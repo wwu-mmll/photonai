@@ -3,6 +3,6 @@
 In dieser Datei soll dokumentiert werden, wer das Git-Repo schon einbinden konnte.
 
 Bis jetzt haben folgende Personen das Git erfolgreich eingerichtet:
- * Claas
+ * Claas, Daniel
 
-(eigenen Namen bitte erg√§nzen)
+(eigenen Namen bitte erg‰nzen)
