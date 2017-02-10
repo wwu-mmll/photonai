@@ -53,7 +53,6 @@ class DataContainer:
         self.targets.summary()
         self.covariates.summary()
 
-### implement these as singleton patterns
 
 class BaseObject:
 
