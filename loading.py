@@ -116,7 +116,8 @@ class FeaturesObject(BaseObject):
 
     def add_numpy(self, data_in, name):
         # add numpy array to data dictionary
-        # check if a pandas dataframe already exists
+        # overwrite base function because features never have column
+        # names
         self.data[name] = pd.DataFrame(data_in)
 
 
