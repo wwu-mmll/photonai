@@ -6,6 +6,8 @@ Loading Module
 
 import numpy as np
 import pandas as pd
+import matlab_io as mio
+
 
 class DataContainer:
 
@@ -14,7 +16,8 @@ class DataContainer:
         self.targets = TargetsObject()
         self.covariates = CovariatesObject()
 
-    def add(self, file, input_type, name, use_as=''):
+
+    def add(self, file, input_type, name, use_as='', **kwargs):
         dataObject = self.select_use(use_as)
 
         if input_type == 'numpy':
@@ -27,7 +30,19 @@ class DataContainer:
             dataObject.load_csv(file)
 
         elif input_type == 'mat':
-            pass
+            if kwargs is not None:
+                for key, value in kwargs.items():
+                    if key == 'var_name':
+                        var_name = value
+                        dataObject.load_mat(file, name, var_name)
+                    else:
+                        raise ValueError('When reading a matlab '
+                                         'structure, specify the '
+                                         'variable that should be '
+                                         'loaded by '
+                                         'var_names="name_of_the_variable".')
+            else:
+                dataObject.load_mat(file, name)
 
         elif input_type == 'hdf5':
             pass
@@ -97,6 +112,18 @@ class BaseObject:
         for key in list(data_in):
             self.data[key] = pd.DataFrame(data_in[key])
 
+    def load_mat(self, file, name, var_name=None):
+        # Use MatlabIO to read .mat-files
+
+        # loadmat loads matfile into Python dictionary
+        # also works for complex structures
+        if var_name:
+            data_in = mio.loadmat(file)[var_name]
+        else:
+            data_in = mio.loadmat(file)
+
+        self.data[name] = pd.DataFrame(data_in)
+
     def summary(self):
         """Get variables of Data Container"""
         print(self.class_name, ':\n')
@@ -109,6 +136,7 @@ class BaseObject:
 
 
 class FeaturesObject(BaseObject):
+
     def __init__(self):
         BaseObject.__init__(self)
         self.class_name = 'Features'
@@ -121,16 +149,17 @@ class FeaturesObject(BaseObject):
 
 
 class TargetsObject(BaseObject):
+
     def __init__(self):
         BaseObject.__init__(self)
         self.class_name = 'Targets'
 
 
 class CovariatesObject(BaseObject):
+
     def __init__(self):
         BaseObject.__init__(self)
         self.class_name = 'Covariates'
-
 
 
 
