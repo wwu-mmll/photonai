@@ -122,7 +122,7 @@ class BaseObject:
         else:
             data_in = mio.loadmat(file)
 
-        self.data[name] = pd.DataFrame(data_in)
+        self.data[name] = pd.DataFrame({name: data_in})
 
     def summary(self):
         """Get variables of Data Container"""
