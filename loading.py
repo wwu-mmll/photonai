@@ -4,162 +4,135 @@ Loading Module
 
 # Copyright (c) PHOTON Development Team
 
+import os
 import numpy as np
 import pandas as pd
-import matlab_io as mio
+import DataLoader.DataLoader as dl
 
 
 class DataContainer:
-
     def __init__(self):
-        self.features = FeaturesObject()
-        self.targets = TargetsObject()
-        self.covariates = CovariatesObject()
+        self.data_objects = []
 
+    def __iadd__(self, new_data):
+        if not issubclass(type(new_data), BaseObject):
+            raise TypeError("Only Type BaseObject allowed")
+        self.data_objects.append(new_data)
+        return self
 
-    def add(self, file, input_type, name, use_as='', **kwargs):
-        dataObject = self.select_use(use_as)
+    def randomize(self):
+        dataset = []
+        labels = []
+        permutation = np.random.permutation(labels.shape[0])
+        shuffled_dataset = dataset[permutation, :]
+        shuffled_labels = labels[permutation]
+        return shuffled_dataset, shuffled_labels
 
-        if input_type == 'numpy':
-            dataObject.add_numpy(file, name)
-
-        elif input_type == 'excel':
-            dataObject.load_excel(file)
-
-        elif input_type == 'csv':
-            dataObject.load_csv(file)
-
-        elif input_type == 'mat':
-            if kwargs is not None:
-                for key, value in kwargs.items():
-                    if key == 'var_name':
-                        var_name = value
-                        dataObject.load_mat(file, name, var_name)
-                    else:
-                        raise ValueError('When reading a matlab '
-                                         'structure, specify the '
-                                         'variable that should be '
-                                         'loaded by '
-                                         'var_names="name_of_the_variable".')
-            else:
-                dataObject.load_mat(file, name)
-
-        elif input_type == 'hdf5':
-            pass
-
-        else:
-            raise ValueError('Wrong input_type variable. Options: '
-                             'None, "excel", "mat", "hdf5".')
-
-
-    def select_use(self, use_as):
-        if use_as.lower() == 'features':
-            return self.features
-        elif use_as.lower() == 'targets':
-            return self.targets
-        elif use_as.lower() == 'covariate':
-            return self.covariates
-        else:
-            raise ValueError('Wrong use_as variable. Options: '
-                             '"features", "targets", "covariate".')
-
-    def summary(self):
-        self.features.summary()
-        self.targets.summary()
-        self.covariates.summary()
+    def __str__(self):
+        self_descriptions = []
+        for item in self.data_objects:
+            item_name = '\n' + type(item).__name__ + '\n-------------------- \n'
+            self_descriptions.append(' '.join([item_name, str(item)]))
+        self_descriptions.append('\n')
+        return '\n'.join(self_descriptions)
 
 
 class BaseObject:
+    def __init__(self, file_or_array, **kwargs):
 
-    def __init__(self):
-        # Create data dictionary to store the pandas arrays
-        # Maybe change this so one doesn't need a dictionary
-        # just one variable would be enough, basically...
-        # Maybe just a list?
-        self.data = {}
-        self.class_name = None
+        self.data = None
+        try:
+            # if its a file path string instantiate the respective loader
+            if isinstance(file_or_array, str):
+                filename, file_extension = os.path.splitext(file_or_array)
+                # module = __import__('DataLoader.DataLoader')
+                # make first letter uppercase and remove the dot
+                class_name = file_extension.title()[1:] + "Loader"
+                if not hasattr(dl, class_name):
+                    raise TypeError("Cannot load files of type " + file_extension)
+                class_ = getattr(dl, class_name)
+                instance = class_()
+                self.data = instance(file_or_array, **kwargs)
+            else:
+                # else simply add to collection
+                self.data = file_or_array
+        except FileNotFoundError as fnfe:
+            print("Sorry could not find file ", file_or_array, fnfe)
+        except TypeError as te:
+            print("Sorry currently this format is not supported.", te)
+        except AttributeError as ae:
+            print("Too many arguments. Remember only Covariates have names.", ae)
+        except Exception as unknown:
+            print("Unexpected exception while loading data:", unknown)
 
+    def __str__(self):
 
-    def add_numpy(self, data_in, name):
-        # add numpy array to data dictionary
-        # check if a pandas dataframe already exists
-        self.data[name] = pd.DataFrame({name: data_in})
-
-
-    def load_excel(self, file, **options):
-        # Use pandas to read excel data
-
-        # TO DO
-        # pass all options for pandas read_excel functions
-
-        data_in = pd.read_excel(file)
-
-        # For more than one variable, pandas will create a dataframe
-        # Split dataframe and save each variable separately
-        for key in list(data_in):
-            self.data[key] = pd.DataFrame(data_in[key])
-
-    def load_csv(self, file, **options):
-        # Use pandas to read excel data
-
-        # TO DO
-        # pass all options for pandas read_excel functions
-
-        data_in = pd.read_csv(file)
-
-        # For more than one variable, pandas will create a dataframe
-        # Split dataframe and save each variable separately
-        for key in list(data_in):
-            self.data[key] = pd.DataFrame(data_in[key])
-
-    def load_mat(self, file, name, var_name=None):
-        # Use MatlabIO to read .mat-files
-
-        # loadmat loads matfile into Python dictionary
-        # also works for complex structures
-        if var_name:
-            data_in = mio.loadmat(file)[var_name]
+        if isinstance(self.data, pd.DataFrame):
+            data_descriptions = []
+            for key in self.data:
+                data_descriptions.append(str(self.data[key].describe()))
+            return '\n'.join(data_descriptions)
         else:
-            data_in = mio.loadmat(file)
-
-        self.data[name] = pd.DataFrame({name: data_in})
+            return str(self.data)
 
     def summary(self):
         """Get variables of Data Container"""
-        print(self.class_name, ':\n')
-        for key in self.data:
-            print(self.data[key].describe())
-            print('\n')
-
-    def get_names(self):
-        return self.data.keys()
-
-
-class FeaturesObject(BaseObject):
-
-    def __init__(self):
-        BaseObject.__init__(self)
-        self.class_name = 'Features'
-
-    def add_numpy(self, data_in, name):
-        # add numpy array to data dictionary
-        # overwrite base function because features never have column
-        # names
-        self.data[name] = pd.DataFrame(data_in)
+        print(self)
+        # print(type(self), ':\n')
+        # for key in self.data:
+        #     tmp_val = self.data[key].describe()
+        #     print(tmp_val)
+        #     print('\n')
 
 
-class TargetsObject(BaseObject):
-
-    def __init__(self):
-        BaseObject.__init__(self)
-        self.class_name = 'Targets'
+class Features(BaseObject):
+    def __init__(self, file_or_array, **kwargs):
+        BaseObject.__init__(self, file_or_array, **kwargs)
 
 
-class CovariatesObject(BaseObject):
+class Targets(BaseObject):
+    def __init__(self, file_or_array, **kwargs):
+        BaseObject.__init__(self, file_or_array, **kwargs)
 
-    def __init__(self):
-        BaseObject.__init__(self)
-        self.class_name = 'Covariates'
+    def dense_to_one_hot(labels_dense, num_classes):
+        """Convert class labels from scalars to one-hot vectors."""
+        num_labels = labels_dense.shape[0]
+        index_offset = np.arange(num_labels) * num_classes
+        labels_one_hot = np.zeros((num_labels, num_classes))
+        labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
+        return labels_one_hot
 
 
+class Covariates(BaseObject):
+    def __init__(self, name, file_or_array, **kwargs):
+        BaseObject.__init__(self, file_or_array, **kwargs)
+        self.name = name
 
+    def __str__(self):
+        return ' '.join([self.name, ':', BaseObject.__str__(self)])
+
+if __name__ == "__main__":
+    # proper handling
+    dc = DataContainer()
+
+    # add features (CSV file)
+    dc += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_SurfAvg.csv',
+                   na_values='NA')
+
+    # add targets (Xlsx file)
+    dc += Targets('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/testExcelFile.xlsx')
+
+    # add covariate (numpy array)
+    variable = np.array([1, 2, 3, 4, 5])
+    dc += Covariates('age', variable)
+
+    # print all what is inside
+    print(dc)
+
+    # error handling
+    # --------------------------
+    dc1 = DataContainer()
+    # File Not Found Error
+    dc1 += Features("test.mat")
+    # Format Not Supported Error
+    dc1 += Targets("fail.txt")
