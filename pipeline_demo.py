@@ -9,16 +9,8 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from six.moves import cPickle as pickle
 
-from PipelineWrapper.TFDNNClassifier import TFDNNClassifier
+from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
 
-
-# setup pipeline
-logistic = linear_model.LogisticRegression()
-pca = decomposition.PCA()
-dnn = TFDNNClassifier(0.5)
-
-# ('logistic', logistic),
-pipe = Pipeline(steps=[('pca', pca),  ('dnn', dnn)])
 
 data_root = '/home/rleenings/PycharmProjects/TFLearnTest/'
 pickle_file = os.path.join(data_root, 'notMNIST.pickle')
@@ -42,6 +34,17 @@ test_labels = all_data['test_labels']
 
 X_digits = train_data[1:2000, :]
 y_digits = train_labels[1:2000]
+
+
+##############################################################################
+# Setup pipeline
+logistic = linear_model.LogisticRegression()
+pca = decomposition.PCA()
+dnn = TFDNNClassifier(0.5)
+
+# ('logistic', logistic),
+pipe = Pipeline(steps=[('pca', pca),  ('dnn', dnn)])
+
 
 ###############################################################################
 # Plot the PCA spectrum
