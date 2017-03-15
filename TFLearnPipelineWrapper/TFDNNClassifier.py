@@ -5,7 +5,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 
 class TFDNNClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, gd_alpha):
+    def __init__(self, gd_alpha=0.1):
         self.gd_alpha = gd_alpha
         self.sess = tf.InteractiveSession()
 
@@ -41,6 +41,8 @@ class TFDNNClassifier(BaseEstimator, ClassifierMixin):
             batch_xs = X[i*batch_size:i*batch_size + batch_size - 1, :]
             batch_ys = y[i*batch_size:i*batch_size + batch_size - 1]
             self.sess.run(train_step, feed_dict={x: batch_xs, y_: batch_ys})
+
+        return self
 
     def predict(self, X):
         X = tf.cast(X, tf.float32)
