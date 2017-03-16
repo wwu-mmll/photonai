@@ -9,6 +9,7 @@ from sklearn.pipeline import Pipeline
 
 from HPOFramework.HPOptimizers import GridSearchOptimizer
 from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
+from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
 
 
 class HyperpipeManager(BaseEstimator):
@@ -113,7 +114,8 @@ class Hyperpipe(object):
 class PipelineElement(object):
 
     ELEMENT_DICTIONARY = {'pca': PCA,
-                          'dnn': TFDNNClassifier}
+                          'dnn': TFDNNClassifier,
+                          'kdnn': KerasDNNWrapper}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
