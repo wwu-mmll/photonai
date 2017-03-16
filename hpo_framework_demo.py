@@ -27,7 +27,7 @@ y_digits = y_items[0:2000]
 manager = HyperpipeManager(X_digits, y_digits)
 # add a PCA and try out several numbers of components
 manager += PipelineElement('pca', {'n_components': [20, 60, 80]})
-manager += PipelineElement('dnn', {'gd_alpha': [0.1, 0.3, 0.5]}, gd_alpha=0.1)
+manager.add(PipelineElement('dnn', {'gd_alpha': [0.1, 0.3, 0.5]}, gd_alpha=0.1))
 scores = manager.optimize('grid_search')
 
 # use best params to score new data

@@ -43,6 +43,9 @@ class HyperpipeManager(BaseEstimator):
             #Todo: raise error
             raise TypeError("Element must be of type Pipeline Element")
 
+    def add(self, pipe_element):
+        self.__iadd__(pipe_element)
+
     def optimize(self, optimization_strategy):
 
         # 0. build pipeline...
