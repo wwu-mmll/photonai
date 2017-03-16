@@ -1,6 +1,8 @@
 
 from typing import Generic, TypeVar
 
+import numpy as np
+
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.base import clone, BaseEstimator
 from sklearn.model_selection import KFold
@@ -24,15 +26,14 @@ class HyperpipeManager(BaseEstimator):
         self.y = y
         self.groups = groups
         # Todo: implement CV adjustment strategy
-        self.cv = KFold(n_splits=5)
+        self.cv = KFold(n_splits=3)
         self.cv_iter = list(self.cv.split(X, y, groups))
         self.pipeline_elements = []
         self.pipe = None
+        self.optimum_pipe = None
 
         if isinstance(config, dict):
             self.create_pipeline_elements_from_config(config)
-
-        print(len(self.pipeline_elements))
 
     def __iadd__(self, pipe_element):
         if isinstance(pipe_element, PipelineElement):
@@ -58,11 +59,33 @@ class HyperpipeManager(BaseEstimator):
         optimizer_class = self.OPTIMIZER_DICTIONARY[optimization_strategy]
         optimizer_instance = optimizer_class(self.pipeline_param_list)
 
-        # 2. iterate next_config
+        config_history = []
+        performance_history = []
+
+        # 2. iterate next_config and save results
         for specific_config in optimizer_instance.next_config:
             hp = Hyperpipe(self.pipe, specific_config)
-            config_loss = hp.calculate_cv_loss(self.X, self.y, self.cv_iter)
-            print(config_loss)
+            config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
+            # 3. inform optimizer about performance
+            optimizer_instance.evaluate_recent_performance(specific_config, config_score)
+            # inform user and log
+            print(config_score)
+            config_history.append(specific_config)
+            performance_history.append(config_score)
+
+        # 4. find best result
+        best_config_nr = np.argmax([t[1] for t in performance_history])
+        best_config = config_history[best_config_nr]
+        best_performance = performance_history[best_config_nr]
+        # ... and create optimal pipeline
+        self.optimum_pipe = clone(self.pipe)
+        self.optimum_pipe.set_params(**best_config)
+
+        # inform user
+        print('--------------------------------------------------')
+        print('Best config: ', best_config)
+        print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
+        print('--------------------------------------------------')
 
     def organize_parameters(self):
         pipeline_dict = dict()
@@ -75,6 +98,10 @@ class HyperpipeManager(BaseEstimator):
     def create_pipeline_elements_from_config(self, config):
         for key, all_params in config.items():
             self += PipelineElement(key, all_params)
+
+    # @property
+    # def optimum_pipe(self):
+    #     return self.optimum_pipe
 
 
 class Hyperpipe(object):
@@ -91,9 +118,10 @@ class Hyperpipe(object):
         self.fit_params = fit_params
         self.error_score = error_score
 
-    def calculate_cv_loss(self, X, y, cv_iter):
+    def calculate_cv_score(self, X, y, cv_iter):
         scores = []
         for train, test in cv_iter:
+
             fit_and_predict_score = _fit_and_score(clone(self.pipe), X, y, self.score,
                                                    train, test, self.verbose, self.params,
                                                    fit_params=self.fit_params,
@@ -102,7 +130,10 @@ class Hyperpipe(object):
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
             scores.append(fit_and_predict_score)
-        return scores
+        train_score_mean = np.mean([l[0] for l in scores])
+        test_score_mean = np.mean([l[1] for l in scores])
+        performance_tuple = (train_score_mean, test_score_mean)
+        return performance_tuple
 
     def score(self, estimator, X_test, y_test):
         return estimator.score(X_test, y_test)

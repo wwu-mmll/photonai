@@ -16,27 +16,34 @@ train_data = train_data.reshape(train_data.shape[0], train_data.shape[1] * train
 
 # randomize
 permutation = np.random.permutation(train_labels.shape[0])
-X_digits = train_data[permutation, :]
-y_digits = train_labels[permutation]
+X_items = train_data[permutation, :]
+y_items = train_labels[permutation]
 
 # take and only x items
-X_digits = X_digits[0:2000, :]
-y_digits = y_digits[0:2000]
+X_digits = X_items[0:2000, :]
+y_digits = y_items[0:2000]
 
-
-# manager += PipelineElement('dnn', {'gd_alpha': [0.1, 0.3, 0.5]}, gd_alpha=0.1)
-
-# Example A
+# Example A: code syntax
 manager = HyperpipeManager(X_digits, y_digits)
+# add a PCA and try out several numbers of components
 manager += PipelineElement('pca', {'n_components': [20, 60, 80]})
-manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
-                           batch_normalization=True, learning_rate=0.3, target_dimension=10)
+manager += PipelineElement('dnn', {'gd_alpha': [0.1, 0.3, 0.5]}, gd_alpha=0.1)
 scores = manager.optimize('grid_search')
 
-# Example B
+# use best params to score new data
+# new_X_digits = X_items[5000:6000]
+# score_of_new_data = manager.optimum_pipe.fit_predict(new_X_digits)
+
+# Example B: config syntax
 # parameters to optimize
-# pipeline_config = {'pca': {'n_components': [20, 60, 80]},
-#                    'dnn': {'gd_alpha': [0.1, 0.3, 0.5]}}
-# config_manager = HyperpipeManager(X_digits, y_digits, config=pipeline_config)
+pipeline_config = {'pca': {'n_components': [20, 60, 80]},
+                   'dnn': {'gd_alpha': [0.1, 0.3, 0.5]}}
+config_manager = HyperpipeManager(X_digits, y_digits, config=pipeline_config)
 # scores2 = config_manager.optimize('grid_search')
 
+# Example C: keras neuronal net
+keras_manager = HyperpipeManager(X_digits, y_digits)
+keras_manager += PipelineElement('pca', {'n_components': [20, 60, 80]})
+# add a neural network with and try out x hidden layers with several sizes
+keras_manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
+                           batch_normalization=True, learning_rate=0.3, target_dimension=10)

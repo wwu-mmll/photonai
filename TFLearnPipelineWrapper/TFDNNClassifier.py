@@ -12,7 +12,7 @@ class TFDNNClassifier(BaseEstimator, ClassifierMixin):
         self.w = None
         self.b = None
 
-    def fit(self, X, y):
+    def fit(self, X, y, **kwargs):
 
         y = self.dense_to_one_hot(y, 10)
 
@@ -47,10 +47,10 @@ class TFDNNClassifier(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         X = tf.cast(X, tf.float32)
         predicted_y = self.sess.run(tf.nn.softmax(tf.matmul(X, self.w) + self.b))
-        # print(predicted_y[1, :])
-        # print(np.argmax(predicted_y[1, :]))
-        # print(np.argmax(predicted_y, 1)[1:5])
         return np.argmax(predicted_y, 1)
+
+    # def fit_predict(self, X, y, **kwargs):
+    #     return self.predict(X)
 
     # Helper functions
     #######################################################
