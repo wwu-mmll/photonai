@@ -7,6 +7,8 @@ from sklearn.model_selection._validation import _fit_and_score
 from sklearn.base import clone, BaseEstimator
 from sklearn.model_selection import KFold
 from sklearn.decomposition import PCA
+from sklearn.svm import SVC
+from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 
 from HPOFramework.HPOptimizers import GridSearchOptimizer
@@ -24,7 +26,7 @@ class HyperpipeManager(BaseEstimator):
         self.data_container = data_container
         self.pipeline_param_list = {}
         self.X = data_container.features.values
-        self.y = data_container.targets.values
+        self.y = np.ravel(data_container.targets.values)
         self.groups = groups
 
         # Todo: implement CV adjustment strategy
@@ -150,7 +152,14 @@ class Hyperpipe(object):
 
 class PipelineElement(object):
 
+    """
+        Add any estimator or transform object from sklearn and associate unique name
+        Add any own object that is compatible (implements fit and/or predict and/or fit_predict)
+         and associate unique name
+    """
     ELEMENT_DICTIONARY = {'pca': PCA,
+                          'svc': SVC,
+                          'logistic': LogisticRegression,
                           'dnn': TFDNNClassifier,
                           'kdnn': KerasDNNWrapper}
 
@@ -166,10 +175,15 @@ class PipelineElement(object):
 
     def __init__(self, name, hyperparameters: dict, **kwargs):
         # Todo: check if adding position argument makes sense?
-        # Todo: check if hyperparameters are members if the class
-        # Todo: check if name is correctly mapped to class
-
+        # Todo: check if hyperparameters are members of the class
+        # Todo: write method that returns any hyperparameter that could be optimized
+        # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
         self.hyperparameters = hyperparameters
-        desired_class = self.ELEMENT_DICTIONARY[name]
-        self.base_element = desired_class(**kwargs)
+        if name in self.ELEMENT_DICTIONARY:
+            desired_class = self.ELEMENT_DICTIONARY[name]
+            self.base_element = desired_class(**kwargs)
+        else:
+            self.base_element = None
+            raise NameError('Element not supported right now:', name)
+

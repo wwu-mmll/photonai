@@ -33,10 +33,20 @@ print(data.covariates['age'])
 # 01. pca
 # 02. keras neuronal net
 keras_manager = HyperpipeManager(data)
-# add a pca analysis, specify hyperparameters to test and default values
+
+# add a pca analysis, specify hyperparameters to test
+# the syntax is always: PipelineElement(Element identifier, hyperparameter dictionary, options to pass to the class)
 keras_manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
-# add a neural network with and try out x hidden layers with several sizes, set default values
+
+# use either SVC
+# keras_manager += PipelineElement('svc', {'C': np.arange(0.2, 1, 0.2)}, kernel='rbf')
+
+# or Logistic regression
+# keras_manager += PipelineElement('logistic', {'C': np.logspace(-4, 4, 5)})
+
+# or a neuronal net
+# add a neural network, hyperparameters = try out x hidden layers with several sizes, set default values
 keras_manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
-                           batch_normalization=True, learning_rate=0.3, target_dimension=10)
+                                  batch_normalization=True, learning_rate=0.3, target_dimension=10)
 # optimize using grid_search
 keras_manager.optimize('grid_search')
