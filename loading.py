@@ -12,25 +12,65 @@ import DataLoader.DataLoader as dl
 
 class DataContainer:
     def __init__(self):
-        self.data_objects = []
+
+        self._data_dict = {}
+        self.covariates = {}
 
     def __iadd__(self, new_data):
         if not issubclass(type(new_data), BaseObject):
             raise TypeError("Only Type BaseObject allowed")
-        self.data_objects.append(new_data)
+
+        if isinstance(new_data, Covariates):
+            # Todo: key errors?
+            self.covariates[new_data.name] = new_data
+        else:
+            name = new_data.__class__.__name__
+            # if an object already exists, try horizontal concat
+            if name in self._data_dict:
+                try:
+                    self._data_dict[name].data = pd.concat([self._data_dict[name].data, new_data.data], axis=1)
+                except Exception as e:
+                    # Todo: proper error management
+                    print('concatenation not successful', e)
+            else:
+                self._data_dict[name] = new_data
         return self
 
-    def randomize(self):
-        dataset = []
-        labels = []
-        permutation = np.random.permutation(labels.shape[0])
-        shuffled_dataset = dataset[permutation, :]
-        shuffled_labels = labels[permutation]
-        return shuffled_dataset, shuffled_labels
+    @property
+    def features(self):
+        if 'Features' in self._data_dict:
+            return self._data_dict['Features']
+        else:
+            return None
+
+    @features.setter
+    def features(self, value):
+        self._data_dict['Features'] = value
+
+    @property
+    def targets(self):
+        if 'Targets' in self._data_dict:
+            return self._data_dict['Targets']
+        else:
+            return None
+
+    @targets.setter
+    def targets(self, value):
+        self._data_dict['Targets'] = value
+
+
+    # def randomize(self):
+    #     dataset = []
+    #     labels = []
+    #     permutation = np.random.permutation(labels.shape[0])
+    #     shuffled_dataset = dataset[permutation, :]
+    #     shuffled_labels = labels[permutation]
+    #     return shuffled_dataset, shuffled_labels
 
     def __str__(self):
         self_descriptions = []
-        for item in self.data_objects:
+        data_objects = [self.Features, self.Targets, self.Covariates]
+        for item in data_objects:
             item_name = '\n' + type(item).__name__ + '\n-------------------- \n'
             self_descriptions.append(' '.join([item_name, str(item)]))
         self_descriptions.append('\n')
@@ -53,6 +93,9 @@ class BaseObject:
                 class_ = getattr(dl, class_name)
                 instance = class_()
                 self.data = instance(file_or_array, **kwargs)
+                # replace nans
+                # Todo: na_value?
+                self.data = self.data.fillna(0)
             else:
                 # else simply add to collection
                 self.data = file_or_array
@@ -65,8 +108,14 @@ class BaseObject:
         except Exception as unknown:
             print("Unexpected exception while loading data:", unknown)
 
-    def __str__(self):
+    @property
+    def values(self):
+        if isinstance(self.data, pd.DataFrame):
+            return self.data.values
+        else:
+            return self.data
 
+    def __str__(self):
         if isinstance(self.data, pd.DataFrame):
             data_descriptions = []
             for key in self.data:

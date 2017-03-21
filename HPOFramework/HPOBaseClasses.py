@@ -18,16 +18,19 @@ class HyperpipeManager(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer}
 
-    def __init__(self, X, y=None, groups=None, config = None):
+    def __init__(self, data_container, groups=None, config=None):
 
         # self.param_dict = param_dict
+        self.data_container = data_container
         self.pipeline_param_list = {}
-        self.X = X
-        self.y = y
+        self.X = data_container.features.values
+        self.y = data_container.targets.values
         self.groups = groups
+
         # Todo: implement CV adjustment strategy
         self.cv = KFold(n_splits=3)
-        self.cv_iter = list(self.cv.split(X, y, groups))
+        self.cv_iter = list(self.cv.split(self.X, self.y, groups))
+
         self.pipeline_elements = []
         self.pipe = None
         self.optimum_pipe = None

@@ -45,20 +45,20 @@ class KerasDNNWrapper(BaseEstimator, ClassifierMixin):
         # start_time = time.time()
 
         # register callbacks
-        # callbacks_list = []
-        # # use early stopping (to save time; does not improve performance as checkpoint will find the best model anyway)
+        callbacks_list = []
+        # use early stopping (to save time; does not improve performance as checkpoint will find the best model anyway)
         # if self.early_stopping_flag:
         #
         #     early_stopping = EarlyStopping(monitor='val_loss', patience=self.eaSt_patience)
         #     callbacks_list += [early_stopping]
-        #
-        # # adjust learning rate when not improving for patience epochs
+
+        # adjust learning rate when not improving for patience epochs
         # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=self.reLe_factor, patience=self.reLe_patience,
         #                               min_lr=0.001, verbose=1)
         # callbacks_list += [reduce_lr]
 
         # fit the model
-        results = self.model.fit(X, y, batch_size=128, epochs=self.nb_epoch, verbose=0) # callbacks=callbacks_list,
+        results = self.model.fit(X, y, batch_size=128, epochs=self.nb_epoch, verbose=0,  callbacks=callbacks_list)
 
         # elapsed_time = time.time()-start_time
         # print(elapsed_time)

@@ -1,49 +1,42 @@
-import os
 import numpy as np
-from six.moves import cPickle as pickle
-
+from loading import DataContainer, Features, Covariates, Targets
 from HPOFramework.HPOBaseClasses import HyperpipeManager, PipelineElement
 
+# Load data
+data = DataContainer()
+# load ENIGMA surface values
+data += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_SurfAvg.csv',
+                 usecols=np.arange(1, 73), na_values='NA')
+# initial shape
+print('feature shape before concat', data.features.data.shape)
+# concatenate ENIGMA thickness values
+data += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_ThickAvg.csv',
+                 usecols=np.arange(1, 73), na_values='NA')
+# shape after concat
+print('feature shape after concat', data.features.data.shape)
 
-# load data
-data_root = '/home/rleenings/PycharmProjects/TFLearnTest/'
-pickle_file = os.path.join(data_root, 'notMNIST.pickle')
-all_data = pickle.load(open(pickle_file, "rb"))
+# try to predict sex, which is column number 4
+data += Targets('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Covariates.csv', usecols=[4], na_values='NA')
 
-train_data = all_data['train_dataset']
-train_labels = all_data['train_labels']
-train_data = train_data.reshape(train_data.shape[0], train_data.shape[1] * train_data.shape[2])
+# data attribute = pandas data frame
+print('data attribute returns:', type(data.targets.data))
+# values attribute = data in form of ndarray
+print('values attribute returns:', type(data.targets.values))
 
-# randomize
-permutation = np.random.permutation(train_labels.shape[0])
-X_items = train_data[permutation, :]
-y_items = train_labels[permutation]
+# add age as covariate
+data += Covariates('age', '/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Covariates.csv',
+                   usecols=[3], na_values='NA')
+# items are accessible:
+print(data.covariates['age'])
 
-# take and only x items
-X_digits = X_items[0:2000, :]
-y_digits = y_items[0:2000]
-
-# Example A: code syntax
-manager = HyperpipeManager(X_digits, y_digits)
-# add a PCA and try out several numbers of components
-manager += PipelineElement('pca', {'n_components': [20, 60, 80]})
-manager.add(PipelineElement('dnn', {'gd_alpha': [0.1, 0.3, 0.5]}, gd_alpha=0.1))
-scores = manager.optimize('grid_search')
-
-# use best params to score new data
-# new_X_digits = X_items[5000:6000]
-# score_of_new_data = manager.optimum_pipe.fit_predict(new_X_digits)
-
-# Example B: config syntax
-# parameters to optimize
-pipeline_config = {'pca': {'n_components': [20, 60, 80]},
-                   'dnn': {'gd_alpha': [0.1, 0.3, 0.5]}}
-config_manager = HyperpipeManager(X_digits, y_digits, config=pipeline_config)
-# scores2 = config_manager.optimize('grid_search')
-
-# Example C: keras neuronal net
-keras_manager = HyperpipeManager(X_digits, y_digits)
-keras_manager += PipelineElement('pca', {'n_components': [20, 60, 80]})
-# add a neural network with and try out x hidden layers with several sizes
+# example hyperparameter optimization for pipeline:
+# 01. pca
+# 02. keras neuronal net
+keras_manager = HyperpipeManager(data)
+# add a pca analysis, specify hyperparameters to test and default values
+keras_manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
+# add a neural network with and try out x hidden layers with several sizes, set default values
 keras_manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
                            batch_normalization=True, learning_rate=0.3, target_dimension=10)
+# optimize using grid_search
+keras_manager.optimize('grid_search')
