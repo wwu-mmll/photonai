@@ -9,7 +9,7 @@ data += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Cortic
                  usecols=np.arange(1, 73), na_values='NA')
 # initial shape
 print('feature shape before concat', data.features.data.shape)
-# concatenate ENIGMA thickness values
+# add values from another file, namely ENIGMA thickness values, to features
 data += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_ThickAvg.csv',
                  usecols=np.arange(1, 73), na_values='NA')
 # shape after concat
@@ -35,7 +35,6 @@ print(data.covariates['age'])
 keras_manager = HyperpipeManager(data)
 
 # add a pca analysis, specify hyperparameters to test
-# the syntax is always: PipelineElement(Element identifier, hyperparameter dictionary, options to pass to the class)
 keras_manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
 
 # use either SVC
@@ -48,5 +47,9 @@ keras_manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
 # add a neural network, hyperparameters = try out x hidden layers with several sizes, set default values
 keras_manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
                                   batch_normalization=True, learning_rate=0.3, target_dimension=10)
+
+# or whatever you want...
+# the syntax is always: PipelineElement(Element identifier, hyperparameter dictionary, options to pass to the class)
+
 # optimize using grid_search
 keras_manager.optimize('grid_search')
