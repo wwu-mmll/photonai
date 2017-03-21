@@ -5,7 +5,6 @@ import numpy as np
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.base import clone, BaseEstimator
-from sklearn.model_selection import KFold
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
@@ -14,13 +13,13 @@ from sklearn.pipeline import Pipeline
 from HPOFramework.HPOptimizers import GridSearchOptimizer
 from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
 from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
-
+from sklearn.model_selection._split import BaseCrossValidator
 
 class HyperpipeManager(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer}
 
-    def __init__(self, data_container, groups=None, config=None):
+    def __init__(self, data_container, cv_object: BaseCrossValidator, groups=None, config=None):
 
         # self.param_dict = param_dict
         self.data_container = data_container
@@ -30,7 +29,7 @@ class HyperpipeManager(BaseEstimator):
         self.groups = groups
 
         # Todo: implement CV adjustment strategy
-        self.cv = KFold(n_splits=3)
+        self.cv = cv_object
         self.cv_iter = list(self.cv.split(self.X, self.y, groups))
 
         self.pipeline_elements = []
