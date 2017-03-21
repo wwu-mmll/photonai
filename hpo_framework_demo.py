@@ -2,6 +2,9 @@ import numpy as np
 from loading import DataContainer, Features, Covariates, Targets
 from HPOFramework.HPOBaseClasses import HyperpipeManager, PipelineElement
 
+# MORE DOCUMENTATION CAN BE FOUND HERE:
+#https://translap.atlassian.net/wiki/display/PENIS/Photon+Toolbox+Framework+HowTos
+
 # Load data
 data_object = DataContainer()
 # load ENIGMA surface values
@@ -41,15 +44,15 @@ print(data_object.covariates['age'])
 # example hyperparameter optimization for pipeline:
 # 01. pca
 # 02. keras neuronal net
-keras_manager = HyperpipeManager(data_object)
+manager = HyperpipeManager(data_object)
 
 # add a pca analysis, specify hyperparameters to test
-keras_manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
+manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
 
 # add a neuronal net
 # add a neural network, hyperparameters = try out x hidden layers with several sizes, set default values
-keras_manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
-                                  batch_normalization=True, learning_rate=0.3, target_dimension=10)
+manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
+                           batch_normalization=True, learning_rate=0.3, target_dimension=10)
 
 # you can also use a SVC
 # keras_manager += PipelineElement('svc', {'C': np.arange(0.2, 1, 0.2)}, kernel='rbf')
@@ -62,4 +65,4 @@ keras_manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], 
 
 # then call optimize and specify optimization strategy
 # optimize using grid_search
-keras_manager.optimize('grid_search')
+manager.optimize('grid_search')
