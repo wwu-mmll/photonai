@@ -32,9 +32,14 @@ class XlsxLoader(object):
         return pd.read_excel(filename)
 
 class NiiLoader(object):
+    # Todo: Currently only works when reshaping 3d nii to a 1d vector
 
     def __call__(self, directory, **kwargs):
         # get nifti filenames in specified directory
+        # get rid of asterisk in directory
+        # os.path.split will take head and tail of path
+        # only use the head
+        directory, _ = os.path.split(directory)
         filenames = self.get_filenames(directory)
 
         # iterate over and load every .nii file
@@ -43,7 +48,7 @@ class NiiLoader(object):
         for ind_sub in range(len(filenames)):
             filename = os.path.join(directory, filenames[ind_sub])
             img = nib.load(filename)
-            data += img.get_data()
+            data.append(img.get_data())
 
         # stack list elements to matrix
         data = np.stack(data, axis=0)
@@ -57,15 +62,10 @@ class NiiLoader(object):
 
 
     def get_filenames(self, directory):
-        # get rid of asterisk in directory
-        # os.path.split will take head and tail of path
-        # only use the head
         filenames = []
-        directory, _ = os.path.split(directory)
         for file in os.listdir(directory):
             if file.endswith(".nii"):
-                filenames += file
-
+                filenames.append(file)
         # check if files have been found
         if len(filenames) == 0:
             raise ValueError('There are no .nii-files in the '
