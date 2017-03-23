@@ -3,6 +3,12 @@ import unittest
 
 class HPOFrameworkTests(unittest.TestCase):
 
+    def setUp(self):
+        
+
+    def tearDown(self):
+        pass
+
     def test_upper(self):
         self.assertEqual('foo'.upper(), 'FOO')
 

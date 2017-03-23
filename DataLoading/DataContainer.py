@@ -102,8 +102,10 @@ class BaseDataObject:
                 self.data = file_or_array
         except FileNotFoundError as fnfe:
             print("Sorry could not find file ", file_or_array, fnfe)
+            raise fnfe
         except TypeError as te:
             print("Sorry currently this format is not supported.", te)
+            raise te
         except AttributeError as ae:
             print("Too many arguments. Remember only Covariates have names.", ae)
         except Exception as unknown:
