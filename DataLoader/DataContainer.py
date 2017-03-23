@@ -17,7 +17,7 @@ class DataContainer:
         self.covariates = {}
 
     def __iadd__(self, new_data):
-        if not issubclass(type(new_data), BaseObject):
+        if not issubclass(type(new_data), BaseDataObject):
             raise TypeError("Only Type BaseObject allowed")
 
         if isinstance(new_data, Covariates):
@@ -77,7 +77,7 @@ class DataContainer:
         return '\n'.join(self_descriptions)
 
 
-class BaseObject:
+class BaseDataObject:
     def __init__(self, file_or_array, **kwargs):
 
         self.data = None
@@ -134,14 +134,14 @@ class BaseObject:
         #     print('\n')
 
 
-class Features(BaseObject):
+class Features(BaseDataObject):
     def __init__(self, file_or_array, **kwargs):
-        BaseObject.__init__(self, file_or_array, **kwargs)
+        BaseDataObject.__init__(self, file_or_array, **kwargs)
 
 
-class Targets(BaseObject):
+class Targets(BaseDataObject):
     def __init__(self, file_or_array, **kwargs):
-        BaseObject.__init__(self, file_or_array, **kwargs)
+        BaseDataObject.__init__(self, file_or_array, **kwargs)
 
     def dense_to_one_hot(labels_dense, num_classes):
         """Convert class labels from scalars to one-hot vectors."""
@@ -152,13 +152,13 @@ class Targets(BaseObject):
         return labels_one_hot
 
 
-class Covariates(BaseObject):
+class Covariates(BaseDataObject):
     def __init__(self, name, file_or_array, **kwargs):
-        BaseObject.__init__(self, file_or_array, **kwargs)
+        BaseDataObject.__init__(self, file_or_array, **kwargs)
         self.name = name
 
     def __str__(self):
-        return ' '.join([self.name, ':', BaseObject.__str__(self)])
+        return ' '.join([self.name, ':', BaseDataObject.__str__(self)])
 
 if __name__ == "__main__":
     # proper handling
