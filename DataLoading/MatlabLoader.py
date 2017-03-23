@@ -7,7 +7,6 @@ It handles loading mat-files with complicated structures.
 
 import scipy.io as spio
 
-
 def loadmat(filename):
     '''
     this function should be called instead of direct spio.loadmat

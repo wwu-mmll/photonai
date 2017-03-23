@@ -4,10 +4,10 @@ Loading Module
 
 # Copyright (c) PHOTON Development Team
 
+from DataLoading import DataLoader as dl
 import os
 import numpy as np
 import pandas as pd
-import DataLoader.DataLoader as dl
 
 
 class DataContainer:
@@ -69,7 +69,8 @@ class DataContainer:
 
     def __str__(self):
         self_descriptions = []
-        data_objects = [self.Features, self.Targets, self.Covariates]
+        # Todo: prettify covariate printing
+        data_objects = [self.features, self.targets, self.covariates]
         for item in data_objects:
             item_name = '\n' + type(item).__name__ + '\n-------------------- \n'
             self_descriptions.append(' '.join([item_name, str(item)]))
@@ -85,7 +86,7 @@ class BaseDataObject:
             # if its a file path string instantiate the respective loader
             if isinstance(file_or_array, str):
                 filename, file_extension = os.path.splitext(file_or_array)
-                # module = __import__('DataLoader.DataLoader')
+                # module = __import__('DataLoading.DataLoading')
                 # make first letter uppercase and remove the dot
                 class_name = file_extension.title()[1:] + "Loader"
                 if not hasattr(dl, class_name):

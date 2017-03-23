@@ -1,5 +1,5 @@
 import numpy as np
-from loading import DataContainer, Features, Covariates, Targets
+from DataLoading.DataContainer import DataContainer, Features, Covariates, Targets
 from HPOFramework.HPOBaseClasses import HyperpipeManager, PipelineElement
 from sklearn.model_selection import KFold
 
