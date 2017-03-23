@@ -64,6 +64,7 @@ class XlsxLoader(object):
     def __call__(self, filename, **kwargs):
         return pd.read_excel(filename)
 
+
 class NiiLoader(object):
     # Todo: Currently only works when reshaping 3d nii to a 1d vector
 

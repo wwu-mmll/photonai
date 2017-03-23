@@ -25,6 +25,7 @@ class DataLoadingTests(unittest.TestCase):
         first_column_values = feature_object.data['A'].values
         expected_values = np.array([1, 2, 3, 4, 5])
         self.assertTrue(np.array_equal(first_column_values, expected_values))
+        self.assertEqual(first_column_values, expected_values)
 
     # def test_isupper(self):
     #     self.assertTrue('FOO'.isupper())
