@@ -25,15 +25,16 @@ class DataContainer:
             self.covariates[new_data.name] = new_data
         else:
             name = new_data.__class__.__name__
-            # if an object already exists, try horizontal concat
-            if name in self._data_dict:
-                try:
-                    self._data_dict[name].data = pd.concat([self._data_dict[name].data, new_data.data], axis=1)
-                except Exception as e:
-                    # Todo: proper error management
-                    print('concatenation not successful', e)
-            else:
-                self._data_dict[name] = new_data
+            # horizontal concat is deprecated
+            # if name in self._data_dict:
+            #     try:
+            #         self._data_dict[name].data = pd.concat([self._data_dict[name].data, new_data.data], axis=1)
+            #     except Exception as e:
+            #         # Todo: proper error management
+            #         print('concatenation not successful', e)
+            # else:
+            #     self._data_dict[name] = new_data
+            self._data_dict[name] = new_data
         return self
 
     @property
