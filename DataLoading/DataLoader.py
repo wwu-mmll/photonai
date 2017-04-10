@@ -66,7 +66,7 @@ class XlsxLoader(object):
 
 class NiiLoader(object):
 
-    def __call__(self, filepaths, vectorize=True, **kwargs):
+    def __call__(self, filepaths, vectorize=False, **kwargs):
         # loading all .nii-files in one folder is no longer supported
 
         if isinstance(filepaths, str):
