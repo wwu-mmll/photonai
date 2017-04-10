@@ -105,7 +105,7 @@ class BaseDataObject:
                 # Todo: .gz files
                 #self.data = self.data.fillna(0)
 
-            elif isinstance(file_or_array, np.array):
+            elif isinstance(file_or_array, np.ndarray):
                 # if numpy array, simply add to collection
                 self.data = file_or_array
             else:
