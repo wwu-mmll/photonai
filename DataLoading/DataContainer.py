@@ -84,8 +84,13 @@ class BaseDataObject:
         self.data = None
         try:
             # if its a file path string instantiate the respective loader
-            if isinstance(file_or_array, str):
-                filename, file_extension = os.path.splitext(file_or_array)
+            if isinstance(file_or_array, (str, list)):
+                if isinstance(file_or_array, list):
+                    filename, file_extension = os.path.splitext(
+                        file_or_array[0])
+                else:
+                    filename, file_extension = os.path.splitext(
+                        file_or_array)
                 # module = __import__('DataLoading.DataLoading')
                 # make first letter uppercase and remove the dot
                 class_name = file_extension.title()[1:] + "Loader"
@@ -96,7 +101,8 @@ class BaseDataObject:
                 self.data = instance(file_or_array, **kwargs)
                 # replace nans
                 # Todo: na_value?
-                self.data = self.data.fillna(0)
+                # Todo: .gz files
+                #self.data = self.data.fillna(0)
             else:
                 # else simply add to collection
                 self.data = file_or_array
