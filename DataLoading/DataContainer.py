@@ -109,6 +109,8 @@ class BaseDataObject:
                 # if numpy array, simply add to collection
                 self.data = file_or_array
             else:
+                # Todo: Ask Ramona how this error message can be
+                # printed.
                 raise TypeError("Input must be string, list of "
                                 "strings or numpy array.")
         except FileNotFoundError as fnfe:
