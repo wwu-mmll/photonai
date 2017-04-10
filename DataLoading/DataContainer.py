@@ -104,9 +104,13 @@ class BaseDataObject:
                 # Todo: na_value?
                 # Todo: .gz files
                 #self.data = self.data.fillna(0)
-            else:
-                # else simply add to collection
+
+            elif isinstance(file_or_array, np.array):
+                # if numpy array, simply add to collection
                 self.data = file_or_array
+            else:
+                raise TypeError("Input must be string, list of "
+                                "strings or numpy array.")
         except FileNotFoundError as fnfe:
             print("Sorry could not find file ", file_or_array, fnfe)
         except TypeError as te:
