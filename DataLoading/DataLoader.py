@@ -65,33 +65,35 @@ class XlsxLoader(object):
         return pd.read_excel(filename)
 
 class NiiLoader(object):
-    # Todo: Currently only works when reshaping 3d nii to a 1d vector
 
-    def __call__(self, directory, **kwargs):
-        # get nifti filenames in specified directory
-        # get rid of asterisk in directory
-        # os.path.split will take head and tail of path
-        # only use the head
-        directory, _ = os.path.split(directory)
-        filenames = self.get_filenames(directory)
+    def __call__(self, filepaths, vectorize=False, **kwargs):
+        # loading all .nii-files in one folder is no longer supported
 
-        # iterate over and load every .nii file
-        # this requires one nifti per subject
-        data = []
-        for ind_sub in range(len(filenames)):
-            filename = os.path.join(directory, filenames[ind_sub])
-            img = nib.load(filename)
-            data.append(img.get_data())
+        if isinstance(filepaths, str):
+            raise TypeError('Filepaths must be passed as list.')
+
+        elif isinstance(filepaths, list):
+            # iterate over and load every .nii file
+            # this requires one nifti per subject
+            img_data = []
+            for ind_sub in range(len(filepaths)):
+                img = nib.load(filepaths[ind_sub], mmap=True)
+                img_data.append(img.get_data())
+
+        else:
+            # Q for Ramona: This error is handled in the
+            # DataContainer class. Handle it here anyway? Maybe to
+            # ensure proper functionality even when DataContainer
+            # changes?
+            raise TypeError('Filepaths must be passed as list.')
+
 
         # stack list elements to matrix
-        data = np.stack(data, axis=0)
-        data = np.reshape(data, (data.shape[0], data.shape[1] *
+        data = np.stack(img_data, axis=0)
+        if vectorize:
+            data = np.reshape(data, (data.shape[0], data.shape[1] *
                                  data.shape[2] * data.shape[3]))
-        # save as numpy array and load with memory map
-        np.save((directory + '/photon_data.npy'), data)
-        del data
-        data = np.load((directory + '/photon_data.npy'), mmap_mode='r')
-        return pd.DataFrame(data)
+        return data
 
 
     def get_filenames(self, directory):

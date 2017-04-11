@@ -25,15 +25,16 @@ class DataContainer:
             self.covariates[new_data.name] = new_data
         else:
             name = new_data.__class__.__name__
-            # if an object already exists, try horizontal concat
-            if name in self._data_dict:
-                try:
-                    self._data_dict[name].data = pd.concat([self._data_dict[name].data, new_data.data], axis=1)
-                except Exception as e:
-                    # Todo: proper error management
-                    print('concatenation not successful', e)
-            else:
-                self._data_dict[name] = new_data
+            # horizontal concat is deprecated
+            # if name in self._data_dict:
+            #     try:
+            #         self._data_dict[name].data = pd.concat([self._data_dict[name].data, new_data.data], axis=1)
+            #     except Exception as e:
+            #         # Todo: proper error management
+            #         print('concatenation not successful', e)
+            # else:
+            #     self._data_dict[name] = new_data
+            self._data_dict[name] = new_data
         return self
 
     @property
@@ -84,8 +85,13 @@ class BaseDataObject:
         self.data = None
         try:
             # if its a file path string instantiate the respective loader
-            if isinstance(file_or_array, str):
-                filename, file_extension = os.path.splitext(file_or_array)
+            if isinstance(file_or_array, (str, list)):
+                if isinstance(file_or_array, list):
+                    filename, file_extension = os.path.splitext(
+                        file_or_array[0])
+                else:
+                    filename, file_extension = os.path.splitext(
+                        file_or_array)
                 # module = __import__('DataLoading.DataLoading')
                 # make first letter uppercase and remove the dot
                 class_name = file_extension.title()[1:] + "Loader"
@@ -96,10 +102,15 @@ class BaseDataObject:
                 self.data = instance(file_or_array, **kwargs)
                 # replace nans
                 # Todo: na_value?
-                self.data = self.data.fillna(0)
-            else:
-                # else simply add to collection
+                # Todo: .gz files
+                #self.data = self.data.fillna(0)
+
+            elif isinstance(file_or_array, np.ndarray):
+                # if numpy array, simply add to collection
                 self.data = file_or_array
+            else:
+                raise TypeError("Input must be string, list of "
+                                "strings or numpy array.")
         except FileNotFoundError as fnfe:
             print("Sorry could not find file ", file_or_array, fnfe)
         except TypeError as te:
@@ -162,7 +173,7 @@ class Covariates(BaseDataObject):
         return ' '.join([self.name, ':', BaseDataObject.__str__(self)])
 
 if __name__ == "__main__":
-    # proper handling
+    ### proper handling
     dc = DataContainer()
 
     # add features (CSV file)
@@ -179,10 +190,32 @@ if __name__ == "__main__":
     # print all what is inside
     print(dc)
 
+    ### Load Nifti files
+    files = ['/home/nils/data/test_nii'
+              '/s8m0wrp1F0079_t1mprsagp2iso20150114PsychMACS0079A1s003a1001.nii',
+              '/home/nils/data/test_nii/s8m0wrp1F0079_t1mprsagp2iso20150114PsychMACS0079A1s003a1001.nii']
+    print('Test list of nifti files:...')
+    dc1 = DataContainer()
+    dc1 += Features(files)
+    print(dc1.features.values.shape)
+
+    print('Test list with vectorization:...')
+    dc2 = DataContainer()
+    dc2 += Features(files, vectorize=True)
+    print(dc2.features.values.shape)
+
     # error handling
     # --------------------------
-    dc1 = DataContainer()
+    dc3 = DataContainer()
+    a_string = '/home/nils/data/test_nii/s8m0wrp1F0079_t1mprsagp2iso20150114PsychMACS0079A1s003a1001.nii'
+    a_float = 3.0
+    a_dict = {}
+
     # File Not Found Error
-    dc1 += Features("test.mat")
+    dc3 += Features("test.mat")
     # Format Not Supported Error
-    dc1 += Targets("fail.txt")
+    dc3 += Targets("fail.txt")
+    dc3 += Features(a_string)
+    dc3 += Features(a_float)
+    dc3 += Features(a_dict)
+
