@@ -4,11 +4,13 @@ from typing import Generic, TypeVar
 import numpy as np
 
 from sklearn.model_selection._validation import _fit_and_score
+from sklearn.model_selection._search import ParameterGrid
 from sklearn.base import clone, BaseEstimator
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
+
 
 from HPOFramework.HPOptimizers import GridSearchOptimizer
 from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
@@ -55,7 +57,8 @@ class HyperpipeManager(BaseEstimator):
         # 0. build pipeline...
         pipeline_steps = []
         for item in self.pipeline_elements:
-            pipeline_steps.append((item.name, item.base_element))
+            # pipeline_steps.append((item.name, item.base_element))
+            pipeline_steps.append((item.name, item))
         self.pipe = Pipeline(pipeline_steps)
 
         # and bring hyperparameters into sklearn pipeline syntax
@@ -71,7 +74,7 @@ class HyperpipeManager(BaseEstimator):
 
         # 2. iterate next_config and save results
         for specific_config in optimizer_instance.next_config:
-            hp = Hyperpipe(self.pipe, specific_config)
+            hp = TestPipeline(self.pipe, specific_config)
             config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
             # 3. inform optimizer about performance
             optimizer_instance.evaluate_recent_performance(specific_config, config_score)
@@ -85,7 +88,8 @@ class HyperpipeManager(BaseEstimator):
         best_config = config_history[best_config_nr]
         best_performance = performance_history[best_config_nr]
         # ... and create optimal pipeline
-        self.optimum_pipe = clone(self.pipe)
+        # Todo: manage optimum pipe stuff
+        self.optimum_pipe = self.pipe
         self.optimum_pipe.set_params(**best_config)
 
         # inform user
@@ -97,8 +101,7 @@ class HyperpipeManager(BaseEstimator):
     def organize_parameters(self):
         pipeline_dict = dict()
         for item in self.pipeline_elements:
-            for attribute, value_list in item.hyperparameters.items():
-                pipeline_dict[item.name+'__' + attribute] = value_list
+            pipeline_dict.update(item.sklearn_hyperparams)
         self.pipeline_param_list = pipeline_dict
         return pipeline_dict
 
@@ -111,7 +114,7 @@ class HyperpipeManager(BaseEstimator):
     #     return self.optimum_pipe
 
 
-class Hyperpipe(object):
+class TestPipeline(object):
 
     def __init__(self, pipe, specific_config, verbose=2, fit_params={}, error_score='raise'):
 
@@ -128,8 +131,8 @@ class Hyperpipe(object):
     def calculate_cv_score(self, X, y, cv_iter):
         scores = []
         for train, test in cv_iter:
-
-            fit_and_predict_score = _fit_and_score(clone(self.pipe), X, y, self.score,
+            # why clone? removed: clone(self.pipe),
+            fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
                                                    train, test, self.verbose, self.params,
                                                    fit_params=self.fit_params,
                                                    return_train_score=self.return_train_score,
@@ -171,18 +174,138 @@ class PipelineElement(object):
     #     desired_class_instance.name = name
     #     desired_class_instance.position = position
     #     return desired_class_instance
+    @classmethod
+    def create(cls, name, hyperparameters: dict ={}, disable=False, **kwargs):
+        if name in PipelineElement.ELEMENT_DICTIONARY:
+            desired_class = PipelineElement.ELEMENT_DICTIONARY[name]
+            base_element = desired_class(**kwargs)
+            obj = PipelineElement(name, base_element, hyperparameters, disable)
+            return obj
+        else:
+            raise NameError('Element not supported right now:', name)
 
-    def __init__(self, name, hyperparameters: dict, **kwargs):
+    def __init__(self, name, base_element, hyperparameters: dict, disable=False):
         # Todo: check if adding position argument makes sense?
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized
         # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
-        self.hyperparameters = hyperparameters
-        if name in self.ELEMENT_DICTIONARY:
-            desired_class = self.ELEMENT_DICTIONARY[name]
-            self.base_element = desired_class(**kwargs)
+        self.base_element = base_element
+        self._hyperparameters = hyperparameters
+        self._sklearn_hyperparams = {}
+        self.hyperparameters = self._hyperparameters
+        self.disable = disable
+
+    @property
+    def hyperparameters(self):
+        # if self.disable:
+        #     return {}
+        # else:
+        #     return self._hyperparameters
+        return self._hyperparameters
+
+    @hyperparameters.setter
+    def hyperparameters(self, value):
+        self._hyperparameters = value
+        self.generate_sklearn_hyperparameters()
+
+    @property
+    def sklearn_hyperparams(self):
+        return self._sklearn_hyperparams
+
+    def generate_sklearn_hyperparameters(self):
+        for attribute, value_list in self._hyperparameters.items():
+            self._sklearn_hyperparams[self.name + '__' + attribute] = value_list
+
+    def get_params(self, deep=True):
+        return self.base_element.get_params(deep)
+
+    def set_params(self, **kwargs):
+        # element disable is a construct used for this container only
+        if 'disable' in kwargs:
+            self.disable = kwargs['disable']
+            del kwargs['disable']
+        self.base_element.set_params(**kwargs)
+        return self
+
+    def fit(self, data, targets):
+        if not self.disable:
+            obj = self.base_element
+            obj.fit(data, targets)
+            # self.base_element.fit(data, targets)
+        return self
+
+    def predict(self, data):
+        if not self.disable:
+            return self.base_element.predict(data)
         else:
-            self.base_element = None
-            raise NameError('Element not supported right now:', name)
+            return data
+
+    def transform(self, data):
+        if not self.disable:
+            return self.base_element.transform(data)
+        else:
+            return data
+
+    def score(self, X_test, y_test):
+        return self.base_element.score(X_test, y_test)
+
+
+class PipelineSwitch(PipelineElement):
+
+    # @classmethod
+    # def create(cls, pipeline_element_list):
+    #     obj = PipelineSwitch()
+    #     obj.pipeline_element_list = pipeline_element_list
+    #     return obj
+
+    def __init__(self, name, pipeline_element_list, disable=False):
+        self.name = name
+        self._hyperparameters = {}
+        self._sklearn_hyperparams = {}
+        self.hyperparameters = self._hyperparameters
+        self.disable = disable
+
+        self._current_element = (1, 1)
+        self.pipeline_element_list = pipeline_element_list
+        self.pipeline_element_configurations = []
+        hyperparameters = []
+        for i, pipe_element in enumerate(pipeline_element_list):
+            element_configurations = []
+            if len(pipe_element.hyperparameters) > 0:
+                for item in ParameterGrid(pipe_element.hyperparameters):
+                    element_configurations.append(item)
+            # elif len(pipe_element.hyperparameters) == 1:
+            #     hp_key = pipe_element.hyperparameters.keys[0]
+            #     for hp_value in pipe_element.hyperparameters[0]:
+            #         element_configurations.append({hp_key: hp_value})
+            self.pipeline_element_configurations.append(element_configurations)
+            hyperparameters += [(i, nr) for nr in range(len(element_configurations))]
+        self.hyperparameters = {'current_element': hyperparameters}
+
+    @property
+    def current_element(self):
+        return self._current_element
+
+    @current_element.setter
+    def current_element(self, value):
+        self._current_element = value
+        # pass the right config to the element
+        # config = self.pipeline_element_configurations[value[0]][value[1]]
+        # self.base_element.set_params(config)
+
+    @property
+    def base_element(self):
+        return self.pipeline_element_list[self.current_element[0]]
+
+    def set_params(self, **kwargs):
+        if 'current_element' in kwargs:
+            config_nr = kwargs['current_element']
+            self.current_element = config_nr
+            config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
+            self.base_element.set_params(**config)
+
+
+
+
 

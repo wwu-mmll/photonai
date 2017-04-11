@@ -1,6 +1,6 @@
 import numpy as np
 from DataLoading.DataContainer import DataContainer, Features, Covariates, Targets
-from HPOFramework.HPOBaseClasses import HyperpipeManager, PipelineElement
+from HPOFramework.HPOBaseClasses import HyperpipeManager, PipelineElement, PipelineSwitch
 from sklearn.model_selection import KFold
 
 """ MORE DOCUMENTATION CAN BE FOUND HERE:
@@ -50,18 +50,20 @@ cv_object = KFold(n_splits=3)
 manager = HyperpipeManager(data_object, cv_object)
 
 # add a pca analysis, specify hyperparameters to test
-manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
+manager += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10), 'disable': [False, True]})
 
 # add a neuronal net
 # add a neural network, hyperparameters = try out x hidden layers with several sizes, set default values
 # manager += PipelineElement('kdnn', {'hidden_layer_sizes': [[10], [5, 10], [10, 20, 10]]},
 #                            batch_normalization=True, learning_rate=0.3, target_dimension=10)
 
-# you can also use a SVC
-# manager += PipelineElement('svc', {'C': np.arange(0.2, 1, 0.2)}, kernel='rbf')
 
+# you can also use a SVC
+svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['linear', 'rbf']}, )
 # or Logistic regression
-manager += PipelineElement('logistic', {'C': np.logspace(-4, 4, 5)})
+lr_estimator = PipelineElement.create('logistic', {'C': np.logspace(-4, 4, 5)})
+
+manager += PipelineSwitch('final_estimator', [svc_estimator, lr_estimator])
 
 # or whatever you want...
 # the syntax is always: PipelineElement(Element identifier, hyperparameter dictionary, options to pass to the element)
