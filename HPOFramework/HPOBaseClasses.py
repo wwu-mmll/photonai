@@ -296,7 +296,8 @@ class PipelineSwitch(PipelineElement):
 
     @property
     def base_element(self):
-        return self.pipeline_element_list[self.current_element[0]]
+        obj = self.pipeline_element_list[self.current_element[0]]
+        return obj.base_element
 
     def set_params(self, **kwargs):
         if 'current_element' in kwargs:

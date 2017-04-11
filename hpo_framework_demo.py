@@ -59,7 +59,7 @@ manager += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10),
 
 
 # you can also use a SVC
-svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['linear', 'rbf']}, )
+svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['rbf', 'sigmoid']})
 # or Logistic regression
 lr_estimator = PipelineElement.create('logistic', {'C': np.logspace(-4, 4, 5)})
 
