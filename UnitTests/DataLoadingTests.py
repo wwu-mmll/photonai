@@ -27,6 +27,9 @@ class DataLoadingTests(unittest.TestCase):
         self.assertTrue(np.array_equal(first_column_values, expected_values))
         self.assertEqual(first_column_values, expected_values)
 
+    def test_parameter(selfs):
+
+
     # def test_isupper(self):
     #     self.assertTrue('FOO'.isupper())
     #     self.assertFalse('Foo'.isupper())
