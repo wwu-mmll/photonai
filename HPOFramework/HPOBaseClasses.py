@@ -1,7 +1,6 @@
 
-from typing import Generic, TypeVar
-
 import numpy as np
+from itertools import product
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
@@ -18,12 +17,14 @@ from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
 from sklearn.model_selection._split import BaseCrossValidator
 
 
-class HyperpipeManager(BaseEstimator):
+class Hyperpipe(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer}
 
-    def __init__(self, cv_object: BaseCrossValidator, optimizer='grid_search', groups=None, config=None):
+    def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', local_search=True, groups=None,
+                 config=None, X=None, y=None):
 
+        self.name = name
         self.cv = cv_object
         self.cv_iter = None
         self.X = None
@@ -35,6 +36,13 @@ class HyperpipeManager(BaseEstimator):
         self.pipe = None
         self.optimum_pipe = None
 
+        # Todo: this might be a case for sanity checking
+        self.X = X
+        self.y = y
+
+        self._hyperparameters = []
+        self._config_grid = []
+
         if isinstance(config, dict):
             self.create_pipeline_elements_from_config(config)
 
@@ -44,74 +52,111 @@ class HyperpipeManager(BaseEstimator):
             optimizer_class = self.OPTIMIZER_DICTIONARY[optimizer]
             optimizer_instance = optimizer_class()
             self.optimizer = optimizer_instance
+            # we need an object for global search
+            # so with a string it must be local search
+            self.local_search = True
         else:
             # Todo: check if correct object
             self.optimizer = optimizer
+            self.local_search = local_search
 
     def __iadd__(self, pipe_element):
         if isinstance(pipe_element, PipelineElement):
             self.pipeline_elements.append(pipe_element)
+            # Todo: is repeated each time element is added....
+            self.prepare_pipeline()
             return self
         else:
             # Todo: raise error
             raise TypeError("Element must be of type Pipeline Element")
 
+    @property
+    def hyperparameters(self):
+        return self._hyperparameters
+
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
-    def fit(self, data, targets):
+    def fit(self, data, targets, **fit_params):
         # prepare data ..
-        self.X = data
-        self.y = targets
+
+        # in case we don't want to use some data from outside the pipeline
+        if self.X is None and self.y is None:
+            self.X = data
+            self.y = targets
+
         # Todo: use self.groups?
         self.cv_iter = list(self.cv.split(self.X, self.y))
 
-        # 0. build pipeline...
-        pipeline_steps = []
-        for item in self.pipeline_elements:
-            # pipeline_steps.append((item.name, item.base_element))
-            pipeline_steps.append((item.name, item))
-        self.pipe = Pipeline(pipeline_steps)
-
-        # and bring hyperparameters into sklearn pipeline syntax
-        self.organize_parameters()
-        self.optimizer.prepare(self.pipeline_elements)
+        # give the optimizer the chance to inform about elements
+        # only for local search
+        if self.local_search:
+            self.optimizer.prepare(self.pipeline_elements)
 
         config_history = []
         performance_history = []
 
-        # 2. iterate next_config and save results
-        for specific_config in self.optimizer.next_config:
-            hp = TestPipeline(self.pipe, specific_config)
-            config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
-            # 3. inform optimizer about performance
-            self.optimizer.evaluate_recent_performance(specific_config, config_score)
-            # inform user and log
-            print(config_score)
-            config_history.append(specific_config)
-            performance_history.append(config_score)
+        # optimize: iterate through configs and save results
+        if self.local_search:
+            for specific_config in self.optimizer.next_config:
+                hp = TestPipeline(self.pipe, specific_config)
+                config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
+                # 3. inform optimizer about performance
+                self.optimizer.evaluate_recent_performance(specific_config, config_score)
+                # inform user and log
+                print(config_score)
+                config_history.append(specific_config)
+                performance_history.append(config_score)
 
-        # 4. find best result
-        best_config_nr = np.argmax([t[1] for t in performance_history])
-        best_config = config_history[best_config_nr]
-        best_performance = performance_history[best_config_nr]
-        # ... and create optimal pipeline
-        # Todo: manage optimum pipe stuff
-        self.optimum_pipe = self.pipe
-        self.optimum_pipe.set_params(**best_config)
+            # afterwards find best result
+            if len(performance_history) > 0:
+                best_config_nr = np.argmax([t[1] for t in performance_history])
+                best_config = config_history[best_config_nr]
+                best_performance = performance_history[best_config_nr]
+                # ... and create optimal pipeline
+                # Todo: manage optimum pipe stuff
+                self.optimum_pipe = self.pipe
+                self.optimum_pipe.set_params(**best_config)
 
-        # inform user
-        print('--------------------------------------------------')
-        print('Best config: ', best_config)
-        print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
-        print('--------------------------------------------------')
+                # inform user
+                print('--------------------------------------------------')
+                print('Best config: ', best_config)
+                print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
+                print('--------------------------------------------------')
+            else:
+                raise BaseException('Optimizer delivered no configurations to test')
 
-    def organize_parameters(self):
-        pipeline_dict = dict()
+        else:
+            self.pipe.fit(self.X, self.y, **fit_params)
+
+        return self
+
+    def predict(self, data):
+        # Todo: use optimized pipe here
+        return self.pipe.predict(data)
+
+    def prepare_pipeline(self):
+        # prepare pipeline, hyperparams and config-grid
+        pipeline_steps = []
+        all_hyperparams = {}
+        all_config_grids = []
         for item in self.pipeline_elements:
-            pipeline_dict.update(item.sklearn_hyperparams)
-        self.pipeline_param_list = pipeline_dict
-        return pipeline_dict
+            # pipeline_steps.append((item.name, item.base_element))
+            pipeline_steps.append((item.name, item))
+            all_hyperparams[item.name] = item.hyperparameters
+            all_config_grids.append(item.config_grid)
+        self._hyperparameters = all_hyperparams
+        if len(self.pipeline_elements) == 1:
+            self._config_grid = all_config_grids[0]
+        else:
+            self._config_grid = list(product(*all_config_grids))
+
+        # build pipeline...
+        self.pipe = Pipeline(pipeline_steps)
+
+    @property
+    def config_grid(self):
+        return self._config_grid
 
     def create_pipeline_elements_from_config(self, config):
         for key, all_params in config.items():
@@ -160,7 +205,7 @@ class TestPipeline(object):
 # T = TypeVar('T')
 
 
-class PipelineElement(object):
+class PipelineElement(BaseEstimator):
 
     """
         Add any estimator or transform object from sklearn and associate unique name
@@ -194,7 +239,7 @@ class PipelineElement(object):
 
     def __init__(self, name, base_element, hyperparameters: dict, set_disabled=False, disabled=False):
         # Todo: check if hyperparameters are members of the class
-        # Todo: write method that returns any hyperparameter that could be optimized
+        # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
         # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
         self.base_element = base_element
@@ -305,6 +350,7 @@ class PipelineSwitch(PipelineElement):
 
     @property
     def hyperparameters(self):
+        # Todo: return actual hyperparameters of all pipeline elements??
         return self._hyperparameters
 
     @hyperparameters.setter
@@ -355,9 +401,78 @@ class PipelineSwitch(PipelineElement):
             self.base_element.set_params(**config)
 
 
+class PipelineFusion(PipelineElement):
 
-#
-# class PipelineFusion(HyperpipeManager):
-#
-#     def __init__(self, cv_object: BaseCrossValidator, optimizer='grid_search', groups=None, config=None):
-#         super.__init__(cv_object, optimizer, groups, config)
+    def __init__(self, name, pipeline_fusion_elements):
+        super(PipelineFusion, self).__init__(name, None, hyperparameters={}, set_disabled=False, disabled=False)
+
+        self._hyperparameters = {}
+        self._config_grid = []
+        self.pipe_elements = {}
+
+        all_config_grids = []
+        for item in pipeline_fusion_elements:
+            self.pipe_elements[item.name] = item
+            self._hyperparameters[item.name] = item.hyperparameters
+            tmp_config_grid = []
+            # for each configuration
+            for config in item.config_grid:
+                tmp_dict = dict(config)
+                # for each configuration item:
+                for key, element in config.items():
+                    # update name to be referable to pipeline
+                    tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
+                tmp_config_grid.append(tmp_dict)
+            all_config_grids.append(tmp_config_grid)
+        self._config_grid = list(product(*all_config_grids))
+
+    @property
+    def config_grid(self):
+        return self._config_grid
+
+    def get_params(self, deep=True):
+        all_params = {}
+        for name, element in self.pipe_elements.items():
+            all_params[name] = element.get_params(deep)
+        return all_params
+
+    def set_params(self, **kwargs):
+        # Todo: disable fusion element?
+        spread_params_dict = {}
+        for k in kwargs:
+            splitted_k = k.split('__')
+            item_name = splitted_k[0]
+            if item_name not in spread_params_dict:
+                spread_params_dict[item_name] = {}
+            spread_params_dict[item_name].update({splitted_k[1]: splitted_k[2]})
+
+        for name, params in spread_params_dict.items():
+            if name in self.pipe_elements:
+                self.pipe_elements[name].set_params(**params)
+            else:
+                raise NameError('Could not find element ', name)
+        return self
+
+    def fit(self, data, targets):
+        for name, element in self.pipe_elements.items():
+            # Todo: parallellize fitting
+            element.fit(data, targets)
+        return self
+
+    def predict(self, data):
+        # Todo: strategy for concatenating data from different pipes
+        data = []
+        for name, element in self.pipe_elements.items():
+            data = data + element.predict(data)
+
+    def transform(self, data):
+        transformed_data = []
+        for name, element in self.pipe_elements.items():
+            transformed_data = transformed_data + element.transform(data)
+
+    def score(self, X_test, y_test):
+        # Todo: invent strategy for this ?
+        pass
+
+
+

@@ -1,5 +1,4 @@
 
-# from sklearn.model_selection._search import ParameterGrid
 from itertools import product
 
 class GridSearchOptimizer(object):

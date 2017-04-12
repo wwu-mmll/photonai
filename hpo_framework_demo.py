@@ -1,6 +1,6 @@
 import numpy as np
 from DataLoading.DataContainer import DataContainer, Features, Covariates, Targets
-from HPOFramework.HPOBaseClasses import HyperpipeManager, PipelineElement, PipelineSwitch
+from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineSwitch
 from sklearn.model_selection import KFold
 
 """ MORE DOCUMENTATION CAN BE FOUND HERE:
@@ -47,7 +47,7 @@ print(data_object.covariates['age'])
 # 01. pca
 # 02. keras neuronal net  OR support vector classifier OR logistic regression
 cv_object = KFold(n_splits=3)
-manager = HyperpipeManager(cv_object)
+manager = Hyperpipe('god', cv_object)
 
 # add a pca analysis, specify hyperparameters to test
 manager += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
