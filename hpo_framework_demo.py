@@ -9,17 +9,18 @@ from sklearn.model_selection import KFold
 
 # Load data
 data_object = DataContainer()
-# load ENIGMA surface values
-data_object += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_SurfAvg.csv',
-                        usecols=np.arange(1, 73), na_values='NA')
-# initial shape of loaded data:
-print('feature shape before concat', data_object.features.data.shape)
+# # load ENIGMA surface values
+# data_object += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_SurfAvg.csv',
+#                         usecols=np.arange(1, 73), na_values='NA')
+# # initial shape of loaded data:
+# print('feature shape before concat', data_object.features.data.shape)
 # add values from another file, namely ENIGMA thickness values, to features
-data_object += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_ThickAvg.csv',
+data_object += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
                         usecols=np.arange(1, 73), na_values='NA')
+
 # when adding more than one data source to features or targets, the data is internally concatenated horizontally
-# --> see shape after concat
-print('feature shape after concat', data_object.features.data.shape)
+# --> see shape after concat -> Nils removed concat!
+# print('feature shape after concat', data_object.features.data.shape)
 
 # try to predict sex, which is column number 4
 data_object += Targets('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Covariates.csv', usecols=[4],

@@ -93,11 +93,11 @@ class Hyperpipe(BaseEstimator):
         if self.local_search:
             self.optimizer.prepare(self.pipeline_elements)
 
-        config_history = []
-        performance_history = []
-
         # optimize: iterate through configs and save results
         if self.local_search:
+            config_history = []
+            performance_history = []
+
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config)
                 config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
@@ -132,8 +132,28 @@ class Hyperpipe(BaseEstimator):
         return self
 
     def predict(self, data):
-        # Todo: use optimized pipe here
-        return self.pipe.predict(data)
+        # Todo: if local_search = true then use optimized pipe here?
+        if self.pipe is not None:
+            return self.pipe.predict(data)
+        else:
+            return None
+
+    def transform(self, data):
+        if self.pipe is not None:
+            return self.pipe.transform(data)
+        else:
+            return None
+
+    def get_params(self, deep=True):
+        if self.pipe is not None:
+            return self.pipe.get_params(deep)
+        else:
+            return None
+
+    def set_params(self, **params):
+        if self.pipe is not None:
+            self.pipe.set_params(**params)
+        return self
 
     def prepare_pipeline(self):
         # prepare pipeline, hyperparams and config-grid
@@ -161,6 +181,7 @@ class Hyperpipe(BaseEstimator):
     def create_pipeline_elements_from_config(self, config):
         for key, all_params in config.items():
             self += PipelineElement(key, all_params)
+
 
     # @property
     # def optimum_pipe(self):
@@ -425,6 +446,10 @@ class PipelineFusion(PipelineElement):
                 tmp_config_grid.append(tmp_dict)
             all_config_grids.append(tmp_config_grid)
         self._config_grid = list(product(*all_config_grids))
+        self._config_grid = [{**i[0], **i[1]} for i in self.config_grid]
+        # for tmp_item in self._config_grid:
+        #     tmp_2 = 1
+        # tmp_i = 1
 
     @property
     def config_grid(self):
@@ -439,12 +464,13 @@ class PipelineFusion(PipelineElement):
     def set_params(self, **kwargs):
         # Todo: disable fusion element?
         spread_params_dict = {}
-        for k in kwargs:
+        for k, val in kwargs.items():
             splitted_k = k.split('__')
             item_name = splitted_k[0]
             if item_name not in spread_params_dict:
                 spread_params_dict[item_name] = {}
-            spread_params_dict[item_name].update({splitted_k[1]: splitted_k[2]})
+            dict_entry = {'__'.join(splitted_k[1::]): val}
+            spread_params_dict[item_name].update(dict_entry)
 
         for name, params in spread_params_dict.items():
             if name in self.pipe_elements:
@@ -461,14 +487,26 @@ class PipelineFusion(PipelineElement):
 
     def predict(self, data):
         # Todo: strategy for concatenating data from different pipes
-        data = []
+        predicted_data = None
         for name, element in self.pipe_elements.items():
-            data = data + element.predict(data)
+            element_transform = element.transform(data)
+            if predicted_data is None:
+                predicted_data = element_transform
+            else:
+                # Todo: check for right dimensions!
+                predicted_data = np.concatenate((predicted_data, element_transform), axis=1)
+        return predicted_data
 
     def transform(self, data):
-        transformed_data = []
+        transformed_data = None
         for name, element in self.pipe_elements.items():
-            transformed_data = transformed_data + element.transform(data)
+            element_transform = element.transform(data)
+            if transformed_data is None:
+                transformed_data = element_transform
+            else:
+                # Todo: check for right dimensions!
+                transformed_data = np.concatenate((transformed_data, element_transform), axis=1)
+        return transformed_data
 
     def score(self, X_test, y_test):
         # Todo: invent strategy for this ?

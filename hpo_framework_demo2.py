@@ -10,20 +10,20 @@ from sklearn.model_selection import KFold
 # Load data
 surface = DataContainer()
 # load ENIGMA surface values
-surface += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_SurfAvg.csv',
+surface += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_SurfAvg.csv',
                     usecols=np.arange(1, 73), na_values='NA')
 
 # add sex as target
-surface += Targets('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Covariates.csv', usecols=[4],
+surface += Targets('EnigmaTestFiles/Covariates.csv', usecols=[4],
                    na_values='NA')
 
 # add age as covariate
-surface += Covariates('age', '/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Covariates.csv',
+surface += Covariates('age', 'EnigmaTestFiles/Covariates.csv',
                       usecols=[3], na_values='NA')
 
 # add values from another file, namely ENIGMA thickness values, to features
 thickness = DataContainer()
-thickness += Features('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/CorticalMeasuresENIGMA_ThickAvg.csv',
+thickness += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
                       usecols=np.arange(1, 73), na_values='NA')
 # we have the same target as above
 thickness.targets = surface.targets
@@ -51,7 +51,7 @@ feature_union = PipelineFusion('surface_and_thickness', [surface_pipe, thickness
 manager += feature_union
 
 # add a pca analysis, specify hyperparameters to test
-manager += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
+manager += PipelineElement.create('pca', {'n_components': [1, 5, 10, 20]}, set_disabled=True)
 
 # use either SVM or Logistic regression
 svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['rbf', 'sigmoid']})
