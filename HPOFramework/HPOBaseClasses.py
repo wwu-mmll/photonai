@@ -75,7 +75,7 @@ class HyperpipeManager(BaseEstimator):
 
         # and bring hyperparameters into sklearn pipeline syntax
         self.organize_parameters()
-        self.optimizer.prepare(self.pipeline_param_list)
+        self.optimizer.prepare(self.pipeline_elements)
 
         config_history = []
         performance_history = []
@@ -183,26 +183,29 @@ class PipelineElement(object):
     #     desired_class_instance.position = position
     #     return desired_class_instance
     @classmethod
-    def create(cls, name, hyperparameters: dict ={}, disable=False, **kwargs):
+    def create(cls, name, hyperparameters: dict ={}, set_disabled=False, disabled=False, **kwargs):
         if name in PipelineElement.ELEMENT_DICTIONARY:
             desired_class = PipelineElement.ELEMENT_DICTIONARY[name]
             base_element = desired_class(**kwargs)
-            obj = PipelineElement(name, base_element, hyperparameters, disable)
+            obj = PipelineElement(name, base_element, hyperparameters, set_disabled, disabled)
             return obj
         else:
             raise NameError('Element not supported right now:', name)
 
-    def __init__(self, name, base_element, hyperparameters: dict, disable=False):
-        # Todo: check if adding position argument makes sense?
+    def __init__(self, name, base_element, hyperparameters: dict, set_disabled=False, disabled=False):
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized
         # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
         self.base_element = base_element
+        self.disabled = disabled
+        self.set_disabled = set_disabled
         self._hyperparameters = hyperparameters
         self._sklearn_hyperparams = {}
+        self._sklearn_disabled = self.name + '__disabled'
+        self._config_grid = []
         self.hyperparameters = self._hyperparameters
-        self.disable = disable
+
 
     @property
     def hyperparameters(self):
@@ -216,6 +219,11 @@ class PipelineElement(object):
     def hyperparameters(self, value):
         self._hyperparameters = value
         self.generate_sklearn_hyperparameters()
+        self.generate_config_grid()
+
+    @property
+    def config_grid(self):
+        return self._config_grid
 
     @property
     def sklearn_hyperparams(self):
@@ -225,32 +233,43 @@ class PipelineElement(object):
         for attribute, value_list in self._hyperparameters.items():
             self._sklearn_hyperparams[self.name + '__' + attribute] = value_list
 
+    def generate_config_grid(self):
+        for item in ParameterGrid(self.sklearn_hyperparams):
+            if self.set_disabled:
+                item[self._sklearn_disabled] = False
+            self._config_grid.append(item)
+        if self.set_disabled:
+            self._config_grid.append({self._sklearn_disabled: True})
+
     def get_params(self, deep=True):
         return self.base_element.get_params(deep)
 
     def set_params(self, **kwargs):
         # element disable is a construct used for this container only
-        if 'disable' in kwargs:
-            self.disable = kwargs['disable']
-            del kwargs['disable']
+        if self._sklearn_disabled in kwargs:
+            self.disabled = kwargs[self._sklearn_disabled]
+            del kwargs[self._sklearn_disabled]
+        elif 'disabled' in kwargs:
+            self.disabled = kwargs['disabled']
+            del kwargs['disabled']
         self.base_element.set_params(**kwargs)
         return self
 
     def fit(self, data, targets):
-        if not self.disable:
+        if not self.disabled:
             obj = self.base_element
             obj.fit(data, targets)
             # self.base_element.fit(data, targets)
         return self
 
     def predict(self, data):
-        if not self.disable:
+        if not self.disabled:
             return self.base_element.predict(data)
         else:
             return data
 
     def transform(self, data):
-        if not self.disable:
+        if not self.disabled:
             return self.base_element.transform(data)
         else:
             return data
@@ -267,33 +286,50 @@ class PipelineSwitch(PipelineElement):
     #     obj.pipeline_element_list = pipeline_element_list
     #     return obj
 
-    def __init__(self, name, pipeline_element_list, disable=False):
+    def __init__(self, name, pipeline_element_list):
         self.name = name
+        self._sklearn_curr_element = self.name + '__current_element'
+        # Todo: disable switch?
+        self.disabled = False
+        self.set_disabled = False
         self._hyperparameters = {}
         self._sklearn_hyperparams = {}
         self.hyperparameters = self._hyperparameters
-        self.disable = disable
-
+        self._config_grid = []
         self._current_element = (1, 1)
         self.pipeline_element_list = pipeline_element_list
         self.pipeline_element_configurations = []
+        self.generate_config_grid()
+        self.generate_sklearn_hyperparameters()
+
+
+    @property
+    def hyperparameters(self):
+        return self._hyperparameters
+
+    @hyperparameters.setter
+    def hyperparameters(self, value):
+        pass
+
+    def generate_config_grid(self):
         hyperparameters = []
-        for i, pipe_element in enumerate(pipeline_element_list):
+        for i, pipe_element in enumerate(self.pipeline_element_list):
             element_configurations = []
             if len(pipe_element.hyperparameters) > 0:
                 for item in ParameterGrid(pipe_element.hyperparameters):
                     element_configurations.append(item)
-            # elif len(pipe_element.hyperparameters) == 1:
-            #     hp_key = pipe_element.hyperparameters.keys[0]
-            #     for hp_value in pipe_element.hyperparameters[0]:
-            #         element_configurations.append({hp_key: hp_value})
             self.pipeline_element_configurations.append(element_configurations)
             hyperparameters += [(i, nr) for nr in range(len(element_configurations))]
-        self.hyperparameters = {'current_element': hyperparameters}
+        self._config_grid = [{self._sklearn_curr_element: (i, nr)} for i, nr in hyperparameters]
+        self._hyperparameters = {self._sklearn_curr_element: hyperparameters}
 
     @property
     def current_element(self):
         return self._current_element
+
+    @property
+    def config_grid(self):
+        return self._config_grid
 
     @current_element.setter
     def current_element(self, value):
@@ -308,13 +344,20 @@ class PipelineSwitch(PipelineElement):
         return obj.base_element
 
     def set_params(self, **kwargs):
-        if 'current_element' in kwargs:
+        config_nr = None
+        if self._sklearn_curr_element in kwargs:
+            config_nr = kwargs[self._sklearn_curr_element]
+        elif 'current_element' in kwargs:
             config_nr = kwargs['current_element']
+        if config_nr is not None:
             self.current_element = config_nr
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
             self.base_element.set_params(**config)
 
 
 
-
-
+#
+# class PipelineFusion(HyperpipeManager):
+#
+#     def __init__(self, cv_object: BaseCrossValidator, optimizer='grid_search', groups=None, config=None):
+#         super.__init__(cv_object, optimizer, groups, config)

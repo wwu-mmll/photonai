@@ -50,7 +50,7 @@ cv_object = KFold(n_splits=3)
 manager = HyperpipeManager(cv_object)
 
 # add a pca analysis, specify hyperparameters to test
-manager += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist(), 'disable': [False, True]})
+manager += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
 
 # add a neuronal net
 # add a neural network, hyperparameters = try out x hidden layers with several sizes, set default values
