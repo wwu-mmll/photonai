@@ -17,42 +17,54 @@ from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
 from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
 from sklearn.model_selection._split import BaseCrossValidator
 
+
 class HyperpipeManager(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer}
 
-    def __init__(self, data_container, cv_object: BaseCrossValidator, groups=None, config=None):
+    def __init__(self, cv_object: BaseCrossValidator, optimizer='grid_search', groups=None, config=None):
 
-        # self.param_dict = param_dict
-        self.data_container = data_container
-        self.pipeline_param_list = {}
-        self.X = data_container.features.values
-        self.y = np.ravel(data_container.targets.values)
+        self.cv = cv_object
+        self.cv_iter = None
+        self.X = None
+        self.y = None
         self.groups = groups
 
-        # Todo: implement CV adjustment strategy
-        self.cv = cv_object
-        self.cv_iter = list(self.cv.split(self.X, self.y, groups))
-
         self.pipeline_elements = []
+        self.pipeline_param_list = {}
         self.pipe = None
         self.optimum_pipe = None
 
         if isinstance(config, dict):
             self.create_pipeline_elements_from_config(config)
 
+        if isinstance(optimizer, str):
+            # instantiate optimizer from string
+            #  Todo: check if optimizer strategy is already implemented
+            optimizer_class = self.OPTIMIZER_DICTIONARY[optimizer]
+            optimizer_instance = optimizer_class()
+            self.optimizer = optimizer_instance
+        else:
+            # Todo: check if correct object
+            self.optimizer = optimizer
+
     def __iadd__(self, pipe_element):
         if isinstance(pipe_element, PipelineElement):
             self.pipeline_elements.append(pipe_element)
             return self
         else:
-            #Todo: raise error
+            # Todo: raise error
             raise TypeError("Element must be of type Pipeline Element")
 
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
-    def optimize(self, optimization_strategy):
+    def fit(self, data, targets):
+        # prepare data ..
+        self.X = data
+        self.y = targets
+        # Todo: use self.groups?
+        self.cv_iter = list(self.cv.split(self.X, self.y))
 
         # 0. build pipeline...
         pipeline_steps = []
@@ -63,21 +75,17 @@ class HyperpipeManager(BaseEstimator):
 
         # and bring hyperparameters into sklearn pipeline syntax
         self.organize_parameters()
-
-        # 1. instantiate optimizer
-        #  Todo: check if optimizer strategy is already implemented
-        optimizer_class = self.OPTIMIZER_DICTIONARY[optimization_strategy]
-        optimizer_instance = optimizer_class(self.pipeline_param_list)
+        self.optimizer.prepare(self.pipeline_param_list)
 
         config_history = []
         performance_history = []
 
         # 2. iterate next_config and save results
-        for specific_config in optimizer_instance.next_config:
+        for specific_config in self.optimizer.next_config:
             hp = TestPipeline(self.pipe, specific_config)
             config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
             # 3. inform optimizer about performance
-            optimizer_instance.evaluate_recent_performance(specific_config, config_score)
+            self.optimizer.evaluate_recent_performance(specific_config, config_score)
             # inform user and log
             print(config_score)
             config_history.append(specific_config)
