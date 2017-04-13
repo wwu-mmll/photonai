@@ -23,7 +23,7 @@ data_object += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
 # print('feature shape after concat', data_object.features.data.shape)
 
 # try to predict sex, which is column number 4
-data_object += Targets('/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Covariates.csv', usecols=[4],
+data_object += Targets('EnigmaTestFiles//Covariates.csv', usecols=[4],
                        na_values='NA')
 
 # you can access the targets via data_objects.targets,
@@ -35,7 +35,7 @@ print('data attribute returns:', type(data_object.targets.data))
 print('values attribute returns:', type(data_object.targets.values))
 
 # add age as covariate
-data_object += Covariates('age', '/home/rleenings/PycharmProjects/TFLearnTest/testDataFor/Covariates.csv',
+data_object += Covariates('age', 'EnigmaTestFiles//Covariates.csv',
                           usecols=[3], na_values='NA')
 
 # covariate items are accessible via data_objects.covariates by their name:
