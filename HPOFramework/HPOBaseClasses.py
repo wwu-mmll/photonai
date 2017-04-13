@@ -9,7 +9,8 @@ from sklearn.decomposition import PCA
 from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-
+from sklearn.preprocessing import StandardScaler
+from TFLearnPipelineWrapper.WrapperModel import WrapperModel
 
 from HPOFramework.HPOptimizers import GridSearchOptimizer
 from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
@@ -30,6 +31,9 @@ class Hyperpipe(BaseEstimator):
         self.X = None
         self.y = None
         self.groups = groups
+
+        self.config_history = []
+        self.performance_history = []
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
@@ -95,8 +99,8 @@ class Hyperpipe(BaseEstimator):
 
         # optimize: iterate through configs and save results
         if self.local_search:
-            config_history = []
-            performance_history = []
+            self.config_history = []
+            self.performance_history = []
 
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config)
@@ -105,14 +109,14 @@ class Hyperpipe(BaseEstimator):
                 self.optimizer.evaluate_recent_performance(specific_config, config_score)
                 # inform user and log
                 print(config_score)
-                config_history.append(specific_config)
-                performance_history.append(config_score)
+                self.config_history.append(specific_config)
+                self.performance_history.append(config_score)
 
             # afterwards find best result
-            if len(performance_history) > 0:
-                best_config_nr = np.argmax([t[1] for t in performance_history])
-                best_config = config_history[best_config_nr]
-                best_performance = performance_history[best_config_nr]
+            if len(self.performance_history) > 0:
+                best_config_nr = np.argmax([t[1] for t in self.performance_history])
+                best_config = self.config_history[best_config_nr]
+                best_performance = self.performance_history[best_config_nr]
                 # ... and create optimal pipeline
                 # Todo: manage optimum pipe stuff
                 self.optimum_pipe = self.pipe
@@ -237,7 +241,9 @@ class PipelineElement(BaseEstimator):
                           'svc': SVC,
                           'logistic': LogisticRegression,
                           'dnn': TFDNNClassifier,
-                          'kdnn': KerasDNNWrapper}
+                          'kdnn': KerasDNNWrapper,
+                          'standard_scaler': StandardScaler,
+                          'wrapper_model': WrapperModel}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
@@ -336,7 +342,12 @@ class PipelineElement(BaseEstimator):
 
     def transform(self, data):
         if not self.disabled:
-            return self.base_element.transform(data)
+            if hasattr(self.base_element, 'transform'):
+                return self.base_element.transform(data)
+            elif hasattr(self.base_element, 'predict'):
+                return self.base_element.predict(data)
+            else:
+                raise BaseException('transform-predict-mess')
         else:
             return data
 
@@ -438,9 +449,16 @@ class PipelineFusion(PipelineElement):
             tmp_config_grid = []
             # for each configuration
             for config in item.config_grid:
-                tmp_dict = dict(config)
                 # for each configuration item:
-                for key, element in config.items():
+                # if config is no dictionary -> unpack it
+                if not isinstance(config, dict):
+                    tmp_dict = {}
+                    for c_item in config:
+                        tmp_dict.update(c_item)
+                else:
+                    tmp_dict = dict(config)
+                tmp_config = dict(tmp_dict)
+                for key, element in tmp_config.items():
                     # update name to be referable to pipeline
                     tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
                 tmp_config_grid.append(tmp_dict)
@@ -490,23 +508,27 @@ class PipelineFusion(PipelineElement):
         predicted_data = None
         for name, element in self.pipe_elements.items():
             element_transform = element.transform(data)
-            if predicted_data is None:
-                predicted_data = element_transform
-            else:
-                # Todo: check for right dimensions!
-                predicted_data = np.concatenate((predicted_data, element_transform), axis=1)
+            predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
         return predicted_data
 
     def transform(self, data):
         transformed_data = None
         for name, element in self.pipe_elements.items():
             element_transform = element.transform(data)
-            if transformed_data is None:
-                transformed_data = element_transform
-            else:
-                # Todo: check for right dimensions!
-                transformed_data = np.concatenate((transformed_data, element_transform), axis=1)
+            transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
         return transformed_data
+
+    @classmethod
+    def stack_data(cls, a, b):
+        if a is None:
+            a = b
+        else:
+            # Todo: check for right dimensions!
+            if a.ndim == 1 and b.ndim == 1:
+                a = np.column_stack((a, b))
+            else:
+                a = np.hstack((a, b))
+        return a
 
     def score(self, X_test, y_test):
         # Todo: invent strategy for this ?

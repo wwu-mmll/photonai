@@ -40,10 +40,12 @@ global_optimizer = manager.optimizer
 # make surface pipeline
 surface_pipe = Hyperpipe('surface', cv_object, optimizer=global_optimizer, local_search=False, X=surface.features.values, y=np.ravel(surface.targets.values))
 surface_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
+surface_pipe += PipelineElement.create('svc', {}, kernel='rbf')
 
 # make thickness pipeline
 thickness_pipe = Hyperpipe('thickness', cv_object, optimizer=global_optimizer, local_search=False, X=thickness.features.values, y=np.ravel(thickness.targets.values))
 thickness_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
+thickness_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 feature_union = PipelineFusion('surface_and_thickness', [surface_pipe, thickness_pipe])
 
@@ -51,9 +53,9 @@ feature_union = PipelineFusion('surface_and_thickness', [surface_pipe, thickness
 manager += feature_union
 
 # add a pca analysis, specify hyperparameters to test
-manager += PipelineElement.create('pca', {'n_components': [1, 5, 10, 20]}, set_disabled=True)
+manager += PipelineElement.create('pca', {'n_components': [1, 2]}, set_disabled=True)
 
-# use either SVM or Logistic regression
+# # use either SVM or Logistic regression
 svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['rbf', 'sigmoid']})
 # or Logistic regression
 lr_estimator = PipelineElement.create('logistic', {'C': np.logspace(-4, 4, 5)})
