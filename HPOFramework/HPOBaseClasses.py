@@ -1,6 +1,9 @@
 
 import numpy as np
 from itertools import product
+import csv
+from collections import OrderedDict
+import os
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
@@ -34,6 +37,8 @@ class Hyperpipe(BaseEstimator):
 
         self.config_history = []
         self.performance_history = []
+        self.best_config = []
+        self.best_performance = []
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
@@ -104,29 +109,47 @@ class Hyperpipe(BaseEstimator):
 
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config)
-                config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
+                config_score, results_cv = hp.calculate_cv_score(
+                    self.X, self.y, self.cv_iter)
                 # 3. inform optimizer about performance
                 self.optimizer.evaluate_recent_performance(specific_config, config_score)
                 # inform user and log
-                print(config_score)
+                print('Performance: Training -%7.4f , Test -'
+                      '%7.4f' %
+                      (results_cv['train_scores_mean'],
+                       results_cv['test_scores_mean']))
                 self.config_history.append(specific_config)
-                self.performance_history.append(config_score)
+                self.performance_history.append(results_cv)
 
             # afterwards find best result
             if len(self.performance_history) > 0:
-                best_config_nr = np.argmax([t[1] for t in self.performance_history])
-                best_config = self.config_history[best_config_nr]
-                best_performance = self.performance_history[best_config_nr]
+                best_config_nr = np.argmax([t['test_scores_mean'] for t
+                                            in self.performance_history])
+                self.best_config = self.config_history[best_config_nr]
+                self.best_performance = self.performance_history[
+                    best_config_nr]
                 # ... and create optimal pipeline
                 # Todo: manage optimum pipe stuff
                 self.optimum_pipe = self.pipe
-                self.optimum_pipe.set_params(**best_config)
+                self.optimum_pipe.set_params(**self.best_config)
 
                 # inform user
                 print('--------------------------------------------------')
-                print('Best config: ', best_config)
-                print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
+                print('Best config: ', self.best_config)
+                print('Performance: Training -%7.4f ('
+                      'SD =%7.4f), Test -'
+                      '%7.4f (SD =%7.4f)' %
+                      (self.best_performance['train_scores_mean'],
+                       self.best_performance['train_scores_std'],
+                       self.best_performance['test_scores_mean'],
+                       self.best_performance['test_scores_std']))
                 print('--------------------------------------------------')
+
+                # save hyperpipe results to csv
+                self.write_results(self.performance_history,
+                                   'hyperpipe_results.csv')
+                # save best model results to csv
+
             else:
                 raise BaseException('Optimizer delivered no configurations to test')
 
@@ -178,6 +201,17 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
 
+    def write_results(self, results_list, results_filename):
+        cwd = os.getcwd()
+        with open(cwd + "/" + results_filename, 'w') as csvfile:
+            keys = list(results_list[0].keys())
+            writer = csv.writer(csvfile)
+            writer.writerow(keys)
+        for l in range(len(results_list)):
+            with open(cwd + "/" + results_filename, 'a') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=keys)
+                writer.writerow(results_list[l])
+
     @property
     def config_grid(self):
         return self._config_grid
@@ -218,10 +252,22 @@ class TestPipeline(object):
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
             scores.append(fit_and_predict_score)
+        # Todo: implement get_full_model_specification() and pass to
+        # results
         train_score_mean = np.mean([l[0] for l in scores])
         test_score_mean = np.mean([l[1] for l in scores])
         performance_tuple = (train_score_mean, test_score_mean)
-        return performance_tuple
+        cv_results = OrderedDict()
+        cv_results['parameters'] = scores[0][5]
+        cv_results['train_scores'] = [l[0] for l in scores]
+        cv_results['test_scores'] = [l[1] for l in scores]
+        cv_results['train_scores_mean'] = np.mean([l[0] for l in scores])
+        cv_results['test_scores_mean'] = np.mean([l[1] for l in scores])
+        cv_results['train_scores_std'] = np.std([l[0] for l in scores])
+        cv_results['test_scores_std'] = np.std([l[1] for l in scores])
+        cv_results['n_test_samples'] = [l[2] for l in scores]
+        cv_results['scoring_time'] = np.sum([l[3] for l in scores])
+        return performance_tuple, cv_results
 
     def score(self, estimator, X_test, y_test):
         return estimator.score(X_test, y_test)
