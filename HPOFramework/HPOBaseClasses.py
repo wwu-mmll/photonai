@@ -136,8 +136,8 @@ class Hyperpipe(BaseEstimator):
                 # inform user
                 print('--------------------------------------------------')
                 print('Best config: ', self.best_config)
-                print('Performance: Training -%7.4f ('
-                      'SD =%7.4f), Test -'
+                print('Performance: Training:%7.4f ('
+                      'SD =%7.4f), Test:'
                       '%7.4f (SD =%7.4f)' %
                       (self.best_performance['train_scores_mean'],
                        self.best_performance['train_scores_std'],
@@ -149,6 +149,11 @@ class Hyperpipe(BaseEstimator):
                 self.write_results(self.performance_history,
                                    'hyperpipe_results.csv')
                 # save best model results to csv
+
+                # convert dicts to one dict with lists as values
+                # Todo: not sure if this is useful
+                #self.performance_history = self.merge_dicts(
+                # self.performance_history)
 
             else:
                 raise BaseException('Optimizer delivered no configurations to test')
@@ -211,6 +216,12 @@ class Hyperpipe(BaseEstimator):
             with open(cwd + "/" + results_filename, 'a') as csvfile:
                 writer = csv.DictWriter(csvfile, fieldnames=keys)
                 writer.writerow(results_list[l])
+
+    def merge_dicts(self, list_of_dicts):
+        d = OrderedDict()
+        for k in list_of_dicts[0].keys():
+            d[k] = list(d[k] for d in list_of_dicts)
+        return d
 
     @property
     def config_grid(self):
