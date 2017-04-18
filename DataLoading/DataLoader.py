@@ -64,6 +64,7 @@ class XlsxLoader(object):
     def __call__(self, filename, **kwargs):
         return pd.read_excel(filename)
 
+
 class NiiLoader(object):
 
     def __call__(self, filepaths, vectorize=False, **kwargs):

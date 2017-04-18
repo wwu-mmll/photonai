@@ -50,7 +50,8 @@ cv_object = KFold(n_splits=3)
 manager = HyperpipeManager(data_object, cv_object)
 
 # add a pca analysis, specify hyperparameters to test
-manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
+pca_dims_to_try = [None] + np.arange(10, 70, 10).tolist()
+manager += PipelineElement('pca', {'n_components': [None, 10, 20]})
 
 # add a neuronal net
 # add a neural network, hyperparameters = try out x hidden layers with several sizes, set default values
@@ -61,7 +62,8 @@ manager += PipelineElement('pca', {'n_components': np.arange(10, 70, 10)})
 # manager += PipelineElement('svc', {'C': np.arange(0.2, 1, 0.2)}, kernel='rbf')
 
 # or Logistic regression
-manager += PipelineElement('logistic', {'C': np.logspace(-4, 4, 5)})
+c_values_to_try = np.logspace(-4, 4, 5)
+manager += PipelineElement('logistic', {'C': c_values_to_try})
 
 # or whatever you want...
 # the syntax is always: PipelineElement(Element identifier, hyperparameter dictionary, options to pass to the element)
