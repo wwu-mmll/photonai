@@ -194,3 +194,4 @@ tmtagsHistory
 *.sublime-project
 *.sublime-workspace
 .bundle
+/hyperpipe_results.csv
