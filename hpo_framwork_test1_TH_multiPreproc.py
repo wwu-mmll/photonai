@@ -26,7 +26,10 @@ cv_object = KFold(n_splits=3, shuffle=True, random_state=0)
 # # now do the same with hyperPipe
 
 # create a hyperPipe
-manager = Hyperpipe('god', cv_object)
+manager = Hyperpipe('god', cv_object, optimizer='random_grid_search')
+# manager = Hyperpipe('god', cv_object, optimizer='random_grid_search', optimizer_params={'k': 4})
+# manager = Hyperpipe('god', cv_object, optimizer='timeboxed_random_grid_search',
+#                     optimizer_params={'limit_in_minutes': 1})
 
 pca_preproc = PipelineElement.create('pca', {'n_components': [1, None]}, set_disabled=True)
 scaler_preproc = PipelineElement.create('standard_scaler', {}, set_disabled=True)

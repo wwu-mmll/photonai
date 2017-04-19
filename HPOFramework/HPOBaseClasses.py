@@ -7,15 +7,18 @@ from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
-from HPOFramework.HPOptimizers import GridSearchOptimizer
+from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
 
 
 class Hyperpipe(BaseEstimator):
 
-    OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer}
+    OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
+                            'random_grid_search': RandomGridSearchOptimizer,
+                            'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
 
-    def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', local_search=True, groups=None,
+    def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
+                 local_search=True, groups=None,
                  config=None, X=None, y=None):
 
         self.name = name
@@ -47,7 +50,7 @@ class Hyperpipe(BaseEstimator):
             # instantiate optimizer from string
             #  Todo: check if optimizer strategy is already implemented
             optimizer_class = self.OPTIMIZER_DICTIONARY[optimizer]
-            optimizer_instance = optimizer_class()
+            optimizer_instance = optimizer_class(**optimizer_params)
             self.optimizer = optimizer_instance
             # we need an object for global search
             # so with a string it must be local search
@@ -121,6 +124,7 @@ class Hyperpipe(BaseEstimator):
                 print('--------------------------------------------------')
                 print('Best config: ', best_config)
                 print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
+                print('Number of tested configurations:', len(self.performance_history))
                 print('--------------------------------------------------')
             else:
                 raise BaseException('Optimizer delivered no configurations to test')

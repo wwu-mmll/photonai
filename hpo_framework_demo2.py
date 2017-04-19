@@ -32,7 +32,8 @@ thickness.targets = surface.targets
 cv_object = KFold(n_splits=3)
 
 # make a global pipeline
-manager = Hyperpipe('god', cv_object)
+manager = Hyperpipe('god', cv_object,
+                    optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1})
 
 # we use the same optimizer for all pipelines = global hyperparameter search
 global_optimizer = manager.optimizer
