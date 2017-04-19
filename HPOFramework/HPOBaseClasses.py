@@ -419,7 +419,7 @@ class PipelineSwitch(PipelineElement):
     @property
     def base_element(self):
         obj = self.pipeline_element_list[self.current_element[0]]
-        return obj.base_element
+        return obj
 
     def set_params(self, **kwargs):
         config_nr = None
@@ -430,7 +430,12 @@ class PipelineSwitch(PipelineElement):
         if config_nr is not None:
             self.current_element = config_nr
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
-            self.base_element.set_params(**config)
+            # remove name
+            unnamed_config = {}
+            for config_key, config_value in config.items():
+                key_split = config_key.split('__')
+                unnamed_config[''.join(key_split[1::])] = config_value
+            self.base_element.set_params(**unnamed_config)
 
 
 class PipelineFusion(PipelineElement):
