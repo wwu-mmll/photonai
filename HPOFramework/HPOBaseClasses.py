@@ -105,7 +105,7 @@ class Hyperpipe(BaseEstimator):
 
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config)
-                print('testing config: ', specific_config)
+                pprint(self.optimize_printing(specific_config))
                 config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
                 # 3. inform optimizer about performance
                 self.optimizer.evaluate_recent_performance(specific_config, config_score)
@@ -188,6 +188,23 @@ class Hyperpipe(BaseEstimator):
 
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
+
+    def optimize_printing(self, config):
+        prettified_config = []
+        for el_key, el_value in config.items():
+            items = el_key.split('__')
+            name = items[0]
+            rest = '__'.join(items[1::])
+            if name in self.pipe.named_steps:
+                new_pretty_key = self.name + '->' + name + '->'
+                prettified_config.append(new_pretty_key +
+                                          self.pipe.named_steps[name].prettify_config_output(rest, el_value))
+            else:
+                raise ValueError('Item is not contained in pipeline:' + name)
+        return prettified_config
+
+    def prettify_config_output(self, config_name, config_value):
+        return config_name + '=' + str(config_value)
 
     @property
     def config_grid(self):
@@ -365,6 +382,9 @@ class PipelineElement(BaseEstimator):
     def score(self, X_test, y_test):
         return self.base_element.score(X_test, y_test)
 
+    def prettify_config_output(self, config_name, config_value):
+        return config_name + ':' + str(config_value)
+
 
 class PipelineSwitch(PipelineElement):
 
@@ -448,6 +468,12 @@ class PipelineSwitch(PipelineElement):
                 key_split = config_key.split('__')
                 unnamed_config[''.join(key_split[1::])] = config_value
             self.base_element.set_params(**unnamed_config)
+
+    def prettify_config_output(self, config_name, config_value):
+        if isinstance(config_value, tuple):
+            return str(self.pipeline_element_configurations[config_value[0]][config_value[1]])
+        else:
+            return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
 
 
 class PipelineFusion(PipelineElement):
