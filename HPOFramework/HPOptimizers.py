@@ -1,6 +1,7 @@
 
 from itertools import product
 
+
 class GridSearchOptimizer(object):
     def __init__(self):
         self.param_grid = []
@@ -12,10 +13,6 @@ class GridSearchOptimizer(object):
         self.pipeline_elements = pipeline_elements
         possible_configurations = []
         for p_element in self.pipeline_elements:
-            # if any(isinstance(el, list) for el in p_element.config_grid):
-            #     for item in p_element.config_grid:
-            #         possible_configurations.append(item)
-            # else:
             possible_configurations.append(p_element.config_grid)
         self.param_grid = product(*possible_configurations)
         # Todo: _check_param_grid(param_grid)

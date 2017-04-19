@@ -91,7 +91,7 @@ class PipelineElementTests(unittest.TestCase):
                                                                  {'svc__C': 1, 'svc__kernel': 'sigmoid'}])
         # hyperparameter dictionary is returned as expected
         self.assertDictEqual(self.svc_pipe_element.hyperparameters, {'C': [0.1, 1],
-                                                                     'kernel': ['rbf', 'sigmoid']})
+                                        elf.hyperpipe.config_gri                             'kernel': ['rbf', 'sigmoid']})
 
     def test_set_params(self):
         config = {'n_components': 3, 'disabled': False}
