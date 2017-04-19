@@ -6,16 +6,8 @@ from itertools import product
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.base import clone, BaseEstimator
-from sklearn.decomposition import PCA
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from TFLearnPipelineWrapper.WrapperModel import WrapperModel
-
 from HPOFramework.HPOptimizers import GridSearchOptimizer
-from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
-from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
 from sklearn.model_selection._split import BaseCrossValidator
 
 
@@ -265,13 +257,21 @@ class PipelineElement(BaseEstimator):
         Add any own object that is compatible (implements fit and/or predict and/or fit_predict)
          and associate unique name
     """
-    ELEMENT_DICTIONARY = {'pca': PCA,
-                          'svc': SVC,
-                          'logistic': LogisticRegression,
-                          'dnn': TFDNNClassifier,
-                          'kdnn': KerasDNNWrapper,
-                          'standard_scaler': StandardScaler,
-                          'wrapper_model': WrapperModel}
+    # from sklearn.decomposition import PCA
+    # from sklearn.svm import SVC
+    # from sklearn.linear_model import LogisticRegression
+    # from sklearn.preprocessing import StandardScaler
+    # from TFLearnPipelineWrapper.WrapperModel import WrapperModel
+    # from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
+    # from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
+
+    ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
+                          'svc': ('sklearn.svm', 'SVC'),
+                          'logistic': ('sklearn.linear_model', 'LogisticRegression'),
+                          'dnn': ('TFLearnPipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
+                          'kdnn': ('TFLearnPipelineWrapper.KerasDNNWrapper', 'KerasDNNWrapper'),
+                          'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
+                          'wrapper_model': ('TFLearnPipelineWrapper.WrapperModel', 'WrapperModel')}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
@@ -285,10 +285,17 @@ class PipelineElement(BaseEstimator):
     @classmethod
     def create(cls, name, hyperparameters: dict ={}, set_disabled=False, disabled=False, **kwargs):
         if name in PipelineElement.ELEMENT_DICTIONARY:
-            desired_class = PipelineElement.ELEMENT_DICTIONARY[name]
-            base_element = desired_class(**kwargs)
-            obj = PipelineElement(name, base_element, hyperparameters, set_disabled, disabled)
-            return obj
+            try:
+                desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
+                desired_class_home = desired_class_info[0]
+                desired_class_name = desired_class_info[1]
+                imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
+                desired_class = getattr(imported_module, desired_class_name)
+                base_element = desired_class(**kwargs)
+                obj = PipelineElement(name, base_element, hyperparameters, set_disabled, disabled)
+                return obj
+            except AttributeError as ae:
+                raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
         else:
             raise NameError('Element not supported right now:', name)
 
