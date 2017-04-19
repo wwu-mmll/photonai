@@ -164,6 +164,8 @@ class Hyperpipe(BaseEstimator):
 
     def prepare_pipeline(self):
         # prepare pipeline, hyperparams and config-grid
+        self._config_grid = []
+        self._hyperparameters = []
         pipeline_steps = []
         all_hyperparams = {}
         all_config_grids = []
@@ -176,7 +178,13 @@ class Hyperpipe(BaseEstimator):
         if len(self.pipeline_elements) == 1:
             self._config_grid = all_config_grids[0]
         else:
-            self._config_grid = list(product(*all_config_grids))
+            # unpack list of dictionaries in one dictionary
+            tmp_config_grid = list(product(*all_config_grids))
+            for config_iterable in tmp_config_grid:
+                base = dict(config_iterable[0])
+                for i in range(1, len(config_iterable)):
+                    base.update(config_iterable[i])
+                self._config_grid.append(base)
 
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
@@ -284,17 +292,16 @@ class PipelineElement(BaseEstimator):
 
     @property
     def hyperparameters(self):
-        # if self.disable:
-        #     return {}
-        # else:
-        #     return self._hyperparameters
         return self._hyperparameters
 
     @hyperparameters.setter
     def hyperparameters(self, value):
+        # Todo: Make sure that set_disabled is not included when generating config_grid and stuff
         self._hyperparameters = value
         self.generate_sklearn_hyperparameters()
         self.generate_config_grid()
+        if self.set_disabled:
+            self._hyperparameters.update({'set_disabled': True})
 
     @property
     def config_grid(self):
@@ -402,7 +409,7 @@ class PipelineSwitch(PipelineElement):
             self.pipeline_element_configurations.append(element_configurations)
             hyperparameters += [(i, nr) for nr in range(len(element_configurations))]
         self._config_grid = [{self._sklearn_curr_element: (i, nr)} for i, nr in hyperparameters]
-        self._hyperparameters = {self._sklearn_curr_element: hyperparameters}
+        self._hyperparameters = {'current_element': hyperparameters}
 
     @property
     def current_element(self):
@@ -430,7 +437,9 @@ class PipelineSwitch(PipelineElement):
             config_nr = kwargs[self._sklearn_curr_element]
         elif 'current_element' in kwargs:
             config_nr = kwargs['current_element']
-        if config_nr is not None:
+        if config_nr is None or not isinstance(config_nr, tuple):
+            raise ValueError('current_element must be of type Tuple')
+        else:
             self.current_element = config_nr
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
             # remove name
@@ -455,18 +464,17 @@ class PipelineFusion(PipelineElement):
             self.pipe_elements[item.name] = item
             self._hyperparameters[item.name] = item.hyperparameters
             tmp_config_grid = []
-            # Todo: Verschachtelung der Teile überprüfen!!
             # for each configuration
             for config in item.config_grid:
-                # for each configuration item:
-                # if config is no dictionary -> unpack it
-                if not isinstance(config, dict):
-                    tmp_dict = {}
-                    for c_item in config:
-                        tmp_dict.update(c_item)
-                else:
-                    tmp_dict = dict(config)
-                tmp_config = dict(tmp_dict)
+                # # for each configuration item:
+                # # if config is no dictionary -> unpack it
+                # if not isinstance(config, dict):
+                #     tmp_dict = {}
+                #     for c_item in config:
+                #         tmp_dict.update(c_item)
+                # else:
+                tmp_dict = dict(config)
+                tmp_config = dict(config)
                 for key, element in tmp_config.items():
                     # update name to be referable to pipeline
                     tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
