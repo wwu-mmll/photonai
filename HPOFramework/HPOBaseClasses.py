@@ -9,6 +9,7 @@ from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
 from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
+from sklearn.metrics import accuracy_score
 
 
 class Hyperpipe(BaseEstimator):
@@ -248,7 +249,9 @@ class TestPipeline(object):
         return performance_tuple
 
     def score(self, estimator, X_test, y_test):
-        return estimator.score(X_test, y_test)
+        predicted = self.pipe.predict(X_test)
+        return accuracy_score(y_test, predicted)
+        # return estimator.score(X_test, y_test)
 
 #
 # T = TypeVar('T')
@@ -561,14 +564,16 @@ class PipelineFusion(PipelineElement):
         # Todo: strategy for concatenating data from different pipes
         predicted_data = None
         for name, element in self.pipe_elements.items():
-            element_transform = element.transform(data)
+            element_transform = element.predict(data)
             predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
         return predicted_data
 
     def transform(self, data):
         transformed_data = None
         for name, element in self.pipe_elements.items():
-            element_transform = element.transform(data)
+            # if it is a stacked pipeline then we want predict
+            # element_transform = element.transform(data)
+            element_transform = element.predict(data)
             transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
         return transformed_data
 
@@ -586,7 +591,9 @@ class PipelineFusion(PipelineElement):
 
     def score(self, X_test, y_test):
         # Todo: invent strategy for this ?
-        pass
+        predicted = np.mean(self.predict(X_test))
+        return accuracy_score(y_test, predicted)
+
 
 
 
