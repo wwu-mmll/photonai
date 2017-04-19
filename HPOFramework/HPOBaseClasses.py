@@ -302,6 +302,7 @@ class PipelineElement(BaseEstimator):
         return self._sklearn_hyperparams
 
     def generate_sklearn_hyperparameters(self):
+        self._sklearn_hyperparams = {}
         for attribute, value_list in self._hyperparameters.items():
             self._sklearn_hyperparams[self.name + '__' + attribute] = value_list
 
@@ -393,9 +394,8 @@ class PipelineSwitch(PipelineElement):
         hyperparameters = []
         for i, pipe_element in enumerate(self.pipeline_element_list):
             element_configurations = []
-            if len(pipe_element.hyperparameters) > 0:
-                for item in ParameterGrid(pipe_element.hyperparameters):
-                    element_configurations.append(item)
+            for item in pipe_element.config_grid:
+                element_configurations.append(item)
             self.pipeline_element_configurations.append(element_configurations)
             hyperparameters += [(i, nr) for nr in range(len(element_configurations))]
         self._config_grid = [{self._sklearn_curr_element: (i, nr)} for i, nr in hyperparameters]
@@ -447,6 +447,7 @@ class PipelineFusion(PipelineElement):
             self.pipe_elements[item.name] = item
             self._hyperparameters[item.name] = item.hyperparameters
             tmp_config_grid = []
+            # Todo: Verschachtelung der Teile überprüfen!!
             # for each configuration
             for config in item.config_grid:
                 # for each configuration item:
