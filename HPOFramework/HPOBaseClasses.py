@@ -1,5 +1,6 @@
 
 import numpy as np
+from pprint import pprint
 from itertools import product
 
 from sklearn.model_selection._validation import _fit_and_score
@@ -104,11 +105,13 @@ class Hyperpipe(BaseEstimator):
 
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config)
+                print('testing config: ', specific_config)
                 config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
                 # 3. inform optimizer about performance
                 self.optimizer.evaluate_recent_performance(specific_config, config_score)
                 # inform user and log
-                print(config_score)
+                print('Training - %7.4f, Test - %7.4f' % (config_score[0], config_score[1]))
+                print('--------------------------------------------------------------------')
                 self.config_history.append(specific_config)
                 self.performance_history.append(config_score)
 
@@ -194,7 +197,7 @@ class Hyperpipe(BaseEstimator):
 
 class TestPipeline(object):
 
-    def __init__(self, pipe, specific_config, verbose=2, fit_params={}, error_score='raise'):
+    def __init__(self, pipe, specific_config, verbose=0, fit_params={}, error_score='raise'):
 
         self.params = specific_config
         self.pipe = pipe
