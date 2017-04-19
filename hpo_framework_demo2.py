@@ -41,7 +41,7 @@ global_optimizer = manager.optimizer
 # make surface pipeline
 surface_pipe = Hyperpipe('surface', cv_object, optimizer=global_optimizer, local_search=False, X=surface.features.values, y=np.ravel(surface.targets.values))
 surface_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
-surface_pipe += PipelineElement.create('svc', {}, kernel='rbf')
+surface_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 # make thickness pipeline
 thickness_pipe = Hyperpipe('thickness', cv_object, optimizer=global_optimizer, local_search=False, X=thickness.features.values, y=np.ravel(thickness.targets.values))
@@ -59,10 +59,12 @@ manager += PipelineElement.create('pca', {'n_components': [1, 2]}, set_disabled=
 # # use either SVM or Logistic regression
 svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['rbf', 'sigmoid']})
 # or Logistic regression
-lr_estimator = PipelineElement.create('logistic', {'C': np.logspace(-4, 4, 5)})
+# lr_estimator = PipelineElement.create('logistic', {'C': np.logspace(-4, 4, 5)})
 
 # use PipelineSwitch Element to interchange the estimators
-manager += PipelineSwitch('final_estimator', [svc_estimator, lr_estimator])
+# manager += PipelineSwitch('final_estimator', [svc_estimator, lr_estimator])
+
+manager += svc_estimator
 
 # optimizes hyperparameters
 X = surface.features.values
