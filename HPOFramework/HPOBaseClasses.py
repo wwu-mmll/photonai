@@ -280,6 +280,8 @@ class TestPipeline(object):
         self.fit_params = fit_params
         self.error_score = error_score
 
+        self.all_scores = []
+
     def calculate_cv_score(self, X, y, cv_iter):
         scores = []
         for train, test in cv_iter:
@@ -292,6 +294,7 @@ class TestPipeline(object):
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
             scores.append(fit_and_predict_score)
+
         # Todo: implement get_full_model_specification() and pass to
         # results
         train_score_mean = np.mean([l[0] for l in scores])
@@ -312,14 +315,15 @@ class TestPipeline(object):
     def score(self, estimator, X, y_true):
         y_pred = self.pipe.predict(X)
         metrics = self.metrics
-        scores = []
-        try:
+        default_score = estimator.score(X, y_true)
+
+        if metrics:
             for metric in metrics:
                 scorer = Scorer.create(metric)
-                scores.append(scorer(y_true, y_pred))
-            return scores
-        except TypeError:
-            return estimator.score(X, y_true)
+                self.all_scores.append(scorer(y_true, y_pred))
+
+        return default_score
+
 
 
 class Scorer(object):
@@ -346,7 +350,7 @@ class Scorer(object):
                 imported_module = __import__(desired_class_home, globals(),
                                          locals(), desired_class_name, 0)
                 desired_class = getattr(imported_module, desired_class_name)
-                scoring_method = desired_class()
+                scoring_method = desired_class
                 return scoring_method
             except AttributeError as ae:
                 raise ValueError('Could not find according class:',
