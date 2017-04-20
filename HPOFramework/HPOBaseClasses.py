@@ -284,15 +284,20 @@ class TestPipeline(object):
         cv_results['scoring_time'] = np.sum([l[3] for l in scores])
         return performance_tuple, cv_results
 
-    def score(self, estimator, X, y_true, metrics=None):
+    def score(self, estimator, X, y_true):
         y_pred = self.pipe.predict(X)
+        metrics = self.metrics
         scores = []
         try:
             for metric in metrics:
-                if hasattr(classification, metric):
-                    scorer = getattr(classification, metric)
-                elif hasattr(regression, metric):
-                    scorer = getattr(regression, metric)
+                if hasattr(classification, (metric+'_score')):
+                    scorer = getattr(classification, (metric+'_score'))
+                elif hasattr(regression, (metric+'_error')):
+                    scorer = getattr(regression, (metric+'_error'))
+                # Todo: Handles r2 which doesn't have "_score"
+                # postfix. This is ugly. Any suggestions?
+                elif hasattr(regression, (metric+'_score')):
+                    scorer = getattr(regression, (metric+'_score'))
                 else:
                     raise AttributeError(metric, ' is not a valid '
                                                  'sklearn metric.')
