@@ -27,7 +27,7 @@ class Hyperpipe(BaseEstimator):
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer}
 
     def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', local_search=True, groups=None,
-                 config=None, X=None, y=None):
+                 config=None, X=None, y=None, metrics=None):
 
         self.name = name
         self.cv = cv_object
@@ -45,7 +45,7 @@ class Hyperpipe(BaseEstimator):
         self.pipeline_param_list = {}
         self.pipe = None
         self.optimum_pipe = None
-
+        self.metrics = metrics
         # Todo: this might be a case for sanity checking
         self.X = X
         self.y = y
@@ -109,7 +109,8 @@ class Hyperpipe(BaseEstimator):
             self.performance_history = []
 
             for specific_config in self.optimizer.next_config:
-                hp = TestPipeline(self.pipe, specific_config)
+                hp = TestPipeline(self.pipe, specific_config,
+                                  self.metrics)
                 config_score, results_cv = hp.calculate_cv_score(
                     self.X, self.y, self.cv_iter)
                 # 3. inform optimizer about performance
@@ -240,10 +241,12 @@ class Hyperpipe(BaseEstimator):
 
 class TestPipeline(object):
 
-    def __init__(self, pipe, specific_config, verbose=2, fit_params={}, error_score='raise'):
+    def __init__(self, pipe, specific_config, metrics, verbose=2,
+                 fit_params={}, error_score='raise'):
 
         self.params = specific_config
         self.pipe = pipe
+        self.metrics = metrics
         # print(self.params)
 
         # default
