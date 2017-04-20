@@ -13,6 +13,7 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import classification, regression
 from TFLearnPipelineWrapper.WrapperModel import WrapperModel
 
 from HPOFramework.HPOptimizers import GridSearchOptimizer
@@ -280,9 +281,22 @@ class TestPipeline(object):
         cv_results['scoring_time'] = np.sum([l[3] for l in scores])
         return performance_tuple, cv_results
 
-    def score(self, estimator, X_test, y_test):
-        return estimator.score(X_test, y_test)
-
+    def score(self, estimator, X, y_true, metrics=None):
+        y_pred = self.pipe.predict(X)
+        scores = []
+        try:
+            for metric in metrics:
+                if hasattr(classification, metric):
+                    scorer = getattr(classification, metric)
+                elif hasattr(regression, metric):
+                    scorer = getattr(regression, metric)
+                else:
+                    raise AttributeError(metric, ' is not a valid '
+                                                 'sklearn metric.')
+                scores.append(scorer(y_true, y_pred))
+            return scores
+        except TypeError:
+            
 #
 # T = TypeVar('T')
 
