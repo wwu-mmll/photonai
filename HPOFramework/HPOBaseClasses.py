@@ -296,7 +296,8 @@ class TestPipeline(object):
                 scores.append(scorer(y_true, y_pred))
             return scores
         except TypeError:
-            
+            return estimator.score(X, y_true)
+
 #
 # T = TypeVar('T')
 
