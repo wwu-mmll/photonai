@@ -35,7 +35,7 @@ pca_preproc = PipelineElement.create('pca', {'n_components': [1, None]}, set_dis
 scaler_preproc = PipelineElement.create('standard_scaler', {}, set_disabled=True)
 
 # SVMs (linear and rbf)
-svc_estimator = PipelineElement.create('svc', {'kernel': ['linear']})
+svc_estimator = PipelineElement.create('svc', {}) #'kernel': ['linear']
 # Logistic Regression with different C values (5 sets)
 lr_estimator = PipelineElement.create('logistic', {'C': np.logspace(-4, 4, 5)})
 
