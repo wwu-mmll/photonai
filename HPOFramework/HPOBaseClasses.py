@@ -12,6 +12,7 @@ from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
 from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
+from sklearn.metrics import accuracy_score
 
 class Hyperpipe(BaseEstimator):
 
@@ -21,7 +22,7 @@ class Hyperpipe(BaseEstimator):
 
     def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
-                 config=None, X=None, y=None,, metrics=None):
+                 config=None, X=None, y=None, metrics=None):
 
         self.name = name
         self.cv = cv_object
