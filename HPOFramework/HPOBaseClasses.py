@@ -111,18 +111,18 @@ class Hyperpipe(BaseEstimator):
                 # 3. inform optimizer about performance
                 self.optimizer.evaluate_recent_performance(specific_config, config_score)
                 # inform user and log
-                print('Performance: Training -%7.4f , Test -'
-                      '%7.4f' %
-                      (results_cv['train_scores_mean'],
-                       results_cv['test_scores_mean']))
-                print(
-                    '--------------------------------------------------------------------')
+                # print('Performance: Training -%7.4f , Test -'
+                #       '%7.4f' %
+                #       (results_cv['train_scores_mean'],
+                #        results_cv['test_scores_mean']))
+                # print('--------------------------------------------------------------------')
+                print('Performance History: ', results_cv['score'])
                 self.config_history.append(specific_config)
                 self.performance_history.append(results_cv)
 
             # afterwards find best result
             if len(self.performance_history) > 0:
-                best_config_nr = np.argmax([t['test_scores_mean'] for t
+                best_config_nr = np.argmax([t['score'] for t
                                             in self.performance_history])
                 self.best_config = self.config_history[best_config_nr]
                 self.best_performance = self.performance_history[
@@ -280,10 +280,13 @@ class TestPipeline(object):
         self.fit_params = fit_params
         self.error_score = error_score
 
-        self.all_scores = []
+        self.cv_results = {}
+        self.labels = []
+        self.predictions = []
 
     def calculate_cv_score(self, X, y, cv_iter):
         scores = []
+
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
             fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
@@ -300,30 +303,35 @@ class TestPipeline(object):
         train_score_mean = np.mean([l[0] for l in scores])
         test_score_mean = np.mean([l[1] for l in scores])
         performance_tuple = (train_score_mean, test_score_mean)
-        cv_results = OrderedDict()
-        cv_results['parameters'] = scores[0][5]
-        cv_results['train_scores'] = [l[0] for l in scores]
-        cv_results['test_scores'] = [l[1] for l in scores]
-        cv_results['train_scores_mean'] = np.mean([l[0] for l in scores])
-        cv_results['test_scores_mean'] = np.mean([l[1] for l in scores])
-        cv_results['train_scores_std'] = np.std([l[0] for l in scores])
-        cv_results['test_scores_std'] = np.std([l[1] for l in scores])
-        cv_results['n_test_samples'] = [l[2] for l in scores]
-        cv_results['scoring_time'] = np.sum([l[3] for l in scores])
-        return performance_tuple, cv_results
+        self.cv_results['parameters'] = scores[0][5]
+        self.cv_results['n_test_samples'] = [l[2] for l in scores]
+        self.cv_results['scoring_time'] = np.sum([l[3] for l in scores])
+        return performance_tuple, self.reorder_results(self.cv_results)
 
     def score(self, estimator, X, y_true):
-        y_pred = self.pipe.predict(X)
-        metrics = self.metrics
         default_score = estimator.score(X, y_true)
-
-        if metrics:
-            for metric in metrics:
+        self.cv_results.setdefault('score', []).append(default_score)
+        y_pred = self.pipe.predict(X)
+        self.predictions.append(y_pred)
+        self.labels.append(y_true)
+        if self.metrics:
+            for metric in self.metrics:
                 scorer = Scorer.create(metric)
-                self.all_scores.append(scorer(y_true, y_pred))
-
+                # use setdefault method of dictionary to create list under
+                # specific key in case no list exists
+                self.cv_results.setdefault(metric, []).append(scorer(y_true, y_pred))
         return default_score
 
+    def reorder_results(self,results):
+        for key in results.items():
+            if len(results[key]):
+                continue
+            else:
+                for i in range(len(results[key])):
+                    if (i%2) == 2:
+                        results[key]['train'] = results[key][i]
+                
+        for i in range()
 
 
 class Scorer(object):
