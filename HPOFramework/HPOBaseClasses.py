@@ -1,5 +1,6 @@
 
 import numpy as np
+from pprint import pprint
 from itertools import product
 import csv
 from collections import OrderedDict
@@ -8,26 +9,22 @@ import os
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.base import clone, BaseEstimator
-from sklearn.decomposition import PCA
-from sklearn.svm import SVC
-from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
-from sklearn.preprocessing import StandardScaler
-from sklearn import metrics as sklmetrics
-from TFLearnPipelineWrapper.WrapperModel import WrapperModel
-
-from HPOFramework.HPOptimizers import GridSearchOptimizer
-from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
-from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
+from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
+from sklearn.metrics import accuracy_score
+from sklearn import metrics as sklmetrics
 
 
 class Hyperpipe(BaseEstimator):
 
-    OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer}
+    OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
+                            'random_grid_search': RandomGridSearchOptimizer,
+                            'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
 
-    def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', local_search=True, groups=None,
-                 config=None, X=None, y=None, metrics=None):
+    def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
+                 local_search=True, groups=None,
+                 config=None, X=None, y=None,, metrics=None):
 
         self.name = name
         self.cv = cv_object
@@ -60,7 +57,7 @@ class Hyperpipe(BaseEstimator):
             # instantiate optimizer from string
             #  Todo: check if optimizer strategy is already implemented
             optimizer_class = self.OPTIMIZER_DICTIONARY[optimizer]
-            optimizer_instance = optimizer_class()
+            optimizer_instance = optimizer_class(**optimizer_params)
             self.optimizer = optimizer_instance
             # we need an object for global search
             # so with a string it must be local search
@@ -109,8 +106,8 @@ class Hyperpipe(BaseEstimator):
             self.performance_history = []
 
             for specific_config in self.optimizer.next_config:
-                hp = TestPipeline(self.pipe, specific_config,
-                                  self.metrics)
+                hp = TestPipeline(self.pipe, specific_config, self.metrics)
+                pprint(self.optimize_printing(specific_config))
                 config_score, results_cv = hp.calculate_cv_score(
                     self.X, self.y, self.cv_iter)
                 # 3. inform optimizer about performance
@@ -120,6 +117,8 @@ class Hyperpipe(BaseEstimator):
                       '%7.4f' %
                       (results_cv['train_scores_mean'],
                        results_cv['test_scores_mean']))
+                print(
+                    '--------------------------------------------------------------------')
                 self.config_history.append(specific_config)
                 self.performance_history.append(results_cv)
 
@@ -145,6 +144,8 @@ class Hyperpipe(BaseEstimator):
                        self.best_performance['train_scores_std'],
                        self.best_performance['test_scores_mean'],
                        self.best_performance['test_scores_std']))
+                print('Number of tested configurations:',
+                      len(self.performance_history))
                 print('--------------------------------------------------')
 
                 # save hyperpipe results to csv
@@ -191,6 +192,8 @@ class Hyperpipe(BaseEstimator):
 
     def prepare_pipeline(self):
         # prepare pipeline, hyperparams and config-grid
+        self._config_grid = []
+        self._hyperparameters = []
         pipeline_steps = []
         all_hyperparams = {}
         all_config_grids = []
@@ -203,7 +206,13 @@ class Hyperpipe(BaseEstimator):
         if len(self.pipeline_elements) == 1:
             self._config_grid = all_config_grids[0]
         else:
-            self._config_grid = list(product(*all_config_grids))
+            # unpack list of dictionaries in one dictionary
+            tmp_config_grid = list(product(*all_config_grids))
+            for config_iterable in tmp_config_grid:
+                base = dict(config_iterable[0])
+                for i in range(1, len(config_iterable)):
+                    base.update(config_iterable[i])
+                self._config_grid.append(base)
 
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
@@ -225,6 +234,24 @@ class Hyperpipe(BaseEstimator):
             d[k] = list(d[k] for d in list_of_dicts)
         return d
 
+    def optimize_printing(self, config):
+        prettified_config = []
+        for el_key, el_value in config.items():
+            items = el_key.split('__')
+            name = items[0]
+            rest = '__'.join(items[1::])
+            if name in self.pipe.named_steps:
+                new_pretty_key = self.name + '->' + name + '->'
+                prettified_config.append(new_pretty_key +
+                                          self.pipe.named_steps[name].prettify_config_output(rest, el_value))
+            else:
+                raise ValueError('Item is not contained in pipeline:' + name)
+        return prettified_config
+
+    def prettify_config_output(self, config_name, config_value):
+        return config_name + '=' + str(config_value)
+
+
     @property
     def config_grid(self):
         return self._config_grid
@@ -241,7 +268,7 @@ class Hyperpipe(BaseEstimator):
 
 class TestPipeline(object):
 
-    def __init__(self, pipe, specific_config, metrics, verbose=2,
+    def __init__(self, pipe, specific_config, metrics, verbose=0,
                  fit_params={}, error_score='raise'):
 
         self.params = specific_config
@@ -311,13 +338,21 @@ class PipelineElement(BaseEstimator):
         Add any own object that is compatible (implements fit and/or predict and/or fit_predict)
          and associate unique name
     """
-    ELEMENT_DICTIONARY = {'pca': PCA,
-                          'svc': SVC,
-                          'logistic': LogisticRegression,
-                          'dnn': TFDNNClassifier,
-                          'kdnn': KerasDNNWrapper,
-                          'standard_scaler': StandardScaler,
-                          'wrapper_model': WrapperModel}
+    # from sklearn.decomposition import PCA
+    # from sklearn.svm import SVC
+    # from sklearn.linear_model import LogisticRegression
+    # from sklearn.preprocessing import StandardScaler
+    # from TFLearnPipelineWrapper.WrapperModel import WrapperModel
+    # from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
+    # from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
+
+    ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
+                          'svc': ('sklearn.svm', 'SVC'),
+                          'logistic': ('sklearn.linear_model', 'LogisticRegression'),
+                          'dnn': ('TFLearnPipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
+                          'kdnn': ('TFLearnPipelineWrapper.KerasDNNWrapper', 'KerasDNNWrapper'),
+                          'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
+                          'wrapper_model': ('TFLearnPipelineWrapper.WrapperModel', 'WrapperModel')}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
@@ -331,10 +366,17 @@ class PipelineElement(BaseEstimator):
     @classmethod
     def create(cls, name, hyperparameters: dict ={}, set_disabled=False, disabled=False, **kwargs):
         if name in PipelineElement.ELEMENT_DICTIONARY:
-            desired_class = PipelineElement.ELEMENT_DICTIONARY[name]
-            base_element = desired_class(**kwargs)
-            obj = PipelineElement(name, base_element, hyperparameters, set_disabled, disabled)
-            return obj
+            try:
+                desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
+                desired_class_home = desired_class_info[0]
+                desired_class_name = desired_class_info[1]
+                imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
+                desired_class = getattr(imported_module, desired_class_name)
+                base_element = desired_class(**kwargs)
+                obj = PipelineElement(name, base_element, hyperparameters, set_disabled, disabled)
+                return obj
+            except AttributeError as ae:
+                raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
         else:
             raise NameError('Element not supported right now:', name)
 
@@ -355,17 +397,16 @@ class PipelineElement(BaseEstimator):
 
     @property
     def hyperparameters(self):
-        # if self.disable:
-        #     return {}
-        # else:
-        #     return self._hyperparameters
         return self._hyperparameters
 
     @hyperparameters.setter
     def hyperparameters(self, value):
+        # Todo: Make sure that set_disabled is not included when generating config_grid and stuff
         self._hyperparameters = value
         self.generate_sklearn_hyperparameters()
         self.generate_config_grid()
+        if self.set_disabled:
+            self._hyperparameters.update({'set_disabled': True})
 
     @property
     def config_grid(self):
@@ -376,6 +417,7 @@ class PipelineElement(BaseEstimator):
         return self._sklearn_hyperparams
 
     def generate_sklearn_hyperparameters(self):
+        self._sklearn_hyperparams = {}
         for attribute, value_list in self._hyperparameters.items():
             self._sklearn_hyperparams[self.name + '__' + attribute] = value_list
 
@@ -428,6 +470,9 @@ class PipelineElement(BaseEstimator):
     def score(self, X_test, y_test):
         return self.base_element.score(X_test, y_test)
 
+    def prettify_config_output(self, config_name, config_value):
+        return config_name + ':' + str(config_value)
+
 
 class PipelineSwitch(PipelineElement):
 
@@ -467,13 +512,12 @@ class PipelineSwitch(PipelineElement):
         hyperparameters = []
         for i, pipe_element in enumerate(self.pipeline_element_list):
             element_configurations = []
-            if len(pipe_element.hyperparameters) > 0:
-                for item in ParameterGrid(pipe_element.hyperparameters):
-                    element_configurations.append(item)
+            for item in pipe_element.config_grid:
+                element_configurations.append(item)
             self.pipeline_element_configurations.append(element_configurations)
             hyperparameters += [(i, nr) for nr in range(len(element_configurations))]
         self._config_grid = [{self._sklearn_curr_element: (i, nr)} for i, nr in hyperparameters]
-        self._hyperparameters = {self._sklearn_curr_element: hyperparameters}
+        self._hyperparameters = {'current_element': hyperparameters}
 
     @property
     def current_element(self):
@@ -493,7 +537,7 @@ class PipelineSwitch(PipelineElement):
     @property
     def base_element(self):
         obj = self.pipeline_element_list[self.current_element[0]]
-        return obj.base_element
+        return obj
 
     def set_params(self, **kwargs):
         config_nr = None
@@ -501,10 +545,23 @@ class PipelineSwitch(PipelineElement):
             config_nr = kwargs[self._sklearn_curr_element]
         elif 'current_element' in kwargs:
             config_nr = kwargs['current_element']
-        if config_nr is not None:
+        if config_nr is None or not isinstance(config_nr, tuple):
+            raise ValueError('current_element must be of type Tuple')
+        else:
             self.current_element = config_nr
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
-            self.base_element.set_params(**config)
+            # remove name
+            unnamed_config = {}
+            for config_key, config_value in config.items():
+                key_split = config_key.split('__')
+                unnamed_config[''.join(key_split[1::])] = config_value
+            self.base_element.set_params(**unnamed_config)
+
+    def prettify_config_output(self, config_name, config_value):
+        if isinstance(config_value, tuple):
+            return str(self.pipeline_element_configurations[config_value[0]][config_value[1]])
+        else:
+            return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
 
 
 class PipelineFusion(PipelineElement):
@@ -523,15 +580,15 @@ class PipelineFusion(PipelineElement):
             tmp_config_grid = []
             # for each configuration
             for config in item.config_grid:
-                # for each configuration item:
-                # if config is no dictionary -> unpack it
-                if not isinstance(config, dict):
-                    tmp_dict = {}
-                    for c_item in config:
-                        tmp_dict.update(c_item)
-                else:
-                    tmp_dict = dict(config)
-                tmp_config = dict(tmp_dict)
+                # # for each configuration item:
+                # # if config is no dictionary -> unpack it
+                # if not isinstance(config, dict):
+                #     tmp_dict = {}
+                #     for c_item in config:
+                #         tmp_dict.update(c_item)
+                # else:
+                tmp_dict = dict(config)
+                tmp_config = dict(config)
                 for key, element in tmp_config.items():
                     # update name to be referable to pipeline
                     tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
@@ -581,14 +638,16 @@ class PipelineFusion(PipelineElement):
         # Todo: strategy for concatenating data from different pipes
         predicted_data = None
         for name, element in self.pipe_elements.items():
-            element_transform = element.transform(data)
+            element_transform = element.predict(data)
             predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
         return predicted_data
 
     def transform(self, data):
         transformed_data = None
         for name, element in self.pipe_elements.items():
-            element_transform = element.transform(data)
+            # if it is a stacked pipeline then we want predict
+            # element_transform = element.transform(data)
+            element_transform = element.predict(data)
             transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
         return transformed_data
 
@@ -606,7 +665,9 @@ class PipelineFusion(PipelineElement):
 
     def score(self, X_test, y_test):
         # Todo: invent strategy for this ?
-        pass
+        predicted = np.mean(self.predict(X_test))
+        return accuracy_score(y_test, predicted)
+
 
 
 
