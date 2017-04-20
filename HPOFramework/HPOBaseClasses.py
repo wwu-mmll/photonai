@@ -303,10 +303,11 @@ class TestPipeline(object):
         train_score_mean = np.mean([l[0] for l in scores])
         test_score_mean = np.mean([l[1] for l in scores])
         performance_tuple = (train_score_mean, test_score_mean)
+        self.cv_results = self.reorder_results(self.cv_results)
         self.cv_results['parameters'] = scores[0][5]
         self.cv_results['n_test_samples'] = [l[2] for l in scores]
         self.cv_results['scoring_time'] = np.sum([l[3] for l in scores])
-        return performance_tuple, self.reorder_results(self.cv_results)
+        return performance_tuple, self.cv_results
 
     def score(self, estimator, X, y_true):
         default_score = estimator.score(X, y_true)
@@ -323,15 +324,16 @@ class TestPipeline(object):
         return default_score
 
     def reorder_results(self,results):
-        for key in results.items():
-            if len(results[key]):
-                continue
-            else:
-                for i in range(len(results[key])):
-                    if (i%2) == 2:
-                        results[key]['train'] = results[key][i]
-                
-        for i in range()
+        r_results = {}
+        for key, value in results.items():
+            for i in range(len(results[key])):
+                if (i%2) == 0:
+                    train = results[key][i]
+                else:
+                    test = results[key][i]
+            r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
+        return r_results
+
 
 
 class Scorer(object):
