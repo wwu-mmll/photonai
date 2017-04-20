@@ -12,9 +12,6 @@ from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
 from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.metrics import accuracy_score
-from sklearn import metrics as sklmetrics
-
 
 class Hyperpipe(BaseEstimator):
 
@@ -317,15 +314,45 @@ class TestPipeline(object):
         scores = []
         try:
             for metric in metrics:
-                if hasattr(sklmetrics, metric):
-                    scorer = getattr(sklmetrics, metric)
-                else:
-                    raise AttributeError(metric, ' is not a valid '
-                                                 'sklearn metric.')
+                scorer = Scorer.create(metric)
                 scores.append(scorer(y_true, y_pred))
             return scores
         except TypeError:
             return estimator.score(X, y_true)
+
+
+class Scorer(object):
+
+    ELEMENT_DICTIONARY = {
+        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef'),
+        'confusion_matrix': ('sklearn.metrics', 'confusion_matrix'),
+        'accuracy': ('sklearn.metrics', 'accuracy_score')
+    }
+
+    def __init__(self, estimator, X, y_true, metrics):
+        self.estimator = estimator
+        self.X = X
+        self.y_true = y_true
+        self.metrics = metrics
+
+    @classmethod
+    def create(cls, metric):
+        if metric in Scorer.ELEMENT_DICTIONARY:
+            try:
+                desired_class_info = Scorer.ELEMENT_DICTIONARY[metric]
+                desired_class_home = desired_class_info[0]
+                desired_class_name = desired_class_info[1]
+                imported_module = __import__(desired_class_home, globals(),
+                                         locals(), desired_class_name, 0)
+                desired_class = getattr(imported_module, desired_class_name)
+                scoring_method = desired_class()
+                return scoring_method
+            except AttributeError as ae:
+                raise ValueError('Could not find according class:',
+                                 PipelineElement.ELEMENT_DICTIONARY[metric])
+        else:
+            raise NameError('Metric not supported right now:', metric)
+
 
 #
 # T = TypeVar('T')
