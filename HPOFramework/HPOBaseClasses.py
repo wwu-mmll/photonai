@@ -13,7 +13,7 @@ from sklearn.svm import SVC
 from sklearn.linear_model import LogisticRegression
 from sklearn.pipeline import Pipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.metrics import classification, regression
+from sklearn import metrics as sklmetrics
 from TFLearnPipelineWrapper.WrapperModel import WrapperModel
 
 from HPOFramework.HPOptimizers import GridSearchOptimizer
@@ -290,14 +290,8 @@ class TestPipeline(object):
         scores = []
         try:
             for metric in metrics:
-                if hasattr(classification, (metric+'_score')):
-                    scorer = getattr(classification, (metric+'_score'))
-                elif hasattr(regression, (metric+'_error')):
-                    scorer = getattr(regression, (metric+'_error'))
-                # Todo: Handles r2 which doesn't have "_score"
-                # postfix. This is ugly. Any suggestions?
-                elif hasattr(regression, (metric+'_score')):
-                    scorer = getattr(regression, (metric+'_score'))
+                if hasattr(sklmetrics, metric):
+                    scorer = getattr(sklmetrics, metric)
                 else:
                     raise AttributeError(metric, ' is not a valid '
                                                  'sklearn metric.')
