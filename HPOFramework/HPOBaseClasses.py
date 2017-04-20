@@ -89,13 +89,10 @@ class Hyperpipe(BaseEstimator):
         # Todo: use self.groups?
         self.cv_iter = list(self.cv.split(self.X, self.y))
 
-        # give the optimizer the chance to inform about elements
-        # only for local search
-        if self.local_search:
-            self.optimizer.prepare(self.pipeline_elements)
-
         # optimize: iterate through configs and save results
         if self.local_search:
+            # give the optimizer the chance to inform about elements
+            self.optimizer.prepare(self.pipeline_elements)
             self.config_history = []
             self.performance_history = []
 
@@ -271,7 +268,6 @@ class PipelineElement(BaseEstimator):
     # from TFLearnPipelineWrapper.WrapperModel import WrapperModel
     # from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
     # from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
-
     ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
                           'svc': ('sklearn.svm', 'SVC'),
                           'logistic': ('sklearn.linear_model', 'LogisticRegression'),
@@ -485,7 +481,11 @@ class PipelineSwitch(PipelineElement):
 
     def prettify_config_output(self, config_name, config_value):
         if isinstance(config_value, tuple):
-            return str(self.pipeline_element_configurations[config_value[0]][config_value[1]])
+            output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
+            if not output:
+                return self.pipeline_element_list[config_value[0]].name
+            else:
+                return str(output)
         else:
             return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
 

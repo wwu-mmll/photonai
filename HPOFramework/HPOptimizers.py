@@ -1,5 +1,5 @@
 
-from itertools import product
+from itertools import product, tee
 import numpy as np
 import datetime
 
@@ -17,6 +17,7 @@ class GridSearchOptimizer(object):
         for p_element in self.pipeline_elements:
             possible_configurations.append(p_element.config_grid)
         self.param_grid = product(*possible_configurations)
+        self.next_config = self.next_config_generator()
 
     def next_config_generator(self):
         for parameters in self.param_grid:
@@ -36,11 +37,8 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         self.k = k
 
     def prepare(self, pipeline_elements):
-        self.pipeline_elements = pipeline_elements
-        possible_configurations = []
-        for p_element in self.pipeline_elements:
-            possible_configurations.append(p_element.config_grid)
-        self.param_grid = list(product(*possible_configurations))
+        super(RandomGridSearchOptimizer, self).prepare(pipeline_elements)
+        self.param_grid = list(self.param_grid)
         # create random chaos in list
         np.random.shuffle(self.param_grid)
         if self.k is not None:
