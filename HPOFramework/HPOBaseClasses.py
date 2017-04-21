@@ -243,6 +243,8 @@ class TestPipeline(object):
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
             scores.append(fit_and_predict_score)
+            print('Data: \n')
+            print(X)
         train_score_mean = np.mean([l[0] for l in scores])
         test_score_mean = np.mean([l[1] for l in scores])
         performance_tuple = (train_score_mean, test_score_mean)
