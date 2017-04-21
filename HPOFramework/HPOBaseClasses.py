@@ -147,8 +147,8 @@ class Hyperpipe(BaseEstimator):
                 print('--------------------------------------------------')
 
                 # save hyperpipe results to csv
-                #self.write_results(self.performance_history,
-                #                   'hyperpipe_results.csv')
+                self.write_results(self.performance_history_list,
+                                   'hyperpipe_results.csv')
                 # save best model results to csv
 
 
@@ -215,12 +215,26 @@ class Hyperpipe(BaseEstimator):
         cwd = os.getcwd()
         with open(cwd + "/" + results_filename, 'w') as csvfile:
             keys = list(results_list[0].keys())
-            writer = csv.writer(csvfile)
-            writer.writerow(keys)
+            keys_w_space = []
+            train_test = []
+            for i in range(len(keys)*2):
+                if (i % 2) == 0:
+                    keys_w_space.append(keys[int(i/2)])
+                    train_test.append('train')
+                else:
+                    keys_w_space.append('')
+                    train_test.append('test')
+            writer = csv.writer(csvfile, delimiter='\t')
+            writer.writerow(keys_w_space)
+            writer.writerow(train_test)
         for l in range(len(results_list)):
             with open(cwd + "/" + results_filename, 'a') as csvfile:
-                writer = csv.DictWriter(csvfile, fieldnames=keys)
-                writer.writerow(results_list[l])
+                write_this_to_csv = []
+                for key1, value1 in results_list[l].items():
+                    for key2, value2 in results_list[l][key1].items():
+                        write_this_to_csv.append(value2)
+                writer = csv.writer(csvfile, delimiter='\t')
+                writer.writerow(write_this_to_csv)
 
     def merge_dicts(self, list_of_dicts):
         d = OrderedDict()
