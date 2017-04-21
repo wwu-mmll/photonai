@@ -291,7 +291,7 @@ class TestPipeline(object):
         self.fit_params = fit_params
         self.error_score = error_score
 
-        self.cv_results = {}
+        self.cv_results = OrderedDict()
         self.labels = []
         self.predictions = []
 
@@ -342,7 +342,7 @@ class TestPipeline(object):
         return default_score
 
     def reorder_results(self,results):
-        r_results = {}
+        r_results = OrderedDict()
         for key, value in results.items():
             # train and test should always be alternated
             # put first element under train, second under test and so forth
@@ -360,9 +360,10 @@ class TestPipeline(object):
                 r_results[key] = {'train': train, 'test': test}
             else:
                 r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
-                r_results[key + '_folds'] = {'train': train, 'test': test}
                 r_results[key + '_std'] = {'train': np.std(train),
-                                             'test': np.std(test)}
+                                           'test': np.std(test)}
+                r_results[key + '_folds'] = {'train': train, 'test': test}
+
         return r_results
 
 
