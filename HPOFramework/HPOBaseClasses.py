@@ -101,13 +101,13 @@ class Hyperpipe(BaseEstimator):
         # optimize: iterate through configs and save results
         if self.local_search:
             self.config_history = []
-            self.performance_history = []
-
+            self.performance_history_list = []
+            self.parameter_history = []
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config, self.metrics)
                 pprint(self.optimize_printing(specific_config))
-                config_score, results_cv = hp.calculate_cv_score(
-                    self.X, self.y, self.cv_iter)
+                results_cv, specific_parameters = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
+                config_score = (results_cv['score']['train'],results_cv['score']['test'])
                 # 3. inform optimizer about performance
                 self.optimizer.evaluate_recent_performance(specific_config, config_score)
                 # inform user and log
@@ -118,14 +118,21 @@ class Hyperpipe(BaseEstimator):
                 # print('--------------------------------------------------------------------')
                 print('Performance History: ', results_cv['score'])
                 self.config_history.append(specific_config)
-                self.performance_history.append(results_cv)
+                self.performance_history_list.append(results_cv)
+                self.parameter_history.append(specific_parameters)
 
             # afterwards find best result
-            if len(self.performance_history) > 0:
+            # merge list of dicts to dict with lists under keys
+            self.performance_history = self.merge_dicts(self.performance_history_list)
+
+            # Todo: Do better error checking
+            if len(self.performance_history['score']['test']) > 0:
                 best_config_nr = np.argmax([t['score'] for t
                                             in self.performance_history])
+                best_config_nr = np.argmax(self.performance_history['score']['test'])
+
                 self.best_config = self.config_history[best_config_nr]
-                self.best_performance = self.performance_history[
+                self.best_performance = self.performance_history_list[
                     best_config_nr]
                 # ... and create optimal pipeline
                 # Todo: manage optimum pipe stuff
@@ -135,15 +142,10 @@ class Hyperpipe(BaseEstimator):
                 # inform user
                 print('--------------------------------------------------')
                 print('Best config: ', self.best_config)
-                print('Performance: Training:%7.4f ('
-                      'SD =%7.4f), Test:'
-                      '%7.4f (SD =%7.4f)' %
-                      (self.best_performance['train_scores_mean'],
-                       self.best_performance['train_scores_std'],
-                       self.best_performance['test_scores_mean'],
-                       self.best_performance['test_scores_std']))
+                print('Performance:\n')
+                print(self.best_performance)
                 print('Number of tested configurations:',
-                      len(self.performance_history))
+                      len(self.performance_history_list))
                 print('--------------------------------------------------')
 
                 # save hyperpipe results to csv
@@ -151,10 +153,6 @@ class Hyperpipe(BaseEstimator):
                                    'hyperpipe_results.csv')
                 # save best model results to csv
 
-                # convert dicts to one dict with lists as values
-                # Todo: not sure if this is useful
-                #self.performance_history = self.merge_dicts(
-                # self.performance_history)
 
             else:
                 raise BaseException('Optimizer delivered no configurations to test')
@@ -229,7 +227,8 @@ class Hyperpipe(BaseEstimator):
     def merge_dicts(self, list_of_dicts):
         d = OrderedDict()
         for k in list_of_dicts[0].keys():
-            d[k] = list(d[k] for d in list_of_dicts)
+            d[k] = {'train': list(d[k]['train'] for d in list_of_dicts),
+                    'test': list(d[k]['test'] for d in list_of_dicts)}
         return d
 
     def optimize_printing(self, config):
@@ -285,8 +284,9 @@ class TestPipeline(object):
         self.predictions = []
 
     def calculate_cv_score(self, X, y, cv_iter):
-        scores = []
-
+        cv_scores = []
+        n_train = []
+        n_test = []
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
             fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
@@ -296,21 +296,27 @@ class TestPipeline(object):
                                                    return_n_test_samples=True,
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
-            scores.append(fit_and_predict_score)
+            n_train.append(len(train))
+            n_test.append(len(test))
+
+            cv_scores.append(fit_and_predict_score)
 
         # Todo: implement get_full_model_specification() and pass to
         # results
-        train_score_mean = np.mean([l[0] for l in scores])
-        test_score_mean = np.mean([l[1] for l in scores])
-        performance_tuple = (train_score_mean, test_score_mean)
+        # reorder results because now train and test simply alternates
+        # in a list
+        # reorder_results() puts the results under keys "train" and "test"
+        # it also calculates mean of metrics
         self.cv_results = self.reorder_results(self.cv_results)
-        self.cv_results['parameters'] = scores[0][5]
-        self.cv_results['n_test_samples'] = [l[2] for l in scores]
-        self.cv_results['scoring_time'] = np.sum([l[3] for l in scores])
-        return performance_tuple, self.cv_results
+        self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
+        parameters = cv_scores[0][5]
+        #self.cv_results['scoring_time'] = np.sum([l[3] for l in cv_scores])
+        return self.cv_results, parameters
 
     def score(self, estimator, X, y_true):
         default_score = estimator.score(X, y_true)
+        # use cv_results as class variable to get results out of
+        # _predict_and_score() method
         self.cv_results.setdefault('score', []).append(default_score)
         y_pred = self.pipe.predict(X)
         self.predictions.append(y_pred)
@@ -343,6 +349,8 @@ class TestPipeline(object):
             else:
                 r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
                 r_results[key + '_folds'] = {'train': train, 'test': test}
+                r_results[key + '_std'] = {'train': np.std(train),
+                                             'test': np.std(test)}
         return r_results
 
 
