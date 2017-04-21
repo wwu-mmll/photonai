@@ -319,19 +319,30 @@ class TestPipeline(object):
             for metric in self.metrics:
                 scorer = Scorer.create(metric)
                 # use setdefault method of dictionary to create list under
-                # specific key in case no list exists
+                # specific key even in case no list exists
                 self.cv_results.setdefault(metric, []).append(scorer(y_true, y_pred))
         return default_score
 
     def reorder_results(self,results):
         r_results = {}
         for key, value in results.items():
+            # train and test should always be alternated
+            # put first element under train, second under test and so forth
+            train = []
+            test = []
             for i in range(len(results[key])):
                 if (i%2) == 0:
-                    train = results[key][i]
+                    train.append(results[key][i])
                 else:
-                    test = results[key][i]
-            r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
+                    test.append(results[key][i])
+            # again, I know this is ugly. Any suggestions? Only confusion
+            # matrix behaves differently because we don't want to calculate
+            # the mean of it
+            if key == 'confusion_matrix':
+                r_results[key] = {'train': train, 'test': test}
+            else:
+                r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
+                r_results[key + '_folds'] = {'train': train, 'test': test}
         return r_results
 
 
