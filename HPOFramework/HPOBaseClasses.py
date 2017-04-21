@@ -321,7 +321,7 @@ class TestPipeline(object):
         # it also calculates mean of metrics
         self.cv_results = self.reorder_results(self.cv_results)
         self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
-        parameters = {'config': cv_scores[0][5], 'parameters':self.pipe.get_params()}
+        parameters = self.pipe.get_params()
         #self.cv_results['scoring_time'] = np.sum([l[3] for l in cv_scores])
         return self.cv_results, parameters
 
