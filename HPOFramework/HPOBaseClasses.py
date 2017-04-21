@@ -356,9 +356,19 @@ class TestPipeline(object):
 class Scorer(object):
 
     ELEMENT_DICTIONARY = {
+        # Classification
         'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef'),
         'confusion_matrix': ('sklearn.metrics', 'confusion_matrix'),
-        'accuracy': ('sklearn.metrics', 'accuracy_score')
+        'accuracy': ('sklearn.metrics', 'accuracy_score'),
+        'f1': ('sklearn.metrics', 'f1_score'),
+        'hamming_loss': ('sklearn.metrics', 'hamming_loss'),
+        'log_loss': ('sklearn.metrics', 'log_loss'),
+        'precision': ('sklearn.metrics', 'precision_score'),
+        # Regression
+        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error'),
+        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
+        'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
+        'r2': ('sklearn.metrics', 'r2_score')
     }
 
     def __init__(self, estimator, X, y_true, metrics):
