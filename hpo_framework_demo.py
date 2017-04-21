@@ -41,8 +41,8 @@ print(data_object.covariates['age'])
 # 02. keras neuronal net  OR support vector classifier OR logistic regression
 cv_object = KFold(n_splits=3)
 
-manager = Hyperpipe('god', cv_object, metrics=['accuracy_score',
-                                               'f1_score'])
+manager = Hyperpipe('god', cv_object, metrics=['accuracy',
+                                               'confusion_matrix'])
 
 # add a pca analysis, specify hyperparameters to test
 manager += PipelineElement.create('pca', {'n_components': [None, 10, 20], 'whiten': [True, False]},
