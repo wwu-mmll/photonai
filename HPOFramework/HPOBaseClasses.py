@@ -127,8 +127,6 @@ class Hyperpipe(BaseEstimator):
 
             # Todo: Do better error checking
             if len(self.performance_history['score']['test']) > 0:
-                best_config_nr = np.argmax([t['score'] for t
-                                            in self.performance_history])
                 best_config_nr = np.argmax(self.performance_history['score']['test'])
 
                 self.best_config = self.config_history[best_config_nr]
@@ -149,8 +147,8 @@ class Hyperpipe(BaseEstimator):
                 print('--------------------------------------------------')
 
                 # save hyperpipe results to csv
-                self.write_results(self.performance_history,
-                                   'hyperpipe_results.csv')
+                #self.write_results(self.performance_history,
+                #                   'hyperpipe_results.csv')
                 # save best model results to csv
 
 
