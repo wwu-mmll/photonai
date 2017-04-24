@@ -149,6 +149,7 @@ class Hyperpipe(BaseEstimator):
                 # save hyperpipe results to csv
                 self.write_results(self.performance_history_list,
                                    'hyperpipe_results.csv')
+                self.write_config_to_csv(self.config_history, 'config_history.csv')
                 # save best model results to csv
 
 
@@ -211,9 +212,9 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
 
-    def write_results(self, results_list, results_filename):
+    def write_results(self, results_list, filename):
         cwd = os.getcwd()
-        with open(cwd + "/" + results_filename, 'w') as csvfile:
+        with open(cwd + "/" + filename, 'w') as csvfile:
             keys = list(results_list[0].keys())
             keys_w_space = []
             train_test = []
@@ -228,13 +229,24 @@ class Hyperpipe(BaseEstimator):
             writer.writerow(keys_w_space)
             writer.writerow(train_test)
         for l in range(len(results_list)):
-            with open(cwd + "/" + results_filename, 'a') as csvfile:
+            with open(cwd + "/" + filename, 'a') as csvfile:
                 write_this_to_csv = []
                 for key1, value1 in results_list[l].items():
                     for key2, value2 in results_list[l][key1].items():
                         write_this_to_csv.append(value2)
                 writer = csv.writer(csvfile, delimiter='\t')
                 writer.writerow(write_this_to_csv)
+
+    def write_config_to_csv(self, config_history, filename):
+        cwd = os.getcwd()
+        with open(cwd + "/" + filename, 'w') as csvfile:
+            keys = list(config_history[0].keys())
+            writer = csv.writer(csvfile, delimiter='\t')
+            writer.writerow(keys)
+            writer = csv.DictWriter(csvfile, fieldnames=keys)
+            for i in range(len(config_history)):
+                writer.writerow(config_history[i])
+
 
     def merge_dicts(self, list_of_dicts):
         d = OrderedDict()

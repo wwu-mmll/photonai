@@ -195,3 +195,4 @@ tmtagsHistory
 *.sublime-workspace
 .bundle
 /hyperpipe_results.csv
+/config_history.csv
