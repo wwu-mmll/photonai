@@ -101,6 +101,7 @@ class Hyperpipe(BaseEstimator):
 
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config)
+                print(self.name)
                 pprint(self.optimize_printing(specific_config))
                 config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
                 # 3. inform optimizer about performance
@@ -248,8 +249,8 @@ class TestPipeline(object):
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
             scores.append(fit_and_predict_score)
-            print('Data: \n')
-            print(X)
+        print('Data: \n')
+        print(np.reshape(X,(1, X.shape[0])))
         train_score_mean = np.mean([l[0] for l in scores])
         test_score_mean = np.mean([l[1] for l in scores])
         performance_tuple = (train_score_mean, test_score_mean)
