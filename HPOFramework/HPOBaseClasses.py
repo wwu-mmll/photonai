@@ -127,8 +127,8 @@ class Hyperpipe(BaseEstimator):
                 print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
                 print('Number of tested configurations:', len(self.performance_history))
                 print('--------------------------------------------------')
-            else:
-                raise BaseException('Optimizer delivered no configurations to test')
+            # else:
+                # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
         else:
             self.pipe.fit(self.X, self.y, **fit_params)
@@ -169,8 +169,13 @@ class Hyperpipe(BaseEstimator):
         for item in self.pipeline_elements:
             # pipeline_steps.append((item.name, item.base_element))
             pipeline_steps.append((item.name, item))
-            all_hyperparams[item.name] = item.hyperparameters
-            all_config_grids.append(item.config_grid)
+            include_params = True
+            if isinstance(item, Hyperpipe):
+                if item.local_search:
+                    include_params = False
+            if include_params:
+                all_hyperparams[item.name] = item.hyperparameters
+                all_config_grids.append(item.config_grid)
         self._hyperparameters = all_hyperparams
         if len(self.pipeline_elements) == 1:
             self._config_grid = all_config_grids[0]
