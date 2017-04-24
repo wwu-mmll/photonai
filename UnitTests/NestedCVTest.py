@@ -23,10 +23,10 @@ manager = Hyperpipe('god', cv_object, optimizer='grid_search')
 global_optimizer = manager.optimizer
 
 # make surface pipeline
-pipe_1 = Hyperpipe('hp1', cv_object, optimizer='grid_search', local_search=True)
+pipe_1 = Hyperpipe('pipe1', cv_object, optimizer='grid_search', local_search=True)
 pipe_1 += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
-pipe_2 = Hyperpipe('hp2', cv_object, optimizer='grid_search', local_search=True)
+pipe_2 = Hyperpipe('pipe2', cv_object, optimizer='grid_search', local_search=True)
 pipe_2 += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 feature_union = PipelineFusion('nested_pipe', [pipe_1, pipe_2])
