@@ -147,7 +147,7 @@ class Hyperpipe(BaseEstimator):
                 print('--------------------------------------------------')
 
                 # save hyperpipe results to csv
-                self.write_results(self.performance_history_list,
+                self.write_results(self.performance_history_list, self.config_history,
                                    'hyperpipe_results.csv')
                 self.write_config_to_csv(self.config_history, 'config_history.csv')
                 # save best model results to csv
@@ -212,7 +212,7 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
 
-    def write_results(self, results_list, filename):
+    def write_results(self, results_list, config_history, filename):
         cwd = os.getcwd()
         with open(cwd + "/" + filename, 'w') as csvfile:
             keys = list(results_list[0].keys())
@@ -225,6 +225,8 @@ class Hyperpipe(BaseEstimator):
                 else:
                     keys_w_space.append('')
                     train_test.append('test')
+            config_keys = list(config_history[0].keys())
+            keys_w_space = keys_w_space + config_keys
             writer = csv.writer(csvfile, delimiter='\t')
             writer.writerow(keys_w_space)
             writer.writerow(train_test)
@@ -234,6 +236,8 @@ class Hyperpipe(BaseEstimator):
                 for key1, value1 in results_list[l].items():
                     for key2, value2 in results_list[l][key1].items():
                         write_this_to_csv.append(value2)
+                for key,value in config_history[l].items():
+                    write_this_to_csv.append(value)
                 writer = csv.writer(csvfile, delimiter='\t')
                 writer.writerow(write_this_to_csv)
 
