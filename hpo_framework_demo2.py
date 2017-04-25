@@ -39,12 +39,12 @@ manager = Hyperpipe('god', cv_object,
 global_optimizer = manager.optimizer
 
 # make surface pipeline
-surface_pipe = Hyperpipe('surface', cv_object, optimizer=global_optimizer, local_search=False, X=surface.features.values, y=np.ravel(surface.targets.values))
+surface_pipe = Hyperpipe('surface', cv_object, optimizer=global_optimizer, local_search=True, X=surface.features.values, y=np.ravel(surface.targets.values))
 surface_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
 surface_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 # make thickness pipeline
-thickness_pipe = Hyperpipe('thickness', cv_object, optimizer=global_optimizer, local_search=False, X=thickness.features.values, y=np.ravel(thickness.targets.values))
+thickness_pipe = Hyperpipe('thickness', cv_object, optimizer=global_optimizer, local_search=True, X=thickness.features.values, y=np.ravel(thickness.targets.values))
 thickness_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
 thickness_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 

@@ -13,11 +13,15 @@ class GridSearchOptimizer(object):
 
     def prepare(self, pipeline_elements):
         self.pipeline_elements = pipeline_elements
+        self.next_config = self.next_config_generator()
         possible_configurations = []
         for p_element in self.pipeline_elements:
-            possible_configurations.append(p_element.config_grid)
-        self.param_grid = product(*possible_configurations)
-        self.next_config = self.next_config_generator()
+            if p_element.config_grid:
+                possible_configurations.append(p_element.config_grid)
+        if len(possible_configurations) == 1:
+            self.param_grid = [[i] for i in possible_configurations[0]]
+        else:
+            self.param_grid = product(*possible_configurations)
 
     def next_config_generator(self):
         for parameters in self.param_grid:
@@ -29,6 +33,7 @@ class GridSearchOptimizer(object):
     def evaluate_recent_performance(self, config, performance):
         # influence return value of next_config
         pass
+
 
 class RandomGridSearchOptimizer(GridSearchOptimizer):
 
