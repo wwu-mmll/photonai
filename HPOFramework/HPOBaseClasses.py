@@ -2,6 +2,9 @@
 import numpy as np
 from pprint import pprint
 from itertools import product
+import csv
+from collections import OrderedDict
+import os
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
@@ -11,7 +14,6 @@ from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptim
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.metrics import accuracy_score
 
-
 class Hyperpipe(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
@@ -20,7 +22,7 @@ class Hyperpipe(BaseEstimator):
 
     def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
-                 config=None, X=None, y=None):
+                 config=None, X=None, y=None, metrics=None):
 
         self.name = name
         self.cv = cv_object
@@ -31,12 +33,14 @@ class Hyperpipe(BaseEstimator):
 
         self.config_history = []
         self.performance_history = []
+        self.best_config = []
+        self.best_performance = []
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
         self.pipe = None
         self.optimum_pipe = None
-
+        self.metrics = metrics
         # Todo: this might be a case for sanity checking
         self.X = X
         self.y = y
@@ -94,41 +98,62 @@ class Hyperpipe(BaseEstimator):
             # give the optimizer the chance to inform about elements
             self.optimizer.prepare(self.pipeline_elements)
             self.config_history = []
-            self.performance_history = []
-
+            self.performance_history_list = []
+            self.parameter_history = []
             for specific_config in self.optimizer.next_config:
-                hp = TestPipeline(self.pipe, specific_config)
+
+                hp = TestPipeline(self.pipe, specific_config, self.metrics)
                 print('******************************')
                 print('optimizing of:', self.name)
                 pprint(self.optimize_printing(specific_config))
-                config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
+                results_cv, specific_parameters = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
+                config_score = (results_cv['score']['train'],results_cv['score']['test'])
                 # 3. inform optimizer about performance
                 self.optimizer.evaluate_recent_performance(specific_config, config_score)
                 # inform user and log
-                print('Training - %7.4f, Test - %7.4f' % (config_score[0], config_score[1]))
-                print('--------------------------------------------------------------------')
+                # print('Performance: Training -%7.4f , Test -'
+                #       '%7.4f' %
+                #       (results_cv['train_scores_mean'],
+                #        results_cv['test_scores_mean']))
+                # print('--------------------------------------------------------------------')
+                print('Performance History: ', results_cv['score'])
                 self.config_history.append(specific_config)
-                self.performance_history.append(config_score)
+                self.performance_history_list.append(results_cv)
+                self.parameter_history.append(specific_parameters)
 
             # afterwards find best result
-            if len(self.performance_history) > 0:
-                best_config_nr = np.argmax([t[1] for t in self.performance_history])
-                best_config = self.config_history[best_config_nr]
-                best_performance = self.performance_history[best_config_nr]
+            # merge list of dicts to dict with lists under keys
+            self.performance_history = self.merge_dicts(self.performance_history_list)
+
+            # Todo: Do better error checking
+            if len(self.performance_history['score']['test']) > 0:
+                best_config_nr = np.argmax(self.performance_history['score']['test'])
+
+                self.best_config = self.config_history[best_config_nr]
+                self.best_performance = self.performance_history_list[
+                    best_config_nr]
                 # ... and create optimal pipeline
                 # Todo: manage optimum pipe stuff
                 self.optimum_pipe = self.pipe
-                self.optimum_pipe.set_params(**best_config)
+                self.optimum_pipe.set_params(**self.best_config)
 
                 # inform user
                 print('--------------------------------------------------')
-                print('Best config: ', best_config)
-                print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
-                print('Number of tested configurations:', len(self.performance_history))
+                print('Best config: ', self.best_config)
+                print('Performance:\n')
+                print(self.best_performance)
+                print('Number of tested configurations:',
+                      len(self.performance_history_list))
                 print('--------------------------------------------------')
+
             # else:
                 # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
+                # save hyperpipe results to csv
+                self.write_results(self.performance_history_list, self.config_history,
+                                   'hyperpipe_results.csv')
+                self.write_config_to_csv(self.config_history, 'config_history.csv')
+                # save best model results to csv
         else:
             self.pipe.fit(self.X, self.y, **fit_params)
 
@@ -186,6 +211,53 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
 
+    def write_results(self, results_list, config_history, filename):
+        cwd = os.getcwd()
+        with open(cwd + "/" + filename, 'w') as csvfile:
+            keys = list(results_list[0].keys())
+            keys_w_space = []
+            train_test = []
+            for i in range(len(keys)*2):
+                if (i % 2) == 0:
+                    keys_w_space.append(keys[int(i/2)])
+                    train_test.append('train')
+                else:
+                    keys_w_space.append('')
+                    train_test.append('test')
+            config_keys = list(config_history[0].keys())
+            keys_w_space = keys_w_space + config_keys
+            writer = csv.writer(csvfile, delimiter='\t')
+            writer.writerow(keys_w_space)
+            writer.writerow(train_test)
+        for l in range(len(results_list)):
+            with open(cwd + "/" + filename, 'a') as csvfile:
+                write_this_to_csv = []
+                for key1, value1 in results_list[l].items():
+                    for key2, value2 in results_list[l][key1].items():
+                        write_this_to_csv.append(value2)
+                for key,value in config_history[l].items():
+                    write_this_to_csv.append(value)
+                writer = csv.writer(csvfile, delimiter='\t')
+                writer.writerow(write_this_to_csv)
+
+    def write_config_to_csv(self, config_history, filename):
+        cwd = os.getcwd()
+        with open(cwd + "/" + filename, 'w') as csvfile:
+            keys = list(config_history[0].keys())
+            writer = csv.writer(csvfile, delimiter='\t')
+            writer.writerow(keys)
+            writer = csv.DictWriter(csvfile, fieldnames=keys)
+            for i in range(len(config_history)):
+                writer.writerow(config_history[i])
+
+
+    def merge_dicts(self, list_of_dicts):
+        d = OrderedDict()
+        for k in list_of_dicts[0].keys():
+            d[k] = {'train': list(d[k]['train'] for d in list_of_dicts),
+                    'test': list(d[k]['test'] for d in list_of_dicts)}
+        return d
+
     def optimize_printing(self, config):
         prettified_config = []
         for el_key, el_value in config.items():
@@ -219,10 +291,12 @@ class Hyperpipe(BaseEstimator):
 
 class TestPipeline(object):
 
-    def __init__(self, pipe, specific_config, verbose=0, fit_params={}, error_score='raise'):
+    def __init__(self, pipe, specific_config, metrics, verbose=0,
+                 fit_params={}, error_score='raise'):
 
         self.params = specific_config
         self.pipe = pipe
+        self.metrics = metrics
         # print(self.params)
 
         # default
@@ -231,8 +305,14 @@ class TestPipeline(object):
         self.fit_params = fit_params
         self.error_score = error_score
 
+        self.cv_results = OrderedDict()
+        self.labels = []
+        self.predictions = []
+
     def calculate_cv_score(self, X, y, cv_iter):
-        scores = []
+        cv_scores = []
+        n_train = []
+        n_test = []
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
             fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
@@ -242,21 +322,106 @@ class TestPipeline(object):
                                                    return_n_test_samples=True,
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
-            scores.append(fit_and_predict_score)
-            # print('Data: \n')
-            # print(np.reshape(X,(1, X.shape[0])))
-        train_score_mean = np.mean([l[0] for l in scores])
-        test_score_mean = np.mean([l[1] for l in scores])
-        performance_tuple = (train_score_mean, test_score_mean)
-        return performance_tuple
+            n_train.append(len(train))
+            n_test.append(len(test))
 
-    def score(self, estimator, X_test, y_test):
-        predicted = self.pipe.predict(X_test)
-        return accuracy_score(y_test, predicted)
-        # return estimator.score(X_test, y_test)
+            cv_scores.append(fit_and_predict_score)
 
-#
-# T = TypeVar('T')
+        # Todo: implement get_full_model_specification() and pass to
+        # results
+        # reorder results because now train and test simply alternates
+        # in a list
+        # reorder_results() puts the results under keys "train" and "test"
+        # it also calculates mean of metrics
+        self.cv_results = self.reorder_results(self.cv_results)
+        self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
+        parameters = self.pipe.get_params()
+        # self.cv_results['scoring_time'] = np.sum([l[3] for l in cv_scores])
+        return self.cv_results, parameters
+
+    def score(self, estimator, X, y_true):
+        default_score = estimator.score(X, y_true)
+        # use cv_results as class variable to get results out of
+        # _predict_and_score() method
+        self.cv_results.setdefault('score', []).append(default_score)
+        y_pred = self.pipe.predict(X)
+        self.predictions.append(y_pred)
+        self.labels.append(y_true)
+        if self.metrics:
+            for metric in self.metrics:
+                scorer = Scorer.create(metric)
+                # use setdefault method of dictionary to create list under
+                # specific key even in case no list exists
+                self.cv_results.setdefault(metric, []).append(scorer(y_true, y_pred))
+        return default_score
+
+    def reorder_results(self,results):
+        r_results = OrderedDict()
+        for key, value in results.items():
+            # train and test should always be alternated
+            # put first element under train, second under test and so forth
+            train = []
+            test = []
+            for i in range(len(results[key])):
+                if (i%2) == 0:
+                    train.append(results[key][i])
+                else:
+                    test.append(results[key][i])
+            # again, I know this is ugly. Any suggestions? Only confusion
+            # matrix behaves differently because we don't want to calculate
+            # the mean of it
+            if key == 'confusion_matrix':
+                r_results[key] = {'train': train, 'test': test}
+            else:
+                r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
+                r_results[key + '_std'] = {'train': np.std(train),
+                                           'test': np.std(test)}
+                r_results[key + '_folds'] = {'train': train, 'test': test}
+
+        return r_results
+
+
+class Scorer(object):
+
+    ELEMENT_DICTIONARY = {
+        # Classification
+        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef'),
+        'confusion_matrix': ('sklearn.metrics', 'confusion_matrix'),
+        'accuracy': ('sklearn.metrics', 'accuracy_score'),
+        'f1': ('sklearn.metrics', 'f1_score'),
+        'hamming_loss': ('sklearn.metrics', 'hamming_loss'),
+        'log_loss': ('sklearn.metrics', 'log_loss'),
+        'precision': ('sklearn.metrics', 'precision_score'),
+        # Regression
+        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error'),
+        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
+        'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
+        'r2': ('sklearn.metrics', 'r2_score')
+    }
+
+    def __init__(self, estimator, X, y_true, metrics):
+        self.estimator = estimator
+        self.X = X
+        self.y_true = y_true
+        self.metrics = metrics
+
+    @classmethod
+    def create(cls, metric):
+        if metric in Scorer.ELEMENT_DICTIONARY:
+            try:
+                desired_class_info = Scorer.ELEMENT_DICTIONARY[metric]
+                desired_class_home = desired_class_info[0]
+                desired_class_name = desired_class_info[1]
+                imported_module = __import__(desired_class_home, globals(),
+                                         locals(), desired_class_name, 0)
+                desired_class = getattr(imported_module, desired_class_name)
+                scoring_method = desired_class
+                return scoring_method
+            except AttributeError as ae:
+                raise ValueError('Could not find according class:',
+                                 PipelineElement.ELEMENT_DICTIONARY[metric])
+        else:
+            raise NameError('Metric not supported right now:', metric)
 
 
 class PipelineElement(BaseEstimator):
