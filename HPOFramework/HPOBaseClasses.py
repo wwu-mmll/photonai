@@ -98,6 +98,8 @@ class Hyperpipe(BaseEstimator):
 
             for specific_config in self.optimizer.next_config:
                 hp = TestPipeline(self.pipe, specific_config)
+                print('******************************')
+                print('optimizing of:', self.name)
                 pprint(self.optimize_printing(specific_config))
                 config_score = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
                 # 3. inform optimizer about performance
@@ -124,8 +126,8 @@ class Hyperpipe(BaseEstimator):
                 print('Performance: Training - %7.4f, Test - %7.4f' % (best_performance[0], best_performance[1]))
                 print('Number of tested configurations:', len(self.performance_history))
                 print('--------------------------------------------------')
-            else:
-                raise BaseException('Optimizer delivered no configurations to test')
+            # else:
+                # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
         else:
             self.pipe.fit(self.X, self.y, **fit_params)
@@ -167,11 +169,12 @@ class Hyperpipe(BaseEstimator):
             # pipeline_steps.append((item.name, item.base_element))
             pipeline_steps.append((item.name, item))
             all_hyperparams[item.name] = item.hyperparameters
-            all_config_grids.append(item.config_grid)
+            if item.config_grid:
+                all_config_grids.append(item.config_grid)
         self._hyperparameters = all_hyperparams
-        if len(self.pipeline_elements) == 1:
+        if len(all_config_grids) == 1:
             self._config_grid = all_config_grids[0]
-        else:
+        elif all_config_grids:
             # unpack list of dictionaries in one dictionary
             tmp_config_grid = list(product(*all_config_grids))
             for config_iterable in tmp_config_grid:
@@ -240,6 +243,8 @@ class TestPipeline(object):
                                                    return_times=True, return_parameters=True,
                                                    error_score=self.error_score)
             scores.append(fit_and_predict_score)
+            # print('Data: \n')
+            # print(np.reshape(X,(1, X.shape[0])))
         train_score_mean = np.mean([l[0] for l in scores])
         test_score_mean = np.mean([l[1] for l in scores])
         performance_tuple = (train_score_mean, test_score_mean)
@@ -503,25 +508,28 @@ class PipelineFusion(PipelineElement):
         for item in pipeline_fusion_elements:
             self.pipe_elements[item.name] = item
             self._hyperparameters[item.name] = item.hyperparameters
-            tmp_config_grid = []
+
             # for each configuration
-            for config in item.config_grid:
-                # # for each configuration item:
-                # # if config is no dictionary -> unpack it
-                # if not isinstance(config, dict):
-                #     tmp_dict = {}
-                #     for c_item in config:
-                #         tmp_dict.update(c_item)
-                # else:
-                tmp_dict = dict(config)
-                tmp_config = dict(config)
-                for key, element in tmp_config.items():
-                    # update name to be referable to pipeline
-                    tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
-                tmp_config_grid.append(tmp_dict)
-            all_config_grids.append(tmp_config_grid)
-        self._config_grid = list(product(*all_config_grids))
-        self._config_grid = [{**i[0], **i[1]} for i in self.config_grid]
+            if not item.local_search:
+                tmp_config_grid = []
+                for config in item.config_grid:
+                    # # for each configuration item:
+                    # # if config is no dictionary -> unpack it
+                    # if not isinstance(config, dict):
+                    #     tmp_dict = {}
+                    #     for c_item in config:
+                    #         tmp_dict.update(c_item)
+                    # else:
+                    tmp_dict = dict(config)
+                    tmp_config = dict(config)
+                    for key, element in tmp_config.items():
+                        # update name to be referable to pipeline
+                        tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
+                    tmp_config_grid.append(tmp_dict)
+                all_config_grids.append(tmp_config_grid)
+        if all_config_grids:
+            self._config_grid = list(product(*all_config_grids))
+            self._config_grid = [{**i[0], **i[1]} for i in self.config_grid]
         # for tmp_item in self._config_grid:
         #     tmp_2 = 1
         # tmp_i = 1
