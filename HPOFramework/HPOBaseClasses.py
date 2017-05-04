@@ -7,11 +7,12 @@ from HPOFramework.ResultLogging import ResultLogging
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
+from sklearn.model_selection import ShuffleSplit
 from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
 from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.metrics import accuracy_score
+# from sklearn.metrics import accuracy_score
 
 
 class Hyperpipe(BaseEstimator):
@@ -22,10 +23,10 @@ class Hyperpipe(BaseEstimator):
 
     def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
-                 config=None, overwrite_x=None, overwrite_y=None, metrics=None):
+                 config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_fitting_cv_object=None, test_size=0.2):
 
         self.name = name
-        self.cv = cv_object
+        self.cv_object = cv_object
         self.cv_iter = None
         self.X = None
         self.y = None
@@ -52,6 +53,7 @@ class Hyperpipe(BaseEstimator):
         self.config_history = []
         self.performance_history_list = []
         self.parameter_history = []
+        self.test_performances = {}
 
         if isinstance(config, dict):
             self.create_pipeline_elements_from_config(config)
@@ -69,6 +71,17 @@ class Hyperpipe(BaseEstimator):
             # Todo: check if correct object
             self.optimizer = optimizer
             self.local_search = local_search
+
+        self.test_size = test_size
+        self.validation_X = None
+        self.validation_y = None
+        self.test_X = None
+        self.test_y = None
+
+        self.cross_validate_hyperparameter_fitting = False
+        self.hyperparameter_fitting_cv_object = hyperparameter_fitting_cv_object
+        if hyperparameter_fitting_cv_object is not None:
+            self.cross_validate_hyperparameter_fitting = True
 
     def __iadd__(self, pipe_element):
         if isinstance(pipe_element, PipelineElement):
@@ -88,9 +101,8 @@ class Hyperpipe(BaseEstimator):
         self.__iadd__(pipe_element)
 
     def fit(self, data, targets, **fit_params):
-        # prepare data ..
 
-        # in case we don't want to use some data from outside the pipeline
+        # in case we want to inject some data from outside the pipeline
         if self.overwrite_x is None and self.overwrite_y is None:
             self.X = data
             self.y = targets
@@ -98,61 +110,77 @@ class Hyperpipe(BaseEstimator):
             self.X = self.overwrite_x
             self.y = self.overwrite_y
 
-        # Todo: use self.groups?
-        self.cv_iter = list(self.cv.split(self.X, self.y))
-
         # optimize: iterate through configs and save results
         if self.local_search:
+
             # give the optimizer the chance to inform about elements
             self.optimizer.prepare(self.pipeline_elements)
             self.config_history = []
             self.performance_history_list = []
             self.parameter_history = []
-            for specific_config in self.optimizer.next_config:
 
-                hp = TestPipeline(self.pipe, specific_config, self.metrics)
-                print('******************************')
-                print('optimizing of:', self.name)
-                pprint(self.optimize_printing(specific_config))
-                results_cv, specific_parameters = hp.calculate_cv_score(self.X, self.y, self.cv_iter)
-                config_score = (results_cv['score']['train'],results_cv['score']['test'])
-                # 3. inform optimizer about performance
-                self.optimizer.evaluate_recent_performance(specific_config, config_score)
-                # inform user and log
-                # print('Performance: Training -%7.4f , Test -'
-                #       '%7.4f' %
-                #       (results_cv['train_scores_mean'],
-                #        results_cv['test_scores_mean']))
-                # print('--------------------------------------------------------------------')
-                print('Performance History: ', results_cv['score'])
-                self.config_history.append(specific_config)
-                self.performance_history_list.append(results_cv)
-                self.parameter_history.append(specific_parameters)
+            if self.cross_validate_hyperparameter_fitting:
+                data_test_cases = self.hyperparameter_fitting_cv_object.split(self.validation_X, self.validation_y)
+            else:
+                train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
+                data_test_cases = train_test_cv_object.split(self.X, self.y)
 
-            # afterwards find best result
-            # merge list of dicts to dict with lists under keys
-            self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
+            for train_indices, test_indices in data_test_cases:
+                validation_X = self.X[train_indices]
+                validation_y = self.y[train_indices]
+                test_X = self.X[test_indices]
+                test_y = self.y[test_indices]
 
-            # Todo: Do better error checking
-            if len(self.performance_history['score']['test']) > 0:
-                best_config_nr = np.argmax(self.performance_history['score']['test'])
+                # do the optimizing
+                for specific_config in self.optimizer.next_config:
 
-                self.best_config = self.config_history[best_config_nr]
-                self.best_performance = self.performance_history_list[
-                    best_config_nr]
-                # ... and create optimal pipeline
-                # Todo: manage optimum pipe stuff
-                self.optimum_pipe = self.pipe
-                self.optimum_pipe.set_params(**self.best_config)
+                    hp = TestPipeline(self.pipe, specific_config, self.metrics)
+                    print('******************************')
+                    print('optimizing of:', self.name)
+                    pprint(self.optimize_printing(specific_config))
+                    results_cv, specific_parameters = hp.calculate_cv_score(validation_X, validation_y, self.cv_object)
+                    config_score = (results_cv['score']['train'], results_cv['score']['test'])
+                    # 3. inform optimizer about performance
+                    self.optimizer.evaluate_recent_performance(specific_config, config_score)
+                    print('Performance History: ', results_cv['score'])
+                    self.config_history.append(specific_config)
+                    self.performance_history_list.append(results_cv)
+                    self.parameter_history.append(specific_parameters)
 
-                # inform user
-                print('--------------------------------------------------')
-                print('Best config: ', self.best_config)
-                print('Performance:\n')
-                print(self.best_performance)
-                print('Number of tested configurations:',
-                      len(self.performance_history_list))
-                print('--------------------------------------------------')
+                # afterwards find best result
+
+                # merge list of dicts to dict with lists under keys
+                self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
+
+                # Todo: Do better error checking
+                if len(self.performance_history['score']['test']) > 0:
+                    best_config_nr = np.argmax(self.performance_history['score']['test'])
+
+                    self.best_config = self.config_history[best_config_nr]
+                    self.best_performance = self.performance_history_list[best_config_nr]
+
+                    # inform user
+                    print('--------------------------------------------------')
+                    print('Best config: ', self.best_config)
+                    print('Performance:\n')
+                    print(self.best_performance)
+                    print('Number of tested configurations:',
+                          len(self.performance_history_list))
+                    print('--------------------------------------------------')
+
+                    # ... and create optimal pipeline
+                    # Todo: manage optimum pipe stuff
+                    # Todo: clone!!!!!!
+                    self.optimum_pipe = self.pipe
+                    self.optimum_pipe.set_params(**self.best_config)
+                    self.optimum_pipe.fit(validation_X, validation_y)
+                    test_predictions = self.optimum_pipe.predict(test_X)
+                    if self.metrics:
+                        for metric in self.metrics:
+                            scorer = Scorer.create(metric)
+                            # use setdefault method of dictionary to create list under
+                            # specific key even in case no list exists
+                            self.test_performances.setdefault(metric, []).append(scorer(test_y, test_predictions))
 
             # else:
                 # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
@@ -162,6 +190,8 @@ class Hyperpipe(BaseEstimator):
                                             'hyperpipe_results.csv')
                 ResultLogging.write_config_to_csv(self.config_history, 'config_history.csv')
                 # save best model results to csv
+
+        ###############################################################################################
         else:
             self.pipe.fit(self.X, self.y, **fit_params)
 
@@ -265,10 +295,12 @@ class TestPipeline(object):
         self.labels = []
         self.predictions = []
 
-    def calculate_cv_score(self, X, y, cv_iter):
+    def calculate_cv_score(self, X, y, cv_object):
+        # very important todo: clone pipeline!!!!!!!!!!!!!!!
         cv_scores = []
         n_train = []
         n_test = []
+        cv_iter = cv_object.split(X, y)
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
             fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
@@ -612,18 +644,15 @@ class PipelineFusion(PipelineElement):
                 for config in item.config_grid:
                     # # for each configuration item:
                     # # if config is no dictionary -> unpack it
-                    # if not isinstance(config, dict):
-                    #     tmp_dict = {}
-                    #     for c_item in config:
-                    #         tmp_dict.update(c_item)
-                    # else:
-                    tmp_dict = dict(config)
-                    tmp_config = dict(config)
-                    for key, element in tmp_config.items():
-                        # update name to be referable to pipeline
-                        tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
-                    tmp_config_grid.append(tmp_dict)
-                all_config_grids.append(tmp_config_grid)
+                    if config:
+                        tmp_dict = dict(config)
+                        tmp_config = dict(config)
+                        for key, element in tmp_config.items():
+                            # update name to be referable to pipeline
+                            tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
+                        tmp_config_grid.append(tmp_dict)
+                if tmp_config_grid:
+                    all_config_grids.append(tmp_config_grid)
         if all_config_grids:
             self._config_grid = list(product(*all_config_grids))
             self._config_grid = [{**i[0], **i[1]} for i in self.config_grid]
