@@ -9,7 +9,7 @@ from sklearn.metrics import classification_report
 from sklearn.pipeline import Pipeline
 from six.moves import cPickle as pickle
 
-from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
+from PipelineWrapper.TFDNNClassifier import TFDNNClassifier
 
 
 data_root = '/home/rleenings/PycharmProjects/TFLearnTest/'

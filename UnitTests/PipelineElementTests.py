@@ -5,7 +5,6 @@ from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe, PipelineSwit
 from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 
-
 class HyperpipeTests(unittest.TestCase):
 
     def setUp(self):
@@ -16,7 +15,7 @@ class HyperpipeTests(unittest.TestCase):
         self.hyperpipe += self.pca_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
 
-    def test_setup(self):
+    def test_init(self):
         self.assertEqual(self.hyperpipe.name, 'god')
         # assure pipeline has two steps, first the pca and second the svc
         self.assertEqual(len(self.hyperpipe.pipe.steps), 2)
@@ -90,8 +89,7 @@ class PipelineElementTests(unittest.TestCase):
                                                                  {'svc__C': 1, 'svc__kernel': 'rbf'},
                                                                  {'svc__C': 1, 'svc__kernel': 'sigmoid'}])
         # hyperparameter dictionary is returned as expected
-        self.assertDictEqual(self.svc_pipe_element.hyperparameters, {'C': [0.1, 1],
-                                        elf.hyperpipe.config_gri                             'kernel': ['rbf', 'sigmoid']})
+        self.assertDictEqual(self.svc_pipe_element.hyperparameters, {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
 
     def test_set_params(self):
         config = {'n_components': 3, 'disabled': False}
@@ -101,6 +99,9 @@ class PipelineElementTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.pca_pipe_element.set_params(**{'any_weird_param': 1})
 
+    def test_fit(self):
+        pass
+
 
 class PipelineSwitchTests(unittest.TestCase):
 
@@ -109,7 +110,7 @@ class PipelineSwitchTests(unittest.TestCase):
         self.lr_pipe_element = PipelineElement.create('logistic', {'C': [0.1, 0.3, 1]})
         self.pipe_switch = PipelineSwitch('switch', [self.svc_pipe_element, self.lr_pipe_element])
 
-    def test_setup(self):
+    def test_init(self):
         self.assertEqual(self.pipe_switch.name, 'switch')
 
     def test_hyperparams(self):
