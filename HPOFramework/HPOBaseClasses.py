@@ -2,9 +2,8 @@
 import numpy as np
 from pprint import pprint
 from itertools import product
-import csv
 from collections import OrderedDict
-import os
+from HPOFramework.ResultLogging import ResultLogging
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
@@ -14,6 +13,7 @@ from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptim
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.metrics import accuracy_score
 
+
 class Hyperpipe(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
@@ -22,7 +22,7 @@ class Hyperpipe(BaseEstimator):
 
     def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
-                 config=None, X=None, y=None, metrics=None):
+                 config=None, overwrite_x=None, overwrite_y=None, metrics=None):
 
         self.name = name
         self.cv = cv_object
@@ -42,11 +42,16 @@ class Hyperpipe(BaseEstimator):
         self.optimum_pipe = None
         self.metrics = metrics
         # Todo: this might be a case for sanity checking
-        self.X = X
-        self.y = y
+        self.overwrite_x = overwrite_x
+        self.overwrite_y = overwrite_y
 
         self._hyperparameters = []
         self._config_grid = []
+
+        # containers for optimization history and logging
+        self.config_history = []
+        self.performance_history_list = []
+        self.parameter_history = []
 
         if isinstance(config, dict):
             self.create_pipeline_elements_from_config(config)
@@ -86,9 +91,12 @@ class Hyperpipe(BaseEstimator):
         # prepare data ..
 
         # in case we don't want to use some data from outside the pipeline
-        if self.X is None and self.y is None:
+        if self.overwrite_x is None and self.overwrite_y is None:
             self.X = data
             self.y = targets
+        else:
+            self.X = self.overwrite_x
+            self.y = self.overwrite_y
 
         # Todo: use self.groups?
         self.cv_iter = list(self.cv.split(self.X, self.y))
@@ -123,7 +131,7 @@ class Hyperpipe(BaseEstimator):
 
             # afterwards find best result
             # merge list of dicts to dict with lists under keys
-            self.performance_history = self.merge_dicts(self.performance_history_list)
+            self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
 
             # Todo: Do better error checking
             if len(self.performance_history['score']['test']) > 0:
@@ -150,9 +158,9 @@ class Hyperpipe(BaseEstimator):
                 # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
                 # save hyperpipe results to csv
-                self.write_results(self.performance_history_list, self.config_history,
-                                   'hyperpipe_results.csv')
-                self.write_config_to_csv(self.config_history, 'config_history.csv')
+                ResultLogging.write_results(self.performance_history_list, self.config_history,
+                                            'hyperpipe_results.csv')
+                ResultLogging.write_config_to_csv(self.config_history, 'config_history.csv')
                 # save best model results to csv
         else:
             self.pipe.fit(self.X, self.y, **fit_params)
@@ -211,53 +219,6 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
 
-    def write_results(self, results_list, config_history, filename):
-        cwd = os.getcwd()
-        with open(cwd + "/" + filename, 'w') as csvfile:
-            keys = list(results_list[0].keys())
-            keys_w_space = []
-            train_test = []
-            for i in range(len(keys)*2):
-                if (i % 2) == 0:
-                    keys_w_space.append(keys[int(i/2)])
-                    train_test.append('train')
-                else:
-                    keys_w_space.append('')
-                    train_test.append('test')
-            config_keys = list(config_history[0].keys())
-            keys_w_space = keys_w_space + config_keys
-            writer = csv.writer(csvfile, delimiter='\t')
-            writer.writerow(keys_w_space)
-            writer.writerow(train_test)
-        for l in range(len(results_list)):
-            with open(cwd + "/" + filename, 'a') as csvfile:
-                write_this_to_csv = []
-                for key1, value1 in results_list[l].items():
-                    for key2, value2 in results_list[l][key1].items():
-                        write_this_to_csv.append(value2)
-                for key,value in config_history[l].items():
-                    write_this_to_csv.append(value)
-                writer = csv.writer(csvfile, delimiter='\t')
-                writer.writerow(write_this_to_csv)
-
-    def write_config_to_csv(self, config_history, filename):
-        cwd = os.getcwd()
-        with open(cwd + "/" + filename, 'w') as csvfile:
-            keys = list(config_history[0].keys())
-            writer = csv.writer(csvfile, delimiter='\t')
-            writer.writerow(keys)
-            writer = csv.DictWriter(csvfile, fieldnames=keys)
-            for i in range(len(config_history)):
-                writer.writerow(config_history[i])
-
-
-    def merge_dicts(self, list_of_dicts):
-        d = OrderedDict()
-        for k in list_of_dicts[0].keys():
-            d[k] = {'train': list(d[k]['train'] for d in list_of_dicts),
-                    'test': list(d[k]['test'] for d in list_of_dicts)}
-        return d
-
     def optimize_printing(self, config):
         prettified_config = []
         for el_key, el_value in config.items():
@@ -282,11 +243,6 @@ class Hyperpipe(BaseEstimator):
     def create_pipeline_elements_from_config(self, config):
         for key, all_params in config.items():
             self += PipelineElement(key, all_params)
-
-
-    # @property
-    # def optimum_pipe(self):
-    #     return self.optimum_pipe
 
 
 class TestPipeline(object):
@@ -333,7 +289,7 @@ class TestPipeline(object):
         # in a list
         # reorder_results() puts the results under keys "train" and "test"
         # it also calculates mean of metrics
-        self.cv_results = self.reorder_results(self.cv_results)
+        self.cv_results = ResultLogging.reorder_results(self.cv_results)
         self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
         parameters = self.pipe.get_params()
         # self.cv_results['scoring_time'] = np.sum([l[3] for l in cv_scores])
@@ -354,31 +310,6 @@ class TestPipeline(object):
                 # specific key even in case no list exists
                 self.cv_results.setdefault(metric, []).append(scorer(y_true, y_pred))
         return default_score
-
-    def reorder_results(self,results):
-        r_results = OrderedDict()
-        for key, value in results.items():
-            # train and test should always be alternated
-            # put first element under train, second under test and so forth
-            train = []
-            test = []
-            for i in range(len(results[key])):
-                if (i%2) == 0:
-                    train.append(results[key][i])
-                else:
-                    test.append(results[key][i])
-            # again, I know this is ugly. Any suggestions? Only confusion
-            # matrix behaves differently because we don't want to calculate
-            # the mean of it
-            if key == 'confusion_matrix':
-                r_results[key] = {'train': train, 'test': test}
-            else:
-                r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
-                r_results[key + '_std'] = {'train': np.std(train),
-                                           'test': np.std(test)}
-                r_results[key + '_folds'] = {'train': train, 'test': test}
-
-        return r_results
 
 
 class Scorer(object):
@@ -413,7 +344,7 @@ class Scorer(object):
                 desired_class_home = desired_class_info[0]
                 desired_class_name = desired_class_info[1]
                 imported_module = __import__(desired_class_home, globals(),
-                                         locals(), desired_class_name, 0)
+                                             locals(), desired_class_name, 0)
                 desired_class = getattr(imported_module, desired_class_name)
                 scoring_method = desired_class
                 return scoring_method
@@ -435,16 +366,17 @@ class PipelineElement(BaseEstimator):
     # from sklearn.svm import SVC
     # from sklearn.linear_model import LogisticRegression
     # from sklearn.preprocessing import StandardScaler
-    # from TFLearnPipelineWrapper.WrapperModel import WrapperModel
-    # from TFLearnPipelineWrapper.TFDNNClassifier import TFDNNClassifier
-    # from TFLearnPipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
+    # from PipelineWrapper.WrapperModel import WrapperModel
+    # from PipelineWrapper.TFDNNClassifier import TFDNNClassifier
+    # from PipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
     ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
                           'svc': ('sklearn.svm', 'SVC'),
                           'logistic': ('sklearn.linear_model', 'LogisticRegression'),
-                          'dnn': ('TFLearnPipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
-                          'kdnn': ('TFLearnPipelineWrapper.KerasDNNWrapper', 'KerasDNNWrapper'),
+                          'dnn': ('PipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
+                          'kdnn': ('PipelineWrapper.KerasDNNWrapper', 'KerasDNNWrapper'),
                           'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
-                          'wrapper_model': ('TFLearnPipelineWrapper.WrapperModel', 'WrapperModel')}
+                          'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
+                          'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement')}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
@@ -764,8 +696,9 @@ class PipelineFusion(PipelineElement):
 
     def score(self, X_test, y_test):
         # Todo: invent strategy for this ?
-        predicted = np.mean(self.predict(X_test))
-        return accuracy_score(y_test, predicted)
+        return 16
+        # predicted = np.mean(self.predict(X_test))
+        # return accuracy_score(y_test, predicted)
 
 
 
