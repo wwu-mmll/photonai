@@ -15,8 +15,7 @@ data_object += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
                         usecols=np.arange(1, 73), na_values='NA')
 
 # try to predict sex, which is column number 4
-data_object += Targets('EnigmaTestFiles//Covariates.csv', usecols=[4],
-                       na_values='NA')
+data_object += Targets('EnigmaTestFiles/Covariates.csv', usecols=[4], na_values='NA')
 
 # you can access the targets via data_objects.targets,
 # and the features via data_objects.features,
@@ -27,7 +26,7 @@ print('data attribute returns:', type(data_object.targets.data))
 print('values attribute returns:', type(data_object.targets.values))
 
 # add age as covariate
-data_object += Covariates('age', 'EnigmaTestFiles//Covariates.csv',
+data_object += Covariates('age', 'EnigmaTestFiles/Covariates.csv',
                           usecols=[3], na_values='NA')
 
 # covariate items are accessible via data_objects.covariates by their name:
@@ -71,11 +70,11 @@ X = data_object.features.values
 y = np.ravel(data_object.targets.values)
 manager.fit(X, y)
 
-final_predictor = manager.optimum_pipe
-final_predictor.fit(X, y)
-prediction = final_predictor.predict(X)
-
-# access the performance and config histories
-config1 = manager.config_history[0]
-performance1 = manager.performance_history[0]
+# final_predictor = manager.optimum_pipe
+# final_predictor.fit(X, y)
+# prediction = final_predictor.predict(X)
+#
+# # access the performance and config histories
+# config1 = manager.config_history[0]
+# performance1 = manager.performance_history[0]
 
