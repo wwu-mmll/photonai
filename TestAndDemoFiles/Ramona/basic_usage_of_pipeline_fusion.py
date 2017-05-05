@@ -10,44 +10,55 @@ from sklearn.model_selection import KFold
 # Load data
 surface = DataContainer()
 # load ENIGMA surface values
-surface += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_SurfAvg.csv',
+surface += Features('../EnigmaTestFiles/CorticalMeasuresENIGMA_SurfAvg.csv',
                     usecols=np.arange(1, 73), na_values='NA')
 
 # add sex as target
-surface += Targets('EnigmaTestFiles/Covariates.csv', usecols=[4],
+surface += Targets('../EnigmaTestFiles/Covariates.csv', usecols=[4],
                    na_values='NA')
 
 # add age as covariate
-surface += Covariates('age', 'EnigmaTestFiles/Covariates.csv',
+surface += Covariates('age', '../EnigmaTestFiles/Covariates.csv',
                       usecols=[3], na_values='NA')
 
 # add values from another file, namely ENIGMA thickness values, to features
 thickness = DataContainer()
-thickness += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
+thickness += Features('../EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
                       usecols=np.arange(1, 73), na_values='NA')
 # we have the same target as above
 thickness.targets = surface.targets
+
+# print(np.count_nonzero(np.isnan(surface.features.values)))
+# print(np.count_nonzero(np.isnan(thickness.features.values)))
 
 # we always do n_splits=3
 cv_object = KFold(n_splits=3)
 
 # make a global pipeline
 manager = Hyperpipe('god', cv_object,
-                    optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1})
+                    optimizer='timeboxed_random_grid_search',
+                    optimizer_params={'limit_in_minutes': 1})
 
 # we use the same optimizer for all pipelines = global hyperparameter search
 global_optimizer = manager.optimizer
 
+# REMARK: If we want to inject data apart from the sklearn pipeline forwarding of data we can use overwrite_x and _y
+
 # make surface pipeline
-surface_pipe = Hyperpipe('surface', cv_object, optimizer=global_optimizer, local_search=True, X=surface.features.values, y=np.ravel(surface.targets.values))
+surface_pipe = Hyperpipe('surface', cv_object, optimizer=global_optimizer, local_search=False,
+                         overwrite_x=surface.features.values,
+                         overwrite_y=np.ravel(surface.targets.values))
 surface_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
 surface_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 # make thickness pipeline
-thickness_pipe = Hyperpipe('thickness', cv_object, optimizer=global_optimizer, local_search=True, X=thickness.features.values, y=np.ravel(thickness.targets.values))
+thickness_pipe = Hyperpipe('thickness', cv_object, optimizer=global_optimizer, local_search=False,
+                           overwrite_x=thickness.features.values,
+                           overwrite_y=np.ravel(thickness.targets.values))
 thickness_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
 thickness_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
+# in the end we want to join both predictions as a new feature set
 feature_union = PipelineFusion('surface_and_thickness', [surface_pipe, thickness_pipe])
 
 # add the container for both surface and thickness pipe to the global pipe
@@ -58,12 +69,6 @@ manager += PipelineElement.create('pca', {'n_components': [1, 2]}, set_disabled=
 
 # # use either SVM or Logistic regression
 svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['rbf', 'sigmoid']})
-# or Logistic regression
-# lr_estimator = PipelineElement.create('logistic', {'C': np.logspace(-4, 4, 5)})
-
-# use PipelineSwitch Element to interchange the estimators
-# manager += PipelineSwitch('final_estimator', [svc_estimator, lr_estimator])
-
 manager += svc_estimator
 
 # optimizes hyperparameters
