@@ -23,7 +23,8 @@ class Hyperpipe(BaseEstimator):
 
     def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
-                 config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_fitting_cv_object=None, test_size=0.2):
+                 config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_fitting_cv_object=None,
+                 test_size=0.2, eval_final_performance=True, debug_cv_mode=False):
 
         self.name = name
         self.cv_object = cv_object
@@ -36,6 +37,8 @@ class Hyperpipe(BaseEstimator):
         self.performance_history = []
         self.best_config = []
         self.best_performance = []
+
+        self.debug_cv_mode = False
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
@@ -77,11 +80,8 @@ class Hyperpipe(BaseEstimator):
         self.validation_y = None
         self.test_X = None
         self.test_y = None
-
-        self.cross_validate_hyperparameter_fitting = False
+        self.eval_final_performance = eval_final_performance
         self.hyperparameter_fitting_cv_object = hyperparameter_fitting_cv_object
-        if hyperparameter_fitting_cv_object is not None:
-            self.cross_validate_hyperparameter_fitting = True
 
     def __iadd__(self, pipe_element):
         if isinstance(pipe_element, PipelineElement):
@@ -113,19 +113,30 @@ class Hyperpipe(BaseEstimator):
         # optimize: iterate through configs and save results
         if self.local_search:
 
-            # give the optimizer the chance to inform about elements
-            self.optimizer.prepare(self.pipeline_elements)
-            self.config_history = []
-            self.performance_history_list = []
-            self.parameter_history = []
-
-            if self.cross_validate_hyperparameter_fitting:
-                data_test_cases = self.hyperparameter_fitting_cv_object.split(self.validation_X, self.validation_y)
+            # if there is a CV Object for cross validating the hyperparameter search
+            if self.hyperparameter_fitting_cv_object:
+                data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
+            # in case we do not want to divide between validation and test set
+            elif not self.eval_final_performance:
+                if hasattr(self.X, 'shape'):
+                    data_test_cases = [(range(self.X.shape[0]), [])]
+                else:
+                    data_test_cases = [(range(len(self.X)), [])]
+            # the default is dividing one time into a validation and test set
             else:
                 train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
                 data_test_cases = train_test_cv_object.split(self.X, self.y)
 
+            cv_counter = 0
             for train_indices, test_indices in data_test_cases:
+
+                # give the optimizer the chance to inform about elements
+                self.optimizer.prepare(self.pipeline_elements)
+                self.config_history = []
+                self.performance_history_list = []
+                self.parameter_history = []
+
+                cv_counter += 1
                 validation_X = self.X[train_indices]
                 validation_y = self.y[train_indices]
                 test_X = self.X[test_indices]
@@ -148,7 +159,6 @@ class Hyperpipe(BaseEstimator):
                     self.parameter_history.append(specific_parameters)
 
                 # afterwards find best result
-
                 # merge list of dicts to dict with lists under keys
                 self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
 
@@ -173,22 +183,25 @@ class Hyperpipe(BaseEstimator):
                     # Todo: clone!!!!!!
                     self.optimum_pipe = self.pipe
                     self.optimum_pipe.set_params(**self.best_config)
-                    self.optimum_pipe.fit(validation_X, validation_y)
-                    test_predictions = self.optimum_pipe.predict(test_X)
-                    if self.metrics:
-                        for metric in self.metrics:
-                            scorer = Scorer.create(metric)
-                            # use setdefault method of dictionary to create list under
-                            # specific key even in case no list exists
-                            self.test_performances.setdefault(metric, []).append(scorer(test_y, test_predictions))
+                    if self.eval_final_performance and not self.debug_cv_mode:
+                        self.optimum_pipe.fit(validation_X, validation_y)
+                        test_predictions = self.optimum_pipe.predict(test_X)
+                        if self.metrics:
+                            for metric in self.metrics:
+                                scorer = Scorer.create(metric)
+                                # use setdefault method of dictionary to create list under
+                                # specific key even in case no list exists
+                                self.test_performances.setdefault(metric, []).append(scorer(test_y, test_predictions))
 
             # else:
                 # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
+
                 # save hyperpipe results to csv
+                file_id = self.name+str(cv_counter)
                 ResultLogging.write_results(self.performance_history_list, self.config_history,
-                                            'hyperpipe_results.csv')
-                ResultLogging.write_config_to_csv(self.config_history, 'config_history.csv')
+                                            'hyperpipe_results'+file_id+'.csv')
+                ResultLogging.write_config_to_csv(self.config_history, 'config_history'+file_id+'.csv')
                 # save best model results to csv
 
         ###############################################################################################
@@ -199,16 +212,20 @@ class Hyperpipe(BaseEstimator):
 
     def predict(self, data):
         # Todo: if local_search = true then use optimized pipe here?
-        if self.pipe is not None:
+        if self.pipe:
             return self.pipe.predict(data)
-        else:
-            return None
 
     def transform(self, data):
-        if self.pipe is not None:
+        if self.pipe:
             return self.pipe.transform(data)
-        else:
-            return None
+
+    def fit_predict(self, data, targets):
+        if self.pipe:
+            return self.pipe.fit_predict(data, targets)
+
+    def fit_transform(self, data, targets):
+        if self.pipe:
+            return self.pipe.fit_transform(data, targets)
 
     def get_params(self, deep=True):
         if self.pipe is not None:
@@ -512,6 +529,12 @@ class PipelineElement(BaseEstimator):
         else:
             return data
 
+    def fit_predict(self, data, targets):
+        if not self.disabled:
+            return self.base_element.fit_predict(data, targets)
+        else:
+            return data
+
     def transform(self, data):
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
@@ -520,6 +543,15 @@ class PipelineElement(BaseEstimator):
                 return self.base_element.predict(data)
             else:
                 raise BaseException('transform-predict-mess')
+        else:
+            return data
+
+    def fit_transform(self, data, targets=None):
+        if not self.disabled:
+            if hasattr(self.base_element, 'fit_transform'):
+                return self.base_element.fit_transform(data, targets)
+            elif hasattr(self.base_element, 'fit_predict'):
+                return self.base_element.fit_predict(data, targets)
         else:
             return data
 
@@ -638,8 +670,15 @@ class PipelineFusion(PipelineElement):
             self.pipe_elements[item.name] = item
             self._hyperparameters[item.name] = item.hyperparameters
 
+            # we want to communicate the configuration options to the optimizer, when local_search = False
+            # but not when the item takes care of itself, that is, when local_search = True
+            add_item_config_grid = True
+            if hasattr(item, 'local_search'):
+                if not item.local_search:
+                    add_item_config_grid = False
+
             # for each configuration
-            if not item.local_search:
+            if add_item_config_grid:
                 tmp_config_grid = []
                 for config in item.config_grid:
                     # # for each configuration item:
@@ -696,6 +735,7 @@ class PipelineFusion(PipelineElement):
 
     def predict(self, data):
         # Todo: strategy for concatenating data from different pipes
+        # todo: parallelize prediction
         predicted_data = None
         for name, element in self.pipe_elements.items():
             element_transform = element.predict(data)
