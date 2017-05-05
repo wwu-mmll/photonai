@@ -12,7 +12,7 @@ from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
 from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
-# from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score
 
 
 class Hyperpipe(BaseEstimator):
@@ -24,7 +24,7 @@ class Hyperpipe(BaseEstimator):
     def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
                  config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_fitting_cv_object=None,
-                 test_size=0.2, eval_final_performance=True, debug_cv_mode=False):
+                 test_size=0.2, eval_final_performance=True, debug_cv_mode=False, logging=False):
 
         self.name = name
         self.cv_object = cv_object
@@ -38,7 +38,8 @@ class Hyperpipe(BaseEstimator):
         self.best_config = []
         self.best_performance = []
 
-        self.debug_cv_mode = False
+        self.debug_cv_mode = debug_cv_mode
+        self.logging = logging
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
@@ -163,7 +164,7 @@ class Hyperpipe(BaseEstimator):
                 self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
 
                 # Todo: Do better error checking
-                if len(self.performance_history['score']['test']) > 0:
+                if len(self.performance_history) > 0:
                     best_config_nr = np.argmax(self.performance_history['score']['test'])
 
                     self.best_config = self.config_history[best_config_nr]
@@ -196,12 +197,13 @@ class Hyperpipe(BaseEstimator):
             # else:
                 # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
-
-                # save hyperpipe results to csv
-                file_id = self.name+str(cv_counter)
-                ResultLogging.write_results(self.performance_history_list, self.config_history,
-                                            'hyperpipe_results'+file_id+'.csv')
-                ResultLogging.write_config_to_csv(self.config_history, 'config_history'+file_id+'.csv')
+                if self.logging:
+                    # LOGGGGGGGGGGGGGING
+                    # save hyperpipe results to csv
+                    file_id = '_'+self.name+'_cv'+str(cv_counter)
+                    ResultLogging.write_results(self.performance_history_list, self.config_history,
+                                                'hyperpipe_results'+file_id+'.csv')
+                    ResultLogging.write_config_to_csv(self.config_history, 'config_history'+file_id+'.csv')
                 # save best model results to csv
 
         ###############################################################################################
@@ -219,13 +221,13 @@ class Hyperpipe(BaseEstimator):
         if self.pipe:
             return self.pipe.transform(data)
 
-    def fit_predict(self, data, targets):
-        if self.pipe:
-            return self.pipe.fit_predict(data, targets)
-
-    def fit_transform(self, data, targets):
-        if self.pipe:
-            return self.pipe.fit_transform(data, targets)
+    # def fit_predict(self, data, targets):
+    #     if self.pipe:
+    #         return self.pipe.fit_predict(data, targets)
+    #
+    # def fit_transform(self, data, targets):
+    #     if self.pipe:
+    #         return self.pipe.fit_transform(data, targets)
 
     def get_params(self, deep=True):
         if self.pipe is not None:
@@ -345,7 +347,10 @@ class TestPipeline(object):
         return self.cv_results, parameters
 
     def score(self, estimator, X, y_true):
-        default_score = estimator.score(X, y_true)
+        if hasattr(estimator, 'score'):
+            default_score = estimator.score(X, y_true)
+        else:
+            default_score = -1
         # use cv_results as class variable to get results out of
         # _predict_and_score() method
         self.cv_results.setdefault('score', []).append(default_score)
@@ -529,11 +534,11 @@ class PipelineElement(BaseEstimator):
         else:
             return data
 
-    def fit_predict(self, data, targets):
-        if not self.disabled:
-            return self.base_element.fit_predict(data, targets)
-        else:
-            return data
+    # def fit_predict(self, data, targets):
+    #     if not self.disabled:
+    #         return self.base_element.fit_predict(data, targets)
+    #     else:
+    #         return data
 
     def transform(self, data):
         if not self.disabled:
@@ -545,15 +550,15 @@ class PipelineElement(BaseEstimator):
                 raise BaseException('transform-predict-mess')
         else:
             return data
-
-    def fit_transform(self, data, targets=None):
-        if not self.disabled:
-            if hasattr(self.base_element, 'fit_transform'):
-                return self.base_element.fit_transform(data, targets)
-            elif hasattr(self.base_element, 'fit_predict'):
-                return self.base_element.fit_predict(data, targets)
-        else:
-            return data
+    #
+    # def fit_transform(self, data, targets=None):
+    #     if not self.disabled:
+    #         if hasattr(self.base_element, 'fit_transform'):
+    #             return self.base_element.fit_transform(data, targets)
+    #         elif hasattr(self.base_element, 'fit_predict'):
+    #             return self.base_element.fit_predict(data, targets)
+    #     else:
+    #         return data
 
     def score(self, X_test, y_test):
         return self.base_element.score(X_test, y_test)
@@ -745,11 +750,34 @@ class PipelineFusion(PipelineElement):
     def transform(self, data):
         transformed_data = None
         for name, element in self.pipe_elements.items():
-            # if it is a stacked pipeline then we want predict
-            # element_transform = element.transform(data)
-            element_transform = element.predict(data)
-            transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
+            # if it is a hyperpipe with a final estimator, we want to use predict:
+            if hasattr(element, 'pipe'):
+                if element.pipe._final_estimator:
+                    element_transform = element.predict(data)
+                else:
+                    # if it is just a preprocessing pipe we want to use transform
+                    element_transform = element.transform(data)
+                transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
         return transformed_data
+
+    # def fit_predict(self, data, targets):
+    #     predicted_data = None
+    #     for name, element in self.pipe_elements.items():
+    #         element_transform = element.fit_predict(data)
+    #         predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
+    #     return predicted_data
+    #
+    # def fit_transform(self, data, targets=None):
+    #     transformed_data = None
+    #     for name, element in self.pipe_elements.items():
+    #         # if it is a hyperpipe with a final estimator, we want to use predict:
+    #         if hasattr(element, 'pipe'):
+    #             if element.pipe._final_estimator:
+    #                 element_transform = element.fit_predict(data, targets)
+    #             else:
+    #                 # if it is just a preprocessing pipe we want to use transform
+    #                 element_transform = element.fit_transform(data)
+    #             transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
 
     @classmethod
     def stack_data(cls, a, b):
@@ -765,9 +793,13 @@ class PipelineFusion(PipelineElement):
 
     def score(self, X_test, y_test):
         # Todo: invent strategy for this ?
-        return 16
-        # predicted = np.mean(self.predict(X_test))
-        # return accuracy_score(y_test, predicted)
+        # raise BaseException('PipelineFusion.score should probably never be reached.')
+        # return 16
+        predicted = self.predict(X_test)
+        if hasattr(predicted, 'shape'):
+            if len(predicted.shape) > 1:
+                predicted = np.mean(predicted)
+        return accuracy_score(y_test, predicted)
 
 
 

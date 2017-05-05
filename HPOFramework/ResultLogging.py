@@ -49,11 +49,14 @@ class ResultLogging:
 
     @staticmethod
     def merge_dicts(list_of_dicts):
-        d = OrderedDict()
-        for k in list_of_dicts[0].keys():
-            d[k] = {'train': list(d[k]['train'] for d in list_of_dicts),
-                    'test': list(d[k]['test'] for d in list_of_dicts)}
-        return d
+        if list_of_dicts:
+            d = OrderedDict()
+            for k in list_of_dicts[0].keys():
+                d[k] = {'train': list(d[k]['train'] for d in list_of_dicts),
+                        'test': list(d[k]['test'] for d in list_of_dicts)}
+            return d
+        else:
+            return list_of_dicts
 
     @staticmethod
     def reorder_results(results):
