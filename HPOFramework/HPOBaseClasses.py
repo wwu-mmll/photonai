@@ -138,6 +138,7 @@ class Hyperpipe(BaseEstimator):
                 self.parameter_history = []
 
                 cv_counter += 1
+                print(' HYPERPARAMETER SEARCH OF ' + self.name + ' ,ITERATION:' + str(cv_counter))
                 validation_X = self.X[train_indices]
                 validation_y = self.y[train_indices]
                 test_X = self.X[test_indices]
@@ -185,14 +186,20 @@ class Hyperpipe(BaseEstimator):
                     self.optimum_pipe = self.pipe
                     self.optimum_pipe.set_params(**self.best_config)
                     if self.eval_final_performance and not self.debug_cv_mode:
+                        print(' EVALUATE TEST SET OF ' + self.name)
+                        print('...now fitting and predicting with optimum configuration')
                         self.optimum_pipe.fit(validation_X, validation_y)
                         test_predictions = self.optimum_pipe.predict(test_X)
+                        print('.. calculating metrics for test set (' + self.name +')')
                         if self.metrics:
                             for metric in self.metrics:
                                 scorer = Scorer.create(metric)
                                 # use setdefault method of dictionary to create list under
                                 # specific key even in case no list exists
-                                self.test_performances.setdefault(metric, []).append(scorer(test_y, test_predictions))
+                                metric_value = scorer(test_y, test_predictions)
+                                print(metric + ':' + str(metric_value))
+                                self.test_performances.setdefault(metric, []).append(metric_value)
+                    print('--------------------------------------------------')
 
             # else:
                 # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
@@ -262,7 +269,7 @@ class Hyperpipe(BaseEstimator):
             for config_iterable in tmp_config_grid:
                 base = dict(config_iterable[0])
                 for i in range(1, len(config_iterable)):
-                    base.update(config_iterable[i])
+                        base.update(config_iterable[i])
                 self._config_grid.append(base)
 
         # build pipeline...
@@ -698,11 +705,12 @@ class PipelineFusion(PipelineElement):
                 if tmp_config_grid:
                     all_config_grids.append(tmp_config_grid)
         if all_config_grids:
-            self._config_grid = list(product(*all_config_grids))
-            self._config_grid = [{**i[0], **i[1]} for i in self.config_grid]
-        # for tmp_item in self._config_grid:
-        #     tmp_2 = 1
-        # tmp_i = 1
+            product_config_grid = list(product(*all_config_grids))
+            for item in product_config_grid:
+                base = dict(item[0])
+                for sub_nr in range(1, len(item)):
+                    base.update(item[sub_nr])
+                self._config_grid.append(base)
 
     @property
     def config_grid(self):
