@@ -190,7 +190,7 @@ class Hyperpipe(BaseEstimator):
                         print('...now fitting and predicting with optimum configuration')
                         self.optimum_pipe.fit(validation_X, validation_y)
                         test_predictions = self.optimum_pipe.predict(test_X)
-                        print('.. calculating metrics for test set (' + self.name +')')
+                        print('.. calculating metrics for test set (' + self.name + ')')
                         if self.metrics:
                             for metric in self.metrics:
                                 scorer = Scorer.create(metric)
@@ -670,12 +670,13 @@ class PipelineSwitch(PipelineElement):
 
 class PipelineFusion(PipelineElement):
 
-    def __init__(self, name, pipeline_fusion_elements):
+    def __init__(self, name, pipeline_fusion_elements, voting=True):
         super(PipelineFusion, self).__init__(name, None, hyperparameters={}, set_disabled=False, disabled=False)
 
         self._hyperparameters = {}
         self._config_grid = []
         self.pipe_elements = {}
+        self.voting = voting
 
         all_config_grids = []
         for item in pipeline_fusion_elements:
@@ -700,7 +701,10 @@ class PipelineFusion(PipelineElement):
                         tmp_config = dict(config)
                         for key, element in tmp_config.items():
                             # update name to be referable to pipeline
-                            tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
+                            if isinstance(item, PipelineElement):
+                                tmp_dict[self.name + '__' + key] = tmp_dict.pop(key)
+                            else:
+                                tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
                         tmp_config_grid.append(tmp_dict)
                 if tmp_config_grid:
                     all_config_grids.append(tmp_config_grid)
@@ -753,6 +757,10 @@ class PipelineFusion(PipelineElement):
         for name, element in self.pipe_elements.items():
             element_transform = element.predict(data)
             predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
+        if self.voting:
+            if hasattr(predicted_data, 'shape'):
+                if len(predicted_data.shape) > 1:
+                    predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data
 
     def transform(self, data):
@@ -804,9 +812,7 @@ class PipelineFusion(PipelineElement):
         # raise BaseException('PipelineFusion.score should probably never be reached.')
         # return 16
         predicted = self.predict(X_test)
-        if hasattr(predicted, 'shape'):
-            if len(predicted.shape) > 1:
-                predicted = np.mean(predicted)
+
         return accuracy_score(y_test, predicted)
 
 
