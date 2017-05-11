@@ -16,13 +16,13 @@ manager = Hyperpipe('outer_man', KFold(n_splits=3), metrics=['accuracy'])
 # if you want a specific CV Strategy, use hyperparameter_fitting_cv_object
 # test a speficic config with KFOld(n_splits=2)
 # test the complete hyperparameter search with KFold(n_splits=3)
-# manager = Hyperpipe('outer_man', KFold(n_splits=2), metrics=['accuracy'],
-#                     hyperparameter_fitting_cv_object=KFold(n_splits=3))
+manager = Hyperpipe('outer_man', KFold(n_splits=2), metrics=['accuracy'],
+                    hyperparameter_search_cv_object=KFold(n_splits=3))
 
 # OPTION 3:
 # if you want no splitting at all, use:
-# manager = Hyperpipe('outer_man', KFold(n_splits=3), metrics=['accuracy'],
-#                    eval_final_performance=False)
+manager = Hyperpipe('outer_man', KFold(n_splits=3), metrics=['accuracy'],
+                   eval_final_performance=False)
 
 manager.add(PipelineElement.create('svc', {'C': [0.3, 0.5, 1]}, kernel='rbf'))
 manager.fit(X, y)

@@ -31,14 +31,15 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
         self.outer_hyperpipe.fit(self.X, self.y)
 
-        print('local_search true: outer pipeline data:')
-        print(self.outer_pipeline_test_element.base_element.data_dict['fit_X'])
-
-        print('local_search true: inner pipeline data:')
-        print(self.inner_pipeline_test_element.base_element.data_dict['fit_X'])
-
         outer_data = self.outer_pipeline_test_element.base_element.data_dict['fit_X'].tolist()
         inner_data = self.inner_pipeline_test_element.base_element.data_dict['fit_X'].tolist()
+
+        print('local_search true: outer pipeline data:')
+        print(sorted(outer_data))
+
+        print('local_search true: inner pipeline data:')
+        print(sorted(inner_data))
+
         # we expect that all items from inner_data are existent in outer_data
         validation = set(inner_data) < set(outer_data)
         self.assertTrue(validation)

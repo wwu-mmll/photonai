@@ -28,7 +28,7 @@ outer_man.add(PipelineElement.create('test_wrapper', {'any_param': [1, 2]}))
 
 # create a second level pipe
 inner_man = Hyperpipe('inner_man', KFold(n_splits=3), local_search=True, metrics=['accuracy'],
-                      hyperparameter_fitting_cv_object=KFold(n_splits=2))
+                      hyperparameter_search_cv_object=KFold(n_splits=2))
 inner_man.add(PipelineElement.create('svc', {'C': [0.3, 0.5, 1]}, kernel='rbf'))
 
 pipeline_fusion = PipelineFusion('fusion_element', [inner_man])

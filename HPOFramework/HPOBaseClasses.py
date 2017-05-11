@@ -21,13 +21,13 @@ class Hyperpipe(BaseEstimator):
                             'random_grid_search': RandomGridSearchOptimizer,
                             'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
 
-    def __init__(self, name, cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
+    def __init__(self, name, hyperparameter_specific_config_cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
-                 config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_fitting_cv_object=None,
-                 test_size=0.2, eval_final_performance=True, debug_cv_mode=False, logging=False):
+                 config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_search_cv_object=None,
+                 test_size=0.2, eval_final_performance=True, debug_cv_mode=False, logging=False, set_random_seed=False):
 
         self.name = name
-        self.cv_object = cv_object
+        self.cv_object = hyperparameter_specific_config_cv_object
         self.cv_iter = None
         self.X = None
         self.y = None
@@ -40,6 +40,9 @@ class Hyperpipe(BaseEstimator):
 
         self.debug_cv_mode = debug_cv_mode
         self.logging = logging
+        if set_random_seed:
+            import random
+            random.seed(42)
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
@@ -82,7 +85,7 @@ class Hyperpipe(BaseEstimator):
         self.test_X = None
         self.test_y = None
         self.eval_final_performance = eval_final_performance
-        self.hyperparameter_fitting_cv_object = hyperparameter_fitting_cv_object
+        self.hyperparameter_fitting_cv_object = hyperparameter_search_cv_object
 
     def __iadd__(self, pipe_element):
         if isinstance(pipe_element, PipelineElement):
