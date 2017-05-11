@@ -43,6 +43,7 @@ class Hyperpipe(BaseEstimator):
         if set_random_seed:
             import random
             random.seed(42)
+            print('set random seed to 42')
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}

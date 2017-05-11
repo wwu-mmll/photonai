@@ -11,14 +11,14 @@ from sklearn.model_selection import KFold
 data_object = DataContainer()
 
 # add values from ENIGMA thickness values to features
-data_object += Features('EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
+data_object += Features('../EnigmaTestFiles/CorticalMeasuresENIGMA_ThickAvg.csv',
                         usecols=np.arange(1, 73), na_values='NA')
 
 # try to predict sex, which is column number 4
-data_object += Targets('EnigmaTestFiles/Covariates.csv', usecols=[4], na_values='NA')
+data_object += Targets('../EnigmaTestFiles/Covariates.csv', usecols=[4], na_values='NA')
 
 # add age as covariate
-data_object += Covariates('age', 'EnigmaTestFiles/Covariates.csv', usecols=[3], na_values='NA')
+data_object += Covariates('age', '../EnigmaTestFiles/Covariates.csv', usecols=[3], na_values='NA')
 
 # example hyperparameter optimization for pipeline:
 # 01. pca
@@ -26,7 +26,7 @@ data_object += Covariates('age', 'EnigmaTestFiles/Covariates.csv', usecols=[3], 
 cv_object = KFold(n_splits=3)
 
 manager = Hyperpipe('god', cv_object, metrics=['accuracy',
-                                               'confusion_matrix'])
+                                               'confusion_matrix'], set_random_seed=True)
 
 # add a pca analysis, specify hyperparameters to test
 manager += PipelineElement.create('pca', {'n_components': [None, 10, 20], 'whiten': [True, False]},
