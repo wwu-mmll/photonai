@@ -8,7 +8,7 @@ from sklearn.model_selection import KFold
 class HyperpipeTests(unittest.TestCase):
 
     def setUp(self):
-        self.pca_pipe_element = PipelineElement.create('pca', {'n_components': [1, 2]}, set_disabled=True)
+        self.pca_pipe_element = PipelineElement.create('pca', {'n_components': [1, 2]}, test_disabled=True)
         self.svc_pipe_element = PipelineElement.create('svc', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.cv_object = KFold(n_splits=3)
         self.hyperpipe = Hyperpipe('god', self.cv_object)
@@ -50,7 +50,7 @@ class HyperpipeTests(unittest.TestCase):
 class PipelineElementTests(unittest.TestCase):
 
     def setUp(self):
-        self.pca_pipe_element = PipelineElement.create('pca', {'n_components': [1, 2]}, set_disabled=True)
+        self.pca_pipe_element = PipelineElement.create('pca', {'n_components': [1, 2]}, test_disabled=True)
         self.svc_pipe_element = PipelineElement.create('svc', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
 
     def tearDown(self):

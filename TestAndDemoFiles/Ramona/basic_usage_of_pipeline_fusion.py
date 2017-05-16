@@ -35,7 +35,7 @@ thickness.targets = surface.targets
 cv_object = KFold(n_splits=3)
 
 # make a global pipeline
-manager = Hyperpipe('god', cv_object,
+manager = Hyperpipe('god', cv_object, metrics=['accuracy', 'precision'],
                     optimizer='timeboxed_random_grid_search',
                     optimizer_params={'limit_in_minutes': 1})
 
@@ -48,14 +48,14 @@ global_optimizer = manager.optimizer
 surface_pipe = Hyperpipe('surface', cv_object, optimizer=global_optimizer, local_search=False,
                          overwrite_x=surface.features.values,
                          overwrite_y=np.ravel(surface.targets.values))
-surface_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
+surface_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, test_disabled=True)
 surface_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 # make thickness pipeline
 thickness_pipe = Hyperpipe('thickness', cv_object, optimizer=global_optimizer, local_search=False,
                            overwrite_x=thickness.features.values,
                            overwrite_y=np.ravel(thickness.targets.values))
-thickness_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, set_disabled=True)
+thickness_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 70, 10).tolist()}, test_disabled=True)
 thickness_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 # in the end we want to join both predictions as a new feature set
@@ -64,11 +64,8 @@ feature_union = PipelineFusion('surface_and_thickness', [surface_pipe, thickness
 # add the container for both surface and thickness pipe to the global pipe
 manager += feature_union
 
-# add a pca analysis, specify hyperparameters to test
-manager += PipelineElement.create('pca', {'n_components': [1, 2]}, set_disabled=True)
-
 # # use either SVM or Logistic regression
-svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['rbf', 'sigmoid']})
+svc_estimator = PipelineElement.create('logistic', {'C': np.arange(0.2, 1, 0.2)})
 manager += svc_estimator
 
 # optimizes hyperparameters

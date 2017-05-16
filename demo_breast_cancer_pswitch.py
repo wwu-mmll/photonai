@@ -23,8 +23,8 @@ cv_object = KFold(n_splits=3, shuffle=True, random_state=0)
 # create a hyperPipe
 manager = Hyperpipe('god', cv_object, optimizer='random_grid_search')
 
-pca_preproc = PipelineElement.create('pca', {'n_components': [1, None]}, set_disabled=True)
-scaler_preproc = PipelineElement.create('standard_scaler', {}, set_disabled=True)
+pca_preproc = PipelineElement.create('pca', {'n_components': [1, None]}, test_disabled=True)
+scaler_preproc = PipelineElement.create('standard_scaler', {}, test_disabled=True)
 
 # SVMs (linear and rbf)
 svc_estimator = PipelineElement.create('svc', {}, kernel='linear')

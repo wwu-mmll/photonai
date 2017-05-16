@@ -67,7 +67,8 @@ class ResultLogging:
             train = []
             test = []
             for i in range(len(results[key])):
-                if (i % 2) == 0:
+                # Todo: NILS fragen!
+                if (i % 2) != 0:
                     train.append(results[key][i])
                 else:
                     test.append(results[key][i])

@@ -30,7 +30,7 @@ manager = Hyperpipe('god', cv_object, metrics=['accuracy',
 
 # add a pca analysis, specify hyperparameters to test
 manager += PipelineElement.create('pca', {'n_components': [None, 10, 20], 'whiten': [True, False]},
-                                  set_disabled=True)
+                                  test_disabled=True)
 
 # test to use a SVC
 svc_estimator = PipelineElement.create('svc', {'C': np.arange(0.2, 1, 0.2), 'kernel': ['rbf', 'sigmoid']})

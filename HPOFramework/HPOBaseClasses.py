@@ -235,7 +235,7 @@ class Hyperpipe(BaseEstimator):
     # def fit_predict(self, data, targets):
     #     if self.pipe:
     #         return self.pipe.fit_predict(data, targets)
-    #
+
     # def fit_transform(self, data, targets):
     #     if self.pipe:
     #         return self.pipe.fit_transform(data, targets)
@@ -453,7 +453,7 @@ class PipelineElement(BaseEstimator):
     #     desired_class_instance.position = position
     #     return desired_class_instance
     @classmethod
-    def create(cls, name, hyperparameters: dict ={}, set_disabled=False, disabled=False, **kwargs):
+    def create(cls, name, hyperparameters: dict ={}, test_disabled=False, disabled=False, **kwargs):
         if name in PipelineElement.ELEMENT_DICTIONARY:
             try:
                 desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
@@ -462,21 +462,21 @@ class PipelineElement(BaseEstimator):
                 imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
                 desired_class = getattr(imported_module, desired_class_name)
                 base_element = desired_class(**kwargs)
-                obj = PipelineElement(name, base_element, hyperparameters, set_disabled, disabled)
+                obj = PipelineElement(name, base_element, hyperparameters, test_disabled, disabled)
                 return obj
             except AttributeError as ae:
                 raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
         else:
             raise NameError('Element not supported right now:', name)
 
-    def __init__(self, name, base_element, hyperparameters: dict, set_disabled=False, disabled=False):
+    def __init__(self, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False):
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
         # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
         self.base_element = base_element
         self.disabled = disabled
-        self.set_disabled = set_disabled
+        self.test_disabled = test_disabled
         self._hyperparameters = hyperparameters
         self._sklearn_hyperparams = {}
         self._sklearn_disabled = self.name + '__disabled'
@@ -494,8 +494,8 @@ class PipelineElement(BaseEstimator):
         self._hyperparameters = value
         self.generate_sklearn_hyperparameters()
         self.generate_config_grid()
-        if self.set_disabled:
-            self._hyperparameters.update({'set_disabled': True})
+        if self.test_disabled:
+            self._hyperparameters.update({'test_disabled': True})
 
     @property
     def config_grid(self):
@@ -512,10 +512,10 @@ class PipelineElement(BaseEstimator):
 
     def generate_config_grid(self):
         for item in ParameterGrid(self.sklearn_hyperparams):
-            if self.set_disabled:
+            if self.test_disabled:
                 item[self._sklearn_disabled] = False
             self._config_grid.append(item)
-        if self.set_disabled:
+        if self.test_disabled:
             self._config_grid.append({self._sklearn_disabled: True})
 
     def get_params(self, deep=True):
@@ -561,13 +561,17 @@ class PipelineElement(BaseEstimator):
                 raise BaseException('transform-predict-mess')
         else:
             return data
-    #
+
     # def fit_transform(self, data, targets=None):
     #     if not self.disabled:
     #         if hasattr(self.base_element, 'fit_transform'):
     #             return self.base_element.fit_transform(data, targets)
-    #         elif hasattr(self.base_element, 'fit_predict'):
-    #             return self.base_element.fit_predict(data, targets)
+    #         elif hasattr(self.base_element, 'transform'):
+    #             self.base_element.fit(data, targets)
+    #             return self.base_element.transform(data)
+    #         # elif hasattr(self.base_element, 'predict'):
+    #         #     self.base_element.fit(data, targets)
+    #         #     return self.base_element.predict(data)
     #     else:
     #         return data
 
@@ -675,7 +679,7 @@ class PipelineSwitch(PipelineElement):
 class PipelineFusion(PipelineElement):
 
     def __init__(self, name, pipeline_fusion_elements, voting=True):
-        super(PipelineFusion, self).__init__(name, None, hyperparameters={}, set_disabled=False, disabled=False)
+        super(PipelineFusion, self).__init__(name, None, hyperparameters={}, test_disabled=False, disabled=False)
 
         self._hyperparameters = {}
         self._config_grid = []
@@ -757,7 +761,7 @@ class PipelineFusion(PipelineElement):
     def predict(self, data):
         # Todo: strategy for concatenating data from different pipes
         # todo: parallelize prediction
-        predicted_data = None
+        predicted_data = np.empty((0, 0))
         for name, element in self.pipe_elements.items():
             element_transform = element.predict(data)
             predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
@@ -768,7 +772,7 @@ class PipelineFusion(PipelineElement):
         return predicted_data
 
     def transform(self, data):
-        transformed_data = None
+        transformed_data = np.empty((0, 0))
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
             if hasattr(element, 'pipe'):
@@ -777,7 +781,10 @@ class PipelineFusion(PipelineElement):
                 else:
                     # if it is just a preprocessing pipe we want to use transform
                     element_transform = element.transform(data)
-                transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
+            else:
+                element_transform = element.transform(data)
+            transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
+
         return transformed_data
 
     # def fit_predict(self, data, targets):
@@ -788,20 +795,23 @@ class PipelineFusion(PipelineElement):
     #     return predicted_data
     #
     # def fit_transform(self, data, targets=None):
-    #     transformed_data = None
+    #     transformed_data = np.empty((0, 0))
     #     for name, element in self.pipe_elements.items():
     #         # if it is a hyperpipe with a final estimator, we want to use predict:
     #         if hasattr(element, 'pipe'):
     #             if element.pipe._final_estimator:
-    #                 element_transform = element.fit_predict(data, targets)
+    #                 element.fit(data, targets)
+    #                 element_transform = element.predict(data)
     #             else:
     #                 # if it is just a preprocessing pipe we want to use transform
-    #                 element_transform = element.fit_transform(data)
+    #                 element.fit(data)
+    #                 element_transform = element.transform(data)
     #             transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
+    #     return transformed_data
 
     @classmethod
     def stack_data(cls, a, b):
-        if a is None:
+        if not a.any():
             a = b
         else:
             # Todo: check for right dimensions!
