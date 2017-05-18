@@ -57,6 +57,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
             outer_test_y = self.__y[test_idx_arr]
 
             sk_config_cv = KFold(n_splits=3)
+            # Todo: test other configs and select best!
             for sub_train_idx, sub_test_idx in sk_config_cv.split(outer_train_X, outer_train_y):
                 inner_train_X = self.__X[sub_train_idx]
                 inner_train_y = self.__y[sub_train_idx]
@@ -81,8 +82,8 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
             sk_results['precision'].append(precision_score(outer_test_y, sk_prediction))
             sk_results['f1_score'].append(f1_score(outer_test_y, sk_prediction))
 
-            bestItem = np.argmax(sk_results['default'])
-            print([str(k)+':'+str(i[bestItem]) for k, i in sk_results.items()])
+            # bestItem = np.argmax(sk_results['default'])
+            # print([str(k)+':'+str(i[bestItem]) for k, i in sk_results.items()])
 
             self.assertEqual(sk_results['accuracy'], my_pipe.test_performances['accuracy'][tmp_counter])
             self.assertEqual(sk_results['precision'], my_pipe.test_performances['precision'][tmp_counter])
