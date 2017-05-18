@@ -27,12 +27,13 @@ class Hyperpipe(BaseEstimator):
                  test_size=0.2, eval_final_performance=True, debug_cv_mode=False, logging=False, set_random_seed=False):
 
         self.name = name
-        self.cv_object = hyperparameter_specific_config_cv_object
+        self.hyperparameter_specific_config_cv_object = hyperparameter_specific_config_cv_object
         self.cv_iter = None
         self.X = None
         self.y = None
         self.groups = groups
 
+        self.data_test_cases = None
         self.config_history = []
         self.performance_history = []
         self.best_config = []
@@ -105,6 +106,21 @@ class Hyperpipe(BaseEstimator):
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
+    def generate_cv_object(self):
+        # if there is a CV Object for cross validating the hyperparameter search
+        if self.hyperparameter_fitting_cv_object:
+            self.data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
+        # in case we do not want to divide between validation and test set
+        elif not self.eval_final_performance:
+            if hasattr(self.X, 'shape'):
+                self.data_test_cases = [(range(self.X.shape[0]), [])]
+            else:
+                self.data_test_cases = [(range(len(self.X)), [])]
+        # the default is dividing one time into a validation and test set
+        else:
+            train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
+            self.data_test_cases = train_test_cv_object.split(self.X, self.y)
+
     def fit(self, data, targets, **fit_params):
 
         # in case we want to inject some data from outside the pipeline
@@ -118,26 +134,15 @@ class Hyperpipe(BaseEstimator):
         # optimize: iterate through configs and save results
         if self.local_search:
 
-            # if there is a CV Object for cross validating the hyperparameter search
-            if self.hyperparameter_fitting_cv_object:
-                data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
-            # in case we do not want to divide between validation and test set
-            elif not self.eval_final_performance:
-                if hasattr(self.X, 'shape'):
-                    data_test_cases = [(range(self.X.shape[0]), [])]
-                else:
-                    data_test_cases = [(range(len(self.X)), [])]
-            # the default is dividing one time into a validation and test set
-            else:
-                train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
-                data_test_cases = train_test_cv_object.split(self.X, self.y)
+            self.generate_cv_object()
 
             cv_counter = 0
-            for train_indices, test_indices in data_test_cases:
+            for train_indices, test_indices in self.data_test_cases:
 
                 # give the optimizer the chance to inform about elements
                 self.optimizer.prepare(self.pipeline_elements)
                 self.config_history = []
+                self.performance_history = []
                 self.performance_history_list = []
                 self.parameter_history = []
 
@@ -148,6 +153,8 @@ class Hyperpipe(BaseEstimator):
                 test_X = self.X[test_indices]
                 test_y = self.y[test_indices]
 
+                cv_iter = self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y)
+
                 # do the optimizing
                 for specific_config in self.optimizer.next_config:
 
@@ -155,7 +162,7 @@ class Hyperpipe(BaseEstimator):
                     print('******************************')
                     print('optimizing of:', self.name)
                     pprint(self.optimize_printing(specific_config))
-                    results_cv, specific_parameters = hp.calculate_cv_score(validation_X, validation_y, self.cv_object)
+                    results_cv, specific_parameters = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
                     config_score = (results_cv['score']['train'], results_cv['score']['test'])
                     # 3. inform optimizer about performance
                     self.optimizer.evaluate_recent_performance(specific_config, config_score)
@@ -325,12 +332,12 @@ class TestPipeline(object):
         self.labels = []
         self.predictions = []
 
-    def calculate_cv_score(self, X, y, cv_object):
+    def calculate_cv_score(self, X, y, cv_iter):
         # very important todo: clone pipeline!!!!!!!!!!!!!!!
         cv_scores = []
         n_train = []
         n_test = []
-        cv_iter = cv_object.split(X, y)
+
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
             fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
@@ -342,7 +349,8 @@ class TestPipeline(object):
                                                    error_score=self.error_score)
             n_train.append(len(train))
             n_test.append(len(test))
-
+            # self.pipe.fit(X[train], y[train])
+            # fit_and_predict_score = self.pipe.score(X[test], y[test])
             cv_scores.append(fit_and_predict_score)
 
         # Todo: implement get_full_model_specification() and pass to
@@ -384,7 +392,7 @@ class Scorer(object):
         'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef'),
         'confusion_matrix': ('sklearn.metrics', 'confusion_matrix'),
         'accuracy': ('sklearn.metrics', 'accuracy_score'),
-        'f1': ('sklearn.metrics', 'f1_score'),
+        'f1_score': ('sklearn.metrics', 'f1_score'),
         'hamming_loss': ('sklearn.metrics', 'hamming_loss'),
         'log_loss': ('sklearn.metrics', 'log_loss'),
         'precision': ('sklearn.metrics', 'precision_score'),
