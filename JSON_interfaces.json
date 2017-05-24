@@ -1,0 +1,146 @@
+
+# Manager / Server
+Input
+from Designer
+
+{
+
+"Pipeline": {"name": "case_a",
+
+             "metrics": ["accuracy", "f1_score"],
+
+             "cv_split_test": 0.2,
+
+             "cv_strategy_specific_config": {
+
+                 "name": "KFold",
+
+                 "parameters": {
+
+                     "n_splits": "3"
+
+                 }
+
+             },
+
+             "cv_strategy_hyperparameter_search": {
+
+                 "name": "KFold",
+
+                 "parameters": {
+
+                     "n_splits": "3"
+
+                 }
+
+             },
+
+             "optimizer": {
+
+                 "name": "time_boxed_random_grid_search",
+
+                 "parameters": {
+
+                     "limit_in_minutes": "10"
+
+                 }
+
+             },
+
+             "elements": {
+
+                 "standard_scaler": {
+
+                     "hyperparameter": {}
+
+                     "test_disabled": "True",
+
+                     "default_settings": {}
+
+                 },
+
+                 "pca": {
+
+                     "hyperparameter": {
+
+                         "n_components": ["10", "20", "30"],
+
+                     }
+
+                     "test_disabled": "True",
+
+                     "default_settings": {
+
+                         "whiten": "True",
+
+                     }
+
+                 },
+
+                 "svc": {
+
+                     "hyperparameter": {
+
+                         "C": [0.5, 1, 2],
+
+                         "kernel": ["rbf", "linear"]
+
+                     }
+
+                     "test_disabled": "False",
+
+                     "default_settings": {}
+
+                 }
+
+             }
+
+             }
+}
+
+
+Output
+to
+Client:
+
+{
+
+"Pipeline": {"name": "case_a",
+
+             "metrics": ["accuracy", "f1_score"],
+
+             "cv_index": {
+
+                 train: [[1, 2, 3, 4], [5, 6, 7, 8][2, 3, 4, 5]]
+
+                 test: [[5, 6, 7, 8], [1, 2, 3, 4], [1, 6, 7, 8]]
+
+             },
+
+             "elements": {
+
+                 "standard_scaler": {
+
+                     "disabled": "True"
+
+                 },
+
+                 "pca": {
+
+                     "n_components": "10"
+
+                 },
+
+                 "svc": {
+
+                     "C": "0.5",
+
+                     "kernel": "rbf"
+
+                 }
+
+             }
+
+             }
+}
+
