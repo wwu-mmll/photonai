@@ -5,6 +5,7 @@ from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe
 from sklearn.model_selection._validation import _fit_and_score
 import random
 
+
 class CVTestsLocalSearchTrue(unittest.TestCase):
     __X = None
     __y = None
