@@ -103,7 +103,7 @@ class BaseDataObject:
                 # replace nans
                 # Todo: na_value?
                 # Todo: .gz files
-                #self.data = self.data.fillna(0)
+                self.data = self.data.fillna(0)
 
             elif isinstance(file_or_array, np.ndarray):
                 # if numpy array, simply add to collection
