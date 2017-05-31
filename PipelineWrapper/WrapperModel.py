@@ -11,15 +11,19 @@ class WrapperModel(BaseEstimator, ClassifierMixin):
         # whatever needs to be done ....
         # do anything with self.learning_rate
         # self.model.fit(data, targets)
+        print('Hello from Wrapper Model. fitting with current learning_rate:', self.learning_rate)
         return self
 
-    def predict(self, data):
-        return self.model.predict(data)
+    def transform(self, data):
+        return data
+
+    # def predict(self, data):
+    #     return self.model.predict(data)
 
     def set_params(self, **params):
-        print('learning_rate before:', self.learning_rate)
+        print('setting params:', str(params))
         super(WrapperModel, self).set_params(**params)
-        print('learning_rate after:', self.learning_rate)
+
 
 
 

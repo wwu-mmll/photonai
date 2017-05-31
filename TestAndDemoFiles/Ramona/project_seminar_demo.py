@@ -17,9 +17,10 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={}
 
 my_pipe += PipelineElement.create('standard_scaler', test_disabled=True)
 my_pipe.add(PipelineElement.create('pca', {'n_components': [1, 2]}, test_disabled=True, whiten=False))
+my_pipe += PipelineElement.create('wrapper_model', {'learning_rate': [0.5, 1]})
 my_pipe += PipelineElement.create('svc', {'C': [0.5, 1], 'kernel': ['rbf', 'linear']})
 
-my_pipe += PipelineElement.create('wrapper_model', {'learning_rate': [0.5, 1]})
+
 # START HYPERPARAMETER SEARCH
 my_pipe.fit(X, y)
 
