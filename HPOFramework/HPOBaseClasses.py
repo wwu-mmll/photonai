@@ -153,7 +153,7 @@ class Hyperpipe(BaseEstimator):
                 test_X = self.X[test_indices]
                 test_y = self.y[test_indices]
 
-                cv_iter = self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y)
+                cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
 
                 # do the optimizing
                 for specific_config in self.optimizer.next_config:
