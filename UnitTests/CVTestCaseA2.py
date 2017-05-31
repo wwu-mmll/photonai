@@ -38,8 +38,6 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         my_pipe.fit(self.__X, self.__y)
         print(my_pipe.test_performances)
 
-
-
         # SKLearn Implementation using Loops
         from sklearn.preprocessing import StandardScaler
         from sklearn.decomposition import PCA
@@ -70,20 +68,24 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                             y_train_2 = y_train_1[train_2]
                             y_val_1 = y_train_1[val_1]
 
+                            my_scaler = StandardScaler()
+                            my_scaler.fit(data_train_2)
+                            data_train_2_scaler = my_scaler.transform(data_train_2)
+                            data_val_1_scaler = my_scaler.transform(data_val_1)
 
-                            #my_pca = PCA(n_components=n_comp)
-                            #my_pca.fit(data_train_2)
-                            #data_tr_2_pca = my_pca.transform(data_train_2)
-                            #data_val_1_pca = my_pca.transform(data_val_1)
-
-                            data_tr_2_pca = data_train_2
-                            data_val_1_pca = data_val_1
+                            my_pca = PCA(n_components=n_comp)
+                            my_pca.fit(data_train_2)
+                            data_tr_2_pca = my_pca.transform(data_train_2_scaler)
+                            data_val_1_pca = my_pca.transform(data_val_1_scaler)
+                            #
+                            # data_tr_2_pca = data_train_2
+                            # data_val_1_pca = data_val_1
 
                             my_svc = SVC(kernel=current_kernel, C=c)
-                            my_svc.fit(data_tr_2_pca,y_train_2)
+                            my_svc.fit(data_tr_2_pca, y_train_2)
 
-                            tr_acc.append(my_svc.score(data_tr_2_pca,y_train_2))
-                            val_acc.append(my_svc.score(data_val_1_pca,y_val_1))
+                            tr_acc.append(my_svc.score(data_tr_2_pca, y_train_2))
+                            val_acc.append(my_svc.score(data_val_1_pca, y_val_1))
                             print('n_components: ', n_comp)
                             print('kernel: ', current_kernel)
                             print('c: ', c)
@@ -99,7 +101,6 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         # self.assertEqual(sk_results['f1_score'], my_pipe.test_performances['f1_score'][tmp_counter])
         #
         # tmp_counter += 1
-
 
     # def score(self, estimator, X, y_true):
     #     default_score = estimator.score(X, y_true)

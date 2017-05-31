@@ -65,7 +65,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                 #test_X = self.__X[sub_test_idx]
                 #test_y = self.__y[sub_test_idx]
 
-                sk_pipeline.fit(inner_train_X, inner_train_y)
+                # sk_pipeline.fit(inner_train_X, inner_train_y)
 
                 fit_and_predict_score = _fit_and_score(sk_pipeline, outer_train_X, outer_train_y, self.score,
                                                        sub_train_idx, sub_test_idx, verbose=0, parameters={},
