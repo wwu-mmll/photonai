@@ -19,7 +19,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         random.seed(42)
 
     def testCaseA(self):
-        pca_n_components = [2]
+        pca_n_components = [2, 5]
         svc_c = [.1, 1]
         svc_kernel = ['rbf']
         # svc_kernel = ['rbf','linear']
@@ -43,11 +43,9 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         pipe_results = {'train': [], 'test': []}
         for i in range(len(my_pipe.performance_history_list)):
             pipe_results['train'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds'][
-                    'train'])
+                my_pipe.performance_history_list[i]['accuracy_folds']['train'])
             pipe_results['test'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds'][
-                    'test'])
+                my_pipe.performance_history_list[i]['accuracy_folds']['test'])
 
         print('\n\n')
         print('Running sklearn version...')
@@ -76,27 +74,21 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
                             my_scaler = StandardScaler()
                             my_scaler.fit(data_train_2)
-                            data_train_2_scaler = my_scaler.transform(
-                                data_train_2)
-                            data_val_1_scaler = my_scaler.transform(
-                                data_val_1)
+                            data_train_2 = my_scaler.transform(data_train_2)
+                            data_val_1 = my_scaler.transform(data_val_1)
 
                             # Run PCA
                             my_pca = PCA(n_components=n_comp)
                             my_pca.fit(data_train_2)
-                            data_tr_2_pca = my_pca.transform(
-                                data_train_2)
-                            data_val_1_pca = my_pca.transform(
-                                data_val_1)
+                            data_tr_2_pca = my_pca.transform(data_train_2)
+                            data_val_1_pca = my_pca.transform(data_val_1)
 
                             # Run SVC
                             my_svc = SVC(kernel=current_kernel, C=c)
                             my_svc.fit(data_tr_2_pca, y_train_2)
 
-                            tr_acc.append(
-                                my_svc.score(data_tr_2_pca, y_train_2))
-                            val_acc.append(
-                                my_svc.score(data_val_1_pca, y_val_1))
+                            tr_acc.append(my_svc.score(data_tr_2_pca, y_train_2))
+                            val_acc.append(my_svc.score(data_val_1_pca, y_val_1))
                             print('n_components: ', n_comp, 'kernel:',
                                   current_kernel, 'c:', c)
                             print('Training 2:', tr_acc[-1],
