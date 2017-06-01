@@ -25,6 +25,15 @@ class Hyperpipe(BaseEstimator):
                  local_search=True, groups=None,
                  config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_search_cv_object=None,
                  test_size=0.2, eval_final_performance=False, debug_cv_mode=False, logging=False, set_random_seed=False):
+        # Re eval_final_performance:
+        # set eval_final_performance to False because
+        # 1. if no cv-object is given, no split is performed --> seems more logical
+        #    than passing nothing, passing no cv-object but getting
+        #    an 80/20 split by default
+        # 2. if cv-object is given, split is performed but we don't peek
+        #    into the test set --> thus we can evaluate more hp configs
+        #    later without double dipping
+
 
         self.name = name
         self.hyperparameter_specific_config_cv_object = hyperparameter_specific_config_cv_object
