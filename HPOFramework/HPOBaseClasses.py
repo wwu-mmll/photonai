@@ -24,7 +24,7 @@ class Hyperpipe(BaseEstimator):
     def __init__(self, name, hyperparameter_specific_config_cv_object: BaseCrossValidator, optimizer='grid_search', optimizer_params={},
                  local_search=True, groups=None,
                  config=None, overwrite_x=None, overwrite_y=None, metrics=None, hyperparameter_search_cv_object=None,
-                 test_size=0.2, eval_final_performance=True, debug_cv_mode=False, logging=False, set_random_seed=False):
+                 test_size=0.2, eval_final_performance=False, debug_cv_mode=False, logging=False, set_random_seed=False):
 
         self.name = name
         self.hyperparameter_specific_config_cv_object = hyperparameter_specific_config_cv_object
@@ -197,6 +197,7 @@ class Hyperpipe(BaseEstimator):
                     self.optimum_pipe = self.pipe
                     self.optimum_pipe.set_params(**self.best_config)
                     if self.eval_final_performance and not self.debug_cv_mode:
+                    #if not self.debug_cv_mode:
                         print(' EVALUATE TEST SET OF ' + self.name)
                         print('...now fitting and predicting with optimum configuration')
                         self.optimum_pipe.fit(validation_X, validation_y)
