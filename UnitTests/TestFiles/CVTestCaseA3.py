@@ -20,7 +20,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
     def testCaseA(self):
         pca_n_components = [2, 5]
-        svc_c = [.1, 1]
+        svc_c = [.1, 1, 5]
         #svc_kernel = ['rbf']
         svc_kernel = ['rbf','linear']
 
