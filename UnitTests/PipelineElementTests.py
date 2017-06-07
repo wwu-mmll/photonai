@@ -24,7 +24,7 @@ class HyperpipeTests(unittest.TestCase):
 
     def test_hyperparameters(self):
         # hyperparameters
-        self.assertDictEqual(self.hyperpipe.hyperparameters, {'pca': {'n_components': [1, 2], 'set_disabled': True},
+        self.assertDictEqual(self.hyperpipe.hyperparameters, {'pca': {'n_components': [1, 2], 'test_disabled': True},
                                                               'svc': {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']}})
         # sklearn params
         # Todo: has no sklearn attribute
@@ -65,7 +65,7 @@ class PipelineElementTests(unittest.TestCase):
         self.assertIsInstance(self.pca_pipe_element.base_element, PCA)
 
         # set_disabled is passed correctly
-        self.assertTrue(self.pca_pipe_element.set_disabled)
+        self.assertTrue(self.pca_pipe_element.test_disabled)
         # correct name
         self.assertEqual(self.pca_pipe_element.name, 'pca')
 
@@ -77,7 +77,7 @@ class PipelineElementTests(unittest.TestCase):
                                                                  {'pca__n_components': 2, 'pca__disabled': False},
                                                                  {'pca__disabled': True}])
         # hyperparameter dictionary is returned as expected
-        self.assertDictEqual(self.pca_pipe_element.hyperparameters, {'n_components': [1, 2], 'set_disabled': True})
+        self.assertDictEqual(self.pca_pipe_element.hyperparameters, {'n_components': [1, 2], 'test_disabled': True})
 
     def test_more_hyperparameters_setup(self):
         # sklearn attributes are generated
