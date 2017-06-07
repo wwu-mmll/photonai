@@ -9,12 +9,13 @@ class PCA_AE_Wrapper(BaseEstimator, ClassifierMixin):
     def __init__(self, n_components=5):
 
         print(n_components)
-        self.n_components = n_components
-        self.my_pca = PCA(n_components=n_components)
-        print(self.my_pca)
+        #self.n_components = n_components
+        self.n_components = None
         self.X_recon = None
 
     def fit(self, X, y):
+        self.my_pca = PCA(n_components=self.n_components)
+        print(self.my_pca)
         self.my_pca.fit(X)
         return self
 
