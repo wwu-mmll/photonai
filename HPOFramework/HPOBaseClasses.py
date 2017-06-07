@@ -459,7 +459,8 @@ class PipelineElement(BaseEstimator):
                           'kdnn': ('PipelineWrapper.KerasDNNWrapper', 'KerasDNNWrapper'),
                           'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
                           'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
-                          'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement')}
+                          'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement'),
+                          'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper')}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
