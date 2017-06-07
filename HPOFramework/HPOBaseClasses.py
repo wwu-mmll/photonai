@@ -205,8 +205,7 @@ class Hyperpipe(BaseEstimator):
                     # Todo: clone!!!!!!
                     self.optimum_pipe = self.pipe
                     self.optimum_pipe.set_params(**self.best_config)
-                    if self.eval_final_performance and not self.debug_cv_mode:
-                    #if not self.debug_cv_mode:
+                    if not self.debug_cv_mode:
                         print(' EVALUATE TEST SET OF ' + self.name)
                         print('...now fitting and predicting with optimum configuration')
                         self.optimum_pipe.fit(validation_X, validation_y)
