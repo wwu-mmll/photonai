@@ -26,7 +26,7 @@ class RLCNN(BaseEstimator, ClassifierMixin):
         # 1st dimension: number of data entries
         # 2nd and 3rd dimension: image width and height
         # 4th dimension: number of color channels.
-        x_image = tf.reshape(x, [-1, image_width, image_height, 1])
+        x_image = tf.reshape(self.x, [-1, image_width, image_height, 1])
 
         # labels
         self.y_ = tf.placeholder(tf.float32, [None, num_labels])
@@ -62,7 +62,7 @@ class RLCNN(BaseEstimator, ClassifierMixin):
         h_fc1_drop = tf.nn.dropout(h_fc1, keep_prob)
 
         # final decision layer
-        W_fc2 = RLCNN.([densely_neurons, num_labels])
+        W_fc2 = RLCNN.weight_variable([densely_neurons, num_labels])
         b_fc2 = RLCNN.bias_variable([densely_neurons])
 
         self.y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
