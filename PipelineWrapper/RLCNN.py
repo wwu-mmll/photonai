@@ -26,6 +26,8 @@ class RLCNN(BaseEstimator, ClassifierMixin):
 
     def fit(self, data, targets):
 
+        targets = RLCNN.dense_to_one_hot(targets, self.num_labels)
+
         self.x = tf.placeholder(tf.float32, [None, self.image_width*self.image_height])
         # 1st dimension: number of data entries
         # 2nd and 3rd dimension: image width and height
