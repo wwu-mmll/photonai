@@ -3,14 +3,15 @@ import numpy as np
 from pprint import pprint
 from itertools import product
 from collections import OrderedDict
-from HPOFramework.ResultLogging import ResultLogging
+
+from .ResultLogging import ResultLogging
+from .HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection import ShuffleSplit
 from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
-from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.metrics import accuracy_score
 
@@ -459,7 +460,8 @@ class PipelineElement(BaseEstimator):
                           'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
                           'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
                           'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement'),
-                          'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper')}
+                          'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper'),
+                          'rl_cnn': ('photon_core.PipelineWrapper.RLCNN', 'RLCNN')}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
