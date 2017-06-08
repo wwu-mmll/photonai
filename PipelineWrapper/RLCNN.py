@@ -68,7 +68,7 @@ class RLCNN(BaseEstimator, ClassifierMixin):
 
         # final decision layer
         W_fc2 = RLCNN.weight_variable([self.number_densely_neurons, self.num_labels])
-        b_fc2 = RLCNN.bias_variable([self.number_densely_neurons])
+        b_fc2 = RLCNN.bias_variable([self.num_labels])
 
         self.y_conv = tf.matmul(h_fc1_drop, W_fc2) + b_fc2
 
