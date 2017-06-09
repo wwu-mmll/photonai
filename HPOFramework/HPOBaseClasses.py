@@ -406,6 +406,7 @@ class Scorer(object):
         'hamming_loss': ('sklearn.metrics', 'hamming_loss'),
         'log_loss': ('sklearn.metrics', 'log_loss'),
         'precision': ('sklearn.metrics', 'precision_score'),
+        'recall': ('sklearn.metrics', 'recall_score'),
         # Regression
         'mean_squared_error': ('sklearn.metrics', 'mean_squared_error'),
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
@@ -454,6 +455,7 @@ class PipelineElement(BaseEstimator):
     # from PipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
     ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
                           'svc': ('sklearn.svm', 'SVC'),
+                          'knn': ('sklearn.neighbors', 'KNeighborsClassifier'),
                           'logistic': ('sklearn.linear_model', 'LogisticRegression'),
                           'dnn': ('PipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
                           'kdnn': ('PipelineWrapper.KerasDNNWrapper', 'KerasDNNWrapper'),
