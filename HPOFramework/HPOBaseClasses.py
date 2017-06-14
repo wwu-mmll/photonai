@@ -194,7 +194,7 @@ class Hyperpipe(BaseEstimator):
 
                     # inform user
                     print('--------------------------------------------------')
-                    print('Best config: ', self.best_config)
+                    print('Best config: ', self.optimize_printing(self.best_config))
                     print('Performance:\n')
                     print(self.best_performance)
                     print('Number of tested configurations:',
