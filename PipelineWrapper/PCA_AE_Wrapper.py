@@ -15,7 +15,7 @@ class PCA_AE_Wrapper(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         self.my_pca = PCA(n_components=self.n_components)
-        print(self.my_pca)
+        #print(self.my_pca)
         self.my_pca.fit(X)
         return self
 
@@ -24,7 +24,7 @@ class PCA_AE_Wrapper(BaseEstimator, ClassifierMixin):
         self.X_recon = self.my_pca.inverse_transform(tmp)
         return self.X_recon
 
-    def score(self, X, X_recon):
+    def score(self, X, y):
         self.predict(X)
         loss = mae(X, self.X_recon)
         return loss
