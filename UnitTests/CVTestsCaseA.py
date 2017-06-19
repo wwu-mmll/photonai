@@ -6,7 +6,7 @@ from sklearn.model_selection._validation import _fit_and_score
 import random
 
 
-class CVTestsLocalSearchTrue(unittest.TestCase):
+class CVTestsCaseA(unittest.TestCase):
     __X = None
     __y = None
 
