@@ -3,14 +3,15 @@ import numpy as np
 from pprint import pprint
 from itertools import product
 from collections import OrderedDict
-from HPOFramework.ResultLogging import ResultLogging
+
+from .ResultLogging import ResultLogging
+from .HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 
 from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection import ShuffleSplit
 from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
-from HPOFramework.HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.metrics import accuracy_score
 
@@ -193,7 +194,7 @@ class Hyperpipe(BaseEstimator):
 
                     # inform user
                     print('--------------------------------------------------')
-                    print('Best config: ', self.best_config)
+                    print('Best config: ', self.optimize_printing(self.best_config))
                     print('Performance:\n')
                     print(self.best_performance)
                     print('Number of tested configurations:',
@@ -205,8 +206,7 @@ class Hyperpipe(BaseEstimator):
                     # Todo: clone!!!!!!
                     self.optimum_pipe = self.pipe
                     self.optimum_pipe.set_params(**self.best_config)
-                    if self.eval_final_performance and not self.debug_cv_mode:
-                    #if not self.debug_cv_mode:
+                    if not self.debug_cv_mode:
                         print(' EVALUATE TEST SET OF ' + self.name)
                         print('...now fitting and predicting with optimum configuration')
                         self.optimum_pipe.fit(validation_X, validation_y)
@@ -406,6 +406,7 @@ class Scorer(object):
         'hamming_loss': ('sklearn.metrics', 'hamming_loss'),
         'log_loss': ('sklearn.metrics', 'log_loss'),
         'precision': ('sklearn.metrics', 'precision_score'),
+        'recall': ('sklearn.metrics', 'recall_score'),
         # Regression
         'mean_squared_error': ('sklearn.metrics', 'mean_squared_error'),
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
@@ -454,13 +455,15 @@ class PipelineElement(BaseEstimator):
     # from PipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
     ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
                           'svc': ('sklearn.svm', 'SVC'),
+                          'knn': ('sklearn.neighbors', 'KNeighborsClassifier'),
                           'logistic': ('sklearn.linear_model', 'LogisticRegression'),
                           'dnn': ('PipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
                           'kdnn': ('PipelineWrapper.KerasDNNWrapper', 'KerasDNNWrapper'),
                           'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
                           'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
                           'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement'),
-                          'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper')}
+                          'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper'),
+                          'rl_cnn': ('photon_core.PipelineWrapper.RLCNN', 'RLCNN')}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
