@@ -25,8 +25,8 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         random.seed(42)
 
     def testCaseA(self):
-        pca_n_components = [2, 5]
-        svc_c = [.1, 1]
+        pca_n_components = [3, 15]
+        svc_c = [.1]
         #svc_kernel = ['rbf']
         svc_kernel = ['rbf','linear']
 
@@ -38,12 +38,11 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         #                     eval_final_performance=True)
         outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
                                metrics=['accuracy'],
-                               hyperparameter_specific_config_cv_object=KFold(
-                                   n_splits=2, random_state=3),
-                               hyperparameter_search_cv_object=ShuffleSplit(n_splits=1,test_size=0.2),
+                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
+                               hyperparameter_search_cv_object=ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
                                eval_final_performance=True)
         inner_pipe = Hyperpipe('pca_pipe', optimizer='grid_search',
-                               hyperparameter_specific_config_cv_object=KFold(n_splits=2, random_state=3),
+                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
                                eval_final_performance=False)
 
         inner_pipe.add(PipelineElement.create('standard_scaler'))
@@ -58,7 +57,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         outer_pipe.fit(self.__X, self.__y)
         print(outer_pipe.test_performances)
         pipe_results = {'train': [], 'test': []}
-        for i in range(len(outer_pipe.performance_history_list)):
+        for i in range(int(len(outer_pipe.performance_history_list)/2)):
             pipe_results['train'].extend(
                 outer_pipe.performance_history_list[i]['accuracy_folds']['train'])
             pipe_results['test'].extend(
@@ -69,13 +68,15 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         print('\n\n')
         print('Running sklearn version...\n')
         #cv_outer = KFold(n_splits=3, random_state=3)
-        cv_outer = ShuffleSplit(n_splits=1,test_size=0.2)
-        cv_inner_1 = KFold(n_splits=2, random_state=3)
-        cv_inner_2 = KFold(n_splits=2, random_state=3)
+        cv_outer = ShuffleSplit(n_splits=1,test_size=0.2, random_state=3)
+        cv_inner_1 = ShuffleSplit(n_splits=1,test_size=0.2, random_state=3)
+        cv_inner_2 = ShuffleSplit(n_splits=1,test_size=0.2, random_state=3)
+        # cv_inner_1 = KFold(n_splits=2, random_state=3)
+        # cv_inner_2 = KFold(n_splits=2, random_state=3)
 
         opt_tr_acc = []
         opt_test_acc = []
-        fold_cnt = 1
+
         for train_1, test in cv_outer.split(self.__X):
             data_train_1 = self.__X[train_1]
             data_test = self.__X[test]
@@ -88,24 +89,32 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                                  'val_1': [],
                                  'train_2_mean': [],
                                  'val_1_mean': []}
-            print('\n\nSklearn Outer Pipe Fold', fold_cnt,'\n')
+            print('Outer Split')
+            print('n train_1:', data_train_1.shape[0], '\n')
+
+
             for c in svc_c:
                 for current_kernel in svc_kernel:
                     config_inner_1['C'].extend([c])
                     config_inner_1['kernel'].extend([current_kernel])
+
+                    print('C:', c, 'Kernel:', current_kernel, '\n')
                     svc_score_tr = []
                     svc_score_te = []
-
-                    print('C:', c, 'Kernel:', current_kernel)
+                    fold_cnt = 1
                     for train_2, val_1 in cv_inner_1.split(
                             data_train_1):
+                        print('\n\nSklearn Outer Pipe Fold', fold_cnt)
+
                         data_train_2 = data_train_1[train_2]
                         data_val_1 = data_train_1[val_1]
                         y_train_2 = y_train_1[train_2]
                         y_val_1 = y_train_1[val_1]
+                        print('n train_2:', data_train_2.shape[0], '\n')
+
 
                         config_inner_2 = {'n_comp': []}
-
+                        print('Sklearn PCA Pipe')
                         for n_comp in pca_n_components:
                             config_inner_2['n_comp'].extend([n_comp])
 
@@ -149,14 +158,16 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                             sk_results_inner2['val_2'].extend(val_acc)
                             sk_results_inner2['train_3_mean'].extend([np.mean(tr_acc)])
                             sk_results_inner2['val_2_mean'].extend([np.mean(val_acc)])
-                            print('Sklearn PCA Pipe')
+
                             print('n_comp:', n_comp)
-                            print('Training 3:', [np.mean(tr_acc)],
-                                  'Validation 2:', [np.mean(val_acc)])
+                            print('n train_3 fold 1:', data_train_3.shape[0])
+                            print('Training 3 mean:', [np.mean(tr_acc)],
+                                  'Validation 2 mean:', [np.mean(val_acc)])
                         # find best config for val 2
                         best_config_id = np.argmax(sk_results_inner2['val_2_mean'])
-                        print('Best config:', config_inner_2['n_comp'][best_config_id], '\n')
+                        print('Best PCA config:', config_inner_2['n_comp'][best_config_id], '\n')
                         # fit optimum pipe
+
                         my_scaler = StandardScaler()
                         my_scaler.fit(data_train_2)
                         data_train_2 = my_scaler.transform(data_train_2)
@@ -173,14 +184,23 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                         my_svc.fit(data_tr_2_pca, y_train_2)
                         svc_score_tr.append(my_svc.score(data_tr_2_pca, y_train_2))
                         svc_score_te.append(my_svc.score(data_val_1_pca, y_val_1))
+                        print('Fit Optimum PCA Config and train with SVC')
+                        print('n train 2:', data_train_2.shape[0])
+                        print('n_comp:',config_inner_2['n_comp'][best_config_id])
+                        print('SVC Train:', svc_score_tr[-1])
+                        print('SVC Test:', svc_score_te[-1], '\n\n')
+                        sk_results_inner1['train_2'].append(svc_score_tr[-1])
+                        sk_results_inner1['val_1'].append(svc_score_te[-1])
+                        fold_cnt += 1
+                    sk_results_inner1['train_2_mean'].append(np.mean(svc_score_tr))
+                    sk_results_inner1['val_1_mean'].append(np.mean(svc_score_te))
 
-                    sk_results_inner1['train_2'].extend(svc_score_tr)
-                    sk_results_inner1['val_1'].extend(svc_score_te)
-                    sk_results_inner1['train_2_mean'].extend([np.mean(svc_score_tr)])
-                    sk_results_inner1['val_1_mean'].extend([np.mean(svc_score_te)])
 
-                fold_cnt += 1
+            print('\nNow find best config for SVC...')
             best_config_id_inner_1 = np.argmax(sk_results_inner1['val_1_mean'])
+            print('Some test data:')
+            print(data_test.shape)
+            print(data_test[0:2,0:2])
 
             # fit optimum pipe
             my_scaler = StandardScaler()
@@ -197,15 +217,17 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
             # Run SVC
             my_svc = SVC(kernel=config_inner_1['kernel'][best_config_id_inner_1],
                          C=config_inner_1['C'][best_config_id_inner_1])
-            print('Best Config:...')
+            print('Best overall config:...')
             print('C = ',config_inner_1['C'][best_config_id_inner_1])
             print('kernel=', config_inner_1['kernel'][best_config_id_inner_1])
-
+            print('pca_n_comp=', config_inner_2['n_comp'][best_config_id])
+            print('n train 1:', data_train_1.shape[0])
             my_svc.fit(data_tr_1_pca, y_train_1)
 
             opt_tr_acc.append(my_svc.score(data_tr_1_pca, y_train_1))
             opt_test_acc.append(my_svc.score(data_test_pca, y_test))
-
+            print('Train Acc:', opt_tr_acc[-1])
+            print('Test Acc:', opt_test_acc[-1])
 
         print('\nCompare results of last iteration (outer cv)...')
         print('SkL  Train:', sk_results_inner1['train_2'])
