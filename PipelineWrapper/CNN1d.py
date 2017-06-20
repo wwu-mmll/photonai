@@ -6,8 +6,6 @@ from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten
 import keras.optimizers
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
-from keras.layers.advanced_activations import PReLU
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 class CNN1d(BaseEstimator, ClassifierMixin):
@@ -104,7 +102,8 @@ class CNN1d(BaseEstimator, ClassifierMixin):
         model.compile(loss=self.loss, optimizer=optimizer, metrics=self.metrics)
         return model
 
-    def define_optimizer(self, optimizer_type='Adam', lr=0.001):
+    @staticmethod
+    def define_optimizer(optimizer_type='Adam', lr=0.001):
         # Todo: use kwargs to allow for additional optimizer tweaking
         try:
             optimizer_class = getattr(keras.optimizers, optimizer_type)
@@ -115,7 +114,8 @@ class CNN1d(BaseEstimator, ClassifierMixin):
 
         return optimizer
 
-    def dense_to_one_hot(self, labels_dense, num_classes):
+    @staticmethod
+    def dense_to_one_hot(labels_dense, num_classes):
         """Convert class labels from scalars to one-hot vectors."""
         num_labels = labels_dense.shape[0]
         index_offset = np.arange(num_labels) * num_classes
