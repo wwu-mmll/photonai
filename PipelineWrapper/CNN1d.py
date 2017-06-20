@@ -2,7 +2,7 @@ import numpy as np
 import tensorflow as tf
 import keras
 from keras.models import Sequential
-from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten
+from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, GaussianNoise
 import keras.optimizers
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
@@ -13,7 +13,7 @@ class CNN1d(BaseEstimator, ClassifierMixin):
     def __init__(self, target_dimension, n_filters,
                            kernel_size, n_convolutions_per_block,
                            pooling_size,
-                           stride, size_last_layer,
+                           stride, size_last_layer, gaussian_noise=0,
                            act_func='relu', learning_rate=0.001,
                            dropout_rate=0, batch_normalization=True,
                            nb_epochs=200, batch_size=64,
@@ -37,6 +37,7 @@ class CNN1d(BaseEstimator, ClassifierMixin):
         self.optimizer = optimizer
         self.batch_size = batch_size
         self.gpu_device = gpu_device
+        self.gaussian_noise = gaussian_noise
 
         self.x = None
         self.y_ = None
@@ -56,7 +57,7 @@ class CNN1d(BaseEstimator, ClassifierMixin):
             return max_index
         else:
             return self.model.predict(X, batch_size=self.batch_size)
-    
+
     def create_model(self, input_shape):
         model = Sequential()
 
@@ -91,6 +92,8 @@ class CNN1d(BaseEstimator, ClassifierMixin):
 
         with tf.device(self.gpu_device):
             model.add(Flatten())
+            if self.gaussian_noise:
+                model.add(GaussianNoise(stddev=self.gaussian_noise))
             model.add(Dense(self.size_last_layer))
             model.add(Activation(self.act_func))
             if self.dropout:
