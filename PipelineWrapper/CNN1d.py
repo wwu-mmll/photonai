@@ -9,16 +9,15 @@ from keras.layers.normalization import BatchNormalization
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 class CNN1d(BaseEstimator, ClassifierMixin):
-
-    def __init__(self, target_dimension, n_filters,
-                           kernel_size, n_convolutions_per_block,
-                           pooling_size,
-                           stride, size_last_layer, gaussian_noise=0,
-                           act_func='relu', learning_rate=0.001,
-                           dropout_rate=0, batch_normalization=True,
-                           nb_epochs=200, batch_size=64,
-                           loss='categorical_crossentropy',
-                           metrics=['accuracy'], optimizer='adam', gpu_device='/gpu:0'):
+    # todo: BUGFIX --> pooling doesnt work
+    def __init__(self, target_dimension=2, n_filters=[16], kernel_size=3,
+                 pooling_size=3, stride=5, size_last_layer=10,
+                 n_convolutions_per_block=1, gaussian_noise=0,
+                 act_func='relu', learning_rate=0.001,
+                 dropout_rate=0, batch_normalization=True,
+                 nb_epochs=200, batch_size=64,
+                 loss='categorical_crossentropy', metrics=['accuracy'],
+                 optimizer='adam', gpu_device='/gpu:0'):
 
         self.target_dimension = target_dimension
         self.n_filters = n_filters
@@ -60,11 +59,12 @@ class CNN1d(BaseEstimator, ClassifierMixin):
 
     def create_model(self, input_shape):
         model = Sequential()
-
+        input_shape = (input_shape[1], input_shape[2])
         for ind_blocks in range(len(self.n_filters)):
             for ind_convs in range(self.n_convolutions_per_block):
                 if ind_blocks == 0 and ind_convs == 0:
                     with tf.device(self.gpu_device):
+                        print(input_shape)
                         model.add(Conv1D(self.n_filters[ind_blocks],
                                          self.kernel_size,
                                          strides=self.stride,
@@ -104,12 +104,11 @@ class CNN1d(BaseEstimator, ClassifierMixin):
             model.add(Dense(self.target_dimension))
             model.add(Activation('softmax'))
 
-        # initiate RMSprop optimizer
         optimizer = self.define_optimizer(optimizer_type=self.optimizer,
                                      lr=self.lr)
 
-        # Let's train the model using RMSprop
         model.compile(loss=self.loss, optimizer=optimizer, metrics=self.metrics)
+        model.summary()
         return model
 
     @staticmethod
