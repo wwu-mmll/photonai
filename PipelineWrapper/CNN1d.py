@@ -49,7 +49,14 @@ class CNN1d(BaseEstimator, ClassifierMixin):
         self.model = self.create_model(X.shape)
         self.model.fit(X,y, batch_size=self.batch_size, epochs=self.nb_epochs, verbose=0)
 
-
+    def predict(self, X):
+        if self.target_dimension > 1:
+            predict_result = self.model.predict(X, batch_size=self.batch_size)
+            max_index = np.argmax(predict_result, axis=1)
+            return max_index
+        else:
+            return self.model.predict(X, batch_size=self.batch_size)
+    
     def create_model(self, input_shape):
         model = Sequential()
 
