@@ -138,10 +138,16 @@ class Hyperpipe(BaseEstimator):
     def fit(self, data, targets, **fit_params):
 
         # first check if correct optimizer metric has been chosen
+        # pass pipeline_elements so that OptimizerMetric can look for last
+        # element and use the corresponding score method
         self.opt_metric = OptimizerMetric(self.opt_metric, self.pipeline_elements)
-        if not self.opt_metric in self.metrics:
-            self.metrics.append(self.opt_metric)
-
+        if self.metrics:
+            if not self.opt_metric in self.metrics:
+                self.metrics.append(self.opt_metric)
+        # maybe there's a better solution for this
+        else:
+            self.metrics = [self.opt_metric]
+            
         # in case we want to inject some data from outside the pipeline
         if self.overwrite_x is None and self.overwrite_y is None:
             self.X = data
@@ -481,16 +487,17 @@ class OptimizerMetric(object):
         else:
             # if no optimizer metric was chosen, use default scoring method
             last_element = pipeline_elements[-1]
-            if last_element.base_element._estimator_type == 'classifier':
-                self.greater_is_better = True
-            elif (last_element.base_element._estimator_type == 'regressor'
-                  or last_element.base_element._estimator_type == 'transformer'
-                  or last_element.base_element._estimator_type == 'clusterer'):
-                self.greater_is_better = False
+            if hasattr(last_element.base_element, '_estimator_type'):
+                if last_element.base_element._estimator_type == 'classifier':
+                    self.greater_is_better = True
+                elif (last_element.base_element._estimator_type == 'regressor'
+                      or last_element.base_element._estimator_type == 'transformer'
+                      or last_element.base_element._estimator_type == 'clusterer'):
+                    self.greater_is_better = False
             else:
                 # Todo: better error checking?
                 raise NotImplementedError('Last pipeline element does not specify '
-                                          'whether it is a regressor, transformer or '
+                                          'whether it is a classifier, regressor, transformer or '
                                           'clusterer.')
             self.metric = 'score'
 
