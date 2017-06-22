@@ -11,8 +11,8 @@ X = dataset.data
 y = dataset.target
 random.seed(42)
 
-pca_n_components = 10
-svc_c = 1
+pca_n_components = [10, 5]
+svc_c = [1,10]
 svc_kernel = "rbf"
 # SET UP HYPERPIPE and choose accuracy as optimizer metric
 my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={},
@@ -23,8 +23,8 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={}
                     optimizer_metric='accuracy')
 
 my_pipe += PipelineElement.create('standard_scaler')
-my_pipe += PipelineElement.create('pca', {'n_components': [pca_n_components]})
-my_pipe += PipelineElement.create('svc', {'C': [svc_c], 'kernel': [svc_kernel]})
+my_pipe += PipelineElement.create('pca', {'n_components': pca_n_components})
+my_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': [svc_kernel]})
 
 # START HYPERPARAMETER SEARCH
 print('-----------------')
@@ -38,11 +38,11 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={}
                     hyperparameter_specific_config_cv_object=KFold(n_splits=3),
                     hyperparameter_search_cv_object=KFold(n_splits=3),
                     eval_final_performance = True,
-                    optimizer_metric='precision')
+                    optimizer_metric='mean_squared_error')
 
 my_pipe += PipelineElement.create('standard_scaler')
-my_pipe += PipelineElement.create('pca', {'n_components': [pca_n_components]})
-my_pipe += PipelineElement.create('svc', {'C': [svc_c], 'kernel': [svc_kernel]})
+my_pipe += PipelineElement.create('pca', {'n_components': pca_n_components})
+my_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': [svc_kernel]})
 
 # START HYPERPARAMETER SEARCH
 print('\n\n\n-----------------')
