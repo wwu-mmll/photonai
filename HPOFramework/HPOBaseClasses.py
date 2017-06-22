@@ -479,11 +479,11 @@ class OptimizerMetric(object):
         else:
             # if no optimizer metric was chosen, use default scoring method
             last_element = pipeline_elements[-1]
-            if last_element._estimator_type == 'classifier':
+            if last_element.base_element._estimator_type == 'classifier':
                 self.greater_is_better = True
-            elif (last_element._estimator_type == 'regressor'
-                  or last_element._estimator_type == 'transformer'
-                  or last_element._estimator_type == 'clusterer'):
+            elif (last_element.base_element._estimator_type == 'regressor'
+                  or last_element.base_element._estimator_type == 'transformer'
+                  or last_element.base_element._estimator_type == 'clusterer'):
                 self.greater_is_better = False
             else:
                 # Todo: better error checking?
