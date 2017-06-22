@@ -139,6 +139,8 @@ class Hyperpipe(BaseEstimator):
 
         # first check if correct optimizer metric has been chosen
         self.opt_metric = OptimizerMetric(self.opt_metric, self.pipeline_elements)
+        if not self.opt_metric in self.metrics:
+            self.metrics.append(self.opt_metric)
 
         # in case we want to inject some data from outside the pipeline
         if self.overwrite_x is None and self.overwrite_y is None:
