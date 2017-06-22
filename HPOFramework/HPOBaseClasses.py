@@ -140,14 +140,21 @@ class Hyperpipe(BaseEstimator):
         # first check if correct optimizer metric has been chosen
         # pass pipeline_elements so that OptimizerMetric can look for last
         # element and use the corresponding score method
+
+        # @Ramona: Ich weiß, dass das hässlich ist und du so viele if's nicht magst :D
+        # vielleicht finden wir dafür noch eine elegantere Lösung
+        # ich will die opt_metric den normalen metrics hinzufügen, damit die
+        # auch berechnet wird. Nur 'score' soll nicht hinzugefügt werden,
+        # weil das sowieso immer gemacht wird
         self.opt_metric = OptimizerMetric(self.opt_metric, self.pipeline_elements)
-        if self.metrics:
-            if not self.opt_metric in self.metrics:
-                self.metrics.append(self.opt_metric)
-        # maybe there's a better solution for this
-        else:
-            self.metrics = [self.opt_metric]
-            
+        if not self.opt_metric == 'score':
+            if self.metrics:
+                if not self.opt_metric in self.metrics:
+                    self.metrics.append(self.opt_metric)
+            # maybe there's a better solution to this
+            else:
+                self.metrics = [self.opt_metric]
+
         # in case we want to inject some data from outside the pipeline
         if self.overwrite_x is None and self.overwrite_y is None:
             self.X = data
