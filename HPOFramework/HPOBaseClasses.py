@@ -147,13 +147,13 @@ class Hyperpipe(BaseEstimator):
         # auch berechnet wird. Nur 'score' soll nicht hinzugefügt werden,
         # weil das sowieso immer gemacht wird
         self.opt_metric = OptimizerMetric(self.opt_metric, self.pipeline_elements)
-        if not self.opt_metric == 'score':
+        if not self.opt_metric.metric == 'score':
             if self.metrics:
                 if not self.opt_metric in self.metrics:
-                    self.metrics.append(self.opt_metric)
+                    self.metrics.append(self.opt_metric.metric)
             # maybe there's a better solution to this
             else:
-                self.metrics = [self.opt_metric]
+                self.metrics = [self.opt_metric.metric]
 
         # in case we want to inject some data from outside the pipeline
         if self.overwrite_x is None and self.overwrite_y is None:
