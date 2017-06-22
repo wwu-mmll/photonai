@@ -223,6 +223,8 @@ class Hyperpipe(BaseEstimator):
 
                     # inform user
                     print('--------------------------------------------------')
+                    print('Optimizer metric: ', self.opt_metric.metric)
+                    print('   --> Greater is better: ', self.opt_metric.greater_is_better)
                     print('Best config: ', self.optimize_printing(self.best_config))
                     print('Performance:\n')
                     print(self.best_performance)
