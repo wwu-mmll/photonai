@@ -19,8 +19,7 @@ manager = Hyperpipe('test_manager',
 
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))
 
-nn = PipelineElement.create('kdnn', hyperparameters={'hidden_layer_sizes': [[5, 3],
-                                                                            [3, 2]]})
+nn = PipelineElement.create('kdnn', hyperparameters={'hidden_layer_sizes': [[5, 3]]})
 svm = PipelineElement.create('svc', hyperparameters={'C': [0.5, 1]}, kernel='rbf')
 manager.add(PipelineSwitch('final_estimator', [nn, svm]))
 

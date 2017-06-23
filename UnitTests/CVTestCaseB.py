@@ -5,6 +5,7 @@
 import unittest
 from sklearn.model_selection import KFold, ShuffleSplit
 from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe, PipelineFusion
+from PipelineWrapper.PCA_AE_Wrapper import PCA_AE_Wrapper
 import random
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler
@@ -24,11 +25,11 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         self.__y = dataset.target
         random.seed(42)
 
-    def testCaseA(self):
-        pca_n_components = [3, 15]
+    def testCaseB(self):
+        pca_n_components = [7, 15]
         svc_c = [.1]
         #svc_kernel = ['rbf']
-        svc_kernel = ['rbf','linear']
+        svc_kernel = ['rbf', 'linear']
 
         # SET UP HYPERPIPE
         # outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
@@ -39,10 +40,10 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
                                metrics=['accuracy'],
                                hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
-                               hyperparameter_search_cv_object=ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
+                               hyperparameter_search_cv_object=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
                                eval_final_performance=True)
         inner_pipe = Hyperpipe('pca_pipe', optimizer='grid_search',
-                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
+                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
                                eval_final_performance=False)
 
         inner_pipe.add(PipelineElement.create('standard_scaler'))
@@ -140,16 +141,13 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                                 data_val_2 = my_scaler.transform(data_val_2)
 
                                 # Run PCA
-                                my_pca = PCA(n_components=n_comp)
+                                my_pca = PCA_AE_Wrapper(n_components=n_comp)
                                 my_pca.fit(data_train_3)
-                                data_tr_3_pca = my_pca.transform(data_train_3)
-                                data_val_2_pca = my_pca.transform(data_val_2)
+                                data_tr_3_pca_inv = my_pca.predict(data_train_3)
+                                data_val_2_pca_inv = my_pca.predict(data_val_2)
 
-                                data_tr_3_pca_inv = my_pca.inverse_transform(data_tr_3_pca)
-                                data_val_2_pca_inv = my_pca.inverse_transform(data_val_2_pca)
-
-                                mae_tr = mae(data_train_3,data_tr_3_pca_inv)
-                                mae_te = mae(data_val_2,data_val_2_pca_inv)
+                                mae_tr = my_pca.score(data_train_3)
+                                mae_te = my_pca.score(data_val_2)
 
                                 tr_acc.append(mae_tr)
                                 val_acc.append(mae_te)
@@ -174,7 +172,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                         data_val_1 = my_scaler.transform(data_val_1)
 
                         # Run PCA
-                        my_pca = PCA(n_components=config_inner_2['n_comp'][best_config_id])
+                        my_pca = PCA_AE_Wrapper(n_components=config_inner_2['n_comp'][best_config_id])
                         my_pca.fit(data_train_2)
                         data_tr_2_pca = my_pca.transform(data_train_2)
                         data_val_1_pca = my_pca.transform(data_val_1)
@@ -209,7 +207,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
             data_test = my_scaler.transform(data_test)
 
             # Run PCA
-            my_pca = PCA(n_components=config_inner_2['n_comp'][best_config_id])
+            my_pca = PCA_AE_Wrapper(n_components=config_inner_2['n_comp'][best_config_id])
             my_pca.fit(data_train_1)
             data_tr_1_pca = my_pca.transform(data_train_1)
             data_test_pca = my_pca.transform(data_test)
