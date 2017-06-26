@@ -565,7 +565,12 @@ class PipelineElement(BaseEstimator):
 
     def predict(self, data):
         if not self.disabled:
-            return self.base_element.predict(data)
+            if hasattr(self.base_element, 'predict'):
+                return self.base_element.predict(data)
+            elif hasattr(self.base_element, 'transform'):
+                return self.base_element.transform(data)
+            else:
+                raise BaseException('Base Element should have function predict, or at least transform.')
         else:
             return data
 

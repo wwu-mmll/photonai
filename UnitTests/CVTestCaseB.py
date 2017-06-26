@@ -143,8 +143,8 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                                 # Run PCA
                                 my_pca = PCA_AE_Wrapper(n_components=n_comp)
                                 my_pca.fit(data_train_3)
-                                data_tr_3_pca_inv = my_pca.predict(data_train_3)
-                                data_val_2_pca_inv = my_pca.predict(data_val_2)
+                                data_tr_3_pca_inv = my_pca.transform(data_train_3)
+                                data_val_2_pca_inv = my_pca.transform(data_val_2)
 
                                 mae_tr = my_pca.score(data_train_3)
                                 mae_te = my_pca.score(data_val_2)
