@@ -6,6 +6,7 @@ from sklearn.metrics import mean_absolute_error as mae
 
 
 class PCA_AE_Wrapper(BaseEstimator, ClassifierMixin):
+    _estimator_type = "transformer"
 
     def __init__(self, n_components=5):
         self.n_components = n_components
