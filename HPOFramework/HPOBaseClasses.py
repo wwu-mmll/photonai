@@ -25,7 +25,7 @@ class Hyperpipe(BaseEstimator):
     def __init__(self, name, hyperparameter_specific_config_cv_object: BaseCrossValidator,
                  optimizer='grid_search', optimizer_params={}, local_search=True,
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
-                 metrics=None, optimizer_metric=None, hyperparameter_search_cv_object=None,
+                 metrics=None, best_config_metric=None, hyperparameter_search_cv_object=None,
                  test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
                  logging=False, set_random_seed=False):
         # Re eval_final_performance:
@@ -63,7 +63,8 @@ class Hyperpipe(BaseEstimator):
         self.pipe = None
         self.optimum_pipe = None
         self.metrics = metrics
-        self.opt_metric = optimizer_metric
+        self.best_config_metric = best_config_metric
+        self.config_optimizer = None
 
         # Todo: this might be a case for sanity checking
         self.overwrite_x = overwrite_x
@@ -137,23 +138,6 @@ class Hyperpipe(BaseEstimator):
 
     def fit(self, data, targets, **fit_params):
 
-        # first check if correct optimizer metric has been chosen
-        # pass pipeline_elements so that OptimizerMetric can look for last
-        # element and use the corresponding score method
-
-        # @Ramona: Ich weiß, dass das hässlich ist und du so viele if's nicht magst :D
-        # vielleicht finden wir dafür noch eine elegantere Lösung
-        # ich will die opt_metric den normalen metrics hinzufügen, damit die
-        # auch berechnet wird. Nur 'score' soll nicht hinzugefügt werden,
-        # weil das sowieso immer gemacht wird
-        self.opt_metric = OptimizerMetric(self.opt_metric, self.pipeline_elements)
-        if not self.opt_metric.metric == 'score':
-            if self.metrics:
-                if not self.opt_metric in self.metrics:
-                    self.metrics.append(self.opt_metric.metric)
-            # maybe there's a better solution to this
-            else:
-                self.metrics = [self.opt_metric.metric]
 
         # in case we want to inject some data from outside the pipeline
         if self.overwrite_x is None and self.overwrite_y is None:
@@ -166,6 +150,13 @@ class Hyperpipe(BaseEstimator):
         # optimize: iterate through configs and save results
         if self.local_search:
 
+            # first check if correct optimizer metric has been chosen
+            # pass pipeline_elements so that OptimizerMetric can look for last
+            # element and use the corresponding score method
+            self.config_optimizer = OptimizerMetric(self.best_config_metric, self.pipeline_elements, self.metrics)
+            self.metrics = self.config_optimizer.check_metrics()
+
+            # generate cross validation splits to iterate over
             self.generate_cv_object()
 
             cv_counter = 0
@@ -197,11 +188,11 @@ class Hyperpipe(BaseEstimator):
                     results_cv, specific_parameters = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
                     # get optimizer_metric and forward to optimizer
                     # todo: also pass greater_is_better=True/False to optimizer
-                    config_score = (results_cv[self.opt_metric.metric]['train'],
-                                    results_cv[self.opt_metric.metric]['test'])
+                    config_score = (results_cv[self.config_optimizer.metric]['train'],
+                                    results_cv[self.config_optimizer.metric]['test'])
                     # 3. inform optimizer about performance
                     self.optimizer.evaluate_recent_performance(specific_config, config_score)
-                    print('Performance History: ', results_cv[self.opt_metric.metric])
+                    print('Performance History: ', results_cv[self.config_optimizer.metric])
                     self.config_history.append(specific_config)
                     self.performance_history_list.append(results_cv)
                     self.parameter_history.append(specific_parameters)
@@ -212,19 +203,14 @@ class Hyperpipe(BaseEstimator):
 
                 # Todo: Do better error checking
                 if len(self.performance_history) > 0:
-                    if self.opt_metric.greater_is_better:
-                        best_config_nr = np.argmax(
-                            self.performance_history[self.opt_metric.metric]['test'])
-                    else:
-                        best_config_nr = np.argmin(
-                            self.performance_history[self.opt_metric.metric]['test'])
+                    best_config_nr= self.config_optimizer.get_optimum_config_idx(self.performance_history[self.config_optimizer.metric]['test'])
                     self.best_config = self.config_history[best_config_nr]
                     self.best_performance = self.performance_history_list[best_config_nr]
 
                     # inform user
                     print('--------------------------------------------------')
-                    print('Optimizer metric: ', self.opt_metric.metric)
-                    print('   --> Greater is better: ', self.opt_metric.greater_is_better)
+                    print('Optimizer metric: ', self.config_optimizer.metric)
+                    print('   --> Greater is better: ', self.config_optimizer.greater_is_better)
                     print('Best config: ', self.optimize_printing(self.best_config))
                     print('Performance:\n')
                     print(self.best_performance)
@@ -472,13 +458,31 @@ class Scorer(object):
 
 class OptimizerMetric(object):
 
-    def __init__(self, metric, pipeline_elements):
+    def __init__(self, metric, pipeline_elements, other_metrics):
         self.metric = metric
         self.greater_is_better = None
+        self.other_metrics = other_metrics
         self.set_optimizer_metric(pipeline_elements)
 
+    def check_metrics(self):
+        if not self.metric == 'score':
+            if self.other_metrics:
+                if self.metric not in self.other_metrics:
+                    self.other_metrics.append(self.metric)
+            # maybe there's a better solution to this
+            else:
+                self.other_metrics = [self.metric]
+        return self.other_metrics
+
+    def get_optimum_config_idx(self, performance_metrics):
+        if self.greater_is_better:
+            best_config_nr = np.argmax(performance_metrics)
+        else:
+            best_config_nr = np.argmin(performance_metrics)
+        return best_config_nr
+
     def set_optimizer_metric(self, pipeline_elements):
-        if isinstance(self.metric,str):
+        if isinstance(self.metric, str):
             if self.metric in Scorer.ELEMENT_DICTIONARY:
                 # for now do a simple hack and set greater_is_better
                 # by looking at error/score in metric name
@@ -495,6 +499,8 @@ class OptimizerMetric(object):
                 raise NameError('Specify valid metric.')
         else:
             # if no optimizer metric was chosen, use default scoring method
+            self.metric = 'score'
+
             last_element = pipeline_elements[-1]
             if hasattr(last_element.base_element, '_estimator_type'):
                 if last_element.base_element._estimator_type == 'classifier':
@@ -508,11 +514,9 @@ class OptimizerMetric(object):
                 raise NotImplementedError('Last pipeline element does not specify '
                                           'whether it is a classifier, regressor, transformer or '
                                           'clusterer.')
-            self.metric = 'score'
 
 
 class PipelineElement(BaseEstimator):
-
     """
         Add any estimator or transform object from sklearn and associate unique name
         Add any own object that is compatible (implements fit and/or predict and/or fit_predict)
