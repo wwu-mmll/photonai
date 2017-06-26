@@ -14,7 +14,7 @@ import numpy as np
 np.random.seed(3)
 from sklearn.metrics import mean_absolute_error as mae
 
-class CVTestsLocalSearchTrue(unittest.TestCase):
+class CVTestCaseB(unittest.TestCase):
     __X = None
     __y = None
 
