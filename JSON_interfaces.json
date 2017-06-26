@@ -54,29 +54,32 @@
 // Output from Manager to Client:
 
 {
-"Pipeline": {
-              "name": "case_a",
-              "metrics": ["accuracy", "f1_score"],
-              "data-source": {
-                "features": "?? what to do here???"
-                "targets": "?? what to do here???"
-              }
-              "cv_index": {
-                 "train": "[[1, 2, 3, 4], [5, 6, 7, 8][2, 3, 4, 5]]",
-                 "test": "[[5, 6, 7, 8], [1, 2, 3, 4], [1, 6, 7, 8]]"
-              },
-              "elements": {
-                 "standard_scaler": {
-                     "disabled": "True"
-                 },
-                 "pca": {
-                     "n_components": "10"
-                 },
-                 "svc": {
-                     "C": "0.5",
-                     "kernel": "rbf"
-                 }
-              }
+    "Pipeline" : {
+        "name" : "case_a",
+        "metrics" : [ 
+            "accuracy", 
+            "f1_score"
+        ],
+        "data-source" : {
+            "features" : "?? what to do here???",
+            "targets" : "?? what to do here???"
+        },
+        "cv_index" : {
+            "train" : "[[1, 2, 3, 4], [5, 6, 7, 8][2, 3, 4, 5]]",
+            "test" : "[[5, 6, 7, 8], [1, 2, 3, 4], [1, 6, 7, 8]]"
+        },
+        "elements" : {
+            "standard_scaler" : {
+                "disabled" : true
+            },
+            "pca" : {
+                "n_components" : 10
+            },
+            "svc" : {
+                "C" : 0.5,
+                "kernel" : "rbf"
             }
+        }
+    }
 }
 
