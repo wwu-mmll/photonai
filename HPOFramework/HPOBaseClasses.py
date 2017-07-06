@@ -882,13 +882,17 @@ class PipelineFusion(PipelineElement):
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
             if hasattr(element, 'pipe'):
+                if element.overwrite_x:
+                    element_data = element.overwrite_x
+                else:
+                    element_data = data
                 if element.pipe._final_estimator:
-                    element_transform = element.predict(data)
+                    element_transform = element.predict(element_data)
                 else:
                     # if it is just a preprocessing pipe we want to use transform
-                    element_transform = element.transform(data)
+                    element_transform = element.transform(element_data)
             else:
-                element_transform = element.transform(data)
+                element_transform = element.transform(element_data)
             transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
 
         return transformed_data
