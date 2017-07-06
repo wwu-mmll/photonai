@@ -882,7 +882,7 @@ class PipelineFusion(PipelineElement):
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
             if hasattr(element, 'pipe'):
-                if element.overwrite_x:
+                if element.overwrite_x is not None:
                     element_data = element.overwrite_x
                 else:
                     element_data = data
@@ -928,7 +928,8 @@ class PipelineFusion(PipelineElement):
             if a.ndim == 1 and b.ndim == 1:
                 a = np.column_stack((a, b))
             else:
-                a = np.hstack((a, b))
+                b = np.reshape(b,(b.shape[0],1))
+                a = np.concatenate((a, b),1)
         return a
 
     def score(self, X_test, y_test):
