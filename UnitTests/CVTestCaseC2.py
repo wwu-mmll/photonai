@@ -80,8 +80,10 @@ class CVTestCaseC2(unittest.TestCase):
                                                         'kernel': svc_kernel}))
 
 
-        pipeline_fusion = PipelineFusion('multiple_source_pipes',[pipe_source_1, pipe_source_2, pipe_source_3],
-                                         voting=False)
+        # pipeline_fusion = PipelineFusion('multiple_source_pipes',[pipe_source_1, pipe_source_2, pipe_source_3], voting=False)
+        pipeline_fusion = PipelineFusion('multiple_source_pipes',
+                                         [pipe_source_1])
+
         outer_pipe.add(pipeline_fusion)
         outer_pipe.add(PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel}))
 
@@ -96,6 +98,9 @@ class CVTestCaseC2(unittest.TestCase):
                 outer_pipe.performance_history_list[i]['accuracy_folds']['test'])
 
         print(outer_pipe.test_performances['accuracy'])
+
+
+
 
         print('\n\n')
         print('Running sklearn version...\n')
@@ -166,13 +171,12 @@ class CVTestCaseC2(unittest.TestCase):
                                 y_train_3 = y_train_2[train_3]
                                 y_val_2 = y_train_2[val_2]
 
-                                my_scaler = StandardScaler()
-                                my_scaler.fit(data_train_3)
-                                data_train_3 = my_scaler.transform(data_train_3)
-                                data_val_2 = my_scaler.transform(data_val_2)
+                                my_pca = PCA()
+                                my_pca.fit(data_train_3)
+                                data_train_3 = my_pca.transform(data_train_3)
 
-                                # Run PCA
-                                my_pca = PCA_AE_Wrapper(n_components=n_comp)
+                                # Run Source SVM
+                                my_pca = SVM(n_components=n_comp)
                                 my_pca.fit(data_train_3)
                                 data_tr_3_pca_inv = my_pca.transform(data_train_3)
                                 data_val_2_pca_inv = my_pca.transform(data_val_2)
@@ -205,12 +209,12 @@ class CVTestCaseC2(unittest.TestCase):
                         # Run PCA
                         my_pca = PCA_AE_Wrapper(n_components=config_inner_2['n_comp'][best_config_id])
                         my_pca.fit(data_train_2)
-                        data_tr_2_pca = my_pca.transform(data_train_2)
-                        data_val_1_pca = my_pca.transform(data_val_1)
+                        data_tr_2_pred = SVM_trans.transform(data_train_2)
+                        data_val_1_pred = SVM_trans.transform(data_val_1)
 
                         # Run SVC
                         my_svc = SVC(kernel=current_kernel, C=c)
-                        my_svc.fit(data_tr_2_pca, y_train_2)
+                        my_svc.fit(data_tr_2_pred, y_train_2)
                         svc_score_tr.append(my_svc.score(data_tr_2_pca, y_train_2))
                         svc_score_te.append(my_svc.score(data_val_1_pca, y_val_1))
                         print('Fit Optimum PCA Config and train with SVC')
