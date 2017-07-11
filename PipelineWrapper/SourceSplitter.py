@@ -1,19 +1,20 @@
 from sklearn.base import BaseEstimator, ClassifierMixin
 import numpy as np
 
-class SourceSplitter:
+class SourceSplitter(BaseEstimator):
     """
     Source splitter
     """
 
-    def __init__(self, column_indices: np.array):
+    def __init__(self, column_indices: list):
         self.column_indices = column_indices
 
     def fit(self, X, y):
         return self.transform(X)
 
     def transform(self, X):
-        return X[:,self.column_indices]
+        X_split = X[:,self.column_indices]
+        return X_split
 
     def predict(self, X):
         return self.transform(X)
