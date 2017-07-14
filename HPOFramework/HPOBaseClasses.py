@@ -48,8 +48,8 @@ class Hyperpipe(BaseEstimator):
         self.data_test_cases = None
         self.config_history = []
         self.performance_history = []
-        self.best_config = []
-        self.best_performance = []
+        self.best_config = None
+        self.best_performance = None
 
         self.debug_cv_mode = debug_cv_mode
         self.logging = logging
@@ -204,7 +204,7 @@ class Hyperpipe(BaseEstimator):
 
                 # Todo: Do better error checking
                 if len(self.performance_history) > 0:
-                    best_config_nr= self.config_optimizer.get_optimum_config_idx(self.performance_history[self.config_optimizer.metric]['test'])
+                    best_config_nr = self.config_optimizer.get_optimum_config_idx(self.performance_history[self.config_optimizer.metric]['test'])
                     self.best_config = self.config_history[best_config_nr]
                     self.best_performance = self.performance_history_list[best_config_nr]
 
