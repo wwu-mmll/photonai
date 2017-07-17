@@ -204,7 +204,7 @@ class Hyperpipe(BaseEstimator):
 
                 # Todo: Do better error checking
                 if len(self.performance_history) > 0:
-                    best_config_nr = self.config_optimizer.get_optimum_config_idx(self.performance_history[self.config_optimizer.metric]['test'])
+                    best_config_nr = self.config_optimizer.get_optimum_config_idx(self.performance_history, self.config_optimizer.metric)
                     self.best_config = self.config_history[best_config_nr]
                     self.best_performance = self.performance_history_list[best_config_nr]
 
@@ -476,11 +476,16 @@ class OptimizerMetric(object):
                 self.other_metrics = [self.metric]
         return self.other_metrics
 
-    def get_optimum_config_idx(self, performance_metrics):
+    def get_optimum_config_idx(self, performance_metrics, metric_to_optimize):
         if self.greater_is_better:
-            best_config_nr = np.argmax(performance_metrics)
+            # max metric plus min std:
+            one_minus_std = np.subtract(1, performance_metrics[metric_to_optimize + '_std']['test'])
+            combined_metric = np.add(performance_metrics[metric_to_optimize]['test'], one_minus_std)
+            best_config_nr = np.argmax(combined_metric)
         else:
-            best_config_nr = np.argmin(performance_metrics)
+            combined_metric = np.add(performance_metrics[metric_to_optimize]['test'],
+                                     performance_metrics[metric_to_optimize + '_std']['test'])
+            best_config_nr = np.argmin(combined_metric)
         return best_config_nr
 
     def set_optimizer_metric(self, pipeline_elements):

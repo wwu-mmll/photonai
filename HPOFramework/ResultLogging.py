@@ -78,10 +78,12 @@ class ResultLogging:
             if key == 'confusion_matrix':
                 r_results[key] = {'train': train, 'test': test}
             else:
-                r_results[key] = {'train': np.mean(train), 'test': np.mean(test)}
-                r_results[key + '_std'] = {'train': np.std(train),
-                                           'test': np.std(test)}
+                train_mean = np.mean(train)
+                train_std = np.std(train)
+                test_mean = np.mean(test)
+                test_std = np.std(test)
+                r_results[key] = {'train': train_mean, 'test': test_mean}
+                r_results[key + '_std'] = {'train': train_std, 'test': test_std}
                 r_results[key + '_folds'] = {'train': train, 'test': test}
-
         return r_results
 
