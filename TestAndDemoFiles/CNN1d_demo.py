@@ -1,4 +1,4 @@
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement
+from Framework.PhotonBase import Hyperpipe, PipelineElement
 from sklearn.model_selection import KFold
 import numpy as np
 

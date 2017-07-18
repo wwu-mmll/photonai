@@ -1,4 +1,4 @@
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineFusion
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
 from sklearn.model_selection import KFold
 
 
@@ -26,7 +26,7 @@ manager = Hyperpipe('outer_man', KFold(n_splits=3), metrics=['accuracy'])
 
 svc = PipelineElement.create('svc', {'C': [0.3, 0.5, 1]}, kernel='rbf')
 lr = PipelineElement.create('logistic', {'C': [0.7, 0.8]})
-fusion = PipelineFusion('estimator_fusion', [svc, lr])
+fusion = PipelineStacking('estimator_fusion', [svc, lr])
 manager.add(fusion)
 manager.fit(X, y)
 

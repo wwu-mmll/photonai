@@ -1,6 +1,6 @@
 import numpy as np
 from DataLoading.DataContainer import DataContainer, Features, Covariates, Targets
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineSwitch, PipelineFusion
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, PipelineStacking
 from sklearn.model_selection import KFold
 
 
@@ -30,7 +30,7 @@ pipe_1 += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 pipe_2 = Hyperpipe('pipe2', cv_object, optimizer='grid_search', local_search=True)
 pipe_2 += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
-feature_union = PipelineFusion('nested_pipe', [pipe_1, pipe_2])
+feature_union = PipelineStacking('nested_pipe', [pipe_1, pipe_2])
 
 # add the container for both surface and thickness pipe to the global pipe
 manager += feature_union

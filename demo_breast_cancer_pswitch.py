@@ -4,7 +4,7 @@
 
 import numpy as np
 from DataLoading.DataContainer import DataContainer, Features, Covariates, Targets
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineSwitch
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch
 from sklearn.model_selection import KFold
 
 

@@ -2,18 +2,17 @@
 import numpy as np
 from pprint import pprint
 from itertools import product
-from collections import OrderedDict
 
 from .ResultLogging import ResultLogging
-from .HPOptimizers import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
+from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
+from .Validation import TestPipeline, OptimizerMetric, Scorer
 
-from sklearn.model_selection._validation import _fit_and_score
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection import ShuffleSplit
 from sklearn.base import clone, BaseEstimator
 from sklearn.pipeline import Pipeline
-from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection._split import BaseCrossValidator
 
 
 class Hyperpipe(BaseEstimator):
@@ -37,7 +36,6 @@ class Hyperpipe(BaseEstimator):
         #    into the test set --> thus we can evaluate more hp configs
         #    later without double dipping
 
-
         self.name = name
         self.hyperparameter_specific_config_cv_object = hyperparameter_specific_config_cv_object
         self.cv_iter = None
@@ -48,8 +46,11 @@ class Hyperpipe(BaseEstimator):
         self.data_test_cases = None
         self.config_history = []
         self.performance_history = []
+        self.children_config_setup = []
         self.best_config = None
+        self.best_children_config = None
         self.best_performance = None
+        self.is_final_fit = False
 
         self.debug_cv_mode = debug_cv_mode
         self.logging = logging
@@ -147,7 +148,7 @@ class Hyperpipe(BaseEstimator):
             self.y = self.overwrite_y
 
         # optimize: iterate through configs and save results
-        if self.local_search:
+        if self.local_search and not self.is_final_fit:
 
             # first check if correct optimizer metric has been chosen
             # pass pipeline_elements so that OptimizerMetric can look for last
@@ -167,6 +168,7 @@ class Hyperpipe(BaseEstimator):
                 self.performance_history = []
                 self.performance_history_list = []
                 self.parameter_history = []
+                self.children_config_setup = []
 
                 cv_counter += 1
                 print(' HYPERPARAMETER SEARCH OF ' + self.name + ' ,ITERATION:' + str(cv_counter))
@@ -184,7 +186,24 @@ class Hyperpipe(BaseEstimator):
                     print('******************************')
                     print('optimizing of:', self.name)
                     pprint(self.optimize_printing(specific_config))
-                    results_cv, specific_parameters = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
+                    # Todo: get 'best_config' attribute of all hyperpipe children after fit and write into array
+                    results_cv = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
+
+                    # save the configuration of all children pipelines
+                    children_config = {}
+                    for pipe_step in self.pipe.steps:
+                        item = pipe_step[1]
+                        if isinstance(item, Hyperpipe):
+                            if item.local_search and item.best_config is not None:
+                                children_config[item.name] = item.best_config
+                        elif isinstance(item, PipelineStacking):
+                            for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
+                                if hyperpipe.local_search and hyperpipe.best_config is not None:
+                                    # special case: we need to access pipe over pipeline_stacking element
+                                    children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config
+
+                    specific_parameters = self.pipe.get_params()
+
                     # get optimizer_metric and forward to optimizer
                     # todo: also pass greater_is_better=True/False to optimizer
                     config_score = (results_cv[self.config_optimizer.metric]['train'],
@@ -197,6 +216,7 @@ class Hyperpipe(BaseEstimator):
                     self.config_history.append(specific_config)
                     self.performance_history_list.append(results_cv)
                     self.parameter_history.append(specific_parameters)
+                    self.children_config_setup.append(children_config)
 
                 # afterwards find best result
                 # merge list of dicts to dict with lists under keys
@@ -206,6 +226,7 @@ class Hyperpipe(BaseEstimator):
                 if len(self.performance_history) > 0:
                     best_config_nr = self.config_optimizer.get_optimum_config_idx(self.performance_history, self.config_optimizer.metric)
                     self.best_config = self.config_history[best_config_nr]
+                    self.best_children_config = self.children_config_setup[best_config_nr]
                     self.best_performance = self.performance_history_list[best_config_nr]
 
                     # inform user
@@ -213,6 +234,7 @@ class Hyperpipe(BaseEstimator):
                     print('Optimizer metric: ', self.config_optimizer.metric)
                     print('   --> Greater is better: ', self.config_optimizer.greater_is_better)
                     print('Best config: ', self.optimize_printing(self.best_config))
+                    print('... with children config: ', self.optimize_printing(self.best_children_config))
                     print('Performance:\n')
                     print(self.best_performance)
                     print('Number of tested configurations:',
@@ -223,7 +245,21 @@ class Hyperpipe(BaseEstimator):
                     # Todo: manage optimum pipe stuff
                     # Todo: clone!!!!!!
                     self.optimum_pipe = self.pipe
+                    # set self to best config
                     self.optimum_pipe.set_params(**self.best_config)
+                    # set all children to best config and inform to NOT optimize again, ONLY fit
+                    for child_name, child_config in self.best_children_config.items():
+                        if child_config:
+                            # in case we have a pipeline stacking we need to identify the particular subhyperpipe
+                            splitted_name = child_name.split('__')
+                            if len(splitted_name) > 1:
+                                stacking_element = self.optimum_pipe.named_steps[splitted_name[0]]
+                                pipe_element = stacking_element.pipe_elements[splitted_name[1]]
+                            else:
+                                pipe_element = self.optimum_pipe.named_steps[child_name]
+                            pipe_element.set_params(**child_config)
+                            pipe_element.is_final_fit = True
+
                     print('...now fitting ' + self.name + ' with optimum configuration')
                     self.optimum_pipe.fit(validation_X, validation_y)
 
@@ -267,14 +303,6 @@ class Hyperpipe(BaseEstimator):
     def transform(self, data):
         if self.pipe:
             return self.optimum_pipe.transform(data)
-
-    # def fit_predict(self, data, targets):
-    #     if self.pipe:
-    #         return self.pipe.fit_predict(data, targets)
-
-    # def fit_transform(self, data, targets):
-    #     if self.pipe:
-    #         return self.pipe.fit_transform(data, targets)
 
     def get_params(self, deep=True):
         if self.pipe is not None:
@@ -324,7 +352,7 @@ class Hyperpipe(BaseEstimator):
             if name in self.pipe.named_steps:
                 new_pretty_key = self.name + '->' + name + '->'
                 prettified_config.append(new_pretty_key +
-                                          self.pipe.named_steps[name].prettify_config_output(rest, el_value))
+                                         self.pipe.named_steps[name].prettify_config_output(rest, el_value))
             else:
                 raise ValueError('Item is not contained in pipeline:' + name)
         return prettified_config
@@ -339,188 +367,6 @@ class Hyperpipe(BaseEstimator):
     def create_pipeline_elements_from_config(self, config):
         for key, all_params in config.items():
             self += PipelineElement(key, all_params)
-
-
-class TestPipeline(object):
-
-    def __init__(self, pipe, specific_config, metrics, verbose=0,
-                 fit_params={}, error_score='raise'):
-
-        self.params = specific_config
-        self.pipe = pipe
-        self.metrics = metrics
-        # print(self.params)
-
-        # default
-        self.return_train_score = True
-        self.verbose = verbose
-        self.fit_params = fit_params
-        self.error_score = error_score
-
-        self.cv_results = OrderedDict()
-        self.labels = []
-        self.predictions = []
-
-    def calculate_cv_score(self, X, y, cv_iter):
-        # very important todo: clone pipeline!!!!!!!!!!!!!!!
-        cv_scores = []
-        n_train = []
-        n_test = []
-
-        for train, test in cv_iter:
-            # why clone? removed: clone(self.pipe),
-            fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
-                                                   train, test, self.verbose, self.params,
-                                                   fit_params=self.fit_params,
-                                                   return_train_score=self.return_train_score,
-                                                   return_n_test_samples=True,
-                                                   return_times=True, return_parameters=True,
-                                                   error_score=self.error_score)
-            n_train.append(len(train))
-            n_test.append(len(test))
-            # self.pipe.fit(X[train], y[train])
-            # fit_and_predict_score = self.pipe.score(X[test], y[test])
-            cv_scores.append(fit_and_predict_score)
-
-        # Todo: implement get_full_model_specification() and pass to
-        # results
-        # reorder results because now train and test simply alternates
-        # in a list
-        # reorder_results() puts the results under keys "train" and "test"
-        # it also calculates mean of metrics
-        self.cv_results = ResultLogging.reorder_results(self.cv_results)
-        self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
-        parameters = self.pipe.get_params()
-        # self.cv_results['scoring_time'] = np.sum([l[3] for l in cv_scores])
-        return self.cv_results, parameters
-
-    def score(self, estimator, X, y_true):
-        if hasattr(estimator, 'score'):
-            default_score = estimator.score(X, y_true)
-        else:
-            default_score = -1
-        # use cv_results as class variable to get results out of
-        # _predict_and_score() method
-        self.cv_results.setdefault('score', []).append(default_score)
-        y_pred = self.pipe.predict(X)
-        self.predictions.append(y_pred)
-        self.labels.append(y_true)
-        if self.metrics:
-            for metric in self.metrics:
-                scorer = Scorer.create(metric)
-                # use setdefault method of dictionary to create list under
-                # specific key even in case no list exists
-                self.cv_results.setdefault(metric, []).append(scorer(y_true, y_pred))
-        return default_score
-
-
-class Scorer(object):
-
-    ELEMENT_DICTIONARY = {
-        # Classification
-        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef'),
-        'confusion_matrix': ('sklearn.metrics', 'confusion_matrix'),
-        'accuracy': ('sklearn.metrics', 'accuracy_score'),
-        'f1_score': ('sklearn.metrics', 'f1_score'),
-        'hamming_loss': ('sklearn.metrics', 'hamming_loss'),
-        'log_loss': ('sklearn.metrics', 'log_loss'),
-        'precision': ('sklearn.metrics', 'precision_score'),
-        'recall': ('sklearn.metrics', 'recall_score'),
-        # Regression
-        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error'),
-        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
-        'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
-        'r2': ('sklearn.metrics', 'r2_score')
-    }
-
-    def __init__(self, estimator, X, y_true, metrics):
-        self.estimator = estimator
-        self.X = X
-        self.y_true = y_true
-        self.metrics = metrics
-
-    @classmethod
-    def create(cls, metric):
-        if metric in Scorer.ELEMENT_DICTIONARY:
-            try:
-                desired_class_info = Scorer.ELEMENT_DICTIONARY[metric]
-                desired_class_home = desired_class_info[0]
-                desired_class_name = desired_class_info[1]
-                imported_module = __import__(desired_class_home, globals(),
-                                             locals(), desired_class_name, 0)
-                desired_class = getattr(imported_module, desired_class_name)
-                scoring_method = desired_class
-                return scoring_method
-            except AttributeError as ae:
-                raise ValueError('Could not find according class:',
-                                 PipelineElement.ELEMENT_DICTIONARY[metric])
-        else:
-            raise NameError('Metric not supported right now:', metric)
-
-
-class OptimizerMetric(object):
-
-    def __init__(self, metric, pipeline_elements, other_metrics):
-        self.metric = metric
-        self.greater_is_better = None
-        self.other_metrics = other_metrics
-        self.set_optimizer_metric(pipeline_elements)
-
-    def check_metrics(self):
-        if not self.metric == 'score':
-            if self.other_metrics:
-                if self.metric not in self.other_metrics:
-                    self.other_metrics.append(self.metric)
-            # maybe there's a better solution to this
-            else:
-                self.other_metrics = [self.metric]
-        return self.other_metrics
-
-    def get_optimum_config_idx(self, performance_metrics, metric_to_optimize):
-        if self.greater_is_better:
-            # max metric plus min std:
-            one_minus_std = np.subtract(1, performance_metrics[metric_to_optimize + '_std']['test'])
-            combined_metric = np.add(performance_metrics[metric_to_optimize]['test'], one_minus_std)
-            best_config_nr = np.argmax(combined_metric)
-        else:
-            combined_metric = np.add(performance_metrics[metric_to_optimize]['test'],
-                                     performance_metrics[metric_to_optimize + '_std']['test'])
-            best_config_nr = np.argmin(combined_metric)
-        return best_config_nr
-
-    def set_optimizer_metric(self, pipeline_elements):
-        if isinstance(self.metric, str):
-            if self.metric in Scorer.ELEMENT_DICTIONARY:
-                # for now do a simple hack and set greater_is_better
-                # by looking at error/score in metric name
-                metric_name = Scorer.ELEMENT_DICTIONARY[self.metric][1]
-                specifier = metric_name.split('_')[-1]
-                if specifier == 'score':
-                    self.greater_is_better = True
-                elif specifier == 'error':
-                    self.greater_is_better = False
-                else:
-                    # Todo: better error checking?
-                    raise NameError('Metric not suitable for optimizer.')
-            else:
-                raise NameError('Specify valid metric.')
-        else:
-            # if no optimizer metric was chosen, use default scoring method
-            self.metric = 'score'
-
-            last_element = pipeline_elements[-1]
-            if hasattr(last_element.base_element, '_estimator_type'):
-                if last_element.base_element._estimator_type == 'classifier':
-                    self.greater_is_better = True
-                elif (last_element.base_element._estimator_type == 'regressor'
-                      or last_element.base_element._estimator_type == 'transformer'
-                      or last_element.base_element._estimator_type == 'clusterer'):
-                    self.greater_is_better = False
-            else:
-                # Todo: better error checking?
-                raise NotImplementedError('Last pipeline element does not specify '
-                                          'whether it is a classifier, regressor, transformer or '
-                                          'clusterer.')
 
 
 class PipelineElement(BaseEstimator):
@@ -694,6 +540,168 @@ class PipelineElement(BaseEstimator):
         return config_name + ':' + str(config_value)
 
 
+
+
+
+class PipelineStacking(PipelineElement):
+
+    def __init__(self, name, pipeline_fusion_elements, voting=True):
+        super(PipelineStacking, self).__init__(name, None, hyperparameters={}, test_disabled=False, disabled=False)
+
+        self._hyperparameters = {}
+        self._config_grid = []
+        self.pipe_elements = {}
+        self.voting = voting
+
+        all_config_grids = []
+        for item in pipeline_fusion_elements:
+            self.pipe_elements[item.name] = item
+            self._hyperparameters[item.name] = item.hyperparameters
+
+            # we want to communicate the configuration options to the optimizer, when local_search = False
+            # but not when the item takes care of itself, that is, when local_search = True
+            add_item_config_grid = True
+            if hasattr(item, 'local_search'):
+                if item.local_search:
+                    add_item_config_grid = False
+
+            # for each configuration
+            if add_item_config_grid:
+                tmp_config_grid = []
+                for config in item.config_grid:
+                    # # for each configuration item:
+                    # # if config is no dictionary -> unpack it
+                    if config:
+                        tmp_dict = dict(config)
+                        tmp_config = dict(config)
+                        for key, element in tmp_config.items():
+                            # update name to be referable to pipeline
+                            if isinstance(item, PipelineElement):
+                                tmp_dict[self.name + '__' + key] = tmp_dict.pop(key)
+                            else:
+                                tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
+                        tmp_config_grid.append(tmp_dict)
+                if tmp_config_grid:
+                    all_config_grids.append(tmp_config_grid)
+        if all_config_grids:
+            product_config_grid = list(product(*all_config_grids))
+            for item in product_config_grid:
+                base = dict(item[0])
+                for sub_nr in range(1, len(item)):
+                    base.update(item[sub_nr])
+                self._config_grid.append(base)
+
+    @property
+    def config_grid(self):
+        return self._config_grid
+
+    def get_params(self, deep=True):
+        all_params = {}
+        for name, element in self.pipe_elements.items():
+            all_params[name] = element.get_params(deep)
+        return all_params
+
+    def set_params(self, **kwargs):
+        # Todo: disable fusion element?
+        spread_params_dict = {}
+        for k, val in kwargs.items():
+            splitted_k = k.split('__')
+            item_name = splitted_k[0]
+            if item_name not in spread_params_dict:
+                spread_params_dict[item_name] = {}
+            dict_entry = {'__'.join(splitted_k[1::]): val}
+            spread_params_dict[item_name].update(dict_entry)
+
+        for name, params in spread_params_dict.items():
+            if name in self.pipe_elements:
+                self.pipe_elements[name].set_params(**params)
+            else:
+                raise NameError('Could not find element ', name)
+        return self
+
+    def fit(self, data, targets):
+        for name, element in self.pipe_elements.items():
+            # Todo: parallellize fitting
+            element.fit(data, targets)
+        return self
+
+    def predict(self, data):
+        # Todo: strategy for concatenating data from different pipes
+        # todo: parallelize prediction
+        predicted_data = np.empty((0, 0))
+        for name, element in self.pipe_elements.items():
+            element_transform = element.predict(data)
+            predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
+        if self.voting:
+            if hasattr(predicted_data, 'shape'):
+                if len(predicted_data.shape) > 1:
+                    predicted_data = np.mean(predicted_data, axis=1).astype(int)
+        return predicted_data
+
+    def transform(self, data):
+        transformed_data = np.empty((0, 0))
+        for name, element in self.pipe_elements.items():
+            # if it is a hyperpipe with a final estimator, we want to use predict:
+            if hasattr(element, 'pipe'):
+                if element.overwrite_x is not None:
+                    element_data = element.overwrite_x
+                else:
+                    element_data = data
+                if element.pipe._final_estimator:
+                    element_transform = element.predict(element_data)
+                else:
+                    # if it is just a preprocessing pipe we want to use transform
+                    element_transform = element.transform(element_data)
+            else:
+                element_transform = element.transform(element_data)
+            transformed_data = PipelineStacking.stack_data(transformed_data, element_transform)
+
+        return transformed_data
+
+    # def fit_predict(self, data, targets):
+    #     predicted_data = None
+    #     for name, element in self.pipe_elements.items():
+    #         element_transform = element.fit_predict(data)
+    #         predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
+    #     return predicted_data
+    #
+    # def fit_transform(self, data, targets=None):
+    #     transformed_data = np.empty((0, 0))
+    #     for name, element in self.pipe_elements.items():
+    #         # if it is a hyperpipe with a final estimator, we want to use predict:
+    #         if hasattr(element, 'pipe'):
+    #             if element.pipe._final_estimator:
+    #                 element.fit(data, targets)
+    #                 element_transform = element.predict(data)
+    #             else:
+    #                 # if it is just a preprocessing pipe we want to use transform
+    #                 element.fit(data)
+    #                 element_transform = element.transform(data)
+    #             transformed_data = PipelineStacking.stack_data(transformed_data, element_transform)
+    #     return transformed_data
+
+    @classmethod
+    def stack_data(cls, a, b):
+        if not a.any():
+            a = b
+        else:
+            # Todo: check for right dimensions!
+            if a.ndim == 1 and b.ndim == 1:
+                a = np.column_stack((a, b))
+            else:
+                b = np.reshape(b,(b.shape[0],1))
+                a = np.concatenate((a, b),1)
+        return a
+
+    def score(self, X_test, y_test):
+        # Todo: invent strategy for this ?
+        # raise BaseException('PipelineStacking.score should probably never be reached.')
+        # return 16
+        predicted = self.predict(X_test)
+
+        return accuracy_score(y_test, predicted)
+
+
 class PipelineSwitch(PipelineElement):
 
     # @classmethod
@@ -786,166 +794,3 @@ class PipelineSwitch(PipelineElement):
                 return str(output)
         else:
             return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
-
-
-class PipelineFusion(PipelineElement):
-
-    def __init__(self, name, pipeline_fusion_elements, voting=True):
-        super(PipelineFusion, self).__init__(name, None, hyperparameters={}, test_disabled=False, disabled=False)
-
-        self._hyperparameters = {}
-        self._config_grid = []
-        self.pipe_elements = {}
-        self.voting = voting
-
-        all_config_grids = []
-        for item in pipeline_fusion_elements:
-            self.pipe_elements[item.name] = item
-            self._hyperparameters[item.name] = item.hyperparameters
-
-            # we want to communicate the configuration options to the optimizer, when local_search = False
-            # but not when the item takes care of itself, that is, when local_search = True
-            add_item_config_grid = True
-            if hasattr(item, 'local_search'):
-                if item.local_search:
-                    add_item_config_grid = False
-
-            # for each configuration
-            if add_item_config_grid:
-                tmp_config_grid = []
-                for config in item.config_grid:
-                    # # for each configuration item:
-                    # # if config is no dictionary -> unpack it
-                    if config:
-                        tmp_dict = dict(config)
-                        tmp_config = dict(config)
-                        for key, element in tmp_config.items():
-                            # update name to be referable to pipeline
-                            if isinstance(item, PipelineElement):
-                                tmp_dict[self.name + '__' + key] = tmp_dict.pop(key)
-                            else:
-                                tmp_dict[self.name+'__'+item.name+'__'+key] = tmp_dict.pop(key)
-                        tmp_config_grid.append(tmp_dict)
-                if tmp_config_grid:
-                    all_config_grids.append(tmp_config_grid)
-        if all_config_grids:
-            product_config_grid = list(product(*all_config_grids))
-            for item in product_config_grid:
-                base = dict(item[0])
-                for sub_nr in range(1, len(item)):
-                    base.update(item[sub_nr])
-                self._config_grid.append(base)
-
-    @property
-    def config_grid(self):
-        return self._config_grid
-
-    def get_params(self, deep=True):
-        all_params = {}
-        for name, element in self.pipe_elements.items():
-            all_params[name] = element.get_params(deep)
-        return all_params
-
-    def set_params(self, **kwargs):
-        # Todo: disable fusion element?
-        spread_params_dict = {}
-        for k, val in kwargs.items():
-            splitted_k = k.split('__')
-            item_name = splitted_k[0]
-            if item_name not in spread_params_dict:
-                spread_params_dict[item_name] = {}
-            dict_entry = {'__'.join(splitted_k[1::]): val}
-            spread_params_dict[item_name].update(dict_entry)
-
-        for name, params in spread_params_dict.items():
-            if name in self.pipe_elements:
-                self.pipe_elements[name].set_params(**params)
-            else:
-                raise NameError('Could not find element ', name)
-        return self
-
-    def fit(self, data, targets):
-        for name, element in self.pipe_elements.items():
-            # Todo: parallellize fitting
-            element.fit(data, targets)
-        return self
-
-    def predict(self, data):
-        # Todo: strategy for concatenating data from different pipes
-        # todo: parallelize prediction
-        predicted_data = np.empty((0, 0))
-        for name, element in self.pipe_elements.items():
-            element_transform = element.predict(data)
-            predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
-        if self.voting:
-            if hasattr(predicted_data, 'shape'):
-                if len(predicted_data.shape) > 1:
-                    predicted_data = np.mean(predicted_data, axis=1).astype(int)
-        return predicted_data
-
-    def transform(self, data):
-        transformed_data = np.empty((0, 0))
-        for name, element in self.pipe_elements.items():
-            # if it is a hyperpipe with a final estimator, we want to use predict:
-            if hasattr(element, 'pipe'):
-                if element.overwrite_x is not None:
-                    element_data = element.overwrite_x
-                else:
-                    element_data = data
-                if element.pipe._final_estimator:
-                    element_transform = element.predict(element_data)
-                else:
-                    # if it is just a preprocessing pipe we want to use transform
-                    element_transform = element.transform(element_data)
-            else:
-                element_transform = element.transform(element_data)
-            transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
-
-        return transformed_data
-
-    # def fit_predict(self, data, targets):
-    #     predicted_data = None
-    #     for name, element in self.pipe_elements.items():
-    #         element_transform = element.fit_predict(data)
-    #         predicted_data = PipelineFusion.stack_data(predicted_data, element_transform)
-    #     return predicted_data
-    #
-    # def fit_transform(self, data, targets=None):
-    #     transformed_data = np.empty((0, 0))
-    #     for name, element in self.pipe_elements.items():
-    #         # if it is a hyperpipe with a final estimator, we want to use predict:
-    #         if hasattr(element, 'pipe'):
-    #             if element.pipe._final_estimator:
-    #                 element.fit(data, targets)
-    #                 element_transform = element.predict(data)
-    #             else:
-    #                 # if it is just a preprocessing pipe we want to use transform
-    #                 element.fit(data)
-    #                 element_transform = element.transform(data)
-    #             transformed_data = PipelineFusion.stack_data(transformed_data, element_transform)
-    #     return transformed_data
-
-    @classmethod
-    def stack_data(cls, a, b):
-        if not a.any():
-            a = b
-        else:
-            # Todo: check for right dimensions!
-            if a.ndim == 1 and b.ndim == 1:
-                a = np.column_stack((a, b))
-            else:
-                b = np.reshape(b,(b.shape[0],1))
-                a = np.concatenate((a, b),1)
-        return a
-
-    def score(self, X_test, y_test):
-        # Todo: invent strategy for this ?
-        # raise BaseException('PipelineFusion.score should probably never be reached.')
-        # return 16
-        predicted = self.predict(X_test)
-
-        return accuracy_score(y_test, predicted)
-
-
-
-

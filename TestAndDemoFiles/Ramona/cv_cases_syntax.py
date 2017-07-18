@@ -1,6 +1,6 @@
 # DO NOT RUN THIS FILE!!! JuST FOR SYNTAX DECLARATION
 
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineSwitch, PipelineFusion
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, PipelineStacking
 from sklearn.model_selection import KFold, ShuffleSplit
 
 X=[]

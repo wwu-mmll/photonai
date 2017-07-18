@@ -3,7 +3,7 @@
 
 import unittest
 from sklearn.model_selection import KFold, ShuffleSplit
-from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe, PipelineFusion
+from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
 from PipelineWrapper.PCA_AE_Wrapper import PCA_AE_Wrapper
 import random
 from sklearn.decomposition import PCA
@@ -81,9 +81,9 @@ class CVTestCaseC2(unittest.TestCase):
                                                         'kernel': svc_kernel}))
 
 
-        # pipeline_fusion = PipelineFusion('multiple_source_pipes',[pipe_source_1, pipe_source_2, pipe_source_3], voting=False)
-        pipeline_fusion = PipelineFusion('multiple_source_pipes',
-                                         [pipe_source_1, pipe_source_2, pipe_source_3])
+        # pipeline_fusion = PipelineStacking('multiple_source_pipes',[pipe_source_1, pipe_source_2, pipe_source_3], voting=False)
+        pipeline_fusion = PipelineStacking('multiple_source_pipes',
+                                           [pipe_source_1, pipe_source_2, pipe_source_3])
 
         outer_pipe.add(pipeline_fusion)
         #outer_pipe.add(PipelineElement.create('svc', {'C': svc_c_2, 'kernel': svc_kernel}))

@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe, PipelineSwitch, PipelineFusion
+from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineSwitch, PipelineStacking
 from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 

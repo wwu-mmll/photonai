@@ -1,5 +1,5 @@
 import numpy as np
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineSwitch, PipelineFusion
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, PipelineStacking
 from Helpers.DataIntuition import show_pca
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.datasets import load_breast_cancer

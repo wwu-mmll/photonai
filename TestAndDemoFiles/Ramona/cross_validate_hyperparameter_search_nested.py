@@ -1,4 +1,4 @@
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineFusion
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
 from sklearn.model_selection import KFold
 
 
@@ -31,7 +31,7 @@ inner_man = Hyperpipe('inner_man', KFold(n_splits=3), local_search=True, metrics
                       hyperparameter_search_cv_object=KFold(n_splits=2))
 inner_man.add(PipelineElement.create('svc', {'C': [0.3, 0.5, 1]}, kernel='rbf'))
 
-pipeline_fusion = PipelineFusion('fusion_element', [inner_man])
+pipeline_fusion = PipelineStacking('fusion_element', [inner_man])
 
 # add inner to outer pipeline with the help of the pipeline fusion wrapper
 outer_man.add(pipeline_fusion)

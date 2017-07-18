@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 from sklearn.model_selection import KFold, ShuffleSplit
-from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe, PipelineFusion
+from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
 
 
 class CVTestsLocalSearchTrue(unittest.TestCase):
@@ -11,7 +11,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         self.inner_hyperpipe = Hyperpipe('inner_pipe', KFold(n_splits=2), local_search=True)
         self.inner_pipeline_test_element = PipelineElement.create('test_wrapper')
         self.inner_hyperpipe += self.inner_pipeline_test_element
-        self.pipeline_fusion = PipelineFusion('fusion_element', [self.inner_hyperpipe])
+        self.pipeline_fusion = PipelineStacking('fusion_element', [self.inner_hyperpipe])
         # set up outer pipeline
         self.outer_hyperpipe = Hyperpipe('outer_pipe', KFold(n_splits=2))
         self.outer_pipeline_test_element = PipelineElement.create('test_wrapper')
@@ -139,7 +139,7 @@ class CVTestsLocalSearchFalse(unittest.TestCase):
                                          local_search=False)
         self.inner_pipeline_test_element = PipelineElement.create('test_wrapper')
         self.inner_hyperpipe += self.inner_pipeline_test_element
-        self.pipeline_fusion = PipelineFusion('fusion_element', [self.inner_hyperpipe])
+        self.pipeline_fusion = PipelineStacking('fusion_element', [self.inner_hyperpipe])
 
         # set up outer pipeline
         self.outer_pipeline_test_element = PipelineElement.create('test_wrapper')

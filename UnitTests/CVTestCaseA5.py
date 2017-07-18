@@ -2,7 +2,7 @@
 
 import unittest
 from sklearn.model_selection import KFold
-from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe
+from Framework.PhotonBase import PipelineElement, Hyperpipe
 import random
 from sklearn.decomposition import PCA
 from sklearn.preprocessing import StandardScaler

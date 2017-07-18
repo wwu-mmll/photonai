@@ -1,6 +1,6 @@
 import numpy as np
 from DataLoading.DataContainer import DataContainer, Features, Covariates, Targets
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineSwitch, PipelineFusion
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, PipelineStacking
 from sklearn.model_selection import KFold
 
 """ MORE DOCUMENTATION CAN BE FOUND HERE:
@@ -59,7 +59,7 @@ thickness_pipe += PipelineElement.create('pca', {'n_components': np.arange(10, 7
 thickness_pipe += PipelineElement.create('svc', {'C': [1, 2]}, kernel='rbf')
 
 # in the end we want to join both predictions as a new feature set
-feature_union = PipelineFusion('surface_and_thickness', [surface_pipe, thickness_pipe])
+feature_union = PipelineStacking('surface_and_thickness', [surface_pipe, thickness_pipe])
 
 # add the container for both surface and thickness pipe to the global pipe
 manager += feature_union

@@ -4,7 +4,7 @@
 
 import unittest
 from sklearn.model_selection import KFold, ShuffleSplit
-from HPOFramework.HPOBaseClasses import PipelineElement, Hyperpipe, PipelineFusion
+from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
 from PipelineWrapper.PCA_AE_Wrapper import PCA_AE_Wrapper
 import random
 from sklearn.decomposition import PCA
@@ -49,7 +49,7 @@ class CVTestCaseB(unittest.TestCase):
         inner_pipe.add(PipelineElement.create('standard_scaler'))
         inner_pipe.add(PipelineElement.create('ae_pca', {'n_components': pca_n_components}))
 
-        pipeline_fusion = PipelineFusion('fusion_element', [inner_pipe])
+        pipeline_fusion = PipelineStacking('fusion_element', [inner_pipe])
 
         outer_pipe.add(pipeline_fusion)
         outer_pipe.add(PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel}))
@@ -69,9 +69,9 @@ class CVTestCaseB(unittest.TestCase):
         print('\n\n')
         print('Running sklearn version...\n')
         #cv_outer = KFold(n_splits=3, random_state=3)
-        cv_outer = ShuffleSplit(n_splits=1,test_size=0.2, random_state=3)
-        cv_inner_1 = ShuffleSplit(n_splits=1,test_size=0.2, random_state=3)
-        cv_inner_2 = ShuffleSplit(n_splits=1,test_size=0.2, random_state=3)
+        cv_outer = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
+        cv_inner_1 = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
+        cv_inner_2 = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
         # cv_inner_1 = KFold(n_splits=2, random_state=3)
         # cv_inner_2 = KFold(n_splits=2, random_state=3)
 
