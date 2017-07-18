@@ -1,5 +1,5 @@
 import numpy as np
-from HPOFramework.HPOBaseClasses import Hyperpipe, PipelineElement, PipelineSwitch
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch
 from sklearn.model_selection import KFold
 
 # classification of malignant vs. benign tumors
