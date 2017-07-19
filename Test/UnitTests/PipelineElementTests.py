@@ -29,7 +29,7 @@ class HyperpipeTests(unittest.TestCase):
         # sklearn params
         # Todo: has no sklearn attribute
         # config grid
-        print(self.hyperpipe.config_grid)
+        # print(self.hyperpipe.config_grid)
         expected_config_grid = [{'pca__n_components': 1, 'pca__disabled': False, 'svc__C': 0.1, 'svc__kernel': 'rbf'},
                                 {'pca__n_components': 1, 'pca__disabled': False, 'svc__C': 0.1, 'svc__kernel': 'sigmoid'},
                                 {'pca__n_components': 1, 'pca__disabled': False, 'svc__C': 1, 'svc__kernel': 'rbf'},
