@@ -2,6 +2,7 @@
 import numpy as np
 from pprint import pprint
 from itertools import product
+from hashlib import sha1
 
 from .ResultLogging import ResultLogging
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
@@ -104,6 +105,8 @@ class Hyperpipe(BaseEstimator):
         self.test_y = None
         self.eval_final_performance = eval_final_performance
         self.hyperparameter_fitting_cv_object = hyperparameter_search_cv_object
+        self.last_fit_data_hash = None
+        self.last_fit_targets_hash = None
 
     def __iadd__(self, pipe_element):
         # if isinstance(pipe_element, PipelineElement):
@@ -147,151 +150,162 @@ class Hyperpipe(BaseEstimator):
             self.X = self.overwrite_x
             self.y = self.overwrite_y
 
-        # optimize: iterate through configs and save results
-        if self.local_search and not self.is_final_fit:
+        # !!!!!!!!!!!!!!!! FIT ONLY IF DATA CHANGED !!!!!!!!!!!!!!!!!!!
+        # -------------------------------------------------------------
 
-            # first check if correct optimizer metric has been chosen
-            # pass pipeline_elements so that OptimizerMetric can look for last
-            # element and use the corresponding score method
-            self.config_optimizer = OptimizerMetric(self.best_config_metric, self.pipeline_elements, self.metrics)
-            self.metrics = self.config_optimizer.check_metrics()
+        new_data_hash = sha1(self.X).hexdigest()
 
-            # generate cross validation splits to iterate over
-            self.generate_cv_object()
+        if (self.last_fit_data_hash is None) or (self.last_fit_data_hash != new_data_hash):
+            self.last_fit_data_hash = new_data_hash
 
-            cv_counter = 0
-            for train_indices, test_indices in self.data_test_cases:
+            # optimize: iterate through configs and save results
+            if self.local_search and not self.is_final_fit:
 
-                # give the optimizer the chance to inform about elements
-                self.optimizer.prepare(self.pipeline_elements)
-                self.config_history = []
-                self.performance_history = []
-                self.performance_history_list = []
-                self.parameter_history = []
-                self.children_config_setup = []
+                # first check if correct optimizer metric has been chosen
+                # pass pipeline_elements so that OptimizerMetric can look for last
+                # element and use the corresponding score method
+                self.config_optimizer = OptimizerMetric(self.best_config_metric, self.pipeline_elements, self.metrics)
+                self.metrics = self.config_optimizer.check_metrics()
 
-                cv_counter += 1
-                print(' HYPERPARAMETER SEARCH OF ' + self.name + ' ,ITERATION:' + str(cv_counter))
-                validation_X = self.X[train_indices]
-                validation_y = self.y[train_indices]
-                test_X = self.X[test_indices]
-                test_y = self.y[test_indices]
+                # generate cross validation splits to iterate over
+                self.generate_cv_object()
 
-                cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
+                cv_counter = 0
+                for train_indices, test_indices in self.data_test_cases:
 
-                # do the optimizing
-                for specific_config in self.optimizer.next_config:
+                    # give the optimizer the chance to inform about elements
+                    self.optimizer.prepare(self.pipeline_elements)
+                    self.config_history = []
+                    self.performance_history = []
+                    self.performance_history_list = []
+                    self.parameter_history = []
+                    self.children_config_setup = []
 
-                    hp = TestPipeline(self.pipe, specific_config, self.metrics)
-                    print('******************************')
-                    print('optimizing of:', self.name)
-                    pprint(self.optimize_printing(specific_config))
-                    # Todo: get 'best_config' attribute of all hyperpipe children after fit and write into array
-                    results_cv = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
+                    cv_counter += 1
+                    print(' HYPERPARAMETER SEARCH OF ' + self.name + ' ,ITERATION:' + str(cv_counter))
+                    validation_X = self.X[train_indices]
+                    validation_y = self.y[train_indices]
+                    test_X = self.X[test_indices]
+                    test_y = self.y[test_indices]
 
-                    # save the configuration of all children pipelines
-                    children_config = {}
-                    for pipe_step in self.pipe.steps:
-                        item = pipe_step[1]
-                        if isinstance(item, Hyperpipe):
-                            if item.local_search and item.best_config is not None:
-                                children_config[item.name] = item.best_config
-                        elif isinstance(item, PipelineStacking):
-                            for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
-                                if hyperpipe.local_search and hyperpipe.best_config is not None:
-                                    # special case: we need to access pipe over pipeline_stacking element
-                                    children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config
+                    cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
 
-                    specific_parameters = self.pipe.get_params()
+                    # do the optimizing
+                    for specific_config in self.optimizer.next_config:
 
-                    # get optimizer_metric and forward to optimizer
-                    # todo: also pass greater_is_better=True/False to optimizer
-                    config_score = (results_cv[self.config_optimizer.metric]['train'],
-                                    results_cv[self.config_optimizer.metric]['test'])
-                    # 3. inform optimizer about performance
-                    self.optimizer.evaluate_recent_performance(specific_config, config_score)
+                        hp = TestPipeline(self.pipe, specific_config, self.metrics)
+                        print('******************************')
+                        print('optimizing of:', self.name)
+                        pprint(self.optimize_printing(specific_config))
+                        # Todo: get 'best_config' attribute of all hyperpipe children after fit and write into array
+                        results_cv = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
 
-                    print('Updated Performance History: ', results_cv[self.config_optimizer.metric])
+                        # save the configuration of all children pipelines
+                        children_config = {}
+                        for pipe_step in self.pipe.steps:
+                            item = pipe_step[1]
+                            if isinstance(item, Hyperpipe):
+                                if item.local_search and item.best_config is not None:
+                                    children_config[item.name] = item.best_config
+                            elif isinstance(item, PipelineStacking):
+                                for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
+                                    if hyperpipe.local_search and hyperpipe.best_config is not None:
+                                        # special case: we need to access pipe over pipeline_stacking element
+                                        children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config
 
-                    self.config_history.append(specific_config)
-                    self.performance_history_list.append(results_cv)
-                    self.parameter_history.append(specific_parameters)
-                    self.children_config_setup.append(children_config)
+                        specific_parameters = self.pipe.get_params()
 
-                # afterwards find best result
-                # merge list of dicts to dict with lists under keys
-                self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
+                        # get optimizer_metric and forward to optimizer
+                        # todo: also pass greater_is_better=True/False to optimizer
+                        config_score = (results_cv[self.config_optimizer.metric]['train'],
+                                        results_cv[self.config_optimizer.metric]['test'])
+                        # 3. inform optimizer about performance
+                        self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
-                # Todo: Do better error checking
-                if len(self.performance_history) > 0:
-                    best_config_nr = self.config_optimizer.get_optimum_config_idx(self.performance_history, self.config_optimizer.metric)
-                    self.best_config = self.config_history[best_config_nr]
-                    self.best_children_config = self.children_config_setup[best_config_nr]
-                    self.best_performance = self.performance_history_list[best_config_nr]
+                        print('Updated Performance History: ', results_cv[self.config_optimizer.metric])
 
-                    # inform user
-                    print('--------------------------------------------------')
-                    print('Optimizer metric: ', self.config_optimizer.metric)
-                    print('   --> Greater is better: ', self.config_optimizer.greater_is_better)
-                    print('Best config: ', self.optimize_printing(self.best_config))
-                    print('... with children config: ', self.optimize_printing(self.best_children_config))
-                    print('Performance:\n')
-                    print(self.best_performance)
-                    print('Number of tested configurations:',
-                          len(self.performance_history_list))
-                    print('--------------------------------------------------')
+                        self.config_history.append(specific_config)
+                        self.performance_history_list.append(results_cv)
+                        self.parameter_history.append(specific_parameters)
+                        self.children_config_setup.append(children_config)
 
-                    # ... and create optimal pipeline
-                    # Todo: manage optimum pipe stuff
-                    # Todo: clone!!!!!!
-                    self.optimum_pipe = self.pipe
-                    # set self to best config
-                    self.optimum_pipe.set_params(**self.best_config)
-                    # set all children to best config and inform to NOT optimize again, ONLY fit
-                    for child_name, child_config in self.best_children_config.items():
-                        if child_config:
-                            # in case we have a pipeline stacking we need to identify the particular subhyperpipe
-                            splitted_name = child_name.split('__')
-                            if len(splitted_name) > 1:
-                                stacking_element = self.optimum_pipe.named_steps[splitted_name[0]]
-                                pipe_element = stacking_element.pipe_elements[splitted_name[1]]
-                            else:
-                                pipe_element = self.optimum_pipe.named_steps[child_name]
-                            pipe_element.set_params(**child_config)
-                            pipe_element.is_final_fit = True
+                    # afterwards find best result
+                    # merge list of dicts to dict with lists under keys
+                    self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
 
-                    print('...now fitting ' + self.name + ' with optimum configuration')
-                    self.optimum_pipe.fit(validation_X, validation_y)
+                    # Todo: Do better error checking
+                    if len(self.performance_history) > 0:
+                        best_config_nr = self.config_optimizer.get_optimum_config_idx(self.performance_history, self.config_optimizer.metric)
+                        self.best_config = self.config_history[best_config_nr]
+                        self.best_children_config = self.children_config_setup[best_config_nr]
+                        self.best_performance = self.performance_history_list[best_config_nr]
 
-                    if not self.debug_cv_mode and self.eval_final_performance:
-                        print('...now predicting ' + self.name + ' unseen data')
-                        test_predictions = self.optimum_pipe.predict(test_X)
-                        print('.. calculating metrics for test set (' + self.name + ')')
-                        if self.metrics:
-                            for metric in self.metrics:
-                                scorer = Scorer.create(metric)
-                                # use setdefault method of dictionary to create list under
-                                # specific key even in case no list exists
-                                metric_value = scorer(test_y, test_predictions)
-                                print(metric + ':' + str(metric_value))
-                                self.test_performances.setdefault(metric, []).append(metric_value)
-                    print('--------------------------------------------------')
+                        # inform user
+                        print('--------------------------------------------------')
+                        print('Optimizer metric: ', self.config_optimizer.metric)
+                        print('   --> Greater is better: ', self.config_optimizer.greater_is_better)
+                        print('Best config: ', self.optimize_printing(self.best_config))
+                        print('... with children config: ', self.optimize_printing(self.best_children_config))
+                        print('Performance:\n')
+                        print(self.best_performance)
+                        print('Number of tested configurations:',
+                              len(self.performance_history_list))
+                        print('--------------------------------------------------')
 
-            # else:
-                # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
+                        # ... and create optimal pipeline
+                        # Todo: manage optimum pipe stuff
+                        # Todo: clone!!!!!!
+                        self.optimum_pipe = self.pipe
+                        # set self to best config
+                        self.optimum_pipe.set_params(**self.best_config)
+                        # set all children to best config and inform to NOT optimize again, ONLY fit
+                        for child_name, child_config in self.best_children_config.items():
+                            if child_config:
+                                # in case we have a pipeline stacking we need to identify the particular subhyperpipe
+                                splitted_name = child_name.split('__')
+                                if len(splitted_name) > 1:
+                                    stacking_element = self.optimum_pipe.named_steps[splitted_name[0]]
+                                    pipe_element = stacking_element.pipe_elements[splitted_name[1]]
+                                else:
+                                    pipe_element = self.optimum_pipe.named_steps[child_name]
+                                pipe_element.set_params(**child_config)
+                                pipe_element.is_final_fit = True
 
-                if self.logging:
-                    # LOGGGGGGGGGGGGGING
-                    # save hyperpipe results to csv
-                    file_id = '_'+self.name+'_cv'+str(cv_counter)
-                    ResultLogging.write_results(self.performance_history_list, self.config_history,
-                                                'hyperpipe_results'+file_id+'.csv')
-                    ResultLogging.write_config_to_csv(self.config_history, 'config_history'+file_id+'.csv')
-                # save best model results to csv
+                        print('...now fitting ' + self.name + ' with optimum configuration')
+                        self.optimum_pipe.fit(validation_X, validation_y)
 
-        ###############################################################################################
+                        if not self.debug_cv_mode and self.eval_final_performance:
+                            print('...now predicting ' + self.name + ' unseen data')
+                            test_predictions = self.optimum_pipe.predict(test_X)
+                            print('.. calculating metrics for test set (' + self.name + ')')
+                            if self.metrics:
+                                for metric in self.metrics:
+                                    scorer = Scorer.create(metric)
+                                    # use setdefault method of dictionary to create list under
+                                    # specific key even in case no list exists
+                                    metric_value = scorer(test_y, test_predictions)
+                                    print(metric + ':' + str(metric_value))
+                                    self.test_performances.setdefault(metric, []).append(metric_value)
+                        print('--------------------------------------------------')
+
+                # else:
+                    # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
+
+                    if self.logging:
+                        # LOGGGGGGGGGGGGGING
+                        # save hyperpipe results to csv
+                        file_id = '_'+self.name+'_cv'+str(cv_counter)
+                        ResultLogging.write_results(self.performance_history_list, self.config_history,
+                                                    'hyperpipe_results'+file_id+'.csv')
+                        ResultLogging.write_config_to_csv(self.config_history, 'config_history'+file_id+'.csv')
+                    # save best model results to csv
+
+            ###############################################################################################
+            else:
+                self.pipe.fit(self.X, self.y, **fit_params)
+
         else:
-            self.pipe.fit(self.X, self.y, **fit_params)
+            print("Avoided fitting of " + self.name + " because data did not change")
 
         return self
 
