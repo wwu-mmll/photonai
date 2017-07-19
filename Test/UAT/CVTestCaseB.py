@@ -14,6 +14,7 @@ import numpy as np
 np.random.seed(3)
 from sklearn.metrics import mean_absolute_error as mae
 
+
 class CVTestCaseB(unittest.TestCase):
     __X = None
     __y = None
@@ -39,7 +40,7 @@ class CVTestCaseB(unittest.TestCase):
         #                     eval_final_performance=True)
         outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
                                metrics=['accuracy'],
-                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
+                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
                                hyperparameter_search_cv_object=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
                                eval_final_performance=True)
         inner_pipe = Hyperpipe('pca_pipe', optimizer='grid_search',

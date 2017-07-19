@@ -93,11 +93,11 @@ class Scorer(object):
         'r2': ('sklearn.metrics', 'r2_score')
     }
 
-    def __init__(self, estimator, X, y_true, metrics):
-        self.estimator = estimator
-        self.X = X
-        self.y_true = y_true
-        self.metrics = metrics
+    # def __init__(self, estimator, x, y_true, metrics):
+    #     self.estimator = estimator
+    #     self.x = x
+    #     self.y_true = y_true
+    #     self.metrics = metrics
 
     @classmethod
     def create(cls, metric):

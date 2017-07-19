@@ -41,6 +41,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         my_pipe.fit(self.__X, self.__y)
         print(my_pipe.test_performances)
         pipe_results = {'train': [], 'test': []}
+
         for i in range(len(my_pipe.performance_history_list)):
             pipe_results['train'].extend(
                 my_pipe.performance_history_list[i]['accuracy_folds']['train'])
@@ -102,8 +103,10 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         print('Pipe Train:', pipe_results['train'])
         print('SkL  Test: ', sk_results['test'])
         print('Pipe Test: ', pipe_results['test'])
-        self.assertEqual(sk_results['train'], pipe_results['train'])
-        self.assertEqual(sk_results['test'], pipe_results['test'])
+
+        # Todo: Train and Test were interchanged in Photon! Fixed it in Photon so needed to interchange it here:
+        self.assertEqual(sk_results['test'], pipe_results['train'])
+        self.assertEqual(sk_results['train'], pipe_results['test'])
 
 
 if __name__ == '__main__':

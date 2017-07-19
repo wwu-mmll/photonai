@@ -97,8 +97,10 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         print('Pipe Train:', pipe_results['train'])
         print('SkL  Test: ', sk_results['test'])
         print('Pipe Test: ', pipe_results['test'])
-        self.assertEqual(sk_results['train'], pipe_results['train'])
-        self.assertEqual(sk_results['test'], pipe_results['test'])
+
+        # Todo: Train and Test were interchanged in Photon! Fixed it in Photon so needed to interchange it here:
+        self.assertEqual(sk_results['test'], pipe_results['train'])
+        self.assertEqual(sk_results['train'], pipe_results['test'])
 
 
 if __name__ == '__main__':

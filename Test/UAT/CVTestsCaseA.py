@@ -47,7 +47,7 @@ class CVTestsCaseA(unittest.TestCase):
         sk_pipeline = Pipeline([("standard_scaler", StandardScaler()), ("pca", PCA(n_components=pca_n_components)),
                                ("svc", SVC(C=svc_c, kernel=svc_kernel))])
 
-        my_pipe.generate_cv_object()
+        my_pipe.generate_outer_cv_indices()
         tmp_counter = 0
         for train_idx_arr, test_idx_arr in my_pipe.data_test_cases:
 
