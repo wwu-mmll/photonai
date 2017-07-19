@@ -106,7 +106,9 @@ class Hyperpipe(BaseEstimator):
         self.eval_final_performance = eval_final_performance
         self.hyperparameter_fitting_cv_object = hyperparameter_search_cv_object
         self.last_fit_data_hash = None
-        self.last_fit_targets_hash = None
+        self.current_fold = -1
+        self.num_of_folds = 0
+        self.fold_data_hashes = []
 
     def __iadd__(self, pipe_element):
         # if isinstance(pipe_element, PipelineElement):
@@ -125,7 +127,7 @@ class Hyperpipe(BaseEstimator):
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
-    def generate_cv_object(self):
+    def generate_outer_cv_indices(self):
         # if there is a CV Object for cross validating the hyperparameter search
         if self.hyperparameter_fitting_cv_object:
             self.data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
@@ -140,6 +142,24 @@ class Hyperpipe(BaseEstimator):
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
             self.data_test_cases = train_test_cv_object.split(self.X, self.y)
 
+    def distribute_cv_info_to_hyperpipe_children(self, num_of_folds = None, reset = False):
+
+        def _distrbute_info_to_object(pipe_object, num_of_folds, reset):
+            if pipe_object.local_search:
+                if num_of_folds is not None:
+                    pipe_object.num_of_folds = num_of_folds
+                if reset:
+                    pipe_object.current_fold = -1
+
+        for element_tuple in self.pipe.steps:
+            element_object = element_tuple[1]
+            if isinstance(element_object, Hyperpipe):
+               _distrbute_info_to_object(element_object, num_of_folds, reset)
+            elif isinstance(element_object, PipelineStacking):
+                for child_pipe_name, child_pipe_object in element_object.pipe_elements.items():
+                    _distrbute_info_to_object(child_pipe_object, num_of_folds, reset)
+
+
     def fit(self, data, targets, **fit_params):
 
         # in case we want to inject some data from outside the pipeline
@@ -153,10 +173,22 @@ class Hyperpipe(BaseEstimator):
         # !!!!!!!!!!!!!!!! FIT ONLY IF DATA CHANGED !!!!!!!!!!!!!!!!!!!
         # -------------------------------------------------------------
 
+        self.current_fold += 1
         new_data_hash = sha1(self.X).hexdigest()
+        # fit
+        # 1. if it is first time ever or
+        # 2. the data did change for that fold or
+        # 3. if it is the mother pipe (then number_of_folds = 0)
+        if (len(self.fold_data_hashes) < self.num_of_folds) \
+                or (self.num_of_folds > 0 and self.fold_data_hashes[self.current_fold] != new_data_hash)\
+                    or self.num_of_folds == 0:
 
-        if (self.last_fit_data_hash is None) or (self.last_fit_data_hash != new_data_hash):
-            self.last_fit_data_hash = new_data_hash
+            # save data hash for that fold
+            if self.num_of_folds > 0:
+                if len(self.fold_data_hashes) < self.num_of_folds:
+                    self.fold_data_hashes.append(new_data_hash)
+                else:
+                    self.fold_data_hashes[self.current_fold] = new_data_hash
 
             # optimize: iterate through configs and save results
             if self.local_search and not self.is_final_fit:
@@ -167,8 +199,8 @@ class Hyperpipe(BaseEstimator):
                 self.config_optimizer = OptimizerMetric(self.best_config_metric, self.pipeline_elements, self.metrics)
                 self.metrics = self.config_optimizer.check_metrics()
 
-                # generate cross validation splits to iterate over
-                self.generate_cv_object()
+                # generate OUTER ! cross validation splits to iterate over
+                self.generate_outer_cv_indices()
 
                 cv_counter = 0
                 for train_indices, test_indices in self.data_test_cases:
@@ -182,21 +214,27 @@ class Hyperpipe(BaseEstimator):
                     self.children_config_setup = []
 
                     cv_counter += 1
-                    print(' HYPERPARAMETER SEARCH OF ' + self.name + ' ,ITERATION:' + str(cv_counter))
+                    print('********************************************************************************')
+                    print(' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(cv_counter))
                     validation_X = self.X[train_indices]
                     validation_y = self.y[train_indices]
                     test_X = self.X[test_indices]
                     test_y = self.y[test_indices]
 
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
+                    num_folds = len(cv_iter)
+
+                    # distribute number of folds to encapsulated child hyperpipes
+                    self.distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds)
 
                     # do the optimizing
                     for specific_config in self.optimizer.next_config:
 
+                        self.distribute_cv_info_to_hyperpipe_children(reset=True)
                         hp = TestPipeline(self.pipe, specific_config, self.metrics)
-                        print('******************************')
+                        print('--------------------------------------------------------------------------------')
                         print('optimizing of:', self.name)
-                        pprint(self.optimize_printing(specific_config))
+                        # pprint(self.optimize_printing(specific_config))
                         # Todo: get 'best_config' attribute of all hyperpipe children after fit and write into array
                         results_cv = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
 
@@ -222,7 +260,9 @@ class Hyperpipe(BaseEstimator):
                         # 3. inform optimizer about performance
                         self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
-                        print('Updated Performance History: ', results_cv[self.config_optimizer.metric])
+                        # Print Result for config
+                        pprint(self.optimize_printing(specific_config))
+                        pprint(results_cv[self.config_optimizer.metric])
 
                         self.config_history.append(specific_config)
                         self.performance_history_list.append(results_cv)
@@ -241,16 +281,19 @@ class Hyperpipe(BaseEstimator):
                         self.best_performance = self.performance_history_list[best_config_nr]
 
                         # inform user
-                        print('--------------------------------------------------')
+                        print('********************************************************************************')
+                        print('finished optimization of ', self.name)
+                        print('--------------------------------------------------------------------------------')
+                        print('           Result')
+                        print('--------------------------------------------------------------------------------')
+                        print('Number of tested configurations:', len(self.performance_history_list))
                         print('Optimizer metric: ', self.config_optimizer.metric)
                         print('   --> Greater is better: ', self.config_optimizer.greater_is_better)
                         print('Best config: ', self.optimize_printing(self.best_config))
                         print('... with children config: ', self.optimize_printing(self.best_children_config))
                         print('Performance:\n')
-                        print(self.best_performance)
-                        print('Number of tested configurations:',
-                              len(self.performance_history_list))
-                        print('--------------------------------------------------')
+                        pprint(self.best_performance)
+                        print('--------------------------------------------------------------------------------')
 
                         # ... and create optimal pipeline
                         # Todo: manage optimum pipe stuff
@@ -271,6 +314,8 @@ class Hyperpipe(BaseEstimator):
                                 pipe_element.set_params(**child_config)
                                 pipe_element.is_final_fit = True
 
+                        self.distribute_cv_info_to_hyperpipe_children(reset=True)
+
                         print('...now fitting ' + self.name + ' with optimum configuration')
                         self.optimum_pipe.fit(validation_X, validation_y)
 
@@ -286,7 +331,7 @@ class Hyperpipe(BaseEstimator):
                                     metric_value = scorer(test_y, test_predictions)
                                     print(metric + ':' + str(metric_value))
                                     self.test_performances.setdefault(metric, []).append(metric_value)
-                        print('--------------------------------------------------')
+                        print('********************************************************************************')
 
                 # else:
                     # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
@@ -305,7 +350,10 @@ class Hyperpipe(BaseEstimator):
                 self.pipe.fit(self.X, self.y, **fit_params)
 
         else:
-            print("Avoided fitting of " + self.name + " because data did not change")
+            print('--------------------------------------------------------------------------------')
+            print("Avoided fitting of " + self.name + " on fold " + str(self.current_fold) + " because data did not change")
+            print('Best config of ' + self.name + ' : ', self.best_config)
+            print('--------------------------------------------------------------------------------')
 
         return self
 

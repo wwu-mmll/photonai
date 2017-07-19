@@ -66,8 +66,9 @@ class ResultLogging:
             train = []
             test = []
             for i in range(len(results[key])):
-                # Todo: NILS fragen!
-                if (i % 2) != 0:
+                # Todo: which is first: Train or Test?
+                # Assuming that Train is first!
+                if (i % 2) == 0:
                     train.append(results[key][i])
                 else:
                     test.append(results[key][i])
