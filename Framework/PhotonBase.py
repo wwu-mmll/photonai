@@ -456,7 +456,12 @@ class PipelineElement(BaseEstimator):
                           'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper'),
                           'rl_cnn': ('photon_core.PipelineWrapper.RLCNN', 'RLCNN'),
                           'CNN1d': ('PipelineWrapper.CNN1d', 'CNN1d'),
-                          'SourceSplitter': ('PipelineWrapper.SourceSplitter', 'SourceSplitter')}
+                          'SourceSplitter': ('PipelineWrapper.SourceSplitter', 'SourceSplitter'),
+                          'f_regression_select_percentile':
+                              ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
+                          'f_classif_select_percentile':
+                              ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile')
+                          }
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
