@@ -114,9 +114,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                         sk_results['train_std'].extend([np.std(tr_acc)])
 
             # find best config
-            # Todo: train and test ist interchanged here
-            # combined_metric = np.add(sk_results['test_mean'], np.subtract(1, sk_results['test_std']))
-            combined_metric = np.add(sk_results['train_mean'], np.subtract(1, sk_results['train_std']))
+            combined_metric = np.add(sk_results['test_mean'], np.subtract(1, sk_results['test_std']))
             best_config_id = np.argmax(combined_metric)
 
             # fit optimum pipe
@@ -159,9 +157,8 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         print('Pipe final perf:', my_pipe.test_performances['accuracy'])
         print('Sklearn final perf:', opt_test_acc)
 
-        # Todo: Train and Test were interchanged in Photon! Fixed it in Photon so needed to interchange it here:
-        self.assertEqual(sk_results['test'], pipe_results['train'])
-        self.assertEqual(sk_results['train'], pipe_results['test'])
+        self.assertEqual(sk_results['test'], pipe_results['test'])
+        self.assertEqual(sk_results['train'], pipe_results['train'])
         self.assertEqual(opt_test_acc, my_pipe.test_performances['accuracy'])
 
 
