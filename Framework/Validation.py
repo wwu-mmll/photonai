@@ -48,6 +48,8 @@ class TestPipeline(object):
         # reorder results because now train and test simply alternates in a list
         # reorder_results() puts the results under keys "train" and "test"
         # it also calculates mean of metrics and std
+        # self.cv_results is updated whenever the self.score is used (which happens within _fit_and_score
+        # in self.cv_results, test score is first, train score is second
         self.cv_results = ResultLogging.reorder_results(self.cv_results)
         self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
 
