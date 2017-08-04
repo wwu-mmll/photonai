@@ -8,28 +8,31 @@ class ResultLogging:
     @staticmethod
     def write_results(results_list, config_history, filename):
         cwd = os.getcwd()
+        # write header to csv file containing all metrics (two columns for train and test) and configurations in the first row
         with open(cwd + "/" + filename, 'w') as csv_file:
-            keys = list(results_list[0].keys())
-            keys_w_space = []
+            metrics = list(results_list[0].keys())
+            metrics_w_space = []
             train_test = []
-            for i in range(len(keys) * 2):
+            for i in range(len(metrics) * 2):
                 if (i % 2) == 0:
-                    keys_w_space.append(keys[int(i / 2)])
+                    metrics_w_space.append(metrics[int(i / 2)])
                     train_test.append('train')
                 else:
-                    keys_w_space.append('')
+                    metrics_w_space.append('')
                     train_test.append('test')
             config_keys = list(config_history[0].keys())
-            keys_w_space += config_keys
+            metrics_w_space += config_keys
             writer = csv.writer(csv_file, delimiter='\t')
-            writer.writerow(keys_w_space)
+            writer.writerow(metrics_w_space)
             writer.writerow(train_test)
+
+        # write results for train and test to csv file
         for l in range(len(results_list)):
             with open(cwd + "/" + filename, 'a') as csv_file:
                 write_this_to_csv = []
-                for key1, value1 in results_list[l].items():
-                    for key2, value2 in results_list[l][key1].items():
-                        write_this_to_csv.append(value2)
+                for metric in results_list[l].keys():
+                    write_this_to_csv.append(results_list[l][metric]['train'])
+                    write_this_to_csv.append(results_list[l][metric]['test'])
                 for key, value in config_history[l].items():
                     write_this_to_csv.append(value)
                 writer = csv.writer(csv_file, delimiter='\t')
@@ -62,16 +65,16 @@ class ResultLogging:
         r_results = OrderedDict()
         for key, value in results.items():
             # train and test should always be alternated
-            # put first element under train, second under test and so forth
+            # put first element under test, second under train and so forth (this is because _fit_and_score() calculates
+            # score of the test set first
             train = []
             test = []
             for i in range(len(results[key])):
-                # Todo: which is first: Train or Test?
-                # Assuming that Train is first!
+                # Test has to be first!
                 if (i % 2) == 0:
-                    train.append(results[key][i])
-                else:
                     test.append(results[key][i])
+                else:
+                    train.append(results[key][i])
             # again, I know this is ugly. Any suggestions? Only confusion
             # matrix behaves differently because we don't want to calculate
             # the mean of it

@@ -27,24 +27,22 @@ class CVTestCaseB(unittest.TestCase):
         random.seed(42)
 
     def testCaseB(self):
-        pca_n_components = [7, 15]
-        svc_c = [.1]
+        pca_n_components = [7, 15, 10]
+        svc_c = [.1, 1]
         #svc_kernel = ['rbf']
         svc_kernel = ['rbf', 'linear']
+        cv_outer = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
+        cv_inner_1 = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
+        cv_inner_2 = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
 
         # SET UP HYPERPIPE
-        # outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
-        #                     metrics=['accuracy'],
-        #                     hyperparameter_specific_config_cv_object=KFold(n_splits=2, random_state=3),
-        #                     hyperparameter_search_cv_object=KFold(n_splits=3, random_state=3),
-        #                     eval_final_performance=True)
         outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
                                metrics=['accuracy'],
-                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
-                               hyperparameter_search_cv_object=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
+                               hyperparameter_specific_config_cv_object=cv_inner_1,
+                               hyperparameter_search_cv_object=cv_outer,
                                eval_final_performance=True)
         inner_pipe = Hyperpipe('pca_pipe', optimizer='grid_search',
-                               hyperparameter_specific_config_cv_object=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
+                               hyperparameter_specific_config_cv_object=cv_inner_2,
                                eval_final_performance=False)
 
         inner_pipe.add(PipelineElement.create('standard_scaler'))
@@ -59,7 +57,7 @@ class CVTestCaseB(unittest.TestCase):
         outer_pipe.fit(self.__X, self.__y)
         print(outer_pipe.test_performances)
         pipe_results = {'train': [], 'test': []}
-        for i in range(int(len(outer_pipe.performance_history_list)/2)):
+        for i in range(len(outer_pipe.performance_history_list)):
             pipe_results['train'].extend(
                 outer_pipe.performance_history_list[i]['accuracy_folds']['train'])
             pipe_results['test'].extend(
@@ -69,13 +67,6 @@ class CVTestCaseB(unittest.TestCase):
 
         print('\n\n')
         print('Running sklearn version...\n')
-        #cv_outer = KFold(n_splits=3, random_state=3)
-        cv_outer = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
-        cv_inner_1 = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
-        cv_inner_2 = ShuffleSplit(n_splits=1, test_size=0.2, random_state=3)
-        # cv_inner_1 = KFold(n_splits=2, random_state=3)
-        # cv_inner_2 = KFold(n_splits=2, random_state=3)
-
         opt_tr_acc = []
         opt_test_acc = []
 
@@ -84,8 +75,6 @@ class CVTestCaseB(unittest.TestCase):
             data_test = self.__X[test]
             y_train_1 = self.__y[train_1]
             y_test = self.__y[test]
-            sk_results = {'train_1': [], 'test': [], 'train_1_mean': [],
-                          'test_mean': []}
             config_inner_1 = {'C':[], 'kernel':[]}
             sk_results_inner1 = {'train_2': [],
                                  'val_1': [],
@@ -117,24 +106,22 @@ class CVTestCaseB(unittest.TestCase):
 
                         config_inner_2 = {'n_comp': []}
                         print('Sklearn PCA Pipe')
+                        sk_results_inner2 = {'train_3': [], 'val_2': [],
+                                             'train_3_mean': [],
+                                             'val_2_mean': []}
                         for n_comp in pca_n_components:
                             config_inner_2['n_comp'].extend([n_comp])
 
                             tr_acc = []
                             val_acc = []
-                            sk_results_inner2 = {'train_3': [], 'val_2': [],
-                                          'train_3_mean': [],
-                                          'val_2_mean': []}
+
                             # print('Some training data:',
                             #       data_train_2[0:2, 0:2])
                             for train_3, val_2 in cv_inner_2.split(
                                     data_train_2):
 
                                 data_train_3 = data_train_2[train_3]
-
                                 data_val_2 = data_train_2[val_2]
-                                y_train_3 = y_train_2[train_3]
-                                y_val_2 = y_train_2[val_2]
 
                                 my_scaler = StandardScaler()
                                 my_scaler.fit(data_train_3)
@@ -144,8 +131,6 @@ class CVTestCaseB(unittest.TestCase):
                                 # Run PCA
                                 my_pca = PCA_AE_Wrapper(n_components=n_comp)
                                 my_pca.fit(data_train_3)
-                                data_tr_3_pca_inv = my_pca.transform(data_train_3)
-                                data_val_2_pca_inv = my_pca.transform(data_val_2)
 
                                 mae_tr = my_pca.score(data_train_3)
                                 mae_te = my_pca.score(data_val_2)
@@ -163,7 +148,7 @@ class CVTestCaseB(unittest.TestCase):
                             print('Training 3 mean:', [np.mean(tr_acc)],
                                   'Validation 2 mean:', [np.mean(val_acc)])
                         # find best config for val 2
-                        best_config_id = np.argmax(sk_results_inner2['val_2_mean'])
+                        best_config_id = np.argmin(sk_results_inner2['val_2_mean'])
                         print('Best PCA config:', config_inner_2['n_comp'][best_config_id], '\n')
                         # fit optimum pipe
 
@@ -236,8 +221,8 @@ class CVTestCaseB(unittest.TestCase):
         print('\nEval final performance:')
         print('Pipe final perf:', outer_pipe.test_performances['accuracy'])
         print('Sklearn final perf:', opt_test_acc)
-        # self.assertEqual(sk_results_inner1['train_2'], pipe_results['train'])
-        # self.assertEqual(sk_results_inner1['val_1'], pipe_results['test'])
+        self.assertEqual(sk_results_inner1['train_2'], pipe_results['train'])
+        self.assertEqual(sk_results_inner1['val_1'], pipe_results['test'])
         self.assertEqual(opt_test_acc, outer_pipe.test_performances['accuracy'])
 
 
