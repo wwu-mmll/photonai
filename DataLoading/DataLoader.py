@@ -62,7 +62,7 @@ class CsvLoader(object):
 class XlsxLoader(object):
 
     def __call__(self, filename, **kwargs):
-        return pd.read_excel(filename)
+        return pd.read_excel(filename, **kwargs)
 
 
 class NiiLoader(object):
