@@ -460,6 +460,8 @@ class PipelineElement(BaseEstimator):
                               ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
                           'f_classif_select_percentile':
                               ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile'),
+                          'py_esn_r': ('PipelineWrapper.PyESNWrapper', 'PyESNRegressor'),
+                          'py_esn_c': ('PipelineWrapper.PyESNWrapper', 'PyESNClassifier'),
                           'SVR': ('sklearn.svm', 'SVR'),
                           'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
                           'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),

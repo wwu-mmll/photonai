@@ -4,6 +4,14 @@ from mpl_toolkits.mplot3d import Axes3D
 from sklearn.decomposition import PCA
 
 
+def plot_some_data(data, targets):
+    ax_array = np.arange(0, data.shape[0], 1)
+    plt.figure().clear()
+    plt.plot(ax_array, data, ax_array, targets)
+    plt.title('A sample of data')
+    plt.show()
+
+
 def show_pca(X, y):
     fig = plt.figure()
     plt.clf()
