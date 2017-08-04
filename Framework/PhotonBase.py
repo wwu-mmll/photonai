@@ -465,7 +465,8 @@ class PipelineElement(BaseEstimator):
                           'SVR': ('sklearn.svm', 'SVR'),
                           'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
                           'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),
-                          'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor')
+                          'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor'),
+                          'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor','KerasDNNRegressor')
                           }
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
