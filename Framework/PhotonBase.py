@@ -460,7 +460,11 @@ class PipelineElement(BaseEstimator):
                           'f_regression_select_percentile':
                               ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
                           'f_classif_select_percentile':
-                              ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile')
+                              ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile'),
+                          'SVR': ('sklearn.svm', 'SVR'),
+                          'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
+                          'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),
+                          'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor')
                           }
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
