@@ -15,7 +15,7 @@ print(np.sum(y)/len(y))
 manager = Hyperpipe('test_manager',
                     hyperparameter_search_cv_object=ShuffleSplit(test_size=0.2, n_splits=3),
                     hyperparameter_specific_config_cv_object=KFold(n_splits=3, shuffle=True),
-                    metrics=['accuracy', 'precision', 'recall'])
+                    metrics=['accuracy', 'precision', 'recall'], logging=True)
 
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))
 

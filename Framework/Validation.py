@@ -1,6 +1,9 @@
 from sklearn.model_selection._validation import _fit_and_score
 from collections import OrderedDict
+import matplotlib.pyplot as plt
 from .ResultLogging import ResultLogging
+
+
 import numpy as np
 
 
@@ -67,6 +70,10 @@ class TestPipeline(object):
         y_pred = self.pipe.predict(X)
         self.predictions.append(y_pred)
         self.labels.append(y_true)
+
+        # Nice to have
+        # TestPipeline.plot_some_data(y_true, y_pred)
+
         if self.metrics:
             for metric in self.metrics:
                 scorer = Scorer.create(metric)
@@ -75,6 +82,13 @@ class TestPipeline(object):
                 self.cv_results.setdefault(metric, []).append(scorer(y_true, y_pred))
         return default_score
 
+    @staticmethod
+    def plot_some_data(data, targets):
+        ax_array = np.arange(0, data.shape[0], 1)
+        plt.figure().clear()
+        plt.plot(ax_array, data, ax_array, targets)
+        plt.title('A sample of data')
+        plt.show()
 
 class Scorer(object):
 

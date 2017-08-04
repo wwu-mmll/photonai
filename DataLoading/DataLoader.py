@@ -14,7 +14,7 @@ class MatLoader(object):
         if 'var_name' in kwargs:
             var_name = kwargs.get('var_name')
             mat_data = mat_data[var_name]
-        return pd.DataFrame(data=mat_data)
+        return mat_data
 
     def load_mat(self, filename):
         '''

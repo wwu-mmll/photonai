@@ -457,10 +457,8 @@ class PipelineElement(BaseEstimator):
                           'CNN1d': ('PipelineWrapper.CNN1d', 'CNN1d'),
                           'SourceSplitter': ('PipelineWrapper.SourceSplitter', 'SourceSplitter'),
                           'f_regression_select_percentile':
-                              ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
-                          'f_classif_select_percentile':
-                              ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile')
-                          }
+                          'py_esn_r': ('PipelineWrapper.PyESNWrapper', 'PyESNRegressor'),
+                          'py_esn_c': ('PipelineWrapper.PyESNWrapper', 'PyESNClassifier')}
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
