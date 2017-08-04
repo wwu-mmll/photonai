@@ -269,6 +269,14 @@ class Hyperpipe(BaseEstimator):
                         self.parameter_history.append(specific_parameters)
                         self.children_config_setup.append(children_config)
 
+                        if self.logging:
+                            # LOGGGGGGGGGGGGGING
+                            # save hyperpipe results to csv
+                            file_id = '_'+self.name+'_cv'+str(cv_counter)
+                            ResultLogging.write_results(self.performance_history_list, self.config_history,
+                                                        'hyperpipe_results'+file_id+'.csv')
+                            ResultLogging.write_config_to_csv(self.config_history, 'config_history'+file_id+'.csv')
+
                     # afterwards find best result
                     # merge list of dicts to dict with lists under keys
                     self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
@@ -335,15 +343,6 @@ class Hyperpipe(BaseEstimator):
 
                 # else:
                     # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
-
-                    if self.logging:
-                        # LOGGGGGGGGGGGGGING
-                        # save hyperpipe results to csv
-                        file_id = '_'+self.name+'_cv'+str(cv_counter)
-                        ResultLogging.write_results(self.performance_history_list, self.config_history,
-                                                    'hyperpipe_results'+file_id+'.csv')
-                        ResultLogging.write_config_to_csv(self.config_history, 'config_history'+file_id+'.csv')
-                    # save best model results to csv
 
             ###############################################################################################
             else:
