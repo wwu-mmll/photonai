@@ -20,7 +20,7 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={}
                     hyperparameter_specific_config_cv_object=KFold(n_splits=3),
                     hyperparameter_search_cv_object=KFold(n_splits=3),
                     eval_final_performance = True,
-                    optimizer_metric='accuracy')
+                    best_config_metric='accuracy', verbose= 0)
 
 my_pipe += PipelineElement.create('standard_scaler')
 my_pipe += PipelineElement.create('pca', {'n_components': pca_n_components})

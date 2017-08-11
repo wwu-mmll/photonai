@@ -7,6 +7,7 @@ from hashlib import sha1
 from .ResultLogging import ResultLogging
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .Validation import TestPipeline, OptimizerMetric, Scorer
+from Logging.Logger import LoggerClass
 
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection import ShuffleSplit
@@ -27,7 +28,7 @@ class Hyperpipe(BaseEstimator):
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
                  metrics=None, best_config_metric=None, hyperparameter_search_cv_object=None,
                  test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
-                 logging=False, set_random_seed=False):
+                 logging=False, set_random_seed=False, verbose=0):
         # Re eval_final_performance:
         # set eval_final_performance to False because
         # 1. if no cv-object is given, no split is performed --> seems more logical
@@ -59,6 +60,9 @@ class Hyperpipe(BaseEstimator):
             import random
             random.seed(42)
             print('set random seed to 42')
+        self.verbose = verbose
+        self.logger = LoggerClass()
+        self.logger.set_verbosity(self.verbose)
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
@@ -75,7 +79,7 @@ class Hyperpipe(BaseEstimator):
         self._hyperparameters = []
         self._config_grid = []
 
-        # containers for optimization history and logging
+        # containers for optimization history and Logging
         self.config_history = []
         self.performance_history_list = []
         self.parameter_history = []
@@ -214,13 +218,13 @@ class Hyperpipe(BaseEstimator):
                     self.children_config_setup = []
 
                     cv_counter += 1
-                    print('********************************************************************************')
-                    print(' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(cv_counter))
+                    self.logger.info('********************************************************************************')
+                    self.logger.info(' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(cv_counter))
                     validation_X = self.X[train_indices]
                     validation_y = self.y[train_indices]
                     test_X = self.X[test_indices]
                     test_y = self.y[test_indices]
-
+                    self.logger.debug(print(validation_y))
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
                     num_folds = len(cv_iter)
 
