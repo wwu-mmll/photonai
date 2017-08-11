@@ -120,7 +120,7 @@ class LoggerClass:
             self._print_entry(entry)
 
     def _print_entry(self, entry: dict):
-        print(entry['log_type'] + ' ' + entry['message'])
+        print(entry['message'])
 
     def _generate_log_entry(self, message: str, log_type: str):
         """Todo: Get current user from user-service and add username to log_entry"""
