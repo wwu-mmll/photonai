@@ -218,13 +218,13 @@ class Hyperpipe(BaseEstimator):
                     self.children_config_setup = []
 
                     cv_counter += 1
-                    self.logger.info('********************************************************************************')
-                    self.logger.info(' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(cv_counter))
+                    self.logger.info('********************************************************************************\n' +
+                    ' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(cv_counter))
                     validation_X = self.X[train_indices]
                     validation_y = self.y[train_indices]
                     test_X = self.X[test_indices]
                     test_y = self.y[test_indices]
-                    self.logger.debug(print(validation_y))
+                    self.logger.debug('Validation Targets\n' + str(validation_y))
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
                     num_folds = len(cv_iter)
 
@@ -236,8 +236,8 @@ class Hyperpipe(BaseEstimator):
 
                         self.distribute_cv_info_to_hyperpipe_children(reset=True)
                         hp = TestPipeline(self.pipe, specific_config, self.metrics)
-                        print('--------------------------------------------------------------------------------')
-                        print('optimizing of:', self.name)
+                        self.logger.verbose('--------------------------------------------------------------------------------\n' +
+                            'optimizing of:' + self.name)
                         # pprint(self.optimize_printing(specific_config))
                         # Todo: get 'best_config' attribute of all hyperpipe children after fit and write into array
                         results_cv = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
@@ -265,8 +265,8 @@ class Hyperpipe(BaseEstimator):
                         self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
                         # Print Result for config
-                        pprint(self.optimize_printing(specific_config))
-                        pprint(results_cv[self.config_optimizer.metric])
+                        self.logger.verbose(self.optimize_printing(specific_config))
+                        self.logger.verbose(results_cv[self.config_optimizer.metric])
 
                         self.config_history.append(specific_config)
                         self.performance_history_list.append(results_cv)
@@ -293,19 +293,20 @@ class Hyperpipe(BaseEstimator):
                         self.best_performance = self.performance_history_list[best_config_nr]
 
                         # inform user
-                        print('********************************************************************************')
-                        print('finished optimization of ', self.name)
-                        print('--------------------------------------------------------------------------------')
-                        print('           Result')
-                        print('--------------------------------------------------------------------------------')
-                        print('Number of tested configurations:', len(self.performance_history_list))
-                        print('Optimizer metric: ', self.config_optimizer.metric)
-                        print('   --> Greater is better: ', self.config_optimizer.greater_is_better)
-                        print('Best config: ', self.optimize_printing(self.best_config))
-                        print('... with children config: ', self.optimize_printing(self.best_children_config))
-                        print('Performance:\n')
-                        pprint(self.best_performance)
-                        print('--------------------------------------------------------------------------------')
+                        self.logger.info('********************************************************************************\n'
+                        + 'finished optimization of ' + self.name +
+                      '\n--------------------------------------------------------------------------------')
+                        self.logger.info('           Result\n' +
+                        '--------------------------------------------------------------------------------')
+                        self.logger.info('Number of tested configurations:' +
+                                         str(len(self.performance_history_list)))
+                        self.logger.verbose('Optimizer metric: ' + self.config_optimizer.metric + '\n' +
+                        '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
+                        self.logger.info('Best config: ' + self.optimize_printing(self.best_config) + '\n' +
+                        '... with children config: '
+                                         + self.optimize_printing(self.best_children_config) + '\n' +
+                       'Performance:\n' + str(self.best_performance) + '\n' +
+                        '--------------------------------------------------------------------------------')
 
                         # ... and create optimal pipeline
                         # Todo: manage optimum pipe stuff
@@ -410,17 +411,18 @@ class Hyperpipe(BaseEstimator):
 
     def optimize_printing(self, config):
         prettified_config = []
+        prettified_config.append(self.name + '\n')
         for el_key, el_value in config.items():
             items = el_key.split('__')
             name = items[0]
             rest = '__'.join(items[1::])
             if name in self.pipe.named_steps:
-                new_pretty_key = self.name + '->' + name + '->'
+                new_pretty_key = '    ' + name + '->'
                 prettified_config.append(new_pretty_key +
-                                         self.pipe.named_steps[name].prettify_config_output(rest, el_value))
+                    self.pipe.named_steps[name].prettify_config_output(rest, el_value) + '\n')
             else:
                 raise ValueError('Item is not contained in pipeline:' + name)
-        return prettified_config
+        return ''.join(prettified_config)
 
     def prettify_config_output(self, config_name, config_value):
         return config_name + '=' + str(config_value)
