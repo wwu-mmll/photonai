@@ -49,7 +49,7 @@ class LoggerClass:
         # Set default LogLevel
         # Should be LogLevel.WARN!
         # Is LogLevel.DEBUG now only for testing purposes
-        self._log_level = LogLevel.INFO
+        self._log_level = self.LogLevel.INFO
 
         # Should the log also be printed to the console?
         # Recommendation: Set to True during development, false in production-environment
@@ -59,53 +59,53 @@ class LoggerClass:
         self._print_to_console = status
 
 
-    def set_log_level(self, level: LogLevel):
+    def set_log_level(self, level):
         """" Use this method to change the log level. """
         self._log_level = level
 
     def set_verbosity(self, verbose=0):
         """ Use this method to change the log level from verbosity attribute of hyperpipe. """
         if verbose == 0:
-            self._log_level = self.set_log_level(LogLevel.INFO)
+            self.set_log_level(self.LogLevel.INFO)
         elif verbose == 1:
-            self._log_level = self.set_log_level(LogLevel.VERBOSE)
+            self.set_log_level(self.LogLevel.VERBOSE)
         elif verbose == 2:
-            self._log_level = self.set_log_level(LogLevel.DEBUG)
+            self.set_log_level(self.LogLevel.DEBUG)
         else:
-            self._log_level = self.set_log_level(LogLevel.WARN)
+            self.set_log_level(self.LogLevel.WARN)
 
 
         # Debug should be used for information that may be useful for program-debugging (most information)
 
     # i.e. training epochs of neural nets
     def debug(self, message: str):
-        if (self._log_level <= LogLevel.DEBUG):
+        if (self._log_level <= self.LogLevel.DEBUG):
             self._insert_log_into_database(message, self.debug_log_collection,
                                       'DEBUG')
 
     # Verbose should be used if something interesting (but uncritically) happened
     # i.e. every hp config that is tested
     def verbose(self, message: str):
-        if (self._log_level <= LogLevel.VERBOSE):
+        if (self._log_level <= self.LogLevel.VERBOSE):
             self._insert_log_into_database(message, self.verbose_log_collection,
                                       'VERBOSE')
 
     # Info should be used if something interesting (but uncritically) happened
     # i.e. most basic info on photon hyperpipe
     def info(self, message: str):
-        if (self._log_level <= LogLevel.INFO):
+        if (self._log_level <= self.LogLevel.INFO):
             self._insert_log_into_database(message, self.info_log_collection,
                                       'INFO')
 
     # Something may have gone wrong? Use warning
     def warn(self, message: str):
-        if (self._log_level <= LogLevel.WARN):
+        if (self._log_level <= self.LogLevel.WARN):
             self._insert_log_into_database(message, self.warn_log_collection,
                                       'WARN')
 
     # Something broke down. Error should be used if something unexpected happened
     def error(self, message: str):
-        if (self._log_level <= LogLevel.ERROR):
+        if (self._log_level <= self.LogLevel.ERROR):
             self._insert_log_into_database(message, self.error_log_collection,
                                       'ERROR')
 
@@ -136,19 +136,19 @@ class LoggerClass:
 
         return log_entry
 
-# Definition of LogLevels, the lower the number, the stronger the logging will be
-@total_ordering
-class LogLevel(Enum):
-    ERROR = 4
-    WARN = 3
-    INFO = 2
-    VERBOSE = 1
-    DEBUG = 0
+    # Definition of LogLevels, the lower the number, the stronger the logging will be
+    @total_ordering
+    class LogLevel(Enum):
+        ERROR = 4
+        WARN = 3
+        INFO = 2
+        VERBOSE = 1
+        DEBUG = 0
 
-    # def __lt__(self, other):
-    #     if self.__class__ is other.__class__:
-    #         return self.value < other.value
-    #     return NotImplemented
+        def __lt__(self, other):
+            if self.__class__ is other.__class__:
+                return self.value < other.value
+            return NotImplemented
 
 
 if __name__ == "__main__":
