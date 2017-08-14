@@ -113,8 +113,10 @@ class LoggerClass:
     # Handles possible console-logging
     def _insert_log_into_database(self, message: str, collection,
                                   log_type: str):
+
         entry = self._generate_log_entry(message, log_type)
-        collection.insert(entry)
+        if (self._log_level > self.LogLevel.INFO):
+            collection.insert(entry)
 
         if (self._print_to_console):
             self._print_entry(entry)
