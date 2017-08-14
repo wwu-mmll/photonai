@@ -53,7 +53,10 @@ class LoggerClass:
 
         # Should the log also be printed to the console?
         # Recommendation: Set to True during development, false in production-environment
-        self._print_to_console = True
+        self._print_to_txt = True
+        self._logfile_name = 'photon.log'
+        with open(self._logfile_name, "w") as text_file:
+            text_file.write('PHOTON LOGFILE')
 
     def set_print_to_console(self, status: bool):
         self._print_to_console = status
@@ -115,11 +118,12 @@ class LoggerClass:
                                   log_type: str):
 
         entry = self._generate_log_entry(message, log_type)
+        self._print_entry(entry)
+        if self._print_to_txt:
+            with open(self._logfile_name, "a") as text_file:
+                text_file.write(entry)
         if (self._log_level > self.LogLevel.INFO):
             collection.insert(entry)
-
-        if (self._print_to_console):
-            self._print_entry(entry)
 
     def _print_entry(self, entry: dict):
         print(entry['message'])
