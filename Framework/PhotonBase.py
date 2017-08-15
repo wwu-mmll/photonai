@@ -1,6 +1,4 @@
-
 import numpy as np
-from pprint import pprint
 from itertools import product
 from hashlib import sha1
 
@@ -61,7 +59,7 @@ class Hyperpipe(BaseEstimator):
             random.seed(42)
             print('set random seed to 42')
         self.verbose = verbose
-        self.logger = LoggerClass()
+        self.logger = LoggerClass.Instance()
         self.logger.set_verbosity(self.verbose)
 
         self.pipeline_elements = []
