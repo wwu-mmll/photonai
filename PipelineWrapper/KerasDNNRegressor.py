@@ -8,7 +8,7 @@ from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import PReLU
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from sklearn.base import BaseEstimator, RegressorMixin
-
+from sklearn.model_selection import ShuffleSplit
 
 class KerasDNNRegressor(BaseEstimator, RegressorMixin):
 
@@ -38,25 +38,39 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
         # 2. fit model
         # start_time = time.time()
 
-        # register callbacks
-        callbacks_list = []
-        # use early stopping (to save time; does not improve performance as checkpoint will find the best model anyway)
-        # if self.early_stopping_flag:
-        #
-        #     early_stopping = EarlyStopping(monitor='val_loss', patience=self.eaSt_patience)
-        #     callbacks_list += [early_stopping]
+        # use callbacks only when size of training set is above 100
+        if X.shape[-1] > 100:
+            # get pseudo validation set for keras callbacks
+            splitter = ShuffleSplit(n_splits=1, test_size=0.2)
+            for train_index, val_index in splitter.split(X):
+                X_train = X[train_index]
+                X_val = X[val_index]
+                y_train = y[train_index]
+                y_val = y[val_index]
 
-        # adjust learning rate when not improving for patience epochs
-        # reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=self.reLe_factor, patience=self.reLe_patience,
-        #                               min_lr=0.001, verbose=1)
-        # callbacks_list += [reduce_lr]
+            # register callbacks
+            callbacks_list = []
+            # use early stopping (to save time;
+            # does not improve performance as checkpoint will find the best model anyway)
+            if self.early_stopping_flag:
+                early_stopping = EarlyStopping(monitor='val_loss', patience=self.eaSt_patience)
+                callbacks_list += [early_stopping]
 
-        # fit the model
-        results = self.model.fit(X, y, batch_size=128, epochs=self.nb_epoch, verbose=0,  callbacks=callbacks_list)
+            # adjust learning rate when not improving for patience epochs
+            reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=self.reLe_factor,
+                                          patience=self.reLe_patience, min_lr=0.001, verbose=1)
+            callbacks_list += [reduce_lr]
 
-        # elapsed_time = time.time()-start_time
-        # print(elapsed_time)
-
+            # fit the model
+            results = self.model.fit(X_train, y_train, validation_data=(X_val, y_val),
+                                     batch_size=128, epochs=self.nb_epoch,
+                                     verbose=0,  callbacks=callbacks_list)
+        else:
+            # fit the model
+            print('Cannot use Keras Callbacks because of small sample size...')
+            results = self.model.fit(X, y, batch_size=128,
+                                     epochs=self.nb_epoch,
+                                     verbose=0)
         return self
 
     def predict(self, X):
