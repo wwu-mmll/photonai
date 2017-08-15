@@ -11,7 +11,7 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from sklearn.base import BaseEstimator, ClassifierMixin
 
 
-class KerasDNNWrapper(BaseEstimator, ClassifierMixin):
+class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, hidden_layer_sizes=[10, 20], dropout_rate=0.5, target_dimension=10, act_func='prelu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
