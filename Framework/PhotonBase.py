@@ -224,7 +224,6 @@ class Hyperpipe(BaseEstimator):
                     validation_y = self.y[train_indices]
                     test_X = self.X[test_indices]
                     test_y = self.y[test_indices]
-                    self.logger.debug('Validation Targets\n' + str(validation_y))
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
                     num_folds = len(cv_iter)
 
@@ -236,7 +235,7 @@ class Hyperpipe(BaseEstimator):
 
                         self.distribute_cv_info_to_hyperpipe_children(reset=True)
                         hp = TestPipeline(self.pipe, specific_config, self.metrics)
-                        self.logger.verbose('--------------------------------------------------------------------------------\n' +
+                        self.logger.debug('--------------------------------------------------------------------------------\n' +
                             'optimizing of:' + self.name)
                         # pprint(self.optimize_printing(specific_config))
                         # Todo: get 'best_config' attribute of all hyperpipe children after fit and write into array
@@ -293,17 +292,18 @@ class Hyperpipe(BaseEstimator):
                         self.best_performance = self.performance_history_list[best_config_nr]
 
                         # inform user
-                        self.logger.info('********************************************************************************\n'
+                        self.logger.info(
+                    '********************************************************************************\n'
                         + 'finished optimization of ' + self.name +
                       '\n--------------------------------------------------------------------------------')
-                        self.logger.info('           Result\n' +
+                        self.logger.verbose('           Result\n' +
                         '--------------------------------------------------------------------------------')
-                        self.logger.info('Number of tested configurations:' +
+                        self.logger.verbose('Number of tested configurations:' +
                                          str(len(self.performance_history_list)))
                         self.logger.verbose('Optimizer metric: ' + self.config_optimizer.metric + '\n' +
                         '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
-                        self.logger.info('Best config: ' + self.optimize_printing(self.best_config) + '\n' +
-                        '... with children config: '
+                        self.logger.info('Best config: ' + self.optimize_printing(self.best_config) +
+                                         '\n' + '... with children config: '
                                          + self.optimize_printing(self.best_children_config) + '\n' +
                        'Performance:\n' + str(self.best_performance) + '\n' +
                         '--------------------------------------------------------------------------------')
@@ -329,22 +329,23 @@ class Hyperpipe(BaseEstimator):
 
                         self.distribute_cv_info_to_hyperpipe_children(reset=True)
 
-                        print('...now fitting ' + self.name + ' with optimum configuration')
+                        self.logger.verbose('...now fitting ' + self.name + ' with optimum configuration')
                         self.optimum_pipe.fit(validation_X, validation_y)
 
                         if not self.debug_cv_mode and self.eval_final_performance:
-                            print('...now predicting ' + self.name + ' unseen data')
+                            self.logger.verbose('...now predicting ' + self.name + ' unseen data')
                             test_predictions = self.optimum_pipe.predict(test_X)
-                            print('.. calculating metrics for test set (' + self.name + ')')
+                            self.logger.info('.. calculating metrics for test set (' + self.name + ')')
                             if self.metrics:
                                 for metric in self.metrics:
                                     scorer = Scorer.create(metric)
                                     # use setdefault method of dictionary to create list under
                                     # specific key even in case no list exists
                                     metric_value = scorer(test_y, test_predictions)
-                                    print(metric + ':' + str(metric_value))
+                                    self.logger.info(metric + ':' + str(metric_value))
                                     self.test_performances.setdefault(metric, []).append(metric_value)
-                        print('********************************************************************************')
+                        self.logger.info('****************************************'+
+                                         '****************************************')
 
                 # else:
                     # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
@@ -354,10 +355,13 @@ class Hyperpipe(BaseEstimator):
                 self.pipe.fit(self.X, self.y, **fit_params)
 
         else:
-            print('--------------------------------------------------------------------------------')
-            print("Avoided fitting of " + self.name + " on fold " + str(self.current_fold) + " because data did not change")
-            print('Best config of ' + self.name + ' : ', self.best_config)
-            print('--------------------------------------------------------------------------------')
+            self.logger.verbose('------------------------------------'+
+                                '--------------------------------------------')
+            self.logger.verbose("Avoided fitting of " + self.name + " on fold "
+                                + str(self.current_fold) + " because data did not change")
+            self.logger.verbose('Best config of ' + self.name + ' : ' + self.best_config)
+            self.logger.verbose('--------------------------------------'+
+                                '------------------------------------------')
 
         return self
 
@@ -421,6 +425,7 @@ class Hyperpipe(BaseEstimator):
                 prettified_config.append(new_pretty_key +
                     self.pipe.named_steps[name].prettify_config_output(rest, el_value) + '\n')
             else:
+                self.logger.error('Item is not contained in pipeline:' + name)
                 raise ValueError('Item is not contained in pipeline:' + name)
         return ''.join(prettified_config)
 
@@ -578,6 +583,7 @@ class PipelineElement(BaseEstimator):
             elif hasattr(self.base_element, 'transform'):
                 return self.base_element.transform(data)
             else:
+
                 raise BaseException('Base Element should have function predict, or at least transform.')
         else:
             return data

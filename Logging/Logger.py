@@ -120,8 +120,9 @@ class LoggerClass:
         entry = self._generate_log_entry(message, log_type)
         self._print_entry(entry)
         if self._print_to_txt:
-            with open(self._logfile_name, "a") as text_file:
-                text_file.write(entry)
+            with open(self._logfile_name, "a", newline='\n') as text_file:
+                text_file.write('\n')
+                text_file.write(str(entry['message']))
         if (self._log_level > self.LogLevel.INFO):
             collection.insert(entry)
 
