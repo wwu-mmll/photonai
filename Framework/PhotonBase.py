@@ -357,7 +357,7 @@ class Hyperpipe(BaseEstimator):
                                 '--------------------------------------------')
             self.logger.verbose("Avoided fitting of " + self.name + " on fold "
                                 + str(self.current_fold) + " because data did not change")
-            self.logger.verbose('Best config of ' + self.name + ' : ' + self.best_config)
+            self.logger.verbose('Best config of ' + self.name + ' : ' + str(self.best_config))
             self.logger.verbose('--------------------------------------'+
                                 '------------------------------------------')
 
@@ -621,8 +621,6 @@ class PipelineElement(BaseEstimator):
 
     def prettify_config_output(self, config_name, config_value):
         return config_name + ':' + str(config_value)
-
-
 
 
 
