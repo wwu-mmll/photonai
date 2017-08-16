@@ -31,8 +31,11 @@ class ResultLogging:
             with open(cwd + "/" + filename, 'a') as csv_file:
                 write_this_to_csv = []
                 for metric in results_list[l].keys():
-                    write_this_to_csv.append(results_list[l][metric]['train'])
-                    write_this_to_csv.append(results_list[l][metric]['test'])
+                    if isinstance(results_list[l][metric], dict):
+                        write_this_to_csv.append(results_list[l][metric]['train'])
+                        write_this_to_csv.append(results_list[l][metric]['test'])
+                    elif isinstance(results_list[l][metric], list):
+                        write_this_to_csv.append(results_list[l][metric])
                 for key, value in config_history[l].items():
                     write_this_to_csv.append(value)
                 writer = csv.writer(csv_file, delimiter='\t')
@@ -62,11 +65,13 @@ class ResultLogging:
 
     @staticmethod
     def reorder_results(results):
+        # black_list = ['duration']
         r_results = OrderedDict()
         for key, value in results.items():
             # train and test should always be alternated
             # put first element under test, second under train and so forth (this is because _fit_and_score() calculates
             # score of the test set first
+            # if key not in black_list :
             train = []
             test = []
             for i in range(len(results[key])):
@@ -88,5 +93,7 @@ class ResultLogging:
                 r_results[key] = {'train': train_mean, 'test': test_mean}
                 r_results[key + '_std'] = {'train': train_std, 'test': test_std}
                 r_results[key + '_folds'] = {'train': train, 'test': test}
+            # else:
+            #     r_results[key] = results[key]
         return r_results
 

@@ -1,11 +1,5 @@
-import pandas as pd
-import nibabel as nib
 import os
 import numpy as np
-import scipy.io as spio
-
-
-#Todo: make sure that each class is returning an pandas DataFrame Object
 
 class MatLoader(object):
 
@@ -23,6 +17,7 @@ class MatLoader(object):
         from mat files. It calls the function check keys to cure all entries
         which are still mat-objects
         '''
+        import scipy.io as spio
         data = spio.loadmat(filename, struct_as_record=False,
                             squeeze_me=True)
         return self._check_keys(data)
@@ -32,6 +27,7 @@ class MatLoader(object):
         checks if entries in dictionary are mat-objects. If yes
         todict is called to change them to nested dictionaries
         '''
+        import scipy.io as spio
         for key in item_dict:
             if isinstance(item_dict[key],
                           spio.matlab.mio5_params.mat_struct):
@@ -39,6 +35,7 @@ class MatLoader(object):
         return item_dict
 
     def _to_dict(self, matobj):
+        import scipy.io as spio
         '''
         A recursive function which constructs from matobjects nested dictionaries
         '''
@@ -55,6 +52,7 @@ class MatLoader(object):
 class CsvLoader(object):
 
     def __call__(self, filename, **kwargs):
+        import pandas as pd
         csv_data = pd.read_csv(filename, **kwargs)
         return csv_data
 
@@ -62,12 +60,14 @@ class CsvLoader(object):
 class XlsxLoader(object):
 
     def __call__(self, filename, **kwargs):
+        import pandas as pd
         return pd.read_excel(filename, **kwargs)
 
 
 class NiiLoader(object):
 
     def __call__(self, filepaths, vectorize=False, **kwargs):
+        import nibabel as nib
         # loading all .nii-files in one folder is no longer supported
 
         if isinstance(filepaths, str):

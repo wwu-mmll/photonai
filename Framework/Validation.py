@@ -1,5 +1,7 @@
 from sklearn.model_selection._validation import _fit_and_score
 from collections import OrderedDict
+import time
+import warnings
 import matplotlib.pyplot as plt
 from .ResultLogging import ResultLogging
 
@@ -28,25 +30,56 @@ class TestPipeline(object):
         self.predictions = []
 
     def calculate_cv_score(self, X, y, cv_iter):
-        # very important todo: clone pipeline!!!!!!!!!!!!!!!
-        cv_scores = []
+
         n_train = []
         n_test = []
 
+        # needed for testing Timeboxed Random Grid Search
+        # time.sleep(35)
+
+        # Todo: @Tim: fill and Result Logging Instances here and return them to hyperpipe
+
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
-            fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
-                                                   train, test, self.verbose, self.params,
-                                                   fit_params=self.fit_params,
-                                                   return_train_score=self.return_train_score,
-                                                   return_n_test_samples=True,
-                                                   return_times=True, return_parameters=True,
-                                                   error_score=self.error_score)
-            n_train.append(len(train))
-            n_test.append(len(test))
-            # self.pipe.fit(X[train], y[train])
-            # fit_and_predict_score = self.pipe.score(X[test], y[test])
-            cv_scores.append(fit_and_predict_score)
+            # fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
+            #                                        train, test, self.verbose, self.params,
+            #                                        fit_params=self.fit_params,
+            #                                        return_train_score=self.return_train_score,
+            #                                        return_n_test_samples=True,
+            #                                        return_times=True, return_parameters=True,
+            #                                        error_score=self.error_score)
+
+            try:
+                n_train.append(len(train))
+                n_test.append(len(test))
+                self.pipe.set_params(**self.params)
+                fit_start_time = time.time()
+                self.pipe.fit(X[train], y[train])
+                fit_duration = time.time()-fit_start_time
+                # do this twice so it is the same for train and test reportings
+                self.cv_results.setdefault('duration', []).append(fit_duration)
+                self.cv_results.setdefault('duration', []).append(fit_duration)
+
+                # score test data
+                score_test_data_time = time.time()
+                self.score(self.pipe, X[test], y[test])
+                score_test_data_duration = time.time() - score_test_data_time
+                self.cv_results.setdefault('score_duration', []).append(score_test_data_duration)
+
+                # score train data
+                score_train_data_time = time.time()
+                self.score(self.pipe, X[train], y[train])
+                score_train_data_duration = time.time() - score_test_data_time
+                self.cv_results.setdefault('score_duration', []).append(score_train_data_duration)
+
+
+
+            except Exception as e:
+                # Todo: Logging!
+                # Logger().error(e)
+                warnings.warn('One test iteration of pipeline failed with error:', e)
+
+            # cv_scores.append(fit_and_predict_score)
 
         # reorder results because now train and test simply alternates in a list
         # reorder_results() puts the results under keys "train" and "test"
@@ -56,12 +89,13 @@ class TestPipeline(object):
         self.cv_results = ResultLogging.reorder_results(self.cv_results)
         self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
 
-        result_dict = self.cv_results
-        return result_dict
+        return self.cv_results
 
     def score(self, estimator, X, y_true):
         if hasattr(estimator, 'score'):
+            # Todo: Here it is potentially slowing down!!!!!!!!!!!!!!!!
             default_score = estimator.score(X, y_true)
+            warnings.warn('Attention: Scoring with default score function of estimator can slow down calculations!')
         else:
             default_score = -1
         # use cv_results as class variable to get results out of
