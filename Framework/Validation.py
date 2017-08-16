@@ -4,7 +4,7 @@ import time
 import warnings
 import matplotlib.pyplot as plt
 from .ResultLogging import ResultLogging
-
+from Logging.Logger import Logger
 
 import numpy as np
 
@@ -162,9 +162,12 @@ class Scorer(object):
                 scoring_method = desired_class
                 return scoring_method
             except AttributeError as ae:
+                Logger().error('ValueError: Could not find according class: '
+                               + Scorer.ELEMENT_DICTIONARY[metric])
                 raise ValueError('Could not find according class:',
                                  Scorer.ELEMENT_DICTIONARY[metric])
         else:
+            Logger().error('NameError: Metric not supported right now:' + metric)
             raise NameError('Metric not supported right now:', metric)
 
 
@@ -211,8 +214,10 @@ class OptimizerMetric(object):
                     self.greater_is_better = False
                 else:
                     # Todo: better error checking?
+                    Logger().error('NameError: Metric not suitable for optimizer.')
                     raise NameError('Metric not suitable for optimizer.')
             else:
+                Logger().error('NameError: Specify valid metric.')
                 raise NameError('Specify valid metric.')
         else:
             # if no optimizer metric was chosen, use default scoring method
@@ -228,6 +233,10 @@ class OptimizerMetric(object):
                     self.greater_is_better = False
             else:
                 # Todo: better error checking?
+                Logger().error('NotImplementedError: ' +
+                               'Last pipeline element does not specify '+
+                               'whether it is a classifier, regressor, transformer or '+
+                               'clusterer.')
                 raise NotImplementedError('Last pipeline element does not specify '
                                           'whether it is a classifier, regressor, transformer or '
                                           'clusterer.')
