@@ -58,6 +58,10 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
         self.start_time = None
         self.end_time = None
 
+    def prepare(self, pipeline_elements):
+        super(TimeBoxedRandomGridSearchOptimizer, self).prepare(pipeline_elements)
+        self.start_time = None
+
     def next_config_generator(self):
         if self.start_time is None:
             self.start_time = datetime.datetime.now()

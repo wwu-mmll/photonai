@@ -234,7 +234,8 @@ class Hyperpipe(BaseEstimator):
                         hp = TestPipeline(self.pipe, specific_config, self.metrics)
                         print('--------------------------------------------------------------------------------')
                         print('optimizing of:', self.name)
-                        # pprint(self.optimize_printing(specific_config))
+                        pprint(self.optimize_printing(specific_config))
+                        print('calculating...')
                         # Todo: get 'best_config' attribute of all hyperpipe children after fit and write into array
                         results_cv = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
 
@@ -261,9 +262,11 @@ class Hyperpipe(BaseEstimator):
                         self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
                         # Print Result for config
+                        print('...done:')
                         pprint(self.optimize_printing(specific_config))
                         pprint(results_cv[self.config_optimizer.metric])
 
+                        # Todo: @Tim: fill and save Result Logging Instances here!
                         self.config_history.append(specific_config)
                         self.performance_history_list.append(results_cv)
                         self.parameter_history.append(specific_parameters)
@@ -419,7 +422,10 @@ class Hyperpipe(BaseEstimator):
         return prettified_config
 
     def prettify_config_output(self, config_name, config_value):
-        return config_name + '=' + str(config_value)
+        if config_name == "disabled" and config_value is False:
+            return "enabled = True"
+        else:
+            return config_name + '=' + str(config_value)
 
     @property
     def config_grid(self):
@@ -611,7 +617,10 @@ class PipelineElement(BaseEstimator):
         return self.base_element.score(X_test, y_test)
 
     def prettify_config_output(self, config_name, config_value):
-        return config_name + ':' + str(config_value)
+        if config_name == "disabled" and config_value is False:
+            return "enabled = True"
+        else:
+            return config_name + '=' + str(config_value)
 
 
 
