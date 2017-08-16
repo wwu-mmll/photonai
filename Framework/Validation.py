@@ -95,7 +95,7 @@ class TestPipeline(object):
         if hasattr(estimator, 'score'):
             # Todo: Here it is potentially slowing down!!!!!!!!!!!!!!!!
             default_score = estimator.score(X, y_true)
-            warnings.warn('Attention: Scoring with default score function of estimator can slow down calculations!')
+            Logger().warn('Attention: Scoring with default score function of estimator can slow down calculations!')
         else:
             default_score = -1
         # use cv_results as class variable to get results out of
