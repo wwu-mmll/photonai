@@ -197,7 +197,7 @@ class Logger:
         return log_entry
 
     def store_logger_names(self, name):
-        print('Appending name ', name)
+        #print('Appending name ', name)
 
         return self.loggers.append(name)
 
