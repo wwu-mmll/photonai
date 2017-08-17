@@ -10,6 +10,7 @@ from keras.layers.advanced_activations import PReLU
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
+from Framework.Metrics import categorical_accuracy_score
 
 class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
@@ -92,7 +93,10 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         predict_result = self.model.predict(X, batch_size=128)
         max_index = np.argmax(predict_result, axis=1)
-        return max_index
+        return self.dense_to_one_hot(max_index, self.target_dimension)
+
+    def score(self, X, y_true):
+        return np.zeros(1)
 
     def create_model(self, input_size):
 
