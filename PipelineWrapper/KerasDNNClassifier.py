@@ -35,8 +35,11 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
         # prepare target values
         # Todo: calculate number of classes?
-        if self.target_dimension > 1:
-            y = self.dense_to_one_hot(y, self.target_dimension)
+        try:
+            if (self.target_dimension > 1) and (y.shape[1] > 1):
+                y = self.dense_to_one_hot(y, self.target_dimension)
+        except:
+            pass
 
         # 1. make model
         self.model = self.create_model(X.shape[1])
@@ -87,12 +90,9 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
         return self
 
     def predict(self, X):
-        if self.target_dimension > 1:
-            predict_result = self.model.predict(X, batch_size=128)
-            max_index = np.argmax(predict_result, axis=1)
-            return max_index
-        else:
-            return self.model.predict(X, batch_size=128)
+        predict_result = self.model.predict(X, batch_size=128)
+        max_index = np.argmax(predict_result, axis=1)
+        return max_index
 
     def create_model(self, input_size):
 
@@ -114,12 +114,13 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
             model.add(Dropout(self.dropout_rate))
 
-        model.add(Dense(self.target_dimension, activation='linear'))
+        model.add(Dense(self.target_dimension, activation='softmax'))
 
         # Compile model
         optimizer = Adam(lr=self.learning_rate)
-        model.compile(loss='mean_absolute_error', optimizer=optimizer, metrics=['mean_absolute_error'])
-        # model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['mean_squared_error'])
+        model.compile(loss='categorical_crossentropy',
+                      optimizer=optimizer, metrics=['accuracy'])
+
 
         return model
 
