@@ -140,7 +140,8 @@ class Scorer(object):
         'mean_squared_error': ('sklearn.metrics', 'mean_squared_error'),
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
-        'r2': ('sklearn.metrics', 'r2_score')
+        'r2': ('sklearn.metrics', 'r2_score'),
+        'categorical_accuracy': ('Framework.Metrics','categorical_accuracy')
     }
 
     # def __init__(self, estimator, x, y_true, metrics):
