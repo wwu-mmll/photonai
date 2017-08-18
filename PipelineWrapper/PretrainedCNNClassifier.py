@@ -2,7 +2,7 @@
 import time
 import numpy as np
 from keras.layers import Input
-from keras.optimizers import Adam
+from keras.optimizers import Adam, RMSprop
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
 from keras.layers.advanced_activations import PReLU
@@ -107,13 +107,14 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
         input_tensor = Input(shape=self.input_shape)  # this assumes K.image_data_format() == 'channels_last'
 
         # create the base pre-trained model
-        base_model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False)
+        #base_model = VGG19(input_tensor=input_tensor, weights='imagenet', include_top=False)
+        base_model = InceptionV3(input_tensor=input_tensor, weights='imagenet', include_top=False)
 
         # add a global spatial average pooling layer
         x = base_model.output
         x = GlobalAveragePooling2D()(x)
         # let's add a fully-connected layer
-        x = Dense(self.size_additional_layer, activation='relu')(x)
+        #x = Dense(self.size_additional_layer, activation='relu')(x)
         # and a logistic layer -- let's say we have 200 classes
         predictions = Dense(self.target_dimension, activation='softmax')(x)
 
@@ -127,6 +128,7 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
             layer.trainable = True
 
         # compile the model (should be done *after* setting layers to non-trainable)
+        #optimizer = RMSprop(lr=self.learning_rate, rho=0.9, epsilon=0.1, decay=0.9)
         optimizer = Adam(lr=self.learning_rate)
         model.compile(optimizer=optimizer, loss='categorical_crossentropy')
         base_model.summary()
