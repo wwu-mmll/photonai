@@ -482,7 +482,8 @@ class PipelineElement(BaseEstimator):
                           'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
                           'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),
                           'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor'),
-                          'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor','KerasDNNRegressor')
+                          'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor','KerasDNNRegressor'),
+                          'PretrainedCNNClassifier': ('PipelineWrapper.PretrainedCNNClassifier', 'PretrainedCNNClassifier')
                           }
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
