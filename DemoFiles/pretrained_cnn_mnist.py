@@ -17,6 +17,8 @@ X_train = np.random.rand(100,224,224,3)
 y_train = np.random.randint(0,10,100)
 y_train = tfu.oneHot(y_train)
 cv = ShuffleSplit(n_splits=1,test_size=0.2, random_state=23)
+
+
 #cv = KFold(n_splits=5, random_state=23)
 my_pipe = Hyperpipe('mnist_siamese_net', optimizer='grid_search',
                             metrics=['categorical_accuracy'], best_config_metric='categorical_accuracy',
@@ -24,5 +26,5 @@ my_pipe = Hyperpipe('mnist_siamese_net', optimizer='grid_search',
                             hyperparameter_search_cv_object=cv,
                             eval_final_performance=True, verbose=2)
 #my_pipe += PipelineElement.create('standard_scaler')
-my_pipe += PipelineElement.create('PretrainedCNNClassifier', {'input_shape': [(224,224,3)],'target_dimension': [10],  'nb_epoch':[100], 'size_additional_layer':[100], 'freezing_point':[20]})
+my_pipe += PipelineElement.create('PretrainedCNNClassifier', {'input_shape': [(224,224,3)],'target_dimension': [10],  'nb_epoch':[100], 'size_additional_layer':[100], 'freezing_point':[0]})
 my_pipe.fit(X_train,y_train)
