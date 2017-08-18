@@ -15,7 +15,7 @@ class RegisterPipelineElement:
         content = PhotonRegister.get_json(self.photon_package)  # load existing json
         duplicate = self.check_duplicate(content)
         if not duplicate:
-            Logger().info('Adding PipelineElement ' + self.class_str + ' to ' + self.photon_package + ' as "' + self.photon_name + '".')
+            #Logger().info('Adding PipelineElement ' + self.class_str + ' to ' + self.photon_package + ' as "' + self.photon_name + '".')
 
             # add new element
             content[self.photon_name] = self.class_str, self.element_type
@@ -26,9 +26,9 @@ class RegisterPipelineElement:
 
     def remove(self):
         content = PhotonRegister.get_json(self.photon_package)  # load existing json
-        Logger().info('Removing the PipelineElement named "' + self.photon_name
-              + '" (' + content[self.photon_name][0] + '.' + content[self.photon_name][
-                  1] + ')' + ' from ' + self.photon_package + '.')
+        #Logger().info('Removing the PipelineElement named "' + self.photon_name
+         #     + '" (' + content[self.photon_name][0] + '.' + content[self.photon_name][
+          #        1] + ')' + ' from ' + self.photon_package + '.')
 
         if self.photon_name in content: del content[self.photon_name]
         PhotonRegister.write2json(content, self.photon_package)
@@ -38,8 +38,8 @@ class RegisterPipelineElement:
         flag = 0
         if self.photon_name in content:
             flag += 1
-            Logger().info('The PipelineElement named "' + self.photon_name + '" has already been registered in '
-                  + self.photon_package + ' with ' + content[self.photon_name][0] + '.')
+            #Logger().info('The PipelineElement named "' + self.photon_name + '" has already been registered in '
+            #      + self.photon_package + ' with ' + content[self.photon_name][0] + '.')
 
         # check for duplicate class_str
         if any(self.class_str in s for s in content.values()):
@@ -48,8 +48,8 @@ class RegisterPipelineElement:
                 if self.class_str in values_str:
                     which = key_str
 
-            Logger().info('The PipelineElement with the ClassName "' + self.class_str + '" has already been registered in '
-                          + self.photon_package + ' as "' + which + '". "' + self.photon_name + '" not added to ' + self.photon_package + '.')
+            #Logger().info('The PipelineElement with the ClassName "' + self.class_str + '" has already been registered in '
+            #              + self.photon_package + ' as "' + which + '". "' + self.photon_name + '" not added to ' + self.photon_package + '.')
 
         return flag > 0
 
@@ -70,15 +70,15 @@ class PhotonRegister:
     # one json file per Photon Package (Core, Neuro, Genetics, Designer (if necessary)
     @staticmethod
     def get_json(photon_package):
-        file_name = photon_package + '.json'
-        import os.path
+        import inspect
+        file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
         if os.path.isfile(file_name):
             # Reading json
             with open(file_name, 'r') as f:
                 file_content = json.load(f)
         else:
             file_content = dict()
-            Logger().info(file_name + ' not found. Creating file.')
+            print(file_name + ' not found. Creating file.')
 
         return file_content
 
@@ -90,23 +90,23 @@ class PhotonRegister:
         with open(file_name, 'w') as f:
            json.dump(content2write, f)
 
-           Logger().debug('Writing to ' + file_name)
+           #Logger().debug('Writing to ' + file_name)
 
 
-# if __name__ == '__main__':
-#
+#if __name__ == '__main__':
+
     # import sklearn
     # import inspect
     # for name, obj in inspect.getmembers(sklearn):
     #     #print(obj)
     #     print(name)
-    #
-    # #print(hasattr(PCA(), '_estimator_type'))
+
+    #print(hasattr(PCA(), '_estimator_type'))
 
     # ELEMENT_DICTIONARY = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore', 'PhotonCore2'])
     # print(ELEMENT_DICTIONARY)
 
-    # photon_package = 'PhotonCore2'  # where to add the element
+    # photon_package = 'PhotonCore'  # where to add the element
     # photon_name = 'skjhvr'  # element name
     # class_str = 'sklearn.svm.SljkVR'  # element info
     # element_type = 'Estimator'  # element type
@@ -121,7 +121,7 @@ class PhotonRegister:
     #                         photon_package=photon_package,
     #                         class_str=class_str,
     #                         element_type=element_type).add()
-
+    #
     # photon_name = 'Test'  # element name
     # class_str = 'sklearn.svm.SVR'  # element info
     # RegisterPipelineElement(photon_name=photon_name,
@@ -137,42 +137,39 @@ class PhotonRegister:
     #                         class_str=class_str,
     #                         element_type=element_type).add()
     #
-    # eldict = RegisterPipelineElement.get_pipeline_element_infos('PhotonCore')
+    # eldict = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore'])
     # # eldict = PhotonRegister.get_element_infos('PhotonCore')
-    # print(eldict['svr'][0])
-    # print(eldict['svr'][1])
-    #
+    # print(eldict)
+
+
     # RegisterPipelineElement(photon_name='PCA',
     #                         photon_package=photon_package).remove()
 
 
-    # # Write complete dict to json (OVERWRITES EVERYTHING IN IT!!!)
-    #
-    # ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
-    #                       'svc': ('sklearn.svm', 'SVC'),
-    #                       'knn': ('sklearn.neighbors', 'KNeighborsClassifier'),
-    #                       'logistic': ('sklearn.linear_model', 'LogisticRegression'),
-    #                       'dnn': ('PipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
-    #                       'KerasDNNClassifier': ('PipelineWrapper.KerasDNNClassifier',
-    #                                              'KerasDNNClassifier'),
-    #                       'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
-    #                       'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
-    #                       'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement'),
-    #                       'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper'),
-    #                       'rl_cnn': ('photon_core.PipelineWrapper.RLCNN', 'RLCNN'),
-    #                       'CNN1d': ('PipelineWrapper.CNN1d', 'CNN1d'),
-    #                       'SourceSplitter': ('PipelineWrapper.SourceSplitter', 'SourceSplitter'),
-    #                       'f_regression_select_percentile':
-    #                           ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
-    #                       'f_classif_select_percentile':
-    #                           ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile'),
-    #                       'py_esn_r': ('PipelineWrapper.PyESNWrapper', 'PyESNRegressor'),
-    #                       'py_esn_c': ('PipelineWrapper.PyESNWrapper', 'PyESNClassifier'),
-    #                       'SVR': ('sklearn.svm', 'SVR'),
-    #                       'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
-    #                       'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),
-    #                       'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor'),
-    #                       'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor','KerasDNNRegressor'),
-    #                       'PretrainedCNNClassifier': ('PipelineWrapper.PretrainedCNNClassifier', 'PretrainedCNNClassifier')
+    # Write complete dict to json (OVERWRITES EVERYTHING IN IT!!!)
+
+    # ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition.PCA', 'Transformer'),
+    #                       'svc': ('sklearn.svm.SVC', 'Estimator'),
+    #                       'knn': ('sklearn.neighbors.KNeighborsClassifier', 'Estimator'),
+    #                       'logistic': ('sklearn.linear_model.LogisticRegression', 'Estimator'),
+    #                       'dnn': ('PipelineWrapper.TFDNNClassifier.TFDNNClassifier', 'Estimator'),
+    #                       'KerasDNNClassifier': ('PipelineWrapper.KerasDNNClassifier.KerasDNNClassifier', 'Estimator'),
+    #                       'standard_scaler': ('sklearn.preprocessing.StandardScaler', 'Transformer'),
+    #                       'wrapper_model': ('PipelineWrapper.WrapperModel.WrapperModel', 'Estimator'),
+    #                       'test_wrapper': ('PipelineWrapper.TestWrapper.WrapperTestElement', 'Estimator'),
+    #                       'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper.PCA_AE_Wrapper', 'Transformer'),
+    #                       'rl_cnn': ('photon_core.PipelineWrapper.RLCNN.RLCNN', 'Estimator'),
+    #                       'CNN1d': ('PipelineWrapper.CNN1d.CNN1d', 'Estimator'),
+    #                       'SourceSplitter': ('PipelineWrapper.SourceSplitter.SourceSplitter', 'Transformer'),
+    #                       'f_regression_select_percentile': ('PipelineWrapper.FeatureSelection.FRegressionSelectPercentile', 'Transformer'),
+    #                       'f_classif_select_percentile': ('PipelineWrapper.FeatureSelection.FClassifSelectPercentile', 'Transformer'),
+    #                       'py_esn_r': ('PipelineWrapper.PyESNWrapper.PyESNRegressor', 'Estimator'),
+    #                       'py_esn_c': ('PipelineWrapper.PyESNWrapper.PyESNClassifier', 'Estimator'),
+    #                       'SVR': ('sklearn.svm.SVR', 'Estimator'),
+    #                       'KNeighborsRegressor': ('sklearn.neighbors.KNeighborsRegressor', 'Estimator'),
+    #                       'DecisionTreeRegressor': ('sklearn.tree.DecisionTreeRegressor', 'Estimator'),
+    #                       'RandomForestRegressor': ('sklearn.ensemble.RandomForestRegressor', 'Estimator'),
+    #                       'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor', 'Estimator'),
+    #                       'PretrainedCNNClassifier': ('PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier', 'Estimator')
     #                       }
     # PhotonRegister.write2json(ELEMENT_DICTIONARY, 'PhotonCore')
