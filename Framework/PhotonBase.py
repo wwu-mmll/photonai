@@ -458,33 +458,38 @@ class PipelineElement(BaseEstimator):
     # from PipelineWrapper.WrapperModel import WrapperModel
     # from PipelineWrapper.TFDNNClassifier import TFDNNClassifier
     # from PipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
-    ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
-                          'svc': ('sklearn.svm', 'SVC'),
-                          'knn': ('sklearn.neighbors', 'KNeighborsClassifier'),
-                          'logistic': ('sklearn.linear_model', 'LogisticRegression'),
-                          'dnn': ('PipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
-                          'KerasDNNClassifier': ('PipelineWrapper.KerasDNNClassifier',
-                                                 'KerasDNNClassifier'),
-                          'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
-                          'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
-                          'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement'),
-                          'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper'),
-                          'rl_cnn': ('photon_core.PipelineWrapper.RLCNN', 'RLCNN'),
-                          'CNN1d': ('PipelineWrapper.CNN1d', 'CNN1d'),
-                          'SourceSplitter': ('PipelineWrapper.SourceSplitter', 'SourceSplitter'),
-                          'f_regression_select_percentile':
-                              ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
-                          'f_classif_select_percentile':
-                              ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile'),
-                          'py_esn_r': ('PipelineWrapper.PyESNWrapper', 'PyESNRegressor'),
-                          'py_esn_c': ('PipelineWrapper.PyESNWrapper', 'PyESNClassifier'),
-                          'SVR': ('sklearn.svm', 'SVR'),
-                          'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
-                          'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),
-                          'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor'),
-                          'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor','KerasDNNRegressor'),
-                          'PretrainedCNNClassifier': ('PipelineWrapper.PretrainedCNNClassifier', 'PretrainedCNNClassifier')
-                          }
+    # ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
+    #                       'svc': ('sklearn.svm', 'SVC'),
+    #                       'knn': ('sklearn.neighbors', 'KNeighborsClassifier'),
+    #                       'logistic': ('sklearn.linear_model', 'LogisticRegression'),
+    #                       'dnn': ('PipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
+    #                       'KerasDNNClassifier': ('PipelineWrapper.KerasDNNClassifier',
+    #                                              'KerasDNNClassifier'),
+    #                       'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
+    #                       'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
+    #                       'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement'),
+    #                       'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper'),
+    #                       'rl_cnn': ('photon_core.PipelineWrapper.RLCNN', 'RLCNN'),
+    #                       'CNN1d': ('PipelineWrapper.CNN1d', 'CNN1d'),
+    #                       'SourceSplitter': ('PipelineWrapper.SourceSplitter', 'SourceSplitter'),
+    #                       'f_regression_select_percentile':
+    #                           ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
+    #                       'f_classif_select_percentile':
+    #                           ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile'),
+    #                       'py_esn_r': ('PipelineWrapper.PyESNWrapper', 'PyESNRegressor'),
+    #                       'py_esn_c': ('PipelineWrapper.PyESNWrapper', 'PyESNClassifier'),
+    #                       'SVR': ('sklearn.svm', 'SVR'),
+    #                       'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
+    #                       'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),
+    #                       'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor'),
+    #                       'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor','KerasDNNRegressor'),
+    #                       'PretrainedCNNClassifier': ('PipelineWrapper.PretrainedCNNClassifier', 'PretrainedCNNClassifier')
+    #                       }
+
+    # Registering Pipeline Elements
+    from Framework.Register import RegisterPipelineElement
+    ELEMENT_DICTIONARY = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore'])
+    # ELEMENT_DICTIONARY = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore', 'PhotonNeuro'])
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
