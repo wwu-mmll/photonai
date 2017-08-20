@@ -2,6 +2,7 @@
 import json
 import os.path
 from logging import Logger
+import inspect
 
 class RegisterPipelineElement:
     def __init__(self, photon_package, photon_name, class_str=None, element_type=None):
@@ -70,7 +71,6 @@ class PhotonRegister:
     # one json file per Photon Package (Core, Neuro, Genetics, Designer (if necessary)
     @staticmethod
     def get_json(photon_package):
-        import inspect
         file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
         if os.path.isfile(file_name):
             # Reading json
@@ -84,7 +84,7 @@ class PhotonRegister:
 
     @staticmethod
     def write2json(content2write, photon_package):
-        file_name = photon_package + '.json'
+        file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
 
         # Writing JSON data
         with open(file_name, 'w') as f:

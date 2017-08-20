@@ -71,7 +71,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
             reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                                           factor=self.reLe_factor,
                                           patience=self.reLe_patience,
-                                          min_lr=0.001, verbose=1)
+                                          min_lr=0.001, verbose=0)
             callbacks_list += [reduce_lr]
 
             # fit the model
