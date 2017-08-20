@@ -16,10 +16,11 @@ from keras import backend as K
 
 class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, input_dim, dropout_rate=0.5, act_func='relu',
+    def __init__(self, input_dim, target_dimension = 10, dropout_rate=0.5, act_func='relu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
                  eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5):
 
+        self.target_dimension = target_dimension
         self.dropout_rate = dropout_rate
         self.act_func = act_func
         self.learning_rate = learning_rate
@@ -66,31 +67,45 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
                                           min_lr=0.001, verbose=1)
             callbacks_list += [reduce_lr]
 
+            # create training+test positive and negative pairs
+            digit_indices = [np.where(y_train == i)[0] for i in range(10)]
+            tr_pairs, tr_y = self.create_pairs(X_train, digit_indices)
+
+            digit_indices = [np.where(y_val == i)[0] for i in range(10)]
+            te_pairs, te_y = self.create_pairs(X_val, digit_indices)
+
             # fit the model
-            results = self.model.fit(X_train, y_train,
-                                     validation_data=(X_val, y_val),
+            results = self.model.fit(tr_pairs, tr_y,
+                                     validation_data=(te_pairs, te_y),
                                      batch_size=128,
                                      epochs=self.nb_epoch,
                                      verbose=0,
                                      callbacks=callbacks_list)
+
+            # Use learnt features for classification
+            # prepare target values
+            # Todo: calculate number of classes?
+            try:
+                if (self.target_dimension > 1) and (y.shape[1] > 1):
+                    y = self.dense_to_one_hot(y, self.target_dimension)
+            except:
+                pass
+
+            model = self.create_base_network()
+
+
         else:
-            # fit the model
-            print('Cannot use Keras Callbacks because of small sample size...')
-            results = self.model.fit(X, y, batch_size=128,
-                                     epochs=self.nb_epoch,
-                                     verbose=0)
+            pass
 
         return self
 
     def predict(self, X):
-        # predict_result = self.model.predict(X, batch_size=128)
-        # max_index = np.argmax(predict_result, axis=1)
-        # return self.dense_to_one_hot(max_index, self.target_dimension)
-        return self.model.predict(X, batch_size=128)
+        predict_result = self.model.predict(X, batch_size=128)
+        max_index = np.argmax(predict_result, axis=1)
+        return self.dense_to_one_hot(max_index, self.target_dimension)
 
     def score(self, X, y_true):
-        pred = self.predict(X)
-        return self.compute_accuracy(pred, y_true)
+        return np.zeros(1)
 
     def create_model(self):
         # network definition
