@@ -17,7 +17,7 @@ from Helpers.TFUtilities import oneHot
 
 class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, input_dim=10, target_dimension = 10, dropout_rate=0.5, act_func='relu',
+    def __init__(self, input_dim=10, n_pairs_per_sample =2 , target_dimension = 10, dropout_rate=0.5, act_func='relu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
                  eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5):
 
@@ -32,6 +32,7 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         self.reLe_factor = reLe_factor
         self.reLe_patience = reLe_patience
         self.input_dim = input_dim
+        self.n_pairs_per_sample = n_pairs_per_sample
         self.model = None
 
     def fit(self, X, y):
@@ -73,10 +74,10 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
             y_val_oh_reverse = oneHot(y_val,reverse=True)
             
             digit_indices = [np.where(y_train_oh_reverse == i)[0] for i in range(10)]
-            tr_pairs, tr_y = self.create_pairs(X_train, digit_indices)
+            tr_pairs, tr_y = self.create_pairs(X_train, digit_indices, self.n_pairs_per_sample)
 
             digit_indices = [np.where(y_val_oh_reverse == i)[0] for i in range(10)]
-            te_pairs, te_y = self.create_pairs(X_val, digit_indices)
+            te_pairs, te_y = self.create_pairs(X_val, digit_indices, self.n_pairs_per_sample)
             
             print(te_pairs.shape)
             print(tr_pairs.shape)
@@ -168,23 +169,23 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         return K.mean(y_true * K.square(y_pred) +
                       (1 - y_true) * K.square(K.maximum(margin - y_pred, 0)))
 
-    def create_pairs(self, x, digit_indices):
-        '''Positive and negative pair creation.
-        Alternates between positive and negative pairs.
-        '''
-        pairs = []
-        labels = []
-        n = min([len(digit_indices[d]) for d in range(10)]) - 1
-        for d in range(10):
-            for i in range(n):
-                z1, z2 = digit_indices[d][i], digit_indices[d][i + 1]
-                pairs += [[x[z1], x[z2]]]
-                inc = random.randrange(1, 10)
-                dn = (d + inc) % 10
-                z1, z2 = digit_indices[d][i], digit_indices[dn][i]
-                pairs += [[x[z1], x[z2]]]
-                labels += [1, 0]
-        return np.array(pairs), np.array(labels)
+    # def create_pairs(self, x, digit_indices):
+    #     '''Positive and negative pair creation.
+    #     Alternates between positive and negative pairs.
+    #     '''
+    #     pairs = []
+    #     labels = []
+    #     n = min([len(digit_indices[d]) for d in range(10)]) - 1
+    #     for d in range(10):
+    #         for i in range(n):
+    #             z1, z2 = digit_indices[d][i], digit_indices[d][i + 1]
+    #             pairs += [[x[z1], x[z2]]]
+    #             inc = random.randrange(1, 10)
+    #             dn = (d + inc) % 10
+    #             z1, z2 = digit_indices[d][i], digit_indices[dn][i]
+    #             pairs += [[x[z1], x[z2]]]
+    #             labels += [1, 0]
+    #     return np.array(pairs), np.array(labels)
 
     def create_base_network(self):
         '''Base network to be shared (eq. to feature extraction).
@@ -212,3 +213,60 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         labels_one_hot = np.zeros((num_labels, num_classes))
         labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
         return labels_one_hot
+
+    def create_pairs(self, x, class_indices, n_pairs_per_subject):
+        '''Positive and negative pair creation.
+        Alternates between positive and negative pairs.
+        '''
+        # x: data, class_indices: lists of indices of subjects in classes
+
+        n_sample_pairs = 2 * n_pairs_per_subject * len(class_indices[0]) * len(class_indices)
+
+        # if n_sample_pairs > 100000:
+        #     print('INSANE: You are trying to use ', n_sample_pairs,
+        #           'sample pairs.')
+
+        print('Generating ', n_sample_pairs, 'sample pairs.')
+
+        pairs = []
+        labels = []
+        n = len(class_indices[0])
+        if all(len(s) == n for s in class_indices):
+            raise ValueError('Lists do not have the same length.')
+
+        pos_pairs = self.draw_pos_pairs(class_indices, n_pairs_per_subject)
+        neg_pairs = self.draw_neg_pairs(class_indices, n_pairs_per_subject)
+
+        for d in range(len(pos_pairs)):
+            z1, z2 = pos_pairs[d]
+            pairs += [[x[z1], x[z2]]]
+            z1, z2 = neg_pairs[d]
+            pairs += [[x[z1], x[z2]]]
+            labels += [1, 0]
+        return np.array(pairs), np.array(labels)
+
+    def draw_pos_pairs(self, indices, n_pairs_per_subject):
+        pairs = []
+        for ind_lists in range(len(indices)):
+            a = indices[ind_lists]
+            for ind_pair in range(n_pairs_per_subject):
+                for ind_sub in range(len(a)):
+                    p1 = a[ind_sub]
+                    next_ind = (ind_sub + 1 + ind_pair) % len(a)
+                    p2 = a[next_ind]
+                    pairs.append([p1, p2])
+        return pairs
+
+    def draw_neg_pairs(self, indices, n_pairs_per_subject):
+        pairs = []
+        n_classes = len(indices)
+        n_subs = len(indices[0])
+        for ind_lists in range(n_classes):
+            for ind_pair in range(n_pairs_per_subject):
+                for ind_sub in range(n_subs):
+                    p1 = indices[ind_lists][ind_sub]
+                    next_ind = (ind_sub + ind_pair + (ind_lists * (
+                        n_pairs_per_subject - 1)) + ind_lists) % len(indices[(ind_lists+ind_pair)%n_classes])
+                    p2 = indices[(ind_lists+ind_pair)%n_classes][next_ind]
+                    pairs.append([p1, p2])
+        return pairs
