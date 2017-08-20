@@ -79,8 +79,8 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
             digit_indices = [np.where(y_val_oh_reverse == i)[0] for i in range(10)]
             te_pairs, te_y = self.create_pairs(X_val, digit_indices, self.n_pairs_per_sample)
             
-            print(te_pairs.shape)
             print(tr_pairs.shape)
+            print(te_pairs.shape)
             # fit the model
             results = siamese_model.fit([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y,
                          validation_data=([te_pairs[:, 0], te_pairs[:, 1]], te_y),
@@ -101,14 +101,15 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
                 pass
             
             seq_model = siamese_model.get_layer(index=2)
+            seq_model.layers[3] = Dropout(0.5)
             new_input = Input(shape=(self.input_dim,))
             new_seq = seq_model(new_input)
+            new_seq = Dropout(0.5)(new_seq)
             new_seq = Dense(self.target_dimension, activation='softmax')(new_seq)
-
             self.model = Model(new_input, new_seq)
             optimizer = Adam(lr=self.learning_rate)
-            self.model.compile(loss=self.contrastive_loss, optimizer=optimizer)
-
+            self.model.compile(loss='categorical_crossentropy', optimizer=optimizer)
+            print(self.model.summary())
             results = self.model.fit(X_train, y_train,
                                      validation_data=(X_val, y_val),
                                      batch_size=128,
@@ -191,11 +192,11 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         '''Base network to be shared (eq. to feature extraction).
         '''
         seq = Sequential()
-        seq.add(Dense(64, input_shape=(self.input_dim,), kernel_initializer='random_uniform'))
+        seq.add(Dense(128, input_shape=(self.input_dim,), kernel_initializer='random_uniform'))
         seq.add(BatchNormalization())
         seq.add(Activation(self.act_func))
         seq.add(Dropout(0.1))
-        seq.add(Dense(32, kernel_initializer='random_uniform'))
+        seq.add(Dense(64, kernel_initializer='random_uniform'))
         seq.add(BatchNormalization())
         seq.add(Activation(self.act_func))
         return seq
@@ -263,7 +264,7 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         n_subs = len(indices[0])
         for ind_lists in range(n_classes):
             for ind_pair in range(n_pairs_per_subject):
-                for ind_sub in range(n_subs):
+                for ind_sub in range(len(indices[ind_lists])):
                     p1 = indices[ind_lists][ind_sub]
                     next_ind = (ind_sub + ind_pair + (ind_lists * (
                         n_pairs_per_subject - 1)) + ind_lists) % len(indices[(ind_lists+ind_pair)%n_classes])
