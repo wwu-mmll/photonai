@@ -75,13 +75,15 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
             te_pairs, te_y = self.create_pairs(X_val, digit_indices)
 
             # fit the model
+            print(self.model.summary())
+            print(self.model.layer[1])
             results = self.model.fit(tr_pairs, tr_y,
                                      validation_data=(te_pairs, te_y),
                                      batch_size=128,
                                      epochs=self.nb_epoch,
                                      verbose=0,
                                      callbacks=callbacks_list)
-
+            
             # Use learnt features for classification
             # prepare target values
             # Todo: calculate number of classes?
@@ -91,8 +93,8 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
             except:
                 pass
 
-            model = self.create_base_network()
-
+            model_learnt = self.create_base_network()
+            
 
         else:
             pass
@@ -172,7 +174,7 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         seq.add(Dense(64, input_shape=(self.input_dim,), kernel_initializer='random_uniform'))
         seq.add(BatchNormalization())
         seq.add(Activation(self.act_func))
-        seq.add(Dropout(self.dropout_rate))
+        seq.add(Dropout(0.1))
         seq.add(Dense(32), kernel_initializer='random_uniform')
         seq.add(BatchNormalization())
         seq.add(Activation(self.act_func))
