@@ -13,10 +13,11 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
 from Framework.Metrics import categorical_accuracy_score
 from keras import backend as K
+from Helpers.TFUtilities import oneHot
 
 class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, input_dim, target_dimension = 10, dropout_rate=0.5, act_func='relu',
+    def __init__(self, input_dim=10, target_dimension = 10, dropout_rate=0.5, act_func='relu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
                  eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5):
 
@@ -36,7 +37,7 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
     def fit(self, X, y):
 
         # 1. make model
-        self.model = self.create_model()
+        siamese_model = self.create_model()
 
         # 2. fit model
         # start_time = time.time()
@@ -64,25 +65,30 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
             reduce_lr = ReduceLROnPlateau(monitor='val_loss',
                                           factor=self.reLe_factor,
                                           patience=self.reLe_patience,
-                                          min_lr=0.001, verbose=1)
+                                          min_lr=0.001, verbose=0)
             callbacks_list += [reduce_lr]
 
             # create training+test positive and negative pairs
-            digit_indices = [np.where(y_train == i)[0] for i in range(10)]
+            y_train_oh_reverse = oneHot(y_train,reverse=True)
+            y_val_oh_reverse = oneHot(y_val,reverse=True)
+            
+            digit_indices = [np.where(y_train_oh_reverse == i)[0] for i in range(10)]
             tr_pairs, tr_y = self.create_pairs(X_train, digit_indices)
 
-            digit_indices = [np.where(y_val == i)[0] for i in range(10)]
+            digit_indices = [np.where(y_val_oh_reverse == i)[0] for i in range(10)]
             te_pairs, te_y = self.create_pairs(X_val, digit_indices)
-
+            
+            print(te_pairs.shape)
+            print(tr_pairs.shape)
             # fit the model
-            print(self.model.summary())
-            print(self.model.layer[1])
-            results = self.model.fit(tr_pairs, tr_y,
-                                     validation_data=(te_pairs, te_y),
-                                     batch_size=128,
-                                     epochs=self.nb_epoch,
-                                     verbose=0,
-                                     callbacks=callbacks_list)
+            results = siamese_model.fit([tr_pairs[:, 0], tr_pairs[:, 1]], tr_y,
+                         validation_data=([te_pairs[:, 0], te_pairs[:, 1]], te_y),
+                         batch_size=128,
+                         epochs=self.nb_epoch,
+                         verbose=0,
+                         callbacks=callbacks_list)
+
+
             
             # Use learnt features for classification
             # prepare target values
@@ -92,9 +98,22 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
                     y = self.dense_to_one_hot(y, self.target_dimension)
             except:
                 pass
-
-            model_learnt = self.create_base_network()
             
+            seq_model = siamese_model.get_layer(index=2)
+            new_input = Input(shape=(self.input_dim,))
+            new_seq = seq_model(new_input)
+            new_seq = Dense(self.target_dimension, activation='softmax')(new_seq)
+
+            self.model = Model(new_input, new_seq)
+            optimizer = Adam(lr=self.learning_rate)
+            self.model.compile(loss=self.contrastive_loss, optimizer=optimizer)
+
+            results = self.model.fit(X_train, y_train,
+                                     validation_data=(X_val, y_val),
+                                     batch_size=128,
+                                     epochs=self.nb_epoch,
+                                     verbose=0,
+                                     callbacks=callbacks_list)
 
         else:
             pass
@@ -111,7 +130,7 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
 
     def create_model(self):
         # network definition
-        base_network = self.create_base_network(self.input_dim)
+        base_network = self.create_base_network()
 
         input_a = Input(shape=(self.input_dim,))
         input_b = Input(shape=(self.input_dim,))
@@ -175,7 +194,7 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         seq.add(BatchNormalization())
         seq.add(Activation(self.act_func))
         seq.add(Dropout(0.1))
-        seq.add(Dense(32), kernel_initializer='random_uniform')
+        seq.add(Dense(32, kernel_initializer='random_uniform'))
         seq.add(BatchNormalization())
         seq.add(Activation(self.act_func))
         return seq
