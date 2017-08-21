@@ -6,6 +6,7 @@ from .ResultLogging import ResultLogging
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .Validation import TestPipeline, OptimizerMetric, Scorer
 from Logging.Logger import Logger
+from Framework.Register import PhotonRegister
 
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection import ShuffleSplit
@@ -487,8 +488,8 @@ class PipelineElement(BaseEstimator):
     #                       }
 
     # Registering Pipeline Elements
-    from Framework.Register import PhotonRegister
-    ELEMENT_DICTIONARY = RegisterPipelineElement.get_package_info(['PhotonCore'])
+
+    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore'])
     # ELEMENT_DICTIONARY = RegisterPipelineElement.get_package_info(['PhotonCore', 'PhotonNeuro'])
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
