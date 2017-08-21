@@ -487,9 +487,9 @@ class PipelineElement(BaseEstimator):
     #                       }
 
     # Registering Pipeline Elements
-    from Framework.Register import RegisterPipelineElement
-    ELEMENT_DICTIONARY = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore'])
-    # ELEMENT_DICTIONARY = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore', 'PhotonNeuro'])
+    from Framework.Register import PhotonRegister
+    ELEMENT_DICTIONARY = RegisterPipelineElement.get_package_info(['PhotonCore'])
+    # ELEMENT_DICTIONARY = RegisterPipelineElement.get_package_info(['PhotonCore', 'PhotonNeuro'])
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
