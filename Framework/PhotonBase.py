@@ -59,7 +59,7 @@ class Hyperpipe(BaseEstimator):
             random.seed(42)
             print('set random seed to 42')
         self.verbose = verbose
-        Logger(hyperpipe_name=self.name).set_verbosity(self.verbose)
+        Logger().set_verbosity(self.verbose)
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}

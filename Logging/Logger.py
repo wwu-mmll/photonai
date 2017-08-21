@@ -42,7 +42,7 @@ class Singleton:
     def __init__(self, decorated):
         self._decorated = decorated
 
-    def __call__(self, hyperpipe_name=None):
+    def __call__(self):
         """
         Returns the singleton instance. Upon its first call, it creates a
         new instance of the decorated class and calls its `__init__` method.
@@ -50,13 +50,9 @@ class Singleton:
 
         """
         try:
-            if hyperpipe_name:
-                self._instance.store_logger_names(name=hyperpipe_name)
             return self._instance
         except AttributeError:
             self._instance = self._decorated()
-            if hyperpipe_name:
-                self._instance.store_logger_names(name=hyperpipe_name)
             return self._instance
 
     def __instancecheck__(self, inst):
@@ -67,33 +63,39 @@ class Singleton:
 class Logger:
 
     def __init__(self):
-        try:
-            # Create the photon_log_db
-            self.client = MongoClient('localhost', 27017)
-            self.log_db = self.client.your_collection
+        # try:
+        #     # Create the photon_log_db
+        #     self.client = MongoClient('localhost', 27017)
+        #     self.log_db = self.client.your_collection
+        #
+        #     # All collections should probably be capped so that no manual log-pruning is necessary
+        #     # like info_log_collection = log_db.createCollection("info_log", capped=True, size=15000)?!
+        #     # info_log_collection = log_db.createCollection("info_log", capped=True, size=15000)
+        #     self.debug_log_collection = self.log_db.debug_log
+        #     self.debug_log_collection.ensure_index([('logged_date', ASCENDING)])
+        #
+        #     self.verbose_log_collection = self.log_db.verbose_log
+        #     self.verbose_log_collection.ensure_index([('logged_date', ASCENDING)])
+        #
+        #     self.info_log_collection = self.log_db.info_log
+        #     self.info_log_collection.ensure_index([('logged_date', ASCENDING)])
+        #
+        #     self.warn_log_collection = self.log_db.warn_log
+        #     self.warn_log_collection.ensure_index([('logged_date', ASCENDING)])
+        #
+        #     self.error_log_collection = self.log_db.error_log
+        #     self.error_log_collection.ensure_index([('logged_date', ASCENDING)])
+        #
+        #     self.use_db = True
+        # except NotImplementedError as e:
+        #     print('WARNING: Error setting up MongoDB. Only using .txt logging.')
+        self.info_log_collection = None
+        self.verbose_log_collection = None
+        self.debug_log_collection = None
+        self.error_log_collection = None
+        self.warn_log_collection = None
 
-            # All collections should probably be capped so that no manual log-pruning is necessary
-            # like info_log_collection = log_db.createCollection("info_log", capped=True, size=15000)?!
-            # info_log_collection = log_db.createCollection("info_log", capped=True, size=15000)
-            self.debug_log_collection = self.log_db.debug_log
-            self.debug_log_collection.ensure_index([('logged_date', ASCENDING)])
-
-            self.verbose_log_collection = self.log_db.verbose_log
-            self.verbose_log_collection.ensure_index([('logged_date', ASCENDING)])
-
-            self.info_log_collection = self.log_db.info_log
-            self.info_log_collection.ensure_index([('logged_date', ASCENDING)])
-
-            self.warn_log_collection = self.log_db.warn_log
-            self.warn_log_collection.ensure_index([('logged_date', ASCENDING)])
-
-            self.error_log_collection = self.log_db.error_log
-            self.error_log_collection.ensure_index([('logged_date', ASCENDING)])
-
-            self.use_db = True
-        except NotImplementedError as e:
-            print('WARNING: Error setting up MongoDB. Only using .txt logging.')
-            self.use_db = False
+        self.use_db = False
 
         # handle multiple instances of hyperpipe
         self.loggers = []

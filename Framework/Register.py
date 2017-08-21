@@ -16,7 +16,7 @@ class RegisterPipelineElement:
         content, _ = PhotonRegister.get_json(self.photon_package)  # load existing json
         duplicate = self.check_duplicate(content)
         if not duplicate:
-            #Logger().info('Adding PipelineElement ' + self.class_str + ' to ' + self.photon_package + ' as "' + self.photon_name + '".')
+            Logger().info('Adding PipelineElement ' + self.class_str + ' to ' + self.photon_package + ' as "' + self.photon_name + '".')
 
             # add new element
             content[self.photon_name] = self.class_str, self.element_type
@@ -27,9 +27,9 @@ class RegisterPipelineElement:
 
     def remove(self):
         content, _ = PhotonRegister.get_json(self.photon_package)  # load existing json
-        #Logger().info('Removing the PipelineElement named "' + self.photon_name
-         #     + '" (' + content[self.photon_name][0] + '.' + content[self.photon_name][
-          #        1] + ')' + ' from ' + self.photon_package + '.')
+        Logger().info('Removing the PipelineElement named "' + self.photon_name
+             + '" (' + content[self.photon_name][0] + '.' + content[self.photon_name][
+                 1] + ')' + ' from ' + self.photon_package + '.')
 
         if self.photon_name in content: del content[self.photon_name]
         PhotonRegister.write2json(content, self.photon_package)
@@ -39,8 +39,8 @@ class RegisterPipelineElement:
         flag = 0
         if self.photon_name in content:
             flag += 1
-            #Logger().info('The PipelineElement named "' + self.photon_name + '" has already been registered in '
-            #      + self.photon_package + ' with ' + content[self.photon_name][0] + '.')
+            Logger().info('The PipelineElement named "' + self.photon_name + '" has already been registered in '
+                 + self.photon_package + ' with ' + content[self.photon_name][0] + '.')
 
         # check for duplicate class_str
         if any(self.class_str in s for s in content.values()):
@@ -49,8 +49,8 @@ class RegisterPipelineElement:
                 if self.class_str in values_str:
                     which = key_str
 
-            #Logger().info('The PipelineElement with the ClassName "' + self.class_str + '" has already been registered in '
-            #              + self.photon_package + ' as "' + which + '". "' + self.photon_name + '" not added to ' + self.photon_package + '.')
+            Logger().info('The PipelineElement with the ClassName "' + self.class_str + '" has already been registered in '
+                         + self.photon_package + ' as "' + which + '". "' + self.photon_name + '" not added to ' + self.photon_package + '.')
 
         return flag > 0
 
@@ -81,7 +81,7 @@ class PhotonRegister:
         # Writing JSON data
         with open(file_name, 'w') as f:
            json.dump(content2write, f)
-           #Logger().debug('Writing to ' + file_name)
+           Logger().debug('Writing to ' + file_name)
 
     def get_package_info(photon_package):
         class_info = dict()
