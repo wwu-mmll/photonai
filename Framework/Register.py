@@ -13,7 +13,7 @@ class RegisterPipelineElement:
 
     def add(self):
         # register_element and jsonify
-        content = PhotonRegister.get_json(self.photon_package)  # load existing json
+        content, _ = PhotonRegister.get_json(self.photon_package)  # load existing json
         duplicate = self.check_duplicate(content)
         if not duplicate:
             #Logger().info('Adding PipelineElement ' + self.class_str + ' to ' + self.photon_package + ' as "' + self.photon_name + '".')
@@ -26,7 +26,7 @@ class RegisterPipelineElement:
             # print(register_element.__dict__)
 
     def remove(self):
-        content = PhotonRegister.get_json(self.photon_package)  # load existing json
+        content, _ = PhotonRegister.get_json(self.photon_package)  # load existing json
         #Logger().info('Removing the PipelineElement named "' + self.photon_name
          #     + '" (' + content[self.photon_name][0] + '.' + content[self.photon_name][
           #        1] + ')' + ' from ' + self.photon_package + '.')
@@ -54,15 +54,6 @@ class RegisterPipelineElement:
 
         return flag > 0
 
-    def get_pipeline_element_infos(photon_package):
-        class_info = dict()
-        for package in photon_package:
-            content = PhotonRegister.get_json(package)
-            for key in content:
-                class_path, class_name = os.path.splitext(content[key][0])
-                class_info[key] = class_path, class_name[1:]
-
-        return class_info
 
 class PhotonRegister:
     def __init__(self):
@@ -76,26 +67,52 @@ class PhotonRegister:
             # Reading json
             with open(file_name, 'r') as f:
                 file_content = json.load(f)
+            file_path = file_name
         else:
             file_content = dict()
+            file_path = None
             print(file_name + ' not found. Creating file.')
 
-        return file_content
+        return file_content, file_path
 
     @staticmethod
     def write2json(content2write, photon_package):
         file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
-
         # Writing JSON data
         with open(file_name, 'w') as f:
            json.dump(content2write, f)
-
            #Logger().debug('Writing to ' + file_name)
 
+    def get_package_info(photon_package):
+        class_info = dict()
+        for package in photon_package:
+            content, _ = PhotonRegister.get_json(package)
+            for key in content:
+                class_path, class_name = os.path.splitext(content[key][0])
+                class_info[key] = class_path, class_name[1:]
+        return class_info
 
-#if __name__ == '__main__':
+    def show_package_info(photon_package):
+        for package in photon_package:
+            content, file_name = PhotonRegister.get_json(package)
+            print('\n' + package + ' (' + file_name + ')')
+            for k, v in sorted(content.items()):
+                class_info, type = v
+                print("{:<35} {:<75} {:<5}".format(k, class_info, type))
 
-    # import sklearn
+#        import json
+
+ #       print(json.dumps(pr, sort_keys=True, indent=4))
+
+
+
+# if __name__ == '__main__':
+#     ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore'])
+#     PhotonRegister.show_package_info(['PhotonCore'])
+#
+#
+
+# import sklearn
     # import inspect
     # for name, obj in inspect.getmembers(sklearn):
     #     #print(obj)
