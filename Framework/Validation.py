@@ -5,6 +5,7 @@ import warnings
 import matplotlib.pyplot as plt
 from .ResultLogging import ResultLogging
 from Logging.Logger import Logger
+from Helpers.TFUtilities import one_hot_to_binary
 
 import numpy as np
 
@@ -92,6 +93,8 @@ class TestPipeline(object):
         return self.cv_results
 
     def score(self, estimator, X, y_true):
+        if np.ndim(y_true) == 2:
+            y_true = one_hot_to_binary(y_true)
         if hasattr(estimator, 'score'):
             # Todo: Here it is potentially slowing down!!!!!!!!!!!!!!!!
             default_score = estimator.score(X, y_true)
@@ -102,6 +105,8 @@ class TestPipeline(object):
         # _predict_and_score() method
         self.cv_results.setdefault('score', []).append(default_score)
         y_pred = self.pipe.predict(X)
+        if np.ndim(y_pred) == 2:
+            y_pred = one_hot_to_binary(y_pred)
         self.predictions.append(y_pred)
         self.labels.append(y_true)
 
