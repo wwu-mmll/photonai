@@ -2,16 +2,11 @@
 Test Feature Selection
 '''
 
-import numpy as np
-from Framework.PhotonBase import Hyperpipe, PipelineElement
+from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
+from Framework.PhotonBase import Hyperpipe, PipelineElement
 
-# ## Test HyperPipe using the BreastCancer dataset
-
-
-# classification of malignant vs. benign tumors
-from sklearn.datasets import load_breast_cancer
 dataset = load_breast_cancer()
 X = dataset.data
 y = dataset.target

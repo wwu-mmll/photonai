@@ -1,8 +1,9 @@
-from Framework.PhotonBase import Hyperpipe, PipelineElement
-from sklearn.model_selection import KFold
 import numpy as np
-
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
+
+from Framework.PhotonBase import Hyperpipe, PipelineElement
+
 dataset = load_breast_cancer()
 X = dataset.data
 # convnets need rgb color dimension

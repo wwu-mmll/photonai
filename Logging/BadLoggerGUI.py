@@ -1,15 +1,14 @@
 import sys
 from itertools import chain
 
-from PyQt5.QtGui import QStandardItemModel, QFont
-from PyQt5.QtWidgets import QApplication, QWidget, QMainWindow, QListWidget, QTableView, QTableWidget, QTableWidgetItem
+from DataLoading.Trigger import Operation
+from PyQt5.QtGui import QFont
+from PyQt5.QtWidgets import QApplication, QTableWidget, QTableWidgetItem
 
 from DataLoading import Trigger
-from DataLoading.Trigger import Operation
-
 from Logging.Logger import warn_log_collection, debug_log_collection, info_log_collection, error_log_collection
 
-""" 
+"""
     This logger GUI is bad. You can use it, but you will have to manually shut it down, plus there
     are are quite a few bugs. Someone who knows more about pyqt should add events/signals etc.
     to make it proper. It's also severly incomplete and there is no filtering yet.

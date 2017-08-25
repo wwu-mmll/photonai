@@ -4,10 +4,12 @@ Loading Module
 
 # Copyright (c) PHOTON Development Team
 
-from DataLoading import DataLoader as dl
 import os
+
 import numpy as np
 import pandas as pd
+
+from DataLoading import DataLoader as dl
 
 
 class DataContainer:

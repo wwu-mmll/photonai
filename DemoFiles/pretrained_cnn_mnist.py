@@ -1,9 +1,8 @@
+import numpy as np
+from sklearn.model_selection import ShuffleSplit
+
 import Helpers.TFUtilities as tfu
 from Framework.PhotonBase import PipelineElement, Hyperpipe
-from sklearn.model_selection import ShuffleSplit
-import numpy as np
-from keras.datasets import mnist
-
 
 #X = np.reshape(X, (28,28,70000))
 

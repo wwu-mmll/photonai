@@ -1,6 +1,8 @@
 import unittest
+
 import numpy as np
 from sklearn.model_selection import KFold, ShuffleSplit
+
 from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
 
 

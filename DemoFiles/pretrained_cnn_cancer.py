@@ -3,12 +3,11 @@ from pathlib import Path
 
 import numpy as np
 from PIL import Image
+from progressbar import ProgressBar
 from sklearn.model_selection import ShuffleSplit
+
 import Helpers.TFUtilities as tfu
 from Framework.PhotonBase import PipelineElement, Hyperpipe
-from progressbar import ProgressBar
-
-
 
 
 ##

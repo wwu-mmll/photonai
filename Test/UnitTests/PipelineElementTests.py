@@ -1,9 +1,9 @@
 import unittest
-import numpy as np
 
-from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineSwitch, PipelineStacking
 from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
+
+from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineSwitch
 
 class HyperpipeTests(unittest.TestCase):
 

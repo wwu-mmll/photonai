@@ -1,14 +1,17 @@
 # Checking if finding best model after hp search (i.e. eval finals performance) works as intended
 
-import unittest
-from sklearn.model_selection import KFold
-from Framework.PhotonBase import PipelineElement, Hyperpipe
 import random
+import unittest
+
+import numpy as np
 from sklearn.decomposition import PCA
+from sklearn.metrics import accuracy_score
+from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from sklearn.metrics import accuracy_score
-import numpy as np
+
+from Framework.PhotonBase import PipelineElement, Hyperpipe
+
 
 class CVTestsLocalSearchTrue(unittest.TestCase):
     __X = None

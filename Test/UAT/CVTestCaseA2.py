@@ -1,10 +1,12 @@
-import unittest
-from sklearn.model_selection import KFold
-from Framework.PhotonBase import PipelineElement, Hyperpipe
 import random
+import unittest
+
 from sklearn.decomposition import PCA
+from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
+
+from Framework.PhotonBase import PipelineElement, Hyperpipe
 
 
 class CVTestsLocalSearchTrue(unittest.TestCase):

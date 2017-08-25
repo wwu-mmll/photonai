@@ -1,19 +1,19 @@
-import numpy as np
-from itertools import product
 from hashlib import sha1
+from itertools import product
 
-from .ResultLogging import ResultLogging
-from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
-from .Validation import TestPipeline, OptimizerMetric, Scorer
-from Logging.Logger import Logger
-from Framework.Register import PhotonRegister
-
-from sklearn.model_selection._search import ParameterGrid
-from sklearn.model_selection import ShuffleSplit
-from sklearn.base import clone, BaseEstimator
-from sklearn.pipeline import Pipeline
+import numpy as np
+from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score
+from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
+from sklearn.pipeline import Pipeline
+
+from Framework.Register import PhotonRegister
+from Logging.Logger import Logger
+from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
+from .ResultLogging import ResultLogging
+from .Validation import TestPipeline, OptimizerMetric, Scorer
 
 
 class Hyperpipe(BaseEstimator):

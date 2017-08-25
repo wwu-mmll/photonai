@@ -2,17 +2,18 @@
 # First, find "best" config for PCA (HyperPipe2) and second, find best
 # config for SVM
 
-import unittest
-from sklearn.model_selection import KFold, ShuffleSplit
-from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
-from PipelineWrapper.PCA_AE_Wrapper import PCA_AE_Wrapper
 import random
-from sklearn.decomposition import PCA
+import unittest
+
+import numpy as np
+from sklearn.model_selection import ShuffleSplit
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-import numpy as np
+
+from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
+from PipelineWrapper.PCA_AE_Wrapper import PCA_AE_Wrapper
+
 np.random.seed(3)
-from sklearn.metrics import mean_absolute_error as mae
 
 
 class CVTestCaseB(unittest.TestCase):

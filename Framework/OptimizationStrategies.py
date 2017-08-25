@@ -1,7 +1,7 @@
-
-from itertools import product, tee
-import numpy as np
 import datetime
+from itertools import product
+
+import numpy as np
 
 
 class GridSearchOptimizer(object):

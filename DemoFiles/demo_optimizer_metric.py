@@ -1,11 +1,10 @@
-import unittest
-import numpy as np
-from sklearn.model_selection import KFold
-from Framework.PhotonBase import PipelineElement, Hyperpipe
-from sklearn.model_selection._validation import _fit_and_score
 import random
 
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
+
+from Framework.PhotonBase import PipelineElement, Hyperpipe
+
 dataset = load_breast_cancer()
 X = dataset.data
 y = dataset.target

@@ -1,7 +1,7 @@
 # Wrapper for Feature Selection (Select Percentile)
 
-from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, VarianceThreshold
 from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, VarianceThreshold
 
 
 class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):

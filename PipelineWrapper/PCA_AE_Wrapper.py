@@ -1,7 +1,7 @@
 # DUMMY IMPLEMENTATION
 
-from sklearn.decomposition import PCA
 from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.decomposition import PCA
 from sklearn.metrics import mean_absolute_error as mae
 
 

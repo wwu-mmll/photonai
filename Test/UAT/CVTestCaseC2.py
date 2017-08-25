@@ -1,17 +1,15 @@
 # Case C2: Multi-Source Nested Hyperparameter Optimization with Stacking and Local Optimization
 
 
-import unittest
-from sklearn.model_selection import KFold, ShuffleSplit
-from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
-from PipelineWrapper.PCA_AE_Wrapper import PCA_AE_Wrapper
 import random
-from sklearn.decomposition import PCA
-from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+import unittest
+
 import numpy as np
+from sklearn.model_selection import ShuffleSplit
+
+from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineStacking
+
 np.random.seed(3)
-from sklearn.metrics import mean_absolute_error as mae
 
 
 class CVTestCaseC2(unittest.TestCase):

@@ -1,8 +1,8 @@
 from sklearn.datasets import fetch_mldata
+from sklearn.model_selection import ShuffleSplit, StratifiedShuffleSplit
+
 import Helpers.TFUtilities as tfu
 from Framework.PhotonBase import PipelineElement, Hyperpipe
-from sklearn.model_selection import ShuffleSplit, KFold, StratifiedShuffleSplit
-
 
 mnist = fetch_mldata("MNIST original")
 X, y = mnist.data / 255., mnist.target

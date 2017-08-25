@@ -1,17 +1,14 @@
-import random
-from keras.datasets import mnist
-from keras.models import Sequential, Model
-from keras.layers import Dense, Dropout, Input, Lambda
-from keras.optimizers import RMSprop, Adam
-from keras import backend as K
 import numpy as np
-import tensorflow as tf 
-from keras.layers import Input, Dense
-from keras.models import Model
+import tensorflow as tf
+from keras import backend as K
+from keras import regularizers
 from keras.layers import Activation, Flatten
 from keras.layers import Conv3D, MaxPooling3D
+from keras.layers import Dense
+from keras.layers import Dropout
 from keras.layers.normalization import BatchNormalization
-from keras import regularizers
+from keras.models import Sequential
+
 
 def euclidean_distance(vects):
     x, y = vects

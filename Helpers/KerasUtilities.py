@@ -1,25 +1,17 @@
-from keras.layers import Input, Dense
-from keras.models import Model
-from sklearn.model_selection import GridSearchCV
-from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Dense, Dropout, Activation, Flatten, AlphaDropout
-from keras.layers.advanced_activations import PReLU
+import itertools
+
+import keras as keras
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import tensorflow as tf
 from keras.layers import Conv3D, MaxPooling3D
-from keras.wrappers.scikit_learn import KerasClassifier
-from keras.optimizers import Adam
+from keras.layers import Dense, Dropout, Flatten, AlphaDropout
+from keras.layers.advanced_activations import PReLU
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
-import keras as keras 
-import matplotlib.pyplot as plt
-import itertools
-from sklearn.metrics import accuracy_score
-import tensorflow as tf
-import pandas as pd 
-
-import numpy as np
-from sklearn.metrics import mean_absolute_error, median_absolute_error, mean_squared_error, confusion_matrix
-from sklearn.cross_validation import KFold
+from keras.models import Sequential
+from sklearn.metrics import mean_absolute_error, median_absolute_error, mean_squared_error
 
 
 # merge _reg and _classif at some point

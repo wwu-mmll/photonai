@@ -1,10 +1,9 @@
+import datetime
 import inspect
 from enum import Enum
 from functools import total_ordering
 
-import datetime
-
-""" Logging is a simple way to emit and store logs. 
+""" Logging is a simple way to emit and store logs.
 
     The default LogLevel is WARN. It should only be increased 
     (to info or debug) if you need more detailed information,
