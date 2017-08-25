@@ -21,14 +21,15 @@ def get_batches(x, batch_size, shuffle=True):
     return batches, n_batches
 
 
-def oneHot(y, reverse=False):
-    if reverse == False:
-        classes = np.unique(y)
-        out = np.zeros((y.shape[0],len(classes)),  dtype=np.int)
-        for i, c in enumerate(classes):
-            out[y==c,i] = 1
-    else:
-        out = np.zeros((y.shape[0]))
-        for i in range(y.shape[0]):
-            out[i] = np.nonzero(y[i,:])[0]
+def one_hot_to_binary(one_hot_matrix):
+    out = np.zeros((one_hot_matrix.shape[0]))
+    for i in range(one_hot_matrix.shape[0]):
+        out[i] = np.nonzero(one_hot_matrix[i,:])[0]
+    return out
+
+def binary_to_one_hot(binary_vector):
+    classes = np.unique(binary_vector)
+    out = np.zeros((binary_vector.shape[0],len(classes)),  dtype=np.int)
+    for i, c in enumerate(classes):
+        out[binary_vector==c,i] = 1
     return out
