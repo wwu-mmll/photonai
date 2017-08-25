@@ -2,8 +2,6 @@ import inspect
 from enum import Enum
 from functools import total_ordering
 
-from pymongo import MongoClient
-from pymongo import ASCENDING
 import datetime
 
 """ Logging is a simple way to emit and store logs. 
