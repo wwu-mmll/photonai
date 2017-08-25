@@ -1,27 +1,22 @@
+import os
 
-import time
 import numpy as np
-from keras.layers import Input
-from keras.optimizers import Adam, RMSprop
-from keras.layers.core import Activation
-from keras.layers.normalization import BatchNormalization
-from keras.layers.advanced_activations import PReLU
+from keras.applications.inception_v3 import InceptionV3
 from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.layers import Dense, GlobalAveragePooling2D
+from keras.layers import Input
+from keras.models import Model
+from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
-from Framework.Metrics import categorical_accuracy_score
-from keras.applications.inception_v3 import InceptionV3
-from keras.applications.vgg19 import VGG19
-from keras.preprocessing import image
-from keras.models import Model
-from keras.layers import Dense, GlobalAveragePooling2D
 
+os.environ["CUDA_VISIBLE_DEVICES"]="7"
 
 class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
 
-    def __init__(self, input_shape=(244,244,3), size_additional_layer=100, target_dimension=10,
-                 learning_rate=0.1, nb_epoch=10000, early_stopping_flag=True,
-                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, freezing_point=0):
+    def __init__(self, input_shape=(244,244,3), target_dimension=10,
+                 learning_rate=0.001, nb_epoch=10000, early_stopping_flag=True,
+                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, freezing_point=0, batch_size=64):
 
 
         self.input_shape = input_shape
@@ -32,9 +27,9 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
         self.eaSt_patience = eaSt_patience
         self.reLe_factor = reLe_factor
         self.reLe_patience = reLe_patience
-        self.size_additional_layer = size_additional_layer
         self.freezing_point = freezing_point
         self.model = None
+        self.batch_size = batch_size
 
     def fit(self, X, y):
 
@@ -53,7 +48,7 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
         # start_time = time.time()
 
         # use callbacks only when size of training set is above 100
-        if X.shape[-1] > 100:
+        if X.shape[0] > 100:
             # get pseudo validation set for keras callbacks
             splitter = ShuffleSplit(n_splits=1, test_size=0.2)
             for train_index, val_index in splitter.split(X):
@@ -81,14 +76,15 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
             # fit the model
             results = self.model.fit(X_train, y_train,
                                      validation_data=(X_val, y_val),
-                                     batch_size=128,
+                                     batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=1,
-                                     callbacks=callbacks_list)
+                                     callbacks=callbacks_list,
+                                     class_weight={0:1.0,1:12670.0/1082})
         else:
             # fit the model
             print('Cannot use Keras Callbacks because of small sample size...')
-            results = self.model.fit(X, y, batch_size=128,
+            results = self.model.fit(X, y, batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=1)
 
@@ -96,8 +92,7 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
 
     def predict(self, X):
         predict_result = self.model.predict(X, batch_size=128)
-        max_index = np.argmax(predict_result, axis=1)
-        return self.dense_to_one_hot(max_index, self.target_dimension)
+        return np.argmax(predict_result, axis=1)
 
     def score(self, X, y_true):
         return np.zeros(1)
@@ -130,9 +125,9 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
         # compile the model (should be done *after* setting layers to non-trainable)
         #optimizer = RMSprop(lr=self.learning_rate, rho=0.9, epsilon=0.1, decay=0.9)
         optimizer = Adam(lr=self.learning_rate)
-        model.compile(optimizer=optimizer, loss='categorical_crossentropy')
-        base_model.summary()
-        model.summary()
+        model.compile(optimizer=optimizer, loss='categorical_crossentropy', metrics=['accuracy'])
+        #base_model.summary()
+        #model.summary()
 
         return model
 
