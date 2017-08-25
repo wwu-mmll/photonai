@@ -1,14 +1,14 @@
-
 import numpy as np
-from keras.models import Sequential
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.layers import Dropout, Dense
-from keras.optimizers import Adam
+from keras.layers.advanced_activations import PReLU
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
-from keras.layers.advanced_activations import PReLU
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.models import Sequential
+from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import ShuffleSplit
+
 
 class KerasDNNRegressor(BaseEstimator, RegressorMixin):
 

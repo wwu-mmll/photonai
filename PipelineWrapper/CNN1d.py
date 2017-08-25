@@ -1,12 +1,13 @@
+import keras
+import keras.optimizers
 import numpy as np
 import tensorflow as tf
-import keras
-from keras.models import Sequential
 from keras.layers import Dropout, Dense, Conv1D, MaxPooling1D, Flatten, GaussianNoise
-import keras.optimizers
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
+from keras.models import Sequential
 from sklearn.base import BaseEstimator, ClassifierMixin
+
 
 class CNN1d(BaseEstimator, ClassifierMixin):
     # todo: BUGFIX --> pooling doesnt work

@@ -1,7 +1,8 @@
-from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
-from numpy import *
 from matplotlib.pyplot import *
+from numpy import *
 from scipy import linalg
+from sklearn.base import BaseEstimator, RegressorMixin, ClassifierMixin
+
 
 class PyESNWrapper():
 

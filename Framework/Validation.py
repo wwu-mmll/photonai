@@ -1,13 +1,13 @@
-from sklearn.model_selection._validation import _fit_and_score
-from collections import OrderedDict
 import time
 import warnings
-import matplotlib.pyplot as plt
-from .ResultLogging import ResultLogging
-from Logging.Logger import Logger
-from Helpers.TFUtilities import one_hot_to_binary
+from collections import OrderedDict
 
+import matplotlib.pyplot as plt
 import numpy as np
+
+from Helpers.TFUtilities import one_hot_to_binary
+from Logging.Logger import Logger
+from .ResultLogging import ResultLogging
 
 
 class TestPipeline(object):

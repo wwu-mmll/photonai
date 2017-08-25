@@ -3,16 +3,11 @@
 
 
 import numpy as np
-from DataLoading.DataContainer import DataContainer, Features, Covariates, Targets
-from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch
+from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
+from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch
 
-# ## Test HyperPipe using the BreastCancer dataset
-
-
-# classification of malignant vs. benign tumors
-from sklearn.datasets import load_breast_cancer
 dataset = load_breast_cancer()
 X = dataset.data
 y = dataset.target

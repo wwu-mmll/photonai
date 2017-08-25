@@ -1,9 +1,8 @@
-import numpy as np
-from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch
+from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-# classification of malignant vs. benign tumors
-from sklearn.datasets import load_breast_cancer
+from Framework.PhotonBase import Hyperpipe, PipelineElement
+
 dataset = load_breast_cancer()
 X = dataset.data
 y = dataset.target

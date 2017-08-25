@@ -1,16 +1,15 @@
 import os
-import numpy as np
-import matplotlib.pyplot as plt
 from pprint import pprint
 from time import time
-from sklearn import linear_model, decomposition, datasets
-from sklearn.model_selection import GridSearchCV
-from sklearn.metrics import classification_report
-from sklearn.pipeline import Pipeline
+
+import matplotlib.pyplot as plt
 from six.moves import cPickle as pickle
+from sklearn import linear_model, decomposition
+from sklearn.metrics import classification_report
+from sklearn.model_selection import GridSearchCV
+from sklearn.pipeline import Pipeline
 
 from PipelineWrapper.TFDNNClassifier import TFDNNClassifier
-
 
 data_root = '/home/rleenings/PycharmProjects/TFLearnTest/'
 pickle_file = os.path.join(data_root, 'notMNIST.pickle')

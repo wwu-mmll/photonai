@@ -1,19 +1,16 @@
-
-import time
 import numpy as np
-import random
-from keras.models import Sequential, Model
+from keras import backend as K
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.layers import Dropout, Dense, Input, Lambda
-from keras.optimizers import Adam
 from keras.layers.core import Activation
 from keras.layers.normalization import BatchNormalization
-from keras.layers.advanced_activations import PReLU
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.models import Sequential, Model
+from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
-from Framework.Metrics import categorical_accuracy_score
-from keras import backend as K
+
 from Helpers.TFUtilities import oneHot
+
 
 class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
 

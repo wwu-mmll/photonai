@@ -1,8 +1,9 @@
 # register Elements, Optimizers, ...?
+import inspect
 import json
 import os.path
 from logging import Logger
-import inspect
+
 
 class RegisterPipelineElement:
     def __init__(self, photon_package, photon_name, class_str=None, element_type=None):

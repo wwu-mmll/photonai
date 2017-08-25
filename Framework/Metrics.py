@@ -2,9 +2,11 @@
 Define custom metrics here
 """
 
-from sklearn.metrics import accuracy_score
-from Helpers.TFUtilities import one_hot_to_binary
 import numpy as np
+from sklearn.metrics import accuracy_score
+
+from Helpers.TFUtilities import one_hot_to_binary
+
 
 def categorical_accuracy_score(y_true, y_pred):
     if np.ndim(y_true) == 2:

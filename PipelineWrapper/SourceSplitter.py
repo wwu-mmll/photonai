@@ -1,5 +1,5 @@
-from sklearn.base import BaseEstimator, ClassifierMixin
-import numpy as np
+from sklearn.base import BaseEstimator
+
 
 class SourceSplitter(BaseEstimator):
     """
