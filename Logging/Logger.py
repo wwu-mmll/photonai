@@ -15,7 +15,8 @@ from functools import total_ordering
     1) Import with
         from Logging import Logger
     2) Log with
-        Logger.debug('Logging message!')
+        logger = Logger()
+        logger.debug('Logging message!')
 """
 
 
@@ -60,39 +61,6 @@ class Singleton:
 class Logger:
 
     def __init__(self):
-        # try:
-        #     # Create the photon_log_db
-        #     self.client = MongoClient('localhost', 27017)
-        #     self.log_db = self.client.your_collection
-        #
-        #     # All collections should probably be capped so that no manual log-pruning is necessary
-        #     # like info_log_collection = log_db.createCollection("info_log", capped=True, size=15000)?!
-        #     # info_log_collection = log_db.createCollection("info_log", capped=True, size=15000)
-        #     self.debug_log_collection = self.log_db.debug_log
-        #     self.debug_log_collection.ensure_index([('logged_date', ASCENDING)])
-        #
-        #     self.verbose_log_collection = self.log_db.verbose_log
-        #     self.verbose_log_collection.ensure_index([('logged_date', ASCENDING)])
-        #
-        #     self.info_log_collection = self.log_db.info_log
-        #     self.info_log_collection.ensure_index([('logged_date', ASCENDING)])
-        #
-        #     self.warn_log_collection = self.log_db.warn_log
-        #     self.warn_log_collection.ensure_index([('logged_date', ASCENDING)])
-        #
-        #     self.error_log_collection = self.log_db.error_log
-        #     self.error_log_collection.ensure_index([('logged_date', ASCENDING)])
-        #
-        #     self.use_db = True
-        # except NotImplementedError as e:
-        #     print('WARNING: Error setting up MongoDB. Only using .txt logging.')
-        self.info_log_collection = None
-        self.verbose_log_collection = None
-        self.debug_log_collection = None
-        self.error_log_collection = None
-        self.warn_log_collection = None
-
-        self.use_db = False
 
         # handle multiple instances of hyperpipe
         self.loggers = []
@@ -135,38 +103,38 @@ class Logger:
     # i.e. training epochs of neural nets
     def debug(self, message: str):
         if (self._log_level <= self.LogLevel.DEBUG):
-            self._insert_log_into_database(message, self.debug_log_collection,
+            self._distribute_log(message,
                                       'DEBUG')
 
     # Verbose should be used if something interesting (but uncritically) happened
     # i.e. every hp config that is tested
     def verbose(self, message: str):
         if (self._log_level <= self.LogLevel.VERBOSE):
-            self._insert_log_into_database(message, self.verbose_log_collection,
+            self._distribute_log(message,
                                       'VERBOSE')
 
     # Info should be used if something interesting (but uncritically) happened
     # i.e. most basic info on photon hyperpipe
     def info(self, message: str):
         if (self._log_level <= self.LogLevel.INFO):
-            self._insert_log_into_database(message, self.info_log_collection,
+            self._distribute_log(message,
                                       'INFO')
 
     # Something may have gone wrong? Use warning
     def warn(self, message: str):
         if (self._log_level <= self.LogLevel.WARN):
-            self._insert_log_into_database(message, self.warn_log_collection,
+            self._distribute_log(message,
                                       'WARN')
 
     # Something broke down. Error should be used if something unexpected happened
     def error(self, message: str):
         if (self._log_level <= self.LogLevel.ERROR):
-            self._insert_log_into_database(message, self.error_log_collection,
+            self._distribute_log(message,
                                       'ERROR')
 
     # Takes a message and inserts it into the given collection
     # Handles possible console-logging
-    def _insert_log_into_database(self, message: str, collection,
+    def _distribute_log(self, message: str,
                                   log_type: str):
 
         entry = self._generate_log_entry(message, log_type)
@@ -175,11 +143,9 @@ class Logger:
             with open(self._logfile_name, "a", newline='\n') as text_file:
                 text_file.write('\n')
                 text_file.write(str(entry['message']))
-        if (self._log_level > self.LogLevel.INFO) and self.use_db:
-            collection.insert(entry)
 
     def _print_entry(self, entry: dict):
-        print(entry['message'])
+        print(entry['logged_date'].strftime("%Y-%m-%d %H:%M:%S") + " UTC - " + entry['log_type'] + ": " + entry['message'])
 
     def _generate_log_entry(self, message: str, log_type: str):
         """Todo: Get current user from user-service and add username to log_entry"""
