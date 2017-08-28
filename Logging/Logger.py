@@ -145,7 +145,8 @@ class Logger:
                 text_file.write(str(entry['message']))
 
     def _print_entry(self, entry: dict):
-        print(entry['logged_date'].strftime("%Y-%m-%d %H:%M:%S") + " UTC - " + entry['log_type'] + ": " + entry['message'])
+        date_str = entry['logged_date'].strftime("%Y-%m-%d %H:%M:%S")
+        print("{0} UTC - {1}: {2}".format(date_str, entry['log_type'], entry['message']))
 
     def _generate_log_entry(self, message: str, log_type: str):
         """Todo: Get current user from user-service and add username to log_entry"""
