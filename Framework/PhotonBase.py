@@ -14,6 +14,7 @@ from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .ResultLogging import ResultLogging
 from .Validation import TestPipeline, OptimizerMetric, Scorer
+import pprint
 
 from Helpers.TFUtilities import one_hot_to_binary
 
@@ -299,7 +300,7 @@ class Hyperpipe(BaseEstimator):
                     '********************************************************************************\n'
                         + 'finished optimization of ' + self.name +
                       '\n--------------------------------------------------------------------------------')
-                        Logger().verbose('           Result\n' +
+                        Logger().verbose('           Result\n' +l
                         '--------------------------------------------------------------------------------')
                         Logger().verbose('Number of tested configurations:' +
                                          str(len(self.performance_history_list)))
@@ -308,7 +309,7 @@ class Hyperpipe(BaseEstimator):
                         Logger().info('Best config: ' + self.optimize_printing(self.best_config) +
                                          '\n' + '... with children config: '
                                          + self.optimize_printing(self.best_children_config) + '\n' +
-                       'Performance:\n' + str(self.best_performance) + '\n' +
+                       'Performance:\n' + str(pprint.pformat(self.best_performance)) + '\n' +
                         '--------------------------------------------------------------------------------')
 
                         # ... and create optimal pipeline
