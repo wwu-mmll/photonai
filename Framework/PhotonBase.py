@@ -300,7 +300,7 @@ class Hyperpipe(BaseEstimator):
                     '********************************************************************************\n'
                         + 'finished optimization of ' + self.name +
                       '\n--------------------------------------------------------------------------------')
-                        Logger().verbose('           Result\n' +l
+                        Logger().verbose('           Result\n' +
                         '--------------------------------------------------------------------------------')
                         Logger().verbose('Number of tested configurations:' +
                                          str(len(self.performance_history_list)))
