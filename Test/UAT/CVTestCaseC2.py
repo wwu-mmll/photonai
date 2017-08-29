@@ -142,7 +142,7 @@ class CVTestCaseC2(unittest.TestCase):
         #             fold_cnt = 1
         #             for train_2, val_1 in cv_inner_1.split(
         #                     data_train_1):
-        #                 print('\n\nSklearn Outer Pipe Fold', fold_cnt)
+        #                 print('\n\nSklearn Outer Pipe FoldMetrics', fold_cnt)
         #
         #                 data_train_2 = data_train_1[train_2]
         #                 data_val_1 = data_train_1[val_1]

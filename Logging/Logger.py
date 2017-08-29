@@ -77,7 +77,7 @@ class Logger:
         self._print_to_console = True
         self._print_to_slack = False
         self._print_to_txt = True
-        self._logfile_name = 'photon.log'
+        self._logfile_name = 'phot on.log'
         with open(self._logfile_name, "w") as text_file:
             text_file.write('PHOTON LOGFILE - ' + str(datetime.datetime.utcnow()))
 
