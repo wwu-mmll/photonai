@@ -8,17 +8,17 @@ class BrainAtlas(BaseEstimator):
     def __init__(self, atlas_name=None, extract_mode='mean', whichROIs='all', background_id=0):
         # ToDo
         # + add-own-atlas capability
-        # + get boxes from ROIs
         # + get atlas infos (.getInfo('AAL'))
-        # + get list of available atlases (BrainAtlas('?'))
+        # + get list of available atlases (BrainAtlas.whichAtlases())
         # + get all ROIs ('all'),
         # + ROIs by name (e.g. in HarvardOxford subcortical: ['Caudate_L', 'Caudate_R'])
         # + get ROIs by map indices (e.g. in AAL: [2001, 2111])
         # - finish mask-img matching
         #   + reorientation/affine transform
-        #   + voxel-size
+        #   + voxel-size (now returns true number of voxels (i.e. after resampling) vs. voxels in mask)
         #   - RAS vs. LPS view-type
         # - handle "disappearing" ROIs when downsampling in map check
+        # - pretty getBox function (@Claas)
         # - unit tests
         # Later
         # - add support for overlapping ROIs and probabilistic atlases using 4d-nii
@@ -39,7 +39,7 @@ class BrainAtlas(BaseEstimator):
 
         # check labels
         if Path(ATLAS_DICT[self.atlas_name][1]).is_file(): # if we have a file with indices and labels
-            print('You have a labels file ( ' + ATLAS_DICT[self.atlas_name][1] + '). Yeah, using labels...')
+            print('Using labels from file (' + ATLAS_DICT[self.atlas_name][1] + ')')
             labels_dict = dict()
 
             with open(ATLAS_DICT[self.atlas_name][1]) as f:
@@ -50,9 +50,14 @@ class BrainAtlas(BaseEstimator):
             # check if map indices correspond with indices in the labels file
             if not sorted(self.indices) == sorted(list(labels_dict.keys())):
                 print('The indices in your map image ARE NOT the same as those in your *_labels.txt! Ignoring *_labels.txt.')
-                print('MapImage: ' + sorted(self.indices))
-                print('File: ' + sorted(list(labels_dict.keys())))
-                self.labels = list(str(i) for i in self.indices)
+                print('MapImage: ')
+                print(sorted(self.indices))
+                print('File: ')
+                print(sorted(list(labels_dict.keys())))
+                #self.labels = list(str(i) for i in self.indices)
+                self.labels = []
+                for i in range(len(self.indices)):
+                    self.labels.append(labels_dict[self.indices[i]].replace('\n', ''))
             else:
                 self.labels = []
                 for i in range(len(self.indices)):
@@ -89,11 +94,17 @@ class BrainAtlas(BaseEstimator):
         roi_data = []
         if extract_mode == 'box':
             self.box_shape = []
+        i = 0
         for roi in rois:
             roi = image.resample_img(roi, target_affine=img.affine, target_shape=img.shape, interpolation='nearest')
 
             masker = NiftiMasker(mask_img=roi, target_affine=img.affine, target_shape=img.shape)
             single_roi = masker.fit_transform(X)
+            self.roi_sizes_applied[i] = single_roi.size
+            print('Extracting data from ' + self.labels_applied[i] + ' (Index: '
+                  + str(self.indices_applied[i]) + '; ROI Size: ' + str(self.roi_sizes_applied[i]) + ')')
+            i += 1
+
             if extract_mode == 'vec':
                 roi_data.append(single_roi)
             elif extract_mode == 'mean':
@@ -109,6 +120,7 @@ class BrainAtlas(BaseEstimator):
             else:
                 # any function which can work on a vector passed as a string
                 tmp = []
+                # ToDo
                 # find something safer than eval!
                 any_func = lambda ex, data, opt_args=None: eval(ex)(data, opt_args)
                 expr = extract_mode
@@ -168,10 +180,6 @@ class BrainAtlas(BaseEstimator):
         #box = np.asarray(box)
         return box, tmp.shape
 
-    def _adjustAtlas(self):
-        # adjust atlas to input imgs regarding reorientation (affine transform), voxel-size, view type (e.g. LPS vs. RAS)
-        pass
-
     @staticmethod
     def _getAtlasDict():
         # Get which atlases are available in Atlases subdir of this module
@@ -226,30 +234,59 @@ class BrainAtlas(BaseEstimator):
                           str("%.0f" % (self.roi_sizes_applied[i] / box_prod * 100)) + '%')
 
 
-# if __name__ == '__main__':
-#
-#
-#     from nilearn import datasets
-#     dataset_files = datasets.fetch_oasis_vbm(n_subjects=5)
-#     from nilearn.datasets import MNI152_FILE_PATH
-#     dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
-#
-#     availbleAtlases = BrainAtlas.whichAtlases() # get list of available atlases and help.
-#     extMeth = ['mean', 'vec', 'box', 'np.std']
-#     roi_data = []
-#     for atlas in availbleAtlases:
-#         for em in extMeth:
-#             print(atlas + ': ' + em)
-#             myAtlas = BrainAtlas(atlas_name=atlas, extract_mode=em, whichROIs='all')
-#             #myAtlas = BrainAtlas(atlas_name='AAL', extract_mode='vec', whichROIs=[2001, 2111, 6301])
-#             #myAtlas = BrainAtlas(atlas_name='AAL', extract_mode='box', whichROIs=['Frontal_Sup_R', 'Caudate_L', 'Temporal_Inf_R'])
-#
-#             #myAtlas.getInfo()
-#             roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-#
-#             #myAtlas.getInfo()
-#     print('')
-#
+if __name__ == '__main__':
+
+
+    #from nilearn import datasets
+    #dataset_files = datasets.fetch_oasis_vbm(n_subjects=5)
+    from nilearn.datasets import MNI152_FILE_PATH
+    dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
+
+    availableAtlases = BrainAtlas.whichAtlases()
+
+    # get list of available atlases and help.
+    extMeth = ['mean', 'vec', 'box', 'np.std']
+    roi_data = []
+    for em in extMeth:
+        for atlas in availableAtlases:
+            print('\n\n' + atlas + ': ' + em)
+            myAtlas = BrainAtlas(atlas_name=atlas, extract_mode=em, whichROIs='all')
+            myAtlas.getInfo()
+            roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+            myAtlas.getInfo()
+
+        print('\n\n' + em)
+        myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=[2001, 2111, 6301])
+        #myAtlas.getInfo()
+        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+        myAtlas.getInfo()
+
+        myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=['Frontal_Sup_R', 'Caudate_L', 'Temporal_Inf_R'])
+        #myAtlas.getInfo()
+        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+        myAtlas.getInfo()
+
+        myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=[1, 29, 8])
+        #myAtlas.getInfo()
+        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+        myAtlas.getInfo()
+
+        myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=['Superior Temporal Gyrus, anterior division', 'Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex)', "Heschl's Gyrus (includes H1 and H2)"])
+        #myAtlas.getInfo()
+        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+        myAtlas.getInfo()
+
+        myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=[10, 11, 12])
+        #myAtlas.getInfo()
+        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+        myAtlas.getInfo()
+
+        myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=['Left Accumbens', 'Right Accumbens', 'Right Caudate'])
+        #myAtlas.getInfo()
+        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+        myAtlas.getInfo()
+print('')
+
 
     # from nilearn.datasets import MNI152_FILE_PATH
     # nii_file = MNI152_FILE_PATH
