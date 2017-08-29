@@ -15,6 +15,7 @@ from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimiz
 from .ResultLogging import ResultLogging
 from .Validation import TestPipeline, OptimizerMetric, Scorer
 
+from Helpers.TFUtilities import one_hot_to_binary
 
 class Hyperpipe(BaseEstimator):
 
@@ -343,6 +344,16 @@ class Hyperpipe(BaseEstimator):
                                     scorer = Scorer.create(metric)
                                     # use setdefault method of dictionary to create list under
                                     # specific key even in case no list exists
+                                    Logger().debug("Metric: {}".format(metric))
+                                    Logger().debug("content of test_y: {}".format(test_y))
+                                    Logger().debug("content of test_predictions: {}".format(test_predictions))
+                                    if np.ndim(test_y) == 2:
+                                        Logger().warn("test_y was one hot encoded => transformed to binary")
+                                        test_y = one_hot_to_binary(test_y)
+                                    if np.ndim(test_predictions) == 2:
+                                        Logger().warn("test_predictions was one hot encoded => transformed to binary")
+                                        test_predictions = one_hot_to_binary(test_predictions)
+
                                     metric_value = scorer(test_y, test_predictions)
                                     Logger().info(metric + ':' + str(metric_value))
                                     self.test_performances.setdefault(metric, []).append(metric_value)
