@@ -3,6 +3,7 @@ import inspect
 from enum import Enum
 from functools import total_ordering
 
+
 """ Logging is a simple way to emit and store logs.
 
     The default LogLevel is WARN. It should only be increased 
@@ -73,12 +74,17 @@ class Logger:
 
         # Should the log also be printed to the console?
         # Recommendation: Set to True during development, false in production-environment
+        self._print_to_console = True
+        self._print_to_slack = False
         self._print_to_txt = True
         self._logfile_name = 'photon.log'
         with open(self._logfile_name, "w") as text_file:
             text_file.write('PHOTON LOGFILE - ' + str(datetime.datetime.utcnow()))
 
     def set_print_to_console(self, status: bool):
+        self._print_to_console = status
+
+    def set_print_to_slack(self, status: bool):
         self._print_to_console = status
 
 
@@ -134,19 +140,39 @@ class Logger:
 
     # Takes a message and inserts it into the given collection
     # Handles possible console-logging
-    def _distribute_log(self, message: str,
-                                  log_type: str):
+    def _distribute_log(self, message: str, log_type: str):
 
         entry = self._generate_log_entry(message, log_type)
-        self._print_entry(entry)
+
+        if self._print_to_console:
+            self._print_entry(entry)
         if self._print_to_txt:
-            with open(self._logfile_name, "a", newline='\n') as text_file:
-                text_file.write('\n')
-                text_file.write(str(entry['message']))
+            self._write_to_file(entry)
+        if self._print_to_slack:
+            self._send_to_slack(entry)
+
+    def _send_to_slack(self, entry: dict):
+        from slackclient import SlackClient
+        from os import environ
+
+        slack_token = "xoxp-113254200629-113099992147-232630779537-e7947c07faa87ab4567cdb8d6719b81c"
+
+        sc = SlackClient(slack_token)
+
+        sc.api_call(
+            "chat.postMessage",
+            channel="#photon-log",
+            text="{}: {}".format(entry['log_type'], entry['message'])
+        )
 
     def _print_entry(self, entry: dict):
         date_str = entry['logged_date'].strftime("%Y-%m-%d %H:%M:%S")
         print("{0} UTC - {1}: {2}".format(date_str, entry['log_type'], entry['message']))
+
+    def _write_to_file(self, entry: dict):
+        with open(self._logfile_name, "a", newline='\n') as text_file:
+            text_file.write('\n')
+            text_file.write(str(entry['message']))
 
     def _generate_log_entry(self, message: str, log_type: str):
         """Todo: Get current user from user-service and add username to log_entry"""
