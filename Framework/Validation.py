@@ -7,7 +7,7 @@ import numpy as np
 
 from Helpers.TFUtilities import one_hot_to_binary
 from Logging.Logger import Logger
-from .ResultLogging import ResultLogging
+from .ResultLogging import ResultLogging, OutputMetric, FoldMetrics, FoldTupel, Configuration
 
 
 class TestPipeline(object):
@@ -38,7 +38,8 @@ class TestPipeline(object):
         # needed for testing Timeboxed Random Grid Search
         # time.sleep(35)
 
-        # Todo: @Tim: fill and Result Logging Instances here and return them to hyperpipe
+        config_item = Configuration(self.params)
+        fold_cnt = 1
 
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
@@ -51,34 +52,47 @@ class TestPipeline(object):
             #                                        error_score=self.error_score)
 
             try:
+
+                curr_train_fold = FoldMetrics()
+                curr_test_fold = FoldMetrics()
+
                 n_train.append(len(train))
                 n_test.append(len(test))
                 self.pipe.set_params(**self.params)
                 fit_start_time = time.time()
                 self.pipe.fit(X[train], y[train])
                 fit_duration = time.time()-fit_start_time
+                config_item.fit_duration = fit_duration
+
                 # do this twice so it is the same for train and test reportings
                 self.cv_results.setdefault('duration', []).append(fit_duration)
                 self.cv_results.setdefault('duration', []).append(fit_duration)
 
                 # score test data
                 score_test_data_time = time.time()
-                self.score(self.pipe, X[test], y[test])
+                output_test_metrics = self.score(self.pipe, X[test], y[test])
                 score_test_data_duration = time.time() - score_test_data_time
                 self.cv_results.setdefault('score_duration', []).append(score_test_data_duration)
+                curr_test_fold.metrics = output_test_metrics
+                curr_test_fold.score_duration = score_test_data_duration
 
                 # score train data
                 score_train_data_time = time.time()
-                self.score(self.pipe, X[train], y[train])
-                score_train_data_duration = time.time() - score_test_data_time
+                output_train_metrics = self.score(self.pipe, X[train], y[train])
+                score_train_data_duration = time.time() - score_train_data_time
                 self.cv_results.setdefault('score_duration', []).append(score_train_data_duration)
+                curr_train_fold.metrics = output_train_metrics
+                curr_train_fold.score_duration = score_train_data_duration
 
-
+                fold_tuple_item = FoldTupel(fold_cnt)
+                fold_tuple_item.test_metrics = curr_test_fold
+                fold_tuple_item.train_metrics = curr_train_fold
+                config_item.fold_list.append(fold_tuple_item)
 
             except Exception as e:
                 # Todo: Logging!
                 # Logger().error(e)
-                warnings.warn('One test iteration of pipeline failed with error:', e)
+                warnings.warn('One test iteration of pipeline failed with error')
 
             # cv_scores.append(fit_and_predict_score)
 
@@ -90,7 +104,7 @@ class TestPipeline(object):
         self.cv_results = ResultLogging.reorder_results(self.cv_results)
         self.cv_results['n_samples'] = {'train': n_train, 'test': n_test}
 
-        return self.cv_results
+        return self.cv_results, config_item
 
     def score(self, estimator, X, y_true):
         if np.ndim(y_true) == 2:
@@ -113,13 +127,18 @@ class TestPipeline(object):
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
+        output_metrics = []
         if self.metrics:
             for metric in self.metrics:
                 scorer = Scorer.create(metric)
+                scorer_value = scorer(y_true, y_pred)
+
+                output_metric_item = OutputMetric(metric, scorer_value)
+                output_metrics.append(output_metric_item)
                 # use setdefault method of dictionary to create list under
                 # specific key even in case no list exists
-                self.cv_results.setdefault(metric, []).append(scorer(y_true, y_pred))
-        return default_score
+                self.cv_results.setdefault(metric, []).append(scorer_value)
+        return output_metrics
 
     @staticmethod
     def plot_some_data(data, targets):

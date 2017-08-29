@@ -3,6 +3,56 @@ import os
 from collections import OrderedDict
 
 import numpy as np
+from enum import Enum
+from functools import total_ordering
+
+
+class OutputMetric:
+
+    # type may be epoch performance or model performance
+    def __init__(self, name, value, output_type="model_performance"):
+        self.output_type = output_type
+        self.name = name
+        self.value = value
+
+
+class FoldMetrics:
+
+    def __init__(self):
+        self.metrics = []
+        self.score_duration = 0
+
+
+class FoldTupel:
+
+    def __init__(self, fold_id):
+        self.fold_id = fold_id
+        self.train_metrics = None
+        self.test_metrics = None
+
+
+# @total_ordering
+# class MetricType(Enum):
+#     Train_Train = 2
+#     TRAIN_VALIDATION = 1
+#     VALIDATION = 0
+#
+
+class Configuration:
+
+    def __init__(self, config_dict):
+        self.config_dict = config_dict
+        self.children_configs = {}
+        self.fold_list = []
+        self.fit_duration = 0
+
+
+class MasterElement:
+
+    def __init__(self, name, master_object):
+        self.name = name
+        self.master_object = master_object
+        self.config_list = []
 
 
 class ResultLogging:
