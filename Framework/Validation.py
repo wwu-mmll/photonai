@@ -39,7 +39,7 @@ class TestPipeline(object):
         # time.sleep(35)
 
         config_item = Configuration(self.params)
-        fold_cnt = 1
+        fold_cnt = 0
 
         for train, test in cv_iter:
             # why clone? removed: clone(self.pipe),
@@ -52,6 +52,8 @@ class TestPipeline(object):
             #                                        error_score=self.error_score)
 
             try:
+
+                fold_cnt += 1
 
                 curr_train_fold = FoldMetrics()
                 curr_test_fold = FoldMetrics()
@@ -85,9 +87,13 @@ class TestPipeline(object):
                 curr_train_fold.score_duration = score_train_data_duration
 
                 fold_tuple_item = FoldTupel(fold_cnt)
-                fold_tuple_item.test_metrics = curr_test_fold
-                fold_tuple_item.train_metrics = curr_train_fold
+                fold_tuple_item.test = curr_test_fold
+                fold_tuple_item.train = curr_train_fold
+                fold_tuple_item.number_samples_train = len(train)
+                fold_tuple_item.number_samples_test = len(test)
                 config_item.fold_list.append(fold_tuple_item)
+
+
 
             except Exception as e:
                 # Todo: Logging!
@@ -107,8 +113,8 @@ class TestPipeline(object):
         return self.cv_results, config_item
 
     def score(self, estimator, X, y_true):
-        if np.ndim(y_true) == 2:
-            y_true = one_hot_to_binary(y_true)
+
+
         if hasattr(estimator, 'score'):
             # Todo: Here it is potentially slowing down!!!!!!!!!!!!!!!!
             default_score = estimator.score(X, y_true)
@@ -118,18 +124,33 @@ class TestPipeline(object):
         # use cv_results as class variable to get results out of
         # _predict_and_score() method
         self.cv_results.setdefault('score', []).append(default_score)
+
         y_pred = self.pipe.predict(X)
-        if np.ndim(y_pred) == 2:
-            y_pred = one_hot_to_binary(y_pred)
+
         self.predictions.append(y_pred)
         self.labels.append(y_true)
 
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
+        score_metrics = TestPipeline.score_metrics(y_true, y_pred, self.metrics, self.cv_results)
+        return score_metrics
+
+
+    @staticmethod
+    def score_metrics(y_true, y_pred, metrics, cv_result_dict=None):
+
+        if np.ndim(y_pred) == 2:
+            y_pred = one_hot_to_binary(y_pred)
+            Logger().warn("test_predictions was one hot encoded => transformed to binary")
+
+        if np.ndim(y_true) == 2:
+            y_true = one_hot_to_binary(y_true)
+            Logger().warn("test_y was one hot encoded => transformed to binary")
+
         output_metrics = []
-        if self.metrics:
-            for metric in self.metrics:
+        if metrics:
+            for metric in metrics:
                 scorer = Scorer.create(metric)
                 scorer_value = scorer(y_true, y_pred)
 
@@ -137,14 +158,15 @@ class TestPipeline(object):
                 output_metrics.append(output_metric_item)
                 # use setdefault method of dictionary to create list under
                 # specific key even in case no list exists
-                self.cv_results.setdefault(metric, []).append(scorer_value)
+                if cv_result_dict:
+                    cv_result_dict.setdefault(metric, []).append(scorer_value)
         return output_metrics
 
     @staticmethod
-    def plot_some_data(data, targets):
+    def plot_some_data(data, targets_true, targets_pred):
         ax_array = np.arange(0, data.shape[0], 1)
         plt.figure().clear()
-        plt.plot(ax_array, data, ax_array, targets)
+        plt.plot(ax_array, data, ax_array, targets_true, ax_array, targets_pred)
         plt.title('A sample of data')
         plt.show()
 
