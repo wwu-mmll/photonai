@@ -1,7 +1,9 @@
+import time
+import numpy as np
+
 from hashlib import sha1
 from itertools import product
 
-import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ShuffleSplit
@@ -12,7 +14,7 @@ from sklearn.pipeline import Pipeline
 from Framework.Register import PhotonRegister
 from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
-from .ResultLogging import ResultLogging, MasterElement, FoldTupel, FoldMetrics, Configuration, OutputMetric
+from .ResultLogging import ResultLogging, MasterElement, MasterElementType, FoldTupel, FoldMetrics, Configuration
 from .Validation import TestPipeline, OptimizerMetric, Scorer
 import pprint
 
@@ -210,8 +212,8 @@ class Hyperpipe(BaseEstimator):
 
                 outer_fold_counter = 0
 
-                self.alpha_master_result = MasterElement(self.name, self)
-                outer_config = Configuration({'name': 'outermost'})
+                self.alpha_master_result = MasterElement(self.name)
+                outer_config = Configuration({})
 
                 for train_indices, test_indices in self.data_test_cases:
 
@@ -224,9 +226,6 @@ class Hyperpipe(BaseEstimator):
                     self.children_config_setup = []
                     outer_fold_counter += 1
 
-                    outer_fold_train_item = FoldMetrics()
-                    outer_fold_test_item = FoldMetrics()
-
                     Logger().info('*****************************************'+
                                   '***************************************\n' +
                     ' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(outer_fold_counter))
@@ -237,10 +236,16 @@ class Hyperpipe(BaseEstimator):
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
                     num_folds = len(cv_iter)
 
+                    num_samples_train = len(validation_y)
+                    num_samples_test = len(test_y)
+
+                    master_item_train = MasterElement(self.name + "_outer_fold_" + str(outer_fold_counter)+"_train",
+                                                      me_type=MasterElementType.TRAIN)
+                    master_item_test = MasterElement(self.name + "_outer_fold_" + str(outer_fold_counter) + "_test",
+                                                     me_type=MasterElementType.TEST)
+
                     # distribute number of folds to encapsulated child hyperpipes
                     self.distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds)
-
-                    master_item = MasterElement(self.name + "_inner_" + str(outer_fold_counter), outer_fold_train_item)
 
                     # do the optimizing
                     for specific_config in self.optimizer.next_config:
@@ -293,7 +298,7 @@ class Hyperpipe(BaseEstimator):
                         self.children_config_setup.append(children_config)
 
                         config_item.children_configs = children_config
-                        master_item.config_list.append(config_item)
+                        master_item_train.config_list.append(config_item)
 
                         if self.logging:
                             # LOGGGGGGGGGGGGGING
@@ -306,7 +311,7 @@ class Hyperpipe(BaseEstimator):
                     # afterwards find best result
                     # merge list of dicts to dict with lists under keys
                     self.performance_history = ResultLogging.merge_dicts(self.performance_history_list)
-                    outer_fold_train_item.metrics.append(master_item)
+
 
                     # Todo: Do better error checking
                     if len(self.performance_history) > 0:
@@ -314,6 +319,13 @@ class Hyperpipe(BaseEstimator):
                         self.best_config = self.config_history[best_config_nr]
                         self.best_children_config = self.children_config_setup[best_config_nr]
                         self.best_performance = self.performance_history_list[best_config_nr]
+
+
+                        best_config_item = Configuration(self.best_config)
+                        best_config_item.children_configs = self.best_children_config
+
+                        self.fold_list = []
+                        self.fit_duration = 0
 
                         # inform user
                         Logger().info(
@@ -333,8 +345,6 @@ class Hyperpipe(BaseEstimator):
                         '--------------------------------------------------------------------------------')
 
                         # ... and create optimal pipeline
-                        # Todo: manage optimum pipe stuff
-                        # Todo: clone!!!!!!
                         self.optimum_pipe = self.pipe
                         # set self to best config
                         self.optimum_pipe.set_params(**self.best_config)
@@ -354,33 +364,55 @@ class Hyperpipe(BaseEstimator):
                         self.distribute_cv_info_to_hyperpipe_children(reset=True)
 
                         Logger().verbose('...now fitting ' + self.name + ' with optimum configuration')
+                        fit_time_start = time.time()
                         self.optimum_pipe.fit(validation_X, validation_y)
+                        final_fit_duration = time.time() - fit_time_start
+
+                        best_config_item.fit_duration = final_fit_duration
+                        master_item_test.config_list.append(best_config_item)
 
                         if not self.debug_cv_mode and self.eval_final_performance:
+
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
+                            predict_test_data_time = time.time()
                             test_predictions = self.optimum_pipe.predict(test_X)
+
+                            Logger().debug("content of test_y: {}".format(test_y))
+                            Logger().debug("content of test_predictions: {}".format(test_predictions))
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
-
+                            output_metric_list_test = []
                             if self.metrics:
-                                for metric in self.metrics:
-                                    scorer = Scorer.create(metric)
-                                    # use setdefault method of dictionary to create list under
-                                    # specific key even in case no list exists
-                                    Logger().debug("Metric: {}".format(metric))
-                                    Logger().debug("content of test_y: {}".format(test_y))
-                                    Logger().debug("content of test_predictions: {}".format(test_predictions))
-                                    if np.ndim(test_y) == 2:
-                                        Logger().warn("test_y was one hot encoded => transformed to binary")
-                                        test_y = one_hot_to_binary(test_y)
-                                    if np.ndim(test_predictions) == 2:
-                                        Logger().warn("test_predictions was one hot encoded => transformed to binary")
-                                        test_predictions = one_hot_to_binary(test_predictions)
+                                output_metric_list_test = TestPipeline.score_metrics(test_y, test_predictions,
+                                                                                     self.metrics,
+                                                                                     self.test_performances)
+                            predict_test_data_duration = time.time() - predict_test_data_time
 
-                                    metric_value = scorer(test_y, test_predictions)
-                                    metric_item = OutputMetric(metric, metric_value)
-                                    outer_fold_test_item.metrics.append(metric_item)
-                                    Logger().info(metric + ':' + str(metric_value))
-                                    self.test_performances.setdefault(metric, []).append(metric_value)
+                            final_fit_test_item = FoldMetrics()
+                            final_fit_test_item.score_duration = predict_test_data_duration
+                            final_fit_test_item.metrics = output_metric_list_test
+
+                            Logger().verbose('...now predicting ' + self.name + ' final model with training data')
+                            predict_train_data_time = time.time()
+                            train_predictions = self.optimum_pipe.predict(validation_X)
+                            output_metric_list_train = []
+                            if self.metrics:
+                                output_metric_list_train = TestPipeline.score_metrics(validation_y, train_predictions,
+                                                                                      self.metrics,
+                                                                                      self.test_performances)
+                            predict_train_data_duration = time.time() - predict_train_data_time
+
+                            final_fit_train_item = FoldMetrics()
+                            final_fit_train_item.score_duration = predict_train_data_duration
+                            final_fit_train_item.metrics = output_metric_list_train
+
+                            final_fit_fold_tuple = FoldTupel(-1)
+                            final_fit_fold_tuple.train = final_fit_train_item
+                            final_fit_fold_tuple.test = final_fit_test_item
+                            final_fit_fold_tuple.number_samples_test = num_samples_train
+                            final_fit_fold_tuple.number_samples_train = num_samples_train
+
+                            best_config_item.fold_list.append(final_fit_fold_tuple)
+
                         Logger().info('****************************************'+
                                          '****************************************')
 
@@ -388,10 +420,12 @@ class Hyperpipe(BaseEstimator):
                     # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
                     outer_fold_tuple_item = FoldTupel(outer_fold_counter)
-                    outer_fold_tuple_item.train_metrics = outer_fold_train_item
-                    outer_fold_tuple_item.test_metrics = outer_fold_test_item
+                    outer_fold_tuple_item.train = master_item_train
+                    outer_fold_tuple_item.test = master_item_test
                     outer_config.fold_list.append(outer_fold_tuple_item)
                 self.alpha_master_result.config_list.append(outer_config)
+                if self.logging:
+                    self.alpha_master_result.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
             ###############################################################################################
             else:
                 self.pipe.fit(self.X, self.y, **fit_params)
