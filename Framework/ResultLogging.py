@@ -89,6 +89,27 @@ class MasterElement:
         CSV FILE
         ******************
 
+        tree_structure:
+        ---------------
+        one
+            master_element: e.g. Hyperpipe or foregoing fold
+        has n
+            configurations
+        has n
+         fold_tuples
+            each of which has
+                one train branch
+            and
+                one test branch
+
+        --> the train and test branches can either point to another master element
+
+        --> or they can point to one
+                fold_metrics object
+            which has n
+                output metrics
+                
+
         static_fields:
         --------------
             master_element: name of outermost element (root hyperpipe)
