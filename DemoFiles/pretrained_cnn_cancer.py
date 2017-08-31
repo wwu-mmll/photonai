@@ -6,6 +6,7 @@ from PIL import Image
 from progressbar import ProgressBar
 from sklearn.model_selection import ShuffleSplit
 from sklearn.metrics import accuracy_score
+from keras.models import load_model
 
 import Helpers.TFUtilities as tfu
 from Framework.PhotonBase import PipelineElement, Hyperpipe
@@ -93,8 +94,16 @@ my_pipe = Hyperpipe('Skin Cancer VGG18 finetuning', optimizer='grid_search',
                             hyperparameter_search_cv_object=cv,
                             eval_final_performance=True, verbose=2)
 #my_pipe += PipelineElement.create('standard_scaler')
-my_pipe += PipelineElement.create('PretrainedCNNClassifier', {'input_shape': [(299,299,3)],'target_dimension': [2], 'freezing_point':[249], 'batch_size':[32], 'early_stopping_flag':[True], 'eaSt_patience':[150]}, nb_epoch=1000)
+my_pipe += PipelineElement.create('PretrainedCNNClassifier',
+                                  {'input_shape': [(299,299,3)],'target_dimension': [2],
+                                   'freezing_point':[249], 'batch_size':[32],
+                                   'early_stopping_flag':[True], 'eaSt_patience':[150]},
+                                  nb_epoch=1000, ckpt_name='pretrained_cnn_cancer.hdf5')
 my_pipe.fit(X_train, y_train)
 y_pred = my_pipe.predict(X_test)
 balanced_accuracy = accuracy_score(tfu.one_hot_to_binary(y_test), y_pred)
 logger.info("Accuracy from independent balanced sample: {}".format(balanced_accuracy))
+best_model = load_model('pretrained_cnn_cancer.hdf5')
+y_pred_best = best_model.predict(X_test)
+balanced_accuracy_best = accuracy_score(tfu.one_hot_to_binary(y_test), y_pred_best)
+logger.info("Accuracy from independent balanced sample: {}".format(balanced_accuracy_best))
