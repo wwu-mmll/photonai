@@ -16,7 +16,8 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, input_shape=(244,244,3), target_dimension=10,
                  learning_rate=0.001, nb_epoch=10000, early_stopping_flag=True,
-                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, freezing_point=0, batch_size=64):
+                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, freezing_point=0,
+                 batch_size=64, ckpt_name=''):
 
 
         self.input_shape = input_shape
@@ -30,6 +31,7 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
         self.freezing_point = freezing_point
         self.model = None
         self.batch_size = batch_size
+        self.ckpt_name = ckpt_name
 
     def fit(self, X, y):
 
@@ -73,15 +75,15 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
                                           min_lr=0.001, verbose=1)
             callbacks_list += [reduce_lr]
 
-            # checkpoint to find the model with the best validation performance later (for final testing)
-            weightsLog = 'photon_pretrained_cnn_model_ckpt.hdf5'
-            checkpoint = ModelCheckpoint(weightsLog,
-                                         monitor='val_acc',
-                                         verbose=0,
-                                         save_best_only=True,
-                                         mode='auto',
-                                         save_weights_only=False)
-            callbacks_list += [checkpoint]
+            if self.ckpt_name:
+                # checkpoint to find the model with the best validation performance later (for final testing)
+                checkpoint = ModelCheckpoint(self.ckpt_name,
+                                             monitor='val_acc',
+                                             verbose=0,
+                                             save_best_only=True,
+                                             mode='auto',
+                                             save_weights_only=False)
+                callbacks_list += [checkpoint]
 
             # fit the model
             results = self.model.fit(X_train, y_train,
