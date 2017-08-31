@@ -2,7 +2,7 @@ import os
 
 import numpy as np
 from keras.applications.inception_v3 import InceptionV3
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau, ModelCheckpoint
 from keras.layers import Dense, GlobalAveragePooling2D
 from keras.layers import Input
 from keras.models import Model
@@ -72,6 +72,16 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
                                           patience=self.reLe_patience,
                                           min_lr=0.001, verbose=1)
             callbacks_list += [reduce_lr]
+
+            # checkpoint to find the model with the best validation performance later (for final testing)
+            weightsLog = 'photon_pretrained_cnn_model_ckpt.hdf5'
+            checkpoint = ModelCheckpoint(weightsLog,
+                                         monitor='val_acc',
+                                         verbose=0,
+                                         save_best_only=True,
+                                         mode='auto',
+                                         save_weights_only=False)
+            callbacks_list += [checkpoint]
 
             # fit the model
             results = self.model.fit(X_train, y_train,
