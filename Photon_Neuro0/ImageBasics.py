@@ -68,8 +68,8 @@ class ResamplingImgs(BaseEstimator):
 #     from nilearn.datasets import MNI152_FILE_PATH
 #     dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
 #
-#     resImg = ResamplingImgs(voxel_size=[10,10,10], output_img=True).transform(dataset_files)
-#     smImg = SmoothImgs(fwhr=[8, 8, 8], output_img=True).transform(resImg)
+#     resImg = ResamplingImgs(voxel_size=[5, 5, 5], output_img=True).transform(dataset_files)
+#     smImg = SmoothImgs(fwhr=[6, 6, 6], output_img=True).transform(resImg)
 #
 #     from Photon_Neuro0.BrainAtlas import BrainAtlas
 #     myAtlas = BrainAtlas(atlas_name='AAL',
