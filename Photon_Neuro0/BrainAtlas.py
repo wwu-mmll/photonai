@@ -13,12 +13,13 @@ class BrainAtlas(BaseEstimator):
         # + get all ROIs ('all'),
         # + ROIs by name (e.g. in HarvardOxford subcortical: ['Caudate_L', 'Caudate_R'])
         # + get ROIs by map indices (e.g. in AAL: [2001, 2111])
-        # - finish mask-img matching
+        # + finish mask-img matching
         #   + reorientation/affine transform
         #   + voxel-size (now returns true number of voxels (i.e. after resampling) vs. voxels in mask)
-        #   - RAS vs. LPS view-type
+        #   + check RAS vs. LPS view-type and provide warning
         # - handle "disappearing" ROIs when downsampling in map check
         # - pretty getBox function (@Claas)
+        # + prettify box-output (to 4d np array)
         # - unit tests
         # Later
         # - add support for overlapping ROIs and probabilistic atlases using 4d-nii
@@ -91,12 +92,23 @@ class BrainAtlas(BaseEstimator):
         from nilearn.input_data import NiftiMasker
         from nilearn import image
         img = load_img(X[0])
+
+        import nibabel as nib
+        orient_data = ''.join(nib.aff2axcodes(img.affine))
+
         roi_data = []
         if extract_mode == 'box':
             self.box_shape = []
         i = 0
         for roi in rois:
             roi = image.resample_img(roi, target_affine=img.affine, target_shape=img.shape, interpolation='nearest')
+
+            # check orientations
+            orient_roi = ''.join(nib.aff2axcodes(roi.affine))
+            orient_ok = orient_roi==orient_data
+            if not orient_ok:
+                print('Orientation of mask and data are not the same: ' + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
+                break
 
             masker = NiftiMasker(mask_img=roi, target_affine=img.affine, target_shape=img.shape)
             single_roi = masker.fit_transform(X)
@@ -178,7 +190,7 @@ class BrainAtlas(BaseEstimator):
             tmp = data[corner1[0]:corner2[0] + 1, corner1[1]:corner2[1] + 1, corner1[2]:corner2[2] + 1]
             box.append(tmp)
         #box = np.asarray(box)
-        return box, tmp.shape
+        return np.asarray(box), tmp.shape
 
     @staticmethod
     def _getAtlasDict():
@@ -242,50 +254,58 @@ if __name__ == '__main__':
     from nilearn.datasets import MNI152_FILE_PATH
     dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
 
-    availableAtlases = BrainAtlas.whichAtlases()
+    # availableAtlases = BrainAtlas.whichAtlases()
+    #
+    #
+    # # get list of available atlases and help.
+    # extMeth = ['vec', 'mean', 'box', 'np.std']
+    # roi_data = []
+    # for em in extMeth:
+    #     for atlas in availableAtlases:
+    #         print('\n\n' + atlas + ': ' + em)
+    #         myAtlas = BrainAtlas(atlas_name=atlas, extract_mode=em, whichROIs='all')
+    #         myAtlas.getInfo()
+    #         roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+    #         myAtlas.getInfo()
+    #
+    #     print('\n\n' + em)
+    #     myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=[2001, 2111, 6301])
+    #     #myAtlas.getInfo()
+    #     roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+    #     myAtlas.getInfo()
+    #
+    #     myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=['Frontal_Sup_R', 'Caudate_L', 'Temporal_Inf_R'])
+    #     #myAtlas.getInfo()
+    #     roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+    #     myAtlas.getInfo()
+    #
+    #     myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=[1, 29, 8])
+    #     #myAtlas.getInfo()
+    #     roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+    #     myAtlas.getInfo()
+    #
+    #     myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=['Superior Temporal Gyrus, anterior division', 'Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex)', "Heschl's Gyrus (includes H1 and H2)"])
+    #     #myAtlas.getInfo()
+    #     roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+    #     myAtlas.getInfo()
+    #
+    #     myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=[10, 11, 12])
+    #     #myAtlas.getInfo()
+    #     roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+    #     myAtlas.getInfo()
+    #
+    #     myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=['Left Accumbens', 'Right Accumbens', 'Right Caudate'])
+    #     #myAtlas.getInfo()
+    #     roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+    #     myAtlas.getInfo()
 
-    # get list of available atlases and help.
-    extMeth = ['mean', 'vec', 'box', 'np.std']
-    roi_data = []
-    for em in extMeth:
-        for atlas in availableAtlases:
-            print('\n\n' + atlas + ': ' + em)
-            myAtlas = BrainAtlas(atlas_name=atlas, extract_mode=em, whichROIs='all')
-            myAtlas.getInfo()
-            roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-            myAtlas.getInfo()
-
-        print('\n\n' + em)
-        myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=[2001, 2111, 6301])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=['Frontal_Sup_R', 'Caudate_L', 'Temporal_Inf_R'])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=[1, 29, 8])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=['Superior Temporal Gyrus, anterior division', 'Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex)', "Heschl's Gyrus (includes H1 and H2)"])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=[10, 11, 12])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=['Left Accumbens', 'Right Accumbens', 'Right Caudate'])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-        myAtlas.getInfo()
-print('')
+#     myAtlas = BrainAtlas(atlas_name='AAL', extract_mode='box', whichROIs='all')
+#     myAtlas.getInfo()
+#     roi_data = myAtlas.transform(X=dataset_files)  # ROI indices
+#     myAtlas.getInfo()
+#
+#
+# print('')
 
 
     # from nilearn.datasets import MNI152_FILE_PATH
