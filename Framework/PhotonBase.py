@@ -182,7 +182,15 @@ class Hyperpipe(BaseEstimator):
         # -------------------------------------------------------------
 
         self.current_fold += 1
-        new_data_hash = sha1(self.X).hexdigest()
+
+        # handle Photon_Neuro Imge paths as data
+        # ToDo: Ramona please check if this is ok!
+        # ToDo: Need to check the DATA, not the img paths for Photon_Neuro
+        try:
+            new_data_hash = sha1(self.X).hexdigest()
+        except:
+            new_data_hash = hash(frozenset(self.X))
+
         # fit
         # 1. if it is first time ever or
         # 2. the data did change for that fold or
@@ -562,9 +570,7 @@ class PipelineElement(BaseEstimator):
     #                       }
 
     # Registering Pipeline Elements
-
-    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore'])
-    # ELEMENT_DICTIONARY = RegisterPipelineElement.get_package_info(['PhotonCore', 'PhotonNeuro'])
+    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'PhotonNeuro'])
 
     # def __new__(cls, name, position, hyperparameters, **kwargs):
     #     # print(cls)
