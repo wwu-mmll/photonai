@@ -237,10 +237,28 @@ class Hyperpipe(BaseEstimator):
                     Logger().info('*****************************************'+
                                   '***************************************\n' +
                     ' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(outer_fold_counter))
-                    validation_X = self.X[train_indices]
-                    validation_y = self.y[train_indices]
-                    test_X = self.X[test_indices]
-                    test_y = self.y[test_indices]
+
+                    # PhotonCore variant (for arrays)
+                    try:
+                        validation_X = self.X[train_indices]
+                        validation_y = self.y[train_indices]
+                        test_X = self.X[test_indices]
+                        test_y = self.y[test_indices]
+                        print('Basic')
+                    except:
+                        # PhotonNeuro variant (for strings)
+                        validation_X = []
+                        validation_y = []
+                        for tr in train_indices:
+                            validation_X.append(self.X[tr])
+                            validation_y.append(self.y[tr])
+                        test_X = []
+                        test_y = []
+                        for te in test_indices:
+                            test_X.append(self.X[te])
+                            test_y.append(self.y[te])
+                        print('Except')
+
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
                     num_folds = len(cv_iter)
 
