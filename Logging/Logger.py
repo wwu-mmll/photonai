@@ -76,6 +76,8 @@ class Logger:
         # Set default LogLevel
         # Should be LogLevel.WARN!
         # Is LogLevel.DEBUG now only for testing purposes
+        self._log_level = self.LogLevel.INFO
+
         self.log_level_console = self.LogLevel.INFO
         self.log_level_slack = self.LogLevel.INFO
         self.log_level_file = self.LogLevel.INFO
