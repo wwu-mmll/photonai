@@ -62,6 +62,7 @@ class Configuration:
         self.children_configs = {}
         self.fold_list = []
         self.fit_duration = 0
+        self.config_failed = False
 
     def to_dict(self):
         output_config_dict = {'fit_duration': self.fit_duration}
@@ -108,7 +109,7 @@ class MasterElement:
                 fold_metrics object
             which has n
                 output metrics
-                
+
 
         static_fields:
         --------------

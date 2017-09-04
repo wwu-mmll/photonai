@@ -31,7 +31,7 @@ class Hyperpipe(BaseEstimator):
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
                  metrics=None, best_config_metric=None, hyperparameter_search_cv_object=None,
                  test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
-                 logging=False, set_random_seed=False, verbose=0):
+                 logging=False, set_random_seed=False, verbose=0, filter_element=None):
         # Re eval_final_performance:
         # set eval_final_performance to False because
         # 1. if no cv-object is given, no split is performed --> seems more logical
@@ -47,6 +47,7 @@ class Hyperpipe(BaseEstimator):
         self.X = None
         self.y = None
         self.groups = groups
+        self.filter_element = filter_element
 
         self.data_test_cases = None
         self.config_history = []
@@ -181,8 +182,24 @@ class Hyperpipe(BaseEstimator):
         # !!!!!!!!!!!!!!!! FIT ONLY IF DATA CHANGED !!!!!!!!!!!!!!!!!!!
         # -------------------------------------------------------------
 
+        # in case we need to reduce the dimension of the data due to parallelity of the outer pipe, lets do it.
+        if self.filter_element:
+            self.X = self.filter_element.transform(self.X)
+
         self.current_fold += 1
+
+        # be compatible to list of (image-) files
+        if not isinstance(self.X, np.ndarray) and isinstance(self.X[0], str):
+            self.X = np.asarray(self.X)
+
+        # handle PhotonNeuro Imge paths as data
+        # ToDo: Need to check the DATA, not the img paths for PhotonNeuro
+        # try:
         new_data_hash = sha1(self.X).hexdigest()
+        # except BaseException as e:
+        #     # new_data_hash = hash(frozenset(self.X))
+        #     new_data_hash = hash(frozenset(self.X))
+
         # fit
         # 1. if it is first time ever or
         # 2. the data did change for that fold or
@@ -229,10 +246,28 @@ class Hyperpipe(BaseEstimator):
                     Logger().info('*****************************************'+
                                   '***************************************\n' +
                     ' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(outer_fold_counter))
+
+                    # PhotonCore variant (for arrays)
+                    # try:
                     validation_X = self.X[train_indices]
                     validation_y = self.y[train_indices]
                     test_X = self.X[test_indices]
                     test_y = self.y[test_indices]
+                    # print('Basic')
+                    # except:
+                    #     # PhotonNeuro variant (for strings)
+                    #     validation_X = []
+                    #     validation_y = []
+                    #     for tr in train_indices:
+                    #         validation_X.append(self.X[tr])
+                    #         validation_y.append(self.y[tr])
+                    #     test_X = []
+                    #     test_y = []
+                    #     for te in test_indices:
+                    #         test_X.append(self.X[te])
+                    #         test_y.append(self.y[te])
+                    #     print('Except')
+
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
                     num_folds = len(cv_iter)
 
@@ -276,21 +311,23 @@ class Hyperpipe(BaseEstimator):
 
                         specific_parameters = self.pipe.get_params()
 
-                        # get optimizer_metric and forward to optimizer
-                        # todo: also pass greater_is_better=True/False to optimizer
-                        config_score = (results_cv[self.config_optimizer.metric]['train'],
-                                        results_cv[self.config_optimizer.metric]['test'])
+                        if not config_item.config_failed:
+                            # get optimizer_metric and forward to optimizer
+                            # todo: also pass greater_is_better=True/False to optimizer
+                            config_score = (results_cv[self.config_optimizer.metric]['train'],
+                                            results_cv[self.config_optimizer.metric]['test'])
 
+                            # Print Result for config
+                            Logger().debug('...done:')
+                            Logger().verbose(results_cv[self.config_optimizer.metric])
+                        else:
+                            config_score = (-1, -1)
+                            # Print Result for config
+                            Logger().debug('...failed:')
 
                         # 3. inform optimizer about performance
-                        self.optimizer.evaluate_recent_performance(specific_config, config_score)
-
-                        # Print Result for config
-                        Logger().debug('...done:')
                         Logger().verbose(self.optimize_printing(specific_config))
-                        Logger().verbose(results_cv[self.config_optimizer.metric])
-
-                        # Todo: @Tim: fill and save Result Logging Instances here!
+                        self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
                         self.config_history.append(specific_config)
                         self.performance_history_list.append(results_cv)
@@ -444,10 +481,14 @@ class Hyperpipe(BaseEstimator):
     def predict(self, data):
         # Todo: if local_search = true then use optimized pipe here?
         if self.pipe:
+            if self.filter_element:
+                data = self.filter_element.transform(data)
             return self.optimum_pipe.predict(data)
 
     def transform(self, data):
         if self.pipe:
+            if self.filter_element:
+                data = self.filter_element.transform(data)
             return self.optimum_pipe.transform(data)
 
     def get_params(self, deep=True):
@@ -521,60 +562,10 @@ class Hyperpipe(BaseEstimator):
 
 
 class PipelineElement(BaseEstimator):
-    """
-        Add any estimator or transform object from sklearn and associate unique name
-        Add any own object that is compatible (implements fit and/or predict and/or fit_predict)
-         and associate unique name
-    """
-    # from sklearn.decomposition import PCA
-    # from sklearn.svm import SVC
-    # from sklearn.linear_model import LogisticRegression
-    # from sklearn.preprocessing import StandardScaler
-    # from PipelineWrapper.WrapperModel import WrapperModel
-    # from PipelineWrapper.TFDNNClassifier import TFDNNClassifier
-    # from PipelineWrapper.KerasDNNWrapper import KerasDNNWrapper
-    # ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition', 'PCA'),
-    #                       'svc': ('sklearn.svm', 'SVC'),
-    #                       'knn': ('sklearn.neighbors', 'KNeighborsClassifier'),
-    #                       'logistic': ('sklearn.linear_model', 'LogisticRegression'),
-    #                       'dnn': ('PipelineWrapper.TFDNNClassifier', 'TFDNNClassifier'),
-    #                       'KerasDNNClassifier': ('PipelineWrapper.KerasDNNClassifier',
-    #                                              'KerasDNNClassifier'),
-    #                       'standard_scaler': ('sklearn.preprocessing', 'StandardScaler'),
-    #                       'wrapper_model': ('PipelineWrapper.WrapperModel', 'WrapperModel'),
-    #                       'test_wrapper': ('PipelineWrapper.TestWrapper', 'WrapperTestElement'),
-    #                       'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper', 'PCA_AE_Wrapper'),
-    #                       'rl_cnn': ('photon_core.PipelineWrapper.RLCNN', 'RLCNN'),
-    #                       'CNN1d': ('PipelineWrapper.CNN1d', 'CNN1d'),
-    #                       'SourceSplitter': ('PipelineWrapper.SourceSplitter', 'SourceSplitter'),
-    #                       'f_regression_select_percentile':
-    #                           ('PipelineWrapper.FeatureSelection', 'FRegressionSelectPercentile'),
-    #                       'f_classif_select_percentile':
-    #                           ('PipelineWrapper.FeatureSelection', 'FClassifSelectPercentile'),
-    #                       'py_esn_r': ('PipelineWrapper.PyESNWrapper', 'PyESNRegressor'),
-    #                       'py_esn_c': ('PipelineWrapper.PyESNWrapper', 'PyESNClassifier'),
-    #                       'SVR': ('sklearn.svm', 'SVR'),
-    #                       'KNeighborsRegressor': ('sklearn.neighbors', 'KNeighborsRegressor'),
-    #                       'DecisionTreeRegressor': ('sklearn.tree','DecisionTreeRegressor'),
-    #                       'RandomForestRegressor': ('sklearn.ensemble', 'RandomForestRegressor'),
-    #                       'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor','KerasDNNRegressor'),
-    #                       'PretrainedCNNClassifier': ('PipelineWrapper.PretrainedCNNClassifier', 'PretrainedCNNClassifier')
-    #                       }
 
     # Registering Pipeline Elements
+    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'PhotonNeuro'])
 
-    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore'])
-    # ELEMENT_DICTIONARY = RegisterPipelineElement.get_package_info(['PhotonCore', 'PhotonNeuro'])
-
-    # def __new__(cls, name, position, hyperparameters, **kwargs):
-    #     # print(cls)
-    #     # print(*args)
-    #     # print(**kwargs)
-    #     desired_class = cls.ELEMENT_DICTIONARY[name]
-    #     desired_class_instance = desired_class(**kwargs)
-    #     desired_class_instance.name = name
-    #     desired_class_instance.position = position
-    #     return desired_class_instance
     @classmethod
     def create(cls, name, hyperparameters: dict ={}, test_disabled=False, disabled=False, **kwargs):
         if name in PipelineElement.ELEMENT_DICTIONARY:
@@ -658,14 +649,14 @@ class PipelineElement(BaseEstimator):
         self.base_element.set_params(**kwargs)
         return self
 
-    def fit(self, data, targets):
+    def fit(self, data, targets=None):
         if not self.disabled:
             obj = self.base_element
             obj.fit(data, targets)
             # self.base_element.fit(data, targets)
         return self
 
-    def predict(self, data):
+    def predict(self, data, targets=None):
         if not self.disabled:
             if hasattr(self.base_element, 'predict'):
                 return self.base_element.predict(data)
@@ -684,7 +675,7 @@ class PipelineElement(BaseEstimator):
     #     else:
     #         return data
 
-    def transform(self, data):
+    def transform(self, data, targets=None):
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
                 return self.base_element.transform(data)
@@ -797,13 +788,13 @@ class PipelineStacking(PipelineElement):
                 raise NameError('Could not find element ', name)
         return self
 
-    def fit(self, data, targets):
+    def fit(self, data, targets=None):
         for name, element in self.pipe_elements.items():
             # Todo: parallellize fitting
             element.fit(data, targets)
         return self
 
-    def predict(self, data):
+    def predict(self, data, targets=None):
         # Todo: strategy for concatenating data from different pipes
         # todo: parallelize prediction
         predicted_data = np.empty((0, 0))
@@ -816,7 +807,7 @@ class PipelineStacking(PipelineElement):
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data
 
-    def transform(self, data):
+    def transform(self, data, targets=None):
         transformed_data = np.empty((0, 0))
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
