@@ -108,7 +108,7 @@ class MasterElement:
                 fold_metrics object
             which has n
                 output metrics
-                
+
 
         static_fields:
         --------------

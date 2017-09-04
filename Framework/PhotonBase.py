@@ -183,13 +183,15 @@ class Hyperpipe(BaseEstimator):
 
         self.current_fold += 1
 
+        if not isinstance(self.X, np.ndarray):
+            self.X = np.asarray(self.X)
+
         # handle Photon_Neuro Imge paths as data
-        # ToDo: Ramona please check if this is ok!
         # ToDo: Need to check the DATA, not the img paths for Photon_Neuro
-        try:
-            new_data_hash = sha1(self.X).hexdigest()
-        except:
-            new_data_hash = hash(frozenset(self.X))
+        # try:
+        new_data_hash = sha1(self.X).hexdigest()
+        # except:
+        #     new_data_hash = hash(frozenset(self.X))
 
         # fit
         # 1. if it is first time ever or
@@ -239,25 +241,25 @@ class Hyperpipe(BaseEstimator):
                     ' HYPERPARAMETER SEARCH OF ' + self.name + ', Iteration:' + str(outer_fold_counter))
 
                     # PhotonCore variant (for arrays)
-                    try:
-                        validation_X = self.X[train_indices]
-                        validation_y = self.y[train_indices]
-                        test_X = self.X[test_indices]
-                        test_y = self.y[test_indices]
-                        print('Basic')
-                    except:
-                        # PhotonNeuro variant (for strings)
-                        validation_X = []
-                        validation_y = []
-                        for tr in train_indices:
-                            validation_X.append(self.X[tr])
-                            validation_y.append(self.y[tr])
-                        test_X = []
-                        test_y = []
-                        for te in test_indices:
-                            test_X.append(self.X[te])
-                            test_y.append(self.y[te])
-                        print('Except')
+                    # try:
+                    validation_X = self.X[train_indices]
+                    validation_y = self.y[train_indices]
+                    test_X = self.X[test_indices]
+                    test_y = self.y[test_indices]
+                    # print('Basic')
+                    # except:
+                    #     # PhotonNeuro variant (for strings)
+                    #     validation_X = []
+                    #     validation_y = []
+                    #     for tr in train_indices:
+                    #         validation_X.append(self.X[tr])
+                    #         validation_y.append(self.y[tr])
+                    #     test_X = []
+                    #     test_y = []
+                    #     for te in test_indices:
+                    #         test_X.append(self.X[te])
+                    #         test_y.append(self.y[te])
+                    #     print('Except')
 
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
                     num_folds = len(cv_iter)
