@@ -1,4 +1,5 @@
 from Framework.PhotonBase import PipelineElement, Hyperpipe
+from PhotonNeuro.AtlasStacker import AtlasStacker
 from sklearn.model_selection import KFold
 
 # get oasis gm data and age from nilearn
@@ -24,10 +25,13 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
 
 my_pipe += PipelineElement.create('SmoothImgs', {'fwhr': [[8, 8, 8], [12, 12, 12]]})
 #my_pipe += PipelineElement.create('ResampeImgs', {'voxel_size': [[5, 5, 5], [10, 10, 10]], 'output_img': [False]})
-from Photon_Neuro.BrainAtlas import BrainAtlas
+from PhotonNeuro.BrainAtlas import BrainAtlas
 
-my_pipe += PipelineElement.create('BrainAtlas', {}, atlas_name='AAL', extract_mode='vec', whichROIs=[2001])
+my_pipe += PipelineElement.create('BrainAtlas', {}, atlas_name='AAL', extract_mode='vec', whichROIs=[2001, 2111])
 # roi_data = myAtlas.transform(X=smImg)
+tmp_atlas_stacker = AtlasStacker('AAL', [['pca', {'n_components': [3, 5]}, {}],
+                                 ['svc', {'kernel': ['rbf', 'linear']}, {}]], rois=[2001, 2111])
+my_pipe += PipelineElement('atlas_stacker', tmp_atlas_stacker, {})
 my_pipe += PipelineElement.create('SVR', {'kernel': ['linear', 'rbf']})
 
 # START HYPERPARAMETER SEARCH

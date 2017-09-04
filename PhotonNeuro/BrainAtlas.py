@@ -125,8 +125,8 @@ class BrainAtlas(BaseEstimator):
                 masker = NiftiMasker(mask_img=roi, target_affine=img.affine, target_shape=img.shape)
                 try:
                     single_roi = masker.fit_transform(X)
-                except:
-                    print('')
+                except BaseException as e:
+                    print(e)
 
                 self.roi_sizes_applied[i] = single_roi.size
                 print('Extracting data from ' + self.labels_applied[i] + ' (Index: '
