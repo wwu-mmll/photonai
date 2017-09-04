@@ -2,8 +2,10 @@ import datetime
 import inspect
 from enum import Enum
 from functools import total_ordering
-from Framework import PhotonConf
 
+from slackclient import SlackClient
+
+from Framework.PhotonConf import PhotonConf
 
 """ Logging is a simple way to emit and store logs.
 
@@ -64,8 +66,8 @@ class Logger:
 
     def __init__(self):
         # load configuration
-        conf = PhotonConf
-        logging_conf = conf.conf['LOGGING']
+        conf = PhotonConf()
+        logging_conf = conf.config['LOGGING']
 
         # handle multiple instances of hyperpipe
         self.loggers = []
@@ -82,6 +84,7 @@ class Logger:
         # Recommendation: Set to True during development, false in production-environment
         self._print_to_console = logging_conf['print_to_console']
         self._print_to_slack = logging_conf['print_to_slack']
+        self._slack_token = logging_conf['slack_token']
         self._print_to_file = logging_conf['print_to_file']
         self._logfile_name = logging_conf['logfile_name']
         with open(self._logfile_name, "w") as text_file:
@@ -93,6 +96,9 @@ class Logger:
     def set_print_to_slack(self, status: bool):
         self._print_to_console = status
 
+    def set_log_level(self, level):
+        """" Use this method to change the log level. """
+        self._log_level = level
     def set_verbosity(self, verbose=0):
         """ Use this method to change the log level from verbosity attribute of hyperpipe. """
         if verbose == 0:
@@ -104,9 +110,11 @@ class Logger:
         else:
             self.set_log_level(self.LogLevel.WARN)
 
+    def set_log_level(self, level):
+        """" Use this method to change the log level. """
+        self._log_level = level
 
-        # Debug should be used for information that may be useful for program-debugging (most information)
-
+    # Debug should be used for information that may be useful for program-debugging (most information
     # i.e. training epochs of neural nets
     def debug(self, message: str):
         if (self._log_level <= self.LogLevel.DEBUG):
@@ -153,11 +161,7 @@ class Logger:
             self._send_to_slack(entry)
 
     def _send_to_slack(self, entry: dict):
-        from slackclient import SlackClient
-
-        slack_token = "xoxp-113254200629-113099992147-232630779537-e7947c07faa87ab4567cdb8d6719b81c"
-
-        sc = SlackClient(slack_token)
+        sc = SlackClient(self._slack_token)
 
         sc.api_call(
             "chat.postMessage",
