@@ -6,14 +6,14 @@ from Framework.PhotonBase import PipelineElement, Hyperpipe
 
 mnist = fetch_mldata("MNIST original")
 X, y = mnist.data / 255., mnist.target
-y_one_hot = tfu.oneHot(y)
+y_one_hot = tfu.binary_to_one_hot(y)
 X_train, X_test = X[:60000], X[60000:]
 y_train, y_test = y[:60000], y[60000:]
 sss = StratifiedShuffleSplit(n_splits=1,test_size=0.01)
 for _, test_index in sss.split(X, y):
     X_small = X[test_index]
     y_small = y[test_index]
-y_small = tfu.oneHot(y_small)
+y_small = tfu.binary_to_one_hot(y_small)
 
 
 cv = ShuffleSplit(n_splits=1,test_size=0.2, random_state=23)
