@@ -14,7 +14,7 @@ from Framework.PhotonBase import PipelineElement, Hyperpipe
 
 X_train = np.random.rand(100,224,224,3)
 y_train = np.random.randint(0,10,100)
-y_train = tfu.oneHot(y_train)
+y_train = tfu.binary_to_one_hot(y_train)
 cv = ShuffleSplit(n_splits=1,test_size=0.2, random_state=23)
 
 

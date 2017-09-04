@@ -13,6 +13,7 @@ from Framework.PhotonBase import PipelineElement, Hyperpipe
 from Logging.Logger import Logger
 
 logger = Logger()
+development = False # If True using smaler samples
 ##
 # Loads the images. They have to be 299x299 pixels.
 # returns (X_train, y_train)
@@ -70,6 +71,11 @@ def split_balanced_test_data_from_current_data(X_train, y_train, group_size=100)
     y_test = np.concatenate([y_train[:group_size],  y_train[-group_size:]])
     X_train_new = X_train[group_size:-group_size]
     y_train_new = y_train[group_size:-group_size]
+    if development:
+        logger.warn("!!!! Development mode is enabled, using smaller samples !!!!")
+        X_train_new = X_train_new[0:1000]
+        y_train_new = y_train_new[0:1000]
+
     return (X_train_new, y_train_new, X_test, y_test)
 
 X_train, y_train = load_skin_cancer_data(use_tempfiles=True)
@@ -105,5 +111,7 @@ balanced_accuracy = accuracy_score(tfu.one_hot_to_binary(y_test), y_pred)
 logger.info("Accuracy from independent balanced sample: {}".format(balanced_accuracy))
 best_model = load_model('pretrained_cnn_cancer.hdf5')
 y_pred_best = best_model.predict(X_test)
+logger.debug("y_pred_best: {}".format(y_pred_best))
+y_pred_best = np.argmax(y_pred_best, axis=1)
 balanced_accuracy_best = accuracy_score(tfu.one_hot_to_binary(y_test), y_pred_best)
-logger.info("Accuracy from independent balanced sample: {}".format(balanced_accuracy_best))
+logger.info("Accuracy for best model from independent balanced sample: {}".format(balanced_accuracy_best))
