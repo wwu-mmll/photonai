@@ -13,12 +13,13 @@ class BrainAtlas(BaseEstimator):
         # + get all ROIs ('all'),
         # + ROIs by name (e.g. in HarvardOxford subcortical: ['Caudate_L', 'Caudate_R'])
         # + get ROIs by map indices (e.g. in AAL: [2001, 2111])
-        # - finish mask-img matching
+        # + finish mask-img matching
         #   + reorientation/affine transform
         #   + voxel-size (now returns true number of voxels (i.e. after resampling) vs. voxels in mask)
-        #   - RAS vs. LPS view-type
-        # - handle "disappearing" ROIs when downsampling in map check
+        #   + check RAS vs. LPS view-type and provide warning
+        # + handle "disappearing" ROIs when downsampling in map check
         # - pretty getBox function (@Claas)
+        # + prettify box-output (to 4d np array)
         # - unit tests
         # Later
         # - add support for overlapping ROIs and probabilistic atlases using 4d-nii
@@ -75,8 +76,8 @@ class BrainAtlas(BaseEstimator):
         self.box_shape = []
         self.gotData = False
 
-    def fit(self):
-        pass
+    def fit(self, X, y):
+        self
 
     def transform(self, X, y=None):
         extract_mode = self.extract_mode
@@ -90,44 +91,79 @@ class BrainAtlas(BaseEstimator):
         # Grab masker and apply to structural data for each ROI
         from nilearn.input_data import NiftiMasker
         from nilearn import image
-        img = load_img(X[0])
+
+        try:
+            img = load_img(X[0])
+        except:
+            img = X[0]
+
+        import nibabel as nib
+        orient_data = ''.join(nib.aff2axcodes(img.affine))
+
         roi_data = []
         if extract_mode == 'box':
             self.box_shape = []
         i = 0
+        out_ind = ()
         for roi in rois:
             roi = image.resample_img(roi, target_affine=img.affine, target_shape=img.shape, interpolation='nearest')
 
-            masker = NiftiMasker(mask_img=roi, target_affine=img.affine, target_shape=img.shape)
-            single_roi = masker.fit_transform(X)
-            self.roi_sizes_applied[i] = single_roi.size
-            print('Extracting data from ' + self.labels_applied[i] + ' (Index: '
-                  + str(self.indices_applied[i]) + '; ROI Size: ' + str(self.roi_sizes_applied[i]) + ')')
-            i += 1
+            # check orientations
+            orient_roi = ''.join(nib.aff2axcodes(roi.affine))
+            orient_ok = orient_roi==orient_data
+            if not orient_ok:
+                print('Orientation of mask and data are not the same: ' + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
+                break
 
-            if extract_mode == 'vec':
-                roi_data.append(single_roi)
-            elif extract_mode == 'mean':
-                tmp = []
-                for sample_ind in range(len(single_roi)):
-                    tmp.append(np.mean(single_roi[sample_ind]))
-                roi_data.append(tmp)
-            elif extract_mode == 'box':
-                tmp = []
-                tmp, bshape = self._getBox(X, roi)
-                roi_data.append(tmp)
-                self.box_shape.append(bshape)
+            # handle empty ROIs
+            if np.sum(roi.dataobj != 0) == 0:
+                print('No voxels in ROI (' + self.labels_applied[i] + ').')
+                out_ind = np.append(out_ind, i)
+                i += 1
+                continue
             else:
-                # any function which can work on a vector passed as a string
-                tmp = []
-                # ToDo
-                # find something safer than eval!
-                any_func = lambda ex, data, opt_args=None: eval(ex)(data, opt_args)
-                expr = extract_mode
-                for sample_ind in range(0, len(single_roi)):
-                    t = any_func(expr, single_roi[sample_ind])
-                    tmp.append(t)
-                roi_data.append(tmp)
+                masker = NiftiMasker(mask_img=roi, target_affine=img.affine, target_shape=img.shape)
+                try:
+                    single_roi = masker.fit_transform(X)
+                except BaseException as e:
+                    print(e)
+
+                self.roi_sizes_applied[i] = single_roi.size
+                print('Extracting data from ' + self.labels_applied[i] + ' (Index: '
+                      + str(self.indices_applied[i]) + '; ROI Size: ' + str(self.roi_sizes_applied[i]) + ')')
+                i += 1
+
+                if extract_mode == 'vec':
+                    roi_data.append(single_roi)
+                elif extract_mode == 'mean':
+                    tmp = []
+                    for sample_ind in range(len(single_roi)):
+                        tmp.append(np.mean(single_roi[sample_ind]))
+                    roi_data.append(tmp)
+                elif extract_mode == 'box':
+                    tmp = []
+                    tmp, bshape = self._getBox(X, roi)
+                    roi_data.append(tmp)
+                    self.box_shape.append(bshape)
+                else:
+                    # any function which can work on a vector passed as a string
+                    tmp = []
+                    # ToDo
+                    # find something safer than eval!
+                    any_func = lambda ex, data, opt_args=None: eval(ex)(data, opt_args)
+                    expr = extract_mode
+                    for sample_ind in range(0, len(single_roi)):
+                        t = any_func(expr, single_roi[sample_ind])
+                        tmp.append(t)
+                    roi_data.append(tmp)
+
+        # delete empty ROI info
+        self.roi_sizes_applied = [k for j, k in enumerate(self.roi_sizes_applied) if j not in out_ind]
+        self.indices_applied = [k for j, k in enumerate(self.indices_applied) if j not in out_ind]
+        self.labels_applied = [k for j, k in enumerate(self.labels_applied) if j not in out_ind]
+
+        if len(roi_data)==1:
+            roi_data = roi_data[0]
 
         return roi_data
 
@@ -174,11 +210,16 @@ class BrainAtlas(BaseEstimator):
         corner2 = true_points.max(axis=0)
         box = []
         for img in in_imgs:
-            data = load_img(img).get_data()
+            try:
+                data = load_img(img).get_data()
+            except:
+                data = img.get_data()
+
+
             tmp = data[corner1[0]:corner2[0] + 1, corner1[1]:corner2[1] + 1, corner1[2]:corner2[2] + 1]
             box.append(tmp)
         #box = np.asarray(box)
-        return box, tmp.shape
+        return np.asarray(box), tmp.shape
 
     @staticmethod
     def _getAtlasDict():
@@ -234,58 +275,67 @@ class BrainAtlas(BaseEstimator):
                           str("%.0f" % (self.roi_sizes_applied[i] / box_prod * 100)) + '%')
 
 
-if __name__ == '__main__':
-
-
-    #from nilearn import datasets
-    #dataset_files = datasets.fetch_oasis_vbm(n_subjects=5)
-    from nilearn.datasets import MNI152_FILE_PATH
-    dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
-
-    availableAtlases = BrainAtlas.whichAtlases()
-
-    # get list of available atlases and help.
-    extMeth = ['mean', 'vec', 'box', 'np.std']
-    roi_data = []
-    for em in extMeth:
-        for atlas in availableAtlases:
-            print('\n\n' + atlas + ': ' + em)
-            myAtlas = BrainAtlas(atlas_name=atlas, extract_mode=em, whichROIs='all')
-            myAtlas.getInfo()
-            roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-            myAtlas.getInfo()
-
-        print('\n\n' + em)
-        myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=[2001, 2111, 6301])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=['Frontal_Sup_R', 'Caudate_L', 'Temporal_Inf_R'])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=[1, 29, 8])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=['Superior Temporal Gyrus, anterior division', 'Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex)', "Heschl's Gyrus (includes H1 and H2)"])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=[10, 11, 12])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
-        myAtlas.getInfo()
-
-        myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=['Left Accumbens', 'Right Accumbens', 'Right Caudate'])
-        #myAtlas.getInfo()
-        roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
-        myAtlas.getInfo()
-print('')
+# if __name__ == '__main__':
+#
+#
+#     # from nilearn import datasets
+#     # dataset_files = datasets.fetch_oasis_vbm(n_subjects=5)
+#     from nilearn.datasets import MNI152_FILE_PATH
+#     dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
+#     print('')
+#
+#     availableAtlases = BrainAtlas.whichAtlases()
+#
+#
+#     # get list of available atlases and help.
+#     extMeth = ['box', 'vec', 'mean', 'np.std']
+#     roi_data = []
+#     for em in extMeth:
+#         for atlas in availableAtlases:
+#             print('\n\n' + atlas + ': ' + em)
+#             myAtlas = BrainAtlas(atlas_name=atlas, extract_mode=em, whichROIs='all')
+#             myAtlas.getInfo()
+#             roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+#             myAtlas.getInfo()
+#
+#         print('\n\n' + em)
+#         myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=[2001, 2111, 6301])
+#         #myAtlas.getInfo()
+#         roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+#         myAtlas.getInfo()
+#
+#         myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=['Frontal_Sup_R', 'Caudate_L', 'Temporal_Inf_R'])
+#         #myAtlas.getInfo()
+#         roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+#         myAtlas.getInfo()
+#
+#         myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=[1, 29, 8])
+#         #myAtlas.getInfo()
+#         roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+#         myAtlas.getInfo()
+#
+#         myAtlas = BrainAtlas(atlas_name='HarvardOxford-cort-maxprob-thr50', extract_mode=em, whichROIs=['Superior Temporal Gyrus, anterior division', 'Juxtapositional Lobule Cortex (formerly Supplementary Motor Cortex)', "Heschl's Gyrus (includes H1 and H2)"])
+#         #myAtlas.getInfo()
+#         roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+#         myAtlas.getInfo()
+#
+#         myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=[10, 11, 12])
+#         #myAtlas.getInfo()
+#         roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
+#         myAtlas.getInfo()
+#
+#         myAtlas = BrainAtlas(atlas_name='HarvardOxford-sub-maxprob-thr50', extract_mode=em, whichROIs=['Left Accumbens', 'Right Accumbens', 'Right Caudate'])
+#         #myAtlas.getInfo()
+#         roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
+#         myAtlas.getInfo()
+#
+#     myAtlas = BrainAtlas(atlas_name='AAL', extract_mode='box', whichROIs='all')
+#     myAtlas.getInfo()
+#     roi_data = myAtlas.transform(X=dataset_files)  # ROI indices
+#     myAtlas.getInfo()
+#
+#
+# print('')
 
 
     # from nilearn.datasets import MNI152_FILE_PATH
