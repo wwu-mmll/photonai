@@ -13,14 +13,16 @@ from Framework.PhotonBase import PipelineElement, Hyperpipe
 from Logging.Logger import Logger
 
 logger = Logger()
-development = False # If True using smaler samples
+development = False # If True using smaller samples
 ##
 # Loads the images. They have to be 299x299 pixels.
 # returns (X_train, y_train)
 def load_skin_cancer_data(use_tempfiles: True):
-    path_benign_images='/spm-data-cached/Scratch/spielwiese_claas/ISIC-images-benign/299x299/'
-    path_malignant_images='/spm-data-cached/Scratch/spielwiese_claas/ISIC-images-malignant/299x299/'
-    path_temp_files_folder='/spm-data-cached/Scratch/spielwiese_claas/'
+    root_path='/spm-data-cached/Scratch/spielwiese_claas/'
+    root_path = '/home/claas/skin_cancer/'
+    path_benign_images=root_path + 'ISIC-images-benign/299x299/'
+    path_malignant_images=root_path + 'ISIC-images-malignant/299x299/'
+    path_temp_files_folder=root_path + ''
 
     skin_cancer_data = Path(path_temp_files_folder + "skin_cancer_data.npy")
     skin_cancer_labels = Path(path_temp_files_folder + "skin_cancer_labels.npy")
