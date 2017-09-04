@@ -162,6 +162,9 @@ class BrainAtlas(BaseEstimator):
         self.indices_applied = [k for j, k in enumerate(self.indices_applied) if j not in out_ind]
         self.labels_applied = [k for j, k in enumerate(self.labels_applied) if j not in out_ind]
 
+        if len(roi_data)==1:
+            roi_data = roi_data[0]
+
         return roi_data
 
     def _getROIs(self, whichROIs='all', background_id=0):

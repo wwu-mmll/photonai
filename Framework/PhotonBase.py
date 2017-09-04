@@ -188,6 +188,7 @@ class Hyperpipe(BaseEstimator):
 
         # handle Photon_Neuro Imge paths as data
         # ToDo: Need to check the DATA, not the img paths for Photon_Neuro
+
         # try:
         new_data_hash = sha1(self.X).hexdigest()
         # except:
