@@ -4,6 +4,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
 from Framework.PhotonBase import PipelineElement, Hyperpipe
+from Logging.Logger import Logger
 
 dataset = load_breast_cancer()
 X = dataset.data
@@ -26,8 +27,8 @@ my_pipe += PipelineElement.create('pca', {'n_components': pca_n_components})
 my_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': [svc_kernel]})
 
 # START HYPERPARAMETER SEARCH
-print('-----------------')
-print('OPTIMIZER METRIC: ACCURACY\n\n\n')
+Logger().info('-----------------')
+Logger().info('OPTIMIZER METRIC: ACCURACY\n\n\n')
 my_pipe.fit(X, y)
 
 # SET UP HYPERPIPE and choose precision as optimizer metric
@@ -43,7 +44,7 @@ my_pipe += PipelineElement.create('pca', {'n_components': pca_n_components})
 my_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': [svc_kernel]})
 
 # START HYPERPARAMETER SEARCH
-print('\n\n\n-----------------')
-print('OPTIMIZER METRIC: PRECISION\n\n\n')
+Logger().info('\n\n\n-----------------')
+Logger().info('OPTIMIZER METRIC: PRECISION\n\n\n')
 my_pipe.fit(X, y)
-print(my_pipe.test_performances)
+Logger().info(my_pipe.test_performances)
