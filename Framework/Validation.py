@@ -9,6 +9,8 @@ from Helpers.TFUtilities import one_hot_to_binary
 from Logging.Logger import Logger
 from .ResultLogging import ResultLogging, OutputMetric, FoldMetrics, FoldTupel, Configuration
 
+import traceback
+
 
 class TestPipeline(object):
 
@@ -98,7 +100,9 @@ class TestPipeline(object):
             except Exception as e:
                 # Todo: Logging!
                 # Logger().error(e)
-                print(e)
+                traceback.print_exc()
+                # print(e)
+                config_item.config_failed = True
                 warnings.warn('One test iteration of pipeline failed with error')
 
             # cv_scores.append(fit_and_predict_score)
