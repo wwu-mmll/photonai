@@ -13,8 +13,8 @@ class SmoothImgs(BaseEstimator):
         self.fwhr = fwhr
         self.output_img = output_img
 
-    def fit(self):
-        pass
+    def fit(self, X, y):
+        return self
 
     def transform(self, X, y=None):
         print('Smoothing data with ' + str(self.fwhr))
@@ -41,8 +41,8 @@ class ResamplingImgs(BaseEstimator):
         self.voxel_size = voxel_size
         self.output_img = output_img
 
-    def fit(self):
-        pass
+    def fit(self, X, y):
+        self
 
     def transform(self, X, y=None):
         from nilearn.image import resample_img

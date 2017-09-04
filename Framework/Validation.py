@@ -98,6 +98,7 @@ class TestPipeline(object):
             except Exception as e:
                 # Todo: Logging!
                 # Logger().error(e)
+                print(e)
                 warnings.warn('One test iteration of pipeline failed with error')
 
             # cv_scores.append(fit_and_predict_score)

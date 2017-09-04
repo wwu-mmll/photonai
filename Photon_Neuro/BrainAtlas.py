@@ -76,8 +76,8 @@ class BrainAtlas(BaseEstimator):
         self.box_shape = []
         self.gotData = False
 
-    def fit(self):
-        pass
+    def fit(self, X, y):
+        self
 
     def transform(self, X, y=None):
         extract_mode = self.extract_mode
