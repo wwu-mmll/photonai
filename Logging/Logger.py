@@ -2,6 +2,7 @@ import datetime
 import inspect
 from enum import Enum
 from functools import total_ordering
+from Framework import PhotonConf
 
 
 """ Logging is a simple way to emit and store logs.
@@ -62,6 +63,9 @@ class Singleton:
 class Logger:
 
     def __init__(self):
+        # load configuration
+        conf = PhotonConf
+        logging_conf = conf.conf['LOGGING']
 
         # handle multiple instances of hyperpipe
         self.loggers = []
@@ -70,14 +74,16 @@ class Logger:
         # Set default LogLevel
         # Should be LogLevel.WARN!
         # Is LogLevel.DEBUG now only for testing purposes
-        self._log_level = self.LogLevel.INFO
+        self.log_level_console = self.LogLevel.INFO
+        self.log_level_slack = self.LogLevel.INFO
+        self.log_level_file = self.LogLevel.INFO
 
         # Should the log also be printed to the console?
         # Recommendation: Set to True during development, false in production-environment
-        self._print_to_console = True
-        self._print_to_slack = False
-        self._print_to_txt = True
-        self._logfile_name = 'phot on.log'
+        self._print_to_console = logging_conf['print_to_console']
+        self._print_to_slack = logging_conf['print_to_slack']
+        self._print_to_file = logging_conf['print_to_file']
+        self._logfile_name = logging_conf['logfile_name']
         with open(self._logfile_name, "w") as text_file:
             text_file.write('PHOTON LOGFILE - ' + str(datetime.datetime.utcnow()))
 
@@ -86,11 +92,6 @@ class Logger:
 
     def set_print_to_slack(self, status: bool):
         self._print_to_console = status
-
-
-    def set_log_level(self, level):
-        """" Use this method to change the log level. """
-        self._log_level = level
 
     def set_verbosity(self, verbose=0):
         """ Use this method to change the log level from verbosity attribute of hyperpipe. """
@@ -146,14 +147,13 @@ class Logger:
 
         if self._print_to_console:
             self._print_entry(entry)
-        if self._print_to_txt:
+        if self._print_to_file:
             self._write_to_file(entry)
         if self._print_to_slack:
             self._send_to_slack(entry)
 
     def _send_to_slack(self, entry: dict):
         from slackclient import SlackClient
-        from os import environ
 
         slack_token = "xoxp-113254200629-113099992147-232630779537-e7947c07faa87ab4567cdb8d6719b81c"
 
