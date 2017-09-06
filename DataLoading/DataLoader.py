@@ -93,7 +93,8 @@ class NiiLoader(object):
         return data
 
 
-    def get_filenames(self, directory):
+    @staticmethod
+    def get_filenames(directory):
         filenames = []
         for file in os.listdir(directory):
             if file.endswith(".nii"):

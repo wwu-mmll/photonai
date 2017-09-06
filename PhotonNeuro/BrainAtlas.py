@@ -202,7 +202,8 @@ class BrainAtlas(BaseEstimator):
 
         return rois
 
-    def _getBox(self, in_imgs, roi):
+    @staticmethod
+    def _getBox(in_imgs, roi):
         # get ROI infos
         map = roi.get_data()
         true_points = np.argwhere(map)
@@ -251,7 +252,7 @@ class BrainAtlas(BaseEstimator):
 
     def getInfo(self):
         print('\nAtlas Name: ' + self.atlas_name)
-        if self.gotData == False:
+        if not self.gotData:
             print('#ROIs: ' + str(len(np.unique(self.indices))))
             print('#\tROI Index\tROI Label\tROI Size')
             for i in range(len(self.indices)):
@@ -259,7 +260,7 @@ class BrainAtlas(BaseEstimator):
                     self.roi_sizes[i]))
         else:
             print('#ROIs applied: ' + str(len(self.indices_applied)))
-            if self.box_shape == []:
+            if not self.box_shape:
                 print('#\tROI Index\tROI Label\tROI Size')
                 for i in range(len(self.indices_applied)):
                     print(str(i + 1) + '\t' + str(self.indices_applied[i]) + '\t' + self.labels_applied[i] + '\t' + str(

@@ -90,7 +90,8 @@ class PyESNWrapper():
             # u = data[trainLen + t + 1]
         return Y
 
-    def add_bias_unit(self, u):
+    @staticmethod
+    def add_bias_unit(u):
         return np.insert(u, 0, 1)
 
     def calculate_state(self, bias_u):

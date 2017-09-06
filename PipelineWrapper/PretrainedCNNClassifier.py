@@ -143,7 +143,8 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
 
         return model
 
-    def dense_to_one_hot(self, labels_dense, num_classes):
+    @staticmethod
+    def dense_to_one_hot(labels_dense, num_classes):
         """Convert class labels from scalars to one-hot vectors."""
         num_labels = labels_dense.shape[0]
         index_offset = np.arange(num_labels) * num_classes

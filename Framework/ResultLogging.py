@@ -1,10 +1,9 @@
 import csv
 import os
 from collections import OrderedDict
+from enum import Enum
 
 import numpy as np
-from enum import Enum
-from functools import total_ordering
 
 
 class OutputMetric:

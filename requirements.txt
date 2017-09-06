@@ -1,3 +1,4 @@
+
 ###### Requirements without Version Specifiers ######
 numpy
 matplotlib
@@ -7,3 +8,9 @@ progressbar2
 Pillow
 scikit-learn
 keras
+nilearn
+pandas
+python-qt5
+nibabel
+pandas
+six

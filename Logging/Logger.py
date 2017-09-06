@@ -171,7 +171,8 @@ class Logger:
             text="{}: {}".format(entry['log_type'], entry['message'])
         )
 
-    def _print_entry(self, entry: dict):
+    @staticmethod
+    def _print_entry(entry: dict):
         date_str = entry['logged_date'].strftime("%Y-%m-%d %H:%M:%S")
         print("{0} UTC - {1}: {2}".format(date_str, entry['log_type'], entry['message']))
 
@@ -180,12 +181,12 @@ class Logger:
             text_file.write('\n')
             text_file.write(str(entry['message']))
 
-    def _generate_log_entry(self, message: str, log_type: str):
+    @staticmethod
+    def _generate_log_entry(message: str, log_type: str):
         """Todo: Get current user from user-service and add username to log_entry"""
-        log_entry = {}
-        log_entry['log_type'] = log_type
-        log_entry['logged_date'] = datetime.datetime.utcnow()
-        log_entry['message'] = message
+        log_entry = {'log_type': log_type,
+                     'logged_date': datetime.datetime.utcnow(),
+                     'message': message}
         if (inspect.stack()[3][3]):
             # If the call stack is changed the first array selector has to be changed
             log_entry['called_by'] = inspect.stack()[3][3]

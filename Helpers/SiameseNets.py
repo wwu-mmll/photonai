@@ -185,7 +185,7 @@ def create_base_dnn_classif(input_size, layer_sizes=[], actFunc = 'relu', learni
                 model.add(Dense(dim, kernel_initializer=weight_initializer,kernel_regularizer=regularizers.l2(l2),
                 activity_regularizer=regularizers.l1(l1)))
         
-        if batch_normalization == True:
+        if batch_normalization:
             model.add(BatchNormalization())
         with tf.device(gpu_device):
             if actFunc == 'prelu':

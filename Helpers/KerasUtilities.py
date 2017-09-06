@@ -71,7 +71,7 @@ def create_model_classif(input_size, n_classes, layer_sizes=[], actFunc = 'relu'
             else:
                 model.add(Dense(dim, kernel_initializer='uniform'))
         
-        if batch_normalization == True:
+        if batch_normalization:
             model.add(BatchNormalization())
         with tf.device(gpu_device):
             if actFunc == 'prelu':

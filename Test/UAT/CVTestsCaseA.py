@@ -94,8 +94,8 @@ class CVTestsCaseA(unittest.TestCase):
 
             tmp_counter += 1
 
-
-    def score(self, estimator, X, y_true):
+    @staticmethod
+    def score(estimator, X, y_true):
         default_score = estimator.score(X, y_true)
         return default_score
 

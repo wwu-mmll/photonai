@@ -93,7 +93,7 @@ for param_name in sorted(gs_params.keys()):
 y_test = grid_search.predict(test_data)
 print(classification_report(y_test, test_labels))
 
-print("Best gradient descent: %.0.3f" % grid_search.best_estimator_.named_steps['dnn'].gd_alpha)
+print("Best gradient descent: %ds.0.3f" % grid_search.best_estimator_.named_steps['dnn'].gd_alpha)
 
 plt.axvline(grid_search.best_estimator_.named_steps['pca'].n_components,
             linestyle=':', label='n_components chosen')
