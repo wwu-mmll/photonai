@@ -41,6 +41,8 @@ class Hyperpipe(BaseEstimator):
         #    into the test set --> thus we can evaluate more hp configs
         #    later without double dipping
 
+        self.fit_duration = 0
+        self.fold_list = []
         self.name = name
         self.hyperparameter_specific_config_cv_object = hyperparameter_specific_config_cv_object
         self.cv_iter = None
@@ -361,9 +363,6 @@ class Hyperpipe(BaseEstimator):
                         best_config_item = Configuration(self.best_config)
                         best_config_item.children_configs = self.best_children_config
 
-                        self.fold_list = []
-                        self.fit_duration = 0
-
                         # inform user
                         Logger().info(
                     '********************************************************************************\n'
@@ -531,8 +530,7 @@ class Hyperpipe(BaseEstimator):
         self.pipe = Pipeline(pipeline_steps)
 
     def optimize_printing(self, config):
-        prettified_config = []
-        prettified_config.append(self.name + '\n')
+        prettified_config = [self.name + '\n']
         for el_key, el_value in config.items():
             items = el_key.split('__')
             name = items[0]
@@ -546,7 +544,8 @@ class Hyperpipe(BaseEstimator):
                 raise ValueError('Item is not contained in pipeline:' + name)
         return ''.join(prettified_config)
 
-    def prettify_config_output(self, config_name, config_value):
+    @staticmethod
+    def prettify_config_output(config_name, config_value):
         if config_name == "disabled" and config_value is False:
             return "enabled = True"
         else:
@@ -879,7 +878,8 @@ class PipelineSwitch(PipelineElement):
     #     obj.pipeline_element_list = pipeline_element_list
     #     return obj
 
-    def __init__(self, name, pipeline_element_list):
+    def __init__(self, name, pipeline_element_list, base_element, hyperparameters: dict):
+        super().__init__(name, base_element, hyperparameters)
         self.name = name
         self._sklearn_curr_element = self.name + '__current_element'
         # Todo: disable switch?

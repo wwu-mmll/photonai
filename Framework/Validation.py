@@ -1,4 +1,5 @@
 import time
+import traceback
 import warnings
 from collections import OrderedDict
 
@@ -8,8 +9,6 @@ import numpy as np
 from Helpers.TFUtilities import one_hot_to_binary
 from Logging.Logger import Logger
 from .ResultLogging import ResultLogging, OutputMetric, FoldMetrics, FoldTupel, Configuration
-
-import traceback
 
 
 class TestPipeline(object):

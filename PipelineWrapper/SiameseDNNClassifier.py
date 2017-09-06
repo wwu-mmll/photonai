@@ -151,15 +151,18 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
 
         return model
 
-    def euclidean_distance(self, vects):
+    @staticmethod
+    def euclidean_distance(vects):
         x, y = vects
         return K.sqrt(K.maximum(K.sum(K.square(x - y), axis=1, keepdims=True), K.epsilon()))
 
-    def eucl_dist_output_shape(self, shapes):
+    @staticmethod
+    def eucl_dist_output_shape(shapes):
         shape1, shape2 = shapes
         return (shape1[0], 1)
 
-    def contrastive_loss(self, y_true, y_pred):
+    @staticmethod
+    def contrastive_loss(y_true, y_pred):
         '''Contrastive loss from Hadsell-et-al.'06
         http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
         '''
@@ -198,13 +201,15 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         seq.add(Activation(self.act_func))
         return seq
 
-    def compute_accuracy(self, predictions, labels):
+    @staticmethod
+    def compute_accuracy(predictions, labels):
         '''Compute classification accuracy with a fixed threshold on distances.
         '''
 
         return labels[predictions.ravel() < 0.5].mean()
 
-    def dense_to_one_hot(self, labels_dense, num_classes):
+    @staticmethod
+    def dense_to_one_hot(labels_dense, num_classes):
         """Convert class labels from scalars to one-hot vectors."""
         num_labels = labels_dense.shape[0]
         index_offset = np.arange(num_labels) * num_classes
@@ -243,7 +248,8 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
             labels += [1, 0]
         return np.array(pairs), np.array(labels)
 
-    def draw_pos_pairs(self, indices, n_pairs_per_subject):
+    @staticmethod
+    def draw_pos_pairs(indices, n_pairs_per_subject):
         pairs = []
         for ind_lists in range(len(indices)):
             a = indices[ind_lists]
@@ -255,7 +261,8 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
                     pairs.append([p1, p2])
         return pairs
 
-    def draw_neg_pairs(self, indices, n_pairs_per_subject):
+    @staticmethod
+    def draw_neg_pairs(indices, n_pairs_per_subject):
         pairs = []
         n_classes = len(indices)
         n_subs = len(indices[0])

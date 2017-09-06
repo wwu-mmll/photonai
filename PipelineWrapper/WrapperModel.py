@@ -14,7 +14,8 @@ class WrapperModel(BaseEstimator, ClassifierMixin):
         print('Hello from Wrapper Model. fitting with current learning_rate:', self.learning_rate)
         return self
 
-    def transform(self, data):
+    @staticmethod
+    def transform(data):
         return data
 
     # def predict(self, data):
