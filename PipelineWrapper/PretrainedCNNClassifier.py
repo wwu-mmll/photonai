@@ -33,6 +33,9 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
         self.batch_size = batch_size
         self.ckpt_name = ckpt_name
 
+    def post_fit(self):
+        return {all_metrics_collected}
+
     def fit(self, X, y):
 
         # prepare target values

@@ -1,34 +1,24 @@
 import csv
 import os
-from collections import OrderedDict
 from enum import Enum
-
 import numpy as np
-
-
-class OutputMetric:
-
-    # type may be epoch performance or model performance
-    def __init__(self, name, value, output_type="model_performance"):
-        self.output_type = output_type
-        self.name = name
-        self.value = value
-
-    def to_dict(self):
-        return {self.name: self.value}
 
 
 class FoldMetrics:
 
     def __init__(self):
-        self.metrics = []
+        self.metrics = {}
         self.score_duration = 0
+        self.y_true = []
+        self.y_predicted = []
 
     def to_dict(self):
         base_dict = {'score_duration': self.score_duration}
-        for item in self.metrics:
-            base_dict = {**base_dict, **item.to_dict()}
-        return base_dict
+        return {**base_dict, **self.metrics}
+
+    def roc_curve(self):
+        from sklearn.metrics import roc_curve
+        fpr, tpr, thresholds = roc_curve(self.y_true, self.y_predicted)
 
 
 class FoldTupel:
@@ -41,31 +31,72 @@ class FoldTupel:
         self.number_samples_test = 0
 
     def to_dict(self):
-        reference_to_train = ""
-        reference_to_test = ""
-        if isinstance(self.train, MasterElement):
-            reference_to_train = self.train.name
-            reference_to_test = self.test.name
 
-        return {'fold_id': self.fold_id,
-                'nr_samples_train': self.number_samples_train,
-                'nr_samples_test': self.number_samples_test,
-                'train_reference_to': reference_to_train,
-                'test_reference_to': reference_to_test}
+        # Todo: Ugly bitch
+        fold_name = 'inner_fold_id'
+        nr_samples = 'nr_samples_inner'
+        if isinstance(self.train, MasterElement):
+            fold_name = 'outer_fold_id'
+            nr_samples = 'nr_samples_outer'
+
+        return {fold_name: self.fold_id,
+                nr_samples + '_train': self.number_samples_train,
+                nr_samples + '_test': self.number_samples_test}
+
+
+class MetricOperations:
+
+    OPERATION_DICT = {'mean': np.mean, 'std': np.std}
+
+    def __init__(self, operation_name: str, metric_name: str, value_list: list):
+        self.operation_name = operation_name
+        self.metric_name = metric_name
+        self.value = None
+        if operation_name in MetricOperations.OPERATION_DICT:
+            self.value = MetricOperations.OPERATION_DICT[operation_name](value_list)
+        else:
+            raise KeyError('Could not find function for processing metrics across folds:' + operation_name)
+
+
+class MetricOperationList:
+
+    def __init__(self):
+        self.processed_metrics = []
+
+    def get_metric(self, operation, name):
+        for item in self.processed_metrics:
+            if item.operation_name == operation and item.metric_name == name:
+                return item.value
 
 
 class Configuration:
 
-    def __init__(self, config_dict):
-        self.config_dict = config_dict
-        self.children_configs = {}
+    def __init__(self, me_type, config_dict={}):
+
         self.fold_list = []
         self.fit_duration = 0
-        self.config_failed = False
+        self.me_type = me_type
+        self.config_nr = -1
+
+        if not self.me_type == MasterElementType.ROOT:
+            self.config_dict = config_dict
+            self.children_configs = {}
+            self.config_failed = False
+            self.config_error = ''
+
+        if self.me_type == MasterElementType.TRAIN:
+            self.fold_metrics_train = None
+            self.fold_metrics_test = None
 
     def to_dict(self):
-        output_config_dict = {'fit_duration': self.fit_duration}
-        return {**output_config_dict, **self.config_dict, **self.children_configs}
+        fit_name = 'config_fit_duration'
+        if self.me_type == MasterElementType.ROOT:
+            fit_name = 'hyperparameter_search_duration'
+            return {fit_name: self.fit_duration}
+        else:
+            output_config_dict = {fit_name: self.fit_duration, 'fail': self.config_failed,
+                                  'error_message': self.config_error}
+            return {**output_config_dict, **self.config_dict, **self.children_configs}
 
 
 class MasterElementType(Enum):
@@ -81,8 +112,13 @@ class MasterElement:
         self.me_type = me_type
         self.config_list = []
 
-        self._header_list = []
-        self._first_write = True
+
+    def to_dict(self):
+        if self.me_type == MasterElementType.ROOT:
+            return {'hyperpipe': self.name}
+        else:
+            return {'name': self.name}
+
 
     '''
         *****************
@@ -136,14 +172,16 @@ class MasterElement:
     def print_csv_file(self, filename):
 
         write_to_csv_list = self.create_csv_rows(self.name)
+        if len(write_to_csv_list) > 0:
+            header_list = write_to_csv_list[0].keys()
 
-        import csv
-        with open(filename, 'w') as csvfile:
-            writer = csv.DictWriter(csvfile, fieldnames=self._header_list)
-            writer.writeheader()
-            writer.writerows(write_to_csv_list)
+            import csv
+            with open(filename, 'w') as csvfile:
+                writer = csv.DictWriter(csvfile, fieldnames=header_list)
+                writer.writeheader()
+                writer.writerows(write_to_csv_list)
 
-    def create_csv_rows(self, master_element_name, first_level_item=False):
+    def create_csv_rows(self, master_element_name):
 
         output_lines = []
         output_dict = {'master_element': master_element_name}
@@ -152,22 +190,15 @@ class MasterElement:
                 common_dict = {**output_dict, **self.to_dict(), **config_item.to_dict(), **fold.to_dict()}
 
                 if isinstance(fold.train, MasterElement):
-                    output_lines.append(common_dict)
 
-                    # Todo: get headers more prettily?
-                    output_lines.extend(fold.train.create_csv_rows(master_element_name, first_level_item=True))
-                    self._header_list = fold.train._header_list
-
-                    output_lines.extend(fold.test.create_csv_rows(master_element_name))
+                    output_lines_train = fold.train.create_csv_rows(master_element_name)
+                    output_lines_test = fold.test.create_csv_rows(master_element_name)
+                    output_lines.extend([{**common_dict, **train_line} for train_line in output_lines_train])
+                    output_lines.extend([{**common_dict, **test_line} for test_line in output_lines_test])
 
                 elif isinstance(fold.train, FoldMetrics):
                     train_dict = {**common_dict, **fold.train.to_dict()}
                     test_dict = {**common_dict, **fold.test.to_dict()}
-
-                    if self._first_write and first_level_item:
-                        self._first_write = False
-                        self._header_list = list(train_dict.keys())
-
                     output_lines.append(train_dict)
                     output_lines.append(test_dict)
 
