@@ -26,9 +26,9 @@ def eucl_dist_output_shape(shapes):
 
 
 def contrastive_loss(y_true, y_pred):
-    '''Contrastive loss from Hadsell-et-al.'06
+    """Contrastive loss from Hadsell-et-al.'06
     http://yann.lecun.com/exdb/publis/pdf/hadsell-chopra-lecun-06.pdf
-    '''
+    """
     margin = 1
     return K.mean(y_true * K.square(y_pred) +
                   (1 - y_true) * K.square(
@@ -37,9 +37,9 @@ def contrastive_loss(y_true, y_pred):
 
 # ensures every subject is present the same number of times
 def create_pairs(x, digit_indices, n_pairs_per_subject):
-    '''Positive and negative pair creation.
+    """Positive and negative pair creation.
     Alternates between positive and negative pairs.
-    '''
+    """
     # x: data, digit_indices: lists of indices of subjects in class1 and class2, respectively
 
     n_sample_pairs = 2 * n_pairs_per_subject * len(digit_indices[0]) * 2
@@ -96,8 +96,8 @@ def draw_neg_pairs(indices, n_pairs_per_subject):
 
 
 def create_base_network(input_dim, actFunc):
-    '''Base network to be shared (eq. to feature extraction).
-    '''
+    """Base network to be shared (eq. to feature extraction).
+    """
     seq = Sequential()
     seq.add(Dense(10, input_shape=(input_dim,), activation=actFunc))
     # seq.add(Dropout(0.6))
@@ -106,8 +106,8 @@ def create_base_network(input_dim, actFunc):
 
 
 def compute_accuracy(predictions, labels):
-    '''Compute classification accuracy with a fixed threshold on distances.
-    '''
+    """Compute classification accuracy with a fixed threshold on distances.
+    """
     return np.mean(np.equal(predictions.ravel() < 0.5, labels))
 
 def acc_t(y_true, y_pred):
