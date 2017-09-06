@@ -33,8 +33,8 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         # SET UP HYPERPIPE
         my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                             metrics=['accuracy', 'precision', 'f1_score'],
-                            hyperparameter_specific_config_cv_object=KFold(n_splits=2, random_state=3),
-                            hyperparameter_search_cv_object=KFold(n_splits=3, random_state=3),
+                            inner_cv=KFold(n_splits=2, random_state=3),
+                            outer_cv=KFold(n_splits=3, random_state=3),
                             eval_final_performance=True)
 
         my_pipe.add(PipelineElement.create('standard_scaler'))

@@ -17,7 +17,7 @@ manager = Hyperpipe('outer_man', KFold(n_splits=3), metrics=['accuracy'])
 # test a speficic config with KFOld(n_splits=2)
 # test the complete hyperparameter search with KFold(n_splits=3)
 manager = Hyperpipe('outer_man', KFold(n_splits=2), metrics=['accuracy'],
-                    hyperparameter_search_cv_object=KFold(n_splits=3))
+                    outer_cv=KFold(n_splits=3))
 
 # OPTION 3:
 # if you want no splitting at all, use:

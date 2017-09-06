@@ -12,8 +12,8 @@ y = dataset.target
 # SET UP HYPERPIPE
 my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={},
                     metrics=['accuracy', 'precision'],
-                    hyperparameter_specific_config_cv_object=KFold(n_splits=3),
-                    hyperparameter_search_cv_object=KFold(n_splits=3))
+                    inner_cv=KFold(n_splits=3),
+                    outer_cv=KFold(n_splits=3))
 
 my_pipe += PipelineElement.create('standard_scaler', test_disabled=True)
 my_pipe.add(PipelineElement.create('pca', {'n_components': [1, 2]}, test_disabled=True, whiten=False))

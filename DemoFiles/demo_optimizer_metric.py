@@ -17,8 +17,8 @@ svc_kernel = "rbf"
 # SET UP HYPERPIPE and choose accuracy as optimizer metric
 my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={},
                     metrics=['accuracy', 'precision', 'f1_score'],
-                    hyperparameter_specific_config_cv_object=KFold(n_splits=3),
-                    hyperparameter_search_cv_object=KFold(n_splits=3),
+                    inner_cv=KFold(n_splits=3),
+                    outer_cv=KFold(n_splits=3),
                     eval_final_performance = True,
                     best_config_metric='accuracy', verbose=2)
 
@@ -34,8 +34,8 @@ my_pipe.fit(X, y)
 # SET UP HYPERPIPE and choose precision as optimizer metric
 my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={},
                     metrics=['accuracy', 'precision', 'f1_score'],
-                    hyperparameter_specific_config_cv_object=KFold(n_splits=3),
-                    hyperparameter_search_cv_object=KFold(n_splits=3),
+                    inner_cv=KFold(n_splits=3),
+                    outer_cv=KFold(n_splits=3),
                     eval_final_performance = True,
                     best_config_metric='mean_squared_error')
 

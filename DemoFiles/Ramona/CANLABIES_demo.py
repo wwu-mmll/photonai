@@ -14,8 +14,8 @@ print(np.sum(y)/len(y))
 # BUILD PIPELINE
 manager = Hyperpipe('test_manager',
                     optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
-                    hyperparameter_search_cv_object=ShuffleSplit(test_size=0.2, n_splits=3),
-                    hyperparameter_specific_config_cv_object=KFold(n_splits=3, shuffle=True),
+                    outer_cv=ShuffleSplit(test_size=0.2, n_splits=3),
+                    inner_cv=KFold(n_splits=3, shuffle=True),
                     metrics=['accuracy', 'precision', 'recall'], logging=True, eval_final_performance=True)
 
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))

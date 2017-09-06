@@ -36,17 +36,17 @@ class CVTestCaseC2(unittest.TestCase):
         # SET UP HYPERPIPE
 
         outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
-                               metrics=['accuracy'],hyperparameter_specific_config_cv_object=
+                               metrics=['accuracy'], inner_cv=
                                ShuffleSplit(n_splits=1,test_size=0.2, random_state=3),
-                               hyperparameter_search_cv_object=
+                               outer_cv=
                                ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
                                eval_final_performance=True)
 
         # Create pipe for first data source
         pipe_source_1 = Hyperpipe('source_1', optimizer='grid_search',
-                               hyperparameter_specific_config_cv_object=
+                                  inner_cv=
                                ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
-                               eval_final_performance=False)
+                                  eval_final_performance=False)
 
         pipe_source_1.add(PipelineElement.create('SourceSplitter',{'column_indices': [np.arange(0,10)]}))
         pipe_source_1.add(PipelineElement.create('pca',{'n_components': pca_n_components}))
@@ -54,10 +54,10 @@ class CVTestCaseC2(unittest.TestCase):
 
         # Create pipe for second data source
         pipe_source_2 = Hyperpipe('source_2', optimizer='grid_search',
-                                 hyperparameter_specific_config_cv_object=
+                                  inner_cv=
                                  ShuffleSplit(n_splits=1, test_size=0.2,
                                               random_state=3),
-                                 eval_final_performance=False)
+                                  eval_final_performance=False)
 
         pipe_source_2.add(PipelineElement.create('SourceSplitter',
                                                  {'column_indices': [np.arange(10, 20)]}))
@@ -67,10 +67,10 @@ class CVTestCaseC2(unittest.TestCase):
                                                         'kernel': svc_kernel}))
         # Create pipe for third data source
         pipe_source_3 = Hyperpipe('source_3', optimizer='grid_search',
-                                 hyperparameter_specific_config_cv_object=
+                                  inner_cv=
                                  ShuffleSplit(n_splits=1, test_size=0.2,
                                               random_state=3),
-                                 eval_final_performance=False)
+                                  eval_final_performance=False)
 
         pipe_source_3.add(PipelineElement.create('SourceSplitter', {
             'column_indices': [np.arange(20, 30)]}))

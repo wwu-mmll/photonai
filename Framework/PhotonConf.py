@@ -1,15 +1,15 @@
 import configparser
 from pathlib import Path
 
+
 class PhotonConf:
     configfile_path = "../configuration.ini"
 
-
-    def createDefaultConfig(self):
+    def create_default_config(self):
         self.config['LOGGING'] = {
             'print_to_console': True,
             'print_to_file': True,
-            'logfile_name' : 'photon_out.log',
+            'logfile_name': 'photon_out.log',
             'print_to_slack': False,
             'slack_token': 'enter token here!',
             'loglevel_slack': 'INFO'
@@ -26,7 +26,7 @@ class PhotonConf:
             self.config.read(self.configfile_path)
         else:
             print("Creating configuration file.")
-            self.createDefaultConfig()
+            self.create_default_config()
 
 
 ## Tests

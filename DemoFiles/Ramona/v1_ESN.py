@@ -102,8 +102,8 @@ y = X
 
 # BUILD PIPELINE
 manager = Hyperpipe('test_manager',
-                    hyperparameter_search_cv_object=ShuffleSplit(test_size=0.2, n_splits=1),
-                    hyperparameter_specific_config_cv_object=KFold(n_splits=3, shuffle=False),
+                    outer_cv=ShuffleSplit(test_size=0.2, n_splits=1),
+                    inner_cv=KFold(n_splits=3, shuffle=False),
                     metrics=['mean_squared_error'], logging=False)
 
 manager.add(PipelineElement.create('py_esn_r', hyperparameters={'reservoir_size': [100, 500, 1000],

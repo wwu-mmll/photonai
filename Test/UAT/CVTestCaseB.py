@@ -39,11 +39,11 @@ class CVTestCaseB(unittest.TestCase):
         # SET UP HYPERPIPE
         outer_pipe = Hyperpipe('outer_pipe', optimizer='grid_search',
                                metrics=['accuracy'],
-                               hyperparameter_specific_config_cv_object=cv_inner_1,
-                               hyperparameter_search_cv_object=cv_outer,
+                               inner_cv=cv_inner_1,
+                               outer_cv=cv_outer,
                                eval_final_performance=True)
         inner_pipe = Hyperpipe('pca_pipe', optimizer='grid_search',
-                               hyperparameter_specific_config_cv_object=cv_inner_2,
+                               inner_cv=cv_inner_2,
                                eval_final_performance=False)
 
         inner_pipe.add(PipelineElement.create('standard_scaler'))

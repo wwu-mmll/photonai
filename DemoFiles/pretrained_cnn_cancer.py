@@ -97,10 +97,10 @@ logger.info(
 
 #cv = KFold(n_splits=5, random_state=23)
 my_pipe = Hyperpipe('Skin Cancer VGG18 finetuning', optimizer='grid_search',
-                            metrics=['categorical_accuracy', 'f1_score', 'confusion_matrix', 'accuracy'], best_config_metric='categorical_accuracy',
-                            hyperparameter_specific_config_cv_object=cv,
-                            hyperparameter_search_cv_object=cv,
-                            eval_final_performance=True, verbose=2)
+                    metrics=['categorical_accuracy', 'f1_score', 'confusion_matrix', 'accuracy'], best_config_metric='categorical_accuracy',
+                    inner_cv=cv,
+                    outer_cv=cv,
+                    eval_final_performance=True, verbose=2)
 #my_pipe += PipelineElement.create('standard_scaler')
 my_pipe += PipelineElement.create('PretrainedCNNClassifier',
                                   {'input_shape': [(299,299,3)],'target_dimension': [2],

@@ -4,6 +4,7 @@ from nilearn.image import new_img_like
 from pathlib import Path
 from sklearn.base import BaseEstimator
 
+
 class BrainAtlas(BaseEstimator):
     def __init__(self, atlas_name=None, extract_mode='mean', whichROIs='all', background_id=0):
         # ToDo

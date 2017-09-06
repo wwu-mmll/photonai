@@ -19,8 +19,8 @@ targets = oasis_dataset.ext_vars['age'].astype(float) # age
 my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                     optimizer_params={},
                     metrics=['mean_squared_error', 'mean_absolute_error'],
-                    hyperparameter_specific_config_cv_object=KFold(n_splits=2, shuffle=True, random_state=3),
-                    hyperparameter_search_cv_object=KFold(n_splits=3, shuffle=True, random_state=3),
+                    inner_cv=KFold(n_splits=2, shuffle=True, random_state=3),
+                    outer_cv=KFold(n_splits=3, shuffle=True, random_state=3),
                     eval_final_performance=False)
 
 my_pipe += PipelineElement.create('SmoothImgs', {'fwhr': [[8, 8, 8], [12, 12, 12]]})

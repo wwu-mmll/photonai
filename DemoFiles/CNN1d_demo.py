@@ -14,7 +14,7 @@ y = dataset.target
 
 # test the complete hyperparameter search with KFold(n_splits=3)
 manager = Hyperpipe('outer_man', KFold(n_splits=2), metrics=['accuracy'],
-                    hyperparameter_search_cv_object=KFold(n_splits=3))
+                    outer_cv=KFold(n_splits=3))
 
 
 manager.add(PipelineElement.create('CNN1d', {'n_filters': [[16],[16,32]],

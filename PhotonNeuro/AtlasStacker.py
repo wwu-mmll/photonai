@@ -35,11 +35,12 @@ class AtlasStacker(BaseEstimator):
         inner_pipe_list = {}
         for i in range(len(self.rois)):
             tmp_inner_pipe = Hyperpipe(self.atlas_name + '_' + str(self.rois[i]), optimizer='grid_search',
-                                      hyperparameter_specific_config_cv_object=
+                                       inner_cv=
                                       ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
-                                      eval_final_performance=False)
+                                       eval_final_performance=False)
 
             # at first set a filter element
+
             roi_filter_element = RoiFilterElement(i)
             tmp_inner_pipe.filter_element = roi_filter_element
 
