@@ -23,11 +23,10 @@ def show_pca(X, y):
     # print('3 PCs:', np.sum(pca.explained_variance_ratio_[0:2]))
     print('PCA 3D explained_variance', np.sum(pca.explained_variance_ratio_))
     X = pca.transform(X)
-    ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=y) # cmap=plt.cm.spectral
+    ax.scatter(X[:, 0], X[:, 1], X[:, 2], c=y)  # cmap=plt.cm.spectral
 
     ax.w_xaxis.set_ticklabels([])
     ax.w_yaxis.set_ticklabels([])
     ax.w_zaxis.set_ticklabels([])
 
     plt.show()
-
