@@ -63,7 +63,6 @@ class Singleton:
 
 @Singleton
 class Logger:
-
     def __init__(self):
         # load configuration
         conf = PhotonConf()
@@ -71,7 +70,6 @@ class Logger:
 
         # handle multiple instances of hyperpipe
         self.loggers = []
-
 
         # Set default LogLevel
         # Should be LogLevel.WARN!
@@ -101,6 +99,7 @@ class Logger:
     def set_log_level(self, level):
         """" Use this method to change the log level. """
         self._log_level = level
+
     def set_verbosity(self, verbose=0):
         """ Use this method to change the log level from verbosity attribute of hyperpipe. """
         if verbose == 0:
@@ -112,42 +111,33 @@ class Logger:
         else:
             self.set_log_level(self.LogLevel.WARN)
 
-    def set_log_level(self, level):
-        """" Use this method to change the log level. """
-        self._log_level = level
-
     # Debug should be used for information that may be useful for program-debugging (most information
     # i.e. training epochs of neural nets
     def debug(self, message: str):
-        if (self._log_level <= self.LogLevel.DEBUG):
-            self._distribute_log(message,
-                                      'DEBUG')
+        if self._log_level <= self.LogLevel.DEBUG:
+            self._distribute_log(message, 'DEBUG')
 
     # Verbose should be used if something interesting (but uncritically) happened
     # i.e. every hp config that is tested
     def verbose(self, message: str):
-        if (self._log_level <= self.LogLevel.VERBOSE):
-            self._distribute_log(message,
-                                      'VERBOSE')
+        if self._log_level <= self.LogLevel.VERBOSE:
+            self._distribute_log(message, 'VERBOSE')
 
     # Info should be used if something interesting (but uncritically) happened
     # i.e. most basic info on photon hyperpipe
     def info(self, message: str):
-        if (self._log_level <= self.LogLevel.INFO):
-            self._distribute_log(message,
-                                      'INFO')
+        if self._log_level <= self.LogLevel.INFO:
+            self._distribute_log(message, 'INFO')
 
     # Something may have gone wrong? Use warning
     def warn(self, message: str):
-        if (self._log_level <= self.LogLevel.WARN):
-            self._distribute_log(message,
-                                      'WARN')
+        if self._log_level <= self.LogLevel.WARN:
+            self._distribute_log(message, 'WARN')
 
     # Something broke down. Error should be used if something unexpected happened
     def error(self, message: str):
-        if (self._log_level <= self.LogLevel.ERROR):
-            self._distribute_log(message,
-                                      'ERROR')
+        if self._log_level <= self.LogLevel.ERROR:
+            self._distribute_log(message, 'ERROR')
 
     # Takes a message and inserts it into the given collection
     # Handles possible console-logging
@@ -187,7 +177,7 @@ class Logger:
         log_entry = {'log_type': log_type,
                      'logged_date': datetime.datetime.utcnow(),
                      'message': message}
-        if (inspect.stack()[3][3]):
+        if inspect.stack()[3][3]:
             # If the call stack is changed the first array selector has to be changed
             log_entry['called_by'] = inspect.stack()[3][3]
         else:
@@ -196,8 +186,6 @@ class Logger:
         return log_entry
 
     def store_logger_names(self, name):
-        #print('Appending name ', name)
-
         return self.loggers.append(name)
 
     # Definition of LogLevels, the lower the number, the stronger the logging will be
