@@ -84,7 +84,7 @@ class PhotonRegister:
            json.dump(content2write, f)
 #           Logger().debug('Writing to ' + file_name)
 
-    def get_package_info(photon_package):
+    def get_package_info(photon_package: [str]) -> object:
         class_info = dict()
         for package in photon_package:
             content, _ = PhotonRegister.get_json(package)

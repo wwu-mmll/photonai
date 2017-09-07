@@ -29,6 +29,3 @@ class PhotonConf:
             self.create_default_config()
 
 
-## Tests
-configtest = PhotonConf()
-print(configtest.config['LOGGING']['logfile_name'])
