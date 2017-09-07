@@ -51,7 +51,8 @@ class BrainAtlas(BaseEstimator):
 
             # check if map indices correspond with indices in the labels file
             if not sorted(self.indices) == sorted(list(labels_dict.keys())):
-                print('The indices in your map image ARE NOT the same as those in your *_labels.txt! Ignoring *_labels.txt.')
+                print('The indices in y'
+                      'our map image ARE NOT the same as those in your *_labels.txt! Ignoring *_labels.txt.')
                 print('MapImage: ')
                 print(sorted(self.indices))
                 print('File: ')

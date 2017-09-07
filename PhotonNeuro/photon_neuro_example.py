@@ -26,8 +26,9 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
 my_pipe += PipelineElement.create('SmoothImgs', {'fwhr': [[8, 8, 8], [12, 12, 12]]})
 #my_pipe += PipelineElement.create('ResampeImgs', {'voxel_size': [[5, 5, 5], [10, 10, 10]], 'output_img': [False]})
 from PhotonNeuro.BrainAtlas import BrainAtlas
+atlas_info = AtlasInfo(atlas_name='AAL', rois=[2001,211], )
 
-my_pipe += PipelineElement.create('BrainAtlas', {}, atlas_name='AAL', extract_mode='vec', whichROIs=[2001, 2111])
+my_pipe += PipelineElement.create('BrainAtlas', {}, atlas=atlas_info)
 # roi_data = myAtlas.transform(X=smImg)
 tmp_atlas_stacker = AtlasStacker('AAL', [['pca', {'n_components': [3, 5]}, {}],
                                  ['svc', {'kernel': ['rbf', 'linear']}, {}]], rois=[2001, 2111])
