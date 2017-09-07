@@ -11,8 +11,9 @@ class PhotonConf:
             'print_to_file': True,
             'logfile_name': 'photon_out.log',
             'print_to_slack': False,
-            'slack_token': 'enter token here!',
-            'loglevel_slack': 'INFO'
+            'slack_token': '',
+            'loglevel_slack': 'INFO',
+            'slack_channel': '#photon-log'
         }
         with open(self.configfile_path, 'w') as configfile:
             self.config.write(configfile)

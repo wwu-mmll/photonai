@@ -85,6 +85,7 @@ class Logger:
         self._print_to_console = logging_conf['print_to_console']
         self._print_to_slack = logging_conf['print_to_slack']
         self._slack_token = logging_conf['slack_token']
+        self._slack_channel = logging_conf['slack_channel']
         self._print_to_file = logging_conf['print_to_file']
         self._logfile_name = logging_conf['logfile_name']
         with open(self._logfile_name, "w") as text_file:
@@ -153,13 +154,21 @@ class Logger:
             self._send_to_slack(entry)
 
     def _send_to_slack(self, entry: dict):
-        sc = SlackClient(self._slack_token)
+        if self._slack_token:
+            try:
+                sc = SlackClient(self._slack_token)
 
-        sc.api_call(
-            "chat.postMessage",
-            channel="#photon-log",
-            text="{}: {}".format(entry['log_type'], entry['message'])
-        )
+                sc.api_call(
+                    "chat.postMessage",
+                    channel=self._slack_channel,
+                    text="{}: {}".format(entry['log_type'], entry['message'])
+                )
+            except:
+                # Todo: catch channel not found exception
+                print("Could not print to Slack") # <- cant use Logger here because it would cause an endless loop
+                pass
+        else:
+            print('Error: No Slack Token Set')
 
     @staticmethod
     def _print_entry(entry: dict):

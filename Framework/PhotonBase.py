@@ -337,6 +337,7 @@ class Hyperpipe(BaseEstimator):
                         best_config_item_test.children_configs = best_train_config.children_configs
                         self.best_config = best_config_item_test
 
+
                         # inform user
                         Logger().info('finished optimization of ' + self.name)
                         Logger().verbose('Result\n')
@@ -352,6 +353,7 @@ class Hyperpipe(BaseEstimator):
                         self.optimum_pipe = self.pipe
                         # set self to best config
                         self.optimum_pipe.set_params(**self.best_config.config_dict)
+
                         # set all children to best config and inform to NOT optimize again, ONLY fit
                         for child_name, child_config in self.best_config.children_configs.items():
                             if child_config:
@@ -372,6 +374,7 @@ class Hyperpipe(BaseEstimator):
                         self.optimum_pipe.fit(validation_X, validation_y)
                         final_fit_duration = time.time() - fit_time_start
 
+                        self.best_config.full_model_specification = self.optimum_pipe.get_params()
                         best_config_item_test.fit_duration = final_fit_duration
                         master_item_test.config_list.append(best_config_item_test)
 
