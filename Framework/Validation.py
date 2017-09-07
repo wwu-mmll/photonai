@@ -100,6 +100,8 @@ class TestPipeline(object):
         # add default metric
         if output_metrics:
             output_metrics = {**output_metrics, **score_metrics}
+        else:
+            output_metrics = score_metrics
 
         final_scoring_time = time.time() - scoring_time_start
         score_result_object = FoldMetrics(output_metrics, final_scoring_time, y_predicted=y_pred, y_true=y_true)
@@ -203,16 +205,19 @@ class OptimizerMetric(object):
     def get_optimum_config(self, tested_configs):
         list_of_config_vals = []
 
-        for config in tested_configs:
-            list_of_config_vals.append(config.get_metric(FoldOperations.MEAN, self.metric, train=False))
+        try:
+            for config in tested_configs:
+                list_of_config_vals.append(config.get_metric(FoldOperations.MEAN, self.metric, train=False))
 
-        if self.greater_is_better:
-            # max metric
-            best_config_metric_nr = np.argmax(list_of_config_vals)
-        else:
-            # min metric
-            best_config_metric_nr = np.argmin(list_of_config_vals)
-        return tested_configs[best_config_metric_nr]
+            if self.greater_is_better:
+                # max metric
+                best_config_metric_nr = np.argmax(list_of_config_vals)
+            else:
+                # min metric
+                best_config_metric_nr = np.argmin(list_of_config_vals)
+            return tested_configs[best_config_metric_nr]
+        except BaseException as e:
+            Logger().error(str(e))
 
     def set_optimizer_metric(self, pipeline_elements):
         if isinstance(self.metric, str):

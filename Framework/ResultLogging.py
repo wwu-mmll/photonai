@@ -5,6 +5,7 @@ import numpy as np
 from functools import total_ordering
 
 
+
 class FoldMetrics:
 
     def __init__(self, metrics, score_duration, y_true, y_predicted):
@@ -17,9 +18,25 @@ class FoldMetrics:
         base_dict = {'score_duration': self.score_duration}
         return {**base_dict, **self.metrics}
 
-    def roc_curve(self):
-        from sklearn.metrics import roc_curve
+    def roc_curve(self, plot=True):
+        from sklearn.metrics import roc_curve, auc
+        import matplotlib.pyplot as plt
+
         fpr, tpr, thresholds = roc_curve(self.y_true, self.y_predicted)
+        roc_auc = auc(fpr, tpr)
+
+        plt.figure()
+        lw = 2
+        plt.plot(fpr, tpr, color='darkorange',
+                 lw=lw, label='ROC curve (area = %0.2f)' % roc_auc)
+        plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+        plt.xlim([0.0, 1.0])
+        plt.ylim([0.0, 1.05])
+        plt.xlabel('False Positive Rate')
+        plt.ylabel('True Positive Rate')
+        plt.title('Receiver operating characteristic example')
+        plt.legend(loc="lower right")
+        plt.show()
 
 
 class FoldTupel:
@@ -49,6 +66,7 @@ class FoldOperations(Enum):
     MEAN = 0
     STD = 1
 
+
 class FoldMetric:
 
     OPERATION_DICT = {FoldOperations.MEAN: np.mean, FoldOperations.STD: np.std}
@@ -75,13 +93,14 @@ class Configuration:
         self.fit_duration = 0
         self.me_type = me_type
         self.config_nr = -1
-        self.full_model_specification = None
+
 
         if self.me_type > MasterElementType.OUTER_TRAIN:
             self.config_dict = config_dict
             self.children_configs = {}
             self.config_failed = False
             self.config_error = ''
+            self.full_model_specification = None
 
         if self.me_type == MasterElementType.OUTER_TRAIN or self.me_type == MasterElementType.INNER_TRAIN:
             self.fold_metrics_train = []
@@ -106,10 +125,12 @@ class Configuration:
                 for op in operations:
                     value_list_train = [fold.train.metrics[metric_item] for fold in self.fold_list
                                         if metric_item in fold.train.metrics]
-                    self.fold_metrics_train.append(FoldMetric(op, metric_item, FoldMetric.calculate_metric(op, value_list_train)))
+                    if value_list_train:
+                        self.fold_metrics_train.append(FoldMetric(op, metric_item, FoldMetric.calculate_metric(op, value_list_train)))
                     value_list_test = [fold.test.metrics[metric_item] for fold in self.fold_list
                                        if metric_item in fold.test.metrics]
-                    self.fold_metrics_test.append(FoldMetric(op, metric_item, FoldMetric.calculate_metric(op, value_list_test)))
+                    if value_list_test:
+                        self.fold_metrics_test.append(FoldMetric(op, metric_item, FoldMetric.calculate_metric(op, value_list_test)))
         else:
             # Todo: calculate metrics for outer folds
             pass
@@ -163,6 +184,24 @@ class MasterElement:
                 writer = csv.DictWriter(csv_file, fieldnames=header_list)
                 writer.writeheader()
                 writer.writerows(write_to_csv_list)
+
+    def get_best_config_for(self, outer_cv_fold):
+        # Todo: Try Catch? -> Photon REsult Tree Exception
+        if self.me_type == MasterElementType.ROOT:
+            return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0]
+
+    def get_best_config_performance_for(self, outer_cv_fold, train_data=False):
+        # Todo: Try Catch?
+        if self.me_type == MasterElementType.ROOT:
+            if train_data:
+                return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0].fold_list[0].train
+            else:
+                return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0].fold_list[0].test
+
+    def get_tested_configurations_for(self, outer_cv_fold):
+        # Todo: Try Catch?
+        if self.me_type == MasterElementType.ROOT:
+            return self.config_list[0].fold_list[outer_cv_fold].train.config_list
 
     def create_csv_rows(self, master_element_name):
 
