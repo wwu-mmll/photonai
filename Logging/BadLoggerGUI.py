@@ -62,20 +62,16 @@ if __name__ == "__main__":
     for w in sortedArray:
         add_doc_to_list(w)
 
-
-
     """ Observer and add new logs from oplog """
 
     def add_log(oplog_doc):
         doc = oplog_doc["o"]
         add_doc_to_list(doc)
 
+
     Trigger.subscribe_to_collection('photon_manager_db.debug_log', add_log, Operation.INSERT)
     Trigger.subscribe_to_collection('photon_manager_db.info_log', add_log, Operation.INSERT)
     Trigger.subscribe_to_collection('photon_manager_db.warn_log', add_log, Operation.INSERT)
     Trigger.subscribe_to_collection('photon_manager_db.error_log', add_log, Operation.INSERT)
-
-
-
 
     sys.exit(app.exec_())
