@@ -1,5 +1,6 @@
 from Framework.PhotonBase import PipelineElement, Hyperpipe
-from PhotonNeuro.AtlasStacker import AtlasStacker
+from PhotonNeuro.BrainAtlas import  BrainAtlas
+from PhotonNeuro.AtlasStacker import AtlasStacker, AtlasInfo
 from sklearn.model_selection import KFold
 
 # get oasis gm data and age from nilearn
@@ -15,6 +16,8 @@ targets = oasis_dataset.ext_vars['age'].astype(float) # age
 # dataset_files = dataset.data
 # targets = dataset.target
 
+print(BrainAtlas._getAtlasDict())
+
 # setup photon HP
 my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                     optimizer_params={},
@@ -23,15 +26,12 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                     outer_cv=KFold(n_splits=3, shuffle=True, random_state=3),
                     eval_final_performance=False)
 
-my_pipe += PipelineElement.create('SmoothImgs', {'fwhr': [[8, 8, 8], [12, 12, 12]]})
-#my_pipe += PipelineElement.create('ResampeImgs', {'voxel_size': [[5, 5, 5], [10, 10, 10]], 'output_img': [False]})
-from PhotonNeuro.BrainAtlas import BrainAtlas
-atlas_info = AtlasInfo(atlas_name='AAL', rois=[2001,211], )
+# my_pipe += PipelineElement.create('SmoothImgs', {'fwhr': [[8, 8, 8], [12, 12, 12]]})
+# my_pipe += PipelineElement.create('ResampleImgs', {'voxel_size': [[5, 5, 5]]})
 
-my_pipe += PipelineElement.create('BrainAtlas', {}, atlas=atlas_info)
-# roi_data = myAtlas.transform(X=smImg)
-tmp_atlas_stacker = AtlasStacker('AAL', [['pca', {'n_components': [3, 5]}, {}],
-                                 ['svc', {'kernel': ['rbf', 'linear']}, {}]], rois=[2001, 2111])
+atlas_info = AtlasInfo(atlas_name='HarvardOxford-cort-maxprob-thr25', roi_names='all', extraction_mode='vec')
+my_pipe += PipelineElement.create('BrainAtlas', {}, atlas_info_object=atlas_info)
+tmp_atlas_stacker = AtlasStacker(atlas_info, [['svc', {'kernel': ['rbf', 'linear']}, {}]])
 my_pipe += PipelineElement('atlas_stacker', tmp_atlas_stacker, {})
 my_pipe += PipelineElement.create('SVR', {'kernel': ['linear', 'rbf']})
 

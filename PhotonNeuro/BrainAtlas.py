@@ -6,7 +6,8 @@ from sklearn.base import BaseEstimator
 
 
 class BrainAtlas(BaseEstimator):
-    def __init__(self, atlas_name=None, extract_mode='mean', whichROIs='all', background_id=0):
+    def __init__(self, atlas_info_object):
+
         # ToDo
         # + add-own-atlas capability
         # + get atlas infos (.getInfo('AAL'))
@@ -26,15 +27,16 @@ class BrainAtlas(BaseEstimator):
         # - add support for overlapping ROIs and probabilistic atlases using 4d-nii
         # - add support for 4d resting-state data using nilearn
 
-        self.extract_mode = extract_mode
-        self.whichROIs = whichROIs
-        self.background_id = background_id
+        self.atlas_info_object = atlas_info_object
+        self.extract_mode = atlas_info_object.extraction_mode
+        self.whichROIs = atlas_info_object.roi_names
+        self.background_id = atlas_info_object.background_id
 
         # get info about available atlases
         ATLAS_DICT, atlas_dir = BrainAtlas._getAtlasDict()
 
         # get Atlas
-        self.atlas_name = atlas_name
+        self.atlas_name = atlas_info_object.atlas_name
         self.atlas_path = ATLAS_DICT[self.atlas_name][0]
         self.map = load_img(self.atlas_path).get_data()  # get actual map data
         self.indices = list(np.unique(self.map))
@@ -164,6 +166,8 @@ class BrainAtlas(BaseEstimator):
         self.indices_applied = [k for j, k in enumerate(self.indices_applied) if j not in out_ind]
         self.labels_applied = [k for j, k in enumerate(self.labels_applied) if j not in out_ind]
 
+        self.atlas_info_object.roi_names_runtime = self.labels_applied
+
         if len(roi_data)==1:
             roi_data = roi_data[0]
 
@@ -202,6 +206,7 @@ class BrainAtlas(BaseEstimator):
                 continue
             rois.append(new_img_like(self.atlas_path, self.map == ind))
 
+        self.atlas_info_object.roi_names_runtime = self.labels_applied
         return rois
 
     @staticmethod

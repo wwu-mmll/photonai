@@ -5,7 +5,6 @@ import numpy as np
 from functools import total_ordering
 
 
-
 class FoldMetrics:
 
     def __init__(self, metrics, score_duration, y_true, y_predicted):
