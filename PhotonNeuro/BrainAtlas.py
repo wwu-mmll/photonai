@@ -84,6 +84,17 @@ class BrainAtlas(BaseEstimator):
         self
 
     def transform(self, X, y=None):
+
+        # if self.last_hash is not None:
+        #     current_hash = hash(X)
+        #     if self.last_hash == current_hash:
+        #         return self.last_transformed_X
+        #     else:
+        #         # do normal stuff
+        #         self.last_hash = current_hash
+        #         return usual_variable
+
+
         extract_mode = self.extract_mode
         whichROIs = self.whichROIs
         background_id = self.background_id

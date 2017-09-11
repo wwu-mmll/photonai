@@ -17,6 +17,7 @@ class TestPipeline(object):
         self.params = specific_config
         self.pipe = pipe
         self.metrics = metrics
+        self.raise_error = True
 
     def calculate_cv_score(self, X, y, cv_iter):
 
@@ -64,7 +65,8 @@ class TestPipeline(object):
                 config_item.fold_list.append(fold_tuple_item)
 
             except Exception as e:
-                # Todo: Logging!
+                if self.raise_error:
+                    raise e
                 Logger().error(e)
                 traceback.print_exc()
                 config_item.config_failed = True
