@@ -193,11 +193,7 @@ class Hyperpipe(BaseEstimator):
 
         # handle PhotonNeuro Imge paths as data
         # ToDo: Need to check the DATA, not the img paths for PhotonNeuro
-        # try:
         new_data_hash = sha1(self.X).hexdigest()
-        # except BaseException as e:
-        #     # new_data_hash = hash(frozenset(self.X))
-        #     new_data_hash = hash(frozenset(self.X))
 
         # fit
         # 1. if it is first time ever or
@@ -243,9 +239,7 @@ class Hyperpipe(BaseEstimator):
                     outer_fold_counter += 1
                     outer_fold_fit_start_time = time.time()
 
-                    Logger().info('*****************************************' +
-                                  '***************************************\n' +
-                                  ' HYPERPARAMETER SEARCH OF {0}, Outer Cross Validation Nr: {1}'
+                    Logger().info('HYPERPARAMETER SEARCH OF {0}, Outer Cross Validation Fold {1}'
                                   .format(self.name, outer_fold_counter))
 
                     # PhotonCore variant (for arrays)
@@ -277,9 +271,7 @@ class Hyperpipe(BaseEstimator):
 
                         self.distribute_cv_info_to_hyperpipe_children(reset=True)
                         hp = TestPipeline(self.pipe, specific_config, self.metrics)
-                        Logger().debug(
-                            '--------------------------------------------------------------------------------\n' +
-                            'optimizing of:' + self.name)
+                        Logger().debug('optimizing of:' + self.name)
                         Logger().debug(self.optimize_printing(specific_config))
                         Logger().debug('calculating...')
 
@@ -340,7 +332,7 @@ class Hyperpipe(BaseEstimator):
 
                         # inform user
                         Logger().info('finished optimization of ' + self.name)
-                        Logger().verbose('Result\n')
+                        Logger().verbose('Result')
                         Logger().verbose('Number of tested configurations:' +
                                          str(len(self.performance_history_list)))
                         Logger().verbose('Optimizer metric: ' + self.config_optimizer.metric + '\n' +
@@ -418,13 +410,9 @@ class Hyperpipe(BaseEstimator):
                 self.pipe.fit(self.X, self.y, **fit_params)
 
         else:
-            Logger().verbose('------------------------------------' +
-                             '--------------------------------------------')
             Logger().verbose("Avoided fitting of " + self.name + " on fold "
                              + str(self.current_fold) + " because data did not change")
             Logger().verbose('Best config of ' + self.name + ' : ' + str(self.best_config))
-            Logger().verbose('--------------------------------------' +
-                             '------------------------------------------')
 
         return self
 
