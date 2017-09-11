@@ -3,6 +3,7 @@ from nilearn.image import load_img
 from nilearn.image import new_img_like
 from pathlib import Path
 from sklearn.base import BaseEstimator
+from Logging import Logger
 
 
 class BrainAtlas(BaseEstimator):
@@ -121,6 +122,7 @@ class BrainAtlas(BaseEstimator):
         i = 0
         out_ind = ()
         for roi in rois:
+            # ToDo: interpolation continuous? bicubic?
             roi = image.resample_img(roi, target_affine=img.affine, target_shape=img.shape, interpolation='nearest')
 
             # check orientations
