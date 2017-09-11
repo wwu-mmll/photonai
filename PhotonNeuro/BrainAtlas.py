@@ -31,6 +31,7 @@ class BrainAtlas(BaseEstimator):
         self.extract_mode = atlas_info_object.extraction_mode
         self.whichROIs = atlas_info_object.roi_names
         self.background_id = atlas_info_object.background_id
+        self.mask_threshold = atlas_info_object.mask_threshold
 
         # get info about available atlases
         ATLAS_DICT, atlas_dir = BrainAtlas._getAtlasDict()
@@ -38,7 +39,12 @@ class BrainAtlas(BaseEstimator):
         # get Atlas
         self.atlas_name = atlas_info_object.atlas_name
         self.atlas_path = ATLAS_DICT[self.atlas_name][0]
-        self.map = load_img(self.atlas_path).get_data()  # get actual map data
+        if self.mask_threshold is None:
+            self.map = load_img(self.atlas_path).get_data()  # get actual map data
+        else:
+            self.map = load_img(self.atlas_path).get_data() > self.mask_threshold  # get actual map data with probability maps
+            self.map = self.map.astype(int)
+
         self.indices = list(np.unique(self.map))
 
         # check labels

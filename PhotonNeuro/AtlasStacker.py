@@ -23,11 +23,12 @@ class RoiFilterElement(BaseEstimator):
 
 class AtlasInfo():
 
-    def __init__(self, atlas_name, roi_names, extraction_mode='mean', background_id=0):
+    def __init__(self, atlas_name, roi_names, extraction_mode='mean', background_id=0, mask_threshold=None):
         self.atlas_name = atlas_name
         self.roi_names = roi_names
         self.extraction_mode = extraction_mode
         self.background_id = background_id
+        self.mask_threshold = mask_threshold
         self.roi_names_runtime = []
 
 

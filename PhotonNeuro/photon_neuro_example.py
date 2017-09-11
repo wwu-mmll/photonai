@@ -29,7 +29,8 @@ my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
 # my_pipe += PipelineElement.create('SmoothImgs', {'fwhr': [[8, 8, 8], [12, 12, 12]]})
 # my_pipe += PipelineElement.create('ResampleImgs', {'voxel_size': [[5, 5, 5]]})
 
-atlas_info = AtlasInfo(atlas_name='HarvardOxford-cort-maxprob-thr25', roi_names='all', extraction_mode='vec')
+#atlas_info = AtlasInfo(atlas_name='mni_icbm152_gm_tal_nlin_sym_09a', mask_threshold=.5, roi_names='all', extraction_mode='vec')
+atlas_info = AtlasInfo(atlas_name='AAL', roi_names='all', extraction_mode='vec')
 my_pipe += PipelineElement.create('BrainAtlas', {}, atlas_info_object=atlas_info)
 tmp_atlas_stacker = AtlasStacker(atlas_info, [['svc', {'kernel': ['rbf', 'linear']}, {}]])
 my_pipe += PipelineElement('atlas_stacker', tmp_atlas_stacker, {})
