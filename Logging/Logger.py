@@ -82,20 +82,21 @@ class Logger:
 
         # Should the log also be printed to the console?
         # Recommendation: Set to True during development, false in production-environment
-        self._print_to_console = logging_conf['print_to_console']
-        self._print_to_slack = logging_conf['print_to_slack']
+        self._print_to_console = logging_conf.getboolean('print_to_console')
+        self._print_to_slack = logging_conf.getboolean('print_to_slack')
         self._slack_token = logging_conf['slack_token']
         self._slack_channel = logging_conf['slack_channel']
-        self._print_to_file = logging_conf['print_to_file']
+        self._print_to_file = logging_conf.getboolean('print_to_file')
         self._logfile_name = logging_conf['logfile_name']
         with open(self._logfile_name, "w") as text_file:
             text_file.write('PHOTON LOGFILE - ' + str(datetime.datetime.utcnow()))
 
+    @staticmethod
     def set_print_to_console(self, status: bool):
         self._print_to_console = status
 
     def set_print_to_slack(self, status: bool):
-        self._print_to_console = status
+        self._print_to_slack = status
 
     def set_log_level(self, level):
         """" Use this method to change the log level. """
