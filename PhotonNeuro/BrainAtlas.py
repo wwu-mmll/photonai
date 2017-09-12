@@ -3,7 +3,7 @@ from nilearn.image import load_img
 from nilearn.image import new_img_like
 from pathlib import Path
 from sklearn.base import BaseEstimator
-from Logging import Logger
+from Logging.Logger import Logger
 
 
 class BrainAtlas(BaseEstimator):
@@ -50,7 +50,7 @@ class BrainAtlas(BaseEstimator):
 
         # check labels
         if Path(ATLAS_DICT[self.atlas_name][1]).is_file(): # if we have a file with indices and labels
-            print('Using labels from file (' + ATLAS_DICT[self.atlas_name][1] + ')')
+            Logger().info('Using labels from file (' + ATLAS_DICT[self.atlas_name][1] + ')')
             labels_dict = dict()
 
             with open(ATLAS_DICT[self.atlas_name][1]) as f:
@@ -60,12 +60,11 @@ class BrainAtlas(BaseEstimator):
 
             # check if map indices correspond with indices in the labels file
             if not sorted(self.indices) == sorted(list(labels_dict.keys())):
-                print('The indices in y'
-                      'our map image ARE NOT the same as those in your *_labels.txt! Ignoring *_labels.txt.')
-                print('MapImage: ')
-                print(sorted(self.indices))
-                print('File: ')
-                print(sorted(list(labels_dict.keys())))
+                Logger().info('The indices in map image ARE NOT the same as those in your *_labels.txt! Ignoring *_labels.txt.')
+                Logger().info('MapImage: ')
+                Logger().info(sorted(self.indices))
+                Logger().info('File: ')
+                Logger().info(sorted(list(labels_dict.keys())))
                 #self.labels = list(str(i) for i in self.indices)
                 self.labels = []
                 for i in range(len(self.indices)):
@@ -82,13 +81,13 @@ class BrainAtlas(BaseEstimator):
         # check for empty ROIs
         for i in range(len(self.roi_sizes)):
             if self.roi_sizes[i] == 0:
-                print('ROI with index ' + str(self.indices[i]) + ' and label ' + self.labels[i] + ' does not exist!')
+                Logger().info('ROI with index ' + str(self.indices[i]) + ' and label ' + self.labels[i] + ' does not exist!')
 
         self.box_shape = []
         self.gotData = False
 
     def fit(self, X, y):
-        self
+        return self
 
     def transform(self, X, y=None):
 
@@ -128,19 +127,18 @@ class BrainAtlas(BaseEstimator):
         i = 0
         out_ind = ()
         for roi in rois:
-            # ToDo: interpolation continuous? bicubic?
             roi = image.resample_img(roi, target_affine=img.affine, target_shape=img.shape, interpolation='nearest')
 
             # check orientations
             orient_roi = ''.join(nib.aff2axcodes(roi.affine))
             orient_ok = orient_roi==orient_data
             if not orient_ok:
-                print('Orientation of mask and data are not the same: ' + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
+                Logger().info('Orientation of mask and data are not the same: ' + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
                 break
 
             # handle empty ROIs
             if np.sum(roi.dataobj != 0) == 0:
-                print('No voxels in ROI (' + self.labels_applied[i] + ').')
+                Logger().info('No voxels in ROI (' + self.labels_applied[i] + ').')
                 out_ind = np.append(out_ind, i)
                 i += 1
                 continue
@@ -149,10 +147,10 @@ class BrainAtlas(BaseEstimator):
                 try:
                     single_roi = masker.fit_transform(X)
                 except BaseException as e:
-                    print(e)
+                    Logger().info(e)
 
-                self.roi_sizes_applied[i] = single_roi.size
-                print('Extracting data from ' + self.labels_applied[i] + ' (Index: '
+                self.roi_sizes_applied[i] = single_roi.shape[1]
+                Logger().info('Extracting data from ' + self.labels_applied[i] + ' (Index: '
                       + str(self.indices_applied[i]) + '; ROI Size: ' + str(self.roi_sizes_applied[i]) + ')')
                 i += 1
 
@@ -216,7 +214,7 @@ class BrainAtlas(BaseEstimator):
                 self.labels_applied = [self.labels[self.indices.index(i)] for i in self.indices_applied]
                 self.roi_sizes_applied = [self.roi_sizes[self.labels.index(i)] for i in self.labels_applied]
         else:
-            print('Pass a list of indices (ints) or ROI names (strings). Or use all via "all".')
+            Logger().info('Pass a list of indices (ints) or ROI names (strings). Or use all via "all".')
 
         # collect roi masks
         rois = []
@@ -268,36 +266,36 @@ class BrainAtlas(BaseEstimator):
     @staticmethod
     def whichAtlases():
         # get info about available atlases
-        print('\nAvailable Atlases:')
+        Logger().info('\nAvailable Atlases:')
         ATLAS_DICT, atlas_dir = BrainAtlas._getAtlasDict()
         for key in ATLAS_DICT.keys():
-            print("'" + key + "'")
-        print('\nCopy your favorite atlas as a *.gz file (e.g. myFavAtlas.nii.gz) to ' + atlas_dir + ' and enjoy.')
-        print('Add a text file containing ROI values and labels (e.g. myFavAtlas_labels.txt) to be able to use your ROI labels with Photon.')
+            Logger().info("'" + key + "'")
+        Logger().info('\nCopy your favorite atlas as a *.gz file (e.g. myFavAtlas.nii.gz) to ' + atlas_dir + ' and enjoy.')
+        Logger().info('Add a text file containing ROI values and labels (e.g. myFavAtlas_labels.txt) to be able to use your ROI labels with Photon.')
         return ATLAS_DICT.keys()
 
     def getInfo(self):
-        print('\nAtlas Name: ' + self.atlas_name)
+        Logger().info('\nAtlas Name: ' + self.atlas_name)
         if not self.gotData:
-            print('#ROIs: ' + str(len(np.unique(self.indices))))
-            print('#\tROI Index\tROI Label\tROI Size')
+            Logger().info('#ROIs: ' + str(len(np.unique(self.indices))))
+            Logger().info('#\tROI Index\tROI Label\tROI Size')
             for i in range(len(self.indices)):
-                print(str(i + 1) + '\t' + str(self.indices[i]) + '\t' + self.labels[i] + '\t' + str(
+                Logger().info(str(i + 1) + '\t' + str(self.indices[i]) + '\t' + self.labels[i] + '\t' + str(
                     self.roi_sizes[i]))
         else:
-            print('#ROIs applied: ' + str(len(self.indices_applied)))
+            Logger().info('#ROIs applied: ' + str(len(self.indices_applied)))
             if not self.box_shape:
-                print('#\tROI Index\tROI Label\tROI Size')
+                Logger().info('#\tROI Index\tROI Label\tROI Size')
                 for i in range(len(self.indices_applied)):
-                    print(str(i + 1) + '\t' + str(self.indices_applied[i]) + '\t' + self.labels_applied[i] + '\t' + str(
+                    Logger().info(str(i + 1) + '\t' + str(self.indices_applied[i]) + '\t' + self.labels_applied[i] + '\t' + str(
                         self.roi_sizes_applied[i]))
             else:
-                print('#\tROI Index\tROI Label\tROI Size\tBox Shape\tBox Size\t% ROI Voxels in Box')
+                Logger().info('#\tROI Index\tROI Label\tROI Size\tBox Shape\tBox Size\t% ROI Voxels in Box')
                 from operator import mul
                 import functools
                 for i in range(len(self.indices_applied)):
                     box_prod = functools.reduce(mul, self.box_shape[i])
-                    print(str(i + 1) + '\t' + str(self.indices_applied[i]) + '\t' + self.labels_applied[i] + '\t' + str(
+                    Logger().info(str(i + 1) + '\t' + str(self.indices_applied[i]) + '\t' + self.labels_applied[i] + '\t' + str(
                         self.roi_sizes_applied[i]) + '\t' + str(self.box_shape[i]) + '\t' + str(box_prod) + '\t' +
                           str("%.0f" % (self.roi_sizes_applied[i] / box_prod * 100)) + '%')
 
@@ -309,7 +307,7 @@ class BrainAtlas(BaseEstimator):
 #     # dataset_files = datasets.fetch_oasis_vbm(n_subjects=5)
 #     from nilearn.datasets import MNI152_FILE_PATH
 #     dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
-#     print('')
+#     Logger().info('')
 #
 #     availableAtlases = BrainAtlas.whichAtlases()
 #
@@ -319,13 +317,13 @@ class BrainAtlas(BaseEstimator):
 #     roi_data = []
 #     for em in extMeth:
 #         for atlas in availableAtlases:
-#             print('\n\n' + atlas + ': ' + em)
+#             Logger().info('\n\n' + atlas + ': ' + em)
 #             myAtlas = BrainAtlas(atlas_name=atlas, extract_mode=em, whichROIs='all')
 #             myAtlas.getInfo()
 #             roi_data.append(myAtlas.transform(X=dataset_files)) # ROI indices
 #             myAtlas.getInfo()
 #
-#         print('\n\n' + em)
+#         Logger().info('\n\n' + em)
 #         myAtlas = BrainAtlas(atlas_name='AAL', extract_mode=em, whichROIs=[2001, 2111, 6301])
 #         #myAtlas.getInfo()
 #         roi_data.append(myAtlas.transform(X=dataset_files))  # ROI indices
@@ -362,7 +360,7 @@ class BrainAtlas(BaseEstimator):
 #     myAtlas.getInfo()
 #
 #
-# print('')
+# Logger().info('')
 
 
     # from nilearn.datasets import MNI152_FILE_PATH

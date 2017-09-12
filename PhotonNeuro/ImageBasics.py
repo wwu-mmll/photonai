@@ -1,5 +1,6 @@
 from sklearn.base import BaseEstimator
 import numpy as np
+from Logging.Logger import Logger
 
 # Smoothing and voxel-size Resampling capabilities
 
@@ -17,7 +18,7 @@ class SmoothImgs(BaseEstimator):
         return self
 
     def transform(self, X, y=None):
-        print('Smoothing data with ' + str(self.fwhr))
+        Logger().info('Smoothing data with ' + str(self.fwhr))
         from nilearn.image import smooth_img
         out_imgs = []
         for x_in in X:
@@ -29,7 +30,7 @@ class SmoothImgs(BaseEstimator):
                 out_imgs.append(smImg)
 
         if not self.output_img:
-            print('Generating numpy array.')
+            Logger().info('Generating numpy array.')
             out_imgs = np.asarray(out_imgs)
 
         return out_imgs
@@ -47,7 +48,7 @@ class ResamplingImgs(BaseEstimator):
     def transform(self, X, y=None):
         from nilearn.image import resample_img
         target_affine = np.diag(self.voxel_size)
-        print('Resampling Voxel Size to ' + str(self.voxel_size))
+        Logger().info('Resampling Voxel Size to ' + str(self.voxel_size))
         out_imgs = []
         for x_in in X:
             resImg = resample_img(x_in, target_affine=target_affine, interpolation='nearest')
@@ -58,7 +59,7 @@ class ResamplingImgs(BaseEstimator):
                 out_imgs.append(resImg)
 
         if not self.output_img:
-            print('Generating numpy array.')
+            Logger().info('Generating numpy array.')
             out_imgs = np.asarray(out_imgs)
 
         return out_imgs
@@ -79,4 +80,4 @@ class ResamplingImgs(BaseEstimator):
 #     roi_data = myAtlas.transform(X=smImg)
 #     myAtlas.getInfo()
 #
-#     print('')
+#     Logger().info('')
