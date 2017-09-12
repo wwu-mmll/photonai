@@ -817,8 +817,7 @@ class PipelineSwitch(PipelineElement):
     #     obj.pipeline_element_list = pipeline_element_list
     #     return obj
 
-    def __init__(self, name, pipeline_element_list, base_element, hyperparameters: dict):
-        super().__init__(name, base_element, hyperparameters)
+    def __init__(self, name, pipeline_element_list):
         self.name = name
         self._sklearn_curr_element = self.name + '__current_element'
         # Todo: disable switch?
