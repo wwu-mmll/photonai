@@ -188,8 +188,8 @@ class Hyperpipe(BaseEstimator):
         self.current_fold += 1
 
         # be compatible to list of (image-) files
-        #if isinstance(self.X, list):
-        #    self.X = np.asarray(self.X)
+        if isinstance(self.X, list):
+            self.X = np.asarray(self.X)
         #if not isinstance(self.X, np.ndarray): # and isinstance(self.X[0], str):
         #    self.X = np.asarray(self.X)
 
