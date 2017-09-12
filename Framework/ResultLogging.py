@@ -189,7 +189,7 @@ class MasterElement:
         if self.me_type == MasterElementType.ROOT:
             return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0]
 
-    def get_best_config_performance_for(self, outer_cv_fold, train_data=False):
+    def get_best_config_performance_for(self, outer_cv_fold: object, train_data: object = False) -> object:
         # Todo: Try Catch?
         if self.me_type == MasterElementType.ROOT:
             if train_data:
