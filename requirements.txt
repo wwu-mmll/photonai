@@ -14,3 +14,4 @@ python-qt5
 nibabel
 pandas
 six
+h5py
