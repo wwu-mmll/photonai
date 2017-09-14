@@ -1,10 +1,10 @@
 # Atlas from nilearn are functions ('call'), simple nii maps are also possible (type 'map')
-ATLAS_DICT = {#'ICBM': ('call', "datasets.fetch_icbm152_2009()"),
-              'AAL': ('call', "datasets.fetch_atlas_aal()"),
-              'HarvardOxford25_cort_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('cort-maxprob-thr25-1mm')"),
-              'HarvardOxford25_sub_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('sub-maxprob-thr25-1mm')"),
-              'HarvardOxford50_cort_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('cort-maxprob-thr50-1mm')"),
-              'HarvardOxford50_sub_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('sub-maxprob-thr50-1mm')"),
+ATLAS_DICT = {'ICBM': ('call', "datasets.fetch_icbm152_2009()")
+              #'AAL': ('call', "datasets.fetch_atlas_aal()"),
+              #'HarvardOxford25_cort_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('cort-maxprob-thr25-1mm')"),
+              #'HarvardOxford25_sub_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('sub-maxprob-thr25-1mm')"),
+              #'HarvardOxford50_cort_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('cort-maxprob-thr50-1mm')"),
+              #'HarvardOxford50_sub_1mm': ('call', "datasets.fetch_atlas_harvard_oxford('sub-maxprob-thr50-1mm')"),
             #  'MSDL': ('call', "datasets.fetch_atlas_msdl()"),
             #  'Smith': ('call', "datasets.fetch_atlas_smith_2009()"),
             #   '' C:\Users\hahnt / nilearn_data\smith_2009\rsn20.nii.gz

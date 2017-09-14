@@ -190,12 +190,12 @@ class Hyperpipe(BaseEstimator):
         # be compatible to list of (image-) files
         if isinstance(self.X, list):
             self.X = np.asarray(self.X)
-        if not isinstance(self.X, np.ndarray): # and isinstance(self.X[0], str):
-            self.X = np.asarray(self.X)
+        #if not isinstance(self.X, np.ndarray): # and isinstance(self.X[0], str):
+        #    self.X = np.asarray(self.X)
 
         # handle PhotonNeuro Imge paths as data
         # ToDo: Need to check the DATA, not the img paths for PhotonNeuro
-        new_data_hash = sha1(self.X).hexdigest()
+        new_data_hash = sha1(np.asarray(self.X)).hexdigest()
 
         # fit
         # 1. if it is first time ever or
@@ -245,7 +245,6 @@ class Hyperpipe(BaseEstimator):
                                   .format(self.name, outer_fold_counter))
 
                     # PhotonCore variant (for arrays)
-                    # try:
                     validation_X = self.X[train_indices]
                     validation_y = self.y[train_indices]
                     test_X = self.X[test_indices]
@@ -818,8 +817,7 @@ class PipelineSwitch(PipelineElement):
     #     obj.pipeline_element_list = pipeline_element_list
     #     return obj
 
-    def __init__(self, name, pipeline_element_list, base_element, hyperparameters: dict):
-        super().__init__(name, base_element, hyperparameters)
+    def __init__(self, name, pipeline_element_list):
         self.name = name
         self._sklearn_curr_element = self.name + '__current_element'
         # Todo: disable switch?
