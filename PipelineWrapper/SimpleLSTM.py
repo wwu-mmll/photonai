@@ -83,7 +83,7 @@ class SimpleLSTM(BaseEstimator, ClassifierMixin):
             results = self.model.fit(X_train, y_train,
                                      validation_data=(X_val, y_val),
                                      batch_size=128,
-                                     epochs=self.nb_epoch,
+                                     epochs=self.nb_epochs,
                                      verbose=0,
                                      callbacks=callbacks_list)
         else:
@@ -91,7 +91,7 @@ class SimpleLSTM(BaseEstimator, ClassifierMixin):
             print(
                 'Cannot use Keras Callbacks because of small sample size...')
             results = self.model.fit(X, y, batch_size=128,
-                                     epochs=self.nb_epoch,
+                                     epochs=self.nb_epochs,
                                      verbose=0)
 
         return self
