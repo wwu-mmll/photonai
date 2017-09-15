@@ -97,7 +97,7 @@ class SimpleLSTM(BaseEstimator, ClassifierMixin):
         return self
 
     def predict(self, X):
-        X = np.reshape(X, (X.shape[0], X.shape[1], 1))
+        X = np.reshape(X, (X.shape[0], 1, X.shape[1]))
         if self.target_dimension > 1:
             predict_result = self.model.predict(X, batch_size=self.batch_size)
             max_index = np.argmax(predict_result, axis=1)
