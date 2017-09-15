@@ -107,10 +107,9 @@ class SimpleLSTM(BaseEstimator, ClassifierMixin):
 
     def create_model(self, input_shape):
         model = Sequential()
-        input_shape = (input_shape[1], input_shape[2])
 
         with tf.device(self.gpu_device):
-            model.add(LSTM(self.units, input_dim=input_shape[2],
+            model.add(LSTM(self.units, input_dim=input_shape[1],
                            stateful=False,return_sequences=False))
             model.add(Activation(self.act_func))
         if self.batch_normalization:
