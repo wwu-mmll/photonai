@@ -14,7 +14,7 @@ print(np.sum(y)/len(y))
 # BUILD PIPELINE
 manager = Hyperpipe('test_manager',
                     optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
-                    outer_cv=ShuffleSplit(test_size=0.2, n_splits=3),
+                    outer_cv=ShuffleSplit(test_size=0.2, n_splits=2),
                     inner_cv=KFold(n_splits=3, shuffle=True), best_config_metric='accuracy',
                     metrics=['accuracy', 'precision', 'recall'], logging=True, eval_final_performance=True)
 
@@ -28,23 +28,27 @@ manager.add(svm)
 # manager.add(nn)
 manager.fit(X, y)
 
-tree = manager.result_tree
+result_tree = manager.result_tree
 
 # get best config of outer cv fold 1:
 
-best_config = tree.get_best_config_for(outer_cv_fold=0)
+best_config = result_tree.get_best_config_for(outer_cv_fold=0)
 
 # performance of best config of outer cv fold 1 for TEST DATA:
 # -> INCLUDING: metrics, y_true and y_predicted
 # -> on this object you can also call helper functions such as roc_curve (which is not tested yet)
-best_config_performance_test = tree.get_best_config_performance_for(outer_cv_fold=0)
+best_config_performance_test = result_tree.get_best_config_performance_for(outer_cv_fold=0)
 
 # performance of best config of outer cv fold 1 for TRAIN DATA:
-best_config_performance_train = tree.get_best_config_performance_for(outer_cv_fold=0, train_data=True)
+best_config_performance_train = result_tree.get_best_config_performance_for(outer_cv_fold=0, train_data=True)
 
 # iterate all tested configuration for outer fold 1:
-tested_configs = tree.get_tested_configurations_for(outer_cv_fold=0)
+tested_configs = result_tree.get_tested_configurations_for(outer_cv_fold=0)
 
 
 # THE END
 debugging = True
+
+from Framework import LogExtractor
+log_ex = LogExtractor.LogExtractor()
+log_ex.extract(result_tree)
