@@ -17,7 +17,7 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
     def __init__(self, input_shape=(244,244,3), target_dimension=10,
                  learning_rate=0.001, nb_epoch=10000, early_stopping_flag=True,
                  eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, freezing_point=0,
-                 batch_size=64, ckpt_name=''):
+                 batch_size=64, ckpt_name='', weight_class_a=1, weight_class_b=1):
 
 
         self.input_shape = input_shape
@@ -32,6 +32,8 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
         self.model = None
         self.batch_size = batch_size
         self.ckpt_name = ckpt_name
+        self.weight_class_a = weight_class_a
+        self.weight_class_b = weight_class_b
 
     def post_fit(self):
         return {all_metrics_collected}
@@ -95,7 +97,7 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
                                      epochs=self.nb_epoch,
                                      verbose=1,
                                      callbacks=callbacks_list,
-                                     class_weight={0:1.0,1:12670.0/1082})
+                                     class_weight={0:1.0,self.weight_class_a:self.weight_class_b})
         else:
             # fit the model
             print('Cannot use Keras Callbacks because of small sample size...')

@@ -77,7 +77,6 @@ def split_balanced_test_data_from_current_data(X_train, y_train, group_size=100)
         logger.warn("!!!! Development mode is enabled, using smaller samples !!!!")
         X_train_new = X_train_new[0:1000]
         y_train_new = y_train_new[0:1000]
-
     return (X_train_new, y_train_new, X_test, y_test)
 
 X_train, y_train = load_skin_cancer_data(use_tempfiles=True)
@@ -102,13 +101,23 @@ my_pipe = Hyperpipe('Skin Cancer VGG18 finetuning', optimizer='grid_search',
                     outer_cv=cv,
                     eval_final_performance=True, verbose=2)
 #my_pipe += PipelineElement.create('standard_scaler')
+
+ratio_true_false = np.count_nonzero(y_train)/np.size(y_train)
 my_pipe += PipelineElement.create('PretrainedCNNClassifier',
                                   {'input_shape': [(299,299,3)],'target_dimension': [2],
                                    'freezing_point':[249], 'batch_size':[32],
-                                   'early_stopping_flag':[True], 'eaSt_patience':[150]},
-                                  nb_epoch=1000, ckpt_name='pretrained_cnn_cancer.hdf5')
+                                   'early_stopping_flag':[True], 'eaSt_patience':[5], 'weight_class_b':[ratio_true_false]},
+                                  nb_epoch=10, ckpt_name='/home/claas/pretrained_cnn_cancer.hdf5')
 my_pipe.fit(X_train, y_train)
 y_pred = my_pipe.predict(X_test)
+
+# RESULTS
+result_tree = my_pipe.result_tree
+
+from Framework import LogExtractor
+log_ex = LogExtractor.LogExtractor(result_tree)
+log_ex.extract_csv("skin_cancer_results.csv")
+
 balanced_accuracy = accuracy_score(tfu.one_hot_to_binary(y_test), y_pred)
 logger.info("Accuracy from independent balanced sample: {}".format(balanced_accuracy))
 best_model = load_model('pretrained_cnn_cancer.hdf5')
