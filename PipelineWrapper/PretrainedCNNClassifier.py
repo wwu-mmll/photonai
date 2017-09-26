@@ -8,9 +8,9 @@ from keras.layers import Input
 from keras.models import Model
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
-from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import KFold, ShuffleSplit
 
-os.environ["CUDA_VISIBLE_DEVICES"]="7"
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 
 class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
 
@@ -97,7 +97,7 @@ class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
                                      epochs=self.nb_epoch,
                                      verbose=1,
                                      callbacks=callbacks_list,
-                                     class_weight={0:1.0,self.weight_class_a:self.weight_class_b})
+                                     class_weight={0:self.weight_class_a,1:self.weight_class_b})
         else:
             # fit the model
             print('Cannot use Keras Callbacks because of small sample size...')
