@@ -50,5 +50,5 @@ tested_configs = result_tree.get_tested_configurations_for(outer_cv_fold=0)
 debugging = True
 
 from Framework import LogExtractor
-log_ex = LogExtractor.LogExtractor()
-log_ex.extract(result_tree)
+log_ex = LogExtractor.LogExtractor(result_tree)
+log_ex.extract_csv("test.csv")
