@@ -4,7 +4,7 @@ import numpy as np
 
 class LogExtractor:
     def __init__(self, result_tree):
-        self.analysis_id = self.result_tree.name
+        self.analysis_id = result_tree.name
         self.result_tree = result_tree
 
     def extract_csv(self, filename: str, with_timestamp: bool = True):
