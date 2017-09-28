@@ -3,102 +3,125 @@ import numpy as np
 
 
 class LogExtractor:
+    """Converts a given result tree in multiple human readable formats.
+        Args:
+            result_tree (ResultTree)
+
+        Attributes:
+            result_tree (ResultTree)
+    """
+
     def __init__(self, result_tree):
         self.analysis_id = result_tree.name
         self.result_tree = result_tree
 
     def extract_csv(self, filename: str, with_timestamp: bool = True):
+        """
+        Extract a csv file out of the results and saves it at the path given with filename.
+
+        :param filename: (The path and) the filename of the resulting csv file
+        :param with_timestamp: Extends the filename with the current timestamp (e.g. 2017-09-28-17-52)
+        :return: None
+        """
+        self.get_stats().to_csv_file(filename, with_timestamp)
+
+    def get_stats(self) -> object:
+        """
+        Creates a object oriented model out of the initial result tree
+        :return: the logged results as Stats object
+        """
+
         start_time = 'not implemented!'
         # ToDo the duration "might" not the right one! ;)
         duration = self.result_tree.config_list[0].fit_duration
         outer_folds = self.result_tree.config_list[0].fold_list
-        outer_folds_stat = self.get_outer_folds_stat(outer_folds)
-        inner_hp_configuration_folds = self.get_folds_stat_for_hp_configs_for_outer_folds(outer_folds)
-        stats = Stats(self.analysis_id, duration, start_time, outer_folds_stat, inner_hp_configuration_folds)
-        stats.to_csv_file(filename, with_timestamp)
+        outer_folds_stat = self.__get_outer_folds_stat(outer_folds)
+        inner_hp_configuration_folds = self.__get_folds_stat_for_hp_configs_for_outer_folds(outer_folds)
+        return Stats(self.analysis_id, duration, start_time, outer_folds_stat, inner_hp_configuration_folds)
 
-    def get_outer_folds_stat(self, outer_folds: list):
+    def __get_outer_folds_stat(self, outer_folds: list) -> object:
         outer_folds_stat = []
         for fold in outer_folds:
-            outer_folds_stat.append(self.get_outer_fold_stat(fold))
-        return FoldsStat(outer_folds_stat, "all outer folds")
+            outer_folds_stat.append(self.__get_outer_fold_stat(fold))
+        return FoldsStat(outer_folds_stat, "All outer folds")
 
-    def get_outer_fold_stat(self, fold):
+    def __get_outer_fold_stat(self, fold) -> object:
         config = fold.test.config_list[0].config_dict
-        fold_metrics = self.get_fold_metrics_from_fold(fold)
+        fold_metrics = self.__get_fold_metrics_from_fold(fold)
         return FoldStat(config, fold.number_samples_test, fold.number_samples_train, fold_metrics)
 
-    def get_fold_metrics_from_fold(self, fold):
+    def __get_fold_metrics_from_fold(self, fold) -> list:
         fold_metrics = []
-        for metric_name in self.get_used_metric_names_form_fold(fold):
-            fold_metrics.append(self.get_fold_metric_form_fold(metric_name, fold))
+        for metric_name in self.__get_used_metric_names_from_fold(fold):
+            fold_metrics.append(self.__get_fold_metric_from_fold(metric_name, fold))
         return fold_metrics
 
     @staticmethod
-    def get_used_metric_names_form_fold(fold):
+    def __get_used_metric_names_from_fold(fold) -> list:
         metrics = set()
         for metric in fold.train.config_list[0].fold_metrics_train:
             metrics.add(metric.metric_name)
         return list(metrics)
 
     @staticmethod
-    def get_fold_metric_form_fold(metric_name, fold):
+    def __get_fold_metric_from_fold(metric_name: str, fold) -> object:
         train_value = fold.test.config_list[0].fold_list[0].train.metrics[metric_name]
         test_value = fold.test.config_list[0].fold_list[0].test.metrics[metric_name]
         return FoldMetric(metric_name, train_value, test_value)
 
-    def get_folds_stat_for_hp_configs_for_outer_folds(self, outer_folds):
+    def __get_folds_stat_for_hp_configs_for_outer_folds(self, outer_folds) -> list:
         folds_stat_for_hp_configs_for_outer_folds = []
         outer_fold_index = 0
         for outer_fold in outer_folds:
             hp_configs = outer_fold.train.config_list
-            folds_stat_for_hp_configs_for_outer_folds += self.get_folds_stat_for_hp_configs(hp_configs,
-                                                                                            outer_fold_index)
+            folds_stat_for_hp_configs_for_outer_folds += self.__get_folds_stat_for_hp_configs(hp_configs,
+                                                                                              outer_fold_index)
             outer_fold_index += 1
         return folds_stat_for_hp_configs_for_outer_folds
 
-    def get_folds_stat_for_hp_configs(self, hp_configs: list, position_in_outer_cv_fold: int):
+    def __get_folds_stat_for_hp_configs(self, hp_configs: list, position_in_outer_cv_fold: int) -> list:
         hp_configs_folds_stat = []
         index = 0
         for hp_config in hp_configs:
             level_description = "Outer CV fold: {0}, Configuration: {1}".format(position_in_outer_cv_fold, index)
-            hp_configs_folds_stat.append(self.get_folds_stat_for_hp_config(hp_config, level_description))
+            hp_configs_folds_stat.append(self.__get_folds_stat_for_hp_config(hp_config, level_description))
             index += 1
         return hp_configs_folds_stat
 
-    def get_folds_stat_for_hp_config(self, hp_config, level_description: str):
+    def __get_folds_stat_for_hp_config(self, hp_config, level_description: str) -> object:
         folds_stat_for_config = []
         config_parameter = hp_config.config_dict
         for fold in hp_config.fold_list:
-            folds_stat_for_config.append(self.get_fold_stat_for_config(fold, config_parameter))
+            folds_stat_for_config.append(self.__get_fold_stat_for_config(fold, config_parameter))
         return FoldsStat(folds_stat_for_config, level_description)
 
-    def get_fold_stat_for_config(self, fold, config_parameter):
-        fold_metrics = self.get_fold_metrics_from_inner_fold(fold)
+    def __get_fold_stat_for_config(self, fold, config_parameter) -> object:
+        fold_metrics = self.__get_fold_metrics_from_inner_fold(fold)
         return FoldStat(config_parameter, fold.number_samples_test, fold.number_samples_train, fold_metrics)
 
-    def get_fold_metrics_from_inner_fold(self, fold):
+    def __get_fold_metrics_from_inner_fold(self, fold) -> list:
         fold_metrics = []
-        for metric_name in self.get_used_metric_names_form_inner_fold(fold):
-            fold_metrics.append(self.get_fold_metric_form_inner_fold(metric_name, fold))
+        for metric_name in self.__get_used_metric_names_form_inner_fold(fold):
+            fold_metrics.append(self.__get_fold_metric_form_inner_fold(metric_name, fold))
         return fold_metrics
 
     @staticmethod
-    def get_used_metric_names_form_inner_fold(fold):
+    def __get_used_metric_names_form_inner_fold(fold) -> list:
         metric_names = set()
         for metric_key in fold.train.metrics:
             metric_names.add(metric_key)
         return list(metric_names)
 
     @staticmethod
-    def get_fold_metric_form_inner_fold(metric_name, fold):
+    def __get_fold_metric_form_inner_fold(metric_name: str, fold) -> object:
         train_value = fold.train.metrics[metric_name]
         test_value = fold.test.metrics[metric_name]
         return FoldMetric(metric_name, train_value, test_value)
 
 
 class Stats:
-    def __init__(self, name, duration, started_at, outer_folds_stat, inner_hp_configurations_folds_stat: list):
+    def __init__(self, name: str, duration, started_at, outer_folds_stat: object,
+                 inner_hp_configurations_folds_stat: list):
         self.name = name
         self.duration = duration
         self.started_at = started_at
@@ -106,7 +129,7 @@ class Stats:
         self.inner_hp_configurations_folds_stat = inner_hp_configurations_folds_stat
 
     @staticmethod
-    def description(self):
+    def description(self) -> str:
         out = """
         Analysis ID: {0}
         Duration:    {1}
@@ -141,7 +164,7 @@ class Stats:
             for i in range(0, len(folds_array_transpose)):
                 csv_writer.writerow(folds_array_transpose[i])
 
-    def get_description_array(self):
+    def get_description_array(self) -> list:
         description_array = []
         headlines_outer = self.outer_folds_stat.get_description_array_headlines()
         headlines_inner = self.inner_hp_configurations_folds_stat[0].get_description_array_headlines()
@@ -162,7 +185,7 @@ class FoldsStat:
         self.folds_stat = folds_stat
         self.level_description = level_description
 
-    def description(self):
+    def description(self) -> str:
         out = """
         Level: {0}
         """.format(self.level_description)
@@ -196,7 +219,7 @@ class FoldsStat:
             idx += 1
         return out
 
-    def get_description_array_headlines(self):
+    def get_description_array_headlines(self) -> list:
         # Level description
         description_array = ["Level description"]
         for _ in self.get_used_metrics():
@@ -236,7 +259,7 @@ class FoldsStat:
             idx += 1
         return description_array
 
-    def get_description_array_folds(self, min_length: int = 0):
+    def get_description_array_folds(self, min_length: int = 0) -> list:
         # Level description
         description_array = [self.level_description]
         for metric_name in self.get_used_metrics():
@@ -278,31 +301,31 @@ class FoldsStat:
             description_array.append("")
         return description_array
 
-    def get_mean_for_metric(self, metric):
+    def get_mean_for_metric(self, metric_name: str) -> dict:
         train = []
         test = []
         for fold in self.folds_stat:
             for f_metric in fold.fold_metrics:
-                if f_metric.name == metric:
+                if f_metric.name == metric_name:
                     train.append(f_metric.train_value)
                     test.append(f_metric.test_value)
         mean_train = np.mean(train)
         mean_test = np.mean(test)
         return {'mean_train': mean_train, 'mean_test': mean_test}
 
-    def get_std_for_metric(self, metric):
+    def get_std_for_metric(self, metric_name: str) -> dict:
         train = []
         test = []
         for fold in self.folds_stat:
             for f_metric in fold.fold_metrics:
-                if f_metric.name == metric:
+                if f_metric.name == metric_name:
                     train.append(f_metric.train_value)
                     test.append(f_metric.test_value)
         std_train = np.std(train)
         std_test = np.std(test)
         return {'std_train': std_train, 'std_test': std_test}
 
-    def get_used_metrics(self):
+    def get_used_metrics(self) -> list:
         metrics = []
         for f_metrics in self.folds_stat[0].fold_metrics:
             metrics.append(f_metrics.name)
@@ -318,7 +341,7 @@ class FoldStat:
 
 
 class FoldMetric:
-    def __init__(self, name: str, train_value, test_value):
+    def __init__(self, name: str, train_value: float, test_value: float):
         self.name = name
         self.train_value = train_value
         self.test_value = test_value
