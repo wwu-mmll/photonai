@@ -36,6 +36,9 @@ class CVTestsCaseA(unittest.TestCase):
         # START HYPERPARAMETER SEARCH
         my_pipe.fit(self.__X, self.__y)
         print(my_pipe.test_performances)
+        from Framework import LogExtractor
+        log_ex = LogExtractor.LogExtractor(my_pipe.result_tree)
+        log_ex.extract_csv("test_case_A.csv")
 
         # Das muss noch weg! ToDo
         from sklearn.preprocessing import StandardScaler

@@ -32,7 +32,6 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
         # SET UP HYPERPIPE
         my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
-                            metrics=['accuracy', 'precision', 'f1_score'],
                             inner_cv=KFold(n_splits=2, random_state=3),
                             outer_cv=KFold(n_splits=3, random_state=3),
                             eval_final_performance=True)
@@ -43,17 +42,9 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
         # START HYPERPARAMETER SEARCH
         my_pipe.fit(self.__X, self.__y)
-
-        # print(my_pipe.test_performances)
-        # print(my_pipe.test_performances['accuracy'])
-
-        pipe_results = {'train': [], 'test': []}
-        for i in range(len(my_pipe.performance_history_list)):
-            pipe_results['train'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds']['train'])
-            pipe_results['test'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds']['test'])
-
+        from Framework import LogExtractor
+        log_ex = LogExtractor.LogExtractor(my_pipe.result_tree)
+        log_ex.extract_csv("test_case_A5.csv")
 
         print('\n\n')
         print('Running sklearn version...')
@@ -153,16 +144,31 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         print('svc_C: ', best_svc_C)
         print('\nCompare results of last iteration (outer cv)...')
         print('SkL  Train:', sk_results['train'])
-        print('Pipe Train:', pipe_results['train'])
+        #print('Pipe Train:', pipe_results['train'])
+        pipe_results_train = []
+        for hp_config in my_pipe.result_tree.config_list[0].fold_list[2].train.config_list:
+            for fold in hp_config.fold_metrics_train:
+                pipe_results_train.append(fold.value)
+        print('Pipe Train:', pipe_results_train)
         print('SkL  Test: ', sk_results['test'])
-        print('Pipe Test: ', pipe_results['test'])
+        #print('Pipe Test: ', pipe_results['test'])
+        pipe_results_test = []
+        for hp_config in my_pipe.result_tree.config_list[0].fold_list[2].train.config_list:
+            for fold in hp_config.fold_metrics_test:
+                pipe_results_test.append(fold.value)
+        print('Pipe Test: ', pipe_results_test)
         print('\nEval final performance:')
-        print('Pipe final perf:', my_pipe.test_performances['accuracy'])
+        #print('Pipe final perf:', my_pipe.test_performances['accuracy'])
+        pipe_outer_folds = []
+        for outer_fold in my_pipe.result_tree.config_list[0].fold_list:
+            pipe_outer_folds.append(outer_fold.test.config_list[0].fold_list[0].test.metrics['score'])
+
+        print('Pipe final perf:',pipe_outer_folds)
         print('Sklearn final perf:', opt_test_acc)
 
-        self.assertEqual(sk_results['test'], pipe_results['test'])
-        self.assertEqual(sk_results['train'], pipe_results['train'])
-        self.assertEqual(opt_test_acc, my_pipe.test_performances['accuracy'])
+        self.assertEqual(sk_results['test'], pipe_results_test)
+        self.assertEqual(sk_results['train'], pipe_results_train)
+        self.assertEqual(opt_test_acc, pipe_outer_folds)
 
 
 if __name__ == '__main__':

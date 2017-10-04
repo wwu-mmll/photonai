@@ -29,11 +29,10 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         # SET UP HYPERPIPE
         my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                             optimizer_params={},
-                            metrics=['accuracy', 'precision', 'f1_score'],
                             inner_cv=KFold(
                                 n_splits=2, random_state=3),
                             outer_cv=KFold(
-                                n_splits=2, random_state=3))
+                                n_splits=2, random_state=3), verbose=2, eval_final_performance=True)
 
         my_pipe += PipelineElement.create('standard_scaler')
         my_pipe += PipelineElement.create('pca', {'n_components': pca_n_components})
@@ -41,13 +40,17 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
         # START HYPERPARAMETER SEARCH
         my_pipe.fit(self.__X, self.__y)
-        print(my_pipe.test_performances)
-        pipe_results = {'train': [], 'test': []}
-        for i in range(len(my_pipe.performance_history_list)):
-            pipe_results['train'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds']['train'])
-            pipe_results['test'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds']['test'])
+        from Framework import LogExtractor
+        log_ex = LogExtractor.LogExtractor(my_pipe.result_tree)
+        log_ex.extract_csv("test_case_A2.csv")
+
+        # print(my_pipe.test_performances)
+        # pipe_results = {'train': [], 'test': []}
+        # for i in range(len(my_pipe.performance_history_list)):
+        #     pipe_results['train'].extend(
+        #         my_pipe.performance_history_list[i]['accuracy_folds']['train'])
+        #     pipe_results['test'].extend(
+        #         my_pipe.performance_history_list[i]['accuracy_folds']['test'])
 
         print('\n\n')
         print('Running sklearn version...')
