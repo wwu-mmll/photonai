@@ -13,7 +13,7 @@ from sklearn.pipeline import Pipeline
 from Framework.Register import PhotonRegister
 from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
-from .ResultLogging import MasterElement, MasterElementType, FoldTupel, FoldMetrics, Configuration
+from .ResultLogging import MasterElement, MasterElementType, FoldTupel, FoldMetrics, FoldOperations, Configuration
 from .Validation import TestPipeline, OptimizerMetric
 
 
@@ -300,8 +300,8 @@ class Hyperpipe(BaseEstimator):
                         if not config_item.config_failed:
                             # get optimizer_metric and forward to optimizer
                             # todo: also pass greater_is_better=True/False to optimizer
-                            config_score = (config_item.get_metric('mean', self.config_optimizer.metric),
-                                            config_item.get_metric('mean', self.config_optimizer.metric, train=False))
+                            config_score = (config_item.get_metric(FoldOperations.MEAN, self.config_optimizer.metric),
+                                            config_item.get_metric(FoldOperations.MEAN, self.config_optimizer.metric, train=False))
 
                             # Print Result for config
                             Logger().debug('...done:')
