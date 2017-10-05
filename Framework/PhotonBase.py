@@ -424,6 +424,12 @@ class Hyperpipe(BaseEstimator):
                 data = self.filter_element.transform(data)
             return self.optimum_pipe.predict(data)
 
+    def predict_proba(self, data):
+        if self.pipe:
+            if self.filter_element:
+                data = self.filter_element.transform(data)
+            return self.optimum_pipe.predict_proba(data)
+
     def transform(self, data):
         if self.pipe:
             if self.filter_element:
@@ -609,6 +615,15 @@ class PipelineElement(BaseEstimator):
         else:
             return data
 
+    def predict_proba(self, data):
+        if not self.disabled:
+            if hasattr(self.base_element, 'predict_proba'):
+                return self.base_element.predict_proba(data)
+            else:
+                Logger().error('BaseException. Base Element should have "predict_proba" function.')
+            raise BaseException('Base Element should have predict_proba function.')
+        return data
+
     # def fit_predict(self, data, targets):
     #     if not self.disabled:
     #         return self.base_element.fit_predict(data, targets)
@@ -738,6 +753,19 @@ class PipelineStacking(PipelineElement):
         predicted_data = np.empty((0, 0))
         for name, element in self.pipe_elements.items():
             element_transform = element.predict(data)
+            predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
+        if self.voting:
+            if hasattr(predicted_data, 'shape'):
+                if len(predicted_data.shape) > 1:
+                    predicted_data = np.mean(predicted_data, axis=1).astype(int)
+        return predicted_data
+
+    def predict_proba(self, data, targets=None):
+        # Todo: strategy for concatenating data from different pipes
+        # todo: parallelize prediction
+        predicted_data = np.empty((0, 0))
+        for name, element in self.pipe_elements.items():
+            element_transform = element.predict_proba(data)
             predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
