@@ -3,6 +3,7 @@ from sklearn.model_selection import ShuffleSplit, StratifiedShuffleSplit
 
 import Helpers.TFUtilities as tfu
 from Framework.PhotonBase import PipelineElement, Hyperpipe
+from Logging.Logger import Logger
 
 mnist = fetch_mldata("MNIST original")
 X, y = mnist.data / 255., mnist.target
@@ -28,4 +29,4 @@ my_pipe += PipelineElement.create('KerasDNNClassifier', {'hidden_layer_sizes': [
 my_pipe.fit(X_small,y_small)
 
 # try predict_proba functionality
-print('Predictions (Probs): ', my_pipe.predict_proba(X_small))
+Logger().info('Predictions (Probs): {0}'.format(my_pipe.predict_proba(X_small)))
