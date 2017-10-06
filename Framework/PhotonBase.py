@@ -425,6 +425,11 @@ class Hyperpipe(BaseEstimator):
             return self.optimum_pipe.predict(data)
 
     def predict_proba(self, data):
+        """
+        Predict probabilities
+        :param data: array-like, dtype=float
+        :return: predicted values, array
+        """
         if self.pipe:
             if self.filter_element:
                 data = self.filter_element.transform(data)
@@ -616,6 +621,13 @@ class PipelineElement(BaseEstimator):
             return data
 
     def predict_proba(self, data):
+        """
+        Predict probabilities
+        Base element needs predict_proba() function, otherwise throw
+        base exception.
+        :param data: array-like, dtype=float
+        :return: predicted values, array
+        """
         if not self.disabled:
             if hasattr(self.base_element, 'predict_proba'):
                 return self.base_element.predict_proba(data)
@@ -761,8 +773,14 @@ class PipelineStacking(PipelineElement):
         return predicted_data
 
     def predict_proba(self, data, targets=None):
-        # Todo: strategy for concatenating data from different pipes
-        # todo: parallelize prediction
+        """
+        Predict probabilities for every pipe element and
+        stack them together. Alternatively, do voting instead.
+        :param data: array-like, dtype=float
+        :param targets:
+        :return: predicted values, array
+        """
+        # ToDo: Ask Ramona about "targets=None". Necessary?
         predicted_data = np.empty((0, 0))
         for name, element in self.pipe_elements.items():
             element_transform = element.predict_proba(data)
