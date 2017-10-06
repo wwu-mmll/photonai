@@ -427,7 +427,8 @@ class Hyperpipe(BaseEstimator):
     def predict_proba(self, data):
         """
         Predict probabilities
-        :param data: array-like, dtype=float
+        :param data: array-like
+        :type data: float
         :return: predicted values, array
         """
         if self.pipe:
@@ -625,7 +626,8 @@ class PipelineElement(BaseEstimator):
         Predict probabilities
         Base element needs predict_proba() function, otherwise throw
         base exception.
-        :param data: array-like, dtype=float
+        :param data: array-like
+        :type data: float
         :return: predicted values, array
         """
         if not self.disabled:
@@ -776,7 +778,8 @@ class PipelineStacking(PipelineElement):
         """
         Predict probabilities for every pipe element and
         stack them together. Alternatively, do voting instead.
-        :param data: array-like, dtype=float
+        :param data: array-like
+        :type data: float
         :param targets:
         :return: predicted values, array
         """
