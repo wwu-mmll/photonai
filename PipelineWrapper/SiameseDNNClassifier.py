@@ -125,6 +125,11 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
         return self.dense_to_one_hot(max_index, self.target_dimension)
 
     def predict_proba(self, X):
+        """
+        Predict probabilities
+        :param X: array-like, dtype=float
+        :return: predicted values, array
+        """
         return self.model.predict(X, batch_size=128)
 
     def score(self, X, y_true):
