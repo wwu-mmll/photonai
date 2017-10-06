@@ -127,7 +127,8 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
     def predict_proba(self, X):
         """
         Predict probabilities
-        :param X: array-like, dtype=float
+        :param X: array-like
+        :type data: float
         :return: predicted values, array
         """
         return self.model.predict(X, batch_size=128)
