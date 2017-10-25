@@ -105,6 +105,17 @@ class SimpleLSTM(BaseEstimator, ClassifierMixin):
         else:
             return self.model.predict(X, batch_size=self.batch_size)
 
+    def predict_proba(self, X):
+        """
+        Predict probabilities
+        :param X: array-like
+        :type data: float
+        :return: predicted values, array
+        """
+        # First, reshape X to meet LSTM input requirements
+        X = np.reshape(X, (X.shape[0], 1, X.shape[1]))
+        return self.model.predict(X, batch_size=self.batch_size)
+
     def create_model(self, input_shape):
         model = Sequential()
 
