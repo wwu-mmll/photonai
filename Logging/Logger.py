@@ -174,7 +174,8 @@ class Logger:
     @staticmethod
     def _print_entry(entry: dict):
         date_str = entry['logged_date'].strftime("%Y-%m-%d %H:%M:%S")
-        print("{0} UTC - {1}: {2}".format(date_str, entry['log_type'], entry['message']))
+        #print("{0} UTC - {1}: {2}".format(date_str, entry['log_type'], entry['message']))
+        print("{0}".format(entry['message']))
 
     def _write_to_file(self, entry: dict):
         with open(self._logfile_name, "a", newline='\n') as text_file:
