@@ -8,7 +8,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import ShuffleSplit
-
+from Logging.Logger import Logger
 
 class KerasDNNRegressor(BaseEstimator, RegressorMixin):
 
@@ -29,6 +29,11 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
         self.reLe_patience = reLe_patience
 
         self.model = None
+
+        if Logger().verbosity_level == 2:
+            self.verbosity = 2
+        else:
+            self.verbosity = 0
 
     def fit(self, X, y):
 
@@ -57,20 +62,23 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
                 callbacks_list += [early_stopping]
 
             # adjust learning rate when not improving for patience epochs
-            reduce_lr = ReduceLROnPlateau(monitor='val_loss', factor=self.reLe_factor,
-                                          patience=self.reLe_patience, min_lr=0.001, verbose=1)
+            reduce_lr = ReduceLROnPlateau(monitor='val_loss',
+                                          factor=self.reLe_factor,
+                                          patience=self.reLe_patience,
+                                          min_lr=0.001,
+                                          verbose=self.verbosity)
             callbacks_list += [reduce_lr]
 
             # fit the model
             results = self.model.fit(X_train, y_train, validation_data=(X_val, y_val),
                                      batch_size=128, epochs=self.nb_epoch,
-                                     verbose=0,  callbacks=callbacks_list)
+                                     verbose=self.verbosity,  callbacks=callbacks_list)
         else:
             # fit the model
             print('Cannot use Keras Callbacks because of small sample size...')
             results = self.model.fit(X, y, batch_size=128,
                                      epochs=self.nb_epoch,
-                                     verbose=0)
+                                     verbose=self.verbosity)
         return self
 
     def predict(self, X):
