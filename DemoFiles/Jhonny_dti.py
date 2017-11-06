@@ -14,7 +14,7 @@ import numpy as np
 ROOT_DIR = "/spm-data/Scratch/spielwiese_claas"
 def load_etc_subject_ids_and_targets(xls_file_path: str):
     # subject IDs
-    subject_ids = pandas.read_excel(open(target_xls_file, 'rb'), sheetname='ECT', parse_cols="A", squeeze=True)
+    subject_ids = pandas.read_excel(open(xls_file_path, 'rb'), sheetname='ECT', parse_cols="A", squeeze=True)
     # load ECT targets
     targets = pandas.read_excel(open(xls_file_path, 'rb'), sheetname='ECT', parse_cols="I", squeeze=True)
     Logger().debug(targets)
@@ -27,7 +27,7 @@ def load_dti_images(folder_path: str, subject_ids):
         tmp = glob.glob(folder_path + '/' + subject_id + '*.gz')
         tmp_files.append(tmp)
     dti_image_files = [item for sublist in tmp_files for item in sublist]
-    Logger().debug(dataset_files)
+    Logger().debug(dti_image_files)
     return dti_image_files
 
 def extract_brain_from_dti_images(dti_image_files):
