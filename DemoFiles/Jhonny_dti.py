@@ -10,13 +10,16 @@ from PhotonNeuro.AtlasStacker import AtlasInfo
 from PhotonNeuro.BrainAtlas import BrainAtlas
 from pathlib import Path
 import numpy as np
+from sklearn.model_selection import LeaveOneOut
+import pandas as pd
 
 ROOT_DIR = "/spm-data/Scratch/spielwiese_claas"
+
 def load_etc_subject_ids_and_targets(xls_file_path: str):
     # subject IDs
     subject_ids = pandas.read_excel(open(xls_file_path, 'rb'), sheetname='ECT', parse_cols="A", squeeze=True)
     # load ECT targets
-    targets = pandas.read_excel(open(xls_file_path, 'rb'), sheetname='ECT', parse_cols="I", squeeze=True)
+    targets = pandas.read_excel(open(xls_file_path, 'rb'), sheetname='ECT', parse_cols="K", squeeze=True)
     Logger().debug(targets)
     return (subject_ids, targets)
 
@@ -27,7 +30,7 @@ def load_dti_images(folder_path: str, subject_ids):
         tmp = glob.glob(folder_path + '/' + subject_id + '*.gz')
         tmp_files.append(tmp)
     dti_image_files = [item for sublist in tmp_files for item in sublist]
-    Logger().debug(dti_image_files)
+    Logger().debug(str(dti_image_files))
     return dti_image_files
 
 def extract_brain_from_dti_images(dti_image_files):
@@ -55,56 +58,49 @@ subject_ids, targets = load_etc_subject_ids_and_targets(ROOT_DIR + '/Key_Informa
 
 cached_preprocessed_dti_data_file = Path(ROOT_DIR + "/cached_preprocessed_dti_data.npy")
 if cached_preprocessed_dti_data_file.exists():
+    Logger().info("Loading cached preprocessed DTI data...")
     dti_roi_brain_striped = np.load(cached_preprocessed_dti_data_file)
 else:
-    dti_image_files = load_dti_images(subject_ids, ROOT_DIR + '/ECT_data_for_Tim/MD/')
+    dti_image_files = load_dti_images(ROOT_DIR + '/ECT_data_for_Tim/MD/', subject_ids)
     dti_roi_brain = extract_brain_from_dti_images(dti_image_files)
     dti_roi_brain_striped = extract_unique_dti_features(dti_roi_brain)
+    dti_roi_brain_striped = np.nan_to_num(dti_roi_brain_striped)
     np.save(cached_preprocessed_dti_data_file, dti_roi_brain_striped)
 
+def classical_classification() -> Hyperpipe:
+    # Strategie 1 - klassisch:
+    # - 2 x CV leave 1 out. (n<100)
+    # - Normieren ([0, ..., 1], keine, standard scaler)
+    # - PCA (lossless, aus)
+    # - Feature selection mit
+    #    - Lasso (an, aus)
+    #    - F-Classification
+    # - Classifier:
+    #    - RF
+    #    - SVM
+    #    - GPC
+    #    - naive Bayes
+    pipe = Hyperpipe('primary_pipe', optimizer='timeboxed_random_grid_search',
+                optimizer_params={"limit_in_minutes": 0.1},
+                metrics=['accuracy'],
+                inner_cv=LeaveOneOut(),
+                outer_cv=LeaveOneOut(),
+                eval_final_performance=True)
+    standard_scaler = PipelineElement.create("standard_scaler", hyperparameters={}, test_disabled=True)
+    #min_max_scaler = PipelineElement.create("standard_scaler", hyperparameters={}, test_disabled=True)
+    pipe += standard_scaler
+    pipe += PipelineElement.create("pca", hyperparameters={}, test_disabled=True, n_components=None)
+    pipe += PipelineElement.create("f_classif_select_percentile", hyperparameters={"percentile": [10, 50]}, test_disabled=True)
+    svc = PipelineElement.create("svc", hyperparameters={"kernel":["rbf", "linear"], "C":[0.5, 1, 2]})
+    dtree = PipelineElement.create("svc", hyperparameters={"kernel":["rbf", "linear"], "C":[0.5, 1, 2]})
+    pipe += svc
 
+    return pipe
 
-# setup photon HP
-my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
-                    optimizer_params={},
-                    metrics=['mean_squared_error', 'mean_absolute_error'],
-                    inner_cv=KFold(n_splits=2, shuffle=True, random_state=3),
-                    outer_cv=KFold(n_splits=2, shuffle=True, random_state=2),
-                    eval_final_performance=True)
+pipe = classical_classification()
 
-#my_pipe += PipelineElement.create('SmoothImgs', {'fwhr': [[8, 8, 8], [12, 12, 12]]})
-#my_pipe += PipelineElement.create('ResampleImgs', {'voxel_size': [[5, 5, 5]]})
+pipe.fit(np.ascontiguousarray(dti_roi_brain_striped),targets.as_matrix())
 
-
-#atlas_info = AtlasInfo(atlas_name='AAL', roi_names='all', extraction_mode='box')
-#my_pipe += PipelineElement.create('BrainAtlas', {}, atlas_info_object=atlas_info)
-# my_pipe += PipelineElement('atlas_stacker',
-#                            AtlasStacker(atlas_info, [['SVR', {'kernel': ['rbf', 'linear']}, {}]]),
-#                            {})
-
-my_pipe += PipelineElement.create('SVR', {'kernel': ['linear']})
-
-# START HYPERPARAMETER SEARCH
-my_pipe.fit(dti_roi_brain_striped, targets)
-
-
-# resImg = ResamplingImgs(voxel_size=[5, 5, 5], output_img=True).transform(dataset_files)
-# smImg = SmoothImgs(fwhr=[6, 6, 6], output_img=True).transform(resImg)
-#
-# from Photon_Neuro0.BrainAtlas import BrainAtlas
-# myAtlas = BrainAtlas(atlas_name='AAL',
-
-#                      extract_mode='vec',
-#                      whichROIs='all')
-# roi_data = myAtlas.transform(X=smImg)
-# myAtlas.getInfo()
-
-logex = LogExtractor(my_pipe.results)
+logex = LogExtractor(pipe.results)
 logex.etract_csv('jhonny_dti_results.csv')
 
-# # remove all cols with only 0s
-# is_in_mat = []
-# for j in range(0, single_roi.shape[1]):
-#     is_in = not np.any(single_roi[:, j])
-#     is_in_mat.append(is_in)
-# single_roi = single_roi[:, is_in_mat]
