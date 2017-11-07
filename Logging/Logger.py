@@ -75,6 +75,7 @@ class Logger:
         # Should be LogLevel.WARN!
         # Is LogLevel.DEBUG now only for testing purposes
         self._log_level = self.LogLevel.INFO
+        self.verbosity_level = 0
 
         self.log_level_console = self.LogLevel.INFO
         self.log_level_slack = self.LogLevel.INFO
@@ -104,6 +105,7 @@ class Logger:
 
     def set_verbosity(self, verbose=0):
         """ Use this method to change the log level from verbosity attribute of hyperpipe. """
+        self.verbosity_level = verbose
         if verbose == 0:
             self.set_log_level(self.LogLevel.INFO)
         elif verbose == 1:
