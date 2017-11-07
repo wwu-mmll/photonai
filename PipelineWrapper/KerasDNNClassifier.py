@@ -8,6 +8,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
+from Logging.Logger import Logger
 
 
 class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
@@ -29,6 +30,11 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
         self.reLe_patience = reLe_patience
 
         self.model = None
+
+        if Logger().verbosity_level == 2:
+            self.verbosity = 2
+        else:
+            self.verbosity = 0
 
     def fit(self, X, y):
 
@@ -77,14 +83,14 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
                                      validation_data=(X_val, y_val),
                                      batch_size=128,
                                      epochs=self.nb_epoch,
-                                     verbose=0,
+                                     verbose=self.verbosity,
                                      callbacks=callbacks_list)
         else:
             # fit the model
-            print('Cannot use Keras Callbacks because of small sample size...')
+            Logger().warn('Cannot use Keras Callbacks because of small sample size...')
             results = self.model.fit(X, y, batch_size=128,
                                      epochs=self.nb_epoch,
-                                     verbose=0)
+                                     verbose=self.verbosity)
 
         return self
 
