@@ -2,7 +2,7 @@
 
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, \
-    VarianceThreshold, mutual_info_classif, mutual_info_regression
+    VarianceThreshold, mutual_info_classif, mutual_info_regression, SelectKBest, chi2
 
 
 class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
@@ -71,6 +71,24 @@ class MIRegressionSelectPercentile(BaseEstimator, TransformerMixin):
     def fit(self, X, y):
         X = self.var_thres.fit_transform(X)
         self.my_fs = SelectPercentile(score_func=mutual_info_regression, percentile=self.percentile)
+        self.my_fs.fit(X, y)
+        return self
+
+    def transform(self, X):
+        X = self.var_thres.transform(X)
+        return self.my_fs.transform(X)
+
+class Chi2KBest(BaseEstimator, TransformerMixin):
+    _estimator_type = 'transformer'
+
+    def __init__(self, k=10):
+        self.var_thres = VarianceThreshold()
+        self.k = k
+        self.my_fs = None
+
+    def fit(self, X, y):
+        X = self.var_thres.fit_transform(X)
+        self.my_fs = SelectKBest(score_func=chi2, k=self.k)
         self.my_fs.fit(X, y)
         return self
 

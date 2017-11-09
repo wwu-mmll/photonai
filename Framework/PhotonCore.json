@@ -67,6 +67,10 @@
       "PipelineWrapper.FeatureSelection.MIClassifSelectPercentile",
       "Transformer"
    ],
+   "chi2_classif_select_kbest":[
+      "PipelineWrapper.FeatureSelection.Chi2KBest",
+      "Transformer"
+   ],
    "svc":[
       "sklearn.svm.SVC",
       "Estimator"
