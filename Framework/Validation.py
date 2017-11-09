@@ -115,11 +115,11 @@ class TestPipeline(object):
 
         if np.ndim(y_pred) == 2:
             y_pred = one_hot_to_binary(y_pred)
-            Logger().warn("test_predictions was one hot encoded => transformed to binary")
+            #Logger().warn("test_predictions was one hot encoded => transformed to binary")
 
         if np.ndim(y_true) == 2:
             y_true = one_hot_to_binary(y_true)
-            Logger().warn("test_y was one hot encoded => transformed to binary")
+            #Logger().warn("test_y was one hot encoded => transformed to binary")
 
         output_metrics = {}
         if metrics:
