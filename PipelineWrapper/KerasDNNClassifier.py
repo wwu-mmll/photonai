@@ -9,6 +9,7 @@ from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
 from Logging.Logger import Logger
+from Helpers.TFUtilities import binary_to_one_hot
 
 
 class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
@@ -40,11 +41,12 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
         # prepare target values
         # Todo: calculate number of classes?
+        # Todo: smarter way to check input dimensions?
         try:
-            if (self.target_dimension > 1) and (y.shape[1] > 1):
-                y = self.dense_to_one_hot(y, self.target_dimension)
+            if y.shape[1] < 2:
+                y = binary_to_one_hot(y)
         except:
-            pass
+            y = binary_to_one_hot(y)
 
         # 1. make model
         self.model = self.create_model(X.shape[1])
@@ -141,12 +143,4 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
         return model
 
- #######################################################
-    @staticmethod
-    def dense_to_one_hot(labels_dense, num_classes):
-        """Convert class labels from scalars to one-hot vectors."""
-        num_labels = labels_dense.shape[0]
-        index_offset = np.arange(num_labels) * num_classes
-        labels_one_hot = np.zeros((num_labels, num_classes))
-        labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
-        return labels_one_hot
+
