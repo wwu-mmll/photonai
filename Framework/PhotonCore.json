@@ -27,6 +27,10 @@
       "sklearn.ensemble.RandomForestRegressor",
       "Estimator"
    ],
+   "RandomForestClassifier":[
+      "sklearn.ensemble.RandomForestClassifier",
+      "Estimator"
+   ],
    "KerasDNNRegressor":[
       "PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor",
       "Estimator"
