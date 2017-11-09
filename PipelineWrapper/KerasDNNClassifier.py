@@ -99,7 +99,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
     def predict(self, X):
         predict_result = self.model.predict(X, batch_size=128)
         max_index = np.argmax(predict_result, axis=1)
-        return self.dense_to_one_hot(max_index, self.target_dimension)
+        return binary_to_one_hot(max_index)
 
     def predict_proba(self, X):
         """
