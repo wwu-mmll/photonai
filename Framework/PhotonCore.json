@@ -55,6 +55,14 @@
       "PipelineWrapper.FeatureSelection.FRegressionSelectPercentile",
       "Transformer"
    ],
+   "mi_regression_select_percentile":[
+      "PipelineWrapper.FeatureSelection.MIRegressionSelectPercentile",
+      "Transformer"
+   ],
+   "mi_classif_select_percentile":[
+      "PipelineWrapper.FeatureSelection.MIClassifSelectPercentile",
+      "Transformer"
+   ],
    "svc":[
       "sklearn.svm.SVC",
       "Estimator"
