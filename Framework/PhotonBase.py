@@ -390,6 +390,15 @@ class Hyperpipe(BaseEstimator):
 
                             best_config_item_test.fold_list.append(final_fit_fold_tuple)
 
+                            Logger().info('PERFORMANCE TRAIN:')
+                            for m_key, m_value in final_fit_train_item.metrics.items():
+                                Logger().info(str(m_key) + ": " + str(m_value))
+
+                            Logger().info('PERFORMANCE TEST:')
+                            for m_key, m_value in final_fit_test_item.metrics.items():
+                                    Logger().info(str(m_key) + ": " + str(m_value))
+
+
                         # else:
                     # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
@@ -817,7 +826,7 @@ class PipelineSwitch(PipelineElement):
     #     obj.pipeline_element_list = pipeline_element_list
     #     return obj
 
-    def __init__(self, name, pipeline_element_list):
+    def __init__(self, name, pipeline_element_list, _estimator_type='regressor'):
         self.name = name
         self._sklearn_curr_element = self.name + '__current_element'
         # Todo: disable switch?
@@ -832,6 +841,7 @@ class PipelineSwitch(PipelineElement):
         self.pipeline_element_configurations = []
         self.generate_config_grid()
         self.generate_sklearn_hyperparameters()
+        self._estimator_type = _estimator_type
 
     @property
     def hyperparameters(self):
