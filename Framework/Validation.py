@@ -113,6 +113,8 @@ class TestPipeline(object):
     @staticmethod
     def calculate_metrics(y_true, y_pred, metrics):
 
+        # Todo: HOW TO CHECK IF ITS REGRESSION?!
+        # The following works only for classification
         if np.ndim(y_pred) == 2:
             y_pred = one_hot_to_binary(y_pred)
             Logger().warn("test_predictions was one hot encoded => transformed to binary")
