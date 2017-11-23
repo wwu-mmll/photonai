@@ -7,11 +7,12 @@ from functools import total_ordering
 
 class FoldMetrics:
 
-    def __init__(self, metrics, score_duration, y_true, y_predicted):
+    def __init__(self, metrics, score_duration, y_true, y_predicted, indices=[]):
         self.metrics = metrics
         self.score_duration = score_duration
         self.y_true = y_true
         self.y_predicted = y_predicted
+        self.indices = indices
 
     def to_dict(self):
         base_dict = {'score_duration': self.score_duration}

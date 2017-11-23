@@ -98,5 +98,13 @@
    "py_esn_r":[
       "PipelineWrapper.PyESNWrapper.PyESNRegressor",
       "Estimator"
+   ],
+   "f_classif_select_p_value":[
+      "PipelineWrapper.FeatureSelection.FRegressionFilterPValue",
+      "Transformer"
+   ],
+   "pearson_feature_selector":[
+      "PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
+      "Transformer"
    ]
 }
