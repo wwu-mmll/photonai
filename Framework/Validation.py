@@ -44,7 +44,7 @@ class TestPipeline(object):
 
                 self.pipe.set_params(**self.params)
                 fit_start_time = time.time()
-                self.pipe.fit(X[train], y[train])
+                self.pipe.fit(X[train, :], y[train])
 
                 # Todo: Fit Process Metrics
 
@@ -52,10 +52,10 @@ class TestPipeline(object):
                 config_item.fit_duration = fit_duration
 
                 # score test data
-                curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics)
+                curr_test_fold = TestPipeline.score(self.pipe, X[test, :], y[test], self.metrics, indices=test)
 
                 # score train data
-                curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics)
+                curr_train_fold = TestPipeline.score(self.pipe, X[train, :], y[train], self.metrics, indices=train)
 
                 fold_tuple_item = FoldTupel(fold_cnt)
                 fold_tuple_item.test = curr_test_fold
@@ -79,7 +79,7 @@ class TestPipeline(object):
         return config_item
 
     @staticmethod
-    def score(estimator, X, y_true, metrics):
+    def score(estimator, X, y_true, metrics, indices=[]):
 
         scoring_time_start = time.time()
 
@@ -106,8 +106,8 @@ class TestPipeline(object):
             output_metrics = score_metrics
 
         final_scoring_time = time.time() - scoring_time_start
-        score_result_object = FoldMetrics(output_metrics, final_scoring_time, y_predicted=y_pred, y_true=y_true)
-
+        score_result_object = FoldMetrics(output_metrics, final_scoring_time,
+                                          y_predicted=y_pred, y_true=y_true, indices=indices)
         return score_result_object
 
     @staticmethod

@@ -1,3 +1,5 @@
+
+
 import glob
 
 import pandas
@@ -11,16 +13,17 @@ from PhotonNeuro.BrainAtlas import BrainAtlas
 from pathlib import Path
 import numpy as np
 from scipy.stats import pearsonr
-import pickle
-from sklearn.model_selection import LeaveOneOut, ShuffleSplit
-import pandas as pd
+from sklearn.metrics import accuracy_score, classification_report
 
+from sklearn.model_selection import LeaveOneOut, ShuffleSplit
+
+import matplotlib
+matplotlib.use('Agg')
 from matplotlib import pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
-# import matplotlib
-# matplotlib.use('Agg')
 
 ROOT_DIR = "/spm-data/Scratch/spielwiese_claas"
+
 
 def load_etc_subject_ids_and_targets(xls_file_path: str):
     # subject IDs
@@ -30,6 +33,7 @@ def load_etc_subject_ids_and_targets(xls_file_path: str):
     targets = targets.as_matrix()
     Logger().debug(targets)
     return (subject_ids, targets)
+
 
 def load_dti_images(folder_path: str, subject_ids):
     # load features (imgs)
@@ -41,11 +45,13 @@ def load_dti_images(folder_path: str, subject_ids):
     Logger().debug(str(dti_image_files))
     return dti_image_files
 
+
 def extract_brain_from_dti_images(dti_image_files):
     atlas_info = AtlasInfo(atlas_name='mni_icbm152_t1_tal_nlin_sym_09a_mask', mask_threshold=.5,
                        roi_names='all', extraction_mode='vec')
     brain_atlas = BrainAtlas(atlas_info_object=atlas_info)
     return brain_atlas.transform(X=dti_image_files)
+
 
 def extract_unique_dti_features(unstripped_data: np.array):
     Logger().info("Extracting unique features.")
@@ -62,6 +68,7 @@ def extract_unique_dti_features(unstripped_data: np.array):
     Logger().info("Element wise equal columns: {0}, {1} will be left.".format(len(columns_to_delete), unstripped_data.shape[1] - len(columns_to_delete)))
     return np.delete(unstripped_data, np.asarray(columns_to_delete), 1)
 
+
 def load_and_preprocess_dti_data():
     cached_preprocessed_dti_data_file = Path(ROOT_DIR + "/cached_preprocessed_dti_data.npy")
     if cached_preprocessed_dti_data_file.exists():
@@ -74,6 +81,7 @@ def load_and_preprocess_dti_data():
         dti_roi_brain_striped = np.nan_to_num(dti_roi_brain_striped)
         np.save(cached_preprocessed_dti_data_file, dti_roi_brain_striped)
     return dti_roi_brain_striped
+
 
 def classical_classification() -> Hyperpipe:
     # Strategie 1 - klassisch:
@@ -94,86 +102,69 @@ def classical_classification() -> Hyperpipe:
                      inner_cv=LeaveOneOut(),
                      eval_final_performance=False)
 
-    standard_scaler = PipelineElement.create("standard_scaler", hyperparameters={}, test_disabled=True)
-
-    pipe += standard_scaler
+    pipe += PipelineElement.create("pearson_feature_selector", test_disabled=False, p_threshold=0.01)
+    pipe += PipelineElement.create("standard_scaler", hyperparameters={}, test_disabled=True)
     pipe += PipelineElement.create("pca", hyperparameters={}, test_disabled=True, n_components=None)
-    pipe += PipelineElement.create("f_regression_select_percentile", hyperparameters={"percentile": [10, 30, 50, 70]}, test_disabled=True)
+    svr = PipelineElement.create("SVR", kernel='linear', C=1)
+    pipe += svr
 
-    svr = PipelineElement.create("SVR", hyperparameters={"kernel": ["rbf", "linear"], "C": [0.1, 0.3, 0.5, 0.75, 1, 1.5, 2, 5]})
+    # svr = PipelineElement.create("SVR", hyperparameters={"kernel": ["rbf", "linear"], "C": [0.1, 0.3, 0.5, 0.75, 1, 1.5, 2, 5]})
     # rndf = PipelineElement.create("RandomForestRegressor", hyperparameters={"min_samples_leaf": [1, 5]}, test_disabled=False)
     # pipe += PipelineSwitch('final_estimator', [svr, rndf])
     # pipe += rndf
-    pipe += svr
 
     return pipe
 
-subject_ids, targets = load_etc_subject_ids_and_targets(ROOT_DIR + '/Key_Information_ECT_sample_20170829.xlsx')
+xls_file = ROOT_DIR + '/Key_Information_ECT_sample_20170829.xlsx'
+subject_ids, targets = load_etc_subject_ids_and_targets(xls_file)
+
+responder = pandas.read_excel(open(xls_file, 'rb'), sheet_name='ECT', usecols="K", squeeze=True)
+hamilton_pre = pandas.read_excel(open(xls_file, 'rb'), sheet_name='ECT', usecols="G", squeeze=True)
+
+
 dti_preprocessed = load_and_preprocess_dti_data()
 pipe = classical_classification()
 
-corr_coef = []
-corr_p = []
-
-for i in range(dti_preprocessed.shape[1]):
-    feature = dti_preprocessed[:, i]
-    # corr = np.correlate(feature, targets)
-    corr = pearsonr(feature, targets)
-    corr_coef.append(corr[0])
-    corr_p.append(corr[1])
-
-corr_coef = np.array(corr_coef)
-corr_p = np.array(corr_p)
-idx_of_significant = np.where(corr_p <= 0.01)
-# nr_of_significants = idx_of_significant[0].shape[0]
-
-# histo_vals = np.histogram(corr_coef[idx_of_significant])
-# plt.hist(corr_coef[idx_of_significant])
-# plt.show()
-
-# tmp_RFR = PipelineElement.create("RandomForestRegressor", hyperparameters={"min_samples_leaf": [1, 5], },
-#                                   test_disabled=False)
-# tmp_RFR.fit(dti_preprocessed, targets)
-# # forest_feature_importance
-# most_important_features_index = np.argsort(tmp_RFR.base_element.feature_importances_)
-# most_important_features = dti_preprocessed[:, most_important_features_index[:200]]
-# num_features = dti_preprocessed.shape[1]
-# fig = plt.figure()
-# plt.plot(np.linspace(0, num_features, num_features), tmp_RFR.base_element.feature_importances_)
-# plt.show()
-#
-# tmp_PCA = PipelineElement.create('pca', {}, test_disabled=False, n_components=2)
-# tmp_PCA.fit(most_important_features)
-# explained_variance = np.sum(tmp_PCA.base_element.explained_variance_)
-# print(explained_variance)
-# dti_preprocessed_three_dim = tmp_PCA.transform(most_important_features)
-# fig = plt.figure()
-# ax = fig.add_subplot(111, projection='3d')
-# ax.scatter(dti_preprocessed_three_dim[:, 0], dti_preprocessed_three_dim[:, 1], targets)
-# plt.show()
-
-
-features = np.ascontiguousarray(np.array(np.squeeze(dti_preprocessed[:, idx_of_significant])))
+features = np.ascontiguousarray(np.array(np.squeeze(dti_preprocessed)))
+Logger().info('Starting Hyperparameter Search')
 pipe.fit(features, targets)
 
-# new_predictions = pipe.predict(features)
-# pred_corr = pearsonr(new_predictions, targets)
-# print(pred_corr)
-
+Logger().info('Calculating output correlations & stuff')
 config_pearsons_list = []
+mse_list = []
+indices_list = []
 
 search_tree = pipe.result_tree.config_list[0].fold_list[0].train.config_list
 for config_item in search_tree:
     pearson_list_y_true = []
     pearson_list_y_pred = []
     for fold in config_item.fold_list:
-        pearson_list_y_true.append(fold.test.y_true)
-        pearson_list_y_pred.append(fold.test.y_predicted)
+        pearson_list_y_true.append(fold.test.y_true[0])
+        pearson_list_y_pred.append(fold.test.y_predicted[0])
+        mse = fold.test.metrics['mean_squared_error']
+        mse_list.append(mse)
+        indices_list.append(fold.test.indices[0])
     pred_pearson = pearsonr(pearson_list_y_pred, pearson_list_y_true)
     print(pred_pearson)
+    print(np.mean(mse_list))
+    print(np.std(mse_list))
+    # print(indices_list)
+    # print(pearson_list_y_pred)
 
-logex = LogExtractor.LogExtractor(pipe.result_tree)
-logex.extract_csv('johnny_dti_results.csv')
+    hamilton_post_predicted = np.subtract(hamilton_pre, pearson_list_y_pred)
+    index_post_predicted = np.where(hamilton_post_predicted <= 8)
+    index_responders = np.where(responder == 1)
+    predicted_responders = np.zeros(targets.size)
+    predicted_responders[index_post_predicted] = 1
+
+    print(accuracy_score(y_true=responder, y_pred=predicted_responders))
+    print(classification_report(y_true=responder, y_pred=predicted_responders))
+    # print(hamilton_post_predicted)
+    # print(index_post_predicted)
+    # print(index_responders)
+
+# logex = LogExtractor.LogExtractor(pipe.result_tree)
+# logex.extract_csv('johnny_dti_results.csv')
 
 # pickle.dump(pipe, open('jonny_pipe.p', 'wb'))
 
