@@ -30,8 +30,10 @@ manager.fit(X, y)
 
 result_tree = manager.result_tree
 
-# get best config of outer cv fold 1:
+# get metrics for no outer cv, for inner fold 1 and for default config:
+metrics = result_tree.get_metrics_for_inner_cv(0, 0, 0)
 
+# get best config of outer cv fold 1:
 best_config = result_tree.get_best_config_for(outer_cv_fold=0)
 
 # performance of best config of outer cv fold 1 for TEST DATA:

@@ -65,6 +65,7 @@ class FoldTupel:
 class FoldOperations(Enum):
     MEAN = 0
     STD = 1
+    RAW = 2
 
 
 class FoldMetric:
@@ -190,11 +191,18 @@ class MasterElement:
         if self.me_type == MasterElementType.ROOT:
             return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0]
 
-    def get_best_config_performance_for(self, outer_cv_fold: object, train_data: object = False) -> object:
+    def get_metrics_for_inner_cv(self, outer_cv_fold: int, inner_cv_fold: int, config_nr: int, train_data: bool = False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            if train_data:
+                return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].train.metrics
+            else:
+                return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].test.metrics
+
+    def get_best_config_performance_for(self, outer_cv_fold: int, train_data: bool = False) -> object:
         # Todo: Try Catch?
         if self.me_type == MasterElementType.ROOT:
             if train_data:
-                return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0].fold_list[0].train
+                return self.config_list[0].fold_list[outer_cv_fold].train.config_list[0].fold_list[0].train
             else:
                 return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0].fold_list[0].test
 
