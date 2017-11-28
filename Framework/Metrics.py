@@ -21,3 +21,5 @@ def pearson_correlation(y_true, y_pred):
 
 def variance_explained(y_true, y_pred):
     return np.square(pearson_correlation(y_true, y_pred))
+
+
