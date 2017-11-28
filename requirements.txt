@@ -13,3 +13,4 @@ nibabel
 pandas
 six
 h5py
+xlrd
