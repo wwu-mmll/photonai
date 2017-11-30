@@ -198,6 +198,28 @@ class MasterElement:
             else:
                 return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].test.metrics
 
+    def get_all_metrics(self, outer_cv_fold: int = 0, config_nr: int = 0, train_data: bool = False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            inner_fold_list = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list
+            metric_dicts = []
+
+            for inner_fold in inner_fold_list:
+                if train_data:
+                    metric_dicts.append(inner_fold.train.metrics)
+                else:
+                    metric_dicts.append(inner_fold.test.metrics)
+
+            final_dict = {}
+            for metric_dict in metric_dicts:
+                for key, value in metric_dict.items():
+                    if key in final_dict:
+                        final_dict[key].append(value)
+                    else:
+                        final_dict[key] = []
+                        final_dict[key].append(value)
+
+            return final_dict
+
     def get_best_config_performance_for(self, outer_cv_fold: int, train_data: bool = False) -> object:
         # Todo: Try Catch?
         if self.me_type == MasterElementType.ROOT:
