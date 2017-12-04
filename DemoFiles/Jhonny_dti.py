@@ -183,11 +183,11 @@ def evaluate_predictions(targets):
 
 #
 #
-# xls_file = ROOT_DIR + '/Key_Information_ECT_sample_20170829.xlsx'
-# subject_ids, targets = load_etc_subject_ids_and_targets(xls_file)
+xls_file = ROOT_DIR + '/Key_Information_ECT_sample_20170829.xlsx'
+subject_ids, targets = load_etc_subject_ids_and_targets(xls_file)
 
-# fit_model(targets)
-# evaluate_predictions(targets)
+fit_model(targets)
+evaluate_predictions(targets)
 #
 loaded_data = pickle.load(open('jonny_pipe_others.p', 'rb'))
 pearson_list_y_true = pickle.load(open('jonny_pipe_y_true.p', 'rb'))

@@ -21,7 +21,7 @@ manager = Hyperpipe('test_manager',
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))
 
 # nn = PipelineElement.create('kdnn', hyperparameters={'hidden_layer_sizes': [[5, 3]]})
-svm = PipelineElement.create('svc', hyperparameters={'C': [0.5, 1]}, kernel='rbf')
+svm = PipelineElement.create('svc', hyperparameters={'C': [0.5, 1]}, kernel='linear')
 # manager.add(PipelineSwitch('final_estimator', [nn, svm]))
 
 manager.add(svm)
@@ -29,6 +29,13 @@ manager.add(svm)
 manager.fit(X, y)
 
 result_tree = manager.result_tree
+
+best_config_outer_cv_0 = result_tree.get_best_config_for(outer_cv_fold=0)
+feature_weights_best_config_outer_cv_0 = best_config_outer_cv_0.fold_list[0].train.feature_importances_
+feature_weights_any_config = result_tree.get_feature_importances_for_inner_cv(outer_cv_fold=0, inner_cv_fold=1, config_nr=0)
+
+inverse_transformed_feature_importances = manager.inverse_transform_pipeline(best_config_outer_cv_0.config_dict, X, y,
+                                                              feature_weights_best_config_outer_cv_0)
 
 # get metrics for no outer cv, for inner fold 1 and for default config:
 metrics = result_tree.get_metrics_for_inner_cv(outer_cv_fold=0, inner_cv_fold=0, config_nr=0)

@@ -7,12 +7,13 @@ from functools import total_ordering
 
 class FoldMetrics:
 
-    def __init__(self, metrics, score_duration, y_true, y_predicted, indices=[]):
+    def __init__(self, metrics, score_duration, y_true, y_predicted, indices=[], feature_importances_=[]):
         self.metrics = metrics
         self.score_duration = score_duration
         self.y_true = y_true
         self.y_predicted = y_predicted
         self.indices = indices
+        self.feature_importances_ = feature_importances_
 
     def to_dict(self):
         base_dict = {'score_duration': self.score_duration}
@@ -206,12 +207,17 @@ class MasterElement:
                 source_element = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].test
             return {'y_true': source_element.y_true, 'y_predicted': source_element.y_predicted}
 
+    def get_feature_importances_for_inner_cv(self, outer_cv_fold: int=0, inner_cv_fold: int=0, config_nr: int=0) -> list:
+        if self.me_type == MasterElementType.ROOT:
+            return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].train.feature_importances_
+
     def get_predictions_for_best_config_of_outer_cv(self, outer_cv_fold: int=0, train_data: bool = False) -> dict:
         if self.me_type == MasterElementType.ROOT:
             best_config = self.get_best_config_for(outer_cv_fold)
             if best_config:
                 if train_data:
-                    return {'y_true': best_config.fold_list[0].train.y_true, 'y_predicted': best_config.fold_list[0].train.y_predicted}
+                    return {'y_true': best_config.fold_list[0].train.y_true,
+                            'y_predicted': best_config.fold_list[0].train.y_predicted}
                 else:
                     return {'y_true': best_config.fold_list[0].test.y_true,
                             'y_predicted': best_config.fold_list[0].test.y_predicted}
