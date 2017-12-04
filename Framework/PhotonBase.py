@@ -1,6 +1,7 @@
 import time
 from hashlib import sha1
 from itertools import product
+from copy import deepcopy
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -478,6 +479,29 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
 
+    def copy_me(self):
+        item_list =[]
+        for item in self.pipeline_elements:
+            item_list.append(item.copy_me())
+        return item_list
+
+    def _copy_pipeline(self):
+        pipeline_steps = []
+        for item in self.pipeline_elements:
+            cpy = item.copy_me()
+            if isinstance(cpy, list):
+                for new_step in cpy:
+                    pipeline_steps.append((new_step.name, new_step))
+            else:
+                pipeline_steps.append((cpy.name, cpy))
+        return Pipeline(pipeline_steps)
+
+    def inverse_transform_pipeline(self, hyperparameters, data, targets, data_to_inverse):
+        copied_pipe = self._copy_pipeline()
+        copied_pipe.set_params(**hyperparameters)
+        copied_pipe.fit(data, targets)
+        return copied_pipe.inverse_transform(data_to_inverse)
+
     def optimize_printing(self, config):
         prettified_config = [self.name + '\n']
         for el_key, el_value in config.items():
@@ -535,6 +559,9 @@ class PipelineElement(BaseEstimator):
         else:
             Logger().error('Element not supported right now:' + name)
             raise NameError('Element not supported right now:', name)
+
+    def copy_me(self):
+        return deepcopy(self)
 
     def __init__(self, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False):
         # Todo: check if hyperparameters are members of the class
@@ -634,6 +661,13 @@ class PipelineElement(BaseEstimator):
                 Logger().error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
         else:
+            return data
+
+    def inverse_transform(self, data):
+        if hasattr(self.base_element, 'inverse_transform'):
+            return self.base_element.inverse_transform(data)
+        else:
+            # raise Warning('Element ' + self.name + ' has no method inverse_transform')
             return data
 
     # def fit_transform(self, data, targets=None):

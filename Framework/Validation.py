@@ -94,6 +94,12 @@ class TestPipeline(object):
 
         y_pred = estimator.predict(X)
 
+        f_importances = []
+        if hasattr(estimator._final_estimator.base_element, 'coef_'):
+            f_importances = estimator._final_estimator.base_element.coef_
+        elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
+            f_importances = estimator._final_estimator.base_element.feature_importances
+
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
@@ -107,7 +113,8 @@ class TestPipeline(object):
 
         final_scoring_time = time.time() - scoring_time_start
         score_result_object = FoldMetrics(output_metrics, final_scoring_time,
-                                          y_predicted=y_pred, y_true=y_true, indices=indices)
+                                          y_predicted=y_pred, y_true=y_true, indices=indices,
+                                          feature_importances_=f_importances)
         return score_result_object
 
     @staticmethod
