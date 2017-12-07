@@ -211,6 +211,22 @@ class MasterElement:
         if self.me_type == MasterElementType.ROOT:
             return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].train.feature_importances_
 
+    def _merge_metric_dicts(self, fold_list, train_data):
+        result_dict = {}
+        for fold in fold_list:
+            if train_data:
+                source_dict = fold.train.metrics
+            else:
+                source_dict = fold.test.metrics
+
+        for key, value in source_dict.items():
+            if key in result_dict:
+                result_dict[key].append(value)
+            else:
+                result_dict[key] = [value]
+
+        return result_dict
+
     def get_predictions_for_best_config_of_outer_cv(self, outer_cv_fold: int=0, train_data: bool = False) -> dict:
         if self.me_type == MasterElementType.ROOT:
             best_config = self.get_best_config_for(outer_cv_fold)
@@ -264,10 +280,6 @@ class MasterElement:
         if self.me_type == MasterElementType.ROOT:
             return self.config_list[0].fold_list[outer_cv_fold].train.config_list
 
-    def get_tested_configurations_for(self, outer_cv_fold):
-        # Todo: Try Catch?
-        if self.me_type == MasterElementType.ROOT:
-            return self.config_list[0].fold_list[outer_cv_fold].train.config_list
 
     def create_csv_rows(self, master_element_name):
 
