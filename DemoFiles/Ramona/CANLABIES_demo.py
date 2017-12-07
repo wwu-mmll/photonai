@@ -21,7 +21,7 @@ manager = Hyperpipe('test_manager',
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))
 
 # nn = PipelineElement.create('kdnn', hyperparameters={'hidden_layer_sizes': [[5, 3]]})
-svm = PipelineElement.create('svc', hyperparameters={'C': [0.5, 1]}, kernel='rbf')
+svm = PipelineElement.create('svc', hyperparameters={'C': [0.5, 1]}, kernel='linear')
 # manager.add(PipelineSwitch('final_estimator', [nn, svm]))
 
 manager.add(svm)
@@ -29,6 +29,13 @@ manager.add(svm)
 manager.fit(X, y)
 
 result_tree = manager.result_tree
+
+best_config_outer_cv_0 = result_tree.get_best_config_for(outer_cv_fold=0)
+feature_weights_best_config_outer_cv_0 = best_config_outer_cv_0.fold_list[0].train.feature_importances_
+feature_weights_any_config = result_tree.get_feature_importances_for_inner_cv(outer_cv_fold=0, inner_cv_fold=1, config_nr=0)
+
+inverse_transformed_feature_importances = manager.inverse_transform_pipeline(best_config_outer_cv_0.config_dict, X, y,
+                                                              feature_weights_best_config_outer_cv_0)
 
 # get metrics for no outer cv, for inner fold 1 and for default config:
 metrics = result_tree.get_metrics_for_inner_cv(outer_cv_fold=0, inner_cv_fold=0, config_nr=0)
@@ -38,13 +45,9 @@ all_metrics = result_tree.get_all_metrics()
 # get best config of outer cv fold 1:
 best_config = result_tree.get_best_config_for(outer_cv_fold=0)
 
-# performance of best config of outer cv fold 1 for TEST DATA:
-# -> INCLUDING: metrics, y_true and y_predicted
-# -> on this object you can also call helper functions such as roc_curve (which is not tested yet)
-best_config_performance_test = result_tree.get_best_config_performance_for(outer_cv_fold=0)
 
-# performance of best config of outer cv fold 1 for TRAIN DATA:
-best_config_performance_train = result_tree.get_best_config_performance_for(outer_cv_fold=0, train_data=True)
+predictions_of_inner_fold = result_tree.get_predictions_for_inner_cv()
+
 
 # iterate all tested configuration for outer fold 1:
 tested_configs = result_tree.get_tested_configurations_for(outer_cv_fold=0)

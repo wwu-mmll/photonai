@@ -15,7 +15,7 @@ from PhotonNeuro.AtlasStacker import AtlasInfo
 from PhotonNeuro.BrainAtlas import BrainAtlas
 from pathlib import Path
 import numpy as np
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, spearmanr
 from sklearn.metrics import accuracy_score, classification_report, mean_squared_error
 
 from sklearn.model_selection import LeaveOneOut, ShuffleSplit
@@ -183,15 +183,15 @@ def evaluate_predictions(targets):
 
 #
 #
-# xls_file = ROOT_DIR + '/Key_Information_ECT_sample_20170829.xlsx'
-# subject_ids, targets = load_etc_subject_ids_and_targets(xls_file)
+xls_file = ROOT_DIR + '/Key_Information_ECT_sample_20170829.xlsx'
+subject_ids, targets = load_etc_subject_ids_and_targets(xls_file)
 
-# fit_model(targets)
-# evaluate_predictions(targets)
+fit_model(targets)
+evaluate_predictions(targets)
 #
 loaded_data = pickle.load(open('jonny_pipe_others.p', 'rb'))
 pearson_list_y_true = pickle.load(open('jonny_pipe_y_true.p', 'rb'))
-# pearson_list_y_pred = pickle.load(open('jonny_pipe_y_pred.p', 'rb'))
+pearson_list_y_pred = pickle.load(open('jonny_pipe_y_pred.p', 'rb'))
 #
 # sort_index = np.argsort(pearson_list_y_true)
 #
@@ -200,12 +200,19 @@ pearson_list_y_true = pickle.load(open('jonny_pipe_y_true.p', 'rb'))
 
 hamilton_post = loaded_data[0]
 hamilton_post_predicted = loaded_data[1]
+
+
+rang = spearmanr(hamilton_post, hamilton_post_predicted)
+print(rang)
+
 predicted_responders = loaded_data[3]
 responder = loaded_data[2]
 
 always_fifteen = np.ones(hamilton_post.shape) * 12.5
 mse_always_fifteen = mean_squared_error(y_true=pearson_list_y_true, y_pred=always_fifteen)
 print(mse_always_fifteen)
+
+print(mean_squared_error(y_true=pearson_list_y_true, y_pred=pearson_list_y_pred))
 # hamilton_post_predicted = hamilton_post_predicted[sort_index]
 # hamilton_post = hamilton_post[sort_index]
 # responder = responder[sort_index]
