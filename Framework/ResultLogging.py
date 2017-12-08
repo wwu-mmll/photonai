@@ -3,7 +3,10 @@ import os
 from enum import Enum
 import numpy as np
 from functools import total_ordering
-
+import datetime
+import plotly
+import plotly.graph_objs as go
+from plotly import tools
 
 class FoldMetrics:
 
@@ -136,6 +139,12 @@ class Configuration:
         else:
             # Todo: calculate metrics for outer folds
             pass
+
+    def pretty_config_dict(self):
+        output = ''
+        for name, value in self.config_dict.items():
+            output += name + ': ' + str(value) + '<br>'
+        return output
 
     def to_dict(self):
         if self.me_type == MasterElementType.ROOT:
@@ -303,6 +312,45 @@ class MasterElement:
                     output_lines.append(test_dict)
 
         return output_lines
+
+    def plot_config_performances_for_outer_fold(self, outer_cv_fold=0, output_filename=''):
+        if not output_filename:
+            output_filename = 'PHOTON_Results_' + self.name + '_' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        tested_configs = self.get_tested_configurations_for(outer_cv_fold=outer_cv_fold)
+
+        tracelist = []
+
+        col_nr = 4
+        row_nr = int(np.ceil(len(tested_configs) / col_nr))
+
+        fig = tools.make_subplots(row_nr, col_nr, shared_xaxes=True, shared_yaxes=True,
+                                  subplot_titles=[item.pretty_config_dict() for item in tested_configs])
+
+        col_cnt = 1
+        row_cnt = 1
+
+        for cfg in tested_configs:
+            inner_fold_list = cfg.fold_list
+            cnt = 0
+            metric_list = []
+            name_list = []
+            text_list = []
+            for fold in inner_fold_list:
+                for metric_name, metric_value in fold.train.metrics.items():
+                    metric_list.append(metric_value)
+                    name_list.append(metric_name)
+                    text_list.append('inner fold ' + str(cnt + 1))
+                cnt += 1
+            trace = go.Scatter(x=name_list, y=metric_list, name=str(cfg.config_dict),
+                               mode="markers", text=text_list)
+            if col_cnt > col_nr:
+                col_cnt = 1
+                row_cnt += 1
+            fig.append_trace(trace, row_cnt, col_cnt)
+            col_cnt += 1
+
+        fig['layout'].update(title="", showlegend=False, width=1500)
+        return plotly.offline.plot(fig, filename=output_filename)
 
     def to_dict(self):
         return {'name': self.name, 'type': str(self.me_type)}
