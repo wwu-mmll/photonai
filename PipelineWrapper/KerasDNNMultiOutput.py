@@ -151,8 +151,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         loss_weights = []
         for output_node in self.list_of_outputs:
             outputs.append(Dense(output_node['target_dimension'],
-                                                 activation=output_node['activation'],
-                                                 name=output_node['name'])(x))
+                                                 activation=output_node['activation'])(x))
             losses.append(output_node['loss'])
             loss_weights.append(output_node['loss_weight'])
 
