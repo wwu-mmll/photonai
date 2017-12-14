@@ -10,8 +10,7 @@ def setup_model_MTL(target_info):
 
     my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                         optimizer_params={},
-                        best_config_metric='mean_absolute_error',
-                        metrics=metrics,
+                        metrics=['score'],
                         inner_cv=cv,
                         eval_final_performance=False,
                         verbose=2)
@@ -32,8 +31,7 @@ def setup_model_MTL(target_info):
 
     # define Multi-Task-Learning Model
     my_pipe += PipelineElement.create('KerasDNNMultiOutput',
-                                   {'list_of_outputs': [target_info],
-                                    'hidden_layer_sizes': [[50, 20]],
+                                   {'hidden_layer_sizes': [[50, 20]],
                                     'dropout_rate': [0.5],
                                     'nb_epoch': [10],
                                     'act_func': ['relu'],
@@ -42,6 +40,8 @@ def setup_model_MTL(target_info):
                                     'early_stopping_flag': [True],
                                     'eaSt_patience': [20],
                                     'reLe_factor': [0.4],
-                                    'reLe_patience': [5]})
+                                    'reLe_patience': [5]},
+                               scoring_method='variance_explained',
+                               list_of_outputs=target_info)
 
     return my_pipe, metrics
