@@ -20,7 +20,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # Thickness
     if any("thick" in s for s in what):
-        print('Getting Freesurfer Thickness data...')
+        print('\nGetting Freesurfer Thickness data...')
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
         target_thick = get_targets(file=target_file)
         if 'target_tmp' in locals():
@@ -30,7 +30,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # SurfaceArea
     if any("surf" in s for s in what):
-        print('Getting Freesurfer Surface data...')
+        print('\nGetting Freesurfer Surface data...')
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
         target_surf = get_targets(file=target_file)
         if 'target_tmp' in locals():
@@ -40,7 +40,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # Volume
     if any("vol" in s for s in what):
-        print('Getting Freesurfer Volume data...')
+        print('\nGetting Freesurfer Volume data...')
         target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
         target_vol = get_targets(file=target_file)
         if 'target_tmp' in locals():
@@ -50,7 +50,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # CAT12 Vgm
     if any("cat" in s for s in what):
-        print('Getting CAT12 ROI data...')
+        print('\nGetting CAT12 ROI data...')
         target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
         target_Vgm = get_targets(file=target_file)
         if 'target_tmp' in locals():
@@ -61,8 +61,10 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
     # drop NaNs from targets
     # to keep train and test fully independent, always use drop
     if impute_targets == 'drop':
+        print('\nNaN-handling: drop')
         target_tmp = target_tmp.dropna(axis=0, how='any')
     elif impute_targets == 'mean':
+        print('\nNaN-handling: impute with mean')
         target_tmp = target_tmp.apply(lambda x: x.fillna(x.mean()), axis=0)
 
     # ToDo: drop duplicate cols
@@ -73,7 +75,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
     # merge the three dataframes into one dataframe and only keep the intersection (via 'inner')
     df = pandas.merge(covs_tmp, target_tmp, how='inner', on='ID')
     df = pandas.merge(df, snp_num_frame, how='inner', on='ID')
-    print('Target shape: ' + str(target_tmp.shape))
+    print('\nTarget shape: ' + str(target_tmp.shape))
     print('Covs shape: ' + str(covs_tmp.shape))
     print('SNPs shape: ' + str(snps_tmp.shape))
     print('Intersection merge: ' + str(df.shape))
@@ -81,6 +83,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
 # get Genetic data
 def get_snps(file):
+    print('\nRetrieving SNPs...')
     snp_frame = pandas.read_excel(file)                    # read snp data
     snp_frame = snp_frame.dropna(axis=0, how='any')     # get rid of subjects whose data contains NaNs
     snp_names = snp_frame.columns[1:].values            # skip subID and take the rest
@@ -89,6 +92,7 @@ def get_snps(file):
 
 # get clinical/psychometric etc. variables
 def get_covs(file):
+    print('\nRetrieving covariates...')
     covs_frame = pandas.read_csv(file)                 # read cov data
     covs_frame.columns = ['ID' if x == 'Proband' else x for x in covs_frame.columns]    # rename the ID column to allow merge
     covs_frame = covs_frame.dropna(axis=0, how='any', subset=['Group'])         # get rid of subjects whose data contains NaNs in the listed col(s) (we only need Group to be valid for everyone)
@@ -99,6 +103,7 @@ def get_covs(file):
 
 # get targets (ROI-wise cortical thickness or volumes or ...)
 def get_targets(file):
+    print('\nRetrieving targets...')
     target_frame = pandas.read_csv(open(file, 'rb'))              # read target data (e.g. volume or thickness)
     target_frame.columns = ['ID' if (x == 'SubjID' or x == 'names') else x for x in target_frame.columns] # rename the ID column to allow merge
 
@@ -117,6 +122,7 @@ def get_targets(file):
 
 # transform SNPs to numbers
 def recode_snps(snp_frame, snp_names):
+    print('\nRecoding SNPs...')
     # deep copy snp_frame
     snp_frame_recode = snp_frame.copy()
     # transform snp data to numbers
@@ -146,6 +152,7 @@ def recode_snps(snp_frame, snp_names):
 
 # one hot encode snp matrix
 def one_hot_snps(snp_frame, snp_names):
+    print('\nOne-hot-encoding SNPs...')
     snp_frame_oneHot = pandas.DataFrame()
     snp_frame_oneHot['ID'] = snp_frame['ID']    # add ID col
     for snpID in snp_names:
@@ -163,6 +170,7 @@ def one_hot_snps(snp_frame, snp_names):
 
 # get feature importance
 def get_feature_importance(results, feature_names, data, targets, roiName):
+    print('\nComputing Feature Importance...')
     results_tree = results.result_tree
     best_config = results_tree.get_best_config_for(outer_cv_fold=0)
     imp_tmp = pandas.DataFrame(index=[np.arange(1, len(best_config.best_config_object_for_validation_set.fold_list)+1)], columns=feature_names)
@@ -182,7 +190,7 @@ def get_feature_importance(results, feature_names, data, targets, roiName):
     return importance_scores
 
 # setup photon HP
-def setup_model():
+def setup_model_classic():
     # import PHOTON Core
     office = True
     import sys
@@ -257,9 +265,57 @@ def setup_model():
     return my_pipe, metrics
 
 
+# setup photon HP for Multi Task Learning
+def setup_model_MTL(target_info):
+    # import PHOTON Core
+    from Framework.PhotonBase import PipelineElement, PipelineSwitch, Hyperpipe, ShuffleSplit
+    from sklearn.model_selection import KFold
+
+    metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
+    #cv = KFold(n_splits=20, shuffle=True, random_state=3)
+    cv = ShuffleSplit(n_splits=1, test_size=0.2)
+
+    my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
+                        optimizer_params={},
+                        best_config_metric='mean_absolute_error',
+                        metrics=metrics,
+                        inner_cv=cv,
+                        eval_final_performance=False,
+                        verbose=2)
+
+    # get interaction terms
+    # # register elements
+    # from Framework.Register import RegisterPipelineElement
+    # photon_package = 'PhotonCore'  # where to add the element
+    # photon_name = 'interaction_terms'  # element name
+    # class_str = 'sklearn.preprocessing.PolynomialFeatures'  # element info
+    # element_type = 'Transformer'  # element type
+    # RegisterPipelineElement(photon_name=photon_name,
+    #                         photon_package=photon_package,
+    #                         class_str=class_str,
+    #                         element_type=element_type).add()
+    # add the elements
+    my_pipe += PipelineElement.create('interaction_terms', {'degree': [2, 3]},  interaction_only=True, include_bias=False, test_disabled=True)
+
+    # define Multi-Task-Learning Model
+    my_pipe += PipelineElement.create('KerasDNNMultiOutput',
+                                   {'list_of_outputs': [target_info],
+                                    'hidden_layer_sizes': [[50, 20]],
+                                    'dropout_rate': [0.5],
+                                    'nb_epoch': [10],
+                                    'act_func': ['relu'],
+                                    'learning_rate': [0.01],
+                                    'batch_normalization': [True],
+                                    'early_stopping_flag': [True],
+                                    'eaSt_patience': [20],
+                                    'reLe_factor': [0.4],
+                                    'reLe_patience': [5]})
+
+    return my_pipe, metrics
+
 ###############################################################################################################
 # iterate over targets (e.g. ROI volumes)
-def run_analysis(data_dict):
+def run_analysis_classic(data_dict):
 
     data = data_dict['data']
     targets = data_dict['targets']
@@ -270,17 +326,16 @@ def run_analysis(data_dict):
     perm_test = data_dict['perm_test']
 
     # create PHOTON hyperpipe
-
-    my_pipe, metrics = setup_model()
+    my_pipe, metrics = setup_model_classic()
 
     # shuffle targets if running a permutation test
     if perm_test == True:
-        print('PERMUTATION TEST: SHUFFLING TARGETS NOW!')
+        print('\nPERMUTATION TEST: SHUFFLING TARGETS NOW!')
         np.random.shuffle(targets)
 
     # remove confounders from target data (age, gender, site, ICV)
     if remove_covs:
-        print('Removing covariates from targets.')
+        print('\nRemoving covariates from targets.')
         import statsmodels.api as sm
         ols_X = data_dict['covs']
         ols_X = sm.add_constant(ols_X)
@@ -305,7 +360,7 @@ def run_analysis(data_dict):
     # TEST SET -> Train
     best_config_performance_train = results_tree.get_best_config_performance_validation_set(train_data=True)
 
-    print('Best config performance TEST: ' + roiName + ' ' + str(best_config_performance_test))
+    print('\n\nBest config performance TEST: ' + roiName + ' ' + str(best_config_performance_test))
     print('Best config performance TRAIN: ' + roiName + ' ' + str(best_config_performance_train))
 
     # initialize results DataFrame
