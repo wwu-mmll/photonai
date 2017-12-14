@@ -19,7 +19,7 @@ def categorical_accuracy_score(y_true, y_pred):
 def pearson_correlation(y_true, y_pred):
     return np.corrcoef(y_true, y_pred)[0][1]
 
-def variance_explained(y_true, y_pred):
+def variance_explained_score(y_true, y_pred):
     return np.square(pearson_correlation(y_true, y_pred))
 
 
