@@ -156,7 +156,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
 
 
         model = Model(input_layer,outputs)
-        model.summary()
+        #model.summary()
         # Compile model
         optimizer = Adam(lr=self.learning_rate)
         model.compile(loss=losses, loss_weights=loss_weights,
