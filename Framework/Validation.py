@@ -166,7 +166,7 @@ class Scorer(object):
         'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
         'r2': ('sklearn.metrics', 'r2_score'),
         'pearson_correlation': ('Framework.Metrics', 'pearson_correlation'),
-        'variance_explained':  ('Framework.Metrics', 'variance_explained'),
+        'variance_explained':  ('Framework.Metrics', 'variance_explained_score'),
         'categorical_accuracy': ('Framework.Metrics','categorical_accuracy_score')
     }
 
