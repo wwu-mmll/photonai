@@ -3,14 +3,15 @@ import pandas
 import numpy as np
 
 #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-#pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/'
+#pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
+pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
 global getImp, perm_test
 getImp = False
 perm_test = False
 covs_out = True
 one_hot_it = False
+discretize_targets = True
 
 def get_data():
     # get data (snps; recode SNPs to numerical values; 0-->hetero)
@@ -350,6 +351,16 @@ if __name__ == '__main__':
         # get data (numeric snps)
         roi_data = np.asarray(df_tmp[snp_names])
         roi_data = roi_data.copy(order='C')  # fixes an error (don't know why this is necessary)
+
+        # # scale targets
+        # print('\nScaling targets.\n')
+        # from sklearn.preprocessing import StandardScaler
+        # roi_targets = StandardScaler().fit_transform(roi_targets)
+
+        # discretize targets
+        print('\nRounding targets.\n')
+        if discretize_targets:
+            roi_targets = np.around(roi_targets, decimals=1)
 
         # get covs
         covs = df_tmp[['Alter', 'Geschlecht', 'Site', 'ICV']]

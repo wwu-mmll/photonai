@@ -98,7 +98,7 @@ class TestPipeline(object):
         if hasattr(estimator._final_estimator.base_element, 'coef_'):
             f_importances = estimator._final_estimator.base_element.coef_
         elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
-            f_importances = estimator._final_estimator.base_element.feature_importances
+            f_importances = estimator._final_estimator.base_element.feature_importances_
 
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
