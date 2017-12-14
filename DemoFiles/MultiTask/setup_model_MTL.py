@@ -6,8 +6,8 @@ def setup_model_MTL(target_info):
 
     metrics = ['variance_explained']
     #cv = KFold(n_splits=20, shuffle=True, random_state=3)
-    cv = ShuffleSplit(n_splits=1, test_size=0.2)
-
+    #cv = ShuffleSplit(n_splits=1, test_size=0.2)
+    cv = KFold(n_splits=3, shuffle=True, random_state=14)
     my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                         optimizer_params={},
                         metrics=['score'],
