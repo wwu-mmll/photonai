@@ -4,7 +4,7 @@ def setup_model_MTL(target_info):
     from Framework.PhotonBase import PipelineElement, PipelineSwitch, Hyperpipe, ShuffleSplit
     from sklearn.model_selection import KFold
 
-    #metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
+    metrics = ['variance_explained']
     #cv = KFold(n_splits=20, shuffle=True, random_state=3)
     cv = ShuffleSplit(n_splits=1, test_size=0.2)
 
@@ -41,7 +41,7 @@ def setup_model_MTL(target_info):
                                     'eaSt_patience': [20],
                                     'reLe_factor': [0.4],
                                     'reLe_patience': [5]},
-                               scoring_method='variance_explained',
+                               scoring_method=metrics[0],
                                list_of_outputs=target_info)
 
     return my_pipe, metrics
