@@ -1,4 +1,5 @@
-from DemoFiles.MultiTask.helpers import get_data, setup_model_MTL
+from DemoFiles.MultiTask.helpers import get_data
+from DemoFiles.MultiTask.setup_model_MTL import setup_model_MTL
 import numpy as np
 import pandas
 
@@ -12,7 +13,8 @@ if __name__ == '__main__':
     # pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/'
 
     group_id = 2    # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
-    target_modalities = ['vol']
+    target_modalities = ['custom', 'Hipp']
+    #target_modalities = 'all'
 
     one_hot_it = True
 

@@ -20,7 +20,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # Thickness
     if any("thick" in s for s in what):
-        print('\nGetting Freesurfer Thickness data...')
+        print('\nRetrieving Freesurfer Thickness data...')
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
         target_thick = get_targets(file=target_file)
         if 'target_tmp' in locals():
@@ -30,7 +30,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # SurfaceArea
     if any("surf" in s for s in what):
-        print('\nGetting Freesurfer Surface data...')
+        print('\nRetrieving Freesurfer Surface data...')
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
         target_surf = get_targets(file=target_file)
         if 'target_tmp' in locals():
@@ -40,7 +40,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # Volume
     if any("vol" in s for s in what):
-        print('\nGetting Freesurfer Volume data...')
+        print('\nRetrieving Freesurfer Volume data...')
         target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
         target_vol = get_targets(file=target_file)
         if 'target_tmp' in locals():
@@ -50,13 +50,23 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     # CAT12 Vgm
     if any("cat" in s for s in what):
-        print('\nGetting CAT12 ROI data...')
+        print('\nRetrieving CAT12 ROI data...')
         target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
         target_Vgm = get_targets(file=target_file)
         if 'target_tmp' in locals():
             target_tmp = pandas.merge(target_tmp, target_Vgm, how='inner', on='ID')     # merge target datasets
         else:
             target_tmp = target_Vgm
+
+    # generic ROI extractor
+    if what[0] == "custom":
+        target_custom = get_custom_targets(what)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_custom, how='inner', on='ID')     # merge target datasets
+        else:
+            target_tmp = target_custom
+
+    print('Retrieving not yet')
 
     # drop NaNs from targets
     # to keep train and test fully independent, always use drop
@@ -119,6 +129,9 @@ def get_targets(file):
     #don't drop NaNs now, but target-wise in the loop to have max number of samples for each ROI model
 
     return target_frame
+
+def get_custom_targets(what):
+    lj
 
 # transform SNPs to numbers
 def recode_snps(snp_frame, snp_names):
@@ -262,55 +275,6 @@ def setup_model_classic():
 
     #my_pipe += dnn_estimator
     my_pipe += tree_estimator
-    return my_pipe, metrics
-
-
-# setup photon HP for Multi Task Learning
-def setup_model_MTL(target_info):
-    # import PHOTON Core
-    from Framework.PhotonBase import PipelineElement, PipelineSwitch, Hyperpipe, ShuffleSplit
-    from sklearn.model_selection import KFold
-
-    metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
-    #cv = KFold(n_splits=20, shuffle=True, random_state=3)
-    cv = ShuffleSplit(n_splits=1, test_size=0.2)
-
-    my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
-                        optimizer_params={},
-                        best_config_metric='mean_absolute_error',
-                        metrics=metrics,
-                        inner_cv=cv,
-                        eval_final_performance=False,
-                        verbose=2)
-
-    # get interaction terms
-    # # register elements
-    # from Framework.Register import RegisterPipelineElement
-    # photon_package = 'PhotonCore'  # where to add the element
-    # photon_name = 'interaction_terms'  # element name
-    # class_str = 'sklearn.preprocessing.PolynomialFeatures'  # element info
-    # element_type = 'Transformer'  # element type
-    # RegisterPipelineElement(photon_name=photon_name,
-    #                         photon_package=photon_package,
-    #                         class_str=class_str,
-    #                         element_type=element_type).add()
-    # add the elements
-    my_pipe += PipelineElement.create('interaction_terms', {'degree': [2, 3]},  interaction_only=True, include_bias=False, test_disabled=True)
-
-    # define Multi-Task-Learning Model
-    my_pipe += PipelineElement.create('KerasDNNMultiOutput',
-                                   {'list_of_outputs': [target_info],
-                                    'hidden_layer_sizes': [[50, 20]],
-                                    'dropout_rate': [0.5],
-                                    'nb_epoch': [10],
-                                    'act_func': ['relu'],
-                                    'learning_rate': [0.01],
-                                    'batch_normalization': [True],
-                                    'early_stopping_flag': [True],
-                                    'eaSt_patience': [20],
-                                    'reLe_factor': [0.4],
-                                    'reLe_patience': [5]})
-
     return my_pipe, metrics
 
 ###############################################################################################################
