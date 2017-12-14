@@ -32,7 +32,7 @@ pipe = Hyperpipe('pipe', optimizer='grid_search',
 
 pipe += PipelineElement.create('KerasDNNMultiOutput',
                                {'hidden_layer_sizes':[[50,20]],
-                                'dropout_rate':[0.5],
+                                'dropout_rate':[0.5, 0.4],
                                 'nb_epoch':[10],
                                 'act_func':['relu'],
                                 'learning_rate': [0.01],
@@ -46,6 +46,8 @@ pipe += PipelineElement.create('KerasDNNMultiOutput',
 
 y_array = np.transpose(np.asarray(multi_y))
 pipe.fit(X,y_array)
+results_tree = pipe.result_tree
+print(results_tree.get_best_config_for(outer_cv_fold=0))
 print('')
 
 
