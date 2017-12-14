@@ -329,6 +329,7 @@ class Hyperpipe(BaseEstimator):
                         # Todo: Umbauen
                         best_config_item_test = Configuration(MasterElementType.OUTER_TEST, best_train_config.config_dict)
                         best_config_item_test.children_configs = best_train_config.children_configs
+                        best_config_item_test.best_config_object_for_validation_set = best_train_config
                         self.best_config = best_config_item_test
 
 
