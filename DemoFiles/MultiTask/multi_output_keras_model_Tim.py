@@ -9,21 +9,22 @@ if __name__ == '__main__':
 
     ###############################################################################################################
     #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-    pre = '/home/nils/data/GeneticBrainAtlas/'
-    # pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/'
+    #pre = '/home/nils/data/GeneticBrainAtlas/'
+    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
     group_id = 2    # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     #target_modalities = ['custom_str', 'hip']
     #target_modalities = ['all']
     target_modalities = ['custom_id', 'Lhippo', 'Rhippo', 'lHip', 'rHip']
 
-    one_hot_it = True
+    one_hot_it = False
+    discretize_targets = True
 
     getImportanceScores = False
     perm_test = False
 
-    remove_covs = False
-    covs = ['Alter', 'Geschlecht', 'Site', 'ICV']
+    remove_covs = True
+    covs = ['Alter', 'Geschlecht', 'Site']
     ###############################################################################################################
 
     # get data
@@ -68,6 +69,11 @@ if __name__ == '__main__':
     print('\nScaling targets.\n')
     from sklearn.preprocessing import StandardScaler
     targets = StandardScaler().fit_transform(targets)
+
+    # discretize targets
+    print('\nRounding targets.\n')
+    if discretize_targets:
+        targets = np.around(targets, decimals=1)
 
     # create PHOTON hyperpipe
     my_pipe, metrics = setup_model_MTL(target_info=target_info)
