@@ -64,6 +64,11 @@ if __name__ == '__main__':
         ols_results = ols_model.fit()
         targets = np.asarray(ols_results.resid)
 
+    # scale targets
+    print('\nScaling targets.\n')
+    from sklearn.preprocessing import StandardScaler
+    targets = StandardScaler().fit_transform(targets)
+
     # create PHOTON hyperpipe
     my_pipe, metrics = setup_model_MTL(target_info=target_info)
     # fit PHOTON model
