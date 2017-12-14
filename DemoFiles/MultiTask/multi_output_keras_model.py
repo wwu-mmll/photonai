@@ -24,14 +24,14 @@ for i in range(len(multi_y)):
 cv = ShuffleSplit(n_splits=1,test_size=0.2)
 
 pipe = Hyperpipe('pipe', optimizer='grid_search',
-                     metrics=[],
+                     metrics=['score'],
                      inner_cv=cv,
-                     eval_final_performance=False, verbose=2)
+                     eval_final_performance=True, verbose=2)
+
 
 
 pipe += PipelineElement.create('KerasDNNMultiOutput',
-                               {'list_of_outputs':[outputs],
-                                'hidden_layer_sizes':[[50,20]],
+                               {'hidden_layer_sizes':[[50,20]],
                                 'dropout_rate':[0.5],
                                 'nb_epoch':[10],
                                 'act_func':['relu'],
@@ -40,7 +40,9 @@ pipe += PipelineElement.create('KerasDNNMultiOutput',
                                 'early_stopping_flag':[True],
                                 'eaSt_patience':[20],
                                 'reLe_factor':[0.4],
-                                'reLe_patience':[5]})
+                                'reLe_patience':[5]},
+                               scoring_method='mean_squared_error',
+                               list_of_outputs=outputs)
 
 y_array = np.transpose(np.asarray(multi_y))
 pipe.fit(X,y_array)
