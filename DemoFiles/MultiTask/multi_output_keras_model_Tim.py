@@ -5,28 +5,32 @@ import pandas
 # ---------------------------
 # run the analysis
 if __name__ == '__main__':
+
+    ###############################################################################################################
     pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
     #pre = '/home/nils/data/GeneticBrainAtlas'
     # pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/'
 
     group_id = 2    # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
-    one_hot_it = True
     target_modalities = ['vol']
+
+    one_hot_it = True
+
     getImportanceScores = False
     perm_test = False
 
-    remove_covs = True
+    remove_covs = False
     covs = ['Alter', 'Geschlecht', 'Site', 'ICV']
     ###############################################################################################################
+
     # get data
     df, ROI_names, snp_names = get_data(pre=pre, one_hot_it=one_hot_it, what=target_modalities,
                                         impute_targets='mean')  # technically, we should always use drop here
 
     # Filter by diagnosis
     # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
-    # group_id = 2
     df = df.loc[df['Group'] == group_id]
-    print(str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
+    print('\n' + str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
 
     # Prepare multi task targets
     targets = np.asarray(df[ROI_names])
@@ -44,12 +48,12 @@ if __name__ == '__main__':
 
     # shuffle targets if running a permutation test
     if perm_test:
-        print('PERMUTATION TEST: SHUFFLING TARGETS NOW!')
+        print('\nPERMUTATION TEST: SHUFFLING TARGETS NOW!')
         np.random.shuffle(targets)
 
-    # remove confounders from target data (age, gender, site, ICV)
+    # remove confounders from target data (e.g. age, gender, site...)
     if remove_covs:
-        print('Removing covariates from targets.')
+        print('\nRemoving covariates from targets.')
         import statsmodels.api as sm
         ols_X = df[covs]
         ols_X = sm.add_constant(ols_X)
@@ -64,7 +68,7 @@ if __name__ == '__main__':
     millis1 = int(round(time.time()))
     results = my_pipe.fit(data, targets)
     millis2 = int(round(time.time()))
-    print('Time (minutes): ' + str((millis2 - millis1) / 60))
+    print('\nTime elapsed (minutes): ' + str((millis2 - millis1) / 60))
 
     # # get results
     # results_tree = results.result_tree
@@ -92,9 +96,6 @@ if __name__ == '__main__':
     # if getImportanceScores and ~perm_test:
     #     importance_scores_summary.to_pickle(path=pre + 'Results/importance_scores_summary_MTL')
 
-    print('Done')
+    print('\nDone')
     # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test_oneHot')
-    print('Done')
-
-
-print('')
+    print('\nDone')
