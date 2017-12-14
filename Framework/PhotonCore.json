@@ -110,6 +110,7 @@
    "KerasDNNMultiOutput":[
    "PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
    "Estimator"
-   ]
-
+   ],
+   "interaction_terms": [
+      "sklearn.preprocessing.PolynomialFeatures", "Transformer"]
 }
