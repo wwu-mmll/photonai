@@ -44,6 +44,7 @@ pipe += PipelineElement.create('KerasDNNMultiOutput',
 
 y_array = np.transpose(np.asarray(multi_y))
 pipe.fit(X,y_array)
+print('')
 
 
 
