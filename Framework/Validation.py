@@ -52,10 +52,10 @@ class TestPipeline(object):
                 config_item.fit_duration = fit_duration
 
                 # score test data
-                curr_test_fold = TestPipeline.score(self.pipe, X[test, :], y[test], self.metrics, indices=test)
+                curr_test_fold = TestPipeline.score(self.pipe, X[test, :], y[test], self.metrics, indices=test, multi_task=self.pipe.multi_task)
 
                 # score train data
-                curr_train_fold = TestPipeline.score(self.pipe, X[train, :], y[train], self.metrics, indices=train)
+                curr_train_fold = TestPipeline.score(self.pipe, X[train, :], y[train], self.metrics, indices=train, multi_task=self.pipe.multi_task)
 
                 fold_tuple_item = FoldTupel(fold_cnt)
                 fold_tuple_item.test = curr_test_fold
@@ -79,7 +79,7 @@ class TestPipeline(object):
         return config_item
 
     @staticmethod
-    def score(estimator, X, y_true, metrics, indices=[]):
+    def score(estimator, X, y_true, metrics, indices=[], multi_task=False):
 
         scoring_time_start = time.time()
 
@@ -103,7 +103,8 @@ class TestPipeline(object):
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
-        score_metrics = TestPipeline.calculate_metrics(y_true, y_pred, non_default_score_metrics)
+        score_metrics = TestPipeline.calculate_metrics(y_true, y_pred,
+                                                       non_default_score_metrics, multi_task)
 
         # add default metric
         if output_metrics:
@@ -118,7 +119,7 @@ class TestPipeline(object):
         return score_result_object
 
     @staticmethod
-    def calculate_metrics(y_true, y_pred, metrics):
+    def calculate_metrics(y_true, y_pred, metrics, multi_task=False):
 
         # Todo: HOW TO CHECK IF ITS REGRESSION?!
         # The following works only for classification
@@ -134,7 +135,12 @@ class TestPipeline(object):
         if metrics:
             for metric in metrics:
                 scorer = Scorer.create(metric)
-                scorer_value = scorer(y_true, y_pred)
+                if multi_task:
+                    scorer_value = []
+                    for i in range(y_true.shape[1]):
+                        scorer_value.append(scorer(y_true[:,i], y_pred[:,i]))
+                else:
+                    scorer_value = scorer(y_true, y_pred)
                 output_metrics[metric] = scorer_value
 
         return output_metrics
