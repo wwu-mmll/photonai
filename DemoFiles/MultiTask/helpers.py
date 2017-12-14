@@ -15,58 +15,7 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
 
     ##############################################################################################################
     # get targets (e.g. volumes, thickness, ... ); (CAT12_GM, DTI, rs-fMRI_Hubness, ...)
-    if what == 'all':
-        what = ['thick', 'surf', 'vol', 'cat']
-
-    # Thickness
-    if any("thick" in s for s in what):
-        print('\nRetrieving Freesurfer Thickness data...')
-        target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
-        target_thick = get_targets(file=target_file)
-        if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_thick, how='inner', on='ID')   # merge target datasets
-        else:
-            target_tmp = target_thick
-
-    # SurfaceArea
-    if any("surf" in s for s in what):
-        print('\nRetrieving Freesurfer Surface data...')
-        target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
-        target_surf = get_targets(file=target_file)
-        if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_surf, how='inner', on='ID')    # merge target datasets
-        else:
-            target_tmp = target_surf
-
-    # Volume
-    if any("vol" in s for s in what):
-        print('\nRetrieving Freesurfer Volume data...')
-        target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
-        target_vol = get_targets(file=target_file)
-        if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_vol, how='inner', on='ID')     # merge target datasets
-        else:
-            target_tmp = target_vol
-
-    # CAT12 Vgm
-    if any("cat" in s for s in what):
-        print('\nRetrieving CAT12 ROI data...')
-        target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
-        target_Vgm = get_targets(file=target_file)
-        if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_Vgm, how='inner', on='ID')     # merge target datasets
-        else:
-            target_tmp = target_Vgm
-
-    # generic ROI extractor
-    if what[0] == "custom":
-        target_custom = get_custom_targets(what)
-        if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_custom, how='inner', on='ID')     # merge target datasets
-        else:
-            target_tmp = target_custom
-
-    print('Retrieving not yet')
+    target_tmp = get_targets(pre, what)
 
     # drop NaNs from targets
     # to keep train and test fully independent, always use drop
@@ -112,7 +61,7 @@ def get_covs(file):
     return covs_frame
 
 # get targets (ROI-wise cortical thickness or volumes or ...)
-def get_targets(file):
+def get_targets_tmp(file):
     print('\nRetrieving targets...')
     target_frame = pandas.read_csv(open(file, 'rb'))              # read target data (e.g. volume or thickness)
     target_frame.columns = ['ID' if (x == 'SubjID' or x == 'names') else x for x in target_frame.columns] # rename the ID column to allow merge
@@ -130,8 +79,66 @@ def get_targets(file):
 
     return target_frame
 
-def get_custom_targets(what):
-    lj
+def get_targets(pre, what):
+    # get targets (e.g. volumes, thickness, ... ); (CAT12_GM, DTI, rs-fMRI_Hubness, ...)
+    if what[0] == 'all':
+        what = ['thick', 'surf', 'vol', 'cat']
+
+    # Thickness
+    if any("thick" in s for s in what):
+        print('\nRetrieving Freesurfer Thickness data...')
+        target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
+        target_thick = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_thick, how='inner', on='ID')   # merge target datasets
+        else:
+            target_tmp = target_thick
+
+    # SurfaceArea
+    if any("surf" in s for s in what):
+        print('\nRetrieving Freesurfer Surface data...')
+        target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
+        target_surf = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_surf, how='inner', on='ID')    # merge target datasets
+        else:
+            target_tmp = target_surf
+
+    # Volume
+    if any("vol" in s for s in what):
+        print('\nRetrieving Freesurfer Volume data...')
+        target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
+        target_vol = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_vol, how='inner', on='ID')     # merge target datasets
+        else:
+            target_tmp = target_vol
+
+    # CAT12 Vgm
+    if any("cat" in s for s in what):
+        print('\nRetrieving CAT12 ROI data...')
+        target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
+        target_Vgm = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_Vgm, how='inner', on='ID')     # merge target datasets
+        else:
+            target_tmp = target_Vgm
+
+    # handle custom targets string search
+    if what[0] == 'custom_str':
+        print('custom_str')
+        tmp = get_targets(pre, ['all'])
+        searchStr = what[1].lower()
+        custom_cols = [col for col in tmp.columns if searchStr in col.lower()]
+
+    # handle custom target input
+    if what[0] == 'custom_id':
+        print('custom_id')
+        tmp = get_targets(pre, ['all'])
+        what[0] = 'ID'
+        target_tmp = tmp[what]
+
+    return target_tmp
 
 # transform SNPs to numbers
 def recode_snps(snp_frame, snp_names):
