@@ -106,5 +106,10 @@
    "pearson_feature_selector":[
       "PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
       "Transformer"
+   ],
+   "KerasDNNMultiOutput":[
+   "PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
+   "Estimator"
    ]
+
 }
