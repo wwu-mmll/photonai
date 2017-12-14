@@ -28,8 +28,7 @@ class Hyperpipe(BaseEstimator):
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
                  metrics=None, best_config_metric=None, outer_cv=None,
                  test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
-                 logging=False, set_random_seed=False, verbose=0, filter_element=None,
-                 multi_task=False):
+                 logging=False, set_random_seed=False, verbose=0, filter_element=None):
         # Re eval_final_performance:
         # set eval_final_performance to False because
         # 1. if no cv-object is given, no split is performed --> seems more logical
@@ -50,7 +49,6 @@ class Hyperpipe(BaseEstimator):
         self.y = None
         self.groups = groups
         self.filter_element = filter_element
-        self.multi_task = multi_task
 
         self.data_test_cases = None
         self.config_history = []

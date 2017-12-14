@@ -121,7 +121,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         for i in range(preds.shape[1]):
             variance_explained_score(y_true,preds)
             scores.append(variance_explained_score(y_true,preds))
-        return scores
+        return np.mean(scores)
 
     def create_model(self):
 
