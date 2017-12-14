@@ -10,6 +10,7 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
 from Logging.Logger import Logger
 from Framework.Metrics import variance_explained_score
+from Framework.Validation import Scorer
 
 class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
 
@@ -17,7 +18,8 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
                  dropout_rate=0.5, target_dimension=10,
                  act_func='prelu', learning_rate=0.1, batch_normalization=True,
                  nb_epoch=100, early_stopping_flag=True, batch_size=32,
-                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5):
+                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5,
+                 scoring_method='variance_explained'):
 
         self.hidden_layer_sizes = hidden_layer_sizes
         self.dropout_rate = dropout_rate
@@ -32,6 +34,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         self.reLe_patience = reLe_patience
         self.batch_size = batch_size
         self.list_of_outputs = list_of_outputs
+        self.scoring_method = Scorer.create(scoring_method)
 
         self.model = None
 
@@ -119,8 +122,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         preds = self.predict(X)
         scores = []
         for i in range(preds.shape[1]):
-            variance_explained_score(y_true,preds)
-            scores.append(variance_explained_score(y_true,preds))
+            scores.append(self.scoring_method(y_true,preds))
         return np.mean(scores)
 
     def create_model(self):
