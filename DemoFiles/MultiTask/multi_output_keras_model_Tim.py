@@ -8,8 +8,8 @@ import pandas
 if __name__ == '__main__':
 
     ###############################################################################################################
-    pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-    #pre = '/home/nils/data/GeneticBrainAtlas'
+    #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    pre = '/home/nils/data/GeneticBrainAtlas/'
     # pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/'
 
     group_id = 2    # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
@@ -77,32 +77,13 @@ if __name__ == '__main__':
     results = my_pipe.fit(data, targets)
     millis2 = int(round(time.time()))
     print('\nTime elapsed (minutes): ' + str((millis2 - millis1) / 60))
-
-    # # get results
-    # results_tree = results.result_tree
-    # metrics_summary_train = pandas.DataFrame()
-    # metrics_summary_test = pandas.DataFrame()
-    # importance_scores_summary = pandas.DataFrame()
-    # for roi in results:
-    #     te, tr, imp = roi
-    #     metrics_summary_test = metrics_summary_test.append(te)
-    #     metrics_summary_train = metrics_summary_train.append(tr)
-    #     if getImportanceScores:
-    #         importance_scores_summary = importance_scores_summary.append(imp)
-    #
-    # metrics_summary_test = metrics_summary_test.sort_values(by='variance_explained', axis=0, ascending=False)
-    # metrics_summary_train = metrics_summary_train.sort_values(by='variance_explained', axis=0, ascending=False)
-    #
-    # # save metrics summary
-    # if perm_test:
-    #     metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test_MTL_perm2')
-    #     metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train_MTL_perm2')
-    # else:
-    #     metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test_MTL')
-    #     metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train_MTL')
-    #
-    # if getImportanceScores and ~perm_test:
-    #     importance_scores_summary.to_pickle(path=pre + 'Results/importance_scores_summary_MTL')
+    results_tree = results.result_tree
+    best_config_performance_test = results_tree.get_best_config_performance_validation_set()
+    best_config_performance_train = results_tree.get_best_config_performance_validation_set(
+        train_data=True)
+    print('best_config_performance_test:', best_config_performance_test)
+    print('best_config_performance_train:', best_config_performance_train)
+    print('')
 
     print('\nDone')
     # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test_oneHot')
