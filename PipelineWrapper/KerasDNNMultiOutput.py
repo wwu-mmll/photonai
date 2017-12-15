@@ -123,6 +123,8 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         scores = []
         for i in range(preds.shape[1]):
             scores.append(self.scoring_method(y_true[:,i],preds[:,i]))
+
+        print(scores)
         return scores
 
     def create_model(self):
