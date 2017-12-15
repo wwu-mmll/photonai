@@ -7,7 +7,7 @@ def setup_model_MTL(target_info):
     metrics = ['variance_explained']
     #cv = KFold(n_splits=20, shuffle=True, random_state=3)
     #cv = ShuffleSplit(n_splits=1, test_size=0.2)
-    cv = KFold(n_splits=3, shuffle=True, random_state=14)
+    cv = KFold(n_splits=10, shuffle=True, random_state=14)
     my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                         optimizer_params={},
                         metrics=['score'],
@@ -31,10 +31,10 @@ def setup_model_MTL(target_info):
 
     # define Multi-Task-Learning Model
     my_pipe += PipelineElement.create('KerasDNNMultiOutput',
-                                   {'hidden_layer_sizes': [[50, 20]],
-                                    'dropout_rate': [0.5],
-                                    'nb_epoch': [2],
-                                    'act_func': ['relu'],
+                                   {'hidden_layer_sizes': [[5], [10], [100], [100, 10], [50, 20], [50, 20, 5]],
+                                    'dropout_rate': [0, .2, .7],
+                                    'nb_epoch': [1000],
+                                    'act_func': ['relu', 'sigmoid'],
                                     'learning_rate': [0.01],
                                     'batch_normalization': [True],
                                     'early_stopping_flag': [True],

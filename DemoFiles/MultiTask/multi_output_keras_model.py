@@ -32,16 +32,16 @@ pipe = Hyperpipe('pipe', optimizer='grid_search',
 
 pipe += PipelineElement.create('KerasDNNMultiOutput',
                                {'hidden_layer_sizes':[[50,20]],
-                                'dropout_rate':[0.5, 0.4],
-                                'nb_epoch':[10],
-                                'act_func':['relu'],
-                                'learning_rate': [0.01],
+                                'dropout_rate':[0, .5, .9],
+                                'nb_epoch':[200],
+                                'act_func':['relu', 'sigmoid'],
+                                'learning_rate': [.1 .01 .001],
                                 'batch_normalization':[True],
                                 'early_stopping_flag':[True],
                                 'eaSt_patience':[20],
                                 'reLe_factor':[0.4],
                                 'reLe_patience':[5]},
-                               scoring_method='mean_squared_error',
+                               scoring_method='mean_absolute_error',
                                list_of_outputs=outputs)
 
 y_array = np.transpose(np.asarray(multi_y))
