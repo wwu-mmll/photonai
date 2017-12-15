@@ -228,11 +228,11 @@ class MasterElement:
             else:
                 source_dict = fold.test.metrics
 
-                for key, value in source_dict.items():
-                    if key in result_dict:
-                        result_dict[key].append(value)
-                    else:
-                        result_dict[key] = [value]
+            for key, value in source_dict.items():
+                if key in result_dict:
+                    result_dict[key].append(value)
+                else:
+                    result_dict[key] = [value]
 
         return result_dict
 
