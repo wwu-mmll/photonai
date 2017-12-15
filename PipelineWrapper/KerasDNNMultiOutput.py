@@ -11,6 +11,8 @@ from sklearn.model_selection import ShuffleSplit
 from Logging.Logger import Logger
 from Framework.Metrics import variance_explained_score
 from Framework.Validation import Scorer
+import tensorflow as tf
+import math
 
 class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
 
@@ -19,7 +21,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
                  act_func='prelu', learning_rate=0.1, batch_normalization=True,
                  nb_epoch=100, early_stopping_flag=True, batch_size=32,
                  eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5,
-                 scoring_method='variance_explained'):
+                 scoring_method='variance_explained', use_spacecraft_loss=False):
 
         self.hidden_layer_sizes = hidden_layer_sizes
         self.dropout_rate = dropout_rate
@@ -35,6 +37,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         self.batch_size = batch_size
         self.list_of_outputs = list_of_outputs
         self.scoring_method = Scorer.create(scoring_method)
+        self.use_spacecraft_loss = use_spacecraft_loss
 
         self.model = None
 
@@ -162,9 +165,41 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         #model.summary()
         # Compile model
         optimizer = Adam(lr=self.learning_rate)
-        model.compile(loss=losses, loss_weights=loss_weights,
-                      optimizer=optimizer)
-
+        if self.use_spacecraft_loss:
+            model.compile(loss=self.spacecraft_loss(losses), loss_weights=loss_weights,
+                          optimizer=optimizer)
+        else:
+            model.compile(loss=losses, loss_weights=loss_weights,
+                          optimizer=optimizer)
 
         return model
 
+    def spacecraft_loss(self, list_of_losses):
+        '''
+        Calculate the spacecraft_loss: A ship in space is 'attracted' by classifiers, depending on their loss.
+        The distance to a respective classifier is the weight for the loss
+        :param list_of_losses: list of losses (list with tf-variables)
+        :return: weighted loss
+        '''
+        # Define the initial position of the spacecraft
+        position = tf.Variable(initial_value=[.0, .0], name="position")
+
+        # Calculate the locations of each classifier: place them equidistant on the quarter of a circle around the origin
+        classifier_positions = []
+        for i in range(len(list_of_losses)):
+            classifier_position_x = math.cos(i * math.pi / (2 * (len(list_of_losses) + 1)))
+            classifier_position_y = math.sin(i * math.pi / (2 * (len(list_of_losses) + 1)))
+            classifier_position = [classifier_position_x, classifier_position_y]
+            classifier_positions.append(classifier_position)
+
+        # Apply attraction
+        for i in range(len(list_of_losses)):
+            position = position + (1 / list_of_losses[i]) * (1 / list_of_losses[i]) * (
+            classifier_positions[i] - position)
+
+        # Calculate weighted loss
+        loss = tf.Variable(initial_value=.0, name="spacecraft_loss")
+        for i in range(len(list_of_losses)):
+            loss = loss + tf.reduce_sum(classifier_positions[i] - position) * list_of_losses[i]
+
+        return loss
