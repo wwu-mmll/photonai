@@ -9,15 +9,16 @@ if __name__ == '__main__':
 
     ###############################################################################################################
     #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    pre = '/spm-data-cached/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
     #pre = '/home/nils/data/GeneticBrainAtlas/'
-    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    #pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
-    group_id = 2    # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
+    group_id = 'NaN'    # 'NaN'=use everyone, 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     #target_modalities = ['custom_str', 'hip']
     #target_modalities = ['all']
     target_modalities = ['custom_id', 'Lhippo', 'Rhippo', 'lHip', 'rHip']
 
-    one_hot_it = False
+    one_hot_it = True
     discretize_targets = True
 
     getImportanceScores = False
@@ -33,8 +34,9 @@ if __name__ == '__main__':
 
     # Filter by diagnosis
     # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
-    df = df.loc[df['Group'] == group_id]
-    print('\n' + str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
+    if not group_id == 'NaN':
+        df = df.loc[df['Group'] == group_id]
+        print('\n' + str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
 
     # Prepare multi task targets
     targets = np.asarray(df[ROI_names])
@@ -90,6 +92,9 @@ if __name__ == '__main__':
     print('best_config_performance_test:', best_config_performance_test)
     print('best_config_performance_train:', best_config_performance_train)
     print('')
+
+    print('best_config_performance_test: ' + str(np.mean(best_config_performance_test['score'], axis=0)))
+    print('best_config_performance_train: ' + str(np.mean(best_config_performance_train['score'], axis=0)))
 
     print('\nDone')
     # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test_oneHot')

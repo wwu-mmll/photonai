@@ -2,9 +2,9 @@
 import pandas
 import numpy as np
 
-#pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 #pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+#pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
 global getImp, perm_test
 getImp = False
@@ -314,10 +314,10 @@ if __name__ == '__main__':
     df, ROI_names, snp_names = get_data()
 
     # add a few covs to be tested as well
-    ROI_names.append('BMI')
-    ROI_names.append('BDI_Sum')
-    ROI_names.append('CTQ_Sum')
-    ROI_names.append('IQ')
+    # ROI_names.append('BMI')
+    # ROI_names.append('BDI_Sum')
+    # ROI_names.append('CTQ_Sum')
+    # ROI_names.append('IQ')
 
     # Filter by diagnosis
     # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
@@ -354,8 +354,8 @@ if __name__ == '__main__':
 
         # # scale targets
         # print('\nScaling targets.\n')
-        # from sklearn.preprocessing import StandardScaler
-        # roi_targets = StandardScaler().fit_transform(roi_targets)
+        # #from sklearn.preprocessing import StandardScaler
+        # rt = (roi_targets - np.mean(roi_targets) / np.var(roi_targets)
 
         # discretize targets
         print('\nRounding targets.\n')

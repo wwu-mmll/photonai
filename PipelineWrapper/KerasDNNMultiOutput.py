@@ -185,28 +185,22 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
 
         # Define losses for all outputs
         list_of_losses = []
-        for i in range(len(y_true)):
+        for i in range(4):
             list_of_losses.append(keras_mae(y_true[i], y_pred[i]))
 
         # Define the initial position of the spacecraft
         position = tf.Variable(initial_value=[.0, .0], name="position")
 
         # Calculate the locations of each classifier: place them equidistant on the quarter of a circle around the origin
-        classifier_positions = []
-        for i in range(len(list_of_losses)):
-            classifier_position_x = math.cos(i * math.pi / (2 * (len(list_of_losses) + 1)))
-            classifier_position_y = math.sin(i * math.pi / (2 * (len(list_of_losses) + 1)))
-            classifier_position = [classifier_position_x, classifier_position_y]
-            classifier_positions.append(classifier_position)
+        classifier_positions = [[1, -1], [1, 1], [-1, 1], [-1,- 1]]
 
         # Apply attraction
         for i in range(len(list_of_losses)):
-            position = position + (1 / list_of_losses[i]) * (1 / list_of_losses[i]) * (
-            classifier_positions[i] - position)
+            position = position + 0.001*(1 / list_of_losses[i]) * (classifier_positions[i] - position)
 
         # Calculate weighted loss
         loss = tf.Variable(initial_value=.0, name="spacecraft_loss")
         for i in range(len(list_of_losses)):
-            loss = loss + tf.reduce_sum(classifier_positions[i] - position) * list_of_losses[i]
+            loss = loss + tf.reduce_sum(tf.abs(classifier_positions[i] - position)) * list_of_losses[i]
 
         return loss
