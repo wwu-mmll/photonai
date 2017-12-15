@@ -9,10 +9,10 @@ from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
 from Logging.Logger import Logger
-from Framework.Metrics import variance_explained_score
 from Framework.Validation import Scorer
 import tensorflow as tf
 import math
+from keras.losses import mean_absolute_error as keras_mae
 
 class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
 
@@ -166,7 +166,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
         # Compile model
         optimizer = Adam(lr=self.learning_rate)
         if self.use_spacecraft_loss:
-            model.compile(loss=self.spacecraft_loss(losses), loss_weights=loss_weights,
+            model.compile(loss=self.spacecraft_loss,
                           optimizer=optimizer)
         else:
             model.compile(loss=losses, loss_weights=loss_weights,
@@ -174,13 +174,20 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
 
         return model
 
-    def spacecraft_loss(self, list_of_losses):
+
+    def spacecraft_loss(self, y_true, y_pred):
         '''
         Calculate the spacecraft_loss: A ship in space is 'attracted' by classifiers, depending on their loss.
         The distance to a respective classifier is the weight for the loss
-        :param list_of_losses: list of losses (list with tf-variables)
+        :param y_true and y_pred as tensors
         :return: weighted loss
         '''
+
+        # Define losses for all outputs
+        list_of_losses = []
+        for i in range(len(y_true)):
+            list_of_losses.append(keras_mae(y_true[i], y_pred[i]))
+
         # Define the initial position of the spacecraft
         position = tf.Variable(initial_value=[.0, .0], name="position")
 

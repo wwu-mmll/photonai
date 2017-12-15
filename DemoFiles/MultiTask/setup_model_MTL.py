@@ -42,6 +42,6 @@ def setup_model_MTL(target_info):
                                     'reLe_factor': [0.4],
                                     'reLe_patience': [5]},
                                scoring_method=metrics[0],
-                               list_of_outputs=target_info)
+                               list_of_outputs=target_info, use_spacecraft_loss=True)
 
     return my_pipe, metrics
