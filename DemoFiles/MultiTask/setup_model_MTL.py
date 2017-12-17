@@ -5,6 +5,7 @@ def setup_model_MTL(target_info):
     from sklearn.model_selection import KFold
 
     metrics = ['variance_explained']
+    #metrics = ['mean_squared_error']
     #cv = KFold(n_splits=20, shuffle=True, random_state=3)
     #cv = ShuffleSplit(n_splits=1, test_size=0.2)
     cv = KFold(n_splits=3, shuffle=True, random_state=14)
@@ -14,6 +15,10 @@ def setup_model_MTL(target_info):
                         inner_cv=cv,
                         eval_final_performance=False,
                         verbose=2)
+
+    # feature scaling
+    my_pipe += PipelineElement.create('standard_scaler')
+    my_pipe += PipelineElement.create('pca')
 
     # get interaction terms
     # # register elements
@@ -27,22 +32,23 @@ def setup_model_MTL(target_info):
     #                         class_str=class_str,
     #                         element_type=element_type).add()
     # add the elements
-    my_pipe += PipelineElement.create('interaction_terms', {'degree': [2]},  interaction_only=True, include_bias=False, test_disabled=False)
+    #my_pipe += PipelineElement.create('interaction_terms', {'degree': [2]},  interaction_only=True, include_bias=False, test_disabled=True)
 
     # define Multi-Task-Learning Model
     my_pipe += PipelineElement.create('KerasDNNMultiOutput',
                                       {#'hidden_layer_sizes': [[2048, 512, 256]],
                                        #'dropout_rate': [.5],
-                                       'hidden_layer_sizes': [[256, 16, 16, 16, 16, 8, 8, 8], [256, 16, 16, 16, 16], [256, 16, 8], [256, 16], [32, 16], [32]],
-                                       'dropout_rate': [0, .2, .5, .7],
+                                       #'hidden_layer_sizes': [[256, 16, 16, 16, 16, 8, 8, 8], [256, 16, 16, 16, 16], [256, 16, 8], [256, 16], [32, 16], [32]],
+                                       'hidden_layer_sizes': [[8, 4, 4, 4, 4]],
+                                       'dropout_rate': [.1],
                                        'nb_epoch': [2000],
-                                       'act_func': ['prelu', 'sigmoid', 'relu'],
-                                       'learning_rate': [.1, .01],
-                                       'batch_normalization': [True, False],
+                                       'act_func': ['sigmoid'],
+                                       'learning_rate': [.001],
+                                       'batch_normalization': [True],
                                        'early_stopping_flag': [True],
                                        'eaSt_patience': [100],
                                        'reLe_factor': [0.4],
-                                       'reLe_patience': [20]},
+                                       'reLe_patience': [40]},
                                       scoring_method=metrics[0],
                                       list_of_outputs=target_info,
                                       batch_size=16,

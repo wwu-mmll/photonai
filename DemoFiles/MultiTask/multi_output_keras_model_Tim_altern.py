@@ -1,4 +1,4 @@
-from DemoFiles.MultiTask.helpers import get_data
+from DemoFiles.MultiTask.helpers import get_targets, get_covs
 from DemoFiles.MultiTask.setup_model_MTL import setup_model_MTL
 import numpy as np
 import pandas
@@ -13,24 +13,48 @@ if __name__ == '__main__':
     #pre = '/home/nils/data/GeneticBrainAtlas/'
     pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
-    group_id = 'NaN'    # 'NaN'=use everyone, 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
+    group_id = 2   # 'NaN'=use everyone, 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     #target_modalities = ['custom_str', 'hip']
-    target_modalities = ['all']
-    #target_modalities = ['custom_id', 'Lhippo', 'Rhippo', 'lHip', 'rHip']
-
-    one_hot_it = True
-    discretize_targets = True
+    data_modalities = ['all']
+    #target_modalities = ['custom_id', 'BDI_Sum', 'CTQ_Sum']
 
     getImportanceScores = False
     perm_test = False
 
-    remove_covs = True
-    covs = ['Alter', 'Geschlecht', 'Site']
+    remove_covs = False
+    covs = ['Alter', 'Geschlecht', 'Site', 'TIV']
+
+    target_ids = ['CTQ_Sum', 'CTQ_Sum'] #, 'CTQ_Sum']
     ###############################################################################################################
 
     # get data
-    df, ROI_names, snp_names = get_data(pre=pre, one_hot_it=one_hot_it, what=target_modalities,
-                                        impute_targets='mean')  # technically, we should always use drop here
+    # get covariates (e.g. diagnosis)
+    #cov_file = pre + 'Datenbank_Update_DataFreeze1&2_17-11-2017_relVars.csv'
+    cov_file = pre + 'Datenbank_Update_DataFreeze1&2_01-12-2017_relVars2.csv'
+    covs_tmp = get_covs(file=cov_file)
+    covs_tmp = covs_tmp.dropna(axis=0, how='any', subset=target_ids)
+
+    ##############################################################################################################
+    # get targets (e.g. volumes, thickness, ... ); (CAT12_GM, DTI, rs-fMRI_Hubness, ...)
+    impute_data = 'mean'
+    #what = ['vol', 'surf', 'thick']
+    what = ['all']
+    data_tmp = get_targets(pre=pre, what=data_modalities)
+    # drop NaNs from data
+    # to keep train and test fully independent, always use drop
+    if impute_data == 'drop':
+        print('\nNaN-handling: drop')
+        data_tmp = data_tmp.dropna(axis=0, how='any')
+    elif impute_data == 'mean':
+        print('\nNaN-handling: impute with mean')
+        data_tmp = data_tmp.apply(lambda x: x.fillna(x.mean()), axis=0)
+
+    # merge the three dataframes into one dataframe and only keep the intersection (via 'inner')
+    df = pandas.merge(covs_tmp, data_tmp, how='inner', on='ID')
+    feature_names = list(data_tmp.columns[1:].values)  # skip subID and take the rest
+
+    # df, ROI_names, snp_names = get_data(pre=pre, what=target_modalities,
+    #                                     impute_targets='mean')  # technically, we should always use drop here
 
     # Filter by diagnosis
     # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
@@ -39,16 +63,16 @@ if __name__ == '__main__':
         print('\n' + str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
 
     # Prepare multi task targets
-    targets = np.asarray(df[ROI_names])
+    targets = np.asarray(df[target_ids])
 
     # get data (numeric snps)
-    data = np.asarray(df[snp_names])
+    data = np.asarray(df[feature_names])
     data = data.copy(order='C')  # fixes an error (don't know why this is necessary)
 
     # create list of dictionaries that define target_info
     target_info = []
-    for roi_name in ROI_names:
-        output_node_dict = {'name': roi_name, 'target_dimension': 1, 'activation': 'linear',
+    for ti in target_ids:
+        output_node_dict = {'name': {ti}, 'target_dimension': 1, 'activation': 'linear',
                             'loss': 'mse', 'loss_weight': 1}
         target_info.append(output_node_dict)
 
@@ -71,11 +95,6 @@ if __name__ == '__main__':
     print('\nScaling targets.\n')
     from sklearn.preprocessing import StandardScaler
     targets = StandardScaler().fit_transform(targets)
-
-    # discretize targets
-    print('\nRounding targets.\n')
-    if discretize_targets:
-        targets = np.around(targets, decimals=1)
 
     # create PHOTON hyperpipe
     my_pipe, metrics = setup_model_MTL(target_info=target_info)
