@@ -128,6 +128,8 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
             scores.append(self.scoring_method(y_true[:,i],preds[:,i]))
 
         print(scores)
+        print(np.mean(scores))
+        print(np.max(scores))
         return scores
 
     def create_model(self):
