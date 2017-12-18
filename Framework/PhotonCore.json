@@ -112,5 +112,9 @@
    "Estimator"
    ],
    "interaction_terms": [
-      "sklearn.preprocessing.PolynomialFeatures", "Transformer"]
+      "sklearn.preprocessing.PolynomialFeatures", "Transformer"
+   ],
+   "CategorialANOVASelectPercentile":[
+   "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
+   "Transformer"]
 }
