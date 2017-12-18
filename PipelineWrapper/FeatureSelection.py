@@ -97,13 +97,14 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
     def loc_anova(self, data, targets):
         fs = []
         ps = []
-        for snpInd in range(data.shape[1]):
-            a = targets[data[:, snpInd] == 1]
-            b = targets[data[:, snpInd] == 2]
-            c = targets[data[:, snpInd] == 3]
+        for feature_ind in range(data.shape[1]):
+            a = targets[data[:, feature_ind] == 1]
+            b = targets[data[:, feature_ind] == 2]
+            c = targets[data[:, feature_ind] == 3]
             f, p = f_oneway(a, b, c)
             fs.append(f)
             ps.append(p)
+        return fs, ps
 
     def fit(self, X, y):
         X = self.var_thres.fit_transform(X)
@@ -113,4 +114,5 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         X = self.var_thres.transform(X)
-        return self.my_fs.transform(X)
+        return_values = self.my_fs.transform(X)
+        return return_values
