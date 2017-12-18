@@ -114,7 +114,7 @@
    "interaction_terms": [
       "sklearn.preprocessing.PolynomialFeatures", "Transformer"
    ],
-   "CategorialANOVASelectPercentile":[
+   "CategoricalANOVASelectPercentile":[
    "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
    "Transformer"]
 }

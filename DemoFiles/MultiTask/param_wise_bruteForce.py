@@ -1,4 +1,4 @@
-from helpers import get_data, run_analysis
+from helpers import get_data, run_analysis_classic
 import numpy as np
 import pandas
 

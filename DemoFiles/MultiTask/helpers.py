@@ -10,7 +10,8 @@ def get_data(pre, one_hot_it=False, what='all', impute_targets='drop'):
         snp_num_frame, snp_names = one_hot_snps(snp_num_frame, snp_names)    # one-hot encode snp matrix
 
     # get covariates (e.g. diagnosis)
-    cov_file = pre + 'Datenbank_Update_DataFreeze1&2_17-11-2017_relVars.csv'
+    #cov_file = pre + 'Datenbank_Update_DataFreeze1&2_17-11-2017_relVars.csv'
+    cov_file = pre + 'Datenbank_Update_DataFreeze1&2_01-12-2017_relVars2.csv'
     covs_tmp = get_covs(file=cov_file)
 
     ##############################################################################################################
@@ -308,11 +309,37 @@ def run_analysis_classic(data_dict):
     if remove_covs:
         print('\nRemoving covariates from targets.')
         import statsmodels.api as sm
+        # # convert all covs to numeric
+        # for c in data_dict['covs']:
+        #     data_dict[c] = pandas.to_numeric(data_dict[c])
         ols_X = data_dict['covs']
         ols_X = sm.add_constant(ols_X)
         ols_model = sm.OLS(targets, ols_X)
         ols_results = ols_model.fit()
         targets = np.asarray(ols_results.resid)
+
+        # test ANOVA
+    from scipy import stats
+    snp_in = []
+    for snpInd in range(data.shape[1]):
+        snpBool = False
+        for targetInd in range(targets.shape[1]):
+            a = targets[data[:, snpInd] == 1, targetInd]
+            b = targets[data[:, snpInd] == 2, targetInd]
+            c = targets[data[:, snpInd] == 3, targetInd]
+
+            f, p = stats.f_oneway(a, b, c)
+
+            if p < .05:
+                print('One-way ANOVA - snp_name ' + snp_names[snpInd] + '; ' + ROI_names[targetInd])
+                print('=============')
+                print('F value:', f)
+                print('P value:', p, '\n')
+                snpBool = True
+        if snpBool:
+            snp_in.append(snp_names[snpInd])
+
+    data = np.asarray(data[snp_in])
 
     # fit PHOTON model
     results = my_pipe.fit(data, targets)

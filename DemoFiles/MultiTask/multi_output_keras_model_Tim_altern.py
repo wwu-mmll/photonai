@@ -9,11 +9,11 @@ if __name__ == '__main__':
 
     ###############################################################################################################
     #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-    #pre = '/spm-data-cached/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
+    pre = '/spm-data-cached/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
     #pre = '/home/nils/data/GeneticBrainAtlas/'
-    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    #pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
-    group_id = 2   # 'NaN'=use everyone, 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
+    group_id = 1   # 'NaN'=use everyone, 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     #target_modalities = ['custom_str', 'hip']
     data_modalities = ['all']
     #target_modalities = ['custom_id', 'BDI_Sum', 'CTQ_Sum']
@@ -24,7 +24,9 @@ if __name__ == '__main__':
     remove_covs = False
     covs = ['Alter', 'Geschlecht', 'Site', 'TIV']
 
-    target_ids = ['CTQ_Sum', 'CTQ_Sum'] #, 'CTQ_Sum']
+    target_ids = ['CTQ_EmotionalerMissbrauch','CTQ_KoerperlicherMissbrauch','CTQ_SexuellerMissbrauch',
+                  'CTQ_EmotionaleVernachlaessigung','CTQ_KoerperlicheVernachlaessigung','CTQ_Sum',
+                  'CTQ_Umweltrisiko_1Skala','CTQ_Umweltrisiko_2Skala']
     ###############################################################################################################
 
     # get data

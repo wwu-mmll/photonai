@@ -1,5 +1,6 @@
 from DemoFiles.MultiTask.helpers import get_data
 from DemoFiles.MultiTask.setup_model_MTL import setup_model_MTL
+from DemoFiles.MultiTask.setup_model_MTL_2 import setup_model_MTL_2
 import numpy as np
 import pandas
 
@@ -9,23 +10,23 @@ if __name__ == '__main__':
 
     ###############################################################################################################
     #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-    #pre = '/spm-data-cached/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
+    pre = '/spm-data-cached/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
     #pre = '/home/nils/data/GeneticBrainAtlas/'
-    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    #pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
-    group_id = 'NaN'    # 'NaN'=use everyone, 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
+    group_id = 2    # 'NaN'=use everyone, 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     #target_modalities = ['custom_str', 'hip']
     target_modalities = ['all']
     #target_modalities = ['custom_id', 'Lhippo', 'Rhippo', 'lHip', 'rHip']
 
-    one_hot_it = True
+    one_hot_it = False
     discretize_targets = True
 
     getImportanceScores = False
     perm_test = False
 
     remove_covs = True
-    covs = ['Alter', 'Geschlecht', 'Site']
+    covs = ['Alter', 'Geschlecht', 'Site', 'TIV']
     ###############################################################################################################
 
     # get data
@@ -34,16 +35,12 @@ if __name__ == '__main__':
 
     # Filter by diagnosis
     # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
-    if not group_id == 'NaN':
+    if not group_id == 2:
         df = df.loc[df['Group'] == group_id]
         print('\n' + str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
 
     # Prepare multi task targets
     targets = np.asarray(df[ROI_names])
-
-    # get data (numeric snps)
-    data = np.asarray(df[snp_names])
-    data = data.copy(order='C')  # fixes an error (don't know why this is necessary)
 
     # create list of dictionaries that define target_info
     target_info = []
@@ -61,6 +58,9 @@ if __name__ == '__main__':
     if remove_covs:
         print('\nRemoving covariates from targets.')
         import statsmodels.api as sm
+        # convert all covs to numeric
+        for c in covs:
+            df[c] = pandas.to_numeric(df[c])
         ols_X = df[covs]
         ols_X = sm.add_constant(ols_X)
         ols_model = sm.OLS(targets, ols_X)
@@ -77,8 +77,36 @@ if __name__ == '__main__':
     if discretize_targets:
         targets = np.around(targets, decimals=1)
 
+    # get data (numeric snps)
+    data = np.asarray(df[snp_names])
+    data = data.copy(order='C')  # fixes an error (don't know why this is necessary)
+
+    # test ANOVA
+    from scipy import stats
+    snp_in = []
+    for snpInd in range(data.shape[1]):
+        snpBool = False
+        for targetInd in range(targets.shape[1]):
+            a = targets[data[:, snpInd] == 1, targetInd]
+            b = targets[data[:, snpInd] == 2, targetInd]
+            c = targets[data[:, snpInd] == 3, targetInd]
+
+            f, p = stats.f_oneway(a,b,c)
+
+            if p<.001:
+                print('One-way ANOVA - snp_name ' + snp_names[snpInd] + '; ' + ROI_names[targetInd])
+                print('=============')
+                print('F value:', f)
+                print('P value:', p, '\n')
+                snpBool = True
+        if snpBool:
+            snp_in.append(snp_names[snpInd])
+
+    data = np.asarray(df[snp_in])
+    data = data.copy(order='C')
+
     # create PHOTON hyperpipe
-    my_pipe, metrics = setup_model_MTL(target_info=target_info)
+    my_pipe, metrics = setup_model_MTL_2(target_info=target_info)
     # fit PHOTON model
     import time
     millis1 = int(round(time.time()))
