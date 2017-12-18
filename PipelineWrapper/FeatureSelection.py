@@ -98,10 +98,11 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
         fs = []
         ps = []
         for feature_ind in range(data.shape[1]):
-            a = targets[data[:, feature_ind] == 1]
-            b = targets[data[:, feature_ind] == 2]
-            c = targets[data[:, feature_ind] == 3]
-            f, p = f_oneway(a, b, c)
+            group_data = []
+            uni_targets = np.unique(data[:, feature_ind])
+            for feature_cat in uni_targets:
+                group_data.append(targets[data[:, feature_ind] == feature_cat])
+            f, p = f_oneway(np.asarray(*group_data))
             fs.append(f)
             ps.append(p)
         return fs, ps
