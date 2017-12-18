@@ -2,7 +2,7 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, VarianceThreshold
-from scipy.stats import pearsonr
+from scipy.stats import pearsonr, f_oneway
 
 
 class PearsonFeatureSelector(BaseEstimator, TransformerMixin):
@@ -66,6 +66,37 @@ class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
+
+
+class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
+    _estimator_type = "transformer"
+
+    def __init__(self, percentile=10):
+        self.var_thres = VarianceThreshold()
+        self.percentile = percentile
+        self.my_fs = None
+
+    def loc_anova(self, data, targets):
+        fs = []
+        ps = []
+        for snpInd in range(data.shape[1]):
+            a = targets[data[:, snpInd] == 1]
+            b = targets[data[:, snpInd] == 2]
+            c = targets[data[:, snpInd] == 3]
+            f, p = f_oneway(a, b, c)
+            fs.append(f)
+            ps.append(p)
+
+    def fit(self, X, y):
+        X = self.var_thres.fit_transform(X)
+        self.my_fs = SelectPercentile(score_func=self.loc_anova, percentile=self.percentile)
+        self.my_fs.fit(X, y)
+        return self
+
+    def transform(self, X):
+        X = self.var_thres.transform(X)
+        return self.my_fs.transform(X)
+
 
 class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
