@@ -322,6 +322,7 @@ def run_analysis(data_dict):
 def perm_test(n_perms, alpha, pre)
     # get permutations
     perms = []
+    # ToDo: Match rows by ROI Name to enable UNcorrected p calculation
     for permInd in range(n_perms):
         a = pandas.read_pickle(path=pre + 'Results/metrics_summary_test_perm_' + str(permInd))['variance_explained']
         perms.append(np.asarray(a.tolist()))
