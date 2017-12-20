@@ -319,7 +319,7 @@ def run_analysis(data_dict):
 
     return mets_test, mets_train, importance_scores
 
-def perm_test(n_perms, alpha, pre)
+def perm_test(n_perms, alpha, pre):
     # get permutations
     perms = []
     # ToDo: Match rows by ROI Name to enable UNcorrected p calculation

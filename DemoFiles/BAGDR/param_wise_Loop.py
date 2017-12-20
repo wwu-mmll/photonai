@@ -102,5 +102,7 @@ if __name__ == '__main__':
 
         # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test')
 
+    p_list = perm_test(n_perms=n_perms, alpha=.05, pre=pre)
+
 print('')
 
