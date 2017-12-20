@@ -1,55 +1,33 @@
-# PHOTON Analysis for the Multimodal Brain Atlas of Genetic Depression Risk
 import pandas
 import numpy as np
 
-#pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-#pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
-global getImp, perm_test
-getImp = False
+def get_data(pre, one_hot_it=False, what='all'):
 
-perm_test = True
-n_perms = 1000
-
-covs_out = True
-one_hot_it = False
-discretize_targets = True
-
-def get_data():
     # get data (snps; recode SNPs to numerical values; 0-->hetero)
     snp_file = pre + 'Genetics/FORMarburgh_1KG_imputed_MDD_Compound_Genotypes_withSNPids_cleared.xlsx'
     snps_tmp, snp_names = get_snps(file=snp_file)
-    snp_num_frame = recode_snps(snps_tmp, snp_names)   # recode SNP strings to numerical values
+    snp_num_frame = recode_snps(snps_tmp, snp_names)  # recode SNP strings to numerical values
     if one_hot_it:
-        snp_num_frame, snp_names = one_hot_snps(snp_num_frame, snp_names)    # one-hot encode snp matrix
+        snp_num_frame, snp_names = one_hot_snps(snp_num_frame, snp_names)  # one-hot encode snp matrix
 
     # get covariates (e.g. diagnosis)
     cov_file = pre + 'Datenbank_Update_DataFreeze1&2_17-11-2017_relVars.csv'
+    # cov_file = pre + 'Datenbank_Update_DataFreeze1&2_01-12-2017_relVars2.csv'
     covs_tmp = get_covs(file=cov_file)
 
-    ##############################################################################################################
-    # get targets (e.g. volumes, thickness, ... ); (CAT12_GM, DTI, rs-fMRI_Hubness, ...)
-    # Thickness
-    target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
-    target_thick = get_targets(file=target_file)
+    # get targets
+    target_tmp = get_targets(pre, what)
 
-    # SurfaceArea
-    target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
-    target_surf = get_targets(file=target_file)
-
-    # Volume
-    target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
-    target_vol = get_targets(file=target_file)
-
-    # CAT12 Vgm
-    target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
-    target_Vgm = get_targets(file=target_file)
-
-    # merge target datasets and drop duplicate cols (e.g. ICV)
-    target_tmp = pandas.merge(target_thick, target_surf, how='inner', on='ID')
-    target_tmp = pandas.merge(target_tmp, target_vol, how='inner', on='ID')
-    target_tmp = pandas.merge(target_tmp, target_Vgm, how='inner', on='ID')
+    # # drop NaNs from targets
+    # impute_targets = 'drop'
+    # # to keep train and test fully independent, always use drop
+    # if impute_targets == 'drop':
+    #     print('\nNaN-handling: drop')
+    #     target_tmp = target_tmp.dropna(axis=0, how='any')
+    # elif impute_targets == 'mean':
+    #     print('\nNaN-handling: impute with mean')
+    #     target_tmp = target_tmp.apply(lambda x: x.fillna(x.mean()), axis=0)
 
     # ToDo: drop duplicate cols
 
@@ -59,7 +37,8 @@ def get_data():
     # merge the three dataframes into one dataframe and only keep the intersection (via 'inner')
     df = pandas.merge(covs_tmp, target_tmp, how='inner', on='ID')
     df = pandas.merge(df, snp_num_frame, how='inner', on='ID')
-    print('Target shape: ' + str(target_tmp.shape))
+
+    print('\nTarget shape: ' + str(target_tmp.shape))
     print('Covs shape: ' + str(covs_tmp.shape))
     print('SNPs shape: ' + str(snps_tmp.shape))
     print('Intersection merge: ' + str(df.shape))
@@ -67,6 +46,7 @@ def get_data():
 
 # get Genetic data
 def get_snps(file):
+    print('\nRetrieving SNPs...')
     snp_frame = pandas.read_excel(file)                    # read snp data
     snp_frame = snp_frame.dropna(axis=0, how='any')     # get rid of subjects whose data contains NaNs
     snp_names = snp_frame.columns[1:].values            # skip subID and take the rest
@@ -75,6 +55,7 @@ def get_snps(file):
 
 # get clinical/psychometric etc. variables
 def get_covs(file):
+    print('\nRetrieving covariates...')
     covs_frame = pandas.read_csv(file)                 # read cov data
     covs_frame.columns = ['ID' if x == 'Proband' else x for x in covs_frame.columns]    # rename the ID column to allow merge
     covs_frame = covs_frame.dropna(axis=0, how='any', subset=['Group'])         # get rid of subjects whose data contains NaNs in the listed col(s) (we only need Group to be valid for everyone)
@@ -84,7 +65,8 @@ def get_covs(file):
     return covs_frame
 
 # get targets (ROI-wise cortical thickness or volumes or ...)
-def get_targets(file):
+def get_targets_tmp(file):
+    print('\nRetrieving targets...')
     target_frame = pandas.read_csv(open(file, 'rb'))              # read target data (e.g. volume or thickness)
     target_frame.columns = ['ID' if (x == 'SubjID' or x == 'names') else x for x in target_frame.columns] # rename the ID column to allow merge
 
@@ -101,8 +83,70 @@ def get_targets(file):
 
     return target_frame
 
+def get_targets(pre, what):
+    # get targets (e.g. volumes, thickness, ... ); (CAT12_GM, DTI, rs-fMRI_Hubness, ...)
+    if what[0] == 'all':
+        what = ['thick', 'surf', 'vol', 'cat']
+
+    # Thickness
+    if any("thick" in s for s in what):
+        print('\nRetrieving Freesurfer Thickness data...')
+        target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
+        target_thick = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_thick, how='inner', on='ID')   # merge target datasets
+        else:
+            target_tmp = target_thick
+
+    # SurfaceArea
+    if any("surf" in s for s in what):
+        print('\nRetrieving Freesurfer Surface data...')
+        target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
+        target_surf = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_surf, how='inner', on='ID')    # merge target datasets
+        else:
+            target_tmp = target_surf
+
+    # Volume
+    if any("vol" in s for s in what):
+        print('\nRetrieving Freesurfer Volume data...')
+        target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
+        target_vol = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_vol, how='inner', on='ID')     # merge target datasets
+        else:
+            target_tmp = target_vol
+
+    # CAT12 Vgm
+    if any("cat" in s for s in what):
+        print('\nRetrieving CAT12 ROI data...')
+        target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
+        target_Vgm = get_targets_tmp(file=target_file)
+        if 'target_tmp' in locals():
+            target_tmp = pandas.merge(target_tmp, target_Vgm, how='inner', on='ID')     # merge target datasets
+        else:
+            target_tmp = target_Vgm
+
+    # handle custom targets string search
+    if what[0] == 'custom_str':
+        print('custom_str')
+        tmp = get_targets(pre, ['all'])
+        searchStr = what[1].lower()
+        custom_cols = [col for col in tmp.columns if searchStr in col.lower()]
+
+    # handle custom target input
+    if what[0] == 'custom_id':
+        print('custom_id')
+        tmp = get_targets(pre, ['all'])
+        what[0] = 'ID'
+        target_tmp = tmp[what]
+
+    return target_tmp
+
 # transform SNPs to numbers
 def recode_snps(snp_frame, snp_names):
+    print('\nRecoding SNPs...')
     # deep copy snp_frame
     snp_frame_recode = snp_frame.copy()
     # transform snp data to numbers
@@ -129,9 +173,9 @@ def recode_snps(snp_frame, snp_names):
     #.get_dummies(s)
     return snp_frame_recode
 
-
 # one hot encode snp matrix
 def one_hot_snps(snp_frame, snp_names):
+    print('\nOne-hot-encoding SNPs...')
     snp_frame_oneHot = pandas.DataFrame()
     snp_frame_oneHot['ID'] = snp_frame['ID']    # add ID col
     for snpID in snp_names:
@@ -149,6 +193,7 @@ def one_hot_snps(snp_frame, snp_names):
 
 # get feature importance
 def get_feature_importance(results, feature_names, data, targets, roiName):
+    print('\nComputing Feature Importance...')
     results_tree = results.result_tree
     best_config = results_tree.get_best_config_for(outer_cv_fold=0)
     imp_tmp = pandas.DataFrame(index=[np.arange(1, len(best_config.best_config_object_for_validation_set.fold_list)+1)], columns=feature_names)
@@ -177,7 +222,7 @@ def setup_model():
                         optimizer_params={},
                         best_config_metric='mean_absolute_error',
                         metrics=metrics,
-                        inner_cv=KFold(n_splits=20, shuffle=True, random_state=3),
+                        inner_cv=KFold(n_splits=5, shuffle=True, random_state=3),
                         eval_final_performance=False,
                         verbose=0)
 
@@ -212,7 +257,7 @@ def setup_model():
     my_pipe += svr_estimator
     return my_pipe, metrics
 
-
+###############################################################################################################
 # iterate over targets (e.g. ROI volumes)
 def run_analysis(data_dict):
 
@@ -220,32 +265,37 @@ def run_analysis(data_dict):
     targets = data_dict['targets']
     roiName = data_dict['roiName']
     snp_names = data_dict['snpNames']
-    covs = data_dict['covs']
+    remove_covs = data_dict['remove_covs']
+    getImportanceScores = data_dict['getImportanceScores']
+    perm_test = data_dict['perm_test']
 
     # create PHOTON hyperpipe
     my_pipe, metrics = setup_model()
 
     # shuffle targets if running a permutation test
     if perm_test == True:
-        print('PERMUTATION TEST: SHUFFLING TARGETS NOW!')
+        print('\nPERMUTATION TEST: SHUFFLING TARGETS NOW!')
         np.random.shuffle(targets)
 
     # remove confounders from target data (age, gender, site, ICV)
-    if covs_out:
+    if remove_covs:
+        print('\nRemoving covariates from targets.')
         import statsmodels.api as sm
-        ols_X = covs
+        # # convert all covs to numeric
+        # for c in data_dict['covs']:
+        #     data_dict[c] = pandas.to_numeric(data_dict[c])
+        ols_X = data_dict['covs']
         ols_X = sm.add_constant(ols_X)
         ols_model = sm.OLS(targets, ols_X)
         ols_results = ols_model.fit()
         targets = np.asarray(ols_results.resid)
-        print('Removing covariates from targets.')
 
     # fit PHOTON model
     results = my_pipe.fit(data, targets)
     results_tree = results.result_tree
 
     # get feature importance
-    if getImp:
+    if getImportanceScores:
         importance_scores = get_feature_importance(results=results, feature_names=snp_names, data=data, targets=targets, roiName=roiName)
     else:
         importance_scores = []
@@ -257,8 +307,7 @@ def run_analysis(data_dict):
     # TEST SET -> Train
     best_config_performance_train = results_tree.get_best_config_performance_validation_set(train_data=True)
 
-
-    print('Best config performance TEST: ' + roiName + ' ' + str(best_config_performance_test))
+    print('\n\nBest config performance TEST: ' + roiName + ' ' + str(best_config_performance_test))
     print('Best config performance TRAIN: ' + roiName + ' ' + str(best_config_performance_train))
 
     # initialize results DataFrame
@@ -270,90 +319,29 @@ def run_analysis(data_dict):
 
     return mets_test, mets_train, importance_scores
 
-
-# ---------------------------
-# run the analysis
-if __name__ == '__main__':
-    # get data
-    global df
-    df, ROI_names, snp_names = get_data()
-
-    # add a few covs to be tested as well
-    # ROI_names.append('BMI')
-    # ROI_names.append('BDI_Sum')
-    # ROI_names.append('CTQ_Sum')
-    # ROI_names.append('IQ')
-
-    # Filter by diagnosis
-    # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
-    group_id = 2
-    df = df.loc[df['Group'] == group_id]
-    print(str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
-
-    import time
-    millis1 = int(round(time.time()))
-    # Execute parallel
-    import multiprocessing as mp
-
+def perm_test(n_perms, alpha, pre)
+    # get permutations
+    perms = []
     for permInd in range(n_perms):
-        print('Running permutation ' + str(permInd) + '/' + str(n_perms))
-        # PREPARE DATA AND TARGETS
-        data_dict_list = []
+        a = pandas.read_pickle(path=pre + 'Results/metrics_summary_test_perm_' + str(permInd))['variance_explained']
+        perms.append(np.asarray(a.tolist()))
 
-        for roiName in ROI_names:
-            print('\n\n\n\n' + roiName + '...')
-            # print(pandas.__version__)
+    flat_list = np.asarray([item for sublist in perms for item in sublist])
+    flat_list = np.nan_to_num(flat_list)
 
-            # Filter samples
-            df_tmp = df.copy()  # deep copy the dataframe so we can drop samples without loosing them in the next iteration
-            df_tmp = df_tmp.dropna(subset=[roiName])  # Filter those samples whose current targets are NaN
-            print(str(df_tmp.shape[0]) + '/' + str(df.shape[0]) + ' samples remaining.')
+    # get results for true targets
+    met_true = pandas.read_pickle(path=pre + 'Results/metrics_summary_test')['variance_explained']
 
-            # get targets
-            roi_targets = np.asarray(df_tmp[roiName])
+    # mark significant
+    #sig_thresh = np.percentile(flat_list, 100-(alpha*100))
+    #met_true[met_true <= sig_thresh] = 0.0
 
-            # get data (numeric snps)
-            roi_data = np.asarray(df_tmp[snp_names])
-            roi_data = roi_data.copy(order='C')  # fixes an error (don't know why this is necessary)
+    # get actual p-values
+    met_p = pandas.read_pickle(path=pre + 'Results/metrics_summary_test')['variance_explained']
+    p_list = []
+    for m in met_p:
+        p = np.sum(m <= flat_list) / len(flat_list)
+        p_list.append(p)
+        print(str(m) + '; p=' + str(p))
 
-            # discretize targets
-            print('\nRounding targets.\n')
-            if discretize_targets:
-                roi_targets = np.around(roi_targets, decimals=1)
-
-            # get covs
-            covs = df_tmp[['Alter', 'Geschlecht', 'Site']]
-            data_dict_list.append({'data': roi_data, 'targets': roi_targets, 'roiName': roiName, 'snpNames': snp_names, 'covs': covs})
-
-        results = mp.Pool().map(run_analysis, data_dict_list)
-        millis2 = int(round(time.time()))
-        print('Time (minutes): ' + str((millis2 - millis1) / 60))
-
-        # initialize results DataFrame and add/join results from parallel pool
-        metrics_summary_train = pandas.DataFrame()
-        metrics_summary_test = pandas.DataFrame()
-        importance_scores_summary = pandas.DataFrame()
-        for roi in results:
-            te, tr, imp = roi
-            metrics_summary_test = metrics_summary_test.append(te)
-            metrics_summary_train = metrics_summary_train.append(tr)
-            if getImp:
-                importance_scores_summary = importance_scores_summary.append(imp)
-
-        # save metrics summary
-        if perm_test:
-            metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test_perm_' + str(permInd))
-            metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train_perm_' + str(permInd))
-        else:
-            metrics_summary_test = metrics_summary_test.sort_values(by='variance_explained', axis=0, ascending=False)
-            metrics_summary_train = metrics_summary_train.sort_values(by='variance_explained', axis=0, ascending=False)
-            metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test')
-            metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train')
-
-        if getImp and ~perm_test:
-            importance_scores_summary.to_pickle(path=pre + 'Results/importance_scores_summary')
-
-        print('Done')
-    # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test')
-    print('Done')
-
+    return p_list

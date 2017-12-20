@@ -3,15 +3,18 @@ import pandas
 import numpy as np
 
 #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-#pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
+#pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
 global getImp, perm_test
 getImp = False
+
 perm_test = False
-covs_out = False
+n_perms = 1
+
+covs_out = True
 one_hot_it = False
-discretize_targets = False
+discretize_targets = True
 
 def get_data():
     # get data (snps; recode SNPs to numerical values; 0-->hetero)
@@ -166,78 +169,47 @@ def get_feature_importance(results, feature_names, data, targets, roiName):
 
 # setup photon HP
 def setup_model():
-    # import PHOTON Core
-    office = True
-    import sys
-    if office:
-        photonPath = '/spm-data/Scratch/spielwiese_tim/PhotonCore'
-        #photonPath = 'C:/Users/hahnt/PycharmProjects/PhotonCore'
-    else:
-        photonPath = 'D:/PyCharmProjects\photon_core/'
-    sys.path.insert(0, photonPath)
     from Framework.PhotonBase import PipelineElement, PipelineSwitch, Hyperpipe
     from sklearn.model_selection import KFold
 
-    # my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
-    #                     optimizer_params={},
-    #                     #best_config_metric='mean_absolute_error',
-    #                     metrics=['pearson_correlation', 'mean_absolute_error'],
-    #                     inner_cv=KFold(n_splits=2, shuffle=True, random_state=3),
-    #                     outer_cv=KFold(n_splits=2, shuffle=True, random_state=2),
-    #                     eval_final_performance=True)
-
-    #metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
-    metrics = ['accuracy', 'precision', 'recall', "f1_score"]
+    metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
     my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                         optimizer_params={},
                         best_config_metric='mean_absolute_error',
                         metrics=metrics,
-                        inner_cv=KFold(n_splits=3, shuffle=True, random_state=3),
+                        inner_cv=KFold(n_splits=20, shuffle=True, random_state=3),
                         eval_final_performance=False,
                         verbose=0)
 
     # setup hyperpipe
-    #from sklearn.feature_selection import f_regression  # import every time or register once
-    #my_pipe += PipelineElement.create('SelectPercentile', {}, score_func=f_regression, test_disabled=True)
 
-    # get interaction terms
-    # register elements
-    from Framework.Register import RegisterPipelineElement
-    photon_package = 'PhotonCore'  # where to add the element
-    photon_name = 'interaction_terms'  # element name
-    class_str = 'sklearn.preprocessing.PolynomialFeatures'  # element info
-    element_type = 'Transformer'  # element type
-    RegisterPipelineElement(photon_name=photon_name,
-                            photon_package=photon_package,
-                            class_str=class_str,
-                            element_type=element_type).add()
-    # add the elements
-    #my_pipe += PipelineElement.create('interaction_terms', {'degree': [2, 3]},  interaction_only=True, include_bias=False, test_disabled=True)
+    # # get interaction terms
+    # # register elements
+    # from Framework.Register import RegisterPipelineElement
+    # photon_package = 'PhotonCore'  # where to add the element
+    # photon_name = 'interaction_terms'  # element name
+    # class_str = 'sklearn.preprocessing.PolynomialFeatures'  # element info
+    # element_type = 'Transformer'  # element type
+    # RegisterPipelineElement(photon_name=photon_name,
+    #                         photon_package=photon_package,
+    #                         class_str=class_str,
+    #                         element_type=element_type).add()
 
-    # # feature selection
-    # from sklearn.feature_selection import f_regression
-    # my_pipe += PipelineElement.create('SelectPercentile', {'percentile': [5, 10, 30]}, score_func=f_regression, test_disabled=True)
+    # # add the elements
+    # my_pipe += PipelineElement.create('interaction_terms', {'degree': [2]},  interaction_only=True,
+    #                                   include_bias=False, test_disabled=False)
 
-    # possible estimators with HPs
-    # dnn_estimator = PipelineElement.create('KerasDNNRegressor', {'hidden_layer_sizes': [[5], [20], [50]],
-    #                                                    'dropout_rate': [0],
-    #                                                    'nb_epoch': [100],
-    #                                                    'act_func': ['relu', 'sigmoid'],
-    #                                                    'learning_rate': [.1, .001],
-    #                                                    'batch_normalization': [True],
-    #                                                    'early_stopping_flag': [True],
-    #                                                    'eaSt_patience': [20],
-    #                                                    'reLe_factor': [0.4],
-    #                                                    'reLe_patience': [5]})
+    # add feature selection
+    my_pipe += PipelineElement.create('CategoricalANOVASelectPercentile', {'percentile': [5]}, test_disabled=False)
 
-    #tree_estimator = PipelineElement.create('RandomForestClassifier', {'min_samples_split': [10, 30, 80, 100]}, n_estimators=100)
-    svc_estimator = PipelineElement.create('svc', {'kernel': ['linear'], 'C': [1.0]})
+    #tree_estimator = PipelineElement.create('RandomForestRegressor', {'min_samples_split': [10, 30, 80, 100]}, n_estimators=100)
+    svr_estimator = PipelineElement.create('SVR', {'kernel': ['linear'], 'C': [1.0]})
     #svr_estimator = PipelineElement.create('SVR', {'kernel': ['linear', 'rbf'], 'C': [.001, .01, 0.7, 1.0, 2.0, 3.0, 5.0, 8.0, 13.0, 21.0, 34.0, 55.0, 100.0]})
     #KNNreg = PipelineElement.create('KNeighborsRegressor')
     #my_pipe += PipelineSwitch('final_estimator', [svr_estimator, tree_estimator, KNNreg])
 
-    #my_pipe += dnn_estimator
-    my_pipe += svc_estimator
+    #my_pipe += tree_estimator
+    my_pipe += svr_estimator
     return my_pipe, metrics
 
 
@@ -268,15 +240,6 @@ def run_analysis(data_dict):
         targets = np.asarray(ols_results.resid)
         print('Removing covariates from targets.')
 
-
-    # # DEBUG Only
-    # from scipy.stats import ttest_ind
-    # #a = []
-    # for i in range(data.shape[1]):
-    #     #a.append(np.asarray())
-    #     a = ttest_ind(data[:, i], targets, equal_var=False)
-
-
     # fit PHOTON model
     results = my_pipe.fit(data, targets)
     results_tree = results.result_tree
@@ -293,6 +256,7 @@ def run_analysis(data_dict):
 
     # TEST SET -> Train
     best_config_performance_train = results_tree.get_best_config_performance_validation_set(train_data=True)
+
 
     print('Best config performance TEST: ' + roiName + ' ' + str(best_config_performance_test))
     print('Best config performance TRAIN: ' + roiName + ' ' + str(best_config_performance_train))
@@ -326,77 +290,70 @@ if __name__ == '__main__':
     df = df.loc[df['Group'] == group_id]
     print(str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
 
-    # # test with less ROIs (for debug only)
-    # ROI_names = ROI_names[0:5]
-
     import time
     millis1 = int(round(time.time()))
     # Execute parallel
     import multiprocessing as mp
 
-    # PREPARE DATA AND TARGETS
-    data_dict_list = []
+    for permInd in range(n_perms):
+        print('Running permutation ' + str(permInd) + '/' + str(n_perms))
+        # PREPARE DATA AND TARGETS
+        data_dict_list = []
 
-    for roiName in ROI_names:
-        print('\n\n\n\n' + roiName + '...')
-        # print(pandas.__version__)
+        for roiName in ROI_names:
+            print('\n\n\n\n' + roiName + '...')
+            # print(pandas.__version__)
 
-        # Filter samples
-        df_tmp = df.copy()  # deep copy the dataframe so we can drop samples without loosing them in the next iteration
-        df_tmp = df_tmp.dropna(subset=[roiName])  # Filter those samples whose current targets are NaN
-        print(str(df_tmp.shape[0]) + '/' + str(df.shape[0]) + ' samples remaining.')
+            # Filter samples
+            df_tmp = df.copy()  # deep copy the dataframe so we can drop samples without loosing them in the next iteration
+            df_tmp = df_tmp.dropna(subset=[roiName])  # Filter those samples whose current targets are NaN
+            print(str(df_tmp.shape[0]) + '/' + str(df.shape[0]) + ' samples remaining.')
 
-        # get targets
-        roi_targets = np.asarray(df_tmp[roiName])
+            # get targets
+            roi_targets = np.asarray(df_tmp[roiName])
 
-        # get data (numeric snps)
-        roi_data = np.asarray(df_tmp[snp_names])
-        roi_data = roi_data.copy(order='C')  # fixes an error (don't know why this is necessary)
+            # get data (numeric snps)
+            roi_data = np.asarray(df_tmp[snp_names])
+            roi_data = roi_data.copy(order='C')  # fixes an error (don't know why this is necessary)
 
-        # # scale targets
-        # print('\nScaling targets.\n')
-        # #from sklearn.preprocessing import StandardScaler
-        # rt = (roi_targets - np.mean(roi_targets) / np.var(roi_targets)
-
-        # discretize targets
-        if discretize_targets:
+            # discretize targets
             print('\nRounding targets.\n')
-            roi_targets = np.around(roi_targets, decimals=1)
+            if discretize_targets:
+                roi_targets = np.around(roi_targets, decimals=1)
 
-        # get covs
-        covs = df_tmp[['Alter', 'Geschlecht', 'Site', 'ICV']]
-        data_dict_list.append({'data': roi_data, 'targets': roi_targets, 'roiName': roiName, 'snpNames': snp_names, 'covs': covs})
+            # get covs
+            covs = df_tmp[['Alter', 'Geschlecht', 'Site']]
+            data_dict_list.append({'data': roi_data, 'targets': roi_targets, 'roiName': roiName, 'snpNames': snp_names, 'covs': covs})
 
-    results = mp.Pool().map(run_analysis, data_dict_list)
-    millis2 = int(round(time.time()))
-    print('Time (minutes): ' + str((millis2 - millis1) / 60))
+        results = mp.Pool().map(run_analysis, data_dict_list)
+        millis2 = int(round(time.time()))
+        print('Time (minutes): ' + str((millis2 - millis1) / 60))
 
-    # initialize results DataFrame and add/join results from parallel pool
-    metrics_summary_train = pandas.DataFrame()
-    metrics_summary_test = pandas.DataFrame()
-    importance_scores_summary = pandas.DataFrame()
-    for roi in results:
-        te, tr, imp = roi
-        metrics_summary_test = metrics_summary_test.append(te)
-        metrics_summary_train = metrics_summary_train.append(tr)
-        if getImp:
-            importance_scores_summary = importance_scores_summary.append(imp)
+        # initialize results DataFrame and add/join results from parallel pool
+        metrics_summary_train = pandas.DataFrame()
+        metrics_summary_test = pandas.DataFrame()
+        importance_scores_summary = pandas.DataFrame()
+        for roi in results:
+            te, tr, imp = roi
+            metrics_summary_test = metrics_summary_test.append(te)
+            metrics_summary_train = metrics_summary_train.append(tr)
+            if getImp:
+                importance_scores_summary = importance_scores_summary.append(imp)
 
-    metrics_summary_test = metrics_summary_test.sort_values(by='variance_explained', axis=0, ascending=False)
-    metrics_summary_train = metrics_summary_train.sort_values(by='variance_explained', axis=0, ascending=False)
+        # save metrics summary
+        if perm_test:
+            metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test_perm_' + str(permInd))
+            metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train_perm_' + str(permInd))
+        else:
+            metrics_summary_test = metrics_summary_test.sort_values(by='variance_explained', axis=0, ascending=False)
+            metrics_summary_train = metrics_summary_train.sort_values(by='variance_explained', axis=0, ascending=False)
+            metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test')
+            metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train')
 
-    # save metrics summary
-    if perm_test:
-        metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test_oneHot_perm2')
-        metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train_oneHot_perm2')
-    else:
-        metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test_oneHot')
-        metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train_oneHot')
+        if getImp and ~perm_test:
+            importance_scores_summary.to_pickle(path=pre + 'Results/importance_scores_summary')
 
-    if getImp and ~perm_test:
-        importance_scores_summary.to_pickle(path=pre + 'Results/importance_scores_summary_oneHot')
-
-    print('Done')
-    # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test_oneHot')
+        print('Done')
+    # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test')
     print('Done')
 
