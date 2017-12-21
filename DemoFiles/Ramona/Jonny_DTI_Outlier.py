@@ -91,11 +91,25 @@ def load_and_preprocess_dti_data():
     return dti_roi_brain_striped
 
 
+class CustomDTISplit:
+
+    def __init__(self):
+        pass
+
+    def split(self, X, y=None, groups=None):
+        test = list(np.where(y == 1))
+        train = list(np.where(y == 0))
+        yield (train, test)
+
+
 def classical_classification() -> Hyperpipe:
+
     pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
-                     metrics=['mean_squared_error'],
-                     best_config_metric='mean_squared_error',
-                     inner_cv=LeaveOneOut(),
+                     metrics=['accuracy'],
+                     best_config_metric='accuracy',
+                     inner_cv=CustomDTISplit(),
+                     # outer_cv=ShuffleSplit(),
+                     # inner_cv=ShuffleSplit(),
                      eval_final_performance=False)
 
     # hyperparameters={'p_threshold': [0.001, 0.01, 0.05]}
@@ -103,19 +117,7 @@ def classical_classification() -> Hyperpipe:
     #                                test_disabled=False, p_threshold=0.001)
     pipe += PipelineElement.create("standard_scaler", hyperparameters={}, test_disabled=False)
     pipe += PipelineElement.create("pca", hyperparameters={}, test_disabled=False, n_components=None)
-    # svr = PipelineElement.create("SVR", hyperparameters={'kernel': ['rbf']},  C=0.5)
-    # pipe += svr
-
-    #  hyperparameters={'hidden_layer_sizes': [[5, 10], [10, 20], [30, 50]]}
-    # kdnn = PipelineElement.create('KerasDNNRegressor', hidden_layer_sizes=[10])
-    # pipe += kdnn
-
-    pipe += PipelineElement.create("OneClassSVM")
-
-    # svr = PipelineElement.create("SVR", hyperparameters={"kernel": ["rbf", "linear"], "C": [0.1, 0.3, 0.5, 0.75, 1, 1.5, 2, 5]})
-    # rndf = PipelineElement.create("RandomForestRegressor", hyperparameters={"min_samples_leaf": [1, 5]}, test_disabled=False)
-    # pipe += PipelineSwitch('final_estimator', [svr, rndf])
-    # pipe += rndf
+    pipe += PipelineElement.create("OneClassSVM", hyperparameters={'nu': [0.2, 0.4, 0.5, 0.7, 0.9]})
 
     return pipe
 
@@ -131,13 +133,13 @@ def fit_model(targets, age, gender, hamilton_pre):
     features = np.hstack((features, np.reshape(gender.values, (-1, 1))))
     features = np.hstack((features, np.reshape(hamilton_pre.values, (-1, 1))))
 
-    target_indices = np.where(targets < 7)
-    targets = np.zeros((len(targets), ))
-    targets[target_indices] = 1
+    targets_binary = np.zeros(targets.shape)
+    targets_indices = np.where(targets < 7)
+    targets_binary[targets_indices] = 1
+    targets_binary = [int(i) for i in targets_binary]
+
     Logger().info('Starting Hyperparameter Search')
-
-    pipe.fit(features, targets)
-
+    pipe.fit(features, targets_binary)
 
     Logger().info('Calculating output correlations & stuff')
     config_pearsons_list = []
@@ -151,14 +153,8 @@ def fit_model(targets, age, gender, hamilton_pre):
         for fold in config_item.fold_list:
             pearson_list_y_true.append(fold.test.y_true[0])
             pearson_list_y_pred.append(fold.test.y_predicted[0])
-            mse = fold.test.metrics['mean_squared_error']
-            mse_list.append(mse)
-            indices_list.append(fold.test.indices[0])
-        pred_pearson = pearsonr(pearson_list_y_pred, pearson_list_y_true)
-        print(pred_pearson)
-        print(np.mean(mse_list))
-        print(np.std(mse_list))
-        # pearson_list_y_pred = [i[0] for i in pearson_list_y_pred]
+            mse = fold.test.metrics['accuracy']
+            print('accuracy: ' + str(mse))
 
         pickle.dump(pearson_list_y_true, open('jonny_pipe_y_true.p', 'wb'))
         pickle.dump(pearson_list_y_pred, open('jonny_pipe_y_pred.p', 'wb'))
@@ -167,93 +163,16 @@ def fit_model(targets, age, gender, hamilton_pre):
     # logex.extract_csv('johnny_dti_results.csv')
 
 
-def plot_predictions():
-    loaded_data = pickle.load(open('jonny_pipe_others.p', 'rb'))
-    pearson_list_y_true = pickle.load(open('jonny_pipe_y_true.p', 'rb'))
-    pearson_list_y_pred = pickle.load(open('jonny_pipe_y_pred.p', 'rb'))
-
-    sort_index = np.argsort(pearson_list_y_true)
-
-    pearson_list_y_true = np.array(pearson_list_y_true)[sort_index]
-    pearson_list_y_pred = np.array(pearson_list_y_pred)[sort_index]
-
-    hamilton_post = loaded_data[0]
-    hamilton_post_predicted = loaded_data[1]
-    rang = spearmanr(hamilton_post, hamilton_post_predicted)
-    print(rang)
-
-    predicted_responders = loaded_data[3]
-    responder = loaded_data[2]
-    hamilton_post_mean = loaded_data[4]
-
-    always_fifteen = np.ones(hamilton_post.shape) * 12.5
-    mse_always_fifteen = mean_squared_error(y_true=pearson_list_y_true, y_pred=always_fifteen)
-    print(mse_always_fifteen)
-
-    print(mean_squared_error(y_true=pearson_list_y_true, y_pred=pearson_list_y_pred))
-
-    sort_index = np.argsort(pearson_list_y_true)
-    hamilton_post_predicted = hamilton_post_predicted[sort_index]
-    hamilton_post = hamilton_post[sort_index]
-    hamilton_post_mean = hamilton_post_mean[sort_index]
-    responder = responder[sort_index]
-    predicted_responders = predicted_responders[sort_index]
-
-    correct_predictions = np.where(responder == predicted_responders)
-    success = np.zeros(predicted_responders.shape)
-    success[correct_predictions] = 1
-
-    fig, axes = plt.subplots(3, 1, sharex=True)
-    x = np.arange(0, hamilton_post.size, 1)
-    axes[1].plot(x, hamilton_post, c='r')
-    axes[1].plot(x, hamilton_post_predicted, c='b')
-    axes[1].plot(x, hamilton_post_mean, c='green')
-    axes[1].set_title('Hamilton Post EKT')
-    axes[0].plot(x, pearson_list_y_true, c='r')
-    axes[0].plot(x, pearson_list_y_pred, c='b')
-    axes[0].set_title('Hamilton Delta')
-    axes[2].scatter(x, success, c='black')
-    axes[2].set_title('Successfully classified Hamilton < 8 Responders?')
-    red_patch = mpatches.Patch(color='red', label='True Values')
-    blue_patch = mpatches.Patch(color='blue', label='Predicted Values')
-    black_patch = mpatches.Patch(color='black', label='Correct Classification?')
-    plt.legend(handles=[red_patch, blue_patch, black_patch])
-    plt.show()
-
-
 def evaluate_predictions(xls_file, targets):
     pearson_list_y_true = pickle.load(open('jonny_pipe_y_true.p', 'rb'))#
     pearson_list_y_pred = pickle.load(open('jonny_pipe_y_pred.p', 'rb'))
-
-    responder = pandas.read_excel(open(xls_file, 'rb'), sheet_name='ECT', usecols="K", squeeze=True)
-    hamilton_pre = pandas.read_excel(open(xls_file, 'rb'), sheet_name='ECT', usecols="G", squeeze=True)
-    hamilton_post = pandas.read_excel(open(xls_file, 'rb'), sheet_name='ECT', usecols="H", squeeze=True)
-
-    hamilton_post_predicted = np.subtract(hamilton_pre, pearson_list_y_pred)
-    hamilton_post_mean = np.subtract(hamilton_pre, np.mean(pearson_list_y_true))
-    index_post_predicted = np.where(hamilton_post_predicted <= 8)
-    index_responders = np.where(responder == 1)
-    predicted_responders = np.zeros(targets.size)
-    predicted_responders[index_post_predicted] = 1
-
-    print(accuracy_score(y_true=responder, y_pred=predicted_responders))
-    print(classification_report(y_true=responder, y_pred=predicted_responders))
-
-    pickle.dump((hamilton_post, hamilton_post_predicted, responder, predicted_responders, hamilton_post_mean), open('jonny_pipe_others.p', 'wb'))
-
-
-    # print(hamilton_post_predicted)
-    # print(index_post_predicted)
-    # print(index_responders)
-
-
 
 
 xls_file = ROOT_DIR + '/Key_Information_ECT_sample_20170829.xlsx'
 subject_ids, targets = load_etc_subject_ids_and_targets(xls_file)
 age, gender, hamilton_pre = load_covariates(xls_file)
 fit_model(targets, age, gender, hamilton_pre)
-evaluate_predictions(xls_file, targets)
+# evaluate_predictions(xls_file, targets)
 
 # plot_predictions()
 

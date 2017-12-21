@@ -116,5 +116,6 @@
    ],
    "CategorialANOVASelectPercentile":[
    "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
-   "Transformer"]
+   "Transformer"],
+   "OneClassSVM": ["sklearn.svm.OneClassSVM", "Estimator"]
 }
