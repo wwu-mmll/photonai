@@ -54,8 +54,8 @@ if __name__ == '__main__':
 
 
         ############
-        # Debug only
-        ROI_names = ROI_names[:4]
+        # # Debug only
+        # ROI_names = ROI_names[:4]
 
         for roiName in ROI_names:
             print('\n\n\n\n' + roiName + '...')
@@ -85,7 +85,7 @@ if __name__ == '__main__':
                                    'covs': covs, 'remove_covs': remove_covs, 'getImportanceScores': getImportanceScores,
                                    'perm_test': perm_test_bool})
 
-        results = mp.Pool().map(run_analysis, data_dict_list)
+        results = mp.Pool(processes=2).map(run_analysis, data_dict_list)
         millis2 = int(round(time.time()))
         print('Time (minutes): ' + str((millis2 - millis1) / 60))
 
