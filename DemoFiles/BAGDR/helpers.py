@@ -244,7 +244,7 @@ def setup_model():
     #                                   include_bias=False, test_disabled=False)
 
     # add feature selection
-    #my_pipe += PipelineElement.create('CategoricalANOVASelectPercentile', {'percentile': [5]}, test_disabled=False)
+    my_pipe += PipelineElement.create('CategoricalANOVASelectPercentile', {'percentile': [5]}, test_disabled=False)
 
     #tree_estimator = PipelineElement.create('RandomForestRegressor', {'min_samples_split': [10, 30, 80, 100]}, n_estimators=100)
     svr_estimator = PipelineElement.create('SVR', {'kernel': ['linear'], 'C': [1.0]})

@@ -20,8 +20,8 @@ if __name__ == '__main__':
 
     discretize_targets = True
 
-    getImportanceScores = True
-    n_perms = 3
+    getImportanceScores = False
+    n_perms = 1000
 
     results_file = pre + 'Results/metrics_summary'
     importance_scores_file = pre + 'Results/importance_scores'

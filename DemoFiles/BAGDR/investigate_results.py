@@ -2,7 +2,7 @@ import numpy as np
 import pandas
 
 def perm_hist(metrics_summary_test, p_cor_file, perm_vec_file, metric, figure_file):
-    alpha = .9
+    alpha = .05
 
     import matplotlib.pyplot as plt
     # get the real performance parameter and p-values
