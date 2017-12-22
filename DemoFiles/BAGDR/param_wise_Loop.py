@@ -7,9 +7,9 @@ import pandas
 # run the analysis
 if __name__ == '__main__':
     ###############################################################################################################
-    # pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-    # pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    #pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
+    #pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
     group_id = 2  # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     one_hot_it = False
@@ -115,18 +115,32 @@ if __name__ == '__main__':
                 if getImportanceScores:
                     importance_scores_summary.to_pickle(path=importance_scores_file)
 
+    # run permutation test
     if perm_test_bool:
         print('Retrieving Permutation Test info...')
         from perm_test import perm_test_multCompCor
-        p, perm_vec = perm_test_multCompCor(n_perms=n_perms, results_file=results_file, metrics=metrics)
-        p.to_pickle(path=results_file + '_p')
-        np.save(file=results_file + '_permVec', arr=perm_vec)
+        p_cor, perm_vec_mets = perm_test_multCompCor(n_perms=n_perms, results_file=results_file, metrics=metrics)
+        p_cor.to_pickle(path=results_file + '_p_cor')
+        perm_vec_mets.to_pickle(path=results_file + '_permVec')
 
+        # get p-vals for importance scores
         if getImportanceScores:
             print('Retrieving Permutation Test info for Importance Scores...')
             from perm_test import perm_test_importance
-            p_imp = perm_test_importance(n_perms=n_perms, importance_score_file=importance_scores_file)
-            p_imp.to_pickle(path=importance_scores_file + '_p')
+            imp_p, imp_p_cor = perm_test_importance(n_perms=n_perms, importance_score_file=importance_scores_file)
+            imp_p.to_pickle(path=importance_scores_file + '_p')
+            imp_p_cor.to_pickle(path=importance_scores_file + '_p_corrected')
+
+
+    # investigate results
+    from investigate_results import perm_hist
+    metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
+    metric = metrics[0]
+    h = perm_hist(metrics_summary_test=results_file + '_test',
+                  p_cor_file=results_file + '_p_cor',
+                  perm_vec_file=results_file + '_permVec',
+                  metric=metric,
+                  figure_file=results_file + 'perm_plot.png')
 
     print('')
 
