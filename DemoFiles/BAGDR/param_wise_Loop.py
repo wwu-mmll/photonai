@@ -8,8 +8,8 @@ import pandas
 if __name__ == '__main__':
     ###############################################################################################################
     # pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
-    pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-    # pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/'
+    # pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
+    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
     group_id = 2  # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     one_hot_it = False
@@ -20,9 +20,11 @@ if __name__ == '__main__':
 
     discretize_targets = True
 
-    getImportanceScores = False
-    perm_test = True
+    getImportanceScores = True
     n_perms = 3
+
+    results_file = pre + 'Results/metrics_summary'
+    importance_scores_file = pre + 'Results/importance_scores'
 
     ###############################################################################################################
     # get data
@@ -38,12 +40,23 @@ if __name__ == '__main__':
     millis1 = int(round(time.time()))
     # Execute parallel
     import multiprocessing as mp
-
-    for permInd in range(n_perms):
-        print('Running permutation ' + str(permInd) + '/' + str(n_perms))
+    perm_test_bool = False
+    for permInd in range(n_perms+1):
+        if permInd == 0:
+            print('Running analysis.')
+            perm_test_bool = False
+        elif permInd > 0:
+            print('Running permutation ' + str(permInd) + '/' + str(n_perms))
+            perm_test_bool = True
 
         # PREPARE DATA AND TARGETS to be passed to the parallel function
         data_dict_list = []
+
+
+        ############
+        # Debug only
+        ROI_names = ROI_names[:4]
+
         for roiName in ROI_names:
             print('\n\n\n\n' + roiName + '...')
 
@@ -70,7 +83,7 @@ if __name__ == '__main__':
             # move all relevant info a dict so it can be passed to the mpPool
             data_dict_list.append({'data': roi_data, 'targets': roi_targets, 'roiName': roiName, 'snpNames': snp_names,
                                    'covs': covs, 'remove_covs': remove_covs, 'getImportanceScores': getImportanceScores,
-                                   'perm_test': perm_test})
+                                   'perm_test': perm_test_bool})
 
         results = mp.Pool().map(run_analysis, data_dict_list)
         millis2 = int(round(time.time()))
@@ -81,28 +94,39 @@ if __name__ == '__main__':
         metrics_summary_test = pandas.DataFrame()
         importance_scores_summary = pandas.DataFrame()
         for roi in results:
-            te, tr, imp = roi
+            te, tr, imp, metrics = roi
             metrics_summary_test = metrics_summary_test.append(te)
             metrics_summary_train = metrics_summary_train.append(tr)
             if getImportanceScores:
                 importance_scores_summary = importance_scores_summary.append(imp)
 
+            metrics_summary_test = metrics_summary_test.sort_values(by='variance_explained', axis=0, ascending=False)
+            metrics_summary_train = metrics_summary_train.sort_values(by='variance_explained', axis=0, ascending=False)
+
             # save metrics summary
-            if perm_test:
-                metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test_perm_' + str(permInd))
-                metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train_perm_' + str(permInd))
+            if perm_test_bool:
+                metrics_summary_test.to_pickle(path=results_file + '_test_perm_' + str(permInd))
+                metrics_summary_train.to_pickle(path=results_file + '_train_perm_' + str(permInd))
+                if getImportanceScores:
+                    importance_scores_summary.to_pickle(path=importance_scores_file + '_perm_' + str(permInd))
             else:
-                # metrics_summary_test = metrics_summary_test.sort_values(by='variance_explained', axis=0, ascending=False)
-                # metrics_summary_train = metrics_summary_train.sort_values(by='variance_explained', axis=0, ascending=False)
-                metrics_summary_test.to_pickle(path=pre + 'Results/metrics_summary_test')
-                metrics_summary_train.to_pickle(path=pre + 'Results/metrics_summary_train')
+                metrics_summary_test.to_pickle(path=results_file + '_test')
+                metrics_summary_train.to_pickle(path=results_file + '_train')
+                if getImportanceScores:
+                    importance_scores_summary.to_pickle(path=importance_scores_file)
 
-            if getImportanceScores and ~perm_test:
-                importance_scores_summary.to_pickle(path=pre + 'Results/importance_scores_summary')
+    if perm_test_bool:
+        print('Retrieving Permutation Test info...')
+        from perm_test import perm_test_multCompCor
+        p, perm_vec = perm_test_multCompCor(n_perms=n_perms, results_file=results_file, metrics=metrics)
+        p.to_pickle(path=results_file + '_p')
+        np.save(file=results_file + '_permVec', arr=perm_vec)
 
-        # test = pandas.read_pickle(path=pre + 'Results//metrics_summary_test')
+        if getImportanceScores:
+            print('Retrieving Permutation Test info for Importance Scores...')
+            from perm_test import perm_test_importance
+            p_imp = perm_test_importance(n_perms=n_perms, importance_score_file=importance_scores_file)
+            p_imp.to_pickle(path=importance_scores_file + '_p')
 
-    p_list = perm_test(n_perms=n_perms, alpha=.05, pre=pre)
-
-print('')
+    print('')
 

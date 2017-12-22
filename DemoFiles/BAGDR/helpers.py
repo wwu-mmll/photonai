@@ -203,7 +203,6 @@ def get_feature_importance(results, feature_names, data, targets, roiName):
         if len(f_imp) > 0:
             t = results.inverse_transform_pipeline(best_config.config_dict, data, targets, f_imp)
             imp_tmp.loc[i, :] = t[0]
-
         else:
             imp_tmp.loc[i, :] = []
         i += 1
@@ -222,7 +221,7 @@ def setup_model():
                         optimizer_params={},
                         best_config_metric='mean_absolute_error',
                         metrics=metrics,
-                        inner_cv=KFold(n_splits=5, shuffle=True, random_state=3),
+                        inner_cv=KFold(n_splits=20, shuffle=True, random_state=3),
                         eval_final_performance=False,
                         verbose=0)
 
@@ -245,7 +244,7 @@ def setup_model():
     #                                   include_bias=False, test_disabled=False)
 
     # add feature selection
-    my_pipe += PipelineElement.create('CategoricalANOVASelectPercentile', {'percentile': [5]}, test_disabled=False)
+    #my_pipe += PipelineElement.create('CategoricalANOVASelectPercentile', {'percentile': [5]}, test_disabled=False)
 
     #tree_estimator = PipelineElement.create('RandomForestRegressor', {'min_samples_split': [10, 30, 80, 100]}, n_estimators=100)
     svr_estimator = PipelineElement.create('SVR', {'kernel': ['linear'], 'C': [1.0]})
@@ -317,7 +316,7 @@ def run_analysis(data_dict):
         mets_train.loc[roiName, met] = np.median(best_config_performance_train[met])
         mets_test.loc[roiName, met] = np.median(best_config_performance_test[met])
 
-    return mets_test, mets_train, importance_scores
+    return mets_test, mets_train, importance_scores, metrics
 
 def perm_test(n_perms, alpha, pre):
     # get permutations
