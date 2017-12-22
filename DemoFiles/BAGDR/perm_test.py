@@ -50,15 +50,17 @@ def perm_test_multCompCor(n_perms, results_file, metrics):
     p_vals = true_vals.copy()
 
     # get permutations
+    perm_vec_mets = pandas.DataFrame(columns=metrics)
     for metric in metrics:
         perms = []
         for permInd in range(1, n_perms+1):
             a = pandas.read_pickle(path=results_file + '_test_perm_' + str(permInd))[metric]
             perms.append(np.asarray(a.tolist()))
 
-        # put all p_values under permutation in one vector
+        # put all p_values under permutation in one vector and store it in a df
         perm_vec = np.asarray([item for sublist in perms for item in sublist])
         perm_vec = np.nan_to_num(perm_vec)
+        perm_vec_mets[metric] = perm_vec
 
         # get p-values for two-tailed test
         met_true = true_vals[metric]
@@ -68,5 +70,5 @@ def perm_test_multCompCor(n_perms, results_file, metrics):
                 p = 1 / len(perm_vec)
             p_vals.loc[i, metric] = p
 
-    return p_vals, perm_vec
+    return p_vals, perm_vec_mets
 
