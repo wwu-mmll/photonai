@@ -106,6 +106,10 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
             fs.append(f)
             ps.append(p)
         return fs, ps
+    
+    def inverse_transform(self, X):
+        X = self.var_thres.fit_transform(X)
+        return self.my_fs.inverse_transform(X)
 
     def fit(self, X, y):
         X = self.var_thres.fit_transform(X)
