@@ -1,5 +1,6 @@
 import pandas
 import numpy as np
+from Logging.Logger import Logger
 
 
 def get_data(pre, one_hot_it=False, what='all'):
@@ -24,10 +25,10 @@ def get_data(pre, one_hot_it=False, what='all'):
     # impute_targets = 'drop'
     # # to keep train and test fully independent, always use drop
     # if impute_targets == 'drop':
-    #     print('\nNaN-handling: drop')
+    #     Logger().info('\nNaN-handling: drop')
     #     target_tmp = target_tmp.dropna(axis=0, how='any')
     # elif impute_targets == 'mean':
-    #     print('\nNaN-handling: impute with mean')
+    #     Logger().info('\nNaN-handling: impute with mean')
     #     target_tmp = target_tmp.apply(lambda x: x.fillna(x.mean()), axis=0)
 
     # ToDo: drop duplicate cols
@@ -39,15 +40,15 @@ def get_data(pre, one_hot_it=False, what='all'):
     df = pandas.merge(covs_tmp, target_tmp, how='inner', on='ID')
     df = pandas.merge(df, snp_num_frame, how='inner', on='ID')
 
-    print('\nTarget shape: ' + str(target_tmp.shape))
-    print('Covs shape: ' + str(covs_tmp.shape))
-    print('SNPs shape: ' + str(snps_tmp.shape))
-    print('Intersection merge: ' + str(df.shape))
+    Logger().info('\nTarget shape: ' + str(target_tmp.shape))
+    Logger().info('Covs shape: ' + str(covs_tmp.shape))
+    Logger().info('SNPs shape: ' + str(snps_tmp.shape))
+    Logger().info('Intersection merge: ' + str(df.shape))
     return df, ROI_names, snp_names
 
 # get Genetic data
 def get_snps(file):
-    print('\nRetrieving SNPs...')
+    Logger().info('\nRetrieving SNPs...')
     snp_frame = pandas.read_excel(file)                    # read snp data
     snp_frame = snp_frame.dropna(axis=0, how='any')     # get rid of subjects whose data contains NaNs
     snp_names = snp_frame.columns[1:].values            # skip subID and take the rest
@@ -56,7 +57,7 @@ def get_snps(file):
 
 # get clinical/psychometric etc. variables
 def get_covs(file):
-    print('\nRetrieving covariates...')
+    Logger().info('\nRetrieving covariates...')
     covs_frame = pandas.read_csv(file)                 # read cov data
     covs_frame.columns = ['ID' if x == 'Proband' else x for x in covs_frame.columns]    # rename the ID column to allow merge
     covs_frame = covs_frame.dropna(axis=0, how='any', subset=['Group'])         # get rid of subjects whose data contains NaNs in the listed col(s) (we only need Group to be valid for everyone)
@@ -67,7 +68,7 @@ def get_covs(file):
 
 # get targets (ROI-wise cortical thickness or volumes or ...)
 def get_targets_tmp(file):
-    print('\nRetrieving targets...')
+    Logger().info('\nRetrieving targets...')
     target_frame = pandas.read_csv(open(file, 'rb'))              # read target data (e.g. volume or thickness)
     target_frame.columns = ['ID' if (x == 'SubjID' or x == 'names') else x for x in target_frame.columns] # rename the ID column to allow merge
 
@@ -91,7 +92,7 @@ def get_targets(pre, what):
 
     # Thickness
     if any("thick" in s for s in what):
-        print('\nRetrieving Freesurfer Thickness data...')
+        Logger().info('\nRetrieving Freesurfer Thickness data...')
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
         target_thick = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
@@ -101,7 +102,7 @@ def get_targets(pre, what):
 
     # SurfaceArea
     if any("surf" in s for s in what):
-        print('\nRetrieving Freesurfer Surface data...')
+        Logger().info('\nRetrieving Freesurfer Surface data...')
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
         target_surf = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
@@ -111,7 +112,7 @@ def get_targets(pre, what):
 
     # Volume
     if any("vol" in s for s in what):
-        print('\nRetrieving Freesurfer Volume data...')
+        Logger().info('\nRetrieving Freesurfer Volume data...')
         target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
         target_vol = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
@@ -121,7 +122,7 @@ def get_targets(pre, what):
 
     # CAT12 Vgm
     if any("cat" in s for s in what):
-        print('\nRetrieving CAT12 ROI data...')
+        Logger().info('\nRetrieving CAT12 ROI data...')
         target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
         target_Vgm = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
@@ -131,14 +132,14 @@ def get_targets(pre, what):
 
     # handle custom targets string search
     if what[0] == 'custom_str':
-        print('custom_str')
+        Logger().info('custom_str')
         tmp = get_targets(pre, ['all'])
         searchStr = what[1].lower()
         custom_cols = [col for col in tmp.columns if searchStr in col.lower()]
 
     # handle custom target input
     if what[0] == 'custom_id':
-        print('custom_id')
+        Logger().info('custom_id')
         tmp = get_targets(pre, ['all'])
         what[0] = 'ID'
         target_tmp = tmp[what]
@@ -147,12 +148,12 @@ def get_targets(pre, what):
 
 # transform SNPs to numbers
 def recode_snps(snp_frame, snp_names):
-    print('\nRecoding SNPs...')
+    Logger().info('\nRecoding SNPs...')
     # deep copy snp_frame
     snp_frame_recode = snp_frame.copy()
     # transform snp data to numbers
     for snpID in snp_frame[snp_names]:  # only recode SNPs (not ID :-)
-        print('Recoding SNP ' + snpID + ' ...')
+        Logger().info('Recoding SNP ' + snpID + ' ...')
         ascii_sum = []
         for x in snp_frame[snpID]:
             if (x[0] != x[1]):  # hetero --> 0
@@ -176,7 +177,7 @@ def recode_snps(snp_frame, snp_names):
 
 # one hot encode snp matrix
 def one_hot_snps(snp_frame, snp_names):
-    print('\nOne-hot-encoding SNPs...')
+    Logger().info('\nOne-hot-encoding SNPs...')
     snp_frame_oneHot = pandas.DataFrame()
     snp_frame_oneHot['ID'] = snp_frame['ID']    # add ID col
     for snpID in snp_names:
@@ -194,7 +195,7 @@ def one_hot_snps(snp_frame, snp_names):
 
 # get feature importance
 def get_feature_importance(results, feature_names, data, targets, roiName):
-    print('\nComputing Feature Importance...')
+    Logger().info('\nComputing Feature Importance...')
     results_tree = results.result_tree
     best_config = results_tree.get_best_config_for(outer_cv_fold=0)
     imp_tmp = pandas.DataFrame(index=[np.arange(1, len(best_config.best_config_object_for_validation_set.fold_list)+1)], columns=feature_names)
@@ -203,11 +204,7 @@ def get_feature_importance(results, feature_names, data, targets, roiName):
         f_imp = inner_fold.test.feature_importances_
         if len(f_imp) > 0:
             t = results.inverse_transform_pipeline(best_config.config_dict, data, targets, f_imp)
-            try:
-                imp_tmp.loc[i, :] = t
-            except ValueError:
-                print('opps t')
-
+            imp_tmp.loc[i, :] = t
         else:
             imp_tmp.loc[i, :] = []
         i += 1
@@ -285,12 +282,12 @@ def run_analysis(data_dict):
 
     # shuffle targets if running a permutation test
     if perm_test == True:
-        print('\nPERMUTATION TEST: SHUFFLING TARGETS NOW!')
+        Logger().info('\nPERMUTATION TEST: SHUFFLING TARGETS NOW!')
         np.random.shuffle(targets)
 
     # remove confounders from target data (age, gender, site, ICV)
     if remove_covs:
-        print('\nRemoving covariates from targets.')
+        Logger().info('\nRemoving covariates from targets.')
         import statsmodels.api as sm
         # # convert all covs to numeric
         # for c in data_dict['covs']:
@@ -318,8 +315,8 @@ def run_analysis(data_dict):
     # TEST SET -> Train
     best_config_performance_train = results_tree.get_best_config_performance_validation_set(train_data=True)
 
-    print('\n\nBest config performance TEST: ' + roiName + ' ' + str(best_config_performance_test))
-    print('Best config performance TRAIN: ' + roiName + ' ' + str(best_config_performance_train))
+    Logger().info('\n\nBest config performance TEST: ' + roiName + ' ' + str(best_config_performance_test))
+    Logger().info('Best config performance TRAIN: ' + roiName + ' ' + str(best_config_performance_train))
 
     # initialize results DataFrame
     mets_train = pandas.DataFrame(index=[roiName], columns=metrics)

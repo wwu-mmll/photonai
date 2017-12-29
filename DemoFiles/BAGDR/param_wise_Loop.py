@@ -1,6 +1,7 @@
 from helpers import get_data, run_analysis
 import numpy as np
 import pandas
+from Logging.Logger import Logger
 
 
 # ---------------------------
@@ -23,7 +24,7 @@ if __name__ == '__main__':
     discretize_targets = True
 
     getImportanceScores = True
-    n_perms = 1000
+    n_perms = 0     # 0 = no permutation
 
     results_file = pre + 'Results/metrics_summary'
     importance_scores_file = pre + 'Results/importance_scores'
@@ -36,7 +37,7 @@ if __name__ == '__main__':
     # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     # group_id = 2
     df = df.loc[df['Group'] == group_id]
-    print(str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
+    Logger().info(str(df.shape[0]) + ' samples remaining for Group ' + str(group_id) + '.')
 
     import time
     millis1 = int(round(time.time()))
@@ -45,10 +46,10 @@ if __name__ == '__main__':
     perm_test_bool = False
     for permInd in range(n_perms+1):
         if permInd == 0:
-            print('Running analysis.')
+            Logger().info('Running analysis.')
             perm_test_bool = False
         elif permInd > 0:
-            print('Running permutation ' + str(permInd) + '/' + str(n_perms))
+            Logger().info('Running permutation ' + str(permInd) + '/' + str(n_perms))
             perm_test_bool = True
 
         # PREPARE DATA AND TARGETS to be passed to the parallel function
@@ -60,18 +61,18 @@ if __name__ == '__main__':
         # ROI_names = ROI_names[:4]
 
         for roiName in ROI_names:
-            print('\n\n\n\n' + roiName + '...')
+            Logger().info('\n\n\n\n' + roiName + '...')
 
             # Filter out NaN targets
             df_tmp = df.copy()  # deep copy the dataframe so we can drop samples without loosing them in the next iteration
             df_tmp = df_tmp.dropna(subset=[roiName])  # Filter those samples whose current targets are NaN
-            print(str(df_tmp.shape[0]) + '/' + str(df.shape[0]) + ' samples remaining.')
+            Logger().info(str(df_tmp.shape[0]) + '/' + str(df.shape[0]) + ' samples remaining.')
 
             # get targets
             roi_targets = np.asarray(df_tmp[roiName])
 
             # discretize targets
-            print('\nRounding targets.\n')
+            Logger().info('\nRounding targets.\n')
             if discretize_targets:
                 roi_targets = np.around(roi_targets, decimals=1)
 
@@ -89,7 +90,7 @@ if __name__ == '__main__':
 
         results = mp.Pool(processes=2).map(run_analysis, data_dict_list)
         millis2 = int(round(time.time()))
-        print('Time (minutes): ' + str((millis2 - millis1) / 60))
+        Logger().info('Time (minutes): ' + str((millis2 - millis1) / 60))
 
         # initialize results DataFrame and add/join results from parallel pool
         metrics_summary_train = pandas.DataFrame()
@@ -124,7 +125,7 @@ if __name__ == '__main__':
 
     # run permutation test
     if perm_test_bool:
-        print('Retrieving Permutation Test info...')
+        Logger().info('Retrieving Permutation Test info...')
         from perm_test import perm_test_multCompCor
         p_cor, perm_vec_mets = perm_test_multCompCor(n_perms=n_perms, results_file=results_file, metrics=metrics)
         p_cor.to_pickle(path=results_file + '_p_cor')
@@ -132,7 +133,7 @@ if __name__ == '__main__':
 
         # get p-vals for importance scores
         if getImportanceScores:
-            print('Retrieving Permutation Test info for Importance Scores...')
+            Logger().info('Retrieving Permutation Test info for Importance Scores...')
             from perm_test import perm_test_importance
             imp_p_cor = perm_test_importance(n_perms=n_perms, importance_score_file=importance_scores_file)
             imp_p_cor.to_pickle(path=importance_scores_file + '_p_corrected')
@@ -147,5 +148,5 @@ if __name__ == '__main__':
                   metric=metric,
                   figure_file=results_file + 'perm_plot.png')
 
-    print('')
+    Logger().info('')
 
