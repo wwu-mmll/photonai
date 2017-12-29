@@ -26,16 +26,16 @@ def perm_hist(metrics_summary_test, p_cor_file, perm_vec_file, metric, figure_fi
     # add significant parameters as vertical lines
     sigs = mets[p_cor < alpha]
     #sigs_labels = sigs.index
-    plt.vlines(sigs.tolist(), 0, 1, lw=3.0, colors='r')
+    o = 2500
+    plt.vlines(sigs.tolist(), 0, o, lw=3.0, colors='r')
 
-    o = 3
     for ind in sigs.index:
         print(ind)
         print(sigs[ind])
         print(p_cor[ind])
         plt.vlines(sigs[ind], 0, o, lw=3.0, colors='r')
         plt.text(sigs[ind]+(sigs[ind]*.05), o, (ind + ' (p=' + str(np.around(p_cor[ind], decimals=3)) + ')'), verticalalignment='center')
-        o += .25
+        o -= o/100
 
     plt.savefig(figure_file)#, bbox_inches='tight')
     plt.show()
