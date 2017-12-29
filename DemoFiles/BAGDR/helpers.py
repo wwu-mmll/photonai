@@ -8,8 +8,14 @@ def get_data(pre, one_hot_it=False, what='all'):
     snp_file = pre + 'Genetics/FORMarburgh_1KG_imputed_MDD_Compound_Genotypes_withSNPids_cleared.xlsx'
     snps_tmp, snp_names = get_snps(file=snp_file)
     snp_num_frame = recode_snps(snps_tmp, snp_names)  # recode SNP strings to numerical values
+
     if one_hot_it:
         snp_num_frame, snp_names = one_hot_snps(snp_num_frame, snp_names)  # one-hot encode snp matrix
+    # # get rid of 0 variance features
+    # a = snp_num_frame.std() == 0
+    # print('SNP(s) ' + str(snp_names[a]) + ' have 0 variance. Dropping feature(s)!')
+    # snp_num_frame = snp_num_frame.drop(columns=snp_names[a])
+    # snp_names = snp_num_frame.columns.values[1:]
 
     # get covariates (e.g. diagnosis)
     cov_file = pre + 'Datenbank_Update_DataFreeze1&2_17-11-2017_relVars.csv'
@@ -202,7 +208,11 @@ def get_feature_importance(results, feature_names, data, targets, roiName):
         f_imp = inner_fold.test.feature_importances_
         if len(f_imp) > 0:
             t = results.inverse_transform_pipeline(best_config.config_dict, data, targets, f_imp)
-            imp_tmp.loc[i, :] = t[0]
+            try:
+                imp_tmp.loc[i, :] = t
+            except ValueError:
+                print('opps t')
+
         else:
             imp_tmp.loc[i, :] = []
         i += 1
@@ -245,6 +255,10 @@ def setup_model():
     # # add the elements
     # my_pipe += PipelineElement.create('interaction_terms', {'degree': [2]},  interaction_only=True,
     #                                   include_bias=False, test_disabled=False)
+
+
+    # remove 0-variance features
+    my_pipe += PipelineElement.create('ZeroVarianceFilter')
 
     # add feature selection
     my_pipe += PipelineElement.create('CategoricalANOVASelectPercentile', {'percentile': [5]}, test_disabled=False)
