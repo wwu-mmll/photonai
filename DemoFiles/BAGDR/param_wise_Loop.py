@@ -3,7 +3,6 @@ import numpy as np
 import pandas
 from Logging.Logger import Logger
 
-
 # ---------------------------
 # run the analysis
 if __name__ == '__main__':
@@ -24,7 +23,7 @@ if __name__ == '__main__':
     discretize_targets = True
 
     getImportanceScores = True
-    n_perms = 0     # 0 = no permutation
+    n_perms = 1000     # 0 = no permutation
 
     results_file = pre + 'Results/metrics_summary'
     importance_scores_file = pre + 'Results/importance_scores'
@@ -115,13 +114,13 @@ if __name__ == '__main__':
                 metrics_summary_train.to_pickle(path=results_file + '_train_perm_' + str(permInd))
                 if getImportanceScores:
                     importance_scores_summary_median.to_pickle(path=importance_scores_file + '_median_perm_' + str(permInd))
-                    importance_scores_summary_std.to_pickle(path=importance_scores_file + '_std_perm_' + str(permInd))
+                    #importance_scores_summary_std.to_pickle(path=importance_scores_file + '_std_perm_' + str(permInd))
             else:
                 metrics_summary_test.to_pickle(path=results_file + '_test')
                 metrics_summary_train.to_pickle(path=results_file + '_train')
                 if getImportanceScores:
                     importance_scores_summary_median.to_pickle(path=importance_scores_file + '_median')
-                    #importance_scores_summary_std.to_pickle(path=importance_scores_file + '_std')
+                    importance_scores_summary_std.to_pickle(path=importance_scores_file + '_std')
 
     # run permutation test
     if perm_test_bool:
