@@ -116,5 +116,9 @@
    ],
    "CategoricalANOVASelectPercentile":[
    "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
+   "Transformer"],
+
+   "ZeroVarianceFilter":[
+   "sklearn.feature_selection.VarianceThreshold",
    "Transformer"]
 }
