@@ -1,6 +1,7 @@
 import pandas
 import numpy as np
 
+# ToDo: Currently only works for "larger is better"-metrics
 def perm_test_importance(n_perms, importance_score_file):
     # get true vals (no permutation)
     true_imps_raw = pandas.read_pickle(path=importance_score_file + '_median')
@@ -15,6 +16,7 @@ def perm_test_importance(n_perms, importance_score_file):
 
     for col_id in imp_p_cor.columns.values:
         perms = mdf.loc[:][col_id].tolist()
+        perms = np.nan_to_num(perms)
         for row_id in imp_p_cor.index.values:
             # get true imp score
             true_imp_scalar = true_imps_raw.loc[row_id][col_id]
@@ -22,6 +24,7 @@ def perm_test_importance(n_perms, importance_score_file):
             if np.isnan(true_imp_scalar):
                 p = 1
             else:
+                # will work only if larger is better
                 p = np.sum(np.abs(true_imp_scalar) <= np.abs(perms)) / len(perms)
             if p == 0:
                 p = 1 / len(perms)
@@ -44,7 +47,7 @@ def perm_test_multCompCor(n_perms, results_file, metrics):
 
         # put all p_values under permutation in one vector and store it in a df
         perm_vec = np.asarray([item for sublist in perms for item in sublist])
-        #perm_vec = np.nan_to_num(perm_vec)
+        perm_vec = np.nan_to_num(perm_vec)
         perm_vec_mets[metric] = perm_vec
 
         # get p-values for two-tailed test
@@ -53,6 +56,7 @@ def perm_test_multCompCor(n_perms, results_file, metrics):
             if np.isnan(met_true[i]):
                 p = 1
             else:
+                # will work only if larger is better
                 p = np.sum(np.abs(met_true[i]) <= np.abs(perm_vec)) / len(perm_vec)
 
             if p==0:
