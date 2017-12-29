@@ -90,7 +90,7 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
 
     def __init__(self, percentile=10):
-        #self.var_thres = VarianceThreshold()
+        self.var_thres = VarianceThreshold()
         self.percentile = percentile
         self.my_fs = None
 
@@ -108,17 +108,17 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
         return fs, ps
     
     def inverse_transform(self, X):
-        #X = self.var_thres.fit_transform(X)
+        X = self.var_thres.fit_transform(X)
         return self.my_fs.inverse_transform(X)
 
     def fit(self, X, y):
-        #X = self.var_thres.fit_transform(X)
+        X = self.var_thres.fit_transform(X)
         self.my_fs = SelectPercentile(score_func=self.loc_anova, percentile=self.percentile)
         self.my_fs.fit(X, y)
         return self
 
     def transform(self, X):
-        #X = self.var_thres.transform(X)
+        X = self.var_thres.transform(X)
         return_values = self.my_fs.transform(X)
         if return_values.size == 0:
             return_values = np.zeros(X.shape)
