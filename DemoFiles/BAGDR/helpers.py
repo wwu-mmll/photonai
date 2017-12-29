@@ -11,11 +11,6 @@ def get_data(pre, one_hot_it=False, what='all'):
 
     if one_hot_it:
         snp_num_frame, snp_names = one_hot_snps(snp_num_frame, snp_names)  # one-hot encode snp matrix
-    # # get rid of 0 variance features
-    # a = snp_num_frame.std() == 0
-    # print('SNP(s) ' + str(snp_names[a]) + ' have 0 variance. Dropping feature(s)!')
-    # snp_num_frame = snp_num_frame.drop(columns=snp_names[a])
-    # snp_names = snp_num_frame.columns.values[1:]
 
     # get covariates (e.g. diagnosis)
     cov_file = pre + 'Datenbank_Update_DataFreeze1&2_17-11-2017_relVars.csv'
