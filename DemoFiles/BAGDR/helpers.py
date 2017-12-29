@@ -197,7 +197,7 @@ def get_feature_importance(results, feature_names, data, targets, roiName):
     results_tree = results.result_tree
     best_config = results_tree.get_best_config_for(outer_cv_fold=0)
     imp_tmp = pandas.DataFrame(index=[np.arange(1, len(best_config.best_config_object_for_validation_set.fold_list)+1)], columns=feature_names)
-    i=1
+    i = 1
     for inner_fold in best_config.best_config_object_for_validation_set.fold_list:
         f_imp = inner_fold.test.feature_importances_
         if len(f_imp) > 0:
@@ -206,10 +206,13 @@ def get_feature_importance(results, feature_names, data, targets, roiName):
         else:
             imp_tmp.loc[i, :] = []
         i += 1
-    importance_scores = pandas.DataFrame(index=[roiName], columns=feature_names)
+    importance_scores_mean = pandas.DataFrame(index=[roiName], columns=feature_names)
+    importance_scores_std = pandas.DataFrame(index=[roiName], columns=feature_names)
     for snpID in feature_names:
-        importance_scores.loc[roiName, snpID] = imp_tmp[snpID].tolist()
-    return importance_scores
+        importance_scores_mean.loc[roiName, snpID] = np.median(imp_tmp[snpID])
+        importance_scores_std.loc[roiName, snpID] = np.std(imp_tmp[snpID])
+        #importance_scores.loc[roiName, snpID] = imp_tmp[snpID].tolist()
+    return importance_scores_mean, importance_scores_std
 
 # setup photon HP
 def setup_model():

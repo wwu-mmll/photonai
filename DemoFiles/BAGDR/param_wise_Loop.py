@@ -7,9 +7,11 @@ import pandas
 # run the analysis
 if __name__ == '__main__':
     ###############################################################################################################
-    pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
+
+    #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
     #pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-    #pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
 
     group_id = 2  # 1=HC, 2=MDD, 3=BD, 4=Schizoaffective, 5=Schizophrenia, 6=other
     one_hot_it = False
@@ -20,7 +22,7 @@ if __name__ == '__main__':
 
     discretize_targets = True
 
-    getImportanceScores = False
+    getImportanceScores = True
     n_perms = 1000
 
     results_file = pre + 'Results/metrics_summary'
@@ -53,7 +55,7 @@ if __name__ == '__main__':
         data_dict_list = []
 
 
-        ############
+        # ############
         # # Debug only
         # ROI_names = ROI_names[:4]
 
@@ -92,13 +94,16 @@ if __name__ == '__main__':
         # initialize results DataFrame and add/join results from parallel pool
         metrics_summary_train = pandas.DataFrame()
         metrics_summary_test = pandas.DataFrame()
-        importance_scores_summary = pandas.DataFrame()
+        importance_scores_summary_median = pandas.DataFrame()
+        importance_scores_summary_std = pandas.DataFrame()
         for roi in results:
             te, tr, imp, metrics = roi
             metrics_summary_test = metrics_summary_test.append(te)
             metrics_summary_train = metrics_summary_train.append(tr)
             if getImportanceScores:
-                importance_scores_summary = importance_scores_summary.append(imp)
+                importance_scores_summary_median = importance_scores_summary_median.append(imp[0])
+                importance_scores_summary_std = importance_scores_summary_std.append(imp[1])
+                #importance_scores_summary['std'] = importance_scores_summary.append(imp)
 
             metrics_summary_test = metrics_summary_test.sort_values(by='variance_explained', axis=0, ascending=False)
             metrics_summary_train = metrics_summary_train.sort_values(by='variance_explained', axis=0, ascending=False)
@@ -108,12 +113,14 @@ if __name__ == '__main__':
                 metrics_summary_test.to_pickle(path=results_file + '_test_perm_' + str(permInd))
                 metrics_summary_train.to_pickle(path=results_file + '_train_perm_' + str(permInd))
                 if getImportanceScores:
-                    importance_scores_summary.to_pickle(path=importance_scores_file + '_perm_' + str(permInd))
+                    importance_scores_summary_median.to_pickle(path=importance_scores_file + '_median_perm_' + str(permInd))
+                    importance_scores_summary_std.to_pickle(path=importance_scores_file + '_std_perm_' + str(permInd))
             else:
                 metrics_summary_test.to_pickle(path=results_file + '_test')
                 metrics_summary_train.to_pickle(path=results_file + '_train')
                 if getImportanceScores:
-                    importance_scores_summary.to_pickle(path=importance_scores_file)
+                    importance_scores_summary_median.to_pickle(path=importance_scores_file + '_median')
+                    #importance_scores_summary_std.to_pickle(path=importance_scores_file + '_std')
 
     # run permutation test
     if perm_test_bool:
@@ -127,14 +134,12 @@ if __name__ == '__main__':
         if getImportanceScores:
             print('Retrieving Permutation Test info for Importance Scores...')
             from perm_test import perm_test_importance
-            imp_p, imp_p_cor = perm_test_importance(n_perms=n_perms, importance_score_file=importance_scores_file)
-            imp_p.to_pickle(path=importance_scores_file + '_p')
+            imp_p_cor = perm_test_importance(n_perms=n_perms, importance_score_file=importance_scores_file)
             imp_p_cor.to_pickle(path=importance_scores_file + '_p_corrected')
 
 
     # investigate results
     from investigate_results import perm_hist
-    metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
     metric = metrics[0]
     h = perm_hist(metrics_summary_test=results_file + '_test',
                   p_cor_file=results_file + '_p_cor',
