@@ -4,7 +4,6 @@ from Logging.Logger import Logger
 
 
 def get_data(pre, one_hot_it=False, what='all'):
-
     # get data (snps; recode SNPs to numerical values; 0-->hetero)
     snp_file = pre + 'Genetics/FORMarburgh_1KG_imputed_MDD_Compound_Genotypes_withSNPids_cleared.xlsx'
     snps_tmp, snp_names = get_snps(file=snp_file)
@@ -30,8 +29,6 @@ def get_data(pre, one_hot_it=False, what='all'):
     # elif impute_targets == 'mean':
     #     Logger().info('\nNaN-handling: impute with mean')
     #     target_tmp = target_tmp.apply(lambda x: x.fillna(x.mean()), axis=0)
-
-    # ToDo: drop duplicate cols
 
     ROI_names = list(target_tmp.columns[1:].values)  # skip subID and take the rest
     ###############################################################################################################
@@ -86,9 +83,10 @@ def get_targets_tmp(file):
     return target_frame
 
 def get_targets(pre, what):
-    # get targets (e.g. volumes, thickness, ... ); (CAT12_GM, DTI, rs-fMRI_Hubness, ...)
+    # get targets (e.g. volumes, thickness, surface); (later CAT12_GM, DTI, rs-fMRI_Hubness, ...)
     if what[0] == 'all':
-        what = ['thick', 'surf', 'vol', 'cat']
+        what = ['thick', 'surf', 'vol']
+        #, 'cat'
 
     # Thickness
     if any("thick" in s for s in what):
@@ -96,7 +94,9 @@ def get_targets(pre, what):
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_ThickAvg.csv'
         target_thick = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_thick, how='inner', on='ID')   # merge target datasets
+            cols_to_use = target_thick.columns.difference(target_tmp.columns).tolist()
+            cols_to_use.append('ID')
+            target_tmp = pandas.merge(target_tmp, target_thick[cols_to_use], how='inner', on='ID')   # merge target datasets
         else:
             target_tmp = target_thick
 
@@ -106,7 +106,9 @@ def get_targets(pre, what):
         target_file = pre + 'FreeSurfer_ROI/CorticalMeasuresENIGMA_SurfAvg.csv'
         target_surf = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_surf, how='inner', on='ID')    # merge target datasets
+            cols_to_use = target_surf.columns.difference(target_tmp.columns).tolist()
+            cols_to_use.append('ID')
+            target_tmp = pandas.merge(target_tmp, target_surf[cols_to_use], how='inner', on='ID')    # merge target datasets
         else:
             target_tmp = target_surf
 
@@ -116,7 +118,9 @@ def get_targets(pre, what):
         target_file = pre + 'FreeSurfer_ROI/LandRvolumes.csv'
         target_vol = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_vol, how='inner', on='ID')     # merge target datasets
+            cols_to_use = target_vol.columns.difference(target_tmp.columns).tolist()
+            cols_to_use.append('ID')
+            target_tmp = pandas.merge(target_tmp, target_vol[cols_to_use], how='inner', on='ID')     # merge target datasets
         else:
             target_tmp = target_vol
 
@@ -126,7 +130,9 @@ def get_targets(pre, what):
         target_file = pre + 'CAT12_ROI/ROI_CAT12_r1184_catROI_neuromorphometrics_Vgm.csv'
         target_Vgm = get_targets_tmp(file=target_file)
         if 'target_tmp' in locals():
-            target_tmp = pandas.merge(target_tmp, target_Vgm, how='inner', on='ID')     # merge target datasets
+            cols_to_use = target_Vgm.columns.difference(target_tmp.columns).tolist()
+            cols_to_use.append('ID')
+            target_tmp = pandas.merge(target_tmp, target_Vgm[cols_to_use], how='inner', on='ID')     # merge target datasets
         else:
             target_tmp = target_Vgm
 
@@ -143,7 +149,6 @@ def get_targets(pre, what):
         tmp = get_targets(pre, ['all'])
         what[0] = 'ID'
         target_tmp = tmp[what]
-
     return target_tmp
 
 # transform SNPs to numbers
