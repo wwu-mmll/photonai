@@ -19,12 +19,17 @@ def get_results_tab(metrics_summary_test, p_cor_file, metric, alpha_cor = .05):
         Logger().info(res_tab)
     return res_tab
 
-def get_imps(importance_scores_file, alpha_cor = .05)
-    imps_scores_scores = pandas.read_pickle(path=importance_scores_file + '_median')
-    imps_std_all = pandas.read_pickle(path=importance_scores_file + 'std')
-    imps_p_all = pandas.read_pickle(path=importance_scores_file + '_p_corrected')
+def get_imps(importance_scores_file, alpha_cor = .05, sig_inds = []):
+    imps_scores = pandas.read_pickle(path=importance_scores_file + '_median')
+    #imps_std_all = pandas.read_pickle(path=importance_scores_file + '_std')
+    imps_p_all = pandas.read_pickle(path=importance_scores_file + '_p_corrected').transpose()
 
-    imps_tab = 0
+    if sig_inds != []:  # show only sig rois?
+        imps_scores = imps_scores.loc[sig_inds, :]
+        imps_p_all = imps_p_all.loc[sig_inds, :]
+
+    imps_tab = imps_scores.mask(imps_p_all >= alpha_cor, 0)
+    imps_tab = imps_tab.loc[:, (imps_tab != 0).any(axis=0)]
     return imps_tab
 
 def perm_hist(metrics_summary_test, p_cor_file, perm_vec_file, metric, figure_file, alpha_cor = .05):
@@ -134,15 +139,3 @@ def star_plot(title, cat, values):
     plt.title(title + '\n')
     # Show polar plot
     plt.show()
-
-def star_plot2(values, cat, title):
-    import pygal
-
-    radar_chart = pygal.Radar()
-    radar_chart.title = title
-    radar_chart.x_labels = cat
-    radar_chart.add('SNPs', values)
-    #radar_chart.add('Actual Spending', [70, 50, 40, 10, 17, 8, 10])
-    #radar_chart.render_to_svg('D:/myGoogleDrive/work/Papers/_underConstruction/'
-    #                           'BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/Results/radar_chart.png')
-    radar_chart.render_in_browser()
