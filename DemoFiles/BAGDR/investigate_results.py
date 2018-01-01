@@ -34,7 +34,6 @@ def get_imps(importance_scores_file, alpha_cor = .05, sig_inds = []):
 
 def perm_hist(metrics_summary_test, p_cor_file, perm_vec_file, metric, figure_file, alpha_cor = .05):
     # p-vals are already correct for multiple comparisons so this will do
-
     import matplotlib.pyplot as plt
     # get the real performance parameter and p-values
     res_tab = get_results_tab(alpha_cor=alpha_cor, metrics_summary_test=metrics_summary_test, p_cor_file=p_cor_file, metric=metric)
