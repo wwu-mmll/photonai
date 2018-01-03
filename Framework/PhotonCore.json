@@ -106,5 +106,16 @@
    "pearson_feature_selector":[
       "PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
       "Transformer"
-   ]
+   ],
+   "KerasDNNMultiOutput":[
+   "PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
+   "Estimator"
+   ],
+   "interaction_terms": [
+      "sklearn.preprocessing.PolynomialFeatures", "Transformer"
+   ],
+   "CategorialANOVASelectPercentile":[
+   "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
+   "Transformer"],
+   "OneClassSVM": ["sklearn.svm.OneClassSVM", "Estimator"]
 }

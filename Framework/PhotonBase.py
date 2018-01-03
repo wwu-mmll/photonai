@@ -137,16 +137,19 @@ class Hyperpipe(BaseEstimator):
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
+    def yield_all_data(self):
+        if hasattr(self.X, 'shape'):
+            yield list(range(self.X.shape[0])), []
+        else:
+            yield list(range(len(self.X))), []
+
     def generate_outer_cv_indices(self):
         # if there is a CV Object for cross validating the hyperparameter search
         if self.hyperparameter_fitting_cv_object:
             self.data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
         # in case we do not want to divide between validation and test set
         elif not self.eval_final_performance:
-            if hasattr(self.X, 'shape'):
-                self.data_test_cases = [(range(self.X.shape[0]), [])]
-            else:
-                self.data_test_cases = [(range(len(self.X)), [])]
+            self.data_test_cases = self.yield_all_data()
         # the default is dividing one time into a validation and test set
         else:
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
@@ -191,6 +194,8 @@ class Hyperpipe(BaseEstimator):
         # be compatible to list of (image-) files
         if isinstance(self.X, list):
             self.X = np.asarray(self.X)
+        if isinstance(self.y, list):
+            self.y = np.asarray(self.y)
         #if not isinstance(self.X, np.ndarray): # and isinstance(self.X[0], str):
         #    self.X = np.asarray(self.X)
 
@@ -329,6 +334,7 @@ class Hyperpipe(BaseEstimator):
                         # Todo: Umbauen
                         best_config_item_test = Configuration(MasterElementType.OUTER_TEST, best_train_config.config_dict)
                         best_config_item_test.children_configs = best_train_config.children_configs
+                        best_config_item_test.best_config_object_for_validation_set = best_train_config
                         self.best_config = best_config_item_test
 
 
