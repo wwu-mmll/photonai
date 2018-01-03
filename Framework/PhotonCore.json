@@ -1,124 +1,130 @@
 {
-   "PretrainedCNNClassifier":[
+   "PretrainedCNNClassifier": [
       "PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
       "Estimator"
    ],
-   "KerasDNNClassifier":[
+   "KerasDNNClassifier": [
       "PipelineWrapper.KerasDNNClassifier.KerasDNNClassifier",
       "Estimator"
    ],
-   "CNN1d":[
+   "CNN1d": [
       "PipelineWrapper.CNN1d.CNN1d",
       "Estimator"
    ],
-   "rl_cnn":[
+   "rl_cnn": [
       "photon_core.PipelineWrapper.RLCNN.RLCNN",
       "Estimator"
    ],
-   "pca":[
+   "pca": [
       "sklearn.decomposition.PCA",
       "Transformer"
    ],
-   "KNeighborsRegressor":[
+   "KNeighborsRegressor": [
       "sklearn.neighbors.KNeighborsRegressor",
       "Estimator"
    ],
-   "RandomForestRegressor":[
+   "RandomForestRegressor": [
       "sklearn.ensemble.RandomForestRegressor",
       "Estimator"
    ],
-   "KerasDNNRegressor":[
+   "KerasDNNRegressor": [
       "PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor",
       "Estimator"
    ],
-   "logistic":[
+   "logistic": [
       "sklearn.linear_model.LogisticRegression",
       "Estimator"
    ],
-   "wrapper_model":[
+   "wrapper_model": [
       "PipelineWrapper.WrapperModel.WrapperModel",
       "Estimator"
    ],
-   "f_classif_select_percentile":[
+   "f_classif_select_percentile": [
       "PipelineWrapper.FeatureSelection.FClassifSelectPercentile",
       "Transformer"
    ],
-   "SelectPercentile":[
+   "SelectPercentile": [
       "sklearn.feature_selection.SelectPercentile",
       "Transformer"
    ],
-   "SVR":[
+   "SVR": [
       "sklearn.svm.SVR",
       "Estimator"
    ],
-   "f_regression_select_percentile":[
+   "f_regression_select_percentile": [
       "PipelineWrapper.FeatureSelection.FRegressionSelectPercentile",
       "Transformer"
    ],
-   "svc":[
+   "svc": [
       "sklearn.svm.SVC",
       "Estimator"
    ],
-   "SourceSplitter":[
+   "SourceSplitter": [
       "PipelineWrapper.SourceSplitter.SourceSplitter",
       "Transformer"
    ],
-   "py_esn_c":[
+   "py_esn_c": [
       "PipelineWrapper.PyESNWrapper.PyESNClassifier",
       "Estimator"
    ],
-   "ae_pca":[
+   "ae_pca": [
       "PipelineWrapper.PCA_AE_Wrapper.PCA_AE_Wrapper",
       "Transformer"
    ],
-   "test_wrapper":[
+   "test_wrapper": [
       "PipelineWrapper.TestWrapper.WrapperTestElement",
       "Estimator"
    ],
-   "standard_scaler":[
+   "standard_scaler": [
       "sklearn.preprocessing.StandardScaler",
       "Transformer"
    ],
-   "DecisionTreeRegressor":[
+   "DecisionTreeRegressor": [
       "sklearn.tree.DecisionTreeRegressor",
       "Estimator"
    ],
-   "SiameseDNNClassifier":[
+   "SiameseDNNClassifier": [
       "PipelineWrapper.SiameseDNNClassifier.SiameseDNNClassifier",
       "Estimator"
    ],
-   "dnn":[
+   "dnn": [
       "PipelineWrapper.TFDNNClassifier.TFDNNClassifier",
       "Estimator"
    ],
-   "knn":[
+   "knn": [
       "sklearn.neighbors.KNeighborsClassifier",
       "Estimator"
    ],
-   "py_esn_r":[
+   "py_esn_r": [
       "PipelineWrapper.PyESNWrapper.PyESNRegressor",
       "Estimator"
    ],
-   "f_classif_select_p_value":[
+   "f_classif_select_p_value": [
       "PipelineWrapper.FeatureSelection.FRegressionFilterPValue",
       "Transformer"
    ],
-   "pearson_feature_selector":[
+   "pearson_feature_selector": [
       "PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
       "Transformer"
    ],
-   "KerasDNNMultiOutput":[
-   "PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
-   "Estimator"
+   "KerasDNNMultiOutput": [
+      "PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
+      "Estimator"
    ],
    "interaction_terms": [
-      "sklearn.preprocessing.PolynomialFeatures", "Transformer"
+      "sklearn.preprocessing.PolynomialFeatures",
+      "Transformer"
    ],
-   "CategoricalANOVASelectPercentile":[
-   "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
-   "Transformer"],
-
-   "ZeroVarianceFilter":[
-   "sklearn.feature_selection.VarianceThreshold",
-   "Transformer"]
+   "CategoricalANOVASelectPercentile": [
+      "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
+      "Transformer"
+   ],
+   "ZeroVarianceFilter": [
+      "sklearn.feature_selection.VarianceThreshold",
+      "Transformer"
+   ],
+   "OneClassSVM": [
+      "sklearn.svm.OneClassSVM",
+      "Estimator"
+   ]
 }
