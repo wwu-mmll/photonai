@@ -5,8 +5,8 @@ import warnings
 # import matplotlib.pyplot as plt
 import numpy as np
 
-from Helpers.TFUtilities import one_hot_to_binary
-from Logging.Logger import Logger
+from ..Helpers.TFUtilities import one_hot_to_binary
+from ..Logging.Logger import Logger
 from .ResultLogging import FoldMetrics, FoldTupel, FoldOperations, Configuration, MasterElementType
 
 
@@ -44,7 +44,7 @@ class TestPipeline(object):
 
                 self.pipe.set_params(**self.params)
                 fit_start_time = time.time()
-                self.pipe.fit(X[train, :], y[train])
+                self.pipe.fit(X[train], y[train])
 
                 # Todo: Fit Process Metrics
 
@@ -52,10 +52,10 @@ class TestPipeline(object):
                 config_item.fit_duration = fit_duration
 
                 # score test data
-                curr_test_fold = TestPipeline.score(self.pipe, X[test, :], y[test], self.metrics, indices=test)
+                curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test)
 
                 # score train data
-                curr_train_fold = TestPipeline.score(self.pipe, X[train, :], y[train], self.metrics, indices=train)
+                curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train)
 
                 fold_tuple_item = FoldTupel(fold_cnt)
                 fold_tuple_item.test = curr_test_fold

@@ -216,6 +216,22 @@ class MasterElement:
                 source_element = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].test
             return {'y_true': source_element.y_true, 'y_predicted': source_element.y_predicted}
 
+    def get_full_dataset_predictions_for_config(self, outer_cv_fold: int=0, config_nr: int=0, train_data=False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            result_dict = {}
+            source_folds = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list
+            for fold in source_folds:
+                if train_data:
+                    source_element = fold.train
+                else:
+                    source_element = fold.test
+
+                cnt = 0
+                for ind in source_element.indices:
+                    if not ind in result_dict:
+                        result_dict[ind] = (source_element.y_true[cnt], source_element.y_predicted[cnt])
+            return result_dict
+
     def get_feature_importances_for_inner_cv(self, outer_cv_fold: int=0, inner_cv_fold: int=0, config_nr: int=0) -> list:
         if self.me_type == MasterElementType.ROOT:
             return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].train.feature_importances_
