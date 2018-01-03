@@ -1,4 +1,4 @@
-from helpers import get_data, run_analysis, my_anova
+from helpers import get_data, run_analysis, mass_anova
 import numpy as np
 import pandas
 from Logging.Logger import Logger
@@ -8,9 +8,9 @@ from Logging.Logger import Logger
 if __name__ == '__main__':
     metrics = ['variance_explained', 'pearson_correlation', 'mean_absolute_error']
 
-    #pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    pre = 'C:/Users/hahnt/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
     #pre = '/spm-data/Scratch/spielwiese_tim/BrainAtlasOfGeneticDepressionRisk/'
-    pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
+    #pre = 'D:/myGoogleDrive/work/Papers/_underConstruction/BrainAtlasOfGeneticDepressionRisk/data_now_on_Titania/'
     results_file = pre + 'Results/metrics_summary'
     importance_scores_file = pre + 'Results/importance_scores'
 
@@ -58,26 +58,29 @@ if __name__ == '__main__':
     # 2. Analyses using model fit
     # a. model fit is higher in bad outcome(high BDI) patients
     # b. r(model fit, CTQ) < 0
+
+
     # c. predict environmental risk group using model fit
     # get true and predicted target per person and ROI
 
 
     # 3. - Insight re ROIs
     # get SNP importance
-    #imps_all = get_imps(importance_scores_file=importance_scores_file, alpha_cor=.05, sig_inds=results_table.index.values)
-    imps_all = get_imps(importance_scores_file=importance_scores_file, alpha_cor=.05, sig_inds=[])
+    imps_all = get_imps(importance_scores_file=importance_scores_file, alpha_cor=.05, sig_inds=results_table.index.values)
+    #imps_all = get_imps(importance_scores_file=importance_scores_file, alpha_cor=.05, sig_inds=[])
+
     # ANOVA: Different snp importance for vol, surf, thick?
     # get group index (vol, surf, thick)
-    group_id = []
+    group_id = list()
     for rn in imps_all.index.values:
-        if "_surfavg" not in rn:    # surface
+        if "_surfavg" in rn:    # surface
             group_id.append(1)
-        elif "_thickavg" not in rn: # thichness
+        elif "_thickavg" in rn: # thichness
             group_id.append(2)
         else:                       # volume
             group_id.append(3)
 
-    F, P = my_anova(np.asarray(group_id), imps_all)
+    F, P = mass_anova(dv=np.asarray(imps_all), factor=group_id)
 
     # PCA, t-SNE visualization; color code vol, surf, thick
     # ? cluster ROIs based on (sig) SNPs? -> Clusters useful? e.g. different for vol, surf, thick...
