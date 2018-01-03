@@ -44,7 +44,7 @@ class TestPipeline(object):
 
                 self.pipe.set_params(**self.params)
                 fit_start_time = time.time()
-                self.pipe.fit(X[train, :], y[train])
+                self.pipe.fit(X[train], y[train])
 
                 # Todo: Fit Process Metrics
 
@@ -52,10 +52,10 @@ class TestPipeline(object):
                 config_item.fit_duration = fit_duration
 
                 # score test data
-                curr_test_fold = TestPipeline.score(self.pipe, X[test, :], y[test], self.metrics, indices=test)
+                curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test)
 
                 # score train data
-                curr_train_fold = TestPipeline.score(self.pipe, X[train, :], y[train], self.metrics, indices=train)
+                curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train)
 
                 fold_tuple_item = FoldTupel(fold_cnt)
                 fold_tuple_item.test = curr_test_fold
@@ -98,7 +98,7 @@ class TestPipeline(object):
         if hasattr(estimator._final_estimator.base_element, 'coef_'):
             f_importances = estimator._final_estimator.base_element.coef_
         elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
-            f_importances = estimator._final_estimator.base_element.feature_importances
+            f_importances = estimator._final_estimator.base_element.feature_importances_
 
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
@@ -122,13 +122,13 @@ class TestPipeline(object):
 
         # Todo: HOW TO CHECK IF ITS REGRESSION?!
         # The following works only for classification
-        if np.ndim(y_pred) == 2:
-            y_pred = one_hot_to_binary(y_pred)
-            Logger().warn("test_predictions was one hot encoded => transformed to binary")
-
-        if np.ndim(y_true) == 2:
-            y_true = one_hot_to_binary(y_true)
-            Logger().warn("test_y was one hot encoded => transformed to binary")
+        # if np.ndim(y_pred) == 2:
+        #     y_pred = one_hot_to_binary(y_pred)
+        #     Logger().warn("test_predictions was one hot encoded => transformed to binary")
+        #
+        # if np.ndim(y_true) == 2:
+        #     y_true = one_hot_to_binary(y_true)
+        #     Logger().warn("test_y was one hot encoded => transformed to binary")
 
         output_metrics = {}
         if metrics:
@@ -166,7 +166,7 @@ class Scorer(object):
         'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
         'r2': ('sklearn.metrics', 'r2_score'),
         'pearson_correlation': ('Framework.Metrics', 'pearson_correlation'),
-        'variance_explained':  ('Framework.Metrics', 'variance_explained'),
+        'variance_explained':  ('Framework.Metrics', 'variance_explained_score'),
         'categorical_accuracy': ('Framework.Metrics','categorical_accuracy_score')
     }
 
