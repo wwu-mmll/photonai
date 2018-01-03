@@ -331,3 +331,17 @@ def run_analysis(data_dict):
         mets_test.loc[roiName, met] = np.median(best_config_performance_test[met])
 
     return mets_test, mets_train, importance_scores, metrics
+
+def my_anova(data, targets):
+    from sklearn.feature_selection import f_oneway
+    fs = []
+    ps = []
+    for feature_ind in range(data.shape[1]):
+        group_data = []
+        uni_targets = np.unique(data[:, feature_ind])
+        for feature_cat in uni_targets:
+            group_data.append(targets[data[:, feature_ind] == feature_cat])
+        f, p = f_oneway(*group_data)
+        fs.append(f)
+        ps.append(p)
+    return fs, ps
