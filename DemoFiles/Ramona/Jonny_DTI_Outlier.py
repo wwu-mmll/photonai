@@ -134,7 +134,7 @@ def fit_model(targets, age, gender, hamilton_pre):
     features = np.hstack((features, np.reshape(hamilton_pre.values, (-1, 1))))
 
     targets_binary = np.zeros(targets.shape)
-    targets_indices = np.where(targets < 7)
+    targets_indices = np.where(targets < 5)
     targets_binary[targets_indices] = 1
     targets_binary = [int(i) for i in targets_binary]
 
