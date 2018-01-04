@@ -1,14 +1,14 @@
 {
    "PretrainedCNNClassifier": [
-      "PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
+      "photon_core.PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
       "Estimator"
    ],
    "KerasDNNClassifier": [
-      "PipelineWrapper.KerasDNNClassifier.KerasDNNClassifier",
+      "photon_core.PipelineWrapper.KerasDNNClassifier.KerasDNNClassifier",
       "Estimator"
    ],
    "CNN1d": [
-      "PipelineWrapper.CNN1d.CNN1d",
+      "photon_core.PipelineWrapper.CNN1d.CNN1d",
       "Estimator"
    ],
    "rl_cnn": [
@@ -28,7 +28,7 @@
       "Estimator"
    ],
    "KerasDNNRegressor": [
-      "PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor",
+      "photon_core.PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor",
       "Estimator"
    ],
    "logistic": [
@@ -36,11 +36,11 @@
       "Estimator"
    ],
    "wrapper_model": [
-      "PipelineWrapper.WrapperModel.WrapperModel",
+      "photon_core.PipelineWrapper.WrapperModel.WrapperModel",
       "Estimator"
    ],
    "f_classif_select_percentile": [
-      "PipelineWrapper.FeatureSelection.FClassifSelectPercentile",
+      "photon_core.PipelineWrapper.FeatureSelection.FClassifSelectPercentile",
       "Transformer"
    ],
    "SelectPercentile": [
@@ -52,7 +52,7 @@
       "Estimator"
    ],
    "f_regression_select_percentile": [
-      "PipelineWrapper.FeatureSelection.FRegressionSelectPercentile",
+      "photon_core.PipelineWrapper.FeatureSelection.FRegressionSelectPercentile",
       "Transformer"
    ],
    "svc": [
@@ -60,19 +60,19 @@
       "Estimator"
    ],
    "SourceSplitter": [
-      "PipelineWrapper.SourceSplitter.SourceSplitter",
+      "photon_core.PipelineWrapper.SourceSplitter.SourceSplitter",
       "Transformer"
    ],
    "py_esn_c": [
-      "PipelineWrapper.PyESNWrapper.PyESNClassifier",
+      "photon_core.PipelineWrapper.PyESNWrapper.PyESNClassifier",
       "Estimator"
    ],
    "ae_pca": [
-      "PipelineWrapper.PCA_AE_Wrapper.PCA_AE_Wrapper",
+      "photon_core.PipelineWrapper.PCA_AE_Wrapper.PCA_AE_Wrapper",
       "Transformer"
    ],
    "test_wrapper": [
-      "PipelineWrapper.TestWrapper.WrapperTestElement",
+      "photon_core.PipelineWrapper.TestWrapper.WrapperTestElement",
       "Estimator"
    ],
    "standard_scaler": [
@@ -84,11 +84,11 @@
       "Estimator"
    ],
    "SiameseDNNClassifier": [
-      "PipelineWrapper.SiameseDNNClassifier.SiameseDNNClassifier",
+      "photon_core.PipelineWrapper.SiameseDNNClassifier.SiameseDNNClassifier",
       "Estimator"
    ],
    "dnn": [
-      "PipelineWrapper.TFDNNClassifier.TFDNNClassifier",
+      "photon_core.PipelineWrapper.TFDNNClassifier.TFDNNClassifier",
       "Estimator"
    ],
    "knn": [
@@ -96,19 +96,19 @@
       "Estimator"
    ],
    "py_esn_r": [
-      "PipelineWrapper.PyESNWrapper.PyESNRegressor",
+      "photon_core.PipelineWrapper.PyESNWrapper.PyESNRegressor",
       "Estimator"
    ],
    "f_classif_select_p_value": [
-      "PipelineWrapper.FeatureSelection.FRegressionFilterPValue",
+      "photon_core.PipelineWrapper.FeatureSelection.FRegressionFilterPValue",
       "Transformer"
    ],
    "pearson_feature_selector": [
-      "PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
+      "photon_core.PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
       "Transformer"
    ],
    "KerasDNNMultiOutput": [
-      "PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
+      "photon_core.PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
       "Estimator"
    ],
    "interaction_terms": [
@@ -116,7 +116,7 @@
       "Transformer"
    ],
    "CategoricalANOVASelectPercentile": [
-      "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
+      "photon_core.PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
       "Transformer"
    ],
    "ZeroVarianceFilter": [
