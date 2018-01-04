@@ -115,7 +115,7 @@
       "sklearn.preprocessing.PolynomialFeatures",
       "Transformer"
    ],
-   "CategoricalANOVASelectPercentile": [
+   "CategorialANOVASelectPercentile": [
       "photon_core.PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
       "Transformer"
    ],

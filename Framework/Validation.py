@@ -165,9 +165,9 @@ class Scorer(object):
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
         'r2': ('sklearn.metrics', 'r2_score'),
-        'pearson_correlation': ('Framework.Metrics', 'pearson_correlation'),
-        'variance_explained':  ('Framework.Metrics', 'variance_explained_score'),
-        'categorical_accuracy': ('Framework.Metrics','categorical_accuracy_score')
+        'pearson_correlation': ('photon_core.Framework.Metrics', 'pearson_correlation'),
+        'variance_explained':  ('photon_core.Framework.Metrics', 'variance_explained_score'),
+        'categorical_accuracy': ('photon_core.Framework.Metrics','categorical_accuracy_score')
     }
 
     # def __init__(self, estimator, x, y_true, metrics):
