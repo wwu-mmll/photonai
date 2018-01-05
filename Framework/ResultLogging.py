@@ -216,20 +216,38 @@ class MasterElement:
                 source_element = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].test
             return {'y_true': source_element.y_true, 'y_predicted': source_element.y_predicted}
 
+    def get_full_dataset_predictions_for_best_config(self, outer_cv_fold: int=0, train_data=False):
+        if self.me_type == MasterElementType.ROOT:
+            best_config = self.get_best_config_for(outer_cv_fold)
+            if best_config:
+                source_folds = best_config.best_config_object_for_validation_set.fold_list
+                return self._collect_predictions(source_folds, train_data)
+
     def get_full_dataset_predictions_for_config(self, outer_cv_fold: int=0, config_nr: int=0, train_data=False) -> dict:
         if self.me_type == MasterElementType.ROOT:
-            result_dict = {}
             source_folds = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list
-            for fold in source_folds:
-                if train_data:
-                    source_element = fold.train
-                else:
-                    source_element = fold.test
+            return self._collect_predictions(source_folds, train_data)
 
-                for cnt in range(len(source_element.indices)):
-                    result_dict[source_element.indices[cnt]] =(source_element.y_true[cnt], source_element.y_predicted[cnt])
+    def _collect_predictions(self, source_folds, train_data):
+        result_dict = {}
+        for fold in source_folds:
+            if train_data:
+                source_element = fold.train
+            else:
+                source_element = fold.test
 
-            return result_dict
+            for cnt in range(len(source_element.indices)):
+                result_dict[source_element.indices[cnt]] = (source_element.y_true[cnt], source_element.y_predicted[cnt])
+
+        nr_of_preds = len(result_dict)
+        y_true = np.zeros((nr_of_preds,))
+        y_pred = np.zeros((nr_of_preds,))
+
+        for key, element in result_dict.items():
+            y_true[key] = element[0]
+            y_pred[key] = element[1]
+
+        return y_true, y_pred
 
     def get_feature_importances_for_inner_cv(self, outer_cv_fold: int=0, inner_cv_fold: int=0, config_nr: int=0) -> list:
         if self.me_type == MasterElementType.ROOT:
