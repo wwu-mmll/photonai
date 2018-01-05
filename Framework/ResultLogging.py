@@ -226,10 +226,9 @@ class MasterElement:
                 else:
                     source_element = fold.test
 
-                cnt = 0
-                for ind in source_element.indices:
-                    if not ind in result_dict:
-                        result_dict[ind] = (source_element.y_true[cnt], source_element.y_predicted[cnt])
+                for cnt in range(len(source_element.indices)):
+                    result_dict[source_element.indices[cnt]] =(source_element.y_true[cnt], source_element.y_predicted[cnt])
+
             return result_dict
 
     def get_feature_importances_for_inner_cv(self, outer_cv_fold: int=0, inner_cv_fold: int=0, config_nr: int=0) -> list:
