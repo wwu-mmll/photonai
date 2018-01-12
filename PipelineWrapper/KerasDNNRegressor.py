@@ -8,7 +8,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import ShuffleSplit
-from Logging.Logger import Logger
+from ..Logging.Logger import Logger
 
 class KerasDNNRegressor(BaseEstimator, RegressorMixin):
 
@@ -44,7 +44,7 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
         # start_time = time.time()
 
         # use callbacks only when size of training set is above 100
-        if X.shape[-1] > 100:
+        if X.shape[0] > 100:
             # get pseudo validation set for keras callbacks
             splitter = ShuffleSplit(n_splits=1, test_size=0.2)
             for train_index, val_index in splitter.split(X):

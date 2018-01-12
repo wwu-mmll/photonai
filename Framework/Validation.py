@@ -52,10 +52,10 @@ class TestPipeline(object):
                 config_item.fit_duration = fit_duration
 
                 # score test data
-                curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics)
+                curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test)
 
                 # score train data
-                curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics)
+                curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train)
 
                 fold_tuple_item = FoldTupel(fold_cnt)
                 fold_tuple_item.test = curr_test_fold
@@ -79,7 +79,7 @@ class TestPipeline(object):
         return config_item
 
     @staticmethod
-    def score(estimator, X, y_true, metrics):
+    def score(estimator, X, y_true, metrics, indices=[]):
 
         scoring_time_start = time.time()
 
@@ -94,6 +94,12 @@ class TestPipeline(object):
 
         y_pred = estimator.predict(X)
 
+        f_importances = []
+        if hasattr(estimator._final_estimator.base_element, 'coef_'):
+            f_importances = estimator._final_estimator.base_element.coef_
+        elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
+            f_importances = estimator._final_estimator.base_element.feature_importances_
+
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
@@ -106,20 +112,23 @@ class TestPipeline(object):
             output_metrics = score_metrics
 
         final_scoring_time = time.time() - scoring_time_start
-        score_result_object = FoldMetrics(output_metrics, final_scoring_time, y_predicted=y_pred, y_true=y_true)
-
+        score_result_object = FoldMetrics(output_metrics, final_scoring_time,
+                                          y_predicted=y_pred, y_true=y_true, indices=indices,
+                                          feature_importances_=f_importances)
         return score_result_object
 
     @staticmethod
     def calculate_metrics(y_true, y_pred, metrics):
 
-        if np.ndim(y_pred) == 2:
-            y_pred = one_hot_to_binary(y_pred)
-            #Logger().warn("test_predictions was one hot encoded => transformed to binary")
-
-        if np.ndim(y_true) == 2:
-            y_true = one_hot_to_binary(y_true)
-            #Logger().warn("test_y was one hot encoded => transformed to binary")
+        # Todo: HOW TO CHECK IF ITS REGRESSION?!
+        # The following works only for classification
+        # if np.ndim(y_pred) == 2:
+        #     y_pred = one_hot_to_binary(y_pred)
+        #     Logger().warn("test_predictions was one hot encoded => transformed to binary")
+        #
+        # if np.ndim(y_true) == 2:
+        #     y_true = one_hot_to_binary(y_true)
+        #     Logger().warn("test_y was one hot encoded => transformed to binary")
 
         output_metrics = {}
         if metrics:
@@ -156,9 +165,9 @@ class Scorer(object):
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
         'r2': ('sklearn.metrics', 'r2_score'),
-        'pearson_correlation': ('Framework.Metrics', 'pearson_correlation'),
-        'variance_explained':  ('Framework.Metrics', 'variance_explained'),
-        'categorical_accuracy': ('Framework.Metrics','categorical_accuracy_score')
+        'pearson_correlation': ('photon_core.Framework.Metrics', 'pearson_correlation'),
+        'variance_explained':  ('photon_core.Framework.Metrics', 'variance_explained_score'),
+        'categorical_accuracy': ('photon_core.Framework.Metrics','categorical_accuracy_score')
     }
 
     # def __init__(self, estimator, x, y_true, metrics):
