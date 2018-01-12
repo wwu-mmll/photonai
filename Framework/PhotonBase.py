@@ -10,8 +10,8 @@ from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.pipeline import Pipeline
 
-from Framework.Register import PhotonRegister
-from Logging.Logger import Logger
+from .Register import PhotonRegister
+from ..Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .ResultLogging import MasterElement, MasterElementType, FoldTupel, FoldMetrics, FoldOperations, Configuration
 from .Validation import TestPipeline, OptimizerMetric
