@@ -3,15 +3,20 @@ import os
 from enum import Enum
 import numpy as np
 from functools import total_ordering
-
+import datetime
+import plotly
+import plotly.graph_objs as go
+from plotly import tools
 
 class FoldMetrics:
 
-    def __init__(self, metrics, score_duration, y_true, y_predicted):
+    def __init__(self, metrics, score_duration, y_true, y_predicted, indices=[], feature_importances_=[]):
         self.metrics = metrics
         self.score_duration = score_duration
         self.y_true = y_true
         self.y_predicted = y_predicted
+        self.indices = indices
+        self.feature_importances_ = feature_importances_
 
     def to_dict(self):
         base_dict = {'score_duration': self.score_duration}
@@ -64,6 +69,7 @@ class FoldTupel:
 class FoldOperations(Enum):
     MEAN = 0
     STD = 1
+    RAW = 2
 
 
 class FoldMetric:
@@ -134,6 +140,12 @@ class Configuration:
             # Todo: calculate metrics for outer folds
             pass
 
+    def pretty_config_dict(self):
+        output = ''
+        for name, value in self.config_dict.items():
+            output += name + ': ' + str(value) + '<br>'
+        return output
+
     def to_dict(self):
         if self.me_type == MasterElementType.ROOT:
             fit_name = "hyperparameter_search_duration"
@@ -189,7 +201,115 @@ class MasterElement:
         if self.me_type == MasterElementType.ROOT:
             return self.config_list[0].fold_list[outer_cv_fold].test.config_list[0]
 
-    def get_best_config_performance_for(self, outer_cv_fold: object, train_data: object = False) -> object:
+    def get_metrics_for_inner_cv(self, outer_cv_fold: int, inner_cv_fold: int, config_nr: int, train_data: bool = False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            if train_data:
+                return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].train.metrics
+            else:
+                return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].test.metrics
+
+    def get_predictions_for_inner_cv(self, outer_cv_fold: int=0, inner_cv_fold: int=0, config_nr: int=0, train_data: bool = False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            if train_data:
+                source_element = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].train
+            else:
+                source_element = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].test
+            return {'y_true': source_element.y_true, 'y_predicted': source_element.y_predicted}
+
+    def get_full_dataset_predictions_for_best_config(self, outer_cv_fold: int=0, train_data=False):
+        if self.me_type == MasterElementType.ROOT:
+            best_config = self.get_best_config_for(outer_cv_fold)
+            if best_config:
+                source_folds = best_config.best_config_object_for_validation_set.fold_list
+                return self._collect_predictions(source_folds, train_data)
+
+    def get_full_dataset_predictions_for_config(self, outer_cv_fold: int=0, config_nr: int=0, train_data=False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            source_folds = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list
+            return self._collect_predictions(source_folds, train_data)
+
+    def _collect_predictions(self, source_folds, train_data):
+        result_dict = {}
+        for fold in source_folds:
+            if train_data:
+                source_element = fold.train
+            else:
+                source_element = fold.test
+
+            for cnt in range(len(source_element.indices)):
+                result_dict[source_element.indices[cnt]] = (source_element.y_true[cnt], source_element.y_predicted[cnt])
+
+        nr_of_preds = len(result_dict)
+        y_true = np.zeros((nr_of_preds,))
+        y_pred = np.zeros((nr_of_preds,))
+
+        for key, element in result_dict.items():
+            y_true[key] = element[0]
+            y_pred[key] = element[1]
+
+        return y_true, y_pred
+
+    def get_feature_importances_for_inner_cv(self, outer_cv_fold: int=0, inner_cv_fold: int=0, config_nr: int=0) -> list:
+        if self.me_type == MasterElementType.ROOT:
+            return self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list[inner_cv_fold].train.feature_importances_
+
+    def _merge_metric_dicts(self, fold_list, train_data):
+        result_dict = {}
+        for fold in fold_list:
+            if train_data:
+                source_dict = fold.train.metrics
+            else:
+                source_dict = fold.test.metrics
+
+            for key, value in source_dict.items():
+                if key in result_dict:
+                    result_dict[key].append(value)
+                else:
+                    result_dict[key] = [value]
+
+        return result_dict
+
+    def get_predictions_for_best_config_of_outer_cv(self, outer_cv_fold: int=0, train_data: bool = False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            best_config = self.get_best_config_for(outer_cv_fold)
+            if best_config:
+                if train_data:
+                    return {'y_true': best_config.fold_list[0].train.y_true,
+                            'y_predicted': best_config.fold_list[0].train.y_predicted}
+                else:
+                    return {'y_true': best_config.fold_list[0].test.y_true,
+                            'y_predicted': best_config.fold_list[0].test.y_predicted}
+
+    def get_all_metrics(self, outer_cv_fold: int = 0, config_nr: int = 0, train_data: bool = False) -> dict:
+        if self.me_type == MasterElementType.ROOT:
+            inner_fold_list = self.config_list[0].fold_list[outer_cv_fold].train.config_list[config_nr].fold_list
+            metric_dicts = []
+
+            for inner_fold in inner_fold_list:
+                if train_data:
+                    metric_dicts.append(inner_fold.train.metrics)
+                else:
+                    metric_dicts.append(inner_fold.test.metrics)
+
+            final_dict = {}
+            for metric_dict in metric_dicts:
+                for key, value in metric_dict.items():
+                    if key in final_dict:
+                        final_dict[key].append(value)
+                    else:
+                        final_dict[key] = []
+                        final_dict[key].append(value)
+
+            return final_dict
+
+    def get_best_config_performance_validation_set(self, outer_cv_fold: int = 0, train_data: bool = False) -> dict:
+        best_config = self.get_best_config_for(outer_cv_fold)
+        if best_config:
+            fold_list = best_config.best_config_object_for_validation_set.fold_list
+            metrics_dict = self._merge_metric_dicts(fold_list, train_data)
+            return metrics_dict
+
+    def get_best_config_performance_test_set(self, outer_cv_fold: int = 0, train_data: bool = False) -> object:
         # Todo: Try Catch?
         if self.me_type == MasterElementType.ROOT:
             if train_data:
@@ -201,6 +321,7 @@ class MasterElement:
         # Todo: Try Catch?
         if self.me_type == MasterElementType.ROOT:
             return self.config_list[0].fold_list[outer_cv_fold].train.config_list
+
 
     def create_csv_rows(self, master_element_name):
 
@@ -224,6 +345,45 @@ class MasterElement:
                     output_lines.append(test_dict)
 
         return output_lines
+
+    def plot_config_performances_for_outer_fold(self, outer_cv_fold=0, output_filename=''):
+        if not output_filename:
+            output_filename = 'PHOTON_Results_' + self.name + '_' + datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+        tested_configs = self.get_tested_configurations_for(outer_cv_fold=outer_cv_fold)
+
+        tracelist = []
+
+        col_nr = 4
+        row_nr = int(np.ceil(len(tested_configs) / col_nr))
+
+        fig = tools.make_subplots(row_nr, col_nr, shared_xaxes=True, shared_yaxes=True,
+                                  subplot_titles=[item.pretty_config_dict() for item in tested_configs])
+
+        col_cnt = 1
+        row_cnt = 1
+
+        for cfg in tested_configs:
+            inner_fold_list = cfg.fold_list
+            cnt = 0
+            metric_list = []
+            name_list = []
+            text_list = []
+            for fold in inner_fold_list:
+                for metric_name, metric_value in fold.train.metrics.items():
+                    metric_list.append(metric_value)
+                    name_list.append(metric_name)
+                    text_list.append('inner fold ' + str(cnt + 1))
+                cnt += 1
+            trace = go.Scatter(x=name_list, y=metric_list, name=str(cfg.config_dict),
+                               mode="markers", text=text_list)
+            if col_cnt > col_nr:
+                col_cnt = 1
+                row_cnt += 1
+            fig.append_trace(trace, row_cnt, col_cnt)
+            col_cnt += 1
+
+        fig['layout'].update(title="", showlegend=False, width=1500)
+        return plotly.offline.plot(fig, filename=output_filename)
 
     def to_dict(self):
         return {'name': self.name, 'type': str(self.me_type)}

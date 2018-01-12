@@ -1,6 +1,7 @@
 import time
 from hashlib import sha1
 from itertools import product
+from copy import deepcopy
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -136,16 +137,19 @@ class Hyperpipe(BaseEstimator):
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
+    def yield_all_data(self):
+        if hasattr(self.X, 'shape'):
+            yield list(range(self.X.shape[0])), []
+        else:
+            yield list(range(len(self.X))), []
+
     def generate_outer_cv_indices(self):
         # if there is a CV Object for cross validating the hyperparameter search
         if self.hyperparameter_fitting_cv_object:
             self.data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
         # in case we do not want to divide between validation and test set
         elif not self.eval_final_performance:
-            if hasattr(self.X, 'shape'):
-                self.data_test_cases = [(range(self.X.shape[0]), [])]
-            else:
-                self.data_test_cases = [(range(len(self.X)), [])]
+            self.data_test_cases = self.yield_all_data()
         # the default is dividing one time into a validation and test set
         else:
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
@@ -190,6 +194,8 @@ class Hyperpipe(BaseEstimator):
         # be compatible to list of (image-) files
         if isinstance(self.X, list):
             self.X = np.asarray(self.X)
+        if isinstance(self.y, list):
+            self.y = np.asarray(self.y)
         #if not isinstance(self.X, np.ndarray): # and isinstance(self.X[0], str):
         #    self.X = np.asarray(self.X)
 
@@ -328,6 +334,7 @@ class Hyperpipe(BaseEstimator):
                         # Todo: Umbauen
                         best_config_item_test = Configuration(MasterElementType.OUTER_TEST, best_train_config.config_dict)
                         best_config_item_test.children_configs = best_train_config.children_configs
+                        best_config_item_test.best_config_object_for_validation_set = best_train_config
                         self.best_config = best_config_item_test
 
 
@@ -389,6 +396,15 @@ class Hyperpipe(BaseEstimator):
                             final_fit_fold_tuple.number_samples_train = num_samples_train
 
                             best_config_item_test.fold_list.append(final_fit_fold_tuple)
+
+                            Logger().info('PERFORMANCE TRAIN:')
+                            for m_key, m_value in final_fit_train_item.metrics.items():
+                                Logger().info(str(m_key) + ": " + str(m_value))
+
+                            Logger().info('PERFORMANCE TEST:')
+                            for m_key, m_value in final_fit_test_item.metrics.items():
+                                    Logger().info(str(m_key) + ": " + str(m_value))
+
 
                         # else:
                     # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
@@ -481,6 +497,29 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self.pipe = Pipeline(pipeline_steps)
 
+    def copy_me(self):
+        item_list =[]
+        for item in self.pipeline_elements:
+            item_list.append(item.copy_me())
+        return item_list
+
+    def _copy_pipeline(self):
+        pipeline_steps = []
+        for item in self.pipeline_elements:
+            cpy = item.copy_me()
+            if isinstance(cpy, list):
+                for new_step in cpy:
+                    pipeline_steps.append((new_step.name, new_step))
+            else:
+                pipeline_steps.append((cpy.name, cpy))
+        return Pipeline(pipeline_steps)
+
+    def inverse_transform_pipeline(self, hyperparameters, data, targets, data_to_inverse):
+        copied_pipe = self._copy_pipeline()
+        copied_pipe.set_params(**hyperparameters)
+        copied_pipe.fit(data, targets)
+        return copied_pipe.inverse_transform(data_to_inverse)
+
     def optimize_printing(self, config):
         prettified_config = [self.name + '\n']
         for el_key, el_value in config.items():
@@ -538,6 +577,9 @@ class PipelineElement(BaseEstimator):
         else:
             Logger().error('Element not supported right now:' + name)
             raise NameError('Element not supported right now:', name)
+
+    def copy_me(self):
+        return deepcopy(self)
 
     def __init__(self, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False):
         # Todo: check if hyperparameters are members of the class
@@ -654,6 +696,13 @@ class PipelineElement(BaseEstimator):
                 Logger().error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
         else:
+            return data
+
+    def inverse_transform(self, data):
+        if hasattr(self.base_element, 'inverse_transform'):
+            return self.base_element.inverse_transform(data)
+        else:
+            # raise Warning('Element ' + self.name + ' has no method inverse_transform')
             return data
 
     # def fit_transform(self, data, targets=None):
@@ -866,7 +915,7 @@ class PipelineSwitch(PipelineElement):
     #     obj.pipeline_element_list = pipeline_element_list
     #     return obj
 
-    def __init__(self, name, pipeline_element_list):
+    def __init__(self, name, pipeline_element_list, _estimator_type='regressor'):
         self.name = name
         self._sklearn_curr_element = self.name + '__current_element'
         # Todo: disable switch?
@@ -881,6 +930,7 @@ class PipelineSwitch(PipelineElement):
         self.pipeline_element_configurations = []
         self.generate_config_grid()
         self.generate_sklearn_hyperparameters()
+        self._estimator_type = _estimator_type
 
     @property
     def hyperparameters(self):

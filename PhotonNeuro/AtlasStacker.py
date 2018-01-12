@@ -1,5 +1,5 @@
 import pickle
-from ..Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
+from photon_core.Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import ShuffleSplit
 import numpy as np
