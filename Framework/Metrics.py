@@ -5,7 +5,7 @@ Define custom metrics here
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-from Helpers.TFUtilities import one_hot_to_binary
+from ..Helpers.TFUtilities import one_hot_to_binary
 
 
 def categorical_accuracy_score(y_true, y_pred):
