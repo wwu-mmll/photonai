@@ -10,7 +10,7 @@ from plotly import tools
 
 class FoldMetrics:
 
-    def __init__(self, metrics, score_duration, y_true, y_predicted, indices=[], feature_importances_=[]):
+    def __init__(self, metrics, score_duration, y_true, y_predicted, indices=None, feature_importances_=None):
         self.metrics = metrics
         self.score_duration = score_duration
         self.y_true = y_true
