@@ -202,6 +202,7 @@ class BrainAtlas(BaseEstimator):
             self.roi_sizes_applied = [self.roi_sizes[self.labels.index(i)] for i in self.labels_applied]
 
         elif isinstance(whichROIs, list):
+            #Todo: Catch empty list
             if all(isinstance(item, int) for item in whichROIs): # use list of indices in map (ints)
                 #self.indices_applied = whichROIs
                 self.labels_applied = [self.labels[self.indices.index(i)] for i in whichROIs]
