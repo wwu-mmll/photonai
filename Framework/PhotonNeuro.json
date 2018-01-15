@@ -1,14 +1,14 @@
 {
    "ResampleImgs":[
-      "PhotonNeuro.ImageBasics.ResamplingImgs",
+      "photon_core.PhotonNeuro.ImageBasics.ResamplingImgs",
       "Transformer"
    ],
    "SmoothImgs":[
-      "PhotonNeuro.ImageBasics.SmoothImgs",
+      "photon_core.PhotonNeuro.ImageBasics.SmoothImgs",
       "Transformer"
    ],
    "BrainAtlas":[
-      "PhotonNeuro.BrainAtlas.BrainAtlas",
+      "photon_core.PhotonNeuro.BrainAtlas.BrainAtlas",
       "Transformer"
    ]
 }
