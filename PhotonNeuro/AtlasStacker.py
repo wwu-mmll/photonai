@@ -3,7 +3,7 @@ from photon_core.Framework.PhotonBase import Hyperpipe, PipelineElement, Pipelin
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import ShuffleSplit
 import numpy as np
-
+from ..Logging.Logger import Logger
 
 class RoiFilterElement(BaseEstimator):
 
@@ -59,9 +59,8 @@ class AtlasStacker(BaseEstimator):
             inner_pipe_list = {}
             for i in range(len(self.rois)):
                 tmp_inner_pipe = Hyperpipe(self.atlas_name + '_' + str(self.rois[i]), optimizer='grid_search',
-                                           inner_cv=
-                                           ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
-                                           eval_final_performance=False)
+                                           inner_cv=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
+                                           eval_final_performance=False, verbose=Logger().verbosity_level)
 
                 # at first set a filter element
 
