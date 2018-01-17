@@ -34,7 +34,7 @@ class AtlasInfo():
 
 class AtlasStacker(BaseEstimator):
 
-    def __init__(self, atlas_info_object, hyperpipe_elements):
+    def __init__(self, atlas_info_object, hyperpipe_elements, best_config_metric=[], metrics=[]):
         # ToDo
         # - Stacker
 
@@ -42,7 +42,8 @@ class AtlasStacker(BaseEstimator):
         self.atlas_name = self.atlas_info_object.atlas_name
         self.hyperpipe_elements = hyperpipe_elements
         self.pipeline_fusion = None
-
+        self.best_config_metric = best_config_metric
+        self.metrics = metrics
         # self.outer_pipe += pipeline_fusion
 
     def generate_hyperpipes(self):
@@ -60,7 +61,8 @@ class AtlasStacker(BaseEstimator):
             for i in range(len(self.rois)):
                 tmp_inner_pipe = Hyperpipe(self.atlas_name + '_' + str(self.rois[i]), optimizer='grid_search',
                                            inner_cv=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
-                                           eval_final_performance=False, verbose=Logger().verbosity_level)
+                                           eval_final_performance=False, verbose=Logger().verbosity_level,
+                                           best_config_metric=self.best_config_metric, metrics=self.metrics)
 
                 # at first set a filter element
 
