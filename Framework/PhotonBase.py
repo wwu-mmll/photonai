@@ -251,12 +251,12 @@ class Hyperpipe(BaseEstimator):
                                   .format(self.name, outer_fold_counter))
 
                     # PhotonCore variant (for arrays)
-                    validation_X = self.X[train_indices]
-                    validation_y = self.y[train_indices]
+                    self.validation_X = self.X[train_indices]
+                    self.validation_y = self.y[train_indices]
                     test_X = self.X[test_indices]
                     test_y = self.y[test_indices]
 
-                    cv_iter = list(self.hyperparameter_specific_config_cv_object.split(validation_X, validation_y))
+                    cv_iter = list(self.hyperparameter_specific_config_cv_object.split(self.validation_X, self.validation_y))
                     num_folds = len(cv_iter)
 
                     num_samples_train = len(validation_y)
@@ -283,7 +283,7 @@ class Hyperpipe(BaseEstimator):
                         Logger().debug('calculating...')
 
                         # Test the configuration cross validated by inner_cv object
-                        config_item = hp.calculate_cv_score(validation_X, validation_y, cv_iter)
+                        config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter)
                         config_item.config_nr = tested_config_counter
                         tested_config_counter += 1
 
@@ -371,7 +371,7 @@ class Hyperpipe(BaseEstimator):
 
                         Logger().verbose('...now fitting ' + self.name + ' with optimum configuration')
                         fit_time_start = time.time()
-                        self.optimum_pipe.fit(validation_X, validation_y)
+                        self.optimum_pipe.fit(self.validation_X, self.validation_y)
                         final_fit_duration = time.time() - fit_time_start
 
                         self.best_config.full_model_specification = self.optimum_pipe.get_params()
@@ -387,7 +387,7 @@ class Hyperpipe(BaseEstimator):
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
-                            final_fit_train_item = TestPipeline.score(self.optimum_pipe, validation_X, validation_y, self.metrics)
+                            final_fit_train_item = TestPipeline.score(self.optimum_pipe, self.validation_X, self.validation_y, self.metrics)
 
                             final_fit_fold_tuple = FoldTupel(-1)
                             final_fit_fold_tuple.train = final_fit_train_item
