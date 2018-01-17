@@ -259,7 +259,7 @@ class Hyperpipe(BaseEstimator):
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(self.validation_X, self.validation_y))
                     num_folds = len(cv_iter)
 
-                    num_samples_train = len(validation_y)
+                    num_samples_train = len(self.validation_y)
                     num_samples_test = len(test_y)
 
                     master_item_train = MasterElement(self.name + "_outer_fold_" + str(outer_fold_counter)+"_train",
