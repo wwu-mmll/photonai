@@ -253,14 +253,14 @@ class Hyperpipe(BaseEstimator):
                     # PhotonCore variant (for arrays)
                     self.validation_X = self.X[train_indices]
                     self.validation_y = self.y[train_indices]
-                    test_X = self.X[test_indices]
-                    test_y = self.y[test_indices]
+                    self.test_X = self.X[test_indices]
+                    self.test_y = self.y[test_indices]
 
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(self.validation_X, self.validation_y))
                     num_folds = len(cv_iter)
 
                     num_samples_train = len(self.validation_y)
-                    num_samples_test = len(test_y)
+                    num_samples_test = len(self.test_y)
 
                     master_item_train = MasterElement(self.name + "_outer_fold_" + str(outer_fold_counter)+"_train",
                                                       me_type=MasterElementType.OUTER_TRAIN)
@@ -382,7 +382,7 @@ class Hyperpipe(BaseEstimator):
                             # Todo: generate mean and std over outer folds as well. move this items to the top
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
 
-                            final_fit_test_item = TestPipeline.score(self.optimum_pipe, test_X, test_y, self.metrics)
+                            final_fit_test_item = TestPipeline.score(self.optimum_pipe, self.test_X, self.test_y, self.metrics)
 
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
