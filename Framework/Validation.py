@@ -256,12 +256,7 @@ class OptimizerMetric(object):
 
             last_element = pipeline_elements[-1]
             if hasattr(last_element.base_element, '_estimator_type'):
-                if last_element.base_element._estimator_type == 'classifier':
-                    self.greater_is_better = True
-                elif (last_element.base_element._estimator_type == 'regressor'
-                      or last_element.base_element._estimator_type == 'transformer'
-                      or last_element.base_element._estimator_type == 'clusterer'):
-                    self.greater_is_better = False
+                self.greater_is_better = True
             else:
                 # Todo: better error checking?
                 Logger().error('NotImplementedError: ' +
