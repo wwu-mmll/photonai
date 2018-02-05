@@ -150,7 +150,7 @@ class BrainAtlas(BaseEstimator):
                     Logger().info(e)
 
                 self.roi_sizes_applied[i] = single_roi.shape[1]
-                Logger().info('Extracting data from ' + self.labels_applied[i] + ' (Index: '
+                Logger().debug('Extracting data from ' + self.labels_applied[i] + ' (Index: '
                       + str(self.indices_applied[i]) + '; ROI Size: ' + str(self.roi_sizes_applied[i]) + ')')
                 i += 1
 
