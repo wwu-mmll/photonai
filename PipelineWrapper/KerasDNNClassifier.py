@@ -16,7 +16,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, hidden_layer_sizes=[10, 20], dropout_rate=0.5, target_dimension=10, act_func='prelu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
-                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5):
+                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, batch_size=64):
 
         self.hidden_layer_sizes = hidden_layer_sizes
         self.dropout_rate = dropout_rate
@@ -29,6 +29,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
         self.eaSt_patience = eaSt_patience
         self.reLe_factor = reLe_factor
         self.reLe_patience = reLe_patience
+        self.batch_size = batch_size
 
         self.model = None
 
@@ -83,21 +84,21 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
             # fit the model
             results = self.model.fit(X_train, y_train,
                                      validation_data=(X_val, y_val),
-                                     batch_size=128,
+                                     batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=self.verbosity,
                                      callbacks=callbacks_list)
         else:
             # fit the model
             Logger().warn('Cannot use Keras Callbacks because of small sample size...')
-            results = self.model.fit(X, y, batch_size=128,
+            results = self.model.fit(X, y, batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=self.verbosity)
 
         return self
 
     def predict(self, X):
-        predict_result = self.model.predict(X, batch_size=128)
+        predict_result = self.model.predict(X, batch_size=self.batch_size)
         max_index = np.argmax(predict_result, axis=1)
         return max_index
 
@@ -108,7 +109,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
         :type data: float
         :return: predicted values, array
         """
-        return self.model.predict(X, batch_size=128)
+        return self.model.predict(X, batch_size=self.batch_size)
 
     def score(self, X, y_true):
         return np.zeros(1)
