@@ -259,7 +259,10 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
         exog = np.concatenate([np.reshape(x, (x.shape[0], 1)), self.components], axis=1)
         exog = sm.add_constant(exog)
         logit_mod = sm.Logit(self._y, exog)
-        logit_res = logit_mod.fit(disp=0)
+        try:
+            logit_res = logit_mod.fit(disp=0)
+        except:
+            logit_res = 1
         return logit_res.pvalues[1]
 
 
