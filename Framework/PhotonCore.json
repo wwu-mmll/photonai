@@ -60,19 +60,19 @@
       "Transformer"
    ],
    "mi_regression_select_percentile":[
-      "PipelineWrapper.FeatureSelection.MIRegressionSelectPercentile",
+      "photon_core.PipelineWrapper.FeatureSelection.MIRegressionSelectPercentile",
       "Transformer"
    ],
    "mi_classif_select_percentile":[
-      "PipelineWrapper.FeatureSelection.MIClassifSelectPercentile",
+      "photon_core.PipelineWrapper.FeatureSelection.MIClassifSelectPercentile",
       "Transformer"
    ],
    "chi2_classif_select_kbest":[
-      "PipelineWrapper.FeatureSelection.Chi2KBest",
+      "photon_core.PipelineWrapper.FeatureSelection.Chi2KBest",
       "Transformer"
    ],
    "logistic_gwas_fs":[
-      "PipelineWrapper.FeatureSelection.LogisticGWASFeatureSelection",
+      "photon_core.PipelineWrapper.FeatureSelection.LogisticGWASFeatureSelection",
       "Transformer"
    ],
    "svc": [
