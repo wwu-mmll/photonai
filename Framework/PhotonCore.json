@@ -71,6 +71,10 @@
       "PipelineWrapper.FeatureSelection.Chi2KBest",
       "Transformer"
    ],
+   "logistic_gwas_fs":[
+      "PipelineWrapper.FeatureSelection.LogisticGWASFeatureSelection",
+      "Transformer"
+   ],
    "svc": [
       "sklearn.svm.SVC",
       "Estimator"

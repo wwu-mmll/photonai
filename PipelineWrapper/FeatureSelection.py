@@ -4,6 +4,11 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, \
     VarianceThreshold, mutual_info_classif, mutual_info_regression, SelectKBest, chi2
 from scipy.stats import pearsonr, f_oneway
+from sklearn.decomposition import PCA, RandomizedPCA, IncrementalPCA
+from hashlib import sha1
+from pathlib import Path
+import statsmodels.api as sm
+import multiprocessing
 
 class PearsonFeatureSelector(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
@@ -207,3 +212,55 @@ class Chi2KBest(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
+
+
+class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
+    _estimator_type = 'transformer'
+
+    def __init__(self, p_thres=0.01, incremental_pca=0, logs='', n_pca_components=4, n_cores=1):
+        self.pca = None
+        self._y = None
+        self.components = None
+        self.ps = None
+
+        self.n_pca_comp = n_pca_components
+        self.n_cores = n_cores
+        self.logs = logs
+        self.incremental_pca = incremental_pca
+        self.p_thres = p_thres
+
+
+    def fit(self, X, y):
+        self._y = y
+        hash = sha1(np.asarray(X)).hexdigest()
+        hash_file = Path(str(self.logs + '/' + hash + '.txt'))
+        if hash_file.is_file():
+            self.ps = np.loadtxt(self.logs + '/' + hash + '.txt')
+
+        else:
+            if self.incremental_pca:
+                self.pca = IncrementalPCA(self.n_pca_comp, self.incremental_pca)
+            else:
+                self.pca = PCA(self.n_pca_comp)
+            self.components = self.pca.fit_transform(X)
+            params = zip(np.arange(0,X.shape[1]),np.nditer(X, flags = ['external_loop'], order = 'F'))
+            pool = multiprocessing.Pool(self.n_cores)
+            res = pool.map(self.parallelized_logistic_regression, params)
+            self.ps = np.asarray(res)
+            self.ps[np.isnan(self.ps)] = 1
+            np.savetxt(str(self.logs + '/' + hash + '.txt'), self.ps)
+        return self
+
+    def transform(self, X):
+        return X[:,self.ps <= self.p_thres]
+
+    def parallelized_logistic_regression(self, params):
+        i, x = params
+        exog = np.concatenate([np.reshape(x, (x.shape[0], 1)), self.components], axis=1)
+        exog = sm.add_constant(exog)
+        logit_mod = sm.Logit(self._y, exog)
+        logit_res = logit_mod.fit(disp=0)
+        return logit_res.pvalues[1]
+
+
+
