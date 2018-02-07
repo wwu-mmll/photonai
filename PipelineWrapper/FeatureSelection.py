@@ -254,7 +254,9 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
         return self
 
     def transform(self, X):
-        return X[:,self.ps <= self.p_thres]
+        X_selected = X[:,self.ps <= self.p_thres]
+        Logger().debug('Remaining features after GWAS feature selection: {}'.format(X_selected.shape[1]))
+        return X_selected
 
     def parallelized_logistic_regression(self, params):
         i, x = params
@@ -267,7 +269,7 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
             logit_res = logit_mod.fit(disp=0)
             return logit_res.pvalues[1]
         except:
-            return 1 
+            return 1
 
 
 
