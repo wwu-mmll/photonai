@@ -236,6 +236,7 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
         hash = sha1(np.asarray(X)).hexdigest()
         hash_file = Path(str(self.logs + '/' + hash + '.txt'))
         if hash_file.is_file():
+            Logger().debug('Reloading GWAS p-values...')
             self.ps = np.loadtxt(self.logs + '/' + hash + '.txt')
 
         else:
@@ -257,16 +258,16 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
 
     def parallelized_logistic_regression(self, params):
         i, x = params
-        if ((i+1) % 1000) == 0:
+        if ((i+1) % 10000) == 0:
             Logger().debug('Running GWAS Feature Selection...done with {} SNPs.'.format(i+1))
         exog = np.concatenate([np.reshape(x, (x.shape[0], 1)), self.components], axis=1)
         exog = sm.add_constant(exog)
         logit_mod = sm.Logit(self._y, exog)
         try:
             logit_res = logit_mod.fit(disp=0)
+            return logit_res.pvalues[1]
         except:
-            logit_res = 1
-        return logit_res.pvalues[1]
+            return 1 
 
 
 
