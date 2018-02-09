@@ -165,9 +165,9 @@ class Scorer(object):
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
         'r2': ('sklearn.metrics', 'r2_score'),
-        'pearson_correlation': ('Framework.Metrics', 'pearson_correlation'),
-        'variance_explained':  ('Framework.Metrics', 'variance_explained_score'),
-        'categorical_accuracy': ('Framework.Metrics','categorical_accuracy_score')
+        'pearson_correlation': ('photon_core.Framework.Metrics', 'pearson_correlation'),
+        'variance_explained':  ('photon_core.Framework.Metrics', 'variance_explained_score'),
+        'categorical_accuracy': ('photon_core.Framework.Metrics','categorical_accuracy_score')
     }
 
     # def __init__(self, estimator, x, y_true, metrics):
@@ -256,12 +256,7 @@ class OptimizerMetric(object):
 
             last_element = pipeline_elements[-1]
             if hasattr(last_element.base_element, '_estimator_type'):
-                if last_element.base_element._estimator_type == 'classifier':
-                    self.greater_is_better = True
-                elif (last_element.base_element._estimator_type == 'regressor'
-                      or last_element.base_element._estimator_type == 'transformer'
-                      or last_element.base_element._estimator_type == 'clusterer'):
-                    self.greater_is_better = False
+                self.greater_is_better = True
             else:
                 # Todo: better error checking?
                 Logger().error('NotImplementedError: ' +
