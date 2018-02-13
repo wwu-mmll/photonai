@@ -8,6 +8,8 @@ import plotly
 import plotly.graph_objs as go
 from plotly import tools
 
+from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
+
 class FoldMetrics:
 
     def __init__(self, metrics, score_duration, y_true, y_predicted, indices=[], feature_importances_=[]):
@@ -90,7 +92,7 @@ class FoldMetric:
         return val
 
 
-class Configuration:
+class Configuration(EmbeddedMongoModel):
 
     def __init__(self, me_type, config_dict={}):
 
@@ -171,7 +173,11 @@ class MasterElementType(Enum):
         return NotImplemented
 
 
-class MasterElement:
+class MasterElement (MongoModel):
+
+    name = fields.CharField()
+    me_type = fields.IntegerField()
+    config_list = fields.EmbeddedDocumentListField(model=Configuration)
 
     def __init__(self, name, me_type=MasterElementType.ROOT):
         self.name = name
@@ -483,3 +489,5 @@ class ResultLogging:
             #     r_results[key] = results[key]
         return r_results
 
+if __name__ == "__main__":
+    connect("mongodb://localhost:27017/photon_db")
