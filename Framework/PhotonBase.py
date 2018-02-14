@@ -201,7 +201,7 @@ class Hyperpipe(BaseEstimator):
 
         # handle PhotonNeuro Imge paths as data
         # ToDo: Need to check the DATA, not the img paths for PhotonNeuro
-        new_data_hash = sha1(np.asarray(self.X)).hexdigest()
+        new_data_hash = sha1(np.asarray(self.X, order='C')).hexdigest()
 
         # fit
         # 1. if it is first time ever or
@@ -550,6 +550,16 @@ class Hyperpipe(BaseEstimator):
         # Todo: Not reassign 'self'!!!
         for key, all_params in config.items():
             self += PipelineElement(key, all_params, {})
+
+class SourceFilter(BaseEstimator):
+    def __init__(self, indices):
+        self.indices = indices
+
+    def fit(self, X, y=None):
+        return self
+
+    def transform(self, X, y=None):
+        return X[:, self.indices]
 
 
 class PipelineElement(BaseEstimator):

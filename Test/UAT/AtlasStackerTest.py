@@ -13,4 +13,4 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         random.seed(42)
 
     def testStacking(self):
-        
+        pass
