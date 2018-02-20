@@ -161,24 +161,61 @@ from sklearn.feature_selection import SelectFromModel
 class ModelSelector(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
 
-    def __init__(self, estimator_obj, threshold=1e-5):
+    def __init__(self, estimator_obj, threshold=1e-5, percentile=False):
         self.threshold = threshold
         self.estimator_obj = estimator_obj
         self.selected_indices = []
-        self.model = None
+        self.percentile = percentile
+        self.importance_scores = []
+
+    def _get_feature_importances(self, estimator, norm_order=1):
+        """Retrieve or aggregate feature importances from estimator"""
+        importances = getattr(estimator, "feature_importances_", None)
+
+        if importances is None and hasattr(estimator, "coef_"):
+            if estimator.coef_.ndim == 1:
+                importances = np.abs(estimator.coef_)
+
+            else:
+                importances = np.linalg.norm(estimator.coef_, axis=0,
+                                             ord=norm_order)
+
+        elif importances is None:
+            raise ValueError(
+                "The underlying estimator %s has no `coef_` or "
+                "`feature_importances_` attribute. Either pass a fitted estimator"
+                " to SelectFromModel or call fit before calling transform."
+                % estimator.__class__.__name__)
+
+        return importances
+
+
 
     def fit(self, X, y):
         # 1. fit estimator
         self.estimator_obj.fit(X, y)
         # penalty = "l1"
-        self.model = SelectFromModel(self.estimator_obj, threshold=self.threshold, prefit=True)
+        self.importance_scores = self._get_feature_importances(self.estimator_obj)
+
+        if not self.percentile:
+            self.selected_indices = np.where(self.importance_scores >= self.threshold)[0]
+        else:
+            # Todo: works only for binary classification, not for multiclass
+            ordered_importances = np.sort(self.importance_scores)
+            index = int(np.floor((1-self.threshold) * X.shape[1]))
+            percentile_thres = ordered_importances[index]
+            self.selected_indices = np.where(self.importance_scores >= percentile_thres)[0]
+            # Todo: sortieren und Grenze definieren und dann np.where
+            pass
         return self
 
     def transform(self, X):
-        X_new = self.model.transform(X)
+
+        X_new = X[:, self.selected_indices]
+
         # if no features were selected raise error
         if X_new.shape[1] == 0:
-            raise Warning("No Features were selected from model, using all features")
+            print("No Features were selected from model, using all features")
             return X
         return X_new
 
@@ -187,3 +224,7 @@ class ModelSelector(BaseEstimator, TransformerMixin):
 
     def get_params(self, deep=True):
         return self.estimator_obj.get_params(deep)
+
+
+
+
