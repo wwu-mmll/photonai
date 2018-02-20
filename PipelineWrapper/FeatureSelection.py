@@ -153,3 +153,26 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
         if return_values.size == 0:
             return_values = np.zeros(X.shape)
         return return_values
+
+
+from sklearn.feature_selection import SelectFromModel
+
+
+class ModelSelector(BaseEstimator, TransformerMixin):
+    _estimator_type = "transformer"
+
+    def __init__(self, estimator_obj):
+        self.estimator_obj = estimator_obj
+        self.selected_indices = []
+        self.model = None
+
+    def fit(self, X, y):
+        # 1. fit estimator
+        self.estimator_obj.fit(X, y)
+        # penalty = "l1"
+        self.model = SelectFromModel(self.estimator_obj, prefit=True)
+        return self
+
+    def transform(self, X):
+        X_new = self.model.transform(X)
+        return X_new
