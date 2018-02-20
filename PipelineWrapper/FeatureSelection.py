@@ -220,6 +220,9 @@ class ModelSelector(BaseEstimator, TransformerMixin):
         return X_new
 
     def set_params(self, **params):
+        if 'threshold' in params:
+            self.threshold = params['threshold']
+            params.pop('threshold')
         self.estimator_obj.set_params(**params)
 
     def get_params(self, deep=True):
