@@ -161,7 +161,8 @@ from sklearn.feature_selection import SelectFromModel
 class ModelSelector(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
 
-    def __init__(self, estimator_obj):
+    def __init__(self, estimator_obj, threshold=1e-5):
+        self.threshold = threshold
         self.estimator_obj = estimator_obj
         self.selected_indices = []
         self.model = None
@@ -170,9 +171,19 @@ class ModelSelector(BaseEstimator, TransformerMixin):
         # 1. fit estimator
         self.estimator_obj.fit(X, y)
         # penalty = "l1"
-        self.model = SelectFromModel(self.estimator_obj, prefit=True)
+        self.model = SelectFromModel(self.estimator_obj, threshold=self.threshold, prefit=True)
         return self
 
     def transform(self, X):
         X_new = self.model.transform(X)
+        # if no features were selected raise error
+        if X_new.shape[1] == 0:
+            raise Exception("No Features were selected from model")
+
         return X_new
+
+    def set_params(self, **params):
+        self.estimator_obj.set_params(**params)
+
+    def get_params(self, deep=True):
+        return self.estimator_obj.get_params(deep)
