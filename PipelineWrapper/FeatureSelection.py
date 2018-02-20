@@ -178,8 +178,8 @@ class ModelSelector(BaseEstimator, TransformerMixin):
         X_new = self.model.transform(X)
         # if no features were selected raise error
         if X_new.shape[1] == 0:
-            raise Exception("No Features were selected from model")
-
+            raise Warning("No Features were selected from model, using all features")
+            return X
         return X_new
 
     def set_params(self, **params):
