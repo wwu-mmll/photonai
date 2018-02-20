@@ -8,7 +8,7 @@ import plotly
 import plotly.graph_objs as go
 from plotly import tools
 
-from .ResultsDatabase import *
+# from .ResultsDatabase import *
 
 
 class FoldMetrics:
