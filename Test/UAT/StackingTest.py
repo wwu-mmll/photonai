@@ -44,39 +44,39 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
         sources = [np.arange(0, self.surface.shape[1]),np.arange(self.surface.shape[1], self.surface.shape[1] + self.thickness.shape[1])]
 
-        ##################################################################################
-        # SET UP HYPERPIPES
-        ##################################################################################
-
-        # surface pipe
-        surface_pipe = Hyperpipe('surface_pipe', optimizer='grid_search',
-                                 metrics=['accuracy'],
-                                 inner_cv=cv_inner, verbose=1)
-
-        surface_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel})
-        # use source filter to select data for stacked hyperpipes
-        surface_pipe.filter_element = SourceFilter(sources[0])
-
-        # thickness pipe
-        thickness_pipe = Hyperpipe('thickness_pipe', optimizer='grid_search',
-                                   metrics=['accuracy'],
-                                   inner_cv=cv_inner, verbose=1)
-
-        thickness_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel})
-        # use source filter to select data for stacked hyperpipes
-        thickness_pipe.filter_element = SourceFilter(sources[1])
-
-        # Mother Pipe
-        mother = Hyperpipe('mother', optimizer='grid_search',
-                           metrics=['accuracy'],
-                           inner_cv=cv_inner,
-                           outer_cv=cv_outer,
-                           eval_final_performance=True, verbose=1)
-
-        mother += PipelineStacking('multiple_sources', [surface_pipe, thickness_pipe], voting=False)
-        mother += PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel})
-
-        mother.fit(self.X, self.y)
+        # ##################################################################################
+        # # SET UP HYPERPIPES
+        # ##################################################################################
+        #
+        # # surface pipe
+        # surface_pipe = Hyperpipe('surface_pipe', optimizer='grid_search',
+        #                          metrics=['accuracy'],
+        #                          inner_cv=cv_inner, verbose=1)
+        #
+        # surface_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel})
+        # # use source filter to select data for stacked hyperpipes
+        # surface_pipe.filter_element = SourceFilter(sources[0])
+        #
+        # # thickness pipe
+        # thickness_pipe = Hyperpipe('thickness_pipe', optimizer='grid_search',
+        #                            metrics=['accuracy'],
+        #                            inner_cv=cv_inner, verbose=1)
+        #
+        # thickness_pipe += PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel})
+        # # use source filter to select data for stacked hyperpipes
+        # thickness_pipe.filter_element = SourceFilter(sources[1])
+        #
+        # # Mother Pipe
+        # mother = Hyperpipe('mother', optimizer='grid_search',
+        #                    metrics=['accuracy'],
+        #                    inner_cv=cv_inner,
+        #                    outer_cv=cv_outer,
+        #                    eval_final_performance=True, verbose=1)
+        #
+        # mother += PipelineStacking('multiple_sources', [surface_pipe, thickness_pipe], voting=False)
+        # mother += PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel})
+        #
+        # mother.fit(self.X, self.y)
 
         ##################################################################################
         # SKLEARN
@@ -89,57 +89,84 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
             y_train1 = self.y[train1]
             y_test = self.y[test]
 
-            sk_results = {'train_1': [], 'test': [], 'train_1_mean': [],
-                          'test_mean': []}
-            config_outer = {'C': [], 'kernel': []}
-
+            results_outer = {'C': [], 'kernel': [], 'val1_score':[]}
+            done_source_optimization = False
             for c_outer in svc_c:
                 for kernel_outer in svc_kernel:
-                    config_outer['C'].extend([c_outer])
-                    config_outer['kernel'].extend([kernel_outer])
+                    results_outer['C'].extend([c_outer])
+                    results_outer['kernel'].extend([kernel_outer])
 
-                    print('C:', c_outer, 'Kernel:', kernel_outer, '\n')
-
+                    print('C Outer:', c_outer, 'Kernel Outer:', kernel_outer, '\n')
+                    results_val1 = []
                     for train2, val1 in cv_inner.split(X_train1):
                         X_train2 = X_train1[train2]
                         X_val1 = X_train1[val1]
                         y_train2 = y_train1[train2]
                         y_val1 = y_train1[val1]
 
-                        source_predictions = list()
-                        for source in range(2):
-                            results_source = {'C': list(), 'kernel': list(),
-                                              'test_score': list(), 'test_predictions': list()}
-                            for c_inner in svc_c:
-                                for kernel_inner in svc_kernel:
-                                    results_source['C'].append(c_inner)
-                                    results_source['kernel'].append(kernel_inner)
-                                    print('Source {} C:{} Kernel:{}\n'.format(source, c_outer, kernel_outer))
 
-                                    results_source_folds = list()
-                                    source_predictions_inner = list()
-                                    all_val2_indices = list()
-                                    for train3, val2 in cv_inner.split(X_train2):
-                                        X_train3 = X_train2[train3][sources[source]]
-                                        X_val2 = X_train2[val2][sources[source]]
-                                        y_train3 = y_train2[train3]
-                                        y_val2 = y_train2[val2]
+                        if done_source_optimization is not True:
+                            source_predictions = list()
 
-                                        svc_source = SVC(kernel=kernel_inner, C=c_inner)
-                                        svc_source.fit(X_train3, y_train3)
-                                        source_predictions_inner.append(svc_source.predict(X_val2))
-                                        all_val2_indices.append(val2)
-                                        results_source_folds.append(svc_source.score(X_val2, y_val2))
-                                    results_source['test_score'].append(np.mean(results_source_folds))
-                                    # sort test predictions so that they are in the same order as y_val1 (or X_train2)
-                                    results_source['test_predictions'].append(
-                                        np.asarray(source_predictions_inner)[np.asarray(all_val2_indices)])
-                            best_inner_config_id = np.argmax(results_source['test_score'])
-                            best_inner_config = {'C': results_source['C'][best_inner_config_id],
-                                                 'kernel': results_source['kernel'][best_inner_config_id]}
-                            print('Optimum config for source {}: {}'.format(source, best_inner_config))
-                            source_predictions.append(results_source['test_predictions'][best_inner_config_id])
+                            for source in range(2):
+                                results_source = {'C': list(), 'kernel': list(),
+                                                  'test_score': list(), 'test_predictions': list()}
+                                best_inner_config = []
+                                for c_inner in svc_c:
+                                    for kernel_inner in svc_kernel:
+                                        results_source['C'].append(c_inner)
+                                        results_source['kernel'].append(kernel_inner)
+                                        print('Source {} C:{} Kernel:{}\n'.format(source, c_outer, kernel_outer))
 
-                        # now we'll get our predictions as new data
+                                        results_source_folds = list()
+                                        all_val2_indices = list()
+                                        for train3, val2 in cv_inner.split(X_train2):
+                                            X_train3 = X_train2[train3][sources[source]]
+                                            X_val2 = X_train2[val2][sources[source]]
+                                            y_train3 = y_train2[train3]
+                                            y_val2 = y_train2[val2]
+
+                                            svc_source = SVC(kernel=kernel_inner, C=c_inner)
+                                            svc_source.fit(X_train3, y_train3)
+                                            all_val2_indices.append(val2)
+                                            results_source_folds.append(svc_source.score(X_val2, y_val2))
+                                        results_source['test_score'].append(np.mean(results_source_folds))
+
+                                best_inner_config_id = np.argmax(results_source['test_score'])
+                                best_inner_config.append({'C': results_source['C'][best_inner_config_id],
+                                                     'kernel': results_source['kernel'][best_inner_config_id]})
+                                print('Optimum config for source {}: {}'.format(source, best_inner_config[-1]))
+                                print('Now fitting optimum source pipe...')
+                                svc_source_opt = SVC(best_inner_config[-1])
+                                svc_source_opt.fit(X_train2[sources[source]],y_train2)
+                                source_predictions.append(svc_source_opt.predict(X_train2[sources[source]]))
+                            done_source_optimization = True
+                        else:
+                            print('Skipping optimization of sources')
+                        print('Now fit 2nd level classifier with C={} and kernel={}'.format(c_outer, kernel_outer))
+                        svc_meta = SVC(C=c_outer, kernel=kernel_outer)
+                        svc_meta.fit(np.asarray(source_predictions), y_train2)
+                        results_val1.append(svc_meta.score(X_val1,y_val1))
+                    results_outer['val1_score'].append(np.mean(results_val1))
+            best_outer_config_id = np.argmax(results_outer['val1_score'])
+            best_outer_config = {'C':results_outer['C'][best_outer_config_id],
+                                 'kernel':results_outer['kernel'][best_outer_config_id]}
+            print('Optimum config for meta classifier: {}'.format(best_outer_config))
+            print('Now fitting optimum meta pipe...')
+            print('...with source config for source 1: {} and source 2: {}'.format(best_inner_config[0],best_inner_config[1]))
+            svc_meta_opt = SVC(best_outer_config)
+            svc_source_1_opt = SVC(best_inner_config[0])
+            svc_source_2_opt = SVC(best_inner_config[1])
+            svc_source_1_opt.fit(X_train1[sources[0]], y_train1)
+            svc_source_2_opt.fit(X_train1[sources[1]], y_train1)
+            pred_source1_train1 = svc_source_1_opt.predict(X_train1[sources[0]])
+            pred_source2_train1 = svc_source_1_opt.predict(X_train1[sources[0]])
+            svc_meta_opt.fit(np.asarray([pred_source1_train1, pred_source2_train1]))
+
+            # get test performance
+            pred_source1_test = svc_source_1_opt.predict(X_test[sources[0]])
+            pred_source2_test = svc_source_1_opt.predict(X_test[sources[1]])
+            final_score = svc_meta_opt.score(np.asarray([pred_source1_test, pred_source2_test]), y_test)
+            print('Final test performance: {}'.format(final_score))
 
 
