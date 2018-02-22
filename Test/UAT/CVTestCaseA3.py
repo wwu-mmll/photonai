@@ -6,7 +6,7 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from Framework.PhotonBase import PipelineElement, Hyperpipe
+from photon_core.Framework.PhotonBase import PipelineElement, Hyperpipe
 
 
 class CVTestsLocalSearchTrue(unittest.TestCase):
