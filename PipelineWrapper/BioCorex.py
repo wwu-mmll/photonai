@@ -1,7 +1,7 @@
-import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
-from ..Logging.Logger import Logger
-from ..SidePackages.bio_corex import corex as bc
+import sys
+sys.path.append("..")
+from ..SidePackages.bio_corex.corex import Corex
 
 
 class BioCorex(BaseEstimator, TransformerMixin):
@@ -15,7 +15,7 @@ class BioCorex(BaseEstimator, TransformerMixin):
         self.continuous_output = continuous_output
 
     def fit(self, X, y):
-        self.corex_model = bc.Corex(n_hidden=self.n_hidden, marginal_description=self.marginal_description,
+        self.corex_model = Corex(n_hidden=self.n_hidden, marginal_description=self.marginal_description,
                                     smooth_marginals=self.smooth_marginal)
         self.corex_model.fit(X)
         return self
