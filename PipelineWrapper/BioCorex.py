@@ -1,8 +1,6 @@
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from ..Logging.Logger import Logger
-import sys
-sys.path.append()
 from ..SidePackages.bio_corex import corex as bc
 
 
