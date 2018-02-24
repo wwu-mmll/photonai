@@ -147,7 +147,7 @@
       "sklearn.svm.OneClassSVM",
       "Estimator"
    ],
-   "Corex": [
+   "BioCorex": [
       "photon_core.PipelineWrapper.BioCorex.BioCorex",
       "Transformer"
    ]
