@@ -248,6 +248,7 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
             params = zip(np.arange(0,X.shape[1]),np.nditer(X, flags = ['external_loop'], order = 'F'))
             pool = multiprocessing.Pool(self.n_cores)
             res = pool.map(self.parallelized_logistic_regression, params)
+            pool.close()
             self.ps = np.asarray(res)
             self.ps[np.isnan(self.ps)] = 1
             np.savetxt(str(self.logs + '/' + hash + '.txt'), self.ps)
