@@ -9,6 +9,7 @@ from hashlib import sha1
 from pathlib import Path
 import statsmodels.api as sm
 import multiprocessing
+import os
 from ..Logging.Logger import Logger
 
 class PearsonFeatureSelector(BaseEstimator, TransformerMixin):
@@ -226,7 +227,10 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
 
         self.n_pca_comp = n_pca_components
         self.n_cores = n_cores
-        self.logs = logs
+        if logs:
+            self.logs = logs
+        else:
+            self.logs = os.getcwd()
         self.incremental_pca = incremental_pca
         self.p_thres = p_thres
 

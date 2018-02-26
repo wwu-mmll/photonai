@@ -5,6 +5,7 @@ from hashlib import sha1
 from pathlib import Path
 import numpy as np
 from sklearn.externals import joblib
+import os
 from ..Logging.Logger import Logger
 
 class PhotonPCA(BaseEstimator, TransformerMixin):
@@ -12,7 +13,10 @@ class PhotonPCA(BaseEstimator, TransformerMixin):
 
     def __init__(self, n_components=None, logs=''):
         self.n_components = n_components
-        self.logs = logs
+        if logs:
+            self.logs = logs
+        else:
+            self.logs = os.getcwd()
         self.pca = None
 
     def fit(self, X, y=None):
