@@ -20,7 +20,7 @@ class PhotonPCA(BaseEstimator, TransformerMixin):
         self.pca = None
 
     def fit(self, X, y=None):
-        hash = sha1(np.asarray(X)).hexdigest()
+        hash = sha1(np.asarray(X, order='C')).hexdigest()
         hash_file = Path(str(self.logs + '/' + hash + '_' + str(self.n_components) + '.pkl'))
         if hash_file.is_file():
             Logger().debug('Reloading PCA...')
