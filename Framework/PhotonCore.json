@@ -154,5 +154,9 @@
    "PhotonPCA": [
       "photon_core.PipelineWrapper.PhotonPCA.PhotonPCA",
       "Transformer"
+   ],
+   "SimpleAutoencoder": [
+      "photon_core.PipelineWrapper.KerasAutoencder.SimpleAutoencoder",
+      "Estimator"
    ]
 }
