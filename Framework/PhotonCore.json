@@ -160,7 +160,7 @@
       "Transformer"
    ],
    "SimpleAutoencoder": [
-      "photon_core.PipelineWrapper.KerasAutoencder.SimpleAutoencoder",
+      "photon_core.PipelineWrapper.KerasAutoencoder.SimpleAutoencoder",
       "Estimator"
    ]
 }
