@@ -3,13 +3,13 @@ from pathlib import Path
 import datetime
 
 class PhotonConf:
-    configfile_path = "../configuration.ini"
+    configfile_path = "../configuration2.ini"
 
     def create_default_config(self):
         self.config['LOGGING'] = {
             'print_to_console': True,
             'print_to_file': True,
-            'logfile_name': str('photon_' + str(datetime.datetime.utcnow()) + '.log'),
+            'logfile_name': 'photon.log',
             'print_to_slack': False,
             'slack_token': '',
             'loglevel_slack': 'INFO',
