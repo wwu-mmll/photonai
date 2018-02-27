@@ -1,6 +1,6 @@
 import configparser
 from pathlib import Path
-
+import datetime
 
 class PhotonConf:
     configfile_path = "../configuration.ini"
@@ -9,7 +9,7 @@ class PhotonConf:
         self.config['LOGGING'] = {
             'print_to_console': True,
             'print_to_file': True,
-            'logfile_name': 'photon_out.log',
+            'logfile_name': str(str(datetime.datetime.utcnow()) + 'photon_out.log'),
             'print_to_slack': False,
             'slack_token': '',
             'loglevel_slack': 'INFO',
