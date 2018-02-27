@@ -9,7 +9,7 @@ class PhotonConf:
         self.config['LOGGING'] = {
             'print_to_console': True,
             'print_to_file': True,
-            'logfile_name': str(str(datetime.datetime.utcnow()) + 'photon_out.log'),
+            'logfile_name': str('photon_' + str(datetime.datetime.utcnow()) + '.log'),
             'print_to_slack': False,
             'slack_token': '',
             'loglevel_slack': 'INFO',
