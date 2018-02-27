@@ -103,6 +103,9 @@ class Logger:
         """" Use this method to change the log level. """
         self._log_level = level
 
+    def set_custom_log_file(self, logfile):
+        self._logfile_name = logfile
+
     def set_verbosity(self, verbose=0):
         """ Use this method to change the log level from verbosity attribute of hyperpipe. """
         self.verbosity_level = verbose
