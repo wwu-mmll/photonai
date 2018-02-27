@@ -653,9 +653,9 @@ class PipelineElement(BaseEstimator):
     def predict(self, data, targets=None):
         if not self.disabled:
             if hasattr(self.base_element, 'predict'):
-                return self.base_element.predict(data)
+                return self.base_element.predict(data, targets)
             elif hasattr(self.base_element, 'transform'):
-                return self.base_element.transform(data)
+                return self.base_element.transform(data, targets)
             else:
                 Logger().error('BaseException. Base Element should have function ' +
                                'predict, or at least transform.')
@@ -689,9 +689,9 @@ class PipelineElement(BaseEstimator):
     def transform(self, data, targets=None):
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
-                return self.base_element.transform(data)
+                return self.base_element.transform(data, targets)
             elif hasattr(self.base_element, 'predict'):
-                return self.base_element.predict(data)
+                return self.base_element.predict(data, targets)
             else:
                 Logger().error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
