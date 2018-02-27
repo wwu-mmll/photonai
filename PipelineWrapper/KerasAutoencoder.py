@@ -24,7 +24,7 @@ class SimpleAutoencoder(BaseEstimator, RegressorMixin):
         # this model maps an input to its reconstruction
         self.model = Model(x, decoded)
         self.model.compile(optimizer='adam', loss='mse')
-        self.model.fit(X, X, epochs=100, batch_size=16, verbose=0)
+        self.model.fit(X, X, epochs=100, batch_size=64, verbose=0)
         return self
 
     def transform(self, X):
