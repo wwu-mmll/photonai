@@ -130,5 +130,10 @@
    "SelectModelWrapper": [
       "photon_core.PipelineWrapper.FeatureSelection.ModelSelector",
       "Transformer"
+   ],
+   "ImbalancedDataTransform": [
+      "photon_core.PipelineWrapper.ImbalancedWrapper.ImbalancedDataTransform",
+      "Transformer"
    ]
+
 }
