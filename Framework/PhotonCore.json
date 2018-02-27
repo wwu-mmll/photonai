@@ -103,6 +103,10 @@
       "sklearn.tree.DecisionTreeRegressor",
       "Estimator"
    ],
+   "DecisionTreeClassifier": [
+      "sklearn.tree.DecisionTreeClassifier",
+      "Estimator"
+   ],
    "SiameseDNNClassifier": [
       "photon_core.PipelineWrapper.SiameseDNNClassifier.SiameseDNNClassifier",
       "Estimator"
