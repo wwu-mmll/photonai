@@ -252,6 +252,7 @@ class Hyperpipe(BaseEstimator):
                     Logger().info('HYPERPARAMETER SEARCH OF {0}, Outer Cross Validation Fold {1}'
                                   .format(self.name, outer_fold_counter))
 
+                    t1 = time.time()
                     # PhotonCore variant (for arrays)
                     self.validation_X = self.X[train_indices]
                     self.validation_y = self.y[train_indices]
@@ -420,7 +421,7 @@ class Hyperpipe(BaseEstimator):
 
                     outer_fold_fit_duration = time.time() - outer_fold_fit_start_time
                     outer_config.fit_duration = outer_fold_fit_duration
-
+                    Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
                 self.result_tree.config_list.append(outer_config)
                 if self.logging:
                     self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
