@@ -2,6 +2,7 @@ import time
 from hashlib import sha1
 from itertools import product
 from copy import deepcopy
+from collections import OrderedDict
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -747,7 +748,7 @@ class PipelineStacking(PipelineElement):
 
         self._hyperparameters = {}
         self._config_grid = []
-        self.pipe_elements = {}
+        self.pipe_elements = OrderedDict()
         self.voting = voting
 
         all_config_grids = []
