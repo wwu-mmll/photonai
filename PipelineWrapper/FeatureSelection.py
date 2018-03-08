@@ -266,7 +266,7 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
     def parallelized_logistic_regression(self, params):
         i, x = params
         if ((i+1) % 10000) == 0:
-            Logger().debug('Running GWAS Feature Selection...done with {} SNPs.'.format(i+1))
+            Logger().info('Running GWAS Feature Selection...done with {} SNPs.'.format(i+1))
         exog = np.concatenate([np.reshape(x, (x.shape[0], 1)), self.components], axis=1)
         exog = sm.add_constant(exog)
         logit_mod = sm.Logit(self._y, exog)
