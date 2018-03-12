@@ -330,6 +330,16 @@ class Hyperpipe(BaseEstimator):
 
                         config_item.children_configs = children_config
                         master_item_train.config_list.append(config_item)
+                        outer_fold_tuple_item = FoldTupel(outer_fold_counter)
+                        outer_fold_tuple_item.train = master_item_train
+                        outer_fold_tuple_item.number_samples_train = num_samples_train
+                        if len(outer_config.fold_list) < outer_fold_counter:
+                            outer_config.fold_list.append(outer_fold_tuple_item)
+                            self.result_tree.config_list.append(outer_config)
+                        else:
+                            outer_config.fold_list[-1] = outer_fold_tuple_item
+                            self.result_tree.config_list[-1] = outer_config
+                        self.result_tree.write_to_db()
 
                     # Todo: Do better error checking
                     if len(self.performance_history_list) > 0:
@@ -413,17 +423,16 @@ class Hyperpipe(BaseEstimator):
                         # else:
                     # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
 
-                    outer_fold_tuple_item = FoldTupel(outer_fold_counter)
-                    outer_fold_tuple_item.train = master_item_train
                     outer_fold_tuple_item.test = master_item_test
-                    outer_fold_tuple_item.number_samples_train = num_samples_train
                     outer_fold_tuple_item.number_samples_test = num_samples_test
-                    outer_config.fold_list.append(outer_fold_tuple_item)
-
+                    outer_config.fold_list[-1] = outer_fold_tuple_item
                     outer_fold_fit_duration = time.time() - outer_fold_fit_start_time
                     outer_config.fit_duration = outer_fold_fit_duration
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
-                self.result_tree.config_list.append(outer_config)
+                    self.result_tree.config_list[-1] = outer_config
+                    self.result_tree.write_to_db()
+                self.result_tree.config_list[-1] = outer_config
+                self.result_tree.write_to_db()
                 if self.logging:
                     self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
             ###############################################################################################

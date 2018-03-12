@@ -44,7 +44,7 @@ class MDBOuterFold(EmbeddedMongoModel):
 
 class MDBHyperpipe(MongoModel):
 
-    name = fields.CharField()
-    outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold)
+    name = fields.CharField(primary_key=True)
+    outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, blank=True)
     time_of_results = fields.DateTimeField()
 
