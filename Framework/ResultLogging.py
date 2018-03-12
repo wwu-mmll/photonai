@@ -230,9 +230,10 @@ class MasterElement:
             outer_fold = MDBOuterFold()
             outer_fold.fold_nr = item.fold_id
 
-            # copy best config and its results on test set
-            best_conf_obj = item.test.config_list[0]
-            outer_fold.best_config = self.copy_config_to_db(best_conf_obj)
+            if item.test:
+                # copy best config and its results on test set
+                best_conf_obj = item.test.config_list[0]
+                outer_fold.best_config = self.copy_config_to_db(best_conf_obj)
 
             # copy all other configs and results on validation set
             tested_config_list = []
