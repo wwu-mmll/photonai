@@ -80,6 +80,7 @@ class Hyperpipe(BaseEstimator):
         self.config_optimizer = None
 
         self.result_tree = None
+        self.mother_fold_counter = 0
 
         # Todo: this might be a case for sanity checking
         self.overwrite_x = overwrite_x
@@ -158,7 +159,8 @@ class Hyperpipe(BaseEstimator):
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
             self.data_test_cases = train_test_cv_object.split(self.X, self.y)
 
-    def distribute_cv_info_to_hyperpipe_children(self, num_of_folds=None, reset=False):
+    def distribute_cv_info_to_hyperpipe_children(self, num_of_folds=None, reset=False, reset_final_fit=False,
+                                                 outer_fold_counter=None):
 
         def _distrbute_info_to_object(pipe_object, number_of_folds, reset_folds):
             if pipe_object.local_search:
@@ -166,14 +168,20 @@ class Hyperpipe(BaseEstimator):
                     pipe_object.num_of_folds = number_of_folds
                 if reset_folds:
                     pipe_object.current_fold = -1
+                if reset_final_fit:
+                    pipe_object.is_final_fit = False
 
         for element_tuple in self.pipe.steps:
             element_object = element_tuple[1]
             if isinstance(element_object, Hyperpipe):
                 _distrbute_info_to_object(element_object, num_of_folds, reset)
+                if outer_fold_counter:
+                    element_object.mother_fold_counter = outer_fold_counter
             elif isinstance(element_object, PipelineStacking):
                 for child_pipe_name, child_pipe_object in element_object.pipe_elements.items():
                     _distrbute_info_to_object(child_pipe_object, num_of_folds, reset)
+                    if outer_fold_counter:
+                        child_pipe_object.mother_fold_counter = outer_fold_counter
 
     def fit(self, data, targets, **fit_params):
 
@@ -238,7 +246,13 @@ class Hyperpipe(BaseEstimator):
 
                 outer_fold_counter = 0
 
-                self.result_tree = MasterElement(self.name, MasterElementType.ROOT)
+                #self.distribute_cv_info_to_hyperpipe_children(outer_fold_counter=outer_fold_counter+1)
+                if self.mother_fold_counter:
+                    self.result_tree = MasterElement(self.name + '_outer_fold_' + str(self.mother_fold_counter),
+                                                     MasterElementType.ROOT)
+                else:
+                    self.result_tree = MasterElement(self.name, MasterElementType.ROOT)
+
                 outer_config = Configuration(MasterElementType.ROOT)
 
                 for train_indices, test_indices in self.data_test_cases:
@@ -431,6 +445,7 @@ class Hyperpipe(BaseEstimator):
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
                     self.result_tree.config_list[-1] = outer_config
                     self.result_tree.write_to_db()
+                    self.distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
                 self.result_tree.config_list[-1] = outer_config
                 self.result_tree.write_to_db()
                 if self.logging:
