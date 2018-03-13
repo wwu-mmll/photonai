@@ -265,6 +265,71 @@ class MasterElement:
         # save
         hyperpipe.save()
 
+    def pull_results_from_db(self):
+        connect("mongodb://localhost:27017/photon_db")
+        db_entry = list(MDBHyperpipe.objects.raw({'_id': self.name}))[0]
+        #self.write_db_entry_to_tree(db_entry)
+        return
+
+    # def write_db_entry_to_tree(self, db_entry):
+    #
+    #     outer_fold_list = list()
+    #     for outer_fold_index, outer_fold in enumerate(db_entry.outer_folds):
+    #
+    #         for test_config_index, test_config in enumerate(outer_fold.tested_config_list):
+    #
+    #             inner_fold_list = list()
+    #             for inner_fold_index, inner_fold in enumerate(test_config.inner_folds):
+    #
+    #                 self.config_list[0].fold_list[outer_fold_index].train[test_config_index][inner_fold_index].train =
+    #                 self.config_list[0].fold_list[outer_fold_index].train[test_config_index][inner_fold_index].test =
+    #
+    #
+    #
+
+        # create hyperpipe
+        hyperpipe = MDBHyperpipe()
+        hyperpipe.name = self.name
+        hyperpipe.time_of_results = datetime.datetime.now()
+
+        outer_fold_list = []
+
+        for item in self.config_list[0].fold_list:
+            outer_fold = MDBOuterFold()
+            outer_fold.fold_nr = item.fold_id
+
+            if item.test:
+                # copy best config and its results on test set
+                best_conf_obj = item.test.config_list[0]
+                outer_fold.best_config = self.copy_config_to_db(best_conf_obj)
+
+            # copy all other configs and results on validation set
+            tested_config_list = []
+            for cfg in item.train.config_list:
+                test_config = self.copy_config_to_db(cfg)
+                test_config.metrics_train = self.copy_fold_metrics(cfg.fold_metrics_train)
+                test_config.metrics_test = self.copy_fold_metrics(cfg.fold_metrics_test)
+
+                inner_fold_list = []
+                for inner_fold in cfg.fold_list:
+                    db_inner_fold = MDBInnerFold()
+                    db_inner_fold.fold_nr = inner_fold.fold_id
+                    db_inner_fold.training = self.copy_score_info(inner_fold.train)
+                    db_inner_fold.validation = self.copy_score_info(inner_fold.test)
+                    inner_fold_list.append(db_inner_fold)
+                test_config.inner_folds = inner_fold_list
+
+                tested_config_list.append(test_config)
+            outer_fold.tested_config_list = tested_config_list
+
+            # save outer fold to list
+            outer_fold_list.append(outer_fold)
+
+        hyperpipe.outer_folds = outer_fold_list
+
+
+
+
     def to_dict(self):
         if self.me_type == MasterElementType.ROOT:
             return {'hyperpipe': self.name}
