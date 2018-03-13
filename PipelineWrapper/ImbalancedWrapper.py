@@ -52,10 +52,14 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
 
         self.method = desired_class(**kwargs)
 
+        self.x_transformed = None
+        self.y_transformed = None
+
 
     def fit(self, X, y):
-        return self
+
+        # ATTENTION: Works only if fit is called before transform!!!
+        self.x_transformed, self.y_transformed = self.method.fit_sample(X, y)
 
     def transform(self, X, y):
-        X_transformed, y_transformed = self.method.fit_sample(X, y)
-        return X_transformed, y_transformed
+        return self.x_transformed, self.y_transformed
