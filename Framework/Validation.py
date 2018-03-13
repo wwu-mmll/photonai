@@ -8,7 +8,8 @@ import numpy as np
 from ..Helpers.TFUtilities import one_hot_to_binary
 from ..Logging.Logger import Logger
 from .ResultLogging import FoldMetrics, FoldTupel, FoldOperations, Configuration, MasterElementType
-
+from .ResultLogging import MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
+from .ResultsDatabase import MDBHelper
 
 class TestPipeline(object):
 
@@ -24,7 +25,7 @@ class TestPipeline(object):
         # needed for testing Timeboxed Random Grid Search
         # time.sleep(35)
 
-        config_item = Configuration(MasterElementType.INNER_TRAIN, self.params)
+        config_item = MDBConfig()
         fold_cnt = 0
 
         for train, test in cv_iter:
@@ -49,7 +50,7 @@ class TestPipeline(object):
                 # Todo: Fit Process Metrics
 
                 fit_duration = time.time()-fit_start_time
-                config_item.fit_duration = fit_duration
+                config_item.fit_duration_minutes = fit_duration
 
                 # score test data
                 curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test)
@@ -57,12 +58,13 @@ class TestPipeline(object):
                 # score train data
                 curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train)
 
-                fold_tuple_item = FoldTupel(fold_cnt)
-                fold_tuple_item.test = curr_test_fold
-                fold_tuple_item.train = curr_train_fold
-                fold_tuple_item.number_samples_train = len(train)
-                fold_tuple_item.number_samples_test = len(test)
-                config_item.fold_list.append(fold_tuple_item)
+                inner_fold = MDBInnerFold()
+                inner_fold.fold_nr = fold_cnt
+                inner_fold.training = curr_train_fold
+                inner_fold.validation = curr_test_fold
+                #inner_fold.number_samples_training = int(len(train))
+                #inner_fold.number_samples_validation = int(len(test))
+                config_item.inner_folds.append(inner_fold)
 
             except Exception as e:
                 if self.raise_error:
@@ -74,8 +76,7 @@ class TestPipeline(object):
                 warnings.warn('One test iteration of pipeline failed with error')
 
         # calculate mean and std
-        config_item.calculate_metrics(self.metrics)
-
+        config_item = MDBHelper.calculate_metrics(config_item, self.metrics)
         return config_item
 
     @staticmethod
@@ -112,9 +113,11 @@ class TestPipeline(object):
             output_metrics = score_metrics
 
         final_scoring_time = time.time() - scoring_time_start
-        score_result_object = FoldMetrics(output_metrics, final_scoring_time,
-                                          y_predicted=y_pred, y_true=y_true, indices=indices,
-                                          feature_importances_=f_importances)
+        score_result_object = MDBScoreInformation(metrics=output_metrics,
+                                                    score_duration=final_scoring_time,
+                                           y_pred=y_pred.tolist(), y_true=y_true.tolist(),
+                                                  indices=np.asarray(indices).tolist(),
+                                           feature_importances=f_importances.tolist())
         return score_result_object
 
     @staticmethod
@@ -220,7 +223,7 @@ class OptimizerMetric(object):
 
         try:
             for config in tested_configs:
-                list_of_config_vals.append(config.get_metric(FoldOperations.MEAN, self.metric, train=False))
+                list_of_config_vals.append(MDBHelper.get_metric(config, FoldOperations.MEAN, self.metric, train=False))
 
             if self.greater_is_better:
                 # max metric
