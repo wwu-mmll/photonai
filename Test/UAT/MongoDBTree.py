@@ -22,8 +22,8 @@ manager = Hyperpipe('test_manager',
                     metrics=['accuracy', 'precision', 'recall', "f1_score"], logging=True, eval_final_performance=True, verbose=2)
 
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))
-tmp_lasso = Lasso()
-manager.add(PipelineElement.create('SelectModelWrapper', estimator_obj=tmp_lasso))
+# tmp_lasso = Lasso()
+# manager.add(PipelineElement.create('SelectModelWrapper', estimator_obj=tmp_lasso))
 svm = PipelineElement.create('svc', hyperparameters={'C': [0.5, 1], 'kernel': ['linear']})
 manager.add(svm)
 manager.fit(X, y)

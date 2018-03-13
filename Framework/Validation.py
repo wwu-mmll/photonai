@@ -5,8 +5,8 @@ import warnings
 # import matplotlib.pyplot as plt
 import numpy as np
 
-from ..Helpers.TFUtilities import one_hot_to_binary
-from ..Logging.Logger import Logger
+from Helpers.TFUtilities import one_hot_to_binary
+from Logging.Logger import Logger
 from .ResultLogging import FoldMetrics, FoldTupel, FoldOperations, Configuration, MasterElementType
 
 
