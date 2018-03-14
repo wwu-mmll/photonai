@@ -26,11 +26,15 @@ class MDBInnerFold(EmbeddedMongoModel):
     number_samples_training = fields.IntegerField(blank=True)
     number_samples_validation = fields.IntegerField(blank=True)
 
+
 class MDBConfig(EmbeddedMongoModel):
     inner_folds = fields.EmbeddedDocumentListField(MDBInnerFold, default=[], blank=True)
     fit_duration_minutes = fields.IntegerField(blank=True)
+    pipe_name = fields.CharField(blank=True)
     config_dict = fields.DictField(blank=True)
-    children_config = fields.DictField(blank=True)
+    children_config_dict = fields.DictField(blank=True)
+    children_config_ref = fields.ListField(default=[], blank=True)
+    # best_config_ref_to_train_item = fields.CharField(blank=True)
     config_nr = fields.IntegerField(blank=True)
     config_failed = fields.BooleanField(blank=True)
     config_error = fields.CharField(blank=True)

@@ -14,7 +14,7 @@ from sklearn.pipeline import Pipeline
 from pymodm import connect
 
 from .Register import PhotonRegister
-from ..Logging.Logger import Logger
+from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .ResultLogging import MasterElement, MasterElementType, FoldTupel, Configuration
 from .ResultLogging import MDBHyperpipe, MDBConfig, MDBFoldMetric, MDBInnerFold, MDBOuterFold, \
@@ -82,7 +82,7 @@ class Hyperpipe(BaseEstimator):
         self.best_config_metric = best_config_metric
         self.config_optimizer = None
 
-        self.result_tree = {}
+        self.result_tree = None
         self.mother_fold_counter = 0
 
         # Todo: this might be a case for sanity checking
@@ -125,6 +125,7 @@ class Hyperpipe(BaseEstimator):
         self.last_fit_data_hash = None
         self.current_fold = -1
         self.num_of_folds = 0
+        self.is_mother_pipe = True
         self.fold_data_hashes = []
 
     def __iadd__(self, pipe_element):
@@ -165,26 +166,26 @@ class Hyperpipe(BaseEstimator):
     def distribute_cv_info_to_hyperpipe_children(self, num_of_folds=None, reset=False, reset_final_fit=False,
                                                  outer_fold_counter=None):
 
-        def _distrbute_info_to_object(pipe_object, number_of_folds, reset_folds):
+        def _distrbute_info_to_object(pipe_object, number_of_folds, reset_folds, reset_final_fit, outer_fold_counter):
             if pipe_object.local_search:
                 if number_of_folds is not None:
                     pipe_object.num_of_folds = number_of_folds
+                    pipe_object.is_mother_pipe = False
                 if reset_folds:
                     pipe_object.current_fold = -1
+                if outer_fold_counter:
+                    self.mother_fold_counter = outer_fold_counter
                 if reset_final_fit:
                     pipe_object.is_final_fit = False
 
         for element_tuple in self.pipe.steps:
             element_object = element_tuple[1]
             if isinstance(element_object, Hyperpipe):
-                _distrbute_info_to_object(element_object, num_of_folds, reset)
-                if outer_fold_counter:
-                    element_object.mother_fold_counter = outer_fold_counter
+                _distrbute_info_to_object(element_object, num_of_folds, reset, reset_final_fit, outer_fold_counter)
             elif isinstance(element_object, PipelineStacking):
                 for child_pipe_name, child_pipe_object in element_object.pipe_elements.items():
-                    _distrbute_info_to_object(child_pipe_object, num_of_folds, reset)
-                    if outer_fold_counter:
-                        child_pipe_object.mother_fold_counter = outer_fold_counter
+                    _distrbute_info_to_object(child_pipe_object, num_of_folds, reset, reset_final_fit,
+                                              outer_fold_counter)
 
     def fit(self, data, targets, **fit_params):
 
@@ -249,14 +250,15 @@ class Hyperpipe(BaseEstimator):
 
                 outer_fold_counter = 0
 
-                if self.mother_fold_counter:
+                if not self.is_mother_pipe:
                     self.result_tree_name = self.name + '_outer_fold_' + str(self.mother_fold_counter)
                 else:
                     self.result_tree_name = self.name
 
-                connect("mongodb://localhost:27017/photon_db", alias=self.result_tree_name)
-                self.result_tree[self.result_tree_name] = MDBHyperpipe(name=self.result_tree_name)
+                # initialize result logging with hyperpipe class
+                self.result_tree = MDBHyperpipe(name=self.result_tree_name)
 
+                # loop over outer cross validation
                 for train_indices, test_indices in self.data_test_cases:
 
                     # give the optimizer the chance to inform about elements
@@ -270,25 +272,29 @@ class Hyperpipe(BaseEstimator):
                                   .format(self.name, outer_fold_counter))
 
                     t1 = time.time()
-                    # PhotonCore variant (for arrays)
+
+                    # Prepare Train and Validation set data
                     self.validation_X = self.X[train_indices]
                     self.validation_y = self.y[train_indices]
                     self.test_X = self.X[test_indices]
                     self.test_y = self.y[test_indices]
 
+                    # Prepare inner cross validation
                     cv_iter = list(self.hyperparameter_specific_config_cv_object.split(self.validation_X, self.validation_y))
                     num_folds = len(cv_iter)
-
                     num_samples_train = len(self.validation_y)
                     num_samples_test = len(self.test_y)
 
                     # distribute number of folds to encapsulated child hyperpipes
-                    self.distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds)
+                    self.distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
+                                                                  outer_fold_counter=outer_fold_counter)
 
                     tested_config_counter = 0
 
+                    # add outer fold info object to result tree
                     outer_fold = MDBOuterFold(fold_nr=outer_fold_counter)
-                    self.result_tree[self.result_tree_name].outer_folds.append(outer_fold)
+                    self.result_tree.outer_folds.append(outer_fold)
+
                     # do the optimizing
                     for specific_config in self.optimizer.next_config:
 
@@ -302,10 +308,12 @@ class Hyperpipe(BaseEstimator):
                         config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter)
                         config_item.config_nr = tested_config_counter
                         config_item.config_dict = specific_config
+                        config_item.pipe_name = self.name
                         tested_config_counter += 1
 
                         # save the configuration of all children pipelines
                         children_config = {}
+                        children_config_ref_list = []
                         for pipe_step in self.pipe.steps:
                             item = pipe_step[1]
                             if isinstance(item, Hyperpipe):
@@ -315,10 +323,15 @@ class Hyperpipe(BaseEstimator):
                                 for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
                                     if hyperpipe.local_search and hyperpipe.best_config is not None:
                                         # special case: we need to access pipe over pipeline_stacking element
-                                        children_config[
-                                            item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
+                                        children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
+                                        # children_config_ref_list.append(hyperpipe.best_config._id)
                         specific_parameters = self.pipe.get_params()
                         #config_item.full_model_spec = specific_parameters
+
+                        config_item.children_config = children_config
+                        config_item.children_config_ref = children_config_ref_list
+
+                        Logger().verbose(self.optimize_printing(specific_config))
 
                         if not config_item.config_failed:
                             # get optimizer_metric and forward to optimizer
@@ -336,24 +349,14 @@ class Hyperpipe(BaseEstimator):
                             Logger().debug('...failed:')
                             Logger().error(config_item.config_error)
 
-                        # 3. inform optimizer about performance
-                        Logger().verbose(self.optimize_printing(specific_config))
-                        self.optimizer.evaluate_recent_performance(specific_config, config_score)
-
                         self.performance_history_list.append(config_score)
 
-                        config_item.children_config = children_config
+                        # add config to result tree and do intermediate saving
+                        self.result_tree.outer_folds[-1].tested_config_list.append(config_item)
+                        self.result_tree.save()
 
-                        self.result_tree[self.result_tree_name].outer_folds[-1].tested_config_list.append(config_item)
-
-
-                        # if len(outer_config.fold_list) < outer_fold_counter:
-                        #     outer_config.fold_list.append(outer_fold_tuple_item)
-                        #     self.result_tree.config_list.append(outer_config)
-                        # else:
-                        #     outer_config.fold_list[-1] = outer_fold_tuple_item
-                        #     self.result_tree.config_list[-1] = outer_config
-                        self.result_tree[self.result_tree_name].save()
+                        # 3. inform optimizer about performance
+                        self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
                     # Todo: Do better error checking
                     if len(self.performance_history_list) > 0:
@@ -361,9 +364,11 @@ class Hyperpipe(BaseEstimator):
 
                         best_config_item_test = MDBConfig()
                         best_config_item_test.children_config = best_train_config.children_config
+                        best_config_item_test.pipe_name = self.name
+                        best_config_item_test.children_config_ref = best_train_config.children_config_ref
+                        # best_config_item_test.best_config_ref_to_train_item = best_train_config._id
                         best_config_item_test.config_dict = best_train_config.config_dict
                         self.best_config = best_config_item_test
-
 
                         # inform user
                         Logger().info('finished optimization of ' + self.name)
@@ -403,8 +408,7 @@ class Hyperpipe(BaseEstimator):
 
                         #self.best_config.full_model_spec = self.optimum_pipe.get_params()
                         self.best_config.fit_duration_minutes = final_fit_duration
-                        self.result_tree[self.result_tree_name].outer_folds[-1].best_config = self.best_config
-                        self.result_tree[self.result_tree_name].save()
+                        self.result_tree.outer_folds[-1].best_config = self.best_config
 
                         if not self.debug_cv_mode and self.eval_final_performance:
                             # Todo: generate mean and std over outer folds as well. move this items to the top
@@ -417,12 +421,14 @@ class Hyperpipe(BaseEstimator):
 
                             final_fit_train_item = TestPipeline.score(self.optimum_pipe, self.validation_X, self.validation_y, self.metrics)
 
-                            self.result_tree[self.result_tree_name].outer_folds[-1].best_config.inner_folds.append(MDBInnerFold())
-                            self.result_tree[self.result_tree_name].outer_folds[-1].best_config.inner_folds[0].fold_nr = 1
-                            self.result_tree[self.result_tree_name].outer_folds[-1].best_config.inner_folds[0].number_samples_training = num_samples_train
-                            self.result_tree[self.result_tree_name].outer_folds[-1].best_config.inner_folds[0].number_samples_validation = num_samples_test
-                            self.result_tree[self.result_tree_name].outer_folds[-1].best_config.inner_folds[0].training = final_fit_train_item
-                            self.result_tree[self.result_tree_name].outer_folds[-1].best_config.inner_folds[0].validation = final_fit_test_item
+                            # save test fold
+                            test_set_fold = MDBInnerFold()
+                            test_set_fold.fold_nr = 1
+                            test_set_fold.number_samples_training = num_samples_train
+                            test_set_fold.number_samples_validation = num_samples_test
+                            test_set_fold.training = final_fit_train_item
+                            test_set_fold.validation = final_fit_test_item
+                            self.result_tree.outer_folds[-1].best_config.inner_folds.append(test_set_fold)
 
 
                             Logger().info('PERFORMANCE TRAIN:')
@@ -434,20 +440,12 @@ class Hyperpipe(BaseEstimator):
                                     Logger().info(str(m_key) + ": " + str(m_value))
 
 
-                        # else:
-                    # raise Warning('Optimizer delivered no configurations to test. Is Pipeline empty?')
-                    #self.result_tree.outer_folds.append(outer_fold)
-                    # outer_fold_tuple_item.test = master_item_test
-                    # outer_fold_tuple_item.number_samples_test = num_samples_test
-                    # outer_config.fold_list[-1] = outer_fold_tuple_item
-                    # outer_fold_fit_duration = time.time() - outer_fold_fit_start_time
-                    # outer_config.fit_duration = outer_fold_fit_duration
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
-                    self.result_tree[self.result_tree_name].save()
+                    self.result_tree.save()
                     self.distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
-                self.result_tree[self.result_tree_name].save()
+                self.result_tree.save()
                 if self.logging:
-                    self.result_tree[self.result_tree_name].print_csv_file(self.name + "_" + str(time.time()) + ".csv")
+                    self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
             ###############################################################################################
             else:
                 self.pipe.fit(self.X, self.y, **fit_params)
