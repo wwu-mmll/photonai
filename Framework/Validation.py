@@ -5,8 +5,8 @@ import warnings
 # import matplotlib.pyplot as plt
 import numpy as np
 
-from ..Helpers.TFUtilities import one_hot_to_binary
-from ..Logging.Logger import Logger
+from Helpers.TFUtilities import one_hot_to_binary
+from Logging.Logger import Logger
 from .ResultLogging import FoldMetrics, FoldTupel, FoldOperations, Configuration, MasterElementType
 from .ResultLogging import MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
 from .ResultsDatabase import MDBHelper
@@ -26,6 +26,9 @@ class TestPipeline(object):
         # time.sleep(35)
 
         config_item = MDBConfig()
+        config_item.inner_folds = []
+        config_item.metrics_test = []
+        config_item.metrics_train = []
         fold_cnt = 0
 
         for train, test in cv_iter:
@@ -40,7 +43,7 @@ class TestPipeline(object):
 
             try:
 
-                fold_cnt += 1
+
 
 
                 self.pipe.set_params(**self.params)
@@ -64,7 +67,10 @@ class TestPipeline(object):
                 inner_fold.validation = curr_test_fold
                 #inner_fold.number_samples_training = int(len(train))
                 #inner_fold.number_samples_validation = int(len(test))
+                config_item.inner_folds = []
                 config_item.inner_folds.append(inner_fold)
+
+                fold_cnt += 1
 
             except Exception as e:
                 if self.raise_error:

@@ -13,6 +13,9 @@ X = dataset.data
 y = dataset.target
 print(np.sum(y)/len(y))
 
+from pymodm import connect
+connect("mongodb://localhost:27017/photon_db")
+
 # BUILD PIPELINE
 manager = Hyperpipe('test_manager',
                     optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
@@ -28,7 +31,7 @@ manager.fit(X, y)
 #  -----------> Result Tree generated ------------------- #
 result_tree = manager.result_tree
 
-result_tree.write_to_db()
+# result_tree.write_to_db()
 
 # THE END
 debugging = True
