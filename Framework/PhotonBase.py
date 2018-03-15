@@ -625,6 +625,18 @@ class Hyperpipe(BaseEstimator):
         for key, all_params in config.items():
             self += PipelineElement(key, all_params, {})
 
+    def config_to_dict(self, specific_config):
+        config = {}
+        for key, value in specific_config.items():
+            items = key.split('__')
+            name = items[0]
+            rest = '__'.join(items[1::])
+            if name in self.pipe.named_steps:
+                config.update(self.pipe.named_steps[name].prettify_config_output(rest, value, return_dict=True))
+                #config[name] = value
+        return config
+
+
 class SourceFilter(BaseEstimator):
     def __init__(self, indices):
         self.indices = indices
