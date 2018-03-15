@@ -203,18 +203,19 @@ class MasterElement:
             fold_metrics.append(fold_m)
         return fold_metrics
 
-    def copy_score_info(self, original_info):
+    def copy_score_info(self, original_info, copy_all=False):
 
         score_info = MDBScoreInformation()
         score_info.metrics = original_info.metrics
         score_info.score_duration = original_info.score_duration
-        score_info.y_true = original_info.y_true.tolist()
-        score_info.y_pred = original_info.y_predicted.tolist()
-        score_info.indices = original_info.indices.tolist()
-        if len(original_info.feature_importances_) > 0:
-            score_info.feature_importances = original_info.feature_importances_.tolist()
-        else:
-            score_info.feature_importances = []
+        if copy_all:
+            score_info.y_true = original_info.y_true.tolist()
+            score_info.y_pred = original_info.y_predicted.tolist()
+            score_info.indices = original_info.indices.tolist()
+            if len(original_info.feature_importances_) > 0:
+                score_info.feature_importances = original_info.feature_importances_.tolist()
+            else:
+                score_info.feature_importances = []
         return score_info
 
     def write_to_db(self):
