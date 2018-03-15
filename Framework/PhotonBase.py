@@ -817,11 +817,17 @@ class PipelineElement(BaseEstimator):
     def score(self, X_test, y_test):
         return self.base_element.score(X_test, y_test)
 
-    def prettify_config_output(self, config_name, config_value):
+    def prettify_config_output(self, config_name, config_value, return_dict=False):
         if config_name == "disabled" and config_value is False:
-            return "enabled = True"
+            if return_dict:
+                return {'enabled':True}
+            else:
+                return "enabled = True"
         else:
-            return config_name + '=' + str(config_value)
+            if return_dict:
+                return {config_name:config_value}
+            else:
+                return config_name + '=' + str(config_value)
 
 
 class PipelineStacking(PipelineElement):
