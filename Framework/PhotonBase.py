@@ -1093,12 +1093,17 @@ class PipelineSwitch(PipelineElement):
                 unnamed_config[''.join(key_split[1::])] = config_value
             self.base_element.set_params(**unnamed_config)
 
-    def prettify_config_output(self, config_name, config_value):
+    def prettify_config_output(self, config_name, config_value, return_dict=False):
         if isinstance(config_value, tuple):
             output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
             if not output:
-                return self.pipeline_element_list[config_value[0]].name
+                if return_dict:
+                    return {self.pipeline_element_list[config_value[0]].name:None}
+                else:
+                    return self.pipeline_element_list[config_value[0]].name
             else:
+                if return_dict:
+                    return output
                 return str(output)
         else:
             return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
