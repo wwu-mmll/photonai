@@ -347,7 +347,7 @@ class Hyperpipe(BaseEstimator):
                             self.result_tree.outer_folds[outer_fold_counter-1].tested_config_list.append(config_item)
                             Logger().debug('optimizing of:' + self.name)
                             Logger().debug(self.optimize_printing(specific_config))
-                            Logger().debug('Loading results for this config from MongoDB')
+                            Logger().info('Loading results for this config from MongoDB')
                         except:
                             self.distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
                             hp = TestPipeline(self.pipe, specific_config, self.metrics, self.update_mother_inner_fold_nr)
@@ -420,6 +420,7 @@ class Hyperpipe(BaseEstimator):
                         best_config_item_test.children_config_ref = best_train_config.children_config_ref
                         # best_config_item_test.best_config_ref_to_train_item = best_train_config._id
                         best_config_item_test.config_dict = best_train_config.config_dict
+                        best_config_item_test.human_readable_config = best_train_config.human_readable_config
                         self.best_config = best_config_item_test
 
                         # inform user
