@@ -359,6 +359,7 @@ class Hyperpipe(BaseEstimator):
                             config_item.config_dict = specific_config
                             config_item.pipe_name = self.name
                             tested_config_counter += 1
+                            config_item.human_readable_config = self.config_to_dict(specific_config)
 
                             # save the configuration of all children pipelines
                             children_config = {}
