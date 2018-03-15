@@ -13,12 +13,12 @@ from .ResultsDatabase import MDBHelper
 
 class TestPipeline(object):
 
-    def __init__(self, pipe, specific_config, metrics):
+    def __init__(self, pipe, specific_config, metrics, raise_error=False):
 
         self.params = specific_config
         self.pipe = pipe
         self.metrics = metrics
-        self.raise_error = True
+        self.raise_error = raise_error
 
     def calculate_cv_score(self, X, y, cv_iter):
 
@@ -31,58 +31,56 @@ class TestPipeline(object):
         config_item.metrics_train = []
         fold_cnt = 0
 
-        for train, test in cv_iter:
-            # why clone? removed: clone(self.pipe),
-            # fit_and_predict_score = _fit_and_score(self.pipe, X, y, self.score,
-            #                                        train, test, self.verbose, self.params,
-            #                                        fit_params=self.fit_params,
-            #                                        return_train_score=self.return_train_score,
-            #                                        return_n_test_samples=True,
-            #                                        return_times=True, return_parameters=True,
-            #                                        error_score=self.error_score)
+        try:
 
-            try:
+            # do inner cv
+            for train, test in cv_iter:
+
+                    # set params to current config
+                    self.pipe.set_params(**self.params)
 
 
+                    # start fitting
+                    fit_start_time = time.time()
+                    self.pipe.fit(X[train], y[train])
+
+                    # Todo: Fit Process Metrics
+
+                    # write down how long the fitting took
+                    fit_duration = time.time()-fit_start_time
+                    config_item.fit_duration_minutes = fit_duration
+
+                    # score test data
+                    curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test)
+
+                    # score train data
+                    curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train)
+
+                    # fill result tree with fold information
+                    inner_fold = MDBInnerFold()
+                    inner_fold.fold_nr = fold_cnt
+                    inner_fold.training = curr_train_fold
+                    inner_fold.validation = curr_test_fold
+                    #inner_fold.number_samples_training = int(len(train))
+                    #inner_fold.number_samples_validation = int(len(test))
+                    config_item.inner_folds.append(inner_fold)
+
+                    fold_cnt += 1
+
+            # calculate mean and std over all folds
+            config_item.metrics_train, config_item.metrics_test = MDBHelper.calculate_metrics(config_item,
+                                                                                              self.metrics)
+
+        except Exception as e:
+            if self.raise_error:
+                raise e
+            Logger().error(e)
+            traceback.print_exc()
+            config_item.config_failed = True
+            config_item.config_error = str(e)
+            warnings.warn('One test iteration of pipeline failed with error')
 
 
-                self.pipe.set_params(**self.params)
-                fit_start_time = time.time()
-                self.pipe.fit(X[train], y[train])
-
-                # Todo: Fit Process Metrics
-
-                fit_duration = time.time()-fit_start_time
-                config_item.fit_duration_minutes = fit_duration
-
-                # score test data
-                curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test)
-
-                # score train data
-                curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train)
-
-                inner_fold = MDBInnerFold()
-                inner_fold.fold_nr = fold_cnt
-                inner_fold.training = curr_train_fold
-                inner_fold.validation = curr_test_fold
-                #inner_fold.number_samples_training = int(len(train))
-                #inner_fold.number_samples_validation = int(len(test))
-                config_item.inner_folds = []
-                config_item.inner_folds.append(inner_fold)
-
-                fold_cnt += 1
-
-            except Exception as e:
-                if self.raise_error:
-                    raise e
-                Logger().error(e)
-                traceback.print_exc()
-                config_item.config_failed = True
-                config_item.config_error = str(e)
-                warnings.warn('One test iteration of pipeline failed with error')
-
-        # calculate mean and std
-        config_item = MDBHelper.calculate_metrics(config_item, self.metrics)
         return config_item
 
     @staticmethod
@@ -225,10 +223,12 @@ class OptimizerMetric(object):
         return self.other_metrics
 
     def get_optimum_config(self, tested_configs):
+
         list_of_config_vals = []
+        list_of_non_failed_configs = [conf for conf in tested_configs if not conf.config_failed]
 
         try:
-            for config in tested_configs:
+            for config in list_of_non_failed_configs:
                 list_of_config_vals.append(MDBHelper.get_metric(config, FoldOperations.MEAN, self.metric, train=False))
 
             if self.greater_is_better:
@@ -237,7 +237,7 @@ class OptimizerMetric(object):
             else:
                 # min metric
                 best_config_metric_nr = np.argmin(list_of_config_vals)
-            return tested_configs[best_config_metric_nr]
+            return list_of_non_failed_configs[best_config_metric_nr]
         except BaseException as e:
             Logger().error(str(e))
 

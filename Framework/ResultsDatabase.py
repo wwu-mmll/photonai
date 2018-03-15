@@ -36,7 +36,7 @@ class MDBConfig(EmbeddedMongoModel):
     children_config_ref = fields.ListField(default=[], blank=True)
     # best_config_ref_to_train_item = fields.CharField(blank=True)
     config_nr = fields.IntegerField(blank=True)
-    config_failed = fields.BooleanField(blank=True)
+    config_failed = fields.BooleanField(default=False)
     config_error = fields.CharField(blank=True)
     full_model_spec = fields.DictField(blank=True)
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
@@ -67,6 +67,10 @@ class MDBHelper():
     @staticmethod
     def calculate_metrics(config_item, metrics):
 
+        # don't try to calculate anything if the config failed
+        if config_item.config_failed:
+            return config_item
+
         def calculate_single_metric(operation_name, value_list: list, **kwargs):
             if operation_name in MDBHelper.OPERATION_DICT:
                 val = MDBHelper.OPERATION_DICT[operation_name](value_list, **kwargs)
@@ -75,29 +79,31 @@ class MDBHelper():
             return val
 
         operations = [FoldOperations.MEAN, FoldOperations.STD]
+        metrics_train = []
+        metrics_test = []
         for metric_item in metrics:
             for op in operations:
                 value_list_train = [fold.training.metrics[metric_item] for fold in config_item.inner_folds
                                         if metric_item in fold.training.metrics]
                 if value_list_train:
-                    config_item.metrics_train.append(MDBFoldMetric(operation=op, metric_name=metric_item,
+                    metrics_train.append(MDBFoldMetric(operation=op, metric_name=metric_item,
                                                                    value=calculate_single_metric(op, value_list_train)))
                 value_list_validation = [fold.validation.metrics[metric_item] for fold in config_item.inner_folds
                                         if metric_item in fold.validation.metrics]
                 if value_list_validation:
-                    config_item.metrics_test.append(MDBFoldMetric(operation=op, metric_name=metric_item,
+                    metrics_test.append(MDBFoldMetric(operation=op, metric_name=metric_item,
                                                                    value=calculate_single_metric(op, value_list_validation)))
-        return config_item
+        return metrics_train, metrics_test
 
 
     @staticmethod
     def get_metric(config_item, operation, metric, train=True):
         if train:
             metric = [item.value for item in config_item.metrics_train if item.operation == str(operation)
-                      and item.metric_name == metric]
+                      and item.metric_name == metric and not config_item.config_failed]
         else:
             metric = [item.value for item in config_item.metrics_test if item.operation == str(operation)
-                      and item.metric_name == metric]
+                      and item.metric_name == metric and not config_item.config_failed]
         if len(metric) == 1:
             return metric[0]
         return metric
