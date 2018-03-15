@@ -108,9 +108,10 @@ class TestPipeline(object):
         f_importances = []
         if hasattr(estimator._final_estimator.base_element, 'coef_'):
             f_importances = estimator._final_estimator.base_element.coef_
+            f_importances = f_importances.tolist()
         elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
             f_importances = estimator._final_estimator.base_element.feature_importances_
-
+            f_importances = f_importances.tolist()
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
@@ -127,7 +128,7 @@ class TestPipeline(object):
                                                     score_duration=final_scoring_time,
                                            y_pred=y_pred.tolist(), y_true=y_true.tolist(),
                                                   indices=np.asarray(indices).tolist(),
-                                           feature_importances=f_importances.tolist())
+                                           feature_importances=f_importances)
         return score_result_object
 
     @staticmethod
