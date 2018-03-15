@@ -13,12 +13,13 @@ from .ResultsDatabase import MDBHelper
 
 class TestPipeline(object):
 
-    def __init__(self, pipe, specific_config, metrics, raise_error=False):
+    def __init__(self, pipe, specific_config, metrics, mother_inner_fold_handle, raise_error=False):
 
         self.params = specific_config
         self.pipe = pipe
         self.metrics = metrics
         self.raise_error = raise_error
+        self.mother_inner_fold_handle = mother_inner_fold_handle
 
     def calculate_cv_score(self, X, y, cv_iter):
 
@@ -31,6 +32,7 @@ class TestPipeline(object):
         config_item.metrics_train = []
         fold_cnt = 0
 
+        inner_fold_list = []
         try:
 
             # do inner cv
@@ -39,6 +41,9 @@ class TestPipeline(object):
                     # set params to current config
                     self.pipe.set_params(**self.params)
 
+                    # inform children in which inner fold we are
+                    # self.pipe.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=fold_cnt)
+                    self.mother_inner_fold_handle(fold_cnt)
 
                     # start fitting
                     fit_start_time = time.time()
@@ -63,11 +68,12 @@ class TestPipeline(object):
                     inner_fold.validation = curr_test_fold
                     #inner_fold.number_samples_training = int(len(train))
                     #inner_fold.number_samples_validation = int(len(test))
-                    config_item.inner_folds.append(inner_fold)
+                    inner_fold_list.append(inner_fold)
 
                     fold_cnt += 1
 
             # calculate mean and std over all folds
+            config_item.inner_folds = inner_fold_list
             config_item.metrics_train, config_item.metrics_test = MDBHelper.calculate_metrics(config_item,
                                                                                               self.metrics)
 
