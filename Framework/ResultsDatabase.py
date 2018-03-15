@@ -41,6 +41,7 @@ class MDBConfig(EmbeddedMongoModel):
     full_model_spec = fields.DictField(blank=True)
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+    human_readable_config = fields.DictField(blank=True)
 
 
 class MDBOuterFold(EmbeddedMongoModel):
