@@ -235,6 +235,9 @@ class MasterElement:
                 # copy best config and its results on test set
                 best_conf_obj = item.test.config_list[0]
                 outer_fold.best_config = self.copy_config_to_db(best_conf_obj)
+                if best_conf_obj.fold_list:
+                    outer_fold.best_config_score_test = self.copy_score_info(best_conf_obj.fold_list[0].test, copy_all=True)
+                    outer_fold.best_config_score_train = self.copy_score_info(best_conf_obj.fold_list[0].train, copy_all=True)
 
             # copy all other configs and results on validation set
             tested_config_list = []
