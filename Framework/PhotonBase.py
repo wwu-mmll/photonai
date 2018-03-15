@@ -342,7 +342,7 @@ class Hyperpipe(BaseEstimator):
                             specific_parameters = self.pipe.get_params()
                             #config_item.full_model_spec = specific_parameters
 
-                            config_item.children_config = children_config
+                            config_item.children_config_dict = children_config
                             config_item.children_config_ref = children_config_ref_list
                             self.result_tree.outer_folds[outer_fold_counter-1].tested_config_list.append(config_item)
                             Logger().debug('optimizing of:' + self.name)
@@ -380,7 +380,7 @@ class Hyperpipe(BaseEstimator):
                             specific_parameters = self.pipe.get_params()
                             #config_item.full_model_spec = specific_parameters
 
-                            config_item.children_config = children_config
+                            config_item.children_config_dict = children_config
                             config_item.children_config_ref = children_config_ref_list
 
                             Logger().verbose(self.optimize_printing(specific_config))
@@ -415,7 +415,7 @@ class Hyperpipe(BaseEstimator):
                         best_train_config = self.config_optimizer.get_optimum_config(outer_fold.tested_config_list)
 
                         best_config_item_test = MDBConfig()
-                        best_config_item_test.children_config = best_train_config.children_config
+                        best_config_item_test.children_config_dict = best_train_config.children_config_dict
                         best_config_item_test.pipe_name = self.name
                         best_config_item_test.children_config_ref = best_train_config.children_config_ref
                         # best_config_item_test.best_config_ref_to_train_item = best_train_config._id
@@ -432,7 +432,7 @@ class Hyperpipe(BaseEstimator):
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
                         Logger().info('Best config: ' + self.optimize_printing(self.best_config.config_dict) +
                                       '\n' + '... with children config: '
-                                      + self.optimize_printing(self.best_config.children_config))
+                                      + self.optimize_printing(self.best_config.children_config_dict))
 
                         # ... and create optimal pipeline
                         self.optimum_pipe = self.pipe
@@ -440,7 +440,7 @@ class Hyperpipe(BaseEstimator):
                         self.optimum_pipe.set_params(**self.best_config.config_dict)
 
                         # set all children to best config and inform to NOT optimize again, ONLY fit
-                        for child_name, child_config in self.best_config.children_config.items():
+                        for child_name, child_config in self.best_config.children_config_dict.items():
                             if child_config:
                                 # in case we have a pipeline stacking we need to identify the particular subhyperpipe
                                 splitted_name = child_name.split('__')
