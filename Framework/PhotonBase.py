@@ -356,7 +356,8 @@ class Hyperpipe(BaseEstimator):
                             Logger().debug('calculating...')
 
                             # Test the configuration cross validated by inner_cv object
-                            config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter)
+                            config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter,
+                                              save_predictions=False)
                             config_item.config_nr = tested_config_counter
                             config_item.config_dict = specific_config
                             config_item.pipe_name = self.name
@@ -467,12 +468,14 @@ class Hyperpipe(BaseEstimator):
                             # Todo: generate mean and std over outer folds as well. move this items to the top
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
 
-                            final_fit_test_item = TestPipeline.score(self.optimum_pipe, self.test_X, self.test_y, self.metrics)
+                            final_fit_test_item = TestPipeline.score(self.optimum_pipe, self.test_X, self.test_y,
+                                                                     self.metrics, save_predictions=True)
 
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
-                            final_fit_train_item = TestPipeline.score(self.optimum_pipe, self.validation_X, self.validation_y, self.metrics)
+                            final_fit_train_item = TestPipeline.score(self.optimum_pipe, self.validation_X, self.validation_y,
+                                                                      self.metrics, save_predictions=True)
 
                             # save test fold
                             test_set_fold = MDBInnerFold()

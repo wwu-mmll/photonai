@@ -21,7 +21,7 @@ class TestPipeline(object):
         self.raise_error = raise_error
         self.mother_inner_fold_handle = mother_inner_fold_handle
 
-    def calculate_cv_score(self, X, y, cv_iter):
+    def calculate_cv_score(self, X, y, cv_iter, save_predictions=False):
 
         # needed for testing Timeboxed Random Grid Search
         # time.sleep(35)
@@ -56,10 +56,12 @@ class TestPipeline(object):
                     config_item.fit_duration_minutes = fit_duration
 
                     # score test data
-                    curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test)
+                    curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test,
+                                                        save_predictions=save_predictions)
 
                     # score train data
-                    curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train)
+                    curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train,
+                                                         save_predictions=save_predictions)
 
                     # fill result tree with fold information
                     inner_fold = MDBInnerFold()
@@ -90,7 +92,7 @@ class TestPipeline(object):
         return config_item
 
     @staticmethod
-    def score(estimator, X, y_true, metrics, indices=[]):
+    def score(estimator, X, y_true, metrics, indices=[], save_predictions=False):
 
         scoring_time_start = time.time()
 
@@ -124,11 +126,15 @@ class TestPipeline(object):
             output_metrics = score_metrics
 
         final_scoring_time = time.time() - scoring_time_start
-        score_result_object = MDBScoreInformation(metrics=output_metrics,
-                                                    score_duration=final_scoring_time,
-                                           y_pred=y_pred.tolist(), y_true=y_true.tolist(),
-                                                  indices=np.asarray(indices).tolist(),
-                                           feature_importances=f_importances)
+        if save_predictions:
+            score_result_object = MDBScoreInformation(metrics=output_metrics,
+                                                        score_duration=final_scoring_time,
+                                               y_pred=y_pred.tolist(), y_true=y_true.tolist(),
+                                                      indices=np.asarray(indices).tolist(),
+                                               feature_importances=f_importances)
+        else:
+            score_result_object = MDBScoreInformation(metrics=output_metrics,
+                                                        score_duration=final_scoring_time)
         return score_result_object
 
     @staticmethod
