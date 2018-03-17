@@ -433,7 +433,7 @@ class Hyperpipe(BaseEstimator):
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
                         Logger().info('Best config: ' + self.optimize_printing(self.best_config.config_dict) +
                                       '\n' + '... with children config: '
-                                      + self.best_config.children_config_dict)
+                                      + self.optimize_printing(self.best_config.children_config_dict))
 
                         # ... and create optimal pipeline
                         self.optimum_pipe = self.pipe
