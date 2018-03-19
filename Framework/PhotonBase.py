@@ -499,6 +499,9 @@ class Hyperpipe(BaseEstimator):
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
                     self.result_tree.save()
                     self.distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
+
+                # save result tree to db
+                Logger().info("Saved result tree to database")
                 self.result_tree.save()
                 if self.logging:
                     self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
