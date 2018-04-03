@@ -5,8 +5,8 @@ import warnings
 # import matplotlib.pyplot as plt
 import numpy as np
 
-from Helpers.TFUtilities import one_hot_to_binary
-from Logging.Logger import Logger
+from photon_core.Helpers.TFUtilities import one_hot_to_binary
+from photon_core.Logging.Logger import Logger
 from .ResultLogging import FoldMetrics, FoldTupel, FoldOperations, Configuration, MasterElementType
 from .ResultLogging import MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
 from .ResultsDatabase import MDBHelper
@@ -240,6 +240,8 @@ class OptimizerMetric(object):
         list_of_config_vals = []
         list_of_non_failed_configs = [conf for conf in tested_configs if not conf.config_failed]
 
+        if len(list_of_non_failed_configs) == 0:
+            raise Warning("No Configs found which did not fail.")
         try:
             for config in list_of_non_failed_configs:
                 list_of_config_vals.append(MDBHelper.get_metric(config, FoldOperations.MEAN, self.metric, train=False))
