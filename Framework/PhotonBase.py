@@ -14,7 +14,7 @@ from sklearn.pipeline import Pipeline
 from pymodm import connect
 
 from .Register import PhotonRegister
-from Logging.Logger import Logger
+from photon_core.Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .ResultLogging import MasterElement, MasterElementType, FoldTupel, Configuration
 from .ResultLogging import MDBHyperpipe, MDBConfig, MDBFoldMetric, MDBInnerFold, MDBOuterFold, \
@@ -306,110 +306,111 @@ class Hyperpipe(BaseEstimator):
 
                     # add outer fold info object to result tree
                     outer_fold = MDBOuterFold(fold_nr=outer_fold_counter)
+                    outer_fold.tested_config_list = []
                     self.result_tree.outer_folds.append(outer_fold)
 
                     # do the optimizing
                     for specific_config in self.optimizer.next_config:
 
-                        try:
-                            loaded_result_tree = list(MDBHyperpipe.objects.raw({'_id':self.result_tree_name}))[0]
-                            config_item = loaded_result_tree.outer_folds[outer_fold_counter-1].tested_config_list[tested_config_counter]
+                        # try:
+                        #     loaded_result_tree = list(MDBHyperpipe.objects.raw({'_id':self.result_tree_name}))[0]
+                        #     config_item = loaded_result_tree.outer_folds[outer_fold_counter-1].tested_config_list[tested_config_counter]
+                        #
+                        #     tested_config_counter += 1
+                        #     self.distribute_cv_info_to_hyperpipe_children(reset=True,
+                        #                                                   config_counter=tested_config_counter)
+                        #
+                        #     config_score = (
+                        #     MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric),
+                        #     MDBHelper.get_metric(config_item, FoldOperations.MEAN,
+                        #                          self.config_optimizer.metric, train=False))
+                        #     self.performance_history_list.append(config_score)
+                        #
+                        #     # save the configuration of all children pipelines
+                        #     children_config = {}
+                        #     children_config_ref_list = []
+                        #     for pipe_step in self.pipe.steps:
+                        #         item = pipe_step[1]
+                        #         if isinstance(item, Hyperpipe):
+                        #             if item.local_search and item.best_config is not None:
+                        #                 children_config[item.name] = item.best_config
+                        #         elif isinstance(item, PipelineStacking):
+                        #             for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
+                        #                 if hyperpipe.local_search and hyperpipe.best_config is not None:
+                        #                     # special case: we need to access pipe over pipeline_stacking element
+                        #                     children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
+                        #                     # children_config_ref_list.append(hyperpipe.best_config._id)
+                        #     specific_parameters = self.pipe.get_params()
+                        #     #config_item.full_model_spec = specific_parameters
+                        #
+                        #     config_item.children_config_dict = children_config
+                        #     config_item.children_config_ref = children_config_ref_list
+                        #     self.result_tree.outer_folds[outer_fold_counter-1].tested_config_list.append(config_item)
+                        #     Logger().debug('optimizing of:' + self.name)
+                        #     Logger().debug(self.optimize_printing(specific_config))
+                        #     Logger().info('Loading results for this config from MongoDB')
+                        # except:
+                        self.distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
+                        hp = TestPipeline(self.pipe, specific_config, self.metrics, self.update_mother_inner_fold_nr)
+                        Logger().debug('optimizing of:' + self.name)
+                        Logger().debug(self.optimize_printing(specific_config))
+                        Logger().debug('calculating...')
 
-                            tested_config_counter += 1
-                            self.distribute_cv_info_to_hyperpipe_children(reset=True,
-                                                                          config_counter=tested_config_counter)
+                        # Test the configuration cross validated by inner_cv object
+                        config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter,
+                                          save_predictions=False)
+                        config_item.config_nr = tested_config_counter
+                        config_item.config_dict = specific_config
+                        config_item.pipe_name = self.name
+                        tested_config_counter += 1
+                        config_item.human_readable_config = self.config_to_dict(specific_config)
 
-                            config_score = (
-                            MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric),
-                            MDBHelper.get_metric(config_item, FoldOperations.MEAN,
-                                                 self.config_optimizer.metric, train=False))
-                            self.performance_history_list.append(config_score)
+                        # save the configuration of all children pipelines
+                        children_config = {}
+                        children_config_ref_list = []
+                        for pipe_step in self.pipe.steps:
+                            item = pipe_step[1]
+                            if isinstance(item, Hyperpipe):
+                                if item.local_search and item.best_config is not None:
+                                    children_config[item.name] = item.best_config
+                            elif isinstance(item, PipelineStacking):
+                                for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
+                                    if hyperpipe.local_search and hyperpipe.best_config is not None:
+                                        # special case: we need to access pipe over pipeline_stacking element
+                                        children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
+                                        # children_config_ref_list.append(hyperpipe.best_config._id)
+                        specific_parameters = self.pipe.get_params()
+                        #config_item.full_model_spec = specific_parameters
 
-                            # save the configuration of all children pipelines
-                            children_config = {}
-                            children_config_ref_list = []
-                            for pipe_step in self.pipe.steps:
-                                item = pipe_step[1]
-                                if isinstance(item, Hyperpipe):
-                                    if item.local_search and item.best_config is not None:
-                                        children_config[item.name] = item.best_config
-                                elif isinstance(item, PipelineStacking):
-                                    for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
-                                        if hyperpipe.local_search and hyperpipe.best_config is not None:
-                                            # special case: we need to access pipe over pipeline_stacking element
-                                            children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
-                                            # children_config_ref_list.append(hyperpipe.best_config._id)
-                            specific_parameters = self.pipe.get_params()
-                            #config_item.full_model_spec = specific_parameters
+                        config_item.children_config_dict = children_config
+                        config_item.children_config_ref = children_config_ref_list
 
-                            config_item.children_config_dict = children_config
-                            config_item.children_config_ref = children_config_ref_list
-                            self.result_tree.outer_folds[outer_fold_counter-1].tested_config_list.append(config_item)
-                            Logger().debug('optimizing of:' + self.name)
-                            Logger().debug(self.optimize_printing(specific_config))
-                            Logger().info('Loading results for this config from MongoDB')
-                        except:
-                            self.distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-                            hp = TestPipeline(self.pipe, specific_config, self.metrics, self.update_mother_inner_fold_nr)
-                            Logger().debug('optimizing of:' + self.name)
-                            Logger().debug(self.optimize_printing(specific_config))
-                            Logger().debug('calculating...')
+                        Logger().verbose(self.optimize_printing(specific_config))
 
-                            # Test the configuration cross validated by inner_cv object
-                            config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter,
-                                              save_predictions=False)
-                            config_item.config_nr = tested_config_counter
-                            config_item.config_dict = specific_config
-                            config_item.pipe_name = self.name
-                            tested_config_counter += 1
-                            config_item.human_readable_config = self.config_to_dict(specific_config)
+                        if not config_item.config_failed:
+                            # get optimizer_metric and forward to optimizer
+                            # todo: also pass greater_is_better=True/False to optimizer
+                            config_score = (MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric),
+                                            MDBHelper.get_metric(config_item, FoldOperations.MEAN,
+                                                                 self.config_optimizer.metric, train=False))
 
-                            # save the configuration of all children pipelines
-                            children_config = {}
-                            children_config_ref_list = []
-                            for pipe_step in self.pipe.steps:
-                                item = pipe_step[1]
-                                if isinstance(item, Hyperpipe):
-                                    if item.local_search and item.best_config is not None:
-                                        children_config[item.name] = item.best_config
-                                elif isinstance(item, PipelineStacking):
-                                    for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
-                                        if hyperpipe.local_search and hyperpipe.best_config is not None:
-                                            # special case: we need to access pipe over pipeline_stacking element
-                                            children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
-                                            # children_config_ref_list.append(hyperpipe.best_config._id)
-                            specific_parameters = self.pipe.get_params()
-                            #config_item.full_model_spec = specific_parameters
+                            # Print Result for config
+                            Logger().debug('...done:')
+                            Logger().verbose(self.config_optimizer.metric + str(config_score))
+                        else:
+                            config_score = (-1, -1)
+                            # Print Result for config
+                            Logger().debug('...failed:')
+                            Logger().error(config_item.config_error)
 
-                            config_item.children_config_dict = children_config
-                            config_item.children_config_ref = children_config_ref_list
+                        self.performance_history_list.append(config_score)
 
-                            Logger().verbose(self.optimize_printing(specific_config))
+                        # add config to result tree and do intermediate saving
+                        self.result_tree.outer_folds[-1].tested_config_list.append(config_item)
+                        self.result_tree.save()
 
-                            if not config_item.config_failed:
-                                # get optimizer_metric and forward to optimizer
-                                # todo: also pass greater_is_better=True/False to optimizer
-                                config_score = (MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric),
-                                                MDBHelper.get_metric(config_item, FoldOperations.MEAN,
-                                                                     self.config_optimizer.metric, train=False))
-
-                                # Print Result for config
-                                Logger().debug('...done:')
-                                Logger().verbose(self.config_optimizer.metric + str(config_score))
-                            else:
-                                config_score = (-1, -1)
-                                # Print Result for config
-                                Logger().debug('...failed:')
-                                Logger().error(config_item.config_error)
-
-                            self.performance_history_list.append(config_score)
-
-                            # add config to result tree and do intermediate saving
-                            self.result_tree.outer_folds[-1].tested_config_list.append(config_item)
-                            self.result_tree.save()
-
-                            # 3. inform optimizer about performance
-                            self.optimizer.evaluate_recent_performance(specific_config, config_score)
+                        # 3. inform optimizer about performance
+                        self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
                     # Todo: Do better error checking
                     if len(self.performance_history_list) > 0:
@@ -433,7 +434,7 @@ class Hyperpipe(BaseEstimator):
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
                         Logger().info('Best config: ' + self.optimize_printing(self.best_config.config_dict) +
                                       '\n' + '... with children config: '
-                                      + self.optimize_printing(self.best_config.children_config_dict))
+                                      + str(self.best_config.children_config_dict))
 
                         # ... and create optimal pipeline
                         self.optimum_pipe = self.pipe
@@ -499,6 +500,9 @@ class Hyperpipe(BaseEstimator):
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
                     self.result_tree.save()
                     self.distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
+
+                # save result tree to db
+                Logger().info("Saved result tree to database")
                 self.result_tree.save()
                 if self.logging:
                     self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
