@@ -33,3 +33,20 @@ class PhotonPCA(BaseEstimator, TransformerMixin):
 
     def transform(self, X):
         return self.pca.transform(X)
+
+    def set_params(self, **params):
+        if 'n_components' in params:
+            self.n_components = params['n_components']
+        if 'logs' in params:
+            self.logs = params.pop('logs', None)
+
+        if not self.pca:
+            self.pca = PCA(n_components=self.n_components)
+        self.pca.set_params(**params)
+
+    def get_params(self, deep=True):
+        if not self.pca:
+            self.pca = PCA(n_components=self.n_components)
+        pca_dict = self.pca.get_params(deep)
+        pca_dict['logs'] = self.logs
+        return pca_dict
