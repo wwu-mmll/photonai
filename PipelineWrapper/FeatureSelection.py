@@ -220,6 +220,9 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
     _estimator_type = 'transformer'
 
     def __init__(self, p_thres=0.01, incremental_pca=0, logs='', n_pca_components=4, n_cores=1):
+        import warnings
+        warnings.filterwarnings('ignore')
+
         self.pca = None
         self._y = None
         self.components = None
@@ -236,6 +239,8 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
 
 
     def fit(self, X, y):
+        import warnings
+        warnings.filterwarnings('ignore')
         self._y = y
         hash = sha1(np.asarray(X)).hexdigest()
         hash_file = Path(str(self.logs + '/' + hash + '.txt'))
@@ -264,6 +269,8 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
         return X_selected
 
     def parallelized_logistic_regression(self, params):
+        import warnings
+        warnings.filterwarnings('ignore')
         i, x = params
         if ((i+1) % 10000) == 0:
             Logger().info('Running GWAS Feature Selection...done with {} SNPs.'.format(i+1))
