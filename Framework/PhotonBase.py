@@ -434,7 +434,7 @@ class Hyperpipe(BaseEstimator):
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
                         Logger().info('Best config: ' + self.optimize_printing(self.best_config.config_dict) +
                                       '\n' + '... with children config: '
-                                      + str(self.best_config.children_config_dict))
+                                      + self.best_config.children_config_dict)
 
                         # ... and create optimal pipeline
                         self.optimum_pipe = self.pipe
@@ -1090,7 +1090,7 @@ class PipelineSwitch(PipelineElement):
             config_nr = kwargs[self._sklearn_curr_element]
         elif 'current_element' in kwargs:
             config_nr = kwargs['current_element']
-        if config_nr is None or not isinstance(config_nr, tuple):
+        if config_nr is None or not isinstance(config_nr, (tuple, list)):
             Logger().error('ValueError: current_element must be of type Tuple')
             raise ValueError('current_element must be of type Tuple')
         else:
