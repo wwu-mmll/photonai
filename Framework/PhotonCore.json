@@ -162,5 +162,9 @@
    "SimpleAutoencoder": [
       "photon_core.PipelineWrapper.KerasAutoencoder.SimpleAutoencoder",
       "Estimator"
+   ],
+   "Imputer": [
+      "sklearn.preprocessing.Imputer",
+      "Transformer"
    ]
 }
