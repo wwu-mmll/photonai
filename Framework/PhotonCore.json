@@ -166,5 +166,9 @@
    "Imputer": [
       "sklearn.preprocessing.Imputer",
       "Transformer"
+   ],
+   "PhotonOneClassSVM": [
+      "photon_core.PipelineWrapper.PhotonOneClassSVM.PhotonOneClassSVM",
+      "Estimator"
    ]
 }
