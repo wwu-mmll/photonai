@@ -5,6 +5,7 @@ from Framework.PhotonBase import Hyperpipe, PipelineElement
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.datasets import load_breast_cancer
 
+from sklearn.linear_model import Lasso
 #  -----------> calculate something ------------------- #
 
 # LOAD DATA
@@ -25,13 +26,15 @@ manager = Hyperpipe('test_manager',
 
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))
 manager += PipelineElement.create('pca', hyperparameters={'n_components': [None, 1, 10000]})
+# tmp_lasso = Lasso()
+# manager.add(PipelineElement.create('SelectModelWrapper', estimator_obj=tmp_lasso))
+
 svm = PipelineElement.create('svc', hyperparameters={'C': [0.5, 1], 'kernel': ['linear']})
 manager.add(svm)
 manager.fit(X, y)
 
 #  -----------> Result Tree generated ------------------- #
 result_tree = manager.result_tree
-
 # result_tree.write_to_db()
 
 # THE END
