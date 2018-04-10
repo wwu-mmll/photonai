@@ -19,16 +19,59 @@ from .Validation import TestPipeline, OptimizerMetric
 
 
 class Hyperpipe(BaseEstimator):
+    """
+    Wrapper class for machine learning pipeline, holding all pipeline elements
+    and managing the optimization of the hyperparameters
+    """
+
+
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
                             'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
 
     def __init__(self, name, inner_cv: BaseCrossValidator,
-                 optimizer='grid_search', optimizer_params=None, local_search=True,
+                 optimizer='grid_search', optimizer_params: dict = None, local_search: bool =True,
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
                  metrics=None, best_config_metric=None, outer_cv=None,
                  test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
-                 logging=False, set_random_seed=False, verbose=0, filter_element=None):
+                 logging: bool =False, set_random_seed: bool =False, verbose: int =0)
+        """
+        Setup the hyperparameter search, the nested cross validation and other parameters of the pipeline construct
+
+        Keyword arguments: 
+            :param name: str -- name of hyperpipe construct 
+            :param inner_cv: BaseCrossValidator -- cross validation strategy to test hyperparameter configurations, generates the validation set
+            :param outer_cv: BaseCrossValidator -- cross validation strategy to use for the hyperparameter search itself, generates the test set
+            :param optimizer: str or object -- hyperparameter optimization algorithm (default 'grid_search')
+            :param optimizer_params: dict -- parameters to pass to the optimizer
+            :param metrics: list of str -- metrics that should be calculated for both validation and test set
+            :param best_config_metric: str -- the metric that should be maximized or minimized in order to choose the best hyperparameter configuration
+            :param eval_final_performance: bool -- if the metrics should be calculated for the test set (default False)
+            :param test_size: double -- the amount of the data that should be left out if no outer_cv is given and eval_final_perfomance is set to True (default 0.2)
+            :param set_random_seed: bool -- if true sets the random seed to 42 (default False)
+            :param verbose: int -- the level of verbosity (default 0)
+            :param logging: bool -- if the output should be printed to a log file (default False)
+            :param groups: list -- info for advanced cross validation strategies about each row in data
+            :param local_search: bool -- if the hyperpipe should optimize the hyperparameters of its element (default True)
+            :param filter_element: SourceSpltiter - transforms the input data, e.g. extracts certain columns
+            :param imbalanced_data_strategy_filter: OverOrUnderSampler - balances the data if there are imbalanced classes
+            :param overwrite_x: list -- data that is used when the hyperpipe object is an element of another hyperpipe
+            :param overwrite_y: list -- targets that are used when the hyperpipe object is an element of another hyperpipe
+            :param config: construct pipeline elements and their hyperparameters and default parameters from JSON
+            :param debug_cv_mode: bool -- boolean for the internal unit tests of the nested cross validation
+
+        Example:
+            manager = Hyperpipe('test_manager',
+                                optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
+                                outer_cv=ShuffleSplit(test_size=0.2, n_splits=1),
+                                inner_cv=KFold(n_splits=10, shuffle=True),
+                                metrics=['accuracy', 'precision', 'recall', "f1_score"],
+                                best_config_metric='accuracy', eval_final_performance=True, 
+                                logging=True, verbose=2)
+
+
+        """
+
         # Re eval_final_performance:
         # set eval_final_performance to False because
         # 1. if no cv-object is given, no split is performed --> seems more logical
@@ -121,6 +164,12 @@ class Hyperpipe(BaseEstimator):
         self.fold_data_hashes = []
 
     def __iadd__(self, pipe_element):
+        """
+        Add an element to the machine learning pipeline
+
+        :param pipe_element: PipelineElement
+        :return: self
+        """
         # if isinstance(pipe_element, PipelineElement):
         self.pipeline_elements.append(pipe_element)
         # Todo: is repeated each time element is added....
@@ -138,12 +187,24 @@ class Hyperpipe(BaseEstimator):
         self.__iadd__(pipe_element)
 
     def yield_all_data(self):
+        """
+        helper that iteratively returns the data stored in self.X
+        :return: self.X
+        """
         if hasattr(self.X, 'shape'):
             yield list(range(self.X.shape[0])), []
         else:
             yield list(range(len(self.X))), []
 
     def generate_outer_cv_indices(self):
+        """
+        generates the training and  test set indices for the hyperparameter search
+
+        if there is a strategy given for the outer cross validation it is used
+        if no strategy is given and eval_final_performance is True, all data is used for training
+        else: a test set is generated by the parameter test_size with ShuffleSplit
+        :return: list of (training and, test indices)
+        """
         # if there is a CV Object for cross validating the hyperparameter search
         if self.hyperparameter_fitting_cv_object:
             self.data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
@@ -156,6 +217,13 @@ class Hyperpipe(BaseEstimator):
             self.data_test_cases = train_test_cv_object.split(self.X, self.y)
 
     def distribute_cv_info_to_hyperpipe_children(self, num_of_folds=None, reset=False):
+        """
+        informs all elements of the pipeline that are of type hyperpipe (hyperpipe children)
+        about the mother's configuration or current state
+
+        :param num_of_folds: how many inner_folds the superior hyperpipe has
+        :param reset: if the hyperparameter search starts anew
+        """
 
         def _distrbute_info_to_object(pipe_object, number_of_folds, reset_folds):
             if pipe_object.local_search:
@@ -173,6 +241,22 @@ class Hyperpipe(BaseEstimator):
                     _distrbute_info_to_object(child_pipe_object, num_of_folds, reset)
 
     def fit(self, data, targets, **fit_params):
+        """
+        Starts the hyperparameter search and/or fits the pipeline to the data and targets
+
+        Manages the nested cross validated hyperparameter search:
+        1. requests new configurations from the hyperparameter search strategy, the optimizer,
+        2. initializes the testing of a specific configuration,
+        3. communicates the result to the optimizer,
+        4. repeats 1-3 until optimizer delivers no more configurations to test
+        5. finally searches for the best config,
+        6. trains the pipeline with the best config and evaluates the performance on the test set
+
+        :param data: the training and test data
+        :param targets: the truth value
+        :param fit_params: any param dict
+        :return: self
+        """
 
         # in case we want to inject some data from outside the pipeline
         if self.overwrite_x is None and self.overwrite_y is None:
