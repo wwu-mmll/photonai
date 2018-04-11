@@ -16,7 +16,7 @@ from pymodm import connect
 from Framework.Register import PhotonRegister
 from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
-from .ResultLogging import *
+from .ResultsDatabase import *
 from .Validation import TestPipeline, OptimizerMetric
 
 
@@ -230,16 +230,19 @@ class Hyperpipe(BaseEstimator):
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
             self.data_test_cases = train_test_cv_object.split(self.X, self.y)
 
-
-    def distribute_cv_info_to_hyperpipe_children(self, num_of_folds=None, reset=False, reset_final_fit=False,
-                                                 outer_fold_counter=None, inner_fold_counter=None, config_counter=None):
-
+    def distribute_cv_info_to_hyperpipe_children(self, reset: bool =False, reset_final_fit: bool=False,
+                                                 outer_fold_counter: int=None, inner_fold_counter: int =None,
+                                                 num_of_folds: int = None, config_counter: int =None):
         """
         informs all elements of the pipeline that are of type hyperpipe (hyperpipe children)
         about the mother's configuration or current state
 
-        :param num_of_folds: how many inner_folds the superior hyperpipe has
+        :param num_of_folds: how many inner folds the mother hyperpipe has
+        :param outer_fold_counter: in which outer fold the mother hyerpipe currently is
+        :param inner_fold_counter: in which inner fold the mother hyperpipe currently is
+        :param config_counter: in which config_nr the mother hyperpipe actually is
         :param reset: if the hyperparameter search starts anew
+        :param reset_final_fit: reset the is_final_fit parameter so that children hyperpipe train anew for outer fold of mother pipe
         """
 
         def _distrbute_info_to_object(pipe_object, number_of_folds, reset_folds, reset_final_fit,
@@ -259,6 +262,7 @@ class Hyperpipe(BaseEstimator):
                 if reset_final_fit:
                     pipe_object.is_final_fit = False
 
+        # walk through all children of pipeline, if its a hyperpipe distribute the information
         for element_tuple in self.pipe.steps:
             element_object = element_tuple[1]
             if isinstance(element_object, Hyperpipe):
@@ -270,6 +274,10 @@ class Hyperpipe(BaseEstimator):
                                               outer_fold_counter, inner_fold_counter, config_counter)
 
     def update_mother_inner_fold_nr(self, new_inner_fold_nr):
+        """
+        function handle so that the TestPipeline class from Photon's Validation module can pass the information to hyperpipe children
+        :param new_inner_fold_nr: in which inner_fold the mother hyperpipe currently is
+        """
         self.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
 
     def fit(self, data, targets, **fit_params):
@@ -284,8 +292,8 @@ class Hyperpipe(BaseEstimator):
         5. finally searches for the best config,
         6. trains the pipeline with the best config and evaluates the performance on the test set
 
-        :param data: the training and test data
-        :param targets: the truth value
+        :param data: the training and test data, array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
+        :param targets: the truth value, array, with shape = [N], where N is the number of samples.
         :param fit_params: any param dict
         :return: self
         """
@@ -401,7 +409,7 @@ class Hyperpipe(BaseEstimator):
 
                     # do the optimizing
                     for specific_config in self.optimizer.next_config:
-
+                        # Load Config from Database
                         # try:
                         #     loaded_result_tree = list(MDBHyperpipe.objects.raw({'_id':self.result_tree_name}))[0]
                         #     config_item = loaded_result_tree.outer_folds[outer_fold_counter-1].tested_config_list[tested_config_counter]
@@ -608,6 +616,11 @@ class Hyperpipe(BaseEstimator):
         return self
 
     def predict(self, data):
+        """
+        Use the optimum pipe to predict the data
+        :param data:
+        :return: predicted targets, array
+        """
         # Todo: if local_search = true then use optimized pipe here?
         if self.pipe:
             if self.filter_element:
@@ -627,23 +640,42 @@ class Hyperpipe(BaseEstimator):
             return self.optimum_pipe.predict_proba(data)
 
     def transform(self, data):
+        """
+        Use the optimum pipe to transform the data
+        :param data: array-like
+        :return: predicted targets, array
+        """
         if self.pipe:
             if self.filter_element:
                 data = self.filter_element.transform(data)
             return self.optimum_pipe.transform(data)
 
     def get_params(self, deep=True):
+        """
+        Retrieve parameters from sklearn pipeline
+        :param deep:
+        :return: dict of element_name__parameter_name: parameter_value
+        """
         if self.pipe is not None:
             return self.pipe.get_params(deep)
         else:
             return None
 
     def set_params(self, **params):
+        """
+        Give parameter values to the pipeline elements
+        :param params: dict of element_name__parameter_name: parameter_value
+        :return: self
+        """
         if self.pipe is not None:
             self.pipe.set_params(**params)
         return self
 
     def prepare_pipeline(self):
+        """
+        build sklearn pipeline from PipelineElements and
+        calculate parameter grid for all combinations of pipeline element hyperparameters
+        """
         # prepare pipeline, hyperparams and config-grid
         self._config_grid = []
         self._hyperparameters = []
@@ -672,12 +704,20 @@ class Hyperpipe(BaseEstimator):
         self.pipe = Pipeline(pipeline_steps)
 
     def copy_me(self):
+        """
+        Helper function to copy all pipeline elements
+        :return: list of copied pipeline elements
+        """
         item_list =[]
         for item in self.pipeline_elements:
             item_list.append(item.copy_me())
         return item_list
 
     def _copy_pipeline(self):
+        """
+        Copy Pipeline by building a new sklearn Pipeline with Pipeline Elements
+        :return:
+        """
         pipeline_steps = []
         for item in self.pipeline_elements:
             cpy = item.copy_me()
@@ -689,12 +729,30 @@ class Hyperpipe(BaseEstimator):
         return Pipeline(pipeline_steps)
 
     def inverse_transform_pipeline(self, hyperparameters, data, targets, data_to_inverse):
+        """
+        Inverse transform data for a pipeline with specific hyperparameter configuration
+
+        1. Copy Sklearn Pipeline,
+        2. Set Parameters
+        3. Fit Pipeline to data and targets
+        4. Inverse transform data with that pipeline
+        :param hyperparameters: the settings for the pipeline elements
+        :param data: the training data
+        :param targets: the truth values for training
+        :param data_to_inverse: the data that should be inversed after training
+        :return: inversed data as array
+        """
         copied_pipe = self._copy_pipeline()
         copied_pipe.set_params(**hyperparameters)
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)
 
     def optimize_printing(self, config):
+        """
+        make the sklearn config syntax prettily readable for humans
+        :param config: a dict of pipeline_element_name__parameter_name: parameter_value
+        :return: a prettified string containing all machines, parameters and values
+        """
         prettified_config = [self.name + '\n']
         for el_key, el_value in config.items():
             items = el_key.split('__')
@@ -711,6 +769,12 @@ class Hyperpipe(BaseEstimator):
 
     @staticmethod
     def prettify_config_output(config_name, config_value):
+        """
+        Print the disabled = False as Enabled = True for better human reading
+        :param config_name: parameter name
+        :param config_value:  parameter value
+        :return:
+        """
         if config_name == "disabled" and config_value is False:
             return "enabled = True"
         else:
@@ -721,11 +785,20 @@ class Hyperpipe(BaseEstimator):
         return self._config_grid
 
     def create_pipeline_elements_from_config(self, config):
+        """
+        Create the pipeline from a config dict
+        :param config:  dictionary of machine_name: hyperparameter dict
+        """
         # Todo: Not reassign 'self'!!!
         for key, all_params in config.items():
             self += PipelineElement(key, all_params, {})
 
     def config_to_dict(self, specific_config):
+        """
+
+        :param specific_config:
+        :return:
+        """
         config = {}
         for key, value in specific_config.items():
             items = key.split('__')
@@ -738,6 +811,9 @@ class Hyperpipe(BaseEstimator):
 
 
 class SourceFilter(BaseEstimator):
+    """
+    Helper Class to split the data e.g. for stacking.
+    """
     def __init__(self, indices):
         self.indices = indices
 
@@ -749,11 +825,28 @@ class SourceFilter(BaseEstimator):
 
 
 class PipelineElement(BaseEstimator):
+    """
+    Photon wrapper class for any transformer or predictor element in the pipeline.
+
+    1. Saves the hyperparameters that are to be tested and creates a grid of all hyperparameter configurations
+    2. Enables fast and rapid instantiation of pipeline elements per string identifier,
+         e.g 'svc' creates an sklearn.svm.SVC object.
+    3. Attaches a "disable" switch to every element in the pipeline in order to test a complete disable
+    """
     # Registering Pipeline Elements
     ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'PhotonNeuro'])
 
     @classmethod
     def create(cls, name, hyperparameters=None, test_disabled=False, disabled=False, **kwargs):
+        """
+        Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
+        :param name: string literal encoding the class to be instantiated
+        :param hyperparameters: the
+        :param test_disabled:
+        :param disabled:
+        :param kwargs:
+        :return:
+        """
         if hyperparameters is None:
             hyperparameters = {}
         if name in PipelineElement.ELEMENT_DICTIONARY:
