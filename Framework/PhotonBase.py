@@ -43,26 +43,48 @@ class Hyperpipe(BaseEstimator):
         Setup the hyperparameter search, the nested cross validation and other parameters of the pipeline construct
 
         Keyword arguments: 
-            :param name: str -- name of hyperpipe construct 
-            :param inner_cv: BaseCrossValidator -- cross validation strategy to test hyperparameter configurations, generates the validation set
-            :param outer_cv: BaseCrossValidator -- cross validation strategy to use for the hyperparameter search itself, generates the test set
-            :param optimizer: str or object -- hyperparameter optimization algorithm (default 'grid_search')
-            :param optimizer_params: dict -- parameters to pass to the optimizer
-            :param metrics: list of str -- metrics that should be calculated for both validation and test set
-            :param best_config_metric: str -- the metric that should be maximized or minimized in order to choose the best hyperparameter configuration
-            :param eval_final_performance: bool -- if the metrics should be calculated for the test set (default False)
-            :param test_size: double -- the amount of the data that should be left out if no outer_cv is given and eval_final_perfomance is set to True (default 0.2)
-            :param set_random_seed: bool -- if true sets the random seed to 42 (default False)
-            :param verbose: int -- the level of verbosity (default 0)
-            :param logging: bool -- if the output should be printed to a log file (default False)
-            :param groups: list -- info for advanced cross validation strategies about each row in data
-            :param local_search: bool -- if the hyperpipe should optimize the hyperparameters of its element (default True)
-            :param filter_element: SourceSpltiter - transforms the input data, e.g. extracts certain columns
-            :param imbalanced_data_strategy_filter: OverOrUnderSampler - balances the data if there are imbalanced classes
-            :param overwrite_x: list -- data that is used when the hyperpipe object is an element of another hyperpipe
-            :param overwrite_y: list -- targets that are used when the hyperpipe object is an element of another hyperpipe
+            :param name: name of hyperpipe construct
+            :type name: str
+            :param inner_cv: cross validation strategy to test hyperparameter configurations, generates the validation set
+            :type inner_cv: BaseCrossValidator
+            :param outer_cv: cross validation strategy to use for the hyperparameter search itself, generates the test set
+            :type outer_cv: BaseCrossValidator
+            :param optimizer: hyperparameter optimization algorithm (default 'grid_search')
+            :type optimizer: str or object
+            :param optimizer_params: parameters to pass to the optimizer
+            :type optimizer_params: dict
+            :param metrics: metrics that should be calculated for both validation and test set
+            :type metrics: array of str
+            :param best_config_metric: the metric that should be maximized or minimized in order to choose the best hyperparameter configuration
+            :type best_config_metric: str
+            :param eval_final_performance: if the metrics should be calculated for the test set (default False)
+            :type eval_final_performance: bool
+            :param test_size: the amount of the data that should be left out if no outer_cv is given and eval_final_perfomance is set to True (default 0.2)
+            :type test_size: double
+            :param set_random_seed: if true sets the random seed to 42 (default False)
+            :type set_random_seed: bool
+            :param verbose: the level of verbosity (default 0)
+            :type verbose: int
+            :param logging: if the output should be printed to a log file (default False)
+            :type logging: bool
+            :param logfile: Path to a file in which the logging text is written
+            :type logfile: str
+            :param groups: info for advanced cross validation strategies about each row in data
+            :type groups: array
+            :param local_search: if the hyperpipe should optimize the hyperparameters of its element (default True)
+            :type local_search: bool
+            :param filter_element: transforms the input data, e.g. extracts certain columns
+            :type filter_element: SourceFilter
+            :param imbalanced_data_strategy_filter: balances the data if there are imbalanced classes
+            :type imbalanced_data_strategy_filter: obj
+            :param overwrite_x: data that is used when the hyperpipe object is an element of another hyperpipe
+            :type overwrite_x: array-like
+            :param overwrite_y: targets that are used when the hyperpipe object is an element of another hyperpipe
+            :type overwrite_y: array
             :param config: construct pipeline elements and their hyperparameters and default parameters from JSON
-            :param debug_cv_mode: bool -- boolean for the internal unit tests of the nested cross validation
+            :type config: dict
+            :param debug_cv_mode:  boolean for the internal unit tests of the nested cross validation
+            :type debug_cv_mode: bool
 
         Example:
             manager = Hyperpipe('test_manager',
@@ -189,15 +211,12 @@ class Hyperpipe(BaseEstimator):
         #     Todo: raise error
         # raise TypeError("Element must be of type Pipeline Element")
 
-
     @property
     def hyperparameters(self):
         return self._hyperparameters
 
-
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
-
 
     def yield_all_data(self):
         """
@@ -238,10 +257,16 @@ class Hyperpipe(BaseEstimator):
         about the mother's configuration or current state
 
         :param num_of_folds: how many inner folds the mother hyperpipe has
+        :type num_of_folds: int
         :param outer_fold_counter: in which outer fold the mother hyerpipe currently is
+        :type outer_fold_counter: int
         :param inner_fold_counter: in which inner fold the mother hyperpipe currently is
+        :type inner_fold_counter: int
         :param config_counter: in which config_nr the mother hyperpipe actually is
+        :type config_counter: int
         :param reset: if the hyperparameter search starts anew
+        :type reset: bool
+        :type  reset_final_fit: bool
         :param reset_final_fit: reset the is_final_fit parameter so that children hyperpipe train anew for outer fold of mother pipe
         """
 
@@ -273,10 +298,11 @@ class Hyperpipe(BaseEstimator):
                     _distrbute_info_to_object(child_pipe_object, num_of_folds, reset, reset_final_fit,
                                               outer_fold_counter, inner_fold_counter, config_counter)
 
-    def update_mother_inner_fold_nr(self, new_inner_fold_nr):
+    def update_mother_inner_fold_nr(self, new_inner_fold_nr: int):
         """
         function handle so that the TestPipeline class from Photon's Validation module can pass the information to hyperpipe children
         :param new_inner_fold_nr: in which inner_fold the mother hyperpipe currently is
+        :type new_inner_fold_nr: int
         """
         self.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
 
@@ -292,9 +318,12 @@ class Hyperpipe(BaseEstimator):
         5. finally searches for the best config,
         6. trains the pipeline with the best config and evaluates the performance on the test set
 
-        :param data: the training and test data, array-like, with shape = [N, D], where N is the number of samples and D is the number of features.
+        :param data: the training and test data, with shape = [N, D], where N is the number of samples and D is the number of features.
+        :type data: array-like
         :param targets: the truth value, array, with shape = [N], where N is the number of samples.
+        :type targets: array
         :param fit_params: any param dict
+        :type fit_params: dict
         :return: self
         """
 
@@ -618,7 +647,8 @@ class Hyperpipe(BaseEstimator):
     def predict(self, data):
         """
         Use the optimum pipe to predict the data
-        :param data:
+        :param data: the data on which the predictions should be made
+        :type data: array-like
         :return: predicted targets, array
         """
         # Todo: if local_search = true then use optimized pipe here?
@@ -642,8 +672,9 @@ class Hyperpipe(BaseEstimator):
     def transform(self, data):
         """
         Use the optimum pipe to transform the data
-        :param data: array-like
-        :return: predicted targets, array
+        :param data: the data to be transformed
+        :type data: array-like
+        :return: transformed data, array
         """
         if self.pipe:
             if self.filter_element:
@@ -653,7 +684,8 @@ class Hyperpipe(BaseEstimator):
     def get_params(self, deep=True):
         """
         Retrieve parameters from sklearn pipeline
-        :param deep:
+        :param deep: If True, will return the parameters for this element and contained subobjects.
+        :type deep: bool
         :return: dict of element_name__parameter_name: parameter_value
         """
         if self.pipe is not None:
@@ -665,6 +697,7 @@ class Hyperpipe(BaseEstimator):
         """
         Give parameter values to the pipeline elements
         :param params: dict of element_name__parameter_name: parameter_value
+        :type params: dict
         :return: self
         """
         if self.pipe is not None:
@@ -716,7 +749,7 @@ class Hyperpipe(BaseEstimator):
     def _copy_pipeline(self):
         """
         Copy Pipeline by building a new sklearn Pipeline with Pipeline Elements
-        :return:
+        :return: new sklearn Pipeline object
         """
         pipeline_steps = []
         for item in self.pipeline_elements:
@@ -728,7 +761,7 @@ class Hyperpipe(BaseEstimator):
                 pipeline_steps.append((cpy.name, cpy))
         return Pipeline(pipeline_steps)
 
-    def inverse_transform_pipeline(self, hyperparameters, data, targets, data_to_inverse):
+    def inverse_transform_pipeline(self, hyperparameters: dict, data, targets, data_to_inverse):
         """
         Inverse transform data for a pipeline with specific hyperparameter configuration
 
@@ -737,9 +770,13 @@ class Hyperpipe(BaseEstimator):
         3. Fit Pipeline to data and targets
         4. Inverse transform data with that pipeline
         :param hyperparameters: the settings for the pipeline elements
+        :type hyperparameters: dict
         :param data: the training data
+        :type data: array-like
         :param targets: the truth values for training
+        :type targets: array-like
         :param data_to_inverse: the data that should be inversed after training
+        :type data_to_inverse: array-like
         :return: inversed data as array
         """
         copied_pipe = self._copy_pipeline()
@@ -747,10 +784,11 @@ class Hyperpipe(BaseEstimator):
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)
 
-    def optimize_printing(self, config):
+    def optimize_printing(self, config: dict):
         """
         make the sklearn config syntax prettily readable for humans
         :param config: a dict of pipeline_element_name__parameter_name: parameter_value
+        :type config: dict
         :return: a prettified string containing all machines, parameters and values
         """
         prettified_config = [self.name + '\n']
@@ -768,10 +806,11 @@ class Hyperpipe(BaseEstimator):
         return ''.join(prettified_config)
 
     @staticmethod
-    def prettify_config_output(config_name, config_value):
+    def prettify_config_output(config_name: str, config_value):
         """
         Print the disabled = False as Enabled = True for better human reading
         :param config_name: parameter name
+        :type config_name: str
         :param config_value:  parameter value
         :return:
         """
@@ -821,6 +860,9 @@ class SourceFilter(BaseEstimator):
         return self
 
     def transform(self, X, y=None):
+        """
+        Returns only part of the data, column-wise filtered by self.indices
+        """
         return X[:, self.indices]
 
 
@@ -837,15 +879,19 @@ class PipelineElement(BaseEstimator):
     ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'PhotonNeuro'])
 
     @classmethod
-    def create(cls, name, hyperparameters=None, test_disabled=False, disabled=False, **kwargs):
+    def create(cls, name, hyperparameters: dict=None, test_disabled: bool=False, disabled:bool =False, **kwargs):
         """
         Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
         :param name: string literal encoding the class to be instantiated
-        :param hyperparameters: the
-        :param test_disabled:
-        :param disabled:
-        :param kwargs:
-        :return:
+        :type name: str
+        :param hyperparameters: dict of parameter_name: [array of parameter values to be tested]
+        :type hyperparameters: dict
+        :param test_disabled: if the hyperparameter search should evaluate a complete disabling of the element
+        :type  test_disabled: bool
+        :param disabled: if the element is disabled
+        :type disabled: bool
+        :param kwargs: any parameter that should be passed to the object to be instantiiated, default parameters
+        :return: instantiated class object
         """
         if hyperparameters is None:
             hyperparameters = {}
@@ -906,11 +952,19 @@ class PipelineElement(BaseEstimator):
         return self._sklearn_hyperparams
 
     def generate_sklearn_hyperparameters(self):
+        """
+        Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
+        :return: dict of hyperparameters
+        """
         self._sklearn_hyperparams = {}
         for attribute, value_list in self._hyperparameters.items():
             self._sklearn_hyperparams[self.name + '__' + attribute] = value_list
 
     def generate_config_grid(self):
+        """
+        Creates a grid of all combinations of the hyperparameters
+        :return: list of hyperparameter combinations
+        """
         for item in ParameterGrid(self.sklearn_hyperparams):
             if self.test_disabled:
                 item[self._sklearn_disabled] = False
@@ -918,10 +972,22 @@ class PipelineElement(BaseEstimator):
         if self.test_disabled:
             self._config_grid.append({self._sklearn_disabled: True})
 
-    def get_params(self, deep=True):
+    def get_params(self, deep: bool=True):
+        """
+        Forwards the get_params request to the wrapped base element
+        :param deep: If True, will return the parameters for this element and contained subobjects.
+        :type deep: bool
+        :return: dict of params
+        """
         return self.base_element.get_params(deep)
 
     def set_params(self, **kwargs):
+        """
+        Forwards the set_params request to the wrapped base element
+        Takes care of the disabled parameter which is additionally attached by the PHOTON wrapper
+        :param kwargs: the parameters to set
+        :return: self
+        """
         # element disable is a construct used for this container only
         if self._sklearn_disabled in kwargs:
             self.disabled = kwargs[self._sklearn_disabled]
@@ -933,13 +999,34 @@ class PipelineElement(BaseEstimator):
         return self
 
     def fit(self, data, targets=None):
+        """
+        Calls the fit function of the base element
+        :param data: the data for fitting the element
+        :type data: array-like
+        :param targets: the targets for fitting the element
+        :type targets: array
+        :return: self
+        """
         if not self.disabled:
             obj = self.base_element
             obj.fit(data, targets)
             # self.base_element.fit(data, targets)
         return self
 
-    def predict(self, data, targets=None):
+    def predict(self, data):
+        """
+        Calls predict function on the base element.
+
+        IF PREDICT IS NOT AVAILABLE CALLS TRANSFORM.
+        This is for the case that the encapsulated hyperpipe only part of another hyperpipe, and works as a transformer.
+        Sklearn usually expects the last element to predict.
+        Also this is needed in case we are using an autoencoder which is firstly trained by using predict, and after
+        training only used for transforming.
+
+        :param data: the data on which the prediction should be based
+        :type data: array-like
+        :return:
+        """
         if not self.disabled:
             if hasattr(self.base_element, 'predict'):
                 return self.base_element.predict(data)
@@ -975,7 +1062,16 @@ class PipelineElement(BaseEstimator):
     #     else:
     #         return data
 
-    def transform(self, data, targets=None):
+    def transform(self, data):
+        """
+        Calls transform on the base element.
+
+        IN CASE THERE IS NO TRANSFORM METHOD, CALLS PREDICT.
+        This is used if we are using an estimator as a preprocessing step.
+        :param data: the data to transform
+        :type data: array-like
+        :return: array-like, the transformed data
+        """
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
                 return self.base_element.transform(data)
@@ -988,6 +1084,12 @@ class PipelineElement(BaseEstimator):
             return data
 
     def inverse_transform(self, data):
+        """
+        Calls inverse_transform on the base element
+        :param data: the data to inverse
+        :type data: array-like
+        :return: array-like, the inversed data
+        """
         if hasattr(self.base_element, 'inverse_transform'):
             return self.base_element.inverse_transform(data)
         else:
@@ -1008,9 +1110,18 @@ class PipelineElement(BaseEstimator):
     #         return data
 
     def score(self, X_test, y_test):
+        """
+        Calls the score function on the base element:
+        Returns a goodness of fit measure or a likelihood of unseen data:
+
+        :param X_test: data to score
+        :param y_test: targets to be tested against
+        :return: score_value (higher is better)
+        """
         return self.base_element.score(X_test, y_test)
 
-    def prettify_config_output(self, config_name, config_value, return_dict=False):
+    def prettify_config_output(self, config_name: str, config_value, return_dict:bool=False):
+        """Make hyperparameter combinations human readable """
         if config_name == "disabled" and config_value is False:
             if return_dict:
                 return {'enabled':True}
@@ -1024,7 +1135,24 @@ class PipelineElement(BaseEstimator):
 
 
 class PipelineStacking(PipelineElement):
-    def __init__(self, name, pipeline_fusion_elements, voting=True):
+    """
+    Allows a parallelization of pipeline elements.
+
+    The object acts as single pipeline element and encapsulates several parallelized other pipeline elements.
+    It takes the incoming data and distributes it iteratively to all children, then collects and stacks the children's outputs.
+    """
+    def __init__(self, name: str, pipeline_fusion_elements, voting: bool=True):
+        """
+        Creates a new PipelineStacking element.
+        Collects all possible hyperparameter combinations of the children
+
+        :param name: give the pipeline element a name
+        :type name: str
+        :param pipeline_fusion_elements: list of pipeline elements that should run in parallel
+        :type pipeline_fusion_elements: list
+        :param voting: if true, the predictions of the encapsulated pipeline elements are joined to a single prediction
+        :type voting: bool
+        """
         super(PipelineStacking, self).__init__(name, None, hyperparameters={}, test_disabled=False, disabled=False)
 
         self._hyperparameters = {}
@@ -1081,6 +1209,12 @@ class PipelineStacking(PipelineElement):
         return all_params
 
     def set_params(self, **kwargs):
+        """
+        Find the particular child and distribute the params to it
+        :param kwargs: parameter dict of element_name__param_name: param_value
+        :type kwargs: dict
+        :return: self
+        """
         # Todo: disable fusion element?
         spread_params_dict = {}
         for k, val in kwargs.items():
@@ -1100,12 +1234,25 @@ class PipelineStacking(PipelineElement):
         return self
 
     def fit(self, data, targets=None):
+        """
+        Calls fit iteratively on every child
+        :param data: data for training
+        :type data: array-like
+        :param targets: accompanying targets for the training data
+        :type targets: array-like
+        :return: self
+        """
         for name, element in self.pipe_elements.items():
             # Todo: parallellize fitting
             element.fit(data, targets)
         return self
 
-    def predict(self, data, targets=None):
+    def predict(self, data):
+        """
+        Iteratively calls predict on every child.
+        :param data: the data on which the predictions should be based
+        :return: list of predictions
+        """
         # Todo: strategy for concatenating data from different pipes
         # todo: parallelize prediction
         predicted_data = np.empty((0, 0))
@@ -1118,7 +1265,7 @@ class PipelineStacking(PipelineElement):
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data
 
-    def predict_proba(self, data, targets=None):
+    def predict_proba(self, data):
         """
         Predict probabilities for every pipe element and
         stack them together. Alternatively, do voting instead.
@@ -1127,7 +1274,6 @@ class PipelineStacking(PipelineElement):
         :param targets:
         :return: predicted values, array
         """
-        # ToDo: Ask Ramona about "targets=None". Necessary?
         predicted_data = np.empty((0, 0))
         for name, element in self.pipe_elements.items():
             element_transform = element.predict_proba(data)
@@ -1138,7 +1284,14 @@ class PipelineStacking(PipelineElement):
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data
 
-    def transform(self, data, targets=None):
+    def transform(self, data):
+        """
+        Calls transform on every child.
+
+        If the encapsulated child is a hyperpipe, also calls predict on the last element in the pipeline.
+        :param data: the data to transform
+        :return: the data transformed by each child stacked
+        """
         transformed_data = np.empty((0, 0))
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
@@ -1183,6 +1336,12 @@ class PipelineStacking(PipelineElement):
 
     @classmethod
     def stack_data(cls, a, b):
+        """
+        Helper method to horizontally join the outcome of each child
+        :param a: the existing matrix
+        :param b: the matrix to attach horizontally
+        :return: new matrix, that is a and b horizontally joined
+        """
         if not a.any():
             a = b
         else:
@@ -1195,6 +1354,16 @@ class PipelineStacking(PipelineElement):
         return a
 
     def score(self, X_test, y_test):
+        """
+        Calculate accuracy for predictions made with this object.
+        This function should probably never be called.
+
+        :param X_test:  data for the predictions
+        :type X_test: array-like
+        :param y_test: truth values
+        :type y_test: list
+        :return: accuracy_score
+        """
         # Todo: invent strategy for this ?
         # raise BaseException('PipelineStacking.score should probably never be reached.')
         # return 16
@@ -1204,13 +1373,34 @@ class PipelineStacking(PipelineElement):
 
 
 class PipelineSwitch(PipelineElement):
-    # @classmethod
-    # def create(cls, pipeline_element_list):
-    #     obj = PipelineSwitch()
-    #     obj.pipeline_element_list = pipeline_element_list
-    #     return obj
+    """
+    This class encapsulates several pipeline elements that belong at the same step of the pipeline,
+    competing for being the best choice.
 
-    def __init__(self, name, pipeline_element_list, _estimator_type='regressor'):
+    If for example you want to find out if preprocessing A or preprocessing B is better at this position in the pipe.
+    Or you want to test if a tree outperforms the good old SVM.
+
+    ATTENTION: This class is a construct that may be convenient but is not suitable for any complex optimizations.
+    Currently it only works for grid_search and the derived optimization strategies.
+    USE THIS ONLY FOR RAPID PROTOTYPING AND PRELIMINARY RESULTS
+
+    The class acts as if it is a single entity. Tt joins the hyperparamater combinations of each encapsulated element to
+    a single, big combination grid. Each hyperparameter combination from that grid gets a number. Then the PipelineSwitch
+    object publishes the numbers to be chosen as the object's hyperparameter. When a new number is chosen from the
+    optimizer, it internally activates the belonging element and sets the element's parameter to the hyperparameter
+    combination. In that way, each of the elements is tested in all its configurations at the same position in the
+    pipeline. From the outside, the process and the optimizer only sees one parameter of the PipelineSwitch, that is
+    the an integer indicating which item of the hyperparameter combination grid is currently active.
+
+    """
+
+    def __init__(self, name: str, pipeline_element_list: list, _estimator_type='regressor'):
+        """
+        Creates a new PipelineSwitch object and generated the hyperparameter combination grid
+        :param name: how the element is called in the pipeline
+        :param pipeline_element_list: the competing pipeline elements
+        :param _estimator_type: used for validation purposes
+        """
         self.name = name
         self._sklearn_curr_element = self.name + '__current_element'
         # Todo: disable switch?
@@ -1264,10 +1454,20 @@ class PipelineSwitch(PipelineElement):
 
     @property
     def base_element(self):
+        """
+        Returns the currently active element
+        :return: BaseTransformer or BaseEstimator object
+        """
         obj = self.pipeline_element_list[self.current_element[0]]
         return obj
 
     def set_params(self, **kwargs):
+        """
+        The optimization process sees the amount of possible combinations and chooses one of them.
+        Then this class activates the belonging element and prepared the element with the particular chosen configuration.
+        :param kwargs: dict containing the current_element parameter
+        :return: self
+        """
         config_nr = None
         if self._sklearn_curr_element in kwargs:
             config_nr = kwargs[self._sklearn_curr_element]
@@ -1285,8 +1485,16 @@ class PipelineSwitch(PipelineElement):
                 key_split = config_key.split('__')
                 unnamed_config[''.join(key_split[1::])] = config_value
             self.base_element.set_params(**unnamed_config)
+        return self
 
     def prettify_config_output(self, config_name, config_value, return_dict=False):
+        """
+        Makes the sklearn configuration dictionary human readable
+        :param config_name: the name of the parameter
+        :param config_value: the value of the parameter
+        :param return_dict: if True, the output is a dict with prettified keys
+        :return: configuration as prettified string or configuration as dict with prettified keys 
+        """
         if isinstance(config_value, tuple):
             output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
             if not output:
