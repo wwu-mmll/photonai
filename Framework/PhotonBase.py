@@ -1493,7 +1493,7 @@ class PipelineSwitch(PipelineElement):
         :param config_name: the name of the parameter
         :param config_value: the value of the parameter
         :param return_dict: if True, the output is a dict with prettified keys
-        :return: configuration as prettified string or configuration as dict with prettified keys 
+        :return: configuration as prettified string or configuration as dict with prettified keys
         """
         if isinstance(config_value, tuple):
             output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
