@@ -106,7 +106,7 @@ class Hyperpipe(BaseEstimator):
         self.best_children_config = None
         self.best_performance = None
         self.is_final_fit = False
-        self.save_all_prediction = save_all_predictions
+        self.save_all_predictions = save_all_predictions
 
         self.debug_cv_mode = debug_cv_mode
         self.logging = logging
