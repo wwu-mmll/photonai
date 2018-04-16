@@ -5,8 +5,8 @@ import warnings
 # import matplotlib.pyplot as plt
 import numpy as np
 
-from photon_core.Helpers.TFUtilities import one_hot_to_binary
-from photon_core.Logging.Logger import Logger
+from Helpers.TFUtilities import one_hot_to_binary
+from Logging.Logger import Logger
 from .ResultLogging import FoldMetrics, FoldTupel, FoldOperations, Configuration, MasterElementType
 from .ResultLogging import MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
 from .ResultsDatabase import MDBHelper
