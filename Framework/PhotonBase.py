@@ -35,7 +35,7 @@ class Hyperpipe(BaseEstimator):
                  optimizer='grid_search', optimizer_params: dict = None, local_search: bool =True,
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
                  metrics=None, best_config_metric=None, outer_cv=None,
-                 test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
+                 test_size=0.2, eval_final_performance=False, save_all_predictions: bool=False, debug_cv_mode=False,
                  set_random_seed: bool=False,  filter_element=None,
                  logfile: str = '', logging: bool =False, verbose:int =0):
 
@@ -63,6 +63,7 @@ class Hyperpipe(BaseEstimator):
             :param overwrite_y: list -- targets that are used when the hyperpipe object is an element of another hyperpipe
             :param config: construct pipeline elements and their hyperparameters and default parameters from JSON
             :param debug_cv_mode: bool -- boolean for the internal unit tests of the nested cross validation
+            :param save_all_predictions: bool -- specify whether to save test/validation/training predictions for all hyperparameter configurations
 
         Example:
             manager = Hyperpipe('test_manager',
@@ -105,6 +106,7 @@ class Hyperpipe(BaseEstimator):
         self.best_children_config = None
         self.best_performance = None
         self.is_final_fit = False
+        self.save_all_prediction = save_all_predictions
 
         self.debug_cv_mode = debug_cv_mode
         self.logging = logging
@@ -242,7 +244,7 @@ class Hyperpipe(BaseEstimator):
         :param reset: if the hyperparameter search starts anew
         """
 
-        def _distrbute_info_to_object(pipe_object, number_of_folds, reset_folds, reset_final_fit,
+        def _distribute_info_to_object(pipe_object, number_of_folds, reset_folds, reset_final_fit,
                                       outer_fold_counter, inner_fold_counter, config_counter):
             if pipe_object.local_search:
                 if number_of_folds is not None:
@@ -250,9 +252,9 @@ class Hyperpipe(BaseEstimator):
                     pipe_object.is_mother_pipe = False
                 if reset_folds:
                     pipe_object.current_fold = -1
-                if outer_fold_counter:
+                if outer_fold_counter is not None:
                     pipe_object.mother_outer_fold_counter = outer_fold_counter
-                if inner_fold_counter:
+                if inner_fold_counter is not None:
                     pipe_object.mother_inner_fold_counter = inner_fold_counter
                 if config_counter:
                     pipe_object.mother_config_counter = config_counter
@@ -262,11 +264,11 @@ class Hyperpipe(BaseEstimator):
         for element_tuple in self.pipe.steps:
             element_object = element_tuple[1]
             if isinstance(element_object, Hyperpipe):
-                _distrbute_info_to_object(element_object, num_of_folds, reset, reset_final_fit,
+                _distribute_info_to_object(element_object, num_of_folds, reset, reset_final_fit,
                                           outer_fold_counter, inner_fold_counter, config_counter)
             elif isinstance(element_object, PipelineStacking):
                 for child_pipe_name, child_pipe_object in element_object.pipe_elements.items():
-                    _distrbute_info_to_object(child_pipe_object, num_of_folds, reset, reset_final_fit,
+                    _distribute_info_to_object(child_pipe_object, num_of_folds, reset, reset_final_fit,
                                               outer_fold_counter, inner_fold_counter, config_counter)
 
     def update_mother_inner_fold_nr(self, new_inner_fold_nr):
@@ -448,7 +450,7 @@ class Hyperpipe(BaseEstimator):
 
                         # Test the configuration cross validated by inner_cv object
                         config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter,
-                                          save_predictions=False)
+                                          save_predictions=self.save_all_predictions)
                         config_item.config_nr = tested_config_counter
                         config_item.config_dict = specific_config
                         config_item.pipe_name = self.name
