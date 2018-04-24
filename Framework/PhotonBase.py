@@ -17,6 +17,7 @@ from Framework.Register import PhotonRegister
 from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .ResultLogging import *
+from .ResultsDatabase import *
 from .Validation import TestPipeline, OptimizerMetric
 
 
