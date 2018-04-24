@@ -14,6 +14,7 @@ from sklearn.pipeline import Pipeline
 from pymodm import connect
 
 from Framework.Register import PhotonRegister
+from Framework.ImbalancedWrapper import ImbalancedDataTransform
 from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .ResultsDatabase import *
@@ -36,7 +37,7 @@ class Hyperpipe(BaseEstimator):
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
                  metrics=None, best_config_metric=None, outer_cv=None,
                  test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
-                 set_random_seed: bool=False,  filter_element=None,
+                 set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter = None,
                  logfile: str = '', logging: bool =False, verbose:int =0):
 
         """
@@ -118,6 +119,7 @@ class Hyperpipe(BaseEstimator):
         self.y = None
         self.groups = groups
         self.filter_element = filter_element
+        self.imbalanced_data_strategy_filter = ImbalancedDataTransform(imbalanced_data_strategy_filter)
 
         self.data_test_cases = None
         self.config_history = []
@@ -311,12 +313,13 @@ class Hyperpipe(BaseEstimator):
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
 
         Manages the nested cross validated hyperparameter search:
-        1. requests new configurations from the hyperparameter search strategy, the optimizer,
-        2. initializes the testing of a specific configuration,
-        3. communicates the result to the optimizer,
-        4. repeats 1-3 until optimizer delivers no more configurations to test
-        5. finally searches for the best config,
-        6. trains the pipeline with the best config and evaluates the performance on the test set
+        1. Filters the data according to filter strategy and according to the imbalanced_data_strategy
+        2. requests new configurations from the hyperparameter search strategy, the optimizer,
+        3. initializes the testing of a specific configuration,
+        4. communicates the result to the optimizer,
+        5. repeats 1-3 until optimizer delivers no more configurations to test
+        6. finally searches for the best config,
+        7. trains the pipeline with the best config and evaluates the performance on the test set
 
         :param data: the training and test data, with shape = [N, D], where N is the number of samples and D is the number of features.
         :type data: array-like
@@ -341,6 +344,11 @@ class Hyperpipe(BaseEstimator):
         # in case we need to reduce the dimension of the data due to parallelity of the outer pipe, lets do it.
         if self.filter_element:
             self.X = self.filter_element.transform(self.X)
+
+        # if the groups are imbalanced, and a strategy is chosen, apply it here
+        if self.imbalanced_data_strategy_filter:
+            self.imbalanced_data_strategy_filter.fit(self.X, self.y)
+            self.X, self.y = self.imbalanced_data_strategy_filter.transform()
 
         self.current_fold += 1
 
