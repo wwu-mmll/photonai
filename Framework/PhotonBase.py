@@ -14,7 +14,7 @@ from sklearn.pipeline import Pipeline
 from pymodm import connect
 
 from Framework.Register import PhotonRegister
-from Framework.ImbalancedWrapper import ImbalancedDataTransform
+# from Framework.ImbalancedWrapper import ImbalancedDataTransform
 from Logging.Logger import Logger
 from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .ResultsDatabase import *
@@ -36,9 +36,10 @@ class Hyperpipe(BaseEstimator):
                  optimizer='grid_search', optimizer_params: dict = None, local_search: bool =True,
                  groups=None, config=None, overwrite_x=None, overwrite_y=None,
                  metrics=None, best_config_metric=None, outer_cv=None,
-                 test_size=0.2, eval_final_performance=False, debug_cv_mode=False,
-                 set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter = None,
-                 logfile: str = '', logging: bool =False, verbose:int =0):
+                 test_size: float = 0.2, eval_final_performance=False, debug_cv_mode=False,
+                 calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = True,
+                 set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter: str = None,
+                 logfile: str = '', logging: bool =False, verbose: int =0):
 
         """
         Setup the hyperparameter search, the nested cross validation and other parameters of the pipeline construct
@@ -78,6 +79,8 @@ class Hyperpipe(BaseEstimator):
             :type filter_element: SourceFilter
             :param imbalanced_data_strategy_filter: balances the data if there are imbalanced classes
             :type imbalanced_data_strategy_filter: obj
+            :param calculate_metrics_per_fold: if True, calculates all metrics for each fold of the inner cross validation
+            :param calculate_metrics_across_folds: if True, collects the prediction of all folds and applies metrics on them
             :param overwrite_x: data that is used when the hyperpipe object is an element of another hyperpipe
             :type overwrite_x: array-like
             :param overwrite_y: targets that are used when the hyperpipe object is an element of another hyperpipe
@@ -119,7 +122,11 @@ class Hyperpipe(BaseEstimator):
         self.y = None
         self.groups = groups
         self.filter_element = filter_element
-        self.imbalanced_data_strategy_filter = ImbalancedDataTransform(imbalanced_data_strategy_filter)
+        # self.imbalanced_data_strategy_filter = ImbalancedDataTransform(imbalanced_data_strategy_filter)
+        self.imbalanced_data_strategy_filter = None
+
+        self.calculate_metrics_per_fold = calculate_metrics_per_fold
+        self.calculate_metrics_across_folds = calculate_metrics_across_folds
 
         self.data_test_cases = None
         self.config_history = []
@@ -493,7 +500,9 @@ class Hyperpipe(BaseEstimator):
 
                         # Test the configuration cross validated by inner_cv object
                         config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter,
-                                          save_predictions=False)
+                                                            save_predictions=False,
+                                                            calculate_metrics_per_fold=self.calculate_metrics_per_fold,
+                                                            calculate_metrics_across_folds=self.calculate_metrics_across_folds)
                         config_item.config_nr = tested_config_counter
                         config_item.config_dict = specific_config
                         config_item.pipe_name = self.name
@@ -569,7 +578,7 @@ class Hyperpipe(BaseEstimator):
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
                         Logger().info('Best config: ' + self.optimize_printing(self.best_config.config_dict) +
                                       '\n' + '... with children config: '
-                                      + self.best_config.children_config_dict)
+                                      + str(self.best_config.children_config_dict))
 
                         # ... and create optimal pipeline
                         self.optimum_pipe = self.pipe

@@ -7,7 +7,7 @@ from Helpers.TFUtilities import one_hot_to_binary
 from sklearn.pipeline import Pipeline
 from Logging.Logger import Logger
 from .ResultLogging import FoldOperations
-from .ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
+from .ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, FoldOperations, MDBConfig
 
 
 class TestPipeline(object):
@@ -38,7 +38,9 @@ class TestPipeline(object):
         self.raise_error = raise_error
         self.mother_inner_fold_handle = mother_inner_fold_handle
 
-    def calculate_cv_score(self, X, y, cv_iter, save_predictions: bool =False):
+    def calculate_cv_score(self, X, y, cv_iter, save_predictions: bool =False,
+                           calculate_metrics_per_fold: bool = True,
+                           calculate_metrics_across_folds: bool =False):
         """
         Iterates over cross-validation folds and trains the pipeline, then uses it for predictions.
         Calculates metrics per fold and averages them over fold.
@@ -46,6 +48,8 @@ class TestPipeline(object):
         :param y: Training and test targets
         :param cv_iter: function/array that yields train and test indices
         :param save_predictions: if true, saves the predicted values into the result tree
+        :param calculate_metrics_per_fold: if True, calculates metrics on predictions particularly for each fold
+        :param calculate_metrics_across_folds: if True, collects predictions from all folds and calculate metrics on whole collective
         :returns: configuration class for result tree that monitors training and test performance
         """
 
@@ -57,6 +61,15 @@ class TestPipeline(object):
         config_item.metrics_test = []
         config_item.metrics_train = []
         fold_cnt = 0
+
+        overall_y_pred_test = []
+        overall_y_true_test = []
+        overall_y_pred_train = []
+        overall_y_true_train = []
+
+        # if we want to collect the predictions, we need to save them into the tree
+        if calculate_metrics_across_folds:
+            save_predictions = True
 
         inner_fold_list = []
         try:
@@ -89,6 +102,23 @@ class TestPipeline(object):
                     curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train,
                                                          save_predictions=save_predictions)
 
+                    if calculate_metrics_across_folds:
+                        # if we have one hot encoded values -> concat horizontally
+                        if isinstance(curr_test_fold.y_pred, np.ndarray):
+                            if len(curr_test_fold.y_pred.shape) > 1:
+                                axis = 1
+                            else:
+                                axis = 0
+                        else:
+                            # if we have lists concat
+                            axis = 0
+                        overall_y_true_test = np.concatenate((overall_y_true_test, curr_test_fold.y_true), axis=axis)
+                        overall_y_pred_test = np.concatenate((overall_y_pred_test, curr_test_fold.y_pred), axis=axis)
+
+                        # we assume y_pred from the training set comes in the same shape as y_pred from the test se
+                        overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
+                        overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
+
                     # fill result tree with fold information
                     inner_fold = MDBInnerFold()
                     inner_fold.fold_nr = fold_cnt
@@ -100,10 +130,43 @@ class TestPipeline(object):
 
                     fold_cnt += 1
 
-            # calculate mean and std over all folds
+            # save all inner folds to the tree under the config item
             config_item.inner_folds = inner_fold_list
-            config_item.metrics_train, config_item.metrics_test = MDBHelper.calculate_metrics(config_item,
+
+            # if we want to have metrics across all predictions from all folds:
+            if calculate_metrics_across_folds:
+                # metrics across folds
+                metrics_to_calculate = list(self.metrics)
+                if 'score' in metrics_to_calculate:
+                    metrics_to_calculate.remove('score')
+                metrics_train = TestPipeline.calculate_metrics(overall_y_true_train, overall_y_pred_train, metrics_to_calculate)
+                metrics_test = TestPipeline.calculate_metrics(overall_y_true_test, overall_y_pred_test, metrics_to_calculate)
+
+                def metric_to_db_class(metric_list):
+                    db_metrics = []
+                    for metric_name, metric_value in metric_list.items():
+                        new_metric = MDBFoldMetric(operation=FoldOperations.RAW, metric_name=metric_name,
+                                                   value=metric_value)
+                        db_metrics.append(new_metric)
+                    return db_metrics
+
+                db_metrics_train = metric_to_db_class(metrics_train)
+                db_metrics_test = metric_to_db_class(metrics_test)
+
+                # if we want to have metrics for each fold as well, calculate mean and std.
+                if calculate_metrics_per_fold:
+                    db_metrics_fold_train, db_metrics_fold_test = MDBHelper.calculate_metrics(config_item,
                                                                                               self.metrics)
+                    config_item.metrics_train = db_metrics_train + db_metrics_fold_train
+                    config_item.metrics_test = db_metrics_test + db_metrics_fold_test
+                else:
+                    config_item.metrics_train = db_metrics_train
+                    config_item.metrics_test = db_metrics_test
+
+            elif calculate_metrics_per_fold:
+                # calculate mean and std over all fold metrics
+                config_item.metrics_train, config_item.metrics_test = MDBHelper.calculate_metrics(config_item,
+                                                                                                  self.metrics)
 
         except Exception as e:
             if self.raise_error:
@@ -117,7 +180,8 @@ class TestPipeline(object):
         return config_item
 
     @staticmethod
-    def score(estimator, X, y_true, metrics, indices=[], save_predictions=False):
+    def score(estimator, X, y_true, metrics, indices=[],
+              save_predictions=False, calculate_metrics: bool=True):
         """
         Uses the pipeline to predict the given data, compare it to the truth values and calculate metrics
 
@@ -127,6 +191,7 @@ class TestPipeline(object):
         :param metrics: the metrics to be calculated
         :param indices: the indices of the given data and targets that are logged into the result tree
         :param save_predictions: if True, the predicted value array is stored in to the result tree
+        :param calculate_metrics: if True, calculates metrics for given data
         :return: ScoreInformation object
         """
 
@@ -153,24 +218,27 @@ class TestPipeline(object):
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
-        score_metrics = TestPipeline.calculate_metrics(y_true, y_pred, non_default_score_metrics)
+        if calculate_metrics:
+            score_metrics = TestPipeline.calculate_metrics(y_true, y_pred, non_default_score_metrics)
 
-        # add default metric
-        if output_metrics:
-            output_metrics = {**output_metrics, **score_metrics}
+            # add default metric
+            if output_metrics:
+                output_metrics = {**output_metrics, **score_metrics}
+            else:
+                output_metrics = score_metrics
         else:
-            output_metrics = score_metrics
+            output_metrics = {}
 
         final_scoring_time = time.time() - scoring_time_start
         if save_predictions:
             score_result_object = MDBScoreInformation(metrics=output_metrics,
-                                                        score_duration=final_scoring_time,
-                                               y_pred=y_pred.tolist(), y_true=y_true.tolist(),
+                                                      score_duration=final_scoring_time,
+                                                      y_pred=y_pred.tolist(), y_true=y_true.tolist(),
                                                       indices=np.asarray(indices).tolist(),
-                                               feature_importances=f_importances)
+                                                      feature_importances=f_importances)
         else:
             score_result_object = MDBScoreInformation(metrics=output_metrics,
-                                                        score_duration=final_scoring_time)
+                                                      score_duration=final_scoring_time)
         return score_result_object
 
     @staticmethod
