@@ -90,15 +90,15 @@ class CVTestCaseC2(unittest.TestCase):
 
         # START HYPERPARAMETER SEARCH
         outer_pipe.fit(self.__X, self.__y)
-        print(outer_pipe.test_performances)
+        print(outer_pipe._test_performances)
         pipe_results = {'train': [], 'test': []}
-        for i in range(int(len(outer_pipe.performance_history_list)/2)):
+        for i in range(int(len(outer_pipe._performance_history_list)/2)):
             pipe_results['train'].extend(
-                outer_pipe.performance_history_list[i]['accuracy_folds']['train'])
+                outer_pipe._performance_history_list[i]['accuracy_folds']['train'])
             pipe_results['test'].extend(
-                outer_pipe.performance_history_list[i]['accuracy_folds']['test'])
+                outer_pipe._performance_history_list[i]['accuracy_folds']['test'])
 
-        print(outer_pipe.test_performances['accuracy'])
+        print(outer_pipe._test_performances['accuracy'])
 
 
 

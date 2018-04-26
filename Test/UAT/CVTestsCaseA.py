@@ -35,7 +35,7 @@ class CVTestsCaseA(unittest.TestCase):
 
         # START HYPERPARAMETER SEARCH
         my_pipe.fit(self.__X, self.__y)
-        print(my_pipe.test_performances)
+        print(my_pipe._test_performances)
         from Framework import LogExtractor
         log_ex = LogExtractor.LogExtractor(my_pipe.result_tree)
         log_ex.extract_csv("test_case_A.csv")
@@ -51,7 +51,7 @@ class CVTestsCaseA(unittest.TestCase):
         sk_pipeline = Pipeline([("standard_scaler", StandardScaler()), ("pca", PCA(n_components=pca_n_components)),
                                ("svc", SVC(C=svc_c, kernel=svc_kernel))])
 
-        my_pipe.generate_outer_cv_indices()
+        my_pipe._generate_outer_cv_indices()
         tmp_counter = 0
         for train_idx_arr, test_idx_arr in my_pipe.data_test_cases:
 
@@ -91,9 +91,9 @@ class CVTestsCaseA(unittest.TestCase):
             # bestItem = np.argmax(sk_results['default'])
             # print([str(k)+':'+str(i[bestItem]) for k, i in sk_results.items()])
 
-            self.assertEqual(sk_results['accuracy'], my_pipe.test_performances['accuracy'][tmp_counter])
-            self.assertEqual(sk_results['precision'], my_pipe.test_performances['precision'][tmp_counter])
-            self.assertEqual(sk_results['f1_score'], my_pipe.test_performances['f1_score'][tmp_counter])
+            self.assertEqual(sk_results['accuracy'], my_pipe._test_performances['accuracy'][tmp_counter])
+            self.assertEqual(sk_results['precision'], my_pipe._test_performances['precision'][tmp_counter])
+            self.assertEqual(sk_results['f1_score'], my_pipe._test_performances['f1_score'][tmp_counter])
 
             tmp_counter += 1
 
