@@ -483,18 +483,21 @@ class Hyperpipe(BaseEstimator):
                         if not config_item.config_failed:
                             # get optimizer_metric and forward to optimizer
                             # todo: also pass greater_is_better=True/False to optimizer
-                            config_score = (MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric),
-                                            MDBHelper.get_metric(config_item, FoldOperations.MEAN,
-                                                                 self.config_optimizer.metric, train=False))
+                            train_value = MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric)
+                            test_value = MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric, train=False)
+                            #
+                            # if not train_value or test_value:
+                            #     raise Exception("Config did not fail, but did not get any metrics either....!!?")
+                            config_score = (train_value, test_value)
 
                             # Print Result for config
                             Logger().debug('...done:')
                             Logger().verbose(self.config_optimizer.metric + str(config_score))
                         else:
-                            config_score = (-1, -1)
-                            # Print Result for config
-                            Logger().debug('...failed:')
-                            Logger().error(config_item.config_error)
+                             config_score = (-1, -1)
+                             # Print Result for config
+                             Logger().debug('...failed:')
+                             Logger().error(config_item.config_error)
 
                         self.performance_history_list.append(config_score)
 
@@ -509,6 +512,8 @@ class Hyperpipe(BaseEstimator):
                     if len(self.performance_history_list) > 0:
                         best_train_config = self.config_optimizer.get_optimum_config(outer_fold.tested_config_list)
 
+                        if not best_train_config:
+                            raise Exception("No best config was found!")
                         best_config_item_test = MDBConfig()
                         best_config_item_test.children_config_dict = best_train_config.children_config_dict
                         best_config_item_test.pipe_name = self.name
