@@ -6,9 +6,10 @@ from sklearn.metrics.pairwise import euclidean_distances
 from .Metrics.dunn_index import dunn
 from .Metrics.davies_bouldin_index import compute_DB_index
 
+
 class ClusterMetric:
 
-    def __init__(self, name :str, plus_minus_one: bool, greater_is_better: bool):
+    def __init__(self, name: str, plus_minus_one: bool, greater_is_better: bool):
         self.name = name
         self.plus_minus_one = plus_minus_one
         self.greater_is_better = greater_is_better

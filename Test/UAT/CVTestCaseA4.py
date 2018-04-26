@@ -40,13 +40,13 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
         # START HYPERPARAMETER SEARCH
         my_pipe.fit(self.__X, self.__y)
-        print(my_pipe.test_performances)
+        print(my_pipe._test_performances)
         pipe_results = {'train': [], 'test': []}
-        for i in range(len(my_pipe.performance_history_list)):
+        for i in range(len(my_pipe._performance_history_list)):
             pipe_results['train'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds']['train'])
+                my_pipe._performance_history_list[i]['accuracy_folds']['train'])
             pipe_results['test'].extend(
-                my_pipe.performance_history_list[i]['accuracy_folds']['test'])
+                my_pipe._performance_history_list[i]['accuracy_folds']['test'])
 
         print('\n\n')
         print('Running sklearn version...')

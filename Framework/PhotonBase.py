@@ -25,8 +25,171 @@ class Hyperpipe(BaseEstimator):
     """
     Wrapper class for machine learning pipeline, holding all pipeline elements
     and managing the optimization of the hyperparameters
-    """
 
+    Parameters
+    ----------
+    * 'name' [str]:
+        Name of hyperpipe instance
+
+    * 'inner_cv' [BaseCrossValidator]:
+        Cross validation strategy to test hyperparameter configurations, generates the validation set
+
+    * 'outer_cv' [BaseCrossValidator]:
+        Cross validation strategy to use for the hyperparameter search itself, generates the test set
+
+    * 'optimizer' [str or object, default="grid_search"]:
+        Hyperparameter optimization algorithm
+
+        - In case a string literal is given:
+            - "grid_search": optimizer that iteratively tests all possible hyperparameter combinations
+            - "random_grid_search": a variation of the grid search optimization that randomly picks hyperparameter
+               combinations from all possible hyperparameter combinations
+            - "timeboxed_random_grid_search": randomly chooses hyperparameter combinations from the set of all
+               possible hyperparameter combinations and tests until the given time limit is reached
+               - 'limit_in_minutes': int
+
+        - In case an object is given:
+          expects the object to have the following methods:
+           - 'next_config_generator': returns a hyperparameter configuration in form of an dictionary containing
+              key->value pairs in the sklearn parameter encoding 'model_name__parameter_name: parameter_value'
+           - 'prepare': takes a list of pipeline elements and their particular hyperparameters to test
+           - 'evaluate_recent_performance': gets a tested config and the respective performance in order to
+              calculate a smart next configuration to process
+
+    * 'metrics' [list of metric names as str]:
+        Metrics that should be calculated for both training, validation and test set
+        Use the preimported metrics from sklearn and photon, or register your own
+
+        - Metrics for 'classification':
+            - 'accuracy': sklearn.metrics.accuracy_score
+            - 'matthews_corrcoef': sklearn.metrics.matthews_corrcoef
+            - 'confusion_matrix': sklearn.metrics.confusion_matrix,
+            - 'f1_score': sklearn.metrics.f1_score
+            - 'hamming_loss': sklearn.metrics.hamming_loss
+            - 'log_loss': sklearn.metrics.log_loss
+            - 'precision': sklearn.metrics.precision_score
+            - 'recall': sklearn.metrics.recall_score
+        - Metrics for 'regression':
+            - 'mean_squared_error': sklearn.metrics.mean_squared_error
+            - 'mean_absolute_error': sklearn.metrics.mean_absolute_error
+            - 'explained_variance': sklearn.metrics.explained_variance_score
+            - 'r2': sklearn.metrics.r2_score
+        - Other metrics
+            - 'pearson_correlation': photon_core.Framework.Metrics.pearson_correlation
+            - 'variance_explained':  photon_core.Framework.Metrics.variance_explained_score
+            - 'categorical_accuracy': photon_core.Framework.Metrics.categorical_accuracy_score
+
+    * 'best_config_metric' [str]:
+        The metric that should be maximized or minimized in order to choose the best hyperparameter configuration
+
+    * 'eval_final_performance' [bool, default=False]:
+        If the metrics should be calculated for the test set, otherwise the testset is seperated but not used
+
+    * 'test_size' [float, default=0.2]:
+        the amount of the data that should be left out if no outer_cv is given and
+        eval_final_perfomance is set to True
+
+    * 'set_random_seed' [bool, default=False]:
+        If True sets the random seed to 42
+
+    * 'verbose' [int, default=0]:
+        The level of verbosity, 0 is least talkative
+
+    * 'logging' [bool, default=False]:
+        If True, prints the output to a log file
+
+    * 'logfile' [str]:
+        Path to a file in which the log messages are written
+
+    * 'groups' [array-like, default=None]:
+        Info for advanced cross validation strategies, such as LeaveOneSiteOut-CV about the affiliation
+        of the rows in the data
+
+    * 'local_search' [bool, default=True]:
+        If True, the hyperpipe optimizes the hyperparameters of its pipeline elements
+
+    * 'filter_element' [SourceFilter, default=None]:
+        Instance of SourceFilter Class that transforms the input data, e.g. extracts certain columns
+
+    * 'imbalanced_data_strategy_filter' [str, default=None]:
+        Uses the imblearn package to handle imbalanced class distributions in the data
+        A strategy is used to transform the data into more balanced distributions before the hyperparameter search
+        is started.
+        Strategies to choose from are:
+        - imbalance_type = OVERSAMPLING:
+            - RandomOverSampler
+            - SMOTE
+            - ADASYN
+
+        -imbalance_type = UNDERSAMPLING:
+            - ClusterCentroids,
+            - RandomUnderSampler,
+            - NearMiss,
+            - InstanceHardnessThreshold,
+            - CondensedNearestNeighbour,
+            - EditedNearestNeighbours,
+            - RepeatedEditedNearestNeighbours,
+            - AllKNN,
+            - NeighbourhoodCleaningRule,
+            - OneSidedSelection
+
+        - imbalance_type = COMBINE:
+            - SMOTEENN,
+            - SMOTETomek
+
+    * 'overwrite_x' [array-like, default=None]:
+        Overwrites the data given to the fit function.
+
+        If the parameter is set, the values given in hyperpipe.fit(X,y) are ignored and substituted by the values
+        from overwrite_x and overwrite_y.
+
+        This is useful if the hyperpipe is stacked into another hyperpipe as pipeline element, calculates on
+        different values and its output is used as an extra feature in the mother pipe.
+
+    * 'overwrite_y' [array-like, default=None]:
+        Overwrites the targets given in the fit function.
+
+        If the parameter is set, the values given in hyperpipe.fit(X,y) are ignored and substituted by the values
+        from overwrite_x and overwrite_y.
+
+        This is useful if the hyperpipe is stacked into another hyperpipe as pipeline element, calculates on
+        different values and its output is used as an extra feature in the mother pipe
+
+    * 'config' [dict, default=None]:
+        If the parameter is set, it constructs the pipeline elements from the information given in the dictionary.
+        Can be used as a shortcut to add the pipeline elements.
+
+    * 'debug_cv_mode' [bool, default=False]:
+        Boolean for the internal unit tests of the nested cross validation
+
+    Attributes
+    ----------
+    * 'optimum_pipe' [Pipeline]:
+        An sklearn pipeline object that is fitted to the training data according to the best hyperparameter
+        configuration found.
+
+    * 'best_config' [dict]:
+        Dictionary containing the hyperparameters of the best configuration.
+        Contains the parameters in the sklearn interface of model_name__parameter_name: parameter value
+
+    * 'result_tree' [MDBHyperpipe]:
+        Object containing all information about the for the performed hyperparameter search.
+        Holds the training and test metrics for all outer folds, inner folds and configurations, as well as
+        additional information.
+
+    * 'pipeline_elements' [list]:
+        Contains all PipelineElement or Hyperpipe objects that are added to the pipeline.
+
+    Example:
+        manager = Hyperpipe('test_manager',
+                            optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
+                            outer_cv=ShuffleSplit(test_size=0.2, n_splits=1),
+                            inner_cv=KFold(n_splits=10, shuffle=True),
+                            metrics=['accuracy', 'precision', 'recall', "f1_score"],
+                            best_config_metric='accuracy', eval_final_performance=True,
+                            logging=True, verbose=2)
+
+   """
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
@@ -40,67 +203,6 @@ class Hyperpipe(BaseEstimator):
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = True,
                  set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter: str = None,
                  logfile: str = '', logging: bool =False, verbose: int =0):
-
-        """
-        Setup the hyperparameter search, the nested cross validation and other parameters of the pipeline construct
-
-        Keyword arguments: 
-            :param name: name of hyperpipe construct
-            :type name: str
-            :param inner_cv: cross validation strategy to test hyperparameter configurations, generates the validation set
-            :type inner_cv: BaseCrossValidator
-            :param outer_cv: cross validation strategy to use for the hyperparameter search itself, generates the test set
-            :type outer_cv: BaseCrossValidator
-            :param optimizer: hyperparameter optimization algorithm (default 'grid_search')
-            :type optimizer: str or object
-            :param optimizer_params: parameters to pass to the optimizer
-            :type optimizer_params: dict
-            :param metrics: metrics that should be calculated for both validation and test set
-            :type metrics: array of str
-            :param best_config_metric: the metric that should be maximized or minimized in order to choose the best hyperparameter configuration
-            :type best_config_metric: str
-            :param eval_final_performance: if the metrics should be calculated for the test set (default False)
-            :type eval_final_performance: bool
-            :param test_size: the amount of the data that should be left out if no outer_cv is given and eval_final_perfomance is set to True (default 0.2)
-            :type test_size: double
-            :param set_random_seed: if true sets the random seed to 42 (default False)
-            :type set_random_seed: bool
-            :param verbose: the level of verbosity (default 0)
-            :type verbose: int
-            :param logging: if the output should be printed to a log file (default False)
-            :type logging: bool
-            :param logfile: Path to a file in which the logging text is written
-            :type logfile: str
-            :param groups: info for advanced cross validation strategies about each row in data
-            :type groups: array
-            :param local_search: if the hyperpipe should optimize the hyperparameters of its element (default True)
-            :type local_search: bool
-            :param filter_element: transforms the input data, e.g. extracts certain columns
-            :type filter_element: SourceFilter
-            :param imbalanced_data_strategy_filter: balances the data if there are imbalanced classes
-            :type imbalanced_data_strategy_filter: obj
-            :param calculate_metrics_per_fold: if True, calculates all metrics for each fold of the inner cross validation
-            :param calculate_metrics_across_folds: if True, collects the prediction of all folds and applies metrics on them
-            :param overwrite_x: data that is used when the hyperpipe object is an element of another hyperpipe
-            :type overwrite_x: array-like
-            :param overwrite_y: targets that are used when the hyperpipe object is an element of another hyperpipe
-            :type overwrite_y: array
-            :param config: construct pipeline elements and their hyperparameters and default parameters from JSON
-            :type config: dict
-            :param debug_cv_mode:  boolean for the internal unit tests of the nested cross validation
-            :type debug_cv_mode: bool
-
-        Example:
-            manager = Hyperpipe('test_manager',
-                                optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
-                                outer_cv=ShuffleSplit(test_size=0.2, n_splits=1),
-                                inner_cv=KFold(n_splits=10, shuffle=True),
-                                metrics=['accuracy', 'precision', 'recall', "f1_score"],
-                                best_config_metric='accuracy', eval_final_performance=True, 
-                                logging=True, verbose=2)
-
-
-        """
 
         # Re eval_final_performance:
         # set eval_final_performance to False because
@@ -129,7 +231,7 @@ class Hyperpipe(BaseEstimator):
         self.calculate_metrics_across_folds = calculate_metrics_across_folds
 
         self.data_test_cases = None
-        self.config_history = []
+        self._config_history = []
         self.performance_history = []
         self.children_config_setup = []
         self.best_config = None
@@ -150,16 +252,17 @@ class Hyperpipe(BaseEstimator):
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
-        self.pipe = None
+        self._pipe = None
+
         self.optimum_pipe = None
         self.metrics = metrics
         self.best_config_metric = best_config_metric
         self.config_optimizer = None
 
         self.result_tree = None
-        self.mother_outer_fold_counter = 0
-        self.mother_inner_fold_counter = 0
-        self.mother_config_counter = 0
+        self.__mother_outer_fold_counter = 0
+        self.__mother_inner_fold_counter = 0
+        self.__mother_config_counter = 0
 
         # Todo: this might be a case for sanity checking
         self.overwrite_x = overwrite_x
@@ -169,10 +272,10 @@ class Hyperpipe(BaseEstimator):
         self._config_grid = []
 
         # containers for optimization history and Logging
-        self.config_history = []
-        self.performance_history_list = []
-        self.parameter_history = []
-        self.test_performances = {}
+        self._config_history = []
+        self._performance_history_list = []
+        self._parameter_history = []
+        self._test_performances = {}
 
         if isinstance(config, dict):
             self.create_pipeline_elements_from_config(config)
@@ -191,30 +294,35 @@ class Hyperpipe(BaseEstimator):
             self.optimizer = optimizer
             self.local_search = local_search
 
-        self.test_size = test_size
-        self.validation_X = None
-        self.validation_y = None
-        self.test_X = None
-        self.test_y = None
         self.eval_final_performance = eval_final_performance
         self.hyperparameter_fitting_cv_object = outer_cv
-        self.last_fit_data_hash = None
-        self.current_fold = -1
-        self.num_of_folds = 0
-        self.is_mother_pipe = True
-        self.fold_data_hashes = []
+        self.test_size = test_size
+
+        self._validation_X = None
+        self._validation_y = None
+        self._test_X = None
+        self._test_y = None
+        self._last_fit_data_hash = None
+        self._current_fold = -1
+        self._num_of_folds = 0
+        self._is_mother_pipe = True
+        self._fold_data_hashes = []
 
     def __iadd__(self, pipe_element):
         """
         Add an element to the machine learning pipeline
+        Returns self
 
-        :param pipe_element: PipelineElement
-        :return: self
+        Parameters
+        ----------
+        * 'pipe_element' [PipelineElement or Hyperpipe]:
+            The object to add to the machine learning pipeline, being either a transformer or an estimator.
+
         """
         # if isinstance(pipe_element, PipelineElement):
         self.pipeline_elements.append(pipe_element)
         # Todo: is repeated each time element is added....
-        self.prepare_pipeline()
+        self._prepare_pipeline()
         return self
         # else:
         #     Todo: raise error
@@ -227,56 +335,64 @@ class Hyperpipe(BaseEstimator):
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
-    def yield_all_data(self):
+    def __yield_all_data(self):
         """
-        helper that iteratively returns the data stored in self.X
-        :return: self.X
+        Helper function that iteratively returns the data stored in self.X
+        Returns an iterable version of self.X
         """
         if hasattr(self.X, 'shape'):
             yield list(range(self.X.shape[0])), []
         else:
             yield list(range(len(self.X))), []
 
-
-    def generate_outer_cv_indices(self):
+    def _generate_outer_cv_indices(self):
         """
-        generates the training and  test set indices for the hyperparameter search
+        Generates the training and  test set indices for the hyperparameter search
+        Returns a tuple of training and test indices
 
-        if there is a strategy given for the outer cross validation it is used
-        if no strategy is given and eval_final_performance is True, all data is used for training
-        else: a test set is generated by the parameter test_size with ShuffleSplit
-        :return: list of (training and, test indices)
+        - If there is a strategy given for the outer cross validation the strategy is called to split the data
+        - If no strategy is given and eval_final_performance is True, all data is used for training
+        - If no strategy is given and eval_final_performance is False: a test set is seperated from the
+          training and validation set by the parameter test_size with ShuffleSplit
         """
         # if there is a CV Object for cross validating the hyperparameter search
         if self.hyperparameter_fitting_cv_object:
             self.data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
         # in case we do not want to divide between validation and test set
         elif not self.eval_final_performance:
-            self.data_test_cases = self.yield_all_data()
+            self.data_test_cases = self.__yield_all_data()
         # the default is dividing one time into a validation and test set
         else:
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
             self.data_test_cases = train_test_cv_object.split(self.X, self.y)
 
-    def distribute_cv_info_to_hyperpipe_children(self, reset: bool =False, reset_final_fit: bool=False,
-                                                 outer_fold_counter: int=None, inner_fold_counter: int =None,
-                                                 num_of_folds: int = None, config_counter: int =None):
+    def _distribute_cv_info_to_hyperpipe_children(self, reset: bool =False, reset_final_fit: bool=False,
+                                                  outer_fold_counter: int=None, inner_fold_counter: int =None,
+                                                  num_of_folds: int = None, config_counter: int =None):
         """
-        informs all elements of the pipeline that are of type hyperpipe (hyperpipe children)
+        Informs all elements of the pipeline that are of type hyperpipe (hyperpipe children)
         about the mother's configuration or current state
 
-        :param num_of_folds: how many inner folds the mother hyperpipe has
-        :type num_of_folds: int
-        :param outer_fold_counter: in which outer fold the mother hyerpipe currently is
-        :type outer_fold_counter: int
-        :param inner_fold_counter: in which inner fold the mother hyperpipe currently is
-        :type inner_fold_counter: int
-        :param config_counter: in which config_nr the mother hyperpipe actually is
-        :type config_counter: int
-        :param reset: if the hyperparameter search starts anew
-        :type reset: bool
-        :type  reset_final_fit: bool
-        :param reset_final_fit: reset the is_final_fit parameter so that children hyperpipe train anew for outer fold of mother pipe
+        Parameters
+        ----------
+        * 'num_of_folds' [int]:
+            how many inner folds the mother hyperpipe has
+
+        * 'outer_fold_counter' [int]:
+            in which outer fold the mother hyerpipe currently is
+
+        * 'inner_fold_counter' [int]:
+            in which inner fold the mother hyperpipe currently is
+
+        * 'config_counter' [int]:
+            in which config_nr the mother hyperpipe actually is
+
+        * 'reset' [bool, default = False]:
+            if the hyperparameter search starts anew
+
+        * 'reset_final_fit' [bool, default = False]:
+            reset the is_final_fit parameter so that children hyperpipe train anew for outer fold of mother pipe
+
         """
 
         def _distrbute_info_to_object(pipe_object, number_of_folds, reset_folds, reset_final_fit,
@@ -297,7 +413,7 @@ class Hyperpipe(BaseEstimator):
                     pipe_object.is_final_fit = False
 
         # walk through all children of pipeline, if its a hyperpipe distribute the information
-        for element_tuple in self.pipe.steps:
+        for element_tuple in self._pipe.steps:
             element_object = element_tuple[1]
             if isinstance(element_object, Hyperpipe):
                 _distrbute_info_to_object(element_object, num_of_folds, reset, reset_final_fit,
@@ -309,11 +425,14 @@ class Hyperpipe(BaseEstimator):
 
     def update_mother_inner_fold_nr(self, new_inner_fold_nr: int):
         """
-        function handle so that the TestPipeline class from Photon's Validation module can pass the information to hyperpipe children
-        :param new_inner_fold_nr: in which inner_fold the mother hyperpipe currently is
-        :type new_inner_fold_nr: int
+        Function handle so that the TestPipeline class from Photon's Validation module can pass the information to hyperpipe children
+
+        Parameters
+        ----------
+        * 'new_inner_fold_nr' [int]:
+            in which inner_fold the mother hyperpipe currently is
         """
-        self.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
+        self._distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
 
     def fit(self, data, targets, **fit_params):
         """
@@ -324,17 +443,20 @@ class Hyperpipe(BaseEstimator):
         2. requests new configurations from the hyperparameter search strategy, the optimizer,
         3. initializes the testing of a specific configuration,
         4. communicates the result to the optimizer,
-        5. repeats 1-3 until optimizer delivers no more configurations to test
-        6. finally searches for the best config,
+        5. repeats 2-4 until optimizer delivers no more configurations to test
+        6. finally searches for the best config in all tested configs,
         7. trains the pipeline with the best config and evaluates the performance on the test set
 
-        :param data: the training and test data, with shape = [N, D], where N is the number of samples and D is the number of features.
-        :type data: array-like
-        :param targets: the truth value, array, with shape = [N], where N is the number of samples.
-        :type targets: array
-        :param fit_params: any param dict
-        :type fit_params: dict
-        :return: self
+        Parameters
+        ----------
+         * `data` [array-like, shape=[N, D]]:
+            the training and test data, where N is the number of samples and D is the number of features.
+
+         * `targets` [array-like, shape=[N]]:
+            the truth values, where N is the number of samples.
+
+        Returns self
+       
         """
 
         # in case we want to inject some data from outside the pipeline
@@ -357,7 +479,7 @@ class Hyperpipe(BaseEstimator):
             self.imbalanced_data_strategy_filter.fit(self.X, self.y)
             self.X, self.y = self.imbalanced_data_strategy_filter.transform()
 
-        self.current_fold += 1
+        self._current_fold += 1
 
         # be compatible to list of (image-) files
         if isinstance(self.X, list):
@@ -375,16 +497,16 @@ class Hyperpipe(BaseEstimator):
         # 1. if it is first time ever or
         # 2. the data did change for that fold or
         # 3. if it is the mother pipe (then number_of_folds = 0)
-        if (len(self.fold_data_hashes) < self.num_of_folds) \
-                or (self.num_of_folds > 0 and self.fold_data_hashes[self.current_fold] != new_data_hash) \
-                or self.num_of_folds == 0:
+        if (len(self._fold_data_hashes) < self._num_of_folds) \
+                or (self._num_of_folds > 0 and self._fold_data_hashes[self._current_fold] != new_data_hash) \
+                or self._num_of_folds == 0:
 
             # save data hash for that fold
-            if self.num_of_folds > 0:
-                if len(self.fold_data_hashes) < self.num_of_folds:
-                    self.fold_data_hashes.append(new_data_hash)
+            if self._num_of_folds > 0:
+                if len(self._fold_data_hashes) < self._num_of_folds:
+                    self._fold_data_hashes.append(new_data_hash)
                 else:
-                    self.fold_data_hashes[self.current_fold] = new_data_hash
+                    self._fold_data_hashes[self._current_fold] = new_data_hash
 
             # optimize: iterate through configs and save results
             if self.local_search and not self.is_final_fit:
@@ -399,13 +521,13 @@ class Hyperpipe(BaseEstimator):
                     Logger().warn('Attention: Scoring with default score function of estimator can slow down calculations!')
 
                 # generate OUTER ! cross validation splits to iterate over
-                self.generate_outer_cv_indices()
+                self._generate_outer_cv_indices()
 
                 outer_fold_counter = 0
 
-                if not self.is_mother_pipe:
-                    self.result_tree_name = self.name + '_outer_fold_' + str(self.mother_outer_fold_counter)  \
-                                            + '_inner_fold_' + str(self.mother_inner_fold_counter)
+                if not self._is_mother_pipe:
+                    self.result_tree_name = self.name + '_outer_fold_' + str(self.__mother_outer_fold_counter)  \
+                                            + '_inner_fold_' + str(self.__mother_inner_fold_counter)
                 else:
                     self.result_tree_name = self.name
 
@@ -418,7 +540,7 @@ class Hyperpipe(BaseEstimator):
 
                     # give the optimizer the chance to inform about elements
                     self.optimizer.prepare(self.pipeline_elements)
-                    self.performance_history_list = []
+                    self._performance_history_list = []
 
                     outer_fold_counter += 1
                     outer_fold_fit_start_time = time.time()
@@ -429,20 +551,20 @@ class Hyperpipe(BaseEstimator):
                     t1 = time.time()
 
                     # Prepare Train and Validation set data
-                    self.validation_X = self.X[train_indices]
-                    self.validation_y = self.y[train_indices]
-                    self.test_X = self.X[test_indices]
-                    self.test_y = self.y[test_indices]
+                    self._validation_X = self.X[train_indices]
+                    self._validation_y = self.y[train_indices]
+                    self._test_X = self.X[test_indices]
+                    self._test_y = self.y[test_indices]
 
                     # Prepare inner cross validation
-                    cv_iter = list(self.hyperparameter_specific_config_cv_object.split(self.validation_X, self.validation_y))
+                    cv_iter = list(self.hyperparameter_specific_config_cv_object.split(self._validation_X, self._validation_y))
                     num_folds = len(cv_iter)
-                    num_samples_train = len(self.validation_y)
-                    num_samples_test = len(self.test_y)
+                    num_samples_train = len(self._validation_y)
+                    num_samples_test = len(self._test_y)
 
                     # distribute number of folds to encapsulated child hyperpipes
-                    self.distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
-                                                                  outer_fold_counter=outer_fold_counter)
+                    self._distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
+                                                                   outer_fold_counter=outer_fold_counter)
 
                     tested_config_counter = 0
 
@@ -492,10 +614,10 @@ class Hyperpipe(BaseEstimator):
                         #     Logger().debug(self.optimize_printing(specific_config))
                         #     Logger().info('Loading results for this config from MongoDB')
                         # except:
-                        self.distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-                        hp = TestPipeline(self.pipe, specific_config, self.metrics, self.update_mother_inner_fold_nr)
+                        self._distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
+                        hp = TestPipeline(self._pipe, specific_config, self.metrics, self.update_mother_inner_fold_nr)
                         Logger().debug('optimizing of:' + self.name)
-                        Logger().debug(self.optimize_printing(specific_config))
+                        Logger().debug(self._optimize_printing(specific_config))
                         Logger().debug('calculating...')
 
                         # Test the configuration cross validated by inner_cv object
@@ -503,6 +625,7 @@ class Hyperpipe(BaseEstimator):
                                                             save_predictions=False,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
                                                             calculate_metrics_across_folds=self.calculate_metrics_across_folds)
+
                         config_item.config_nr = tested_config_counter
                         config_item.config_dict = specific_config
                         config_item.pipe_name = self.name
@@ -512,7 +635,7 @@ class Hyperpipe(BaseEstimator):
                         # save the configuration of all children pipelines
                         children_config = {}
                         children_config_ref_list = []
-                        for pipe_step in self.pipe.steps:
+                        for pipe_step in self._pipe.steps:
                             item = pipe_step[1]
                             if isinstance(item, Hyperpipe):
                                 if item.local_search and item.best_config is not None:
@@ -523,13 +646,13 @@ class Hyperpipe(BaseEstimator):
                                         # special case: we need to access pipe over pipeline_stacking element
                                         children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
                                         # children_config_ref_list.append(hyperpipe.best_config._id)
-                        specific_parameters = self.pipe.get_params()
+                        specific_parameters = self._pipe.get_params()
                         #config_item.full_model_spec = specific_parameters
 
                         config_item.children_config_dict = children_config
                         config_item.children_config_ref = children_config_ref_list
 
-                        Logger().verbose(self.optimize_printing(specific_config))
+                        Logger().verbose(self._optimize_printing(specific_config))
 
                         if not config_item.config_failed:
                             # get optimizer_metric and forward to optimizer
@@ -547,7 +670,7 @@ class Hyperpipe(BaseEstimator):
                             Logger().debug('...failed:')
                             Logger().error(config_item.config_error)
 
-                        self.performance_history_list.append(config_score)
+                        self._performance_history_list.append(config_score)
 
                         # add config to result tree and do intermediate saving
                         self.result_tree.outer_folds[-1].tested_config_list.append(config_item)
@@ -557,7 +680,7 @@ class Hyperpipe(BaseEstimator):
                         self.optimizer.evaluate_recent_performance(specific_config, config_score)
 
                     # Todo: Do better error checking
-                    if len(self.performance_history_list) > 0:
+                    if len(self._performance_history_list) > 0:
                         best_train_config = self.config_optimizer.get_optimum_config(outer_fold.tested_config_list)
 
                         best_config_item_test = MDBConfig()
@@ -573,15 +696,15 @@ class Hyperpipe(BaseEstimator):
                         Logger().info('finished optimization of ' + self.name)
                         Logger().verbose('Result')
                         Logger().verbose('Number of tested configurations:' +
-                                         str(len(self.performance_history_list)))
+                                         str(len(self._performance_history_list)))
                         Logger().verbose('Optimizer metric: ' + self.config_optimizer.metric + '\n' +
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
-                        Logger().info('Best config: ' + self.optimize_printing(self.best_config.config_dict) +
+                        Logger().info('Best config: ' + self._optimize_printing(self.best_config.config_dict) +
                                       '\n' + '... with children config: '
                                       + str(self.best_config.children_config_dict))
 
                         # ... and create optimal pipeline
-                        self.optimum_pipe = self.pipe
+                        self.optimum_pipe = self._pipe
                         # set self to best config
                         self.optimum_pipe.set_params(**self.best_config.config_dict)
 
@@ -598,11 +721,11 @@ class Hyperpipe(BaseEstimator):
                                 pipe_element.set_params(**child_config)
                                 pipe_element.is_final_fit = True
 
-                        self.distribute_cv_info_to_hyperpipe_children(reset=True)
+                        self._distribute_cv_info_to_hyperpipe_children(reset=True)
 
                         Logger().verbose('...now fitting ' + self.name + ' with optimum configuration')
                         fit_time_start = time.time()
-                        self.optimum_pipe.fit(self.validation_X, self.validation_y)
+                        self.optimum_pipe.fit(self._validation_X, self._validation_y)
                         final_fit_duration = time.time() - fit_time_start
 
                         #self.best_config.full_model_spec = self.optimum_pipe.get_params()
@@ -613,13 +736,13 @@ class Hyperpipe(BaseEstimator):
                             # Todo: generate mean and std over outer folds as well. move this items to the top
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
 
-                            final_fit_test_item = TestPipeline.score(self.optimum_pipe, self.test_X, self.test_y,
+                            final_fit_test_item = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
                                                                      self.metrics, save_predictions=True)
 
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
-                            final_fit_train_item = TestPipeline.score(self.optimum_pipe, self.validation_X, self.validation_y,
+                            final_fit_train_item = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
                                                                       self.metrics, save_predictions=True)
 
                             # save test fold
@@ -643,7 +766,7 @@ class Hyperpipe(BaseEstimator):
 
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
                     self.result_tree.save()
-                    self.distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
+                    self._distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
 
                 # save result tree to db
                 Logger().info("Saved result tree to database")
@@ -652,11 +775,11 @@ class Hyperpipe(BaseEstimator):
                     self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
             ###############################################################################################
             else:
-                self.pipe.fit(self.X, self.y, **fit_params)
+                self._pipe.fit(self.X, self.y, **fit_params)
 
         else:
             Logger().verbose("Avoided fitting of " + self.name + " on fold "
-                             + str(self.current_fold) + " because data did not change")
+                             + str(self._current_fold) + " because data did not change")
             Logger().verbose('Best config of ' + self.name + ' : ' + str(self.best_config))
 
         return self
@@ -669,7 +792,7 @@ class Hyperpipe(BaseEstimator):
         :return: predicted targets, array
         """
         # Todo: if local_search = true then use optimized pipe here?
-        if self.pipe:
+        if self._pipe:
             if self.filter_element:
                 data = self.filter_element.transform(data)
             return self.optimum_pipe.predict(data)
@@ -681,7 +804,7 @@ class Hyperpipe(BaseEstimator):
         :type data: float
         :return: predicted values, array
         """
-        if self.pipe:
+        if self._pipe:
             if self.filter_element:
                 data = self.filter_element.transform(data)
             return self.optimum_pipe.predict_proba(data)
@@ -693,7 +816,7 @@ class Hyperpipe(BaseEstimator):
         :type data: array-like
         :return: transformed data, array
         """
-        if self.pipe:
+        if self._pipe:
             if self.filter_element:
                 data = self.filter_element.transform(data)
             return self.optimum_pipe.transform(data)
@@ -705,8 +828,8 @@ class Hyperpipe(BaseEstimator):
         :type deep: bool
         :return: dict of element_name__parameter_name: parameter_value
         """
-        if self.pipe is not None:
-            return self.pipe.get_params(deep)
+        if self._pipe is not None:
+            return self._pipe.get_params(deep)
         else:
             return None
 
@@ -717,11 +840,11 @@ class Hyperpipe(BaseEstimator):
         :type params: dict
         :return: self
         """
-        if self.pipe is not None:
-            self.pipe.set_params(**params)
+        if self._pipe is not None:
+            self._pipe.set_params(**params)
         return self
 
-    def prepare_pipeline(self):
+    def _prepare_pipeline(self):
         """
         build sklearn pipeline from PipelineElements and
         calculate parameter grid for all combinations of pipeline element hyperparameters
@@ -751,7 +874,7 @@ class Hyperpipe(BaseEstimator):
                 self._config_grid.append(base)
 
         # build pipeline...
-        self.pipe = Pipeline(pipeline_steps)
+        self._pipe = Pipeline(pipeline_steps)
 
     def copy_me(self):
         """
@@ -801,7 +924,7 @@ class Hyperpipe(BaseEstimator):
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)
 
-    def optimize_printing(self, config: dict):
+    def _optimize_printing(self, config: dict):
         """
         make the sklearn config syntax prettily readable for humans
         :param config: a dict of pipeline_element_name__parameter_name: parameter_value
@@ -813,10 +936,10 @@ class Hyperpipe(BaseEstimator):
             items = el_key.split('__')
             name = items[0]
             rest = '__'.join(items[1::])
-            if name in self.pipe.named_steps:
+            if name in self._pipe.named_steps:
                 new_pretty_key = '    ' + name + '->'
                 prettified_config.append(new_pretty_key +
-                                         self.pipe.named_steps[name].prettify_config_output(rest, el_value) + '\n')
+                                         self._pipe.named_steps[name].prettify_config_output(rest, el_value) + '\n')
             else:
                 Logger().error('ValueError: Item is not contained in pipeline:' + name)
                 raise ValueError('Item is not contained in pipeline:' + name)
@@ -851,7 +974,6 @@ class Hyperpipe(BaseEstimator):
 
     def config_to_dict(self, specific_config):
         """
-
         :param specific_config:
         :return:
         """
@@ -860,8 +982,8 @@ class Hyperpipe(BaseEstimator):
             items = key.split('__')
             name = items[0]
             rest = '__'.join(items[1::])
-            if name in self.pipe.named_steps:
-                config.update(self.pipe.named_steps[name].prettify_config_output(rest, value, return_dict=True))
+            if name in self._pipe.named_steps:
+                config.update(self._pipe.named_steps[name].prettify_config_output(rest, value, return_dict=True))
                 #config[name] = value
         return config
 
