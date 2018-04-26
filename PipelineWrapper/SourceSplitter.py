@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator
 
 
+
 class SourceSplitter(BaseEstimator):
     """
     Source splitter

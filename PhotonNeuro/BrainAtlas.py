@@ -113,9 +113,12 @@ class BrainAtlas(BaseEstimator):
         from nilearn.input_data import NiftiMasker
         from nilearn import image
 
-        try:
+        if len(X) < 1:
+            raise Exception("Brain Atlas: Did not get any data in parameter X")
+
+        if isinstance(X[0], str):
             img = load_img(X[0])
-        except:
+        else:
             img = X[0]
 
         import nibabel as nib
