@@ -1,5 +1,7 @@
 """
 Define custom metrics here
+The method stub of all metrics is
+function_name(y_true, y_pred)
 """
 
 import numpy as np
