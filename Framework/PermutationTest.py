@@ -1,5 +1,7 @@
 import numpy as np
 from multiprocessing import Pool
+from copy import deepcopy
+from sklearn.model_selection import ShuffleSplit
 
 from .PhotonBase import Hyperpipe
 
@@ -9,8 +11,6 @@ class PermutationTest:
     def __init__(self, hyperpipe: Hyperpipe, metric: str, greater_is_better, n_perms=1000, n_cores=1,
                  results_to_mongodb=False, random_state=15):
         self.hyperpipe = hyperpipe
-        self.X = hyperpipe.X
-        self.y_true = hyperpipe.y
         self.n_perms = n_perms
         self.n_cores = n_cores
         self.random_state = random_state
@@ -18,11 +18,14 @@ class PermutationTest:
         self.metric = metric
         self.greater_is_better = greater_is_better
 
-    def fit(self):
+    def fit(self, X, y):
         np.random.seed(self.random_state)
+        self.X = X
+        self.y_true = y
+        self.y_perm = list()
 
         # Run with true labels
-        true_pipe = self.hyperpipe
+        true_pipe = self.copy_pipe(self.hyperpipe)
         true_pipe.fit(self.X, self.y_true)
 
         # collect test set performances and calculate mean
@@ -33,7 +36,6 @@ class PermutationTest:
         true_performance = np.mean(performance)
 
         # Compute permutations
-        self.y_perm = list()
         for perm in range(self.n_perms):
             self.y_perm.append(np.random.permutation(self.y_true))
 
@@ -59,7 +61,10 @@ class PermutationTest:
         return {'p': p, 'true_performance': true_performance, 'perm_performances': perm_performances}
 
     def run_parallized_permutation(self, perm):
-        perm_pipe = self.hyperpipe
+        attributes = self.hyperpipe.__dict__
+        perm_pipe = Hyperpipe('name',inner_cv=ShuffleSplit(n_splits=1))
+        for key, attr in attributes.items():
+            perm_pipe.__setattr__(key, attr)
         perm_pipe.verbose = -1
         perm_pipe.name = self.hyperpipe.name + '_perm_' + str(perm)
         perm_pipe.fit(self.X, self.y_perm[perm])
@@ -77,3 +82,23 @@ class PermutationTest:
             return np.sum(true_performance > np.asarray(perm_performances))/self.n_perms
         else:
             return np.sum(true_performance < np.asarray(perm_performances))/self.n_perms
+
+    def copy_pipe(self, hyperpipe):
+        attributes = hyperpipe.__dict__
+        copied_pipe = Hyperpipe('name',inner_cv=ShuffleSplit(n_splits=1))
+        for key, attr in attributes.items():
+            copied_pipe.__setattr__(key, attr)
+        return copied_pipe
+
+
+
+
+
+
+
+
+
+
+
+
+
