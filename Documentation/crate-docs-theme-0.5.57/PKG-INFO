@@ -1,0 +1,17 @@
+Metadata-Version: 1.1
+Name: crate-docs-theme
+Version: 0.5.57
+Summary: Crate Sphinx Theme for ReadTheDocs
+Home-page: https://github.com/crate/crate-docs-theme
+Author: Crate.IO GmbH
+Author-email: office@crate.io
+License: Apache License 2.0
+Description: A Sphinx theme for Crate's Documentation
+Keywords: crate docs sphinx readthedocs
+Platform: UNKNOWN
+Classifier: Intended Audience :: Developers
+Classifier: License :: OSI Approved :: Apache Software License
+Classifier: Operating System :: OS Independent
+Classifier: Programming Language :: Python
+Classifier: Programming Language :: Python :: 2
+Classifier: Topic :: Software Development :: Documentation

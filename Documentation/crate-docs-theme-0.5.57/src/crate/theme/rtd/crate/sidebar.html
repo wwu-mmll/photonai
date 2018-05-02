@@ -1,0 +1,30 @@
+<div role="complementary" class="bs-docs-sidebar hidden-print" id="nav-affix">
+  <div class="search-link">
+    <a href="{{ pathto('search') }}" class="btn btn-primary">Search Documentation</a>
+  </div>
+  <ul class="bs-docs-sidenav bs-sidenav nav" role="complementary">
+
+    {% if theme_navbar_links %}
+      {%- for link in theme_navbar_links %}
+        <li><a href="{{ pathto(*link[1:]) }}">{{ link[0] }}</a></li>
+      {%- endfor %}
+    {% endif %}
+
+    {% block navbartoc %}
+      {% include "sidebartoc.html" %}
+    {% endblock %}
+
+    {% if theme_navbar_sidebarrel %}
+      {% block sidebarrel %}
+      {% endblock %}
+    {% endif %}
+
+    {% block navbarextra %}
+    {% endblock %}
+
+    {% if theme_source_link_position == "nav" %}
+      <li>{% include "sourcelink.html" %}</li>
+    {% endif %}
+
+  </ul>
+</div>
