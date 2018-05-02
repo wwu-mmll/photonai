@@ -9,6 +9,8 @@ class PermutationTest:
     def __init__(self, hyperpipe: Hyperpipe, metric: str, greater_is_better, n_perms=1000, n_cores=1,
                  results_to_mongodb=False, random_state=15):
         self.hyperpipe = hyperpipe
+        self.X = hyperpipe.X
+        self.y_true = hyperpipe.y
         self.n_perms = n_perms
         self.n_cores = n_cores
         self.random_state = random_state
@@ -16,11 +18,8 @@ class PermutationTest:
         self.metric = metric
         self.greater_is_better = greater_is_better
 
-    def fit(self, X, y):
+    def fit(self):
         np.random.seed(self.random_state)
-        self.X = X
-        self.y_true = y
-        self.y_perm = list()
 
         # Run with true labels
         true_pipe = self.hyperpipe
@@ -34,6 +33,7 @@ class PermutationTest:
         true_performance = np.mean(performance)
 
         # Compute permutations
+        self.y_perm = list()
         for perm in range(self.n_perms):
             self.y_perm.append(np.random.permutation(self.y_true))
 
