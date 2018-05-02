@@ -33,8 +33,8 @@ class ClusterPerformance:
         self.DUNN_INDEX = ClusterMetric("dunn_index", True)
         self.DB_INDEX = ClusterMetric("davies_bouldin_index", False)
         self.INERTIA = ClusterMetric("inertia", False)
-        self.BIC = ClusterMetric("bayesian_information_criterion", True)
-        self.metric_list = [self.SILHOUETTE, self.CH_SCORE, self.DUNN_INDEX, self.DB_INDEX, self.INERTIA, self.BIC]
+        # self.BIC = ClusterMetric("bayesian_information_criterion", True)
+        self.metric_list = [self.SILHOUETTE, self.CH_SCORE, self.DUNN_INDEX, self.DB_INDEX, self.INERTIA] #, self.BIC]
 
 
     def fit(self, X):
@@ -70,7 +70,7 @@ class ClusterPerformance:
             self.metric_dict[self.INERTIA.name].append(cluster_obj.inertia_)
 
             # 6. BIC
-            self.metric_dict[self.BIC.name].append(compute_bic(centroids, cluster_labels, nr_clusters, X))
+            # self.metric_dict[self.BIC.name].append(compute_bic(centroids, cluster_labels, nr_clusters, X))
 
         if self.plot:
 
