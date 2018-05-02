@@ -56,15 +56,15 @@ class CVTestCaseB(unittest.TestCase):
 
         # START HYPERPARAMETER SEARCH
         outer_pipe.fit(self.__X, self.__y)
-        print(outer_pipe.test_performances)
+        print(outer_pipe._test_performances)
         pipe_results = {'train': [], 'test': []}
-        for i in range(len(outer_pipe.performance_history_list)):
+        for i in range(len(outer_pipe._performance_history_list)):
             pipe_results['train'].extend(
-                outer_pipe.performance_history_list[i]['accuracy_folds']['train'])
+                outer_pipe._performance_history_list[i]['accuracy_folds']['train'])
             pipe_results['test'].extend(
-                outer_pipe.performance_history_list[i]['accuracy_folds']['test'])
+                outer_pipe._performance_history_list[i]['accuracy_folds']['test'])
 
-        print(outer_pipe.test_performances['accuracy'])
+        print(outer_pipe._test_performances['accuracy'])
 
         print('\n\n')
         print('Running sklearn version...\n')
@@ -220,11 +220,11 @@ class CVTestCaseB(unittest.TestCase):
         print('SkL  Test: ', sk_results_inner1['val_1'])
         print('Pipe Test: ', pipe_results['test'])
         print('\nEval final performance:')
-        print('Pipe final perf:', outer_pipe.test_performances['accuracy'])
+        print('Pipe final perf:', outer_pipe._test_performances['accuracy'])
         print('Sklearn final perf:', opt_test_acc)
         self.assertEqual(sk_results_inner1['train_2'], pipe_results['train'])
         self.assertEqual(sk_results_inner1['val_1'], pipe_results['test'])
-        self.assertEqual(opt_test_acc, outer_pipe.test_performances['accuracy'])
+        self.assertEqual(opt_test_acc, outer_pipe._test_performances['accuracy'])
 
 
 if __name__ == '__main__':

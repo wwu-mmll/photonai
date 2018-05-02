@@ -5,7 +5,7 @@ from functools import total_ordering
 
 from slackclient import SlackClient
 
-from photon_core.Framework.PhotonConf import PhotonConf
+from Framework.PhotonConf import PhotonConf
 
 """ Logging is a simple way to emit and store logs.
 

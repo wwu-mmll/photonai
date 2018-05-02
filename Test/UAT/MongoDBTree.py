@@ -22,7 +22,10 @@ manager = Hyperpipe('test_manager',
                     optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
                     outer_cv=ShuffleSplit(test_size=0.2, n_splits=3),
                     inner_cv=KFold(n_splits=10, shuffle=True), best_config_metric='accuracy',
-                    metrics=['accuracy', 'precision', 'recall', "f1_score"], logging=False, eval_final_performance=True, verbose=2)
+                    metrics=['accuracy', 'precision', 'recall', "f1_score"],
+                    logging=False, eval_final_performance=True,
+                    calculate_metrics_across_folds=True,
+                    verbose=2)
 
 manager.add(PipelineElement.create('standard_scaler', test_disabled=True))
 manager += PipelineElement.create('pca', hyperparameters={'n_components': [None, 1, 10000]})
