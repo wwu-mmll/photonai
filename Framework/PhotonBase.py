@@ -280,17 +280,29 @@ class Hyperpipe(BaseEstimator):
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
 
         Manages the nested cross validated hyperparameter search:
-        1. requests new configurations from the hyperparameter search strategy, the optimizer,
-        2. initializes the testing of a specific configuration,
-        3. communicates the result to the optimizer,
-        4. repeats 1-3 until optimizer delivers no more configurations to test
-        5. finally searches for the best config,
-        6. trains the pipeline with the best config and evaluates the performance on the test set
 
-        :param data: the training and test data
-        :param targets: the truth value
-        :param fit_params: any param dict
-        :return: self
+        1. Filters the data according to filter strategy and according to the imbalanced_data_strategy
+        2. requests new configurations from the hyperparameter search strategy, the optimizer,
+        3. initializes the testing of a specific configuration,
+        4. communicates the result to the optimizer,
+        5. repeats 2-4 until optimizer delivers no more configurations to test
+        6. finally searches for the best config in all tested configs,
+        7. trains the pipeline with the best config and evaluates the performance on the test set
+
+        Parameters
+        ----------
+         * `data` [array-like, shape=[N, D]]:
+            the training and test data, where N is the number of samples and D is the number of features.
+
+         * `targets` [array-like, shape=[N]]:
+            the truth values, where N is the number of samples.
+
+        Returns
+        -------
+         * 'self'
+            Returns self
+       
+
         """
 
         # in case we want to inject some data from outside the pipeline
@@ -616,6 +628,13 @@ class Hyperpipe(BaseEstimator):
         return self
 
     def predict(self, data):
+        """
+        Use the optimum pipe to predict the data
+
+        Returns
+        -------
+            predicted targets
+        """
         # Todo: if local_search = true then use optimized pipe here?
         if self.pipe:
             if self.filter_element:
@@ -625,9 +644,10 @@ class Hyperpipe(BaseEstimator):
     def predict_proba(self, data):
         """
         Predict probabilities
-        :param data: array-like
-        :type data: float
-        :return: predicted values, array
+
+       Returns
+       -------
+
         """
         if self.pipe:
             if self.filter_element:
@@ -1183,6 +1203,18 @@ class PipelineSwitch(PipelineElement):
         return obj
 
     def set_params(self, **kwargs):
+<<<<<<< Updated upstream
+=======
+        """
+        The optimization process sees the amount of possible combinations and chooses one of them.
+        Then this class activates the belonging element and prepared the element with the particular chosen configuration.
+        :param kwargs: dict containing the current_element parameter
+
+        Returns
+        -------
+
+        """
+>>>>>>> Stashed changes
         config_nr = None
         if self._sklearn_curr_element in kwargs:
             config_nr = kwargs[self._sklearn_curr_element]
@@ -1202,6 +1234,21 @@ class PipelineSwitch(PipelineElement):
             self.base_element.set_params(**unnamed_config)
 
     def prettify_config_output(self, config_name, config_value, return_dict=False):
+<<<<<<< Updated upstream
+=======
+        """
+        Makes the sklearn configuration dictionary human readable
+
+        :param config_name: the name of the parameter
+        :param config_value: the value of the parameter
+        :param return_dict: if True, the output is a dict with prettified keys
+
+        Returns
+        -------
+        * 'prettified_configuration_string' [str]:
+            configuration as prettified string or configuration as dict with prettified keys
+        """
+>>>>>>> Stashed changes
         if isinstance(config_value, tuple):
             output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
             if not output:
