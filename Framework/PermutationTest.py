@@ -1,22 +1,18 @@
 import numpy as np
 from multiprocessing import Pool
-from copy import deepcopy
-from sklearn.model_selection import ShuffleSplit
-from pymodm import connect
-from .PhotonBase import Hyperpipe
 
 
 class PermutationTest:
 
     def __init__(self, hyperpipe_constructor, metric: str, greater_is_better, n_perms=1000, n_processes=1,
-                 results_to_mongodb=False, random_state=15):
+                 permutations_to_mongodb=False, random_state=15):
 
         self.hyperpipe_constructor = hyperpipe_constructor
         self.pipe = self.hyperpipe_constructor()
         self.n_perms = n_perms
         self.n_processes = n_processes
         self.random_state = random_state
-        self.results_to_mongodb = results_to_mongodb
+        self.permutations_to_mongodb = permutations_to_mongodb
         self.metric = metric
         self.greater_is_better = greater_is_better
 
@@ -42,7 +38,8 @@ class PermutationTest:
 
         # Run parallel pool
         pool = Pool(processes=self.n_processes)
-        perm_performances = [pool.apply(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metric)) for perm_run, y_perm in enumerate(y_perms)]
+        perm_performances = [pool.apply(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metric, self.permutations_to_mongodb))
+                             for perm_run, y_perm in enumerate(y_perms)]
         pool.close()
 
         # Calculate p-value
@@ -70,12 +67,13 @@ class PermutationTest:
 
 
 
-def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metric):
-    connect("mongodb://localhost:27017/permutation_test_test")
+def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metric, write_to_db):
     # Create new instance of hyperpipe and set all parameters
     perm_pipe = hyperpipe_constructor()
     perm_pipe.verbose = -1
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
+    perm_pipe.mongodb_writer.set_connection(perm_pipe.mongodb_connect_url + '_permutations')
+    perm_pipe.mongodb_writer.set_write_to_db(write_to_db)
 
     # Fit hyperpipe
     perm_pipe.fit(X, y_perm)
