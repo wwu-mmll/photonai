@@ -18,7 +18,6 @@ class PermutationTest:
 
 
     def fit(self, X, y):
-        np.random.seed(self.random_state)
         y_true = y
 
         # Run with true labels
@@ -32,6 +31,7 @@ class PermutationTest:
         true_performance = np.mean(performance)
 
         # Compute permutations
+        np.random.seed(self.random_state)
         y_perms = list()
         for perm in range(self.n_perms):
             y_perms.append(np.random.permutation(y_true))
