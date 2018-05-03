@@ -2,7 +2,7 @@
 from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from enum import Enum
 import numpy as np
-
+from ..Logging.Logger import Singleton, Logger
 
 class MDBFoldMetric(EmbeddedMongoModel):
     operation = fields.CharField(blank=True)
@@ -108,6 +108,25 @@ class MDBHelper():
         if len(metric) == 1:
             return metric[0]
         return metric
+
+
+
+class MongoDBWriter:
+    def __init__(self, write_to_db, connect_url):
+        self.write_to_db = write_to_db
+        self.connect_url = connect_url
+
+    def set_write_to_db(self, write_to_db: bool):
+        self.write_to_db = write_to_db
+
+    def set_connection(self, connection_url: str):
+        self.connect_url = connection_url
+
+    def save(self, results_tree):
+        if self.write_to_db:
+            connect(self.connect_url)
+            Logger().debug('Write results to mongodb...')
+            results_tree.save()
 
 
 

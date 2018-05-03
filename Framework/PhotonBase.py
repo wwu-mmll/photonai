@@ -204,7 +204,8 @@ class Hyperpipe(BaseEstimator):
                  test_size: float = 0.2, eval_final_performance=False, debug_cv_mode=False,
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = True,
                  set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter: str = None,
-                 logfile: str = '', logging: bool =False, verbose: int =0):
+                 logfile: str = '', logging: bool =False, verbose: int =0, write_to_db: bool = True,
+                 mongodb_connect_url: str = None, save_all_predictions: bool = True):
 
 
         # Re eval_final_performance:
@@ -253,6 +254,11 @@ class Hyperpipe(BaseEstimator):
         Logger().set_verbosity(self.verbose)
         if logfile:
             Logger().set_custom_log_file(logfile)
+
+        # MongoDBWriter setup
+        self.mongodb_connect_url = mongodb_connect_url
+        self.write_to_db = write_to_db
+        self.mongodb_writer = MongoDBWriter(write_to_db=write_to_db, connect_url=self.mongodb_connect_url)
 
         self.pipeline_elements = []
         self.pipeline_param_list = {}
@@ -630,7 +636,7 @@ class Hyperpipe(BaseEstimator):
                         Logger().debug('calculating...')
 
                         # Test the configuration cross validated by inner_cv object
-                        config_item = hp.calculate_cv_score(self.validation_X, self.validation_y, cv_iter,
+                        config_item = hp.calculate_cv_score(self._validation_X, self._validation_y, cv_iter,
                                                             save_predictions=self.save_all_predictions,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
                                                             calculate_metrics_across_folds=self.calculate_metrics_across_folds)
@@ -686,7 +692,7 @@ class Hyperpipe(BaseEstimator):
 
                         # add config to result tree and do intermediate saving
                         self.result_tree.outer_folds[-1].tested_config_list.append(config_item)
-                        self.result_tree.save()
+                        self.mongodb_writer.save(self.result_tree)
 
                         # 3. inform optimizer about performance
                         self.optimizer.evaluate_recent_performance(specific_config, config_score)
@@ -715,7 +721,7 @@ class Hyperpipe(BaseEstimator):
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
                         Logger().info('Best config: ' + self._optimize_printing(self.best_config.config_dict) +
                                       '\n' + '... with children config: '
-                                      + self.optimize_printing(self.best_config.children_config_dict))
+                                      + self._optimize_printing(self.best_config.children_config_dict))
 
 
                         # ... and create optimal pipeline
@@ -780,12 +786,12 @@ class Hyperpipe(BaseEstimator):
 
 
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
-                    self.result_tree.save()
+                    self.mongodb_writer.save(self.result_tree)
                     self._distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
 
                 # save result tree to db
                 Logger().info("Saved result tree to database")
-                self.result_tree.save()
+                self.mongodb_writer.save(self.result_tree)
                 if self.logging:
                     self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
             ###############################################################################################
