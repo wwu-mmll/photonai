@@ -2,7 +2,7 @@ import numpy as np
 from multiprocessing import Pool
 from .ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 from .Validation import Scorer
-from ..Logging.Logger import Logger
+from Logging.Logger import Logger
 
 
 class PermutationTest:
