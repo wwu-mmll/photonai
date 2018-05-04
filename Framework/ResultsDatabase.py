@@ -2,7 +2,7 @@
 from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from enum import Enum
 import numpy as np
-from ..Logging.Logger import Singleton, Logger
+from Logging.Logger import Logger
 
 class MDBFoldMetric(EmbeddedMongoModel):
     operation = fields.CharField(blank=True)
