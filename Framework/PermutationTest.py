@@ -1,0 +1,173 @@
+import numpy as np
+from multiprocessing import Pool
+from .ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
+from .Validation import Scorer
+from ..Logging.Logger import Logger
+
+
+class PermutationTest:
+
+    def __init__(self, hyperpipe_constructor, n_perms=1000, n_processes=1,
+                 random_state=15):
+
+        self.hyperpipe_constructor = hyperpipe_constructor
+        self.pipe = self.hyperpipe_constructor()
+        self.n_perms = n_perms
+        self.n_processes = n_processes
+        self.random_state = random_state
+
+        # Get all specified metrics
+        self.metrics = dict()
+        for metric in self.pipe.metrics:
+            self.metrics[metric] = {'name': metric, 'greater_is_better': self.set_greater_is_better(metric)}
+        best_config_metric = self.pipe.best_config_metric
+        if best_config_metric not in self.metrics.keys():
+            self.metrics[best_config_metric] = {'name': best_config_metric,
+                                                'greater_is_better': self.set_greater_is_better(best_config_metric)}
+
+    def fit(self, X, y):
+        y_true = y
+
+        # Run with true labels
+        self.pipe.fit(X, y_true)
+
+        # collect test set performances and calculate mean
+        n_outer_folds = len(self.pipe.result_tree.outer_folds)
+
+        true_performance = dict()
+        for _, metric  in self.metrics.items():
+            performance = list()
+            for fold in range(n_outer_folds):
+                performance.append(self.pipe.result_tree.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
+            true_performance[metric['name']] = np.mean(performance)
+
+        # Compute permutations
+        np.random.seed(self.random_state)
+        y_perms = list()
+        for perm in range(self.n_perms):
+            y_perms.append(np.random.permutation(y_true))
+
+        # Run parallel pool
+        pool = Pool(processes=self.n_processes)
+        perm_performances = [pool.apply(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metrics))
+                             for perm_run, y_perm in enumerate(y_perms)]
+        pool.close()
+
+        # Reorder results
+        perm_perf_metrics = dict()
+        for _, metric in self.metrics.items():
+            perms = list()
+            for i in range(self.n_perms):
+                perms.append(perm_performances[i][metric['name']])
+            perm_perf_metrics[metric['name']] = perms
+
+        # Calculate p-value
+        p = self.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics)
+
+        # Print results
+        print(""" 
+        Done with permutations...
+        
+        Results Permutation Test
+        ===============================================
+        """)
+        for _, metric in self.metrics.items():
+            print("""
+                Metric: {}
+                True Performance: {}
+                p Value: {}
+                
+            """.format(metric['name'], true_performance[metric['name']], p[metric['name']]))
+
+        # Write results to results tree
+        perm_results = MDBPermutationResults(n_perms=self.n_perms, random_state=self.random_state)
+        results_all_metrics = list()
+        for _, metric in self.metrics.items():
+            perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']], metric_value=true_performance[metric['name']])
+            perm_metrics.values_permutations = perm_perf_metrics[metric['name']]
+            results_all_metrics.append(perm_metrics)
+        perm_results.metrics = results_all_metrics
+        self.pipe.result_tree.permutation_test = perm_results
+        self.pipe.mongodb_writer.save(self.pipe.result_tree)
+
+        return {'pipe': self.pipe, 'p': p, 'true_performance': true_performance, 'perm_performances': perm_perf_metrics}
+
+    def calculate_p(self, true_performance, perm_performances):
+        p = dict()
+        for _, metric in self.metrics.items():
+            if metric['greater_is_better']:
+                p[metric['name']] = np.sum(true_performance[metric['name']] < np.asarray(perm_performances[metric['name']]))/self.n_perms
+            else:
+                p[metric['name']] = np.sum(true_performance[metric['name']] > np.asarray(perm_performances[metric['name']]))/self.n_perms
+        return p
+
+    def set_greater_is_better(self, metric):
+        """
+        Set greater_is_better for metric
+        :param string specifying metric
+        """
+        if metric == 'score':
+            # if no specific metric was chosen, use default scoring method
+
+            last_element = self.pipe.pipeline_elements[-1]
+            if hasattr(last_element.base_element, '_estimator_type'):
+                greater_is_better = True
+            else:
+                # Todo: better error checking?
+                Logger().error('NotImplementedError: ' +
+                               'No metric was chosen and last pipeline element does not specify ' +
+                               'whether it is a classifier, regressor, transformer or ' +
+                               'clusterer.')
+                raise NotImplementedError('No metric was chosen and last pipeline element does not specify '
+                                          'whether it is a classifier, regressor, transformer or '
+                                          'clusterer.')
+        else:
+            if metric in Scorer.ELEMENT_DICTIONARY:
+                # for now do a simple hack and set greater_is_better
+                # by looking at error/score in metric name
+                metric_name = Scorer.ELEMENT_DICTIONARY[metric][1]
+                specifier = metric_name.split('_')[-1]
+                if specifier == 'score':
+                    greater_is_better = True
+                elif specifier == 'error':
+                    greater_is_better = False
+                else:
+                    # Todo: better error checking?
+                    error_msg = "Metric is not registered in PHOTON yet."
+                    Logger().error(error_msg)
+                    raise NameError(error_msg)
+            else:
+                Logger().error('NameError: Specify valid metric.')
+                raise NameError('Specify valid metric.')
+        return greater_is_better
+
+
+def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metrics):
+    # Create new instance of hyperpipe and set all parameters
+    perm_pipe = hyperpipe_constructor()
+    perm_pipe.verbose = -1
+    perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
+    perm_pipe.mongodb_writer.set_connection(perm_pipe.mongodb_connect_url + '_permutations')
+    perm_pipe.mongodb_writer.set_write_to_db(False)
+
+    # Fit hyperpipe
+    perm_pipe.fit(X, y_perm)
+
+    # collect test set predictions
+    n_outer_folds = len(perm_pipe.result_tree.outer_folds)
+
+    perm_performances = dict()
+    for _, metric in metrics.items():
+        performance = list()
+        for fold in range(n_outer_folds):
+            performance.append(
+                perm_pipe.result_tree.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
+        perm_performances[metric['name']] = np.mean(performance)
+    return perm_performances
+
+
+
+
+
+
+

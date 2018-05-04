@@ -2,7 +2,7 @@
 from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from enum import Enum
 import numpy as np
-
+from ..Logging.Logger import Singleton, Logger
 
 class MDBFoldMetric(EmbeddedMongoModel):
     operation = fields.CharField(blank=True)
@@ -49,13 +49,23 @@ class MDBOuterFold(EmbeddedMongoModel):
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
     tested_config_list = fields.EmbeddedDocumentListField(MDBConfig, default=[], blank=True)
 
+class MDBPermutationMetrics(EmbeddedMongoModel):
+    metric_name = fields.CharField(blank=True)
+    metric_value = fields.FloatField(blank=True)
+    p_value = fields.FloatField(blank=True)
+    values_permutations = fields.ListField(blank=True)
+
+class MDBPermutationResults(EmbeddedMongoModel):
+    n_perms = fields.IntegerField(blank=True)
+    random_state = fields.IntegerField(blank=True)
+    metrics = fields.EmbeddedDocumentListField(MDBPermutationMetrics, blank=True)
+
 
 class MDBHyperpipe(MongoModel):
-
     name = fields.CharField(primary_key=True)
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
-
+    permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
 
 class FoldOperations(Enum):
     MEAN = 0
@@ -108,6 +118,25 @@ class MDBHelper():
         if len(metric) == 1:
             return metric[0]
         return metric
+
+
+
+class MongoDBWriter:
+    def __init__(self, write_to_db, connect_url):
+        self.write_to_db = write_to_db
+        self.connect_url = connect_url
+
+    def set_write_to_db(self, write_to_db: bool):
+        self.write_to_db = write_to_db
+
+    def set_connection(self, connection_url: str):
+        self.connect_url = connection_url
+
+    def save(self, results_tree):
+        if self.write_to_db:
+            connect(self.connect_url)
+            Logger().debug('Write results to mongodb...')
+            results_tree.save()
 
 
 
