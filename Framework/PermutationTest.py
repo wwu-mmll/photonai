@@ -48,11 +48,12 @@ class PermutationTest:
             y_perms.append(np.random.permutation(y_true))
 
         # Run parallel pool
-        self.perm_performances = [None]*self.n_perms
+        #self.perm_performances = [None]*self.n_perms
         pool = Pool(processes=self.n_processes)
 
+        perm_performances = list()
         for perm_run, y_perm in enumerate(y_perms):
-            pool.apply_async(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metrics), callback=self.collect_results)
+            perm_performances.append(pool.apply(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metrics)))
         pool.close()
 
         # Reorder results
@@ -60,7 +61,7 @@ class PermutationTest:
         for _, metric in self.metrics.items():
             perms = list()
             for i in range(self.n_perms):
-                perms.append(self.perm_performances[i][metric['name']])
+                perms.append(perm_performances[i][metric['name']])
             perm_perf_metrics[metric['name']] = perms
 
         # Calculate p-value
