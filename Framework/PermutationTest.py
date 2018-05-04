@@ -48,9 +48,11 @@ class PermutationTest:
             y_perms.append(np.random.permutation(y_true))
 
         # Run parallel pool
+        self.perm_performances = [None]*self.n_perms
         pool = Pool(processes=self.n_processes)
-        perm_performances = [pool.apply(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metrics))
-                             for perm_run, y_perm in enumerate(y_perms)]
+
+        for perm_run, y_perm in enumerate(y_perms):
+            pool.apply_async(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metrics), callback=self.collect_results)
         pool.close()
 
         # Reorder results
@@ -58,7 +60,7 @@ class PermutationTest:
         for _, metric in self.metrics.items():
             perms = list()
             for i in range(self.n_perms):
-                perms.append(perm_performances[i][metric['name']])
+                perms.append(self.perm_performances[i][metric['name']])
             perm_perf_metrics[metric['name']] = perms
 
         # Calculate p-value
@@ -91,6 +93,11 @@ class PermutationTest:
         self.pipe.mongodb_writer.save(self.pipe.result_tree)
 
         return {'pipe': self.pipe, 'p': p, 'true_performance': true_performance, 'perm_performances': perm_perf_metrics}
+
+    def collect_results(self, result):
+        # This is called whenever foo_pool(i) returns a result.
+        # result_list is modified only by the main process, not the pool workers.
+        self.perm_performances[result['ind_perm']] = result
 
     def calculate_p(self, true_performance, perm_performances):
         p = dict()
@@ -151,6 +158,7 @@ def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metri
     perm_pipe.mongodb_writer.set_write_to_db(False)
 
     # Fit hyperpipe
+    print('Fitting permutation...')
     perm_pipe.fit(X, y_perm)
 
     # collect test set predictions
@@ -163,7 +171,10 @@ def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metri
             performance.append(
                 perm_pipe.result_tree.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
         perm_performances[metric['name']] = np.mean(performance)
+    perm_performances['ind_perm'] = perm_run
     return perm_performances
+
+
 
 
 
