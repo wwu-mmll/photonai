@@ -49,13 +49,23 @@ class MDBOuterFold(EmbeddedMongoModel):
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
     tested_config_list = fields.EmbeddedDocumentListField(MDBConfig, default=[], blank=True)
 
+class MDBPermutationMetrics(EmbeddedMongoModel):
+    metric_name = fields.CharField(blank=True)
+    metric_value = fields.FloatField(blank=True)
+    p_value = fields.FloatField(blank=True)
+    values_permutations = fields.ListField(blank=True)
+
+class MDBPermutationResults(EmbeddedMongoModel):
+    n_perms = fields.IntegerField(blank=True)
+    random_state = fields.IntegerField(blank=True)
+    metrics = fields.EmbeddedDocumentListField(MDBPermutationMetrics, blank=True)
+
 
 class MDBHyperpipe(MongoModel):
-
     name = fields.CharField(primary_key=True)
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
-
+    permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
 
 class FoldOperations(Enum):
     MEAN = 0
