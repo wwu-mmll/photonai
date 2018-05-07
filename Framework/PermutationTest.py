@@ -48,29 +48,24 @@ class PermutationTest:
             y_perms.append(np.random.permutation(y_true))
 
         # Run parallel pool
-        #self.perm_performances = [None]*self.n_perms
-        pool = Pool(processes=self.n_processes)
-
-        perm_performances = list()
-        for perm_run, y_perm in enumerate(y_perms):
-            perm_performances.append(pool.apply(run_parallized_permutation, args=(self.hyperpipe_constructor, X, perm_run, y_perm, self.metrics)))
-        pool.close()
+        self.perm_performances = [None]*self.n_perms
+        self.run_parallelized_hyperpipes(y_perms, self.hyperpipe_constructor, X, self.metrics)
 
         # Reorder results
         perm_perf_metrics = dict()
         for _, metric in self.metrics.items():
             perms = list()
             for i in range(self.n_perms):
-                perms.append(perm_performances[i][metric['name']])
+                perms.append(self.perm_performances[i][metric['name']])
             perm_perf_metrics[metric['name']] = perms
 
         # Calculate p-value
         p = self.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics)
 
         # Print results
-        print(""" 
+        print("""
         Done with permutations...
-        
+
         Results Permutation Test
         ===============================================
         """)
@@ -79,7 +74,7 @@ class PermutationTest:
                 Metric: {}
                 True Performance: {}
                 p Value: {}
-                
+
             """.format(metric['name'], true_performance[metric['name']], p[metric['name']]))
 
         # Write results to results tree
@@ -95,10 +90,18 @@ class PermutationTest:
 
         return {'pipe': self.pipe, 'p': p, 'true_performance': true_performance, 'perm_performances': perm_perf_metrics}
 
+    def run_parallelized_hyperpipes(self, y_perms, hyperpipe_constructor, X, metrics):
+        pool = Pool(processes=self.n_processes)
+        for perm_run, y_perm in enumerate(y_perms):
+            pool.apply_async(run_parallized_permutation, args=(hyperpipe_constructor, X, perm_run, y_perm, metrics), callback=self.collect_results, error_callback=error_callback)
+        pool.close()
+        pool.join()
+
     def collect_results(self, result):
         # This is called whenever foo_pool(i) returns a result.
         # result_list is modified only by the main process, not the pool workers.
         self.perm_performances[result['ind_perm']] = result
+
 
     def calculate_p(self, true_performance, perm_performances):
         p = dict()
@@ -149,6 +152,11 @@ class PermutationTest:
                 raise NameError('Specify valid metric.')
         return greater_is_better
 
+def collect_result(result):
+    print('Done.')
+
+def error_callback(result):
+    print('What the hell happened.')
 
 def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metrics):
     # Create new instance of hyperpipe and set all parameters
@@ -156,7 +164,7 @@ def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metri
     perm_pipe.verbose = -1
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
     perm_pipe.mongodb_writer.set_connection(perm_pipe.mongodb_connect_url + '_permutations')
-    perm_pipe.mongodb_writer.set_write_to_db(False)
+    perm_pipe.mongodb_writer.set_write_to_db(True)
 
     # Fit hyperpipe
     print('Fitting permutation...')
