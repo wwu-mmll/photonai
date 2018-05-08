@@ -161,6 +161,7 @@ def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metri
     perm_pipe.mongodb_writer.set_connection(perm_pipe.mongodb_connect_url + '_permutations')
     perm_pipe.mongodb_writer.set_write_to_db(True)
     perm_pipe.save_final_predictions = False
+    perm_pipe.calculate_metrics_across_folds = False
 
     # Fit hyperpipe
     print('Fitting permutation...')
