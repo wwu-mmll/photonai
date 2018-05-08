@@ -178,5 +178,8 @@
   "ImbalancedDataTransform": [
     "photon_core.PipelineWrapper.ImbalancedWrapper.ImbalancedDataTransform",
     "Transformer"
+  ],
+  "DeepPRSClassifier": [
+    "photon_core.PipelineWrapper.DeepPRS.DeepPRSClassifier"
   ]
 }
