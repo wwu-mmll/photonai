@@ -152,11 +152,6 @@ class PermutationTest:
                 raise NameError('Specify valid metric.')
         return greater_is_better
 
-def collect_result(result):
-    print('Done.')
-
-def error_callback(result):
-    print('What the hell happened.')
 
 def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metrics):
     # Create new instance of hyperpipe and set all parameters
@@ -165,6 +160,7 @@ def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metri
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
     perm_pipe.mongodb_writer.set_connection(perm_pipe.mongodb_connect_url + '_permutations')
     perm_pipe.mongodb_writer.set_write_to_db(True)
+    perm_pipe.save_final_predictions = False
 
     # Fit hyperpipe
     print('Fitting permutation...')
