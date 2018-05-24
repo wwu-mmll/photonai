@@ -3,7 +3,7 @@ from photon_core.Framework.PhotonBase import Hyperpipe, PipelineElement, Pipelin
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import ShuffleSplit
 import numpy as np
-from ..Logging.Logger import Logger
+from Logging.Logger import Logger
 
 class RoiFilterElement(BaseEstimator):
 
