@@ -272,6 +272,16 @@
   ],
 
 
+  "BayesianGaussianMixture": [
+    "sklearn.mixture.BayesianGaussianMixture",
+    "Estimator"
+  ],
+  "GaussianMixture": [
+    "sklearn.mixture.GaussianMixture",
+    "Estimator"
+  ],
+
+
 
 
   "PretrainedCNNClassifier": [
