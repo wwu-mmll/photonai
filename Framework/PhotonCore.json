@@ -222,6 +222,20 @@
   ],
 
 
+  "BernoulliRBM": [
+    "sklearn.neural_network.BernoulliRBM",
+    "Estimator"
+  ],
+  "MLPClassifier": [
+    "sklearn.neural_network.MLPClassifier",
+    "Estimator"
+  ],
+  "MLPRegressor": [
+    "sklearn.neural_network.MLPRegressor",
+    "Estimator"
+  ],
+  
+
 
 
   "PretrainedCNNClassifier": [
