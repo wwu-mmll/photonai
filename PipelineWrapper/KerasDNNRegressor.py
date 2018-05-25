@@ -8,7 +8,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import ShuffleSplit
-from ..Logging.Logger import Logger
+from Logging.Logger import Logger
 
 class KerasDNNRegressor(BaseEstimator, RegressorMixin):
 
