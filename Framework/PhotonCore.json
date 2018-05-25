@@ -1,4 +1,80 @@
-{
+{ "DictionaryLearning": [
+    "sklearn.decomposition.DictionaryLearning",
+    "Transformer"
+  ],
+  "FactorAnalysis": [
+    "sklearn.decomposition.FactorAnalysis",
+    "Transformer"
+  ],
+  "FastICA": [
+    "sklearn.decomposition.FastICA",
+    "Transformer"
+  ],
+  "IncrementalPCA": [
+    "sklearn.decomposition.IncrementalPCA",
+    "Transformer"
+  ],
+  "KernelPCA": [
+    "sklearn.decomposition.KernelPCA",
+    "Transformer"
+  ],
+  "LatentDirichletAllocation": [
+    "sklearn.decomposition.LatentDirichletAllocation",
+    "Transformer"
+  ],
+  "MiniBatchDictionaryLearning": [
+    "sklearn.decomposition.MiniBatchDictionaryLearning",
+    "Transformer"
+  ],
+  "MiniBatchSparsePCA": [
+    "sklearn.decomposition.MiniBatchSparsePCA",
+    "Transformer"
+  ],
+  "NMF": [
+    "sklearn.decomposition.NMF",
+    "Transformer"
+  ],
+  "PCA": [
+    "sklearn.decomposition.PCA",
+    "Transformer"
+  ],
+  "SparsePCA": [
+    "sklearn.decomposition.SparsePCA",
+    "Transformer"
+  ],
+  "SparseCoder": [
+    "sklearn.decomposition.SparseCoder",
+    "Transformer"
+  ],
+  "TruncatedSVD": [
+    "sklearn.decomposition.TruncatedSVD",
+    "Transformer"
+  ],
+  "dict_learning": [
+    "sklearn.decomposition.dict_learning",
+    "Transformer"
+  ],
+  "dict_learning_online": [
+    "sklearn.decomposition.dict_learning_online",
+    "Transformer"
+  ],
+  "fastica": [
+    "sklearn.decomposition.fastica",
+    "Transformer"
+  ],
+  "sparse_encode": [
+    "sklearn.decomposition.sparse_encode",
+    "Transformer"
+  ],
+
+  
+
+
+
+
+
+
+
   "PretrainedCNNClassifier": [
     "photon_core.PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
     "Estimator"
@@ -15,10 +91,7 @@
     "photon_core.PipelineWrapper.RLCNN.RLCNN",
     "Estimator"
   ],
-  "pca": [
-    "sklearn.decomposition.PCA",
-    "Transformer"
-  ],
+
   "KNeighborsRegressor": [
     "sklearn.neighbors.KNeighborsRegressor",
     "Estimator"
