@@ -174,8 +174,22 @@
   ],
 
 
-
-
+  "DecisionTreeRegressor": [
+    "sklearn.tree.DecisionTreeRegressor",
+    "Estimator"
+  ],
+  "DecisionTreeClassifier": [
+    "sklearn.tree.DecisionTreeClassifier",
+    "Estimator"
+  ],
+  "ExtraDecisionTreeRegressor": [
+    "sklearn.tree.ExtraDecisionTreeRegressor",
+    "Estimator"
+  ],
+  "ExtraDecisionTreeClassifier": [
+    "sklearn.tree.ExtraDecisionTreeClassifier",
+    "Estimator"
+  ],
 
 
 
@@ -275,14 +289,7 @@
     "sklearn.preprocessing.StandardScaler",
     "Transformer"
   ],
-  "DecisionTreeRegressor": [
-    "sklearn.tree.DecisionTreeRegressor",
-    "Estimator"
-  ],
-  "DecisionTreeClassifier": [
-    "sklearn.tree.DecisionTreeClassifier",
-    "Estimator"
-  ],
+
   "SiameseDNNClassifier": [
     "photon_core.PipelineWrapper.SiameseDNNClassifier.SiameseDNNClassifier",
     "Estimator"
@@ -338,10 +345,6 @@
   "SimpleAutoencoder": [
     "photon_core.PipelineWrapper.KerasAutoencoder.SimpleAutoencoder",
     "Estimator"
-  ],
-  "Imputer": [
-    "sklearn.preprocessing.Imputer",
-    "Transformer"
   ],
   "PhotonOneClassSVM": [
     "photon_core.PipelineWrapper.PhotonOneClassSVM.PhotonOneClassSVM",
