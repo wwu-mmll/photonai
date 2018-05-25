@@ -67,7 +67,50 @@
     "Transformer"
   ],
 
-  
+
+
+  "GenericUnivariateSelect": [
+    "sklearn.feature_selection.GenericUnivariateSelect",
+    "Transformer"
+  ],
+  "SelectPercentile": [
+    "sklearn.feature_selection.SelectPercentile",
+    "Transformer"
+  ],
+  "SelectKBest": [
+    "sklearn.feature_selection.SelectKBest",
+    "Transformer"
+  ],
+  "SelectFpr": [
+    "sklearn.feature_selection.SelectFpr",
+    "Transformer"
+  ],
+  "SelectFdr": [
+    "sklearn.feature_selection.SelectFdr",
+    "Transformer"
+  ],
+  "SelectFromModel": [
+    "sklearn.feature_selection.SelectFromModel",
+    "Transformer"
+  ],
+  "SelectFwe": [
+    "sklearn.feature_selection.SelectFwe",
+    "Transformer"
+  ],
+  "RFE": [
+    "sklearn.feature_selection.RFE",
+    "Transformer"
+  ],
+  "RFECV": [
+    "sklearn.feature_selection.RFECV",
+    "Transformer"
+  ],
+  "VarianceThreshold": [
+    "sklearn.feature_selection.VarianceThreshold",
+    "Transformer"
+  ],
+
+
 
 
 
