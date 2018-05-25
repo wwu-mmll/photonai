@@ -350,10 +350,30 @@
     "sklearn.linear_model.SGDRegressor",
     "Estimator"
   ],
-    "TheilSenRegressor": [
+  "TheilSenRegressor": [
     "sklearn.linear_model.TheilSenRegressor",
     "Estimator"
   ],
+
+
+  "KernelRidge": [
+    "sklearn.kernel_ridge.KernelRidge",
+    "Estimator"
+  ],
+
+
+  "GaussianProcessClassifier": [
+    "sklearn.gaussian_process.GaussianProcessClassifier",
+    "Estimator"
+  ],
+  "GaussianProcessRegressor": [
+    "sklearn.gaussian_process.GaussianProcessRegressor",
+    "Estimator"
+  ],
+
+          
+
+
 
 
 
