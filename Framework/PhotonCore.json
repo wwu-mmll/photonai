@@ -192,6 +192,35 @@
   ],
 
 
+  "LinearSVC": [
+    "sklearn.svm.LinearSVC",
+    "Estimator"
+  ],
+  "LinearSVR": [
+    "sklearn.svm.LinearSVR",
+    "Estimator"
+  ],
+  "NuSVC": [
+    "sklearn.svm.NuSVC",
+    "Estimator"
+  ],
+  "NuSVR": [
+    "sklearn.svm.NuSVR",
+    "Estimator"
+  ],
+  "SVC": [
+    "sklearn.svm.SVC",
+    "Estimator"
+  ],
+  "SVR": [
+    "sklearn.svm.SVR",
+    "Estimator"
+  ],
+  "OneClassSVM": [
+    "sklearn.svm.OneClassSVM",
+    "Estimator"
+  ],
+
 
 
 
@@ -241,10 +270,7 @@
     "Transformer"
   ],
 
-  "SVR": [
-    "sklearn.svm.SVR",
-    "Estimator"
-  ],
+
   "f_regression_select_percentile": [
     "photon_core.PipelineWrapper.FeatureSelection.FRegressionSelectPercentile",
     "Transformer"
@@ -265,10 +291,7 @@
     "photon_core.PipelineWrapper.FeatureSelection.LogisticGWASFeatureSelection",
     "Transformer"
   ],
-  "svc": [
-    "sklearn.svm.SVC",
-    "Estimator"
-  ],
+
   "SourceSplitter": [
     "photon_core.PipelineWrapper.SourceSplitter.SourceSplitter",
     "Transformer"
@@ -330,10 +353,7 @@
     "sklearn.feature_selection.VarianceThreshold",
     "Transformer"
   ],
-  "OneClassSVM": [
-    "sklearn.svm.OneClassSVM",
-    "Estimator"
-  ],
+
   "BioCorex": [
     "photon_core.PipelineWrapper.BioCorex.BioCorex",
     "Transformer"
