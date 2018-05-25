@@ -257,7 +257,20 @@
     "Estimator"
   ],
 
-  
+
+  "BernoulliNB": [
+    "sklearn.naive_bayes.BernoulliNB",
+    "Estimator"
+  ],
+  "GaussianNB": [
+    "sklearn.naive_bayes.GaussianNB",
+    "Estimator"
+  ],
+  "MultinomialNB": [
+    "sklearn.naive_bayes.MultinomialNB",
+    "Estimator"
+  ],
+
 
 
 
