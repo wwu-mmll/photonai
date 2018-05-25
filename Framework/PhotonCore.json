@@ -282,6 +282,80 @@
   ],
 
 
+  "ARDRegression": [
+    "sklearn.linear_model.ARDRegression",
+    "Estimator"
+  ],
+  "BayesianRidge": [
+    "sklearn.linear_model.BayesianRidge",
+    "Estimator"
+  ],
+  "ElasticNet": [
+    "sklearn.linear_model.ElasticNet",
+    "Estimator"
+  ],
+  "HuberRegressor": [
+    "sklearn.linear_model.HuberRegressor",
+    "Estimator"
+  ],
+  "Lars": [
+    "sklearn.linear_model.Lars",
+    "Estimator"
+  ],
+  "Lasso": [
+    "sklearn.linear_model.Lasso",
+    "Estimator"
+  ],
+  "LassoLars": [
+    "sklearn.linear_model.LassoLars",
+    "Estimator"
+  ],
+  "LinearRegression": [
+    "sklearn.linear_model.LinearRegression",
+    "Estimator"
+  ],
+  "LogisticRegression": [
+    "sklearn.linear_model.LogisticRegression",
+    "Estimator"
+  ],
+  "PassiveAggressiveClassifier": [
+    "sklearn.linear_model.PassiveAggressiveClassifier",
+    "Estimator"
+  ],
+  "PassiveAggressiveRegressor": [
+    "sklearn.linear_model.PassiveAggressiveRegressor",
+    "Estimator"
+  ],
+  "Perceptron": [
+    "sklearn.linear_model.Perceptron",
+    "Estimator"
+  ],
+  "RANSACRegressor": [
+    "sklearn.linear_model.RANSACRegressor",
+    "Estimator"
+  ],
+   "Ridge": [
+    "sklearn.linear_model.Ridge",
+    "Estimator"
+  ],
+  "RidgeClassifier": [
+    "sklearn.linear_model.RidgeClassifier",
+    "Estimator"
+  ],
+  "SGDClassifier": [
+    "sklearn.linear_model.SGDClassifier",
+    "Estimator"
+  ],
+  "SGDRegressor": [
+    "sklearn.linear_model.SGDRegressor",
+    "Estimator"
+  ],
+    "TheilSenRegressor": [
+    "sklearn.linear_model.TheilSenRegressor",
+    "Estimator"
+  ],
+
+
 
 
   "PretrainedCNNClassifier": [
