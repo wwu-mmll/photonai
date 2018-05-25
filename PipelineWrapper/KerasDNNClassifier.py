@@ -16,7 +16,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
     def __init__(self, hidden_layer_sizes=[10, 20], dropout_rate=0.5, target_dimension=10, act_func='prelu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
-                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, batch_size=64):
+                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, batch_size=64, verbosity=0):
 
         self.hidden_layer_sizes = hidden_layer_sizes
         self.dropout_rate = dropout_rate
@@ -33,10 +33,14 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
 
         self.model = None
 
-        if Logger().verbosity_level == 2:
-            self.verbosity = 2
-        else:
-            self.verbosity = 0
+        # Todo: Check why Logger singleton doesn't work in this scenario
+        # if Logger().verbosity_level == 2:
+        #     self.verbosity = 2
+        # else:
+        #     self.verbosity = 0
+
+        self.verbosity = verbosity
+
 
     def fit(self, X, y):
 

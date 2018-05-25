@@ -29,7 +29,7 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
         self.reLe_patience = reLe_patience
 
         self.model = None
-        
+
         # Todo: Check why Logger singleton doesn't work in this scenario
         # if Logger().verbosity_level == 2:
         #     self.verbosity = 2
