@@ -418,6 +418,15 @@
   ],
 
 
+  "DummyClassifier": [
+    "sklearn.dummy.DummyClassifier",
+    "Estimator"
+  ],
+  "DummyRegressor": [
+    "sklearn.dummy.DummyRegressor",
+    "Estimator"
+  ],
+
 
 
 
