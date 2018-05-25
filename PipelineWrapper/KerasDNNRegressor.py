@@ -85,12 +85,7 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
         return self
 
     def predict(self, X):
-        if self.target_dimension > 1:
-            predict_result = self.model.predict(X, batch_size=128)
-            max_index = np.argmax(predict_result, axis=1)
-            return max_index
-        else:
-            return self.model.predict(X, batch_size=128)
+        return np.squeeze(self.model.predict(X, batch_size=128))
 
     def create_model(self, input_size):
 
