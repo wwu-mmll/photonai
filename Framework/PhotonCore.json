@@ -371,7 +371,53 @@
     "Estimator"
   ],
 
-          
+
+  "AdaBoostClassifier": [
+    "sklearn.ensemble.AdaBoostClassifier",
+    "Estimator"
+  ],
+  "AdaBoostRegressor": [
+    "sklearn.ensemble.AdaBoostRegressor",
+    "Estimator"
+  ],
+  "BaggingClassifier": [
+    "sklearn.ensemble.BaggingClassifier",
+    "Estimator"
+  ],
+  "BaggingRegressor": [
+    "sklearn.ensemble.BaggingRegressor",
+    "Estimator"
+  ],
+  "ExtraTreesClassifier": [
+    "sklearn.ensemble.ExtraTreesClassifier",
+    "Estimator"
+  ],
+  "ExtraTreesRegressor": [
+    "sklearn.ensemble.ExtraTreesRegressor",
+    "Estimator"
+  ],
+  "GradientBoostingClassifier": [
+    "sklearn.ensemble.GradientBoostingClassifier",
+    "Estimator"
+  ],
+  "GradientBoostingRegressor": [
+    "sklearn.ensemble.GradientBoostingRegressor",
+    "Estimator"
+  ],
+  "RandomForestRegressor": [
+    "sklearn.ensemble.RandomForestRegressor",
+    "Estimator"
+  ],
+  "RandomForestClassifier": [
+    "sklearn.ensemble.RandomForestClassifier",
+    "Estimator"
+  ],
+  "VotingClassifier": [
+    "sklearn.ensemble.VotingClassifier",
+    "Estimator"
+  ],
+
+
 
 
 
@@ -395,14 +441,7 @@
     "Estimator"
   ],
 
-  "RandomForestRegressor": [
-    "sklearn.ensemble.RandomForestRegressor",
-    "Estimator"
-  ],
-  "RandomForestClassifier": [
-    "sklearn.ensemble.RandomForestClassifier",
-    "Estimator"
-  ],
+
   "KerasDNNRegressor": [
     "photon_core.PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor",
     "Estimator"
