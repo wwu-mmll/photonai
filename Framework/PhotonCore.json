@@ -68,6 +68,23 @@
   ],
 
 
+  "CCA": [
+    "sklearn.cross_decomposition.CCA",
+    "Transformer"
+  ],
+  "PLSCanonical": [
+    "sklearn.cross_decomposition.PLSCanonical",
+    "Transformer"
+  ],
+  "PLSRegression": [
+    "sklearn.cross_decomposition.PLSRegression",
+    "Transformer"
+  ],
+  "PLSSVD": [
+    "sklearn.cross_decomposition.PLSSVD",
+    "Transformer"
+  ],
+
 
   "GenericUnivariateSelect": [
     "sklearn.feature_selection.GenericUnivariateSelect",
@@ -163,10 +180,7 @@
     "photon_core.PipelineWrapper.FeatureSelection.FClassifSelectPercentile",
     "Transformer"
   ],
-  "SelectPercentile": [
-    "sklearn.feature_selection.SelectPercentile",
-    "Transformer"
-  ],
+
   "SVR": [
     "sklearn.svm.SVR",
     "Estimator"
