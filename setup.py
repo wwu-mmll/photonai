@@ -11,4 +11,23 @@ setup(
   download_url = 'https://github.com/photon-ai-team/photon-ai/archive/0.1.tar.gz', # I'll explain this in a second
   keywords = ['machine learning', 'deep learning', 'neural networks', 'hyperparameter'], # arbitrary keywords
   classifiers = [],
+  install_requires = [
+    'numpy',
+    'matplotlib',
+    'tensorflow',
+    'slackclient',
+    'progressbar2',
+    'Pillow',
+    'scikit-learn',
+    'keras',
+    'nilearn',
+    'pandas',
+    'nibabel',
+    'pandas',
+    'six',
+    'h5py',
+    'xlrd',
+    'plotly',
+    'imblearn'
+  ]
 )
