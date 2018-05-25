@@ -7,8 +7,8 @@ setup(
   description = 'A Python-Based Hyperparameter Optimization Toolbox for Neural Networks',
   author = 'PHOTON Team',
   author_email = 'hahnt@wwu.de',
-  url = 'https://github.com/photon-team/photon.git', # use the URL to the github repo
-  download_url = 'https://github.com/photon-team/photon/archive/alpha0.2.tar.gz', # I'll explain this in a second
+  url = 'https://github.com/photon-ai-team/photon-ai.git', # use the URL to the github repo
+  download_url = 'https://github.com/photon-ai-team/photon-ai/archive/alpha0.2.tar.gz', # I'll explain this in a second
   keywords = ['machine learning', 'deep learning', 'neural networks', 'hyperparameter'], # arbitrary keywords
   classifiers = [],
 )

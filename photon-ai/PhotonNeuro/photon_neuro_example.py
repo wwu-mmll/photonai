@@ -18,7 +18,7 @@ targets = oasis_dataset.ext_vars['age'].astype(float)   # age
 
 print(BrainAtlas._getAtlasDict())
 
-# setup photon HP
+# setup photon-ai HP
 my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                     optimizer_params={},
                     metrics=['mean_squared_error', 'mean_absolute_error'],

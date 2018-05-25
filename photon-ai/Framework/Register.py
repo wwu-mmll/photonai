@@ -24,7 +24,7 @@ class RegisterPipelineElement:
     def __init__(self, photon_package: str, photon_name: str, class_str: str, element_type=None):
         """
         Create new entry information
-        :param photon_package: the photon module name e.g. photon_core, photon_neuro
+        :param photon_package: the photon-ai module name e.g. photon_core, photon_neuro
         :param photon_name: the string literal with which you want to access the class
         :param class_str: the namespace of the class, like in the import statement
         :param element_type: 'estimator' or 'transformer'
@@ -104,7 +104,7 @@ class PhotonRegister:
         Load JSON file in which the elements for the PHOTON submodule are stored.
 
         The JSON files are stored in the framework folder by the name convention 'photon_package.json'
-        :param photon_package: the name of the photon submodule
+        :param photon_package: the name of the photon-ai submodule
         :type photon_package: str
         :return: JSON file as dict, file path as str
         """

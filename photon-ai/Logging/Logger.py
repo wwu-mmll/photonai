@@ -131,7 +131,7 @@ class Logger:
             self._distribute_log(message, 'VERBOSE')
 
     # Info should be used if something interesting (but uncritically) happened
-    # i.e. most basic info on photon hyperpipe
+    # i.e. most basic info on photon-ai hyperpipe
     def info(self, message: str):
         if self._log_level <= self.LogLevel.INFO:
             self._distribute_log(message, 'INFO')
