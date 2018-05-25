@@ -9,11 +9,11 @@ class PhotonConf:
         self.config['LOGGING'] = {
             'print_to_console': True,
             'print_to_file': True,
-            'logfile_name': 'photon.log',
+            'logfile_name': 'photon-ai.log',
             'print_to_slack': False,
             'slack_token': '',
             'loglevel_slack': 'INFO',
-            'slack_channel': '#photon-log'
+            'slack_channel': '#photon-ai-log'
         }
         with open(self.configfile_path, 'w') as configfile:
             self.config.write(configfile)

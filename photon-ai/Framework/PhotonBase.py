@@ -59,7 +59,7 @@ class Hyperpipe(BaseEstimator):
 
     * 'metrics' [list of metric names as str]:
         Metrics that should be calculated for both training, validation and test set
-        Use the preimported metrics from sklearn and photon, or register your own
+        Use the preimported metrics from sklearn and photon-ai, or register your own
 
         - Metrics for 'classification':
             - 'accuracy': sklearn.metrics.accuracy_score
