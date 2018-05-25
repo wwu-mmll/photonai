@@ -234,6 +234,29 @@
     "sklearn.neural_network.MLPRegressor",
     "Estimator"
   ],
+
+
+  "KNeighborsClassifier": [
+    "sklearn.neighbors.KNeighborsClassifier",
+    "Estimator"
+  ],
+  "KNeighborsRegressor": [
+    "sklearn.neighbors.KNeighborsRegressor",
+    "Estimator"
+  ],
+  "RadiusNeighborsClassifier": [
+    "sklearn.neighbors.RadiusNeighborsClassifier",
+    "Estimator"
+  ],
+  "RadiusNeighborsRegressor": [
+    "sklearn.neighbors.RadiusNeighborsRegressor",
+    "Estimator"
+  ],
+  "NearestCentroid": [
+    "sklearn.neighbors.NearestCentroid",
+    "Estimator"
+  ],
+
   
 
 
@@ -255,10 +278,6 @@
     "Estimator"
   ],
 
-  "KNeighborsRegressor": [
-    "sklearn.neighbors.KNeighborsRegressor",
-    "Estimator"
-  ],
   "RandomForestRegressor": [
     "sklearn.ensemble.RandomForestRegressor",
     "Estimator"
