@@ -429,98 +429,98 @@
 
 
   "KerasDNNClassifier": [
-    "photon_core.PipelineWrapper.KerasDNNClassifier.KerasDNNClassifier",
+    "PipelineWrapper.KerasDNNClassifier.KerasDNNClassifier",
     "Estimator"
   ],
   "KerasDNNRegressor": [
-    "photon_core.PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor",
+    "PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor",
     "Estimator"
   ],
   "SiameseDNNClassifier": [
-    "photon_core.PipelineWrapper.SiameseDNNClassifier.SiameseDNNClassifier",
+    "PipelineWrapper.SiameseDNNClassifier.SiameseDNNClassifier",
     "Estimator"
   ],
   "PretrainedCNNClassifier": [
-    "photon_core.PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
+    "PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
     "Estimator"
   ],
   "CNN1dClassifier": [
-    "photon_core.PipelineWrapper.CNN1d.CNN1d",
+    "PipelineWrapper.CNN1d.CNN1d",
     "Estimator"
   ],
   "TensorFlowDNNClassifier": [
-    "photon_core.PipelineWrapper.TFDNNClassifier.TFDNNClassifier",
+    "PipelineWrapper.TFDNNClassifier.TFDNNClassifier",
     "Estimator"
   ],
   "KerasDNNMultiOutput": [
-    "photon_core.PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
+    "PipelineWrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
     "Estimator"
   ],
   "SimpleAutoencoder": [
-    "photon_core.PipelineWrapper.KerasAutoencoder.SimpleAutoencoder",
+    "PipelineWrapper.KerasAutoencoder.SimpleAutoencoder",
     "Estimator"
   ],
   "RLCNN": [
-    "photon_core.PipelineWrapper.RLCNN.RLCNN",
+    "PipelineWrapper.RLCNN.RLCNN",
     "Estimator"
   ],
   "WrapperModel": [
-    "photon_core.PipelineWrapper.WrapperModel.WrapperModel",
+    "PipelineWrapper.WrapperModel.WrapperModel",
     "Estimator"
   ],
   "LogisticGWASFeatureSelection": [
-    "photon_core.PipelineWrapper.FeatureSelection.LogisticGWASFeatureSelection",
+    "PipelineWrapper.FeatureSelection.LogisticGWASFeatureSelection",
     "Transformer"
   ],
   "SourceSplitter": [
-    "photon_core.PipelineWrapper.SourceSplitter.SourceSplitter",
+    "PipelineWrapper.SourceSplitter.SourceSplitter",
     "Transformer"
   ],
   "PyESNClassifier": [
-    "photon_core.PipelineWrapper.PyESNWrapper.PyESNClassifier",
+    "PipelineWrapper.PyESNWrapper.PyESNClassifier",
     "Estimator"
   ],
   "PyESNRegressor": [
-    "photon_core.PipelineWrapper.PyESNWrapper.PyESNRegressor",
+    "PipelineWrapper.PyESNWrapper.PyESNRegressor",
     "Estimator"
   ],
   "TestWrapper": [
-    "photon_core.PipelineWrapper.TestWrapper.WrapperTestElement",
+    "PipelineWrapper.TestWrapper.WrapperTestElement",
     "Estimator"
   ],
   "f_classif_select_p_value": [
-    "photon_core.PipelineWrapper.FeatureSelection.FRegressionFilterPValue",
+    "PipelineWrapper.FeatureSelection.FRegressionFilterPValue",
     "Transformer"
   ],
   "pearson_feature_selector": [
-    "photon_core.PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
+    "PipelineWrapper.FeatureSelection.PearsonFeatureSelector",
     "Transformer"
   ],
   "CategorialANOVASelectPercentile": [
-    "photon_core.PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
+    "PipelineWrapper.FeatureSelection.AnovaSelectPercentile",
     "Transformer"
   ],
   "BioCorex": [
-    "photon_core.PipelineWrapper.BioCorex.BioCorex",
+    "PipelineWrapper.BioCorex.BioCorex",
     "Transformer"
   ],
   "PhotonPCA": [
-    "photon_core.PipelineWrapper.PhotonPCA.PhotonPCA",
+    "PipelineWrapper.PhotonPCA.PhotonPCA",
     "Transformer"
   ],
   "PhotonOneClassSVM": [
-    "photon_core.PipelineWrapper.PhotonOneClassSVM.PhotonOneClassSVM",
+    "PipelineWrapper.PhotonOneClassSVM.PhotonOneClassSVM",
     "Estimator"
   ],
   "SelectModelWrapper": [
-    "photon_core.PipelineWrapper.FeatureSelection.ModelSelector",
+    "PipelineWrapper.FeatureSelection.ModelSelector",
     "Transformer"
   ],
   "ImbalancedDataTransform": [
-    "photon_core.PipelineWrapper.ImbalancedWrapper.ImbalancedDataTransform",
+    "PipelineWrapper.ImbalancedWrapper.ImbalancedDataTransform",
     "Transformer"
   ],
   "DeepPRSClassifier": [
-    "photon_core.PipelineWrapper.DeepPRS.DeepPRSClassifier"
+    "PipelineWrapper.DeepPRS.DeepPRSClassifier"
   ]
 }
