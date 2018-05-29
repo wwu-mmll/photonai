@@ -2,6 +2,7 @@
 from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from enum import Enum
 import numpy as np
+import pickle
 from Logging.Logger import Logger
 
 class MDBFoldMetric(EmbeddedMongoModel):
@@ -119,6 +120,9 @@ class MDBHelper():
             return metric[0]
         return metric
 
+    @staticmethod
+    def load_results(filename):
+        return MDBHyperpipe.from_document(pickle.load(open(filename, 'rb')))
 
 
 class MongoDBWriter:
@@ -137,6 +141,8 @@ class MongoDBWriter:
             connect(self.connect_url)
             Logger().debug('Write results to mongodb...')
             results_tree.save()
+        else:
+            pickle.dump(results_tree.to_son(), open(results_tree.name + '_results.p', 'wb'))
 
 
 
