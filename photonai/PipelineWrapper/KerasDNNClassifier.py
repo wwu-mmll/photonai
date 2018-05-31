@@ -10,14 +10,14 @@ from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
 from Logging.Logger import Logger
 from Helpers.TFUtilities import binary_to_one_hot
+from PipelineWrapper.KerasBaseEstimator import KerasBaseEstimator
 
-
-class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
+class KerasDNNClassifier(BaseEstimator, ClassifierMixin, KerasBaseEstimator):
 
     def __init__(self, hidden_layer_sizes=[10, 20], dropout_rate=0.5, target_dimension=10, act_func='prelu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
                  eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, batch_size=64, verbosity=0):
-
+        super(KerasBaseEstimator, self).__init__()
         self.hidden_layer_sizes = hidden_layer_sizes
         self.dropout_rate = dropout_rate
         self.act_func = act_func
@@ -31,7 +31,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
         self.reLe_patience = reLe_patience
         self.batch_size = batch_size
 
-        self.model = None
+        #self.model = None
 
         # Todo: Check why Logger singleton doesn't work in this scenario
         # if Logger().verbosity_level == 2:
