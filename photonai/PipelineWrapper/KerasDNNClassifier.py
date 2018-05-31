@@ -8,8 +8,8 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
-from ..Logging.Logger import Logger
-from ..Helpers.TFUtilities import binary_to_one_hot
+from Logging.Logger import Logger
+from Helpers.TFUtilities import binary_to_one_hot
 
 
 class KerasDNNClassifier(BaseEstimator, ClassifierMixin):
