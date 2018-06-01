@@ -1,5 +1,0 @@
-include *.txt
-recursive-include src/crate/theme/rtd/crate *
-global-exclude .DS_Store
-global-exclude *.pyc
-
