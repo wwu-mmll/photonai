@@ -96,7 +96,7 @@ def draw_neg_pairs(indices, n_pairs_per_subject):
 
 
 def create_base_network(input_dim, actFunc):
-    """Base network to be shared (eq. to feature extraction).
+    """base network to be shared (eq. to feature extraction).
     """
     seq = Sequential()
     seq.add(Dense(10, input_shape=(input_dim,), activation=actFunc))

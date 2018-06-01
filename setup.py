@@ -4,7 +4,7 @@ setup(
   name = 'photonai',
   packages = ['photonai'], # this must be the same as the name above
   version = '0.1',
-  description = 'A Python-Based Hyperparameter Optimization Toolbox for Neural Networks',
+  description = 'A Python-Based Hyperparameter optimization Toolbox for Neural Networks',
   author = 'PHOTON Team',
   author_email = 'hahnt@wwu.de',
   url = 'https://github.com/photonai-team/photonai.git', # use the URL to the github repo

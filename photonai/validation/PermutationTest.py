@@ -2,9 +2,9 @@ from multiprocessing import Pool
 
 import numpy as np
 from Logging.Logger import Logger
-
-from photonai.framework.validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 from photonai.framework.validation import Scorer
+
+from photonai.validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 
 
 class PermutationTest:

@@ -5,9 +5,9 @@ from functools import total_ordering
 
 from slackclient import SlackClient
 
-from Framework.PhotonConf import PhotonConf
+from photonai.configuration.PhotonConf import PhotonConf
 
-""" Logging is a simple way to emit and store logs.
+""" logging is a simple way to emit and store logs.
 
     The default LogLevel is WARN. It should only be increased 
     (to info or debug) if you need more detailed information,
@@ -17,10 +17,10 @@ from Framework.PhotonConf import PhotonConf
     
     Usage: 
     1) Import with
-        from Logging import Logger
+        from logging import Logger
     2) Log with
         logger = Logger()
-        logger.debug('Logging message!')
+        logger.debug('logging message!')
 """
 
 
@@ -223,15 +223,15 @@ if __name__ == "__main__":
     logger = Logger()
     logger.set_verbosity(2)
 
-    logger.debug('Test-Log debug message')
-    logger.info('Test-Log info message')
-    logger.warn('Test-Log warn message')
-    logger.error('Test-Log error message')
+    logger.debug('test-Log debug message')
+    logger.info('test-Log info message')
+    logger.warn('test-Log warn message')
+    logger.error('test-Log error message')
 
     # Starting here, only warn and error logs
     # should be created
     logger.set_verbosity(0)
-    logger.debug('Test-Log debug message')
-    logger.info('Test-Log info message')
-    logger.warn('Test-Log warn message')
-    logger.error('Test-Log error message')
+    logger.debug('test-Log debug message')
+    logger.info('test-Log info message')
+    logger.warn('test-Log warn message')
+    logger.error('test-Log error message')

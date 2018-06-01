@@ -1,7 +1,7 @@
 import numpy as np
 
 
-class ValueList:
+class Categorical:
     """
       Class for defining a  definite list of hyperparameter values.
       Can be used for categorical values, but also for numbers.
@@ -77,11 +77,11 @@ class NumberRange:
         Further parameters that should be passed to the numpy function chosen with range_type.
     """
 
-    def __init__(self, start, stop, range_type, num_type, step=None, num=None, **kwargs):
+    def __init__(self, start, stop, range_type, step=None, num=None, num_type=np.int64, **kwargs):
 
         self.start = start
         self.stop = stop
-        self.type = range_type
+        self.range_type = range_type
         self.range_params = kwargs
         self.num_type = num_type
         self.values = self.transform()
@@ -136,8 +136,8 @@ class IntegerRange(NumberRange):
            Further parameters that should be passed to the numpy function chosen with range_type.
        """
 
-    def __init__(self, start, stop, range_type, **kwargs):
-            super().__init__(start, stop, range_type, np.int32, **kwargs)
+    def __init__(self, start, stop, range_type, step=None, num=None, **kwargs):
+            super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
 
 
 class FloatRange(NumberRange):
@@ -178,5 +178,5 @@ class FloatRange(NumberRange):
             Further parameters that should be passed to the numpy function chosen with range_type.
         """
 
-    def __init__(self, start, stop, range_type, **kwargs):
-            super().__init__(start, stop, range_type, np.float32, **kwargs)
+    def __init__(self, start, stop, range_type, step=None, num=None, **kwargs):
+            super().__init__(start, stop, range_type, step, num, np.float32, **kwargs)
