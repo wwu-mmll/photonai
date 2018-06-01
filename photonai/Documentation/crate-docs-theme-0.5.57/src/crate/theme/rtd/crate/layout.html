@@ -1,0 +1,147 @@
+{% extends "base.html" %}
+
+  {% set css_files = [
+    '_static/css/normalize.css',
+    '_static/css/bootstrap.css',
+    '_static/css/mmenu.all.css',
+    '_static/css/components.css',
+    '_static/css/crateio.css',
+    '_static/css/crateio-rtd.css',
+    '_static/css/custom.css',
+    ]
+  %}
+
+  {% set script_files = [
+    '_static/js/modernizr.js',
+    '_static/js/underscore.min.js',
+    '_static/doctools.js',
+    '_static/js/searchtools.js',
+    '_static/js/webflow.js',
+    '_static/js/bootstrap.js',
+    '_static/js/mmenu.all.min.js',
+    '_static/js/fontawesome.js',
+    '_static/js/custom.js'
+    ]
+  %}
+
+  {%- block doctype -%}
+  <!DOCTYPE html>
+  {%- endblock %}
+
+  {%- block extra_head %}
+  <meta charset='utf-8'>
+  <meta http-equiv='X-UA-Compatible' content='IE=edge,chrome=1'>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0, maximum-scale=1'>
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  {% endblock %}
+
+  {# Silence the sidebar's, relbar's #}
+  {% block header %}{% endblock %}
+  {% block relbar1 %}{% endblock %}
+  {% block relbar2 %}{% endblock %}
+  {% block sidebarsourcelink %}{% endblock %}
+
+  {%- block content %}
+  {% include "navbar.html" %}
+
+  <div class="w-section section border-top">
+    <div class="w-container w-hidden-main margin-bottom-32">
+      <div class="section" style="margin: 0px">
+        <a href="#" id="mobile-menu-toggler" class="w-button">Toggle Doc Menu</a>
+      </div>
+    </div>
+    <div class="container">
+      <div class="row">
+        <div class="col-md-4 col-lg-3">
+          <aside class="wrapper-navleft">
+            {%- block sidebar1 %}
+            {%- for sidebartemplate in sidebars %}
+            {%- include sidebartemplate %}
+            {%- endfor %}
+            {% endblock %}
+          </aside>
+        </div>
+        <div class="col-md-8 col-lg-9">
+          <div class="wrapper-content-right">
+            {%- if current_version %}
+            <div class="version-select-container">
+              <div data-delay="0" class="w-dropdown">
+                <div class="w-dropdown-toggle toggle">
+                  <div><a href="{{ pathto(master_doc) }}">v:{{ current_version }}</a></div>
+                  <div class="w-icon-dropdown-toggle toggle-icon"></div>
+                </div>
+                {%- if versions %}
+                <nav class="w-dropdown-list dropdown-list">
+                  {% for slug, url in versions %}
+                  <a href="https://crate.io/{{ theme_canonical_url_path|replace("en/latest/", "") }}{{ rtd_language }}/{{ slug }}/" class="w-dropdown-link">{{ slug }}</a>
+                  {% endfor %}
+                </nav>
+                {%- endif %}
+              </div>
+            </div>
+            {%- endif %}
+            {% block body %}{% endblock %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+  {%- include "footer.html" %}
+
+  {%- endblock %}
+
+  {%- block custom_footer %}
+
+  <script>
+  var $navAffix = $('#nav-affix');
+  var $contentEl = $('.wrapper-content-right');
+  // Desktop only
+  if( !$('#mobile-menu-toggler').is(':visible') ) {
+
+    // Only if the content is taller than the sidebar,
+    // to avoid scroll jerk
+    if ( $contentEl.height() > $navAffix.height() ) {
+      // Init
+      $navAffix.affix({
+        offset: {
+          top: 100,
+          bottom: function () {
+            return (this.bottom = $('footer').outerHeight(true) + 200)
+          }
+        }
+      });
+      // Recalculate the sidebar
+      $(window).resize(function() {
+        $navAffix.affix('checkPosition');
+      });
+    }
+
+    $('body').scrollspy();
+
+  } else {
+
+    $('.wrapper-navleft').hide();
+    $('#mobile-menu-toggler').click(function() {
+      $('.wrapper-navleft').toggle();
+    });
+
+  }
+
+  $(document).ready(function() {
+    window.setTimeout(function() {$('body').append('<a href="https://crate.io/docs/support/slackin/" style="z-index: 10; position: fixed; bottom: 20px; right: ' + ($('#intercom-launcher').is(':visible') ? '90' : '20') + 'px; box-shadow: 0 6px 13px 0 rgba(0, 0, 0, .23)"><img src="{{ pathto('_static', 1) }}/images/slack.png" id="slack-container" /></a>'); }, 2000);
+  });
+  </script>
+
+  <!-- Segment -->
+  <script>
+    !function(){var analytics=window.analytics=window.analytics||[];if(!analytics.initialize)if(analytics.invoked)window.console&&console.error&&console.error("Segment snippet included twice.");else{analytics.invoked=!0;analytics.methods=["trackSubmit","trackClick","trackLink","trackForm","pageview","identify","reset","group","track","ready","alias","debug","page","once","off","on","setAnonymousId"];analytics.factory=function(t){return function(){var e=Array.prototype.slice.call(arguments);e.unshift(t);analytics.push(e);return analytics}};for(var t=0;t<analytics.methods.length;t++){var e=analytics.methods[t];analytics[e]=analytics.factory(e)}analytics.load=function(t){var e=document.createElement("script");e.type="text/javascript";e.async=!0;e.src=("https:"===document.location.protocol?"https://":"http://")+"cdn.segment.com/analytics.js/v1/"+t+"/analytics.min.js";var n=document.getElementsByTagName("script")[0];n.parentNode.insertBefore(e,n)};analytics.SNIPPET_VERSION="4.0.0";
+      analytics.load("{{ theme_tracking_segment_id }}");
+      analytics.setAnonymousId($.cookie('uid'));
+      analytics.page();
+      analytics.track('visited_section_docs', {
+        project: '{{ theme_tracking_project }}',
+        version: '{{ current_version }}'
+      });
+    }}();
+  </script>
+{%- endblock %}
