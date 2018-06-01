@@ -6,6 +6,8 @@ from collections import OrderedDict
 import zipfile
 import pickle
 import glob
+import inspect
+import importlib.util
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -937,7 +939,16 @@ class Hyperpipe(BaseEstimator):
         """
         element_number = 0
         element_identifier = list()
-        folder = os.path.dirname(file)
+        folder = os.path.splitext(file)[0]
+        file = os.path.splitext(file)[0] + '.photon'
+
+        if os.path.exists(folder):
+            raise FileExistsError('Trying to save optimum pipe: The file you specified already exists as a folder.')
+        else:
+            os.mkdir(folder)
+            folder = folder + '/'
+        wrapper_files = list()
+
         for element_name, element in self.optimum_pipe.named_steps.items():
             filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
             element_identifier.append({'element_name': element_name,
@@ -945,6 +956,12 @@ class Hyperpipe(BaseEstimator):
             if hasattr(element.base_element, 'save'):
                 element.base_element.save(folder + filename)
                 element_identifier[-1]['mode'] = 'custom'
+                element_identifier[-1]['wrapper_script'] = os.path.basename(inspect.getfile(element.base_element.__class__))
+                wrapper_files.append(inspect.getfile(element.base_element.__class__))
+                element_identifier[-1]['test_disabled'] = element.test_disabled
+                element_identifier[-1]['disabled'] = element.disabled
+                element_identifier[-1]['hyperparameters'] = element.hyperparameters
+
             else:
                 try:
                     joblib.dump(element, folder + filename + '.pkl', compress=1)
@@ -959,30 +976,42 @@ class Hyperpipe(BaseEstimator):
 
         # get all files
         files = glob.glob(folder + '_optimum_pipe_*')
-        with zipfile.ZipFile(file + '.zip', 'w') as myzip:
+        with zipfile.ZipFile(file, 'w') as myzip:
             for f in files:
-                myzip.write(folder + f)
-                os.remove(folder + f)
-
+                myzip.write(f, os.path.basename(f))
+                os.remove(f)
+            for f in wrapper_files:
+                myzip.write(f, os.path.splitext(os.path.basename(f))[0] + '.py')
+        os.removedirs(folder)
 
     @staticmethod
     def load_optimum_pipe(file):
         """
         Load optimal pipeline.
-        :param file: string specifying file to load pipeline from
+        :param file: string specifying .photon file to load optimal pipeline from
         :return:
         """
-        archive_name = os.path.splitext(file)[0]
-        folder = os.path.dirname(file) + archive_name + '/'
-
-        zf = zipfile.ZipFile(file)
-        zf.extractall(folder)
+        if file.endswith('.photon'):
+            archive_name = os.path.splitext(file)[0]
+            folder = archive_name + '/'
+            zf = zipfile.ZipFile(file)
+            zf.extractall(folder)
+        else:
+            raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
 
         setup_info = pickle.load(open(folder + '_optimum_pipe_blueprint.pkl', 'rb'))
         element_list = list()
         for element_info in setup_info:
             if element_info['mode'] == 'custom':
-                custom_element = PipelineElement.create(element_info['element_name'])
+                spec = importlib.util.spec_from_file_location(element_info['element_name'],
+                                                              folder + element_info['wrapper_script'])
+                imported_module = importlib.util.module_from_spec(spec)
+                spec.loader.exec_module(imported_module)
+                base_element = getattr(imported_module, element_info['element_name'])
+                custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
+                                                 hyperparameters=element_info['hyperparameters'],
+                                                 test_disabled=element_info['test_disabled'],
+                                                 disabled=element_info['disabled'])
                 custom_element.base_element.load(folder + element_info['filename'])
                 element_list.append((element_info['element_name'], custom_element))
             else:
