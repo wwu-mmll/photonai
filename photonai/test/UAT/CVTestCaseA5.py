@@ -98,7 +98,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                             print('n_components: ', n_comp, 'kernel:',
                                   current_kernel, 'c:', c)
                             print('Training 2:', tr_acc[-1],
-                                  'Validation 1:', val_acc[-1])
+                                  'validation 1:', val_acc[-1])
 
                         sk_results['train'].extend(tr_acc)
                         sk_results['test'].extend(val_acc)

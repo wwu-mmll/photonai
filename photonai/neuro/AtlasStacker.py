@@ -94,7 +94,7 @@ class AtlasStacker(BaseEstimator):
 
 # if __name__ == '__main__':
 #     from sklearn.model_selection import ShuffleSplit
-#     from Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
+#     from framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
 #
 #
 #     pca_n_components = [5, 10]

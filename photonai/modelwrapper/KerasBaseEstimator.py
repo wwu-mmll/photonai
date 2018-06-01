@@ -1,7 +1,7 @@
 from keras.models import model_from_json
 
 class KerasBaseEstimator(object):
-    """Base class for all Keras wrappers
+    """base class for all Keras wrappers
     """
     def __init__(self):
         self.model = None

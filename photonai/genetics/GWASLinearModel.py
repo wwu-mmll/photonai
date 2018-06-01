@@ -12,7 +12,7 @@ __version__ = "2018-01-10"
 __email__ = "nils.r.winter@uni-muenster.de"
 """
 
-#from photon_core.Logging.Logger import Logger
+#from photon_core.logging.Logger import Logger
 from sklearn.base import BaseEstimator
 from sklearn.decomposition import RandomizedPCA
 from pygwas.core.linear_models import LinearModel

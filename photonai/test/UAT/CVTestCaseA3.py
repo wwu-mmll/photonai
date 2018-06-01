@@ -6,7 +6,7 @@ from sklearn.model_selection import KFold
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 
-from Framework.PhotonBase import PipelineElement, Hyperpipe
+from photon_core.Framework.PhotonBase import PipelineElement, Hyperpipe
 
 
 class CVTestsLocalSearchTrue(unittest.TestCase):
@@ -22,17 +22,18 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
     def testCaseA(self):
         pca_n_components = [2, 5]
-        svc_c = [.1, 1]
-        svc_kernel = ['rbf']
-        # svc_kernel = ['rbf','linear']
+        svc_c = [.1, 1, 5]
+        #svc_kernel = ['rbf']
+        svc_kernel = ['rbf','linear']
 
         # SET UP HYPERPIPE
         my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search',
                             optimizer_params={},
+                            metrics=['accuracy', 'precision', 'f1_score'],
                             inner_cv=KFold(
-                                n_splits=2, random_state=3),
+                                n_splits=5, random_state=3),
                             outer_cv=KFold(
-                                n_splits=2, random_state=3), verbose=2, eval_final_performance=True)
+                                n_splits=2, random_state=3))
 
         my_pipe += PipelineElement.create('standard_scaler')
         my_pipe += PipelineElement.create('pca', {'n_components': pca_n_components})
@@ -40,22 +41,19 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
 
         # START HYPERPARAMETER SEARCH
         my_pipe.fit(self.__X, self.__y)
-        from Framework import LogExtractor
-        log_ex = LogExtractor.LogExtractor(my_pipe.result_tree)
-        log_ex.extract_csv("test_case_A2.csv")
+        print(my_pipe.test_performances)
+        pipe_results = {'train': [], 'test': []}
 
-        # print(my_pipe.test_performances)
-        # pipe_results = {'train': [], 'test': []}
-        # for i in range(len(my_pipe.performance_history_list)):
-        #     pipe_results['train'].extend(
-        #         my_pipe.performance_history_list[i]['accuracy_folds']['train'])
-        #     pipe_results['test'].extend(
-        #         my_pipe.performance_history_list[i]['accuracy_folds']['test'])
+        for i in range(len(my_pipe.performance_history_list)):
+            pipe_results['train'].extend(
+                my_pipe.performance_history_list[i]['accuracy_folds']['train'])
+            pipe_results['test'].extend(
+                my_pipe.performance_history_list[i]['accuracy_folds']['test'])
 
         print('\n\n')
         print('Running sklearn version...')
         cv_outer = KFold(n_splits=2, random_state=3)
-        cv_inner_1 = KFold(n_splits=2, random_state=3)
+        cv_inner_1 = KFold(n_splits=5, random_state=3)
 
         for train_1, test in cv_outer.split(self.__X):
             data_train_1 = self.__X[train_1]
@@ -65,8 +63,8 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
             sk_results = {'train': [], 'test': []}
 
             for n_comp in pca_n_components:
-                for current_kernel in svc_kernel:
-                    for c in svc_c:
+                for c in svc_c:
+                    for current_kernel in svc_kernel:
                         tr_acc = []
                         val_acc = []
 
@@ -97,7 +95,7 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
                             print('n_components: ', n_comp, 'kernel:',
                                   current_kernel, 'c:', c)
                             print('Training 2:', tr_acc[-1],
-                                  'Validation 1:', val_acc[-1])
+                                  'validation 1:', val_acc[-1])
 
                         sk_results['train'].extend(tr_acc)
                         sk_results['test'].extend(val_acc)

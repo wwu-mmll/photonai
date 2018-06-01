@@ -83,7 +83,7 @@ class LogExtractor:
         hp_configs_folds_stat = []
         index = 0
         for hp_config in hp_configs:
-            level_description = "Outer CV fold: {0}, Configuration: {1}".format(position_in_outer_cv_fold, index)
+            level_description = "Outer CV fold: {0}, configuration: {1}".format(position_in_outer_cv_fold, index)
             hp_configs_folds_stat.append(self.__get_folds_stat_for_hp_config(hp_config, level_description))
             index += 1
         return hp_configs_folds_stat
@@ -192,7 +192,7 @@ class FoldsStat:
         for metric_name in self.get_used_metrics():
             out += ("""
             {0}:
-              Test:
+              test:
                 Mean: {1}
                 STD:  {2}
               Train:
@@ -214,7 +214,7 @@ class FoldsStat:
             for metric in fold_stat.fold_metrics:
                 out += """
               {0}:
-                Test:  {1}
+                test:  {1}
                 Train: {2} """.format(metric.name, metric.test_value, metric.train_value)
             idx += 1
         return out
@@ -225,13 +225,13 @@ class FoldsStat:
         for _ in self.get_used_metrics():
             # Name Metric
             description_array.append("Name Metric")
-            # Mean Test
-            description_array.append("Mean Test")
-            # Std Test
-            description_array.append("STD Test")
+            # Mean test
+            description_array.append("Mean test")
+            # Std test
+            description_array.append("STD test")
             # Mean Train
             description_array.append("Mean Train")
-            # Std Test
+            # Std test
             description_array.append("STD Train")
             # Blank Line
             description_array.append("")
@@ -239,8 +239,8 @@ class FoldsStat:
         for fold_stat in self.folds_stat:
             # Fold Number
             description_array.append("Fold Number")
-            # Fold Configuration
-            description_array.append("Configuration")
+            # Fold configuration
+            description_array.append("configuration")
             # Number of test samples
             description_array.append("Number of test samples")
             # Number of train samples
@@ -248,8 +248,8 @@ class FoldsStat:
             for _ in fold_stat.fold_metrics:
                 # Name Metric
                 description_array.append("Name Metric")
-                # Test
-                description_array.append("Test")
+                # test
+                description_array.append("test")
                 # Train
                 description_array.append("Train")
                 # Blank Line
@@ -265,13 +265,13 @@ class FoldsStat:
         for metric_name in self.get_used_metrics():
             # Name Metric
             description_array.append(metric_name)
-            # Mean Test
+            # Mean test
             description_array.append(str(self.get_mean_for_metric(metric_name)['mean_test']))
-            # Std Test
+            # Std test
             description_array.append(str(self.get_std_for_metric(metric_name)['std_test']))
             # Mean Train
             description_array.append(str(self.get_mean_for_metric(metric_name)['mean_train']))
-            # Std Test
+            # Std test
             description_array.append(str(self.get_std_for_metric(metric_name)['std_train']))
             # Blank Line
             description_array.append("")
@@ -279,7 +279,7 @@ class FoldsStat:
         for fold_stat in self.folds_stat:
             # Fold Number
             description_array.append(idx)
-            # Fold Configuration
+            # Fold configuration
             description_array.append(fold_stat.config)
             # Number of test samples
             description_array.append(fold_stat.number_samples_test)
@@ -288,7 +288,7 @@ class FoldsStat:
             for metric in fold_stat.fold_metrics:
                 # Name Metric
                 description_array.append(metric.name)
-                # Test
+                # test
                 description_array.append(metric.test_value)
                 # Train
                 description_array.append(metric.train_value)

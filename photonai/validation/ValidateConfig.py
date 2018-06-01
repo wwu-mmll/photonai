@@ -3,10 +3,11 @@ import traceback
 import warnings
 
 import numpy as np
-from Helpers.TFUtilities import one_hot_to_binary
-from sklearn.pipeline import Pipeline
 from Logging.Logger import Logger
-from .ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, FoldOperations, MDBConfig
+from sklearn.pipeline import Pipeline
+
+from photonai.framework.validation.ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
+    FoldOperations, MDBConfig
 
 
 class TestPipeline(object):
@@ -292,9 +293,9 @@ class Scorer(object):
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
         'r2': ('sklearn.metrics', 'r2_score'),
-        'pearson_correlation': ('photon_core.Framework.Metrics', 'pearson_correlation'),
-        'variance_explained':  ('photon_core.Framework.Metrics', 'variance_explained_score'),
-        'categorical_accuracy': ('photon_core.Framework.Metrics','categorical_accuracy_score')
+        'pearson_correlation': ('photon_core.framework.Metrics', 'pearson_correlation'),
+        'variance_explained':  ('photon_core.framework.Metrics', 'variance_explained_score'),
+        'categorical_accuracy': ('photon_core.framework.Metrics','categorical_accuracy_score')
     }
 
     @classmethod

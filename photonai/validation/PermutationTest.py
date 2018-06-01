@@ -1,8 +1,10 @@
-import numpy as np
 from multiprocessing import Pool
-from .ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
-from .Validation import Scorer
+
+import numpy as np
 from Logging.Logger import Logger
+
+from photonai.framework.validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
+from photonai.framework.validation import Scorer
 
 
 class PermutationTest:
@@ -66,7 +68,7 @@ class PermutationTest:
         print("""
         Done with permutations...
 
-        Results Permutation Test
+        Results Permutation test
         ===============================================
         """)
         for _, metric in self.metrics.items():

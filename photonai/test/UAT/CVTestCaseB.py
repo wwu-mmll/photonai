@@ -147,7 +147,7 @@ class CVTestCaseB(unittest.TestCase):
                             print('n_comp:', n_comp)
                             print('n train_3 fold 1:', data_train_3.shape[0])
                             print('Training 3 mean:', [np.mean(tr_acc)],
-                                  'Validation 2 mean:', [np.mean(val_acc)])
+                                  'validation 2 mean:', [np.mean(val_acc)])
                         # find best config for val 2
                         best_config_id = np.argmin(sk_results_inner2['val_2_mean'])
                         print('Best PCA config:', config_inner_2['n_comp'][best_config_id], '\n')
