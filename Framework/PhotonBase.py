@@ -204,7 +204,7 @@ class Hyperpipe(BaseEstimator):
                  test_size: float = 0.2, eval_final_performance=False, debug_cv_mode=False,
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = True,
                  set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter: str = None,
-                 logfile: str = '', logging: bool =False, verbose: int =0):
+                 logfile: str = '', logging: bool =False, verbose: int =0, save_all_predictions=False):
 
 
         # Re eval_final_performance:
@@ -894,14 +894,14 @@ class Hyperpipe(BaseEstimator):
         # build pipeline...
         self._pipe = Pipeline(pipeline_steps)
 
-    def copy_me(self):
+    def __copy_me(self):
         """
         Helper function to copy all pipeline elements
         :return: list of copied pipeline elements
         """
         item_list =[]
         for item in self.pipeline_elements:
-            item_list.append(item.copy_me())
+            item_list.append(item.__copy_me())
         return item_list
 
     def _copy_pipeline(self):
@@ -911,7 +911,7 @@ class Hyperpipe(BaseEstimator):
         """
         pipeline_steps = []
         for item in self.pipeline_elements:
-            cpy = item.copy_me()
+            cpy = item.__copy_me()
             if isinstance(cpy, list):
                 for new_step in cpy:
                     pipeline_steps.append((new_step.name, new_step))
