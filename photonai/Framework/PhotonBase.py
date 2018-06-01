@@ -3,6 +3,9 @@ from hashlib import sha1
 from itertools import product
 from copy import deepcopy
 from collections import OrderedDict
+import zipfile
+import pickle
+import glob
 
 import numpy as np
 from sklearn.base import BaseEstimator
@@ -11,6 +14,7 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.pipeline import Pipeline
+from sklearn.externals import joblib
 from pymodm import connect
 
 from Framework.Register import PhotonRegister
@@ -924,6 +928,68 @@ class Hyperpipe(BaseEstimator):
             else:
                 pipeline_steps.append((cpy.name, cpy))
         return Pipeline(pipeline_steps)
+
+    def save_optimum_pipe(self, file):
+        """
+        Save optimal pipeline only. Complete hyperpipe will no not be saved.
+        :param: file: string specifying file to save pipeline to
+        :return:
+        """
+        element_number = 0
+        element_identifier = list()
+        folder = os.path.dirname(file)
+        for element_name, element in self.optimum_pipe.named_steps.items():
+            filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
+            element_identifier.append({'element_name': element_name,
+                                       'filename': filename})
+            if hasattr(element.base_element, 'save'):
+                element.base_element.save(folder + filename)
+                element_identifier[-1]['mode'] = 'custom'
+            else:
+                try:
+                    joblib.dump(element, folder + filename + '.pkl', compress=1)
+                    element_identifier[-1]['mode'] = 'pickle'
+                except:
+                    raise NotImplementedError("Custom pipeline element must implement .save() method or "
+                                              "allow pickle.")
+            element_number += 1
+        # save pipeline blueprint to make loading of pipeline easier
+        with open(folder + '_optimum_pipe_blueprint.pkl', 'wb') as f:
+            pickle.dump(element_identifier, f)
+
+        # get all files
+        files = glob.glob(folder + '_optimum_pipe_*')
+        with zipfile.ZipFile(file + '.zip', 'w') as myzip:
+            for f in files:
+                myzip.write(folder + f)
+                os.remove(folder + f)
+
+
+    @staticmethod
+    def load_optimum_pipe(file):
+        """
+        Load optimal pipeline.
+        :param file: string specifying file to load pipeline from
+        :return:
+        """
+        archive_name = os.path.splitext(file)[0]
+        folder = os.path.dirname(file) + archive_name + '/'
+
+        zf = zipfile.ZipFile(file)
+        zf.extractall(folder)
+
+        setup_info = pickle.load(open(folder + '_optimum_pipe_blueprint.pkl', 'rb'))
+        element_list = list()
+        for element_info in setup_info:
+            if element_info['mode'] == 'custom':
+                custom_element = PipelineElement.create(element_info['element_name'])
+                custom_element.base_element.load(folder + element_info['filename'])
+                element_list.append((element_info['element_name'], custom_element))
+            else:
+                element_list.append((element_info['element_name'], joblib.load(folder + element_info['filename'] + '.pkl')))
+
+        return Pipeline(element_list)
+
 
     def inverse_transform_pipeline(self, hyperparameters: dict, data, targets, data_to_inverse):
         """
