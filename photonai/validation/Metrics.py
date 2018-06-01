@@ -7,7 +7,7 @@ function_name(y_true, y_pred)
 import numpy as np
 from sklearn.metrics import accuracy_score
 
-from ..Helpers.TFUtilities import one_hot_to_binary
+from photonai.helpers.TFUtilities import one_hot_to_binary
 
 
 def categorical_accuracy_score(y_true, y_pred):

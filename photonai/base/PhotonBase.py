@@ -1,29 +1,26 @@
+import pickle
 import time
+from collections import OrderedDict
+from copy import deepcopy
 from hashlib import sha1
 from itertools import product
-from copy import deepcopy
-from collections import OrderedDict
-import zipfile
-import pickle
-import glob
 
-import numpy as np
 from sklearn.base import BaseEstimator
+from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ShuffleSplit
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.pipeline import Pipeline
-from sklearn.externals import joblib
-from pymodm import connect
 
-from Framework.Register import PhotonRegister
-# from Framework.ImbalancedWrapper import ImbalancedDataTransform
-from Logging.Logger import Logger
-from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
-from .ResultLogging import *
-from .ResultsDatabase import *
-from .Validation import TestPipeline, OptimizerMetric
+from photonai.configuration.Register import PhotonRegister
+# from framework.ImbalancedWrapper import ImbalancedDataTransform
+from photonai.logging.Logger import Logger
+from photonai.framework.optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
+    TimeBoxedRandomGridSearchOptimizer
+from ..validation.ValidateConfig import TestPipeline, OptimizerMetric
+from ..validation.ResultsDatabase import *
+from ..validation.ResultLogging import *
 
 
 class Hyperpipe(BaseEstimator):
@@ -80,9 +77,9 @@ class Hyperpipe(BaseEstimator):
             - 'explained_variance': sklearn.metrics.explained_variance_score
             - 'r2': sklearn.metrics.r2_score
         - Other metrics
-            - 'pearson_correlation': photon_core.Framework.Metrics.pearson_correlation
-            - 'variance_explained':  photon_core.Framework.Metrics.variance_explained_score
-            - 'categorical_accuracy': photon_core.Framework.Metrics.categorical_accuracy_score
+            - 'pearson_correlation': photon_core.framework.Metrics.pearson_correlation
+            - 'variance_explained':  photon_core.framework.Metrics.variance_explained_score
+            - 'categorical_accuracy': photon_core.framework.Metrics.categorical_accuracy_score
 
     * 'best_config_metric' [str]:
         The metric that should be maximized or minimized in order to choose the best hyperparameter configuration
@@ -285,7 +282,7 @@ class Hyperpipe(BaseEstimator):
         self._hyperparameters = []
         self._config_grid = []
 
-        # containers for optimization history and Logging
+        # containers for optimization history and logging
         self._config_history = []
         self._performance_history_list = []
         self._parameter_history = []
@@ -439,7 +436,7 @@ class Hyperpipe(BaseEstimator):
 
     def update_mother_inner_fold_nr(self, new_inner_fold_nr: int):
         """
-        Function handle so that the TestPipeline class from Photon's Validation module can pass the information to hyperpipe children
+        Function handle so that the TestPipeline class from Photon's validation module can pass the information to hyperpipe children
 
         Parameters
         ----------
@@ -508,8 +505,8 @@ class Hyperpipe(BaseEstimator):
         #if not isinstance(self.X, np.ndarray): # and isinstance(self.X[0], str):
         #    self.X = np.asarray(self.X)
 
-        # handle PhotonNeuro Imge paths as data
-        # ToDo: Need to check the DATA, not the img paths for PhotonNeuro
+        # handle neuro Imge paths as data
+        # ToDo: Need to check the DATA, not the img paths for neuro
         new_data_hash = sha1(np.asarray(self.X, order='C')).hexdigest()
 
         # fit
@@ -564,12 +561,12 @@ class Hyperpipe(BaseEstimator):
                     outer_fold_counter += 1
                     outer_fold_fit_start_time = time.time()
 
-                    Logger().info('HYPERPARAMETER SEARCH OF {0}, Outer Cross Validation Fold {1}'
+                    Logger().info('HYPERPARAMETER SEARCH OF {0}, Outer Cross validation Fold {1}'
                                   .format(self.name, outer_fold_counter))
 
                     t1 = time.time()
 
-                    # Prepare Train and Validation set data
+                    # Prepare Train and validation set data
                     self._validation_X = self.X[train_indices]
                     self._validation_y = self.y[train_indices]
                     self._test_X = self.X[test_indices]
@@ -639,7 +636,7 @@ class Hyperpipe(BaseEstimator):
                         Logger().debug(self._optimize_printing(specific_config))
                         Logger().debug('calculating...')
 
-                        # Test the configuration cross validated by inner_cv object
+                        # test the configuration cross validated by inner_cv object
                         config_item = hp.calculate_cv_score(self._validation_X, self._validation_y, cv_iter,
                                                             save_predictions=self.save_all_predictions,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
@@ -1093,7 +1090,7 @@ class PipelineElement(BaseEstimator):
     3. Attaches a "disable" switch to every element in the pipeline in order to test a complete disable
     """
     # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'PhotonNeuro'])
+    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'neuro'])
 
     @classmethod
     def create(cls, name, hyperparameters: dict=None, test_disabled: bool=False, disabled:bool =False, **kwargs):
@@ -1250,16 +1247,16 @@ class PipelineElement(BaseEstimator):
             elif hasattr(self.base_element, 'transform'):
                 return self.base_element.transform(data)
             else:
-                Logger().error('BaseException. Base Element should have function ' +
+                Logger().error('BaseException. base Element should have function ' +
                                'predict, or at least transform.')
-                raise BaseException('Base Element should have function predict, or at least transform.')
+                raise BaseException('base Element should have function predict, or at least transform.')
         else:
             return data
 
     def predict_proba(self, data):
         """
         Predict probabilities
-        Base element needs predict_proba() function, otherwise throw
+        base element needs predict_proba() function, otherwise throw
         base exception.
         :param data: array-like
         :type data: float
@@ -1269,8 +1266,8 @@ class PipelineElement(BaseEstimator):
             if hasattr(self.base_element, 'predict_proba'):
                 return self.base_element.predict_proba(data)
             else:
-                Logger().error('BaseException. Base Element should have "predict_proba" function.')
-            raise BaseException('Base Element should have predict_proba function.')
+                Logger().error('BaseException. base Element should have "predict_proba" function.')
+            raise BaseException('base Element should have predict_proba function.')
         return data
 
     # def fit_predict(self, data, targets):

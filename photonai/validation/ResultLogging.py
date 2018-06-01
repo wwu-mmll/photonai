@@ -573,7 +573,7 @@ class ResultLogging:
             train = []
             test = []
             for i in range(len(results[key])):
-                # Test has to be first!
+                # test has to be first!
                 if (i % 2) == 0:
                     test.append(results[key][i])
                 else:

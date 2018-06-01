@@ -198,7 +198,7 @@ class SiameseDNNClassifier(BaseEstimator, ClassifierMixin):
     #     return np.array(pairs), np.array(labels)
 
     def create_base_network(self):
-        """Base network to be shared (eq. to feature extraction).
+        """base network to be shared (eq. to feature extraction).
         """
         seq = Sequential()
         seq.add(Dense(128, input_shape=(self.input_dim,), kernel_initializer='random_uniform'))
