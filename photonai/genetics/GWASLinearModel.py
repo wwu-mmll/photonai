@@ -34,7 +34,7 @@ class GWASLinearModel(BaseEstimator):
 
     Examples
     --------
-    >>> from photon_core.PhotonGenetics.GWASLinearModel import GWASLinearModel
+    >>> from photon_core.genetics.GWASLinearModel import GWASLinearModel
     See also
     --------
     GWASLogisticModel

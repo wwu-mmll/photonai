@@ -103,8 +103,8 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
         print('\nCompare results of last iteration (outer cv)...')
         print('SkL  Train:', sk_results['train'])
         print('Pipe Train:', pipe_results['train'])
-        print('SkL  Test: ', sk_results['test'])
-        print('Pipe Test: ', pipe_results['test'])
+        print('SkL  test: ', sk_results['test'])
+        print('Pipe test: ', pipe_results['test'])
 
         self.assertEqual(sk_results['test'], pipe_results['test'])
         self.assertEqual(sk_results['train'], pipe_results['train'])

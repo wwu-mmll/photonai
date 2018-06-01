@@ -150,13 +150,13 @@ class CVTestsLocalSearchTrue(unittest.TestCase):
             for fold in hp_config.fold_list:
                 pipe_results_train.append(fold.train.metrics['score'])
         print('Pipe Train:', pipe_results_train)
-        print('SkL  Test: ', sk_results['test'])
-        #print('Pipe Test: ', pipe_results['test'])
+        print('SkL  test: ', sk_results['test'])
+        #print('Pipe test: ', pipe_results['test'])
         pipe_results_test = []
         for hp_config in my_pipe.result_tree.config_list[0].fold_list[2].train.config_list:
             for fold in hp_config.fold_list:
                 pipe_results_test.append(fold.test.metrics['score'])
-        print('Pipe Test: ', pipe_results_test)
+        print('Pipe test: ', pipe_results_test)
         print('\nEval final performance:')
         #print('Pipe final perf:', my_pipe.test_performances['accuracy'])
         pipe_outer_folds = []

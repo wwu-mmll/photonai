@@ -3,10 +3,10 @@ import traceback
 import warnings
 
 import numpy as np
-from Logging.Logger import Logger
+from photonai.logging.Logger import Logger
 from sklearn.pipeline import Pipeline
 
-from photonai.framework.validation.ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
+from photonai.validation.ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
     FoldOperations, MDBConfig
 
 

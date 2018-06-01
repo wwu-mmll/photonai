@@ -197,7 +197,7 @@ class PhotonRegister:
 #                         class_str=class_str,
 #                         element_type=element_type).add()
 #
-# photon_name = 'Test'  # element name
+# photon_name = 'test'  # element name
 # class_str = 'sklearn.svm.SVR'  # element info
 # RegisterPipelineElement(photon_name=photon_name,
 #                         photon_package=photon_package,
@@ -227,24 +227,24 @@ class PhotonRegister:
 #                       'svc': ('sklearn.svm.SVC', 'Estimator'),
 #                       'knn': ('sklearn.neighbors.KNeighborsClassifier', 'Estimator'),
 #                       'logistic': ('sklearn.linear_model.LogisticRegression', 'Estimator'),
-#                       'dnn': ('PipelineWrapper.TFDNNClassifier.TFDNNClassifier', 'Estimator'),
-#                       'KerasDNNClassifier': ('PipelineWrapper.KerasDNNClassifier.KerasDNNClassifier', 'Estimator'),
+#                       'dnn': ('modelwrapper.TFDNNClassifier.TFDNNClassifier', 'Estimator'),
+#                       'KerasDNNClassifier': ('modelwrapper.KerasDNNClassifier.KerasDNNClassifier', 'Estimator'),
 #                       'standard_scaler': ('sklearn.preprocessing.StandardScaler', 'Transformer'),
-#                       'wrapper_model': ('PipelineWrapper.WrapperModel.WrapperModel', 'Estimator'),
-#                       'test_wrapper': ('PipelineWrapper.TestWrapper.WrapperTestElement', 'Estimator'),
-#                       'ae_pca': ('PipelineWrapper.PCA_AE_Wrapper.PCA_AE_Wrapper', 'Transformer'),
-#                       'rl_cnn': ('photon_core.PipelineWrapper.RLCNN.RLCNN', 'Estimator'),
-#                       'CNN1d': ('PipelineWrapper.CNN1d.CNN1d', 'Estimator'),
-#                       'SourceSplitter': ('PipelineWrapper.SourceSplitter.SourceSplitter', 'Transformer'),
-#                       'f_regression_select_percentile': ('PipelineWrapper.FeatureSelection.FRegressionSelectPercentile', 'Transformer'),
-#                       'f_classif_select_percentile': ('PipelineWrapper.FeatureSelection.FClassifSelectPercentile', 'Transformer'),
-#                       'py_esn_r': ('PipelineWrapper.PyESNWrapper.PyESNRegressor', 'Estimator'),
-#                       'py_esn_c': ('PipelineWrapper.PyESNWrapper.PyESNClassifier', 'Estimator'),
+#                       'wrapper_model': ('modelwrapper.WrapperModel.WrapperModel', 'Estimator'),
+#                       'test_wrapper': ('modelwrapper.TestWrapper.WrapperTestElement', 'Estimator'),
+#                       'ae_pca': ('modelwrapper.PCA_AE_Wrapper.PCA_AE_Wrapper', 'Transformer'),
+#                       'rl_cnn': ('photon_core.modelwrapper.RLCNN.RLCNN', 'Estimator'),
+#                       'CNN1d': ('modelwrapper.CNN1d.CNN1d', 'Estimator'),
+#                       'SourceSplitter': ('modelwrapper.SourceSplitter.SourceSplitter', 'Transformer'),
+#                       'f_regression_select_percentile': ('modelwrapper.FeatureSelection.FRegressionSelectPercentile', 'Transformer'),
+#                       'f_classif_select_percentile': ('modelwrapper.FeatureSelection.FClassifSelectPercentile', 'Transformer'),
+#                       'py_esn_r': ('modelwrapper.PyESNWrapper.PyESNRegressor', 'Estimator'),
+#                       'py_esn_c': ('modelwrapper.PyESNWrapper.PyESNClassifier', 'Estimator'),
 #                       'SVR': ('sklearn.svm.SVR', 'Estimator'),
 #                       'KNeighborsRegressor': ('sklearn.neighbors.KNeighborsRegressor', 'Estimator'),
 #                       'DecisionTreeRegressor': ('sklearn.tree.DecisionTreeRegressor', 'Estimator'),
 #                       'RandomForestRegressor': ('sklearn.ensemble.RandomForestRegressor', 'Estimator'),
-#                       'KerasDNNRegressor': ('PipelineWrapper.KerasDNNRegressor.KerasDNNRegressor', 'Estimator'),
-#                       'PretrainedCNNClassifier': ('PipelineWrapper.PretrainedCNNClassifier.PretrainedCNNClassifier', 'Estimator')
+#                       'KerasDNNRegressor': ('modelwrapper.KerasDNNRegressor.KerasDNNRegressor', 'Estimator'),
+#                       'PretrainedCNNClassifier': ('modelwrapper.PretrainedCNNClassifier.PretrainedCNNClassifier', 'Estimator')
 #                       }
 # PhotonRegister.write2json(ELEMENT_DICTIONARY, 'PhotonCore')

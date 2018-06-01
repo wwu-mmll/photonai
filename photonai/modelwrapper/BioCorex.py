@@ -1,7 +1,7 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 import sys
 sys.path.append("..")
-from ..SidePackages.bio_corex.corex import Corex
+from ..sidepackages.bio_corex.corex import Corex
 
 
 class BioCorex(BaseEstimator, TransformerMixin):

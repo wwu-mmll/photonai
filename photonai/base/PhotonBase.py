@@ -5,6 +5,7 @@ from copy import deepcopy
 from hashlib import sha1
 from itertools import product
 
+
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
@@ -16,11 +17,10 @@ from sklearn.pipeline import Pipeline
 from photonai.configuration.Register import PhotonRegister
 # from framework.ImbalancedWrapper import ImbalancedDataTransform
 from photonai.logging.Logger import Logger
-from photonai.framework.optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
+from photonai.optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
-from ..validation.ValidateConfig import TestPipeline, OptimizerMetric
-from ..validation.ResultsDatabase import *
-from ..validation.ResultLogging import *
+from photonai.validation.ValidateConfig import TestPipeline, OptimizerMetric
+from photonai.validation.ResultsDatabase import *
 
 
 class Hyperpipe(BaseEstimator):
@@ -1090,10 +1090,10 @@ class PipelineElement(BaseEstimator):
     3. Attaches a "disable" switch to every element in the pipeline in order to test a complete disable
     """
     # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'neuro'])
+    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'PhotonNeuro'])
 
-    @classmethod
-    def create(cls, name, hyperparameters: dict=None, test_disabled: bool=False, disabled:bool =False, **kwargs):
+    def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False, disabled:bool =False, base_element=None,
+                 **kwargs):
         """
         Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
         :param name: string literal encoding the class to be instantiated
@@ -1109,40 +1109,46 @@ class PipelineElement(BaseEstimator):
         """
         if hyperparameters is None:
             hyperparameters = {}
-        if name in PipelineElement.ELEMENT_DICTIONARY:
-            try:
-                desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
-                desired_class_home = desired_class_info[0]
-                desired_class_name = desired_class_info[1]
-                imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
-                desired_class = getattr(imported_module, desired_class_name)
-                base_element = desired_class(**kwargs)
-                obj = PipelineElement(name, base_element, hyperparameters, test_disabled, disabled)
-                return obj
-            except AttributeError as ae:
-                Logger().error('ValueError: Could not find according class:'
-                               + str(PipelineElement.ELEMENT_DICTIONARY[name]))
-                raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
+
+        if not base_element:
+            if name in PipelineElement.ELEMENT_DICTIONARY:
+                try:
+                    desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
+                    desired_class_home = desired_class_info[0]
+                    desired_class_name = desired_class_info[1]
+                    imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
+                    desired_class = getattr(imported_module, desired_class_name)
+                    base_element = desired_class(**kwargs)
+                    obj = PipelineElement(name, hyperparameters, test_disabled, disabled, base_element)
+                    self.base_element = obj
+                except AttributeError as ae:
+                    Logger().error('ValueError: Could not find according class:'
+                                   + str(PipelineElement.ELEMENT_DICTIONARY[name]))
+                    raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
+            else:
+                Logger().error('Element not supported right now:' + name)
+                raise NameError('Element not supported right now:', name)
         else:
-            Logger().error('Element not supported right now:' + name)
-            raise NameError('Element not supported right now:', name)
+            self.base_element = base_element
 
-    def copy_me(self):
-        return deepcopy(self)
 
-    def __init__(self, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False):
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
         # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
-        self.base_element = base_element
-        self.disabled = disabled
         self.test_disabled = test_disabled
         self._hyperparameters = hyperparameters
         self._sklearn_hyperparams = {}
         self._sklearn_disabled = self.name + '__disabled'
         self._config_grid = []
         self.hyperparameters = self._hyperparameters
+
+    def copy_me(self):
+        return deepcopy(self)
+
+    @classmethod
+    def create(cls, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False):
+        return PipelineElement(name, hyperparameters, test_disabled, disabled, base_element=base_element)
 
     @property
     def hyperparameters(self):
