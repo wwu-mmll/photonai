@@ -1,7 +1,11 @@
 import numpy as np
 
 
-class Categorical:
+class PhotonHyperparam:
+    pass
+
+
+class Categorical(PhotonHyperparam):
     """
       Class for defining a  definite list of hyperparameter values.
       Can be used for categorical values, but also for numbers.
@@ -17,7 +21,7 @@ class Categorical:
         self.values = values
 
 
-class BooleanSwitch:
+class BooleanSwitch(PhotonHyperparam):
     """
       Class for defining a boolean hyperparameter, when both options should be tested in hyperparameter optimization.
 
@@ -32,7 +36,7 @@ class BooleanSwitch:
         self.values = [True, False]
 
 
-class NumberRange:
+class NumberRange(PhotonHyperparam):
     """
       Class for easily creating a range of numbers to be tested in hyperparameter optimization.
 
@@ -84,18 +88,29 @@ class NumberRange:
         self.range_type = range_type
         self.range_params = kwargs
         self.num_type = num_type
-        self.values = self.transform()
+        self.values = None
+        self.step = step
+        self.num = num
 
     def transform(self):
 
         if self.range_type == "range":
-            return np.arange(self.start, self.stop, dtype=self.num_type, **self.range_params)
+            if not self.step:
+                self.values = np.arange(self.start, self.stop, dtype=self.num_type, **self.range_params)
+            else:
+                self.values = np.arange(self.start, self.stop, self.step, dtype=self.num_type, **self.range_params)
         elif self.range_type == "linspace":
-            return np.linspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+            if self.num:
+                self.values = np.linspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+            else:
+                self.values = np.linspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         elif self.range_type == "logspace":
-            return np.logspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+            if self.num:
+                self.values = np.logspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+            else:
+                self.values = np.logspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         else:
-            return []
+            self.values = []
 
 
 class IntegerRange(NumberRange):

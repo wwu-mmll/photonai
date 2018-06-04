@@ -4,6 +4,7 @@ from enum import Enum
 import numpy as np
 from photonai.logging.Logger import Logger
 
+
 class MDBFoldMetric(EmbeddedMongoModel):
     operation = fields.CharField(blank=True)
     metric_name = fields.CharField(blank=True)
