@@ -32,7 +32,7 @@ setup(
         'pymodm',
         'mpl_toolkits',
         'scipy',
-        'statsmodel',
+        'statsmodels',
         'flask'
   ]
 )
