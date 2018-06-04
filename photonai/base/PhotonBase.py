@@ -1142,6 +1142,7 @@ class PipelineElement(BaseEstimator):
         self._sklearn_disabled = self.name + '__disabled'
         self._config_grid = []
         self.hyperparameters = self._hyperparameters
+        self.disabled = disabled
 
     def copy_me(self):
         return deepcopy(self)
@@ -1179,18 +1180,20 @@ class PipelineElement(BaseEstimator):
         self._sklearn_hyperparams = {}
         for attribute, value_list in self._hyperparameters.items():
             self._sklearn_hyperparams[self.name + '__' + attribute] = value_list
+        if self.test_disabled:
+            self.sklearn_hyperparams[self._sklearn_disabled] = [True]
 
     def generate_config_grid(self):
         """
         Creates a grid of all combinations of the hyperparameters
         :return: list of hyperparameter combinations
         """
-        for item in ParameterGrid(self.sklearn_hyperparams):
-            if self.test_disabled:
-                item[self._sklearn_disabled] = False
-            self._config_grid.append(item)
-        if self.test_disabled:
-            self._config_grid.append({self._sklearn_disabled: True})
+        # for item in ParameterGrid(self.sklearn_hyperparams):
+        #     if self.test_disabled:
+        #         item[self._sklearn_disabled] = False
+        #     self._config_grid.append(item)
+        # if self.test_disabled:
+        #     self._config_grid.append({self._sklearn_disabled: True})
 
     def get_params(self, deep: bool=True):
         """
@@ -1376,6 +1379,7 @@ class PipelineStacking(PipelineElement):
         super(PipelineStacking, self).__init__(name, None, hyperparameters={}, test_disabled=False, disabled=False)
 
         self._hyperparameters = {}
+        self._sklearn_hyperparams = {}
         self._config_grid = []
         self.pipe_elements = OrderedDict()
         self.voting = voting
@@ -1394,29 +1398,14 @@ class PipelineStacking(PipelineElement):
 
             # for each configuration
             if add_item_config_grid:
-                tmp_config_grid = []
-                for config in item.config_grid:
-                    # # for each configuration item:
-                    # # if config is no dictionary -> unpack it
-                    if config:
-                        tmp_dict = dict(config)
-                        tmp_config = dict(config)
-                        for key, element in tmp_config.items():
-                            # update name to be referable to pipeline
-                            if isinstance(item, PipelineElement):
-                                tmp_dict[self.name + '__' + key] = tmp_dict.pop(key)
-                            else:
-                                tmp_dict[self.name + '__' + item.name + '__' + key] = tmp_dict.pop(key)
-                        tmp_config_grid.append(tmp_dict)
-                if tmp_config_grid:
-                    all_config_grids.append(tmp_config_grid)
-        if all_config_grids:
-            product_config_grid = list(product(*all_config_grids))
-            for item in product_config_grid:
-                base = dict(item[0])
-                for sub_nr in range(1, len(item)):
-                    base.update(item[sub_nr])
-                self._config_grid.append(base)
+                tmp_dict = dict(item.sklearn_hyperparams)
+                for key, element in tmp_dict.items():
+                    if isinstance(item, PipelineElement):
+                        self._sklearn_hyperparams[self.name + '__' + key] = tmp_dict.pop(key)
+                    else:
+                        self._sklearn_hyperparams[self.name + '__' + item.name + '__' + key] = tmp_dict.pop(key)
+
+
 
     @property
     def config_grid(self):
