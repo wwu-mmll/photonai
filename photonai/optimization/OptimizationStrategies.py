@@ -3,7 +3,8 @@ import numpy as np
 from itertools import product
 from .Hyperparameters import FloatRange, Categorical, IntegerRange, BooleanSwitch, PhotonHyperparam
 from sklearn.model_selection import ParameterGrid
-from itertools import product
+from ..logging.Logger import Logger
+from ..helpers.ConfigGrid import create_global_config
 
 class GridSearchOptimizer(object):
     def __init__(self):
@@ -15,32 +16,11 @@ class GridSearchOptimizer(object):
     def prepare(self, pipeline_elements):
         self.pipeline_elements = pipeline_elements
         self.next_config = self.next_config_generator()
-        possible_configurations = []
-
-        global_hyperparameter_dict = {}
-
-        for p_element in self.pipeline_elements:
-            if len(p_element.sklearn_hyperparams) > 0:
-                for h_key, h_value in p_element.sklearn_hyperparams.items():
-                    if isinstance(h_value, list):
-                        global_hyperparameter_dict[h_key] = h_value
-                    elif isinstance(h_value, PhotonHyperparam):
-                        # when we have a range we need to convert it to a definite list of values
-                        if isinstance(h_value, FloatRange) or isinstance(h_value, IntegerRange):
-                            # build a definite list of values
-                            h_value.transform()
-                            global_hyperparameter_dict[h_key] = h_value.values
-                        elif isinstance(h_value, BooleanSwitch) or isinstance(h_value, Categorical):
-                            global_hyperparameter_dict[h_key] = h_value.values
-            #
-            # if p_element.config_grid:
-            #     possible_configurations.append(p_element.config_grid)
+        global_hyperparameter_dict = create_global_config(self.pipeline_elements)
+        # marry each hyperparameter value with all others
         self.param_grid = list(ParameterGrid(global_hyperparameter_dict))
-        # generate Parameter Grid
-        # if len(possible_configurations) == 1:
-        #     self.param_grid = [[i] for i in possible_configurations[0]]
-        # else:
-        #     self.param_grid = product(*possible_configurations)
+        Logger().info("Grid Search generated " + str(len(self.param_grid)) + " configurations")
+
 
     def next_config_generator(self):
         for parameters in self.param_grid:

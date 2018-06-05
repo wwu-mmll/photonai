@@ -1,5 +1,6 @@
 
 from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
+from pymongo.errors import DocumentTooLarge
 from enum import Enum
 import numpy as np
 from photonai.logging.Logger import Logger
@@ -19,6 +20,7 @@ class MDBScoreInformation(EmbeddedMongoModel):
     y_pred = fields.ListField(blank=True)
     indices = fields.ListField(blank=True)
     feature_importances = fields.ListField(blank=True)
+    metrics_copied_from_inner = fields.BooleanField(default=False)
 
 
 class MDBInnerFold(EmbeddedMongoModel):
@@ -64,7 +66,7 @@ class MDBPermutationResults(EmbeddedMongoModel):
 
 
 class MDBHyperpipe(MongoModel):
-    name = fields.CharField(primary_key=True)
+    name = fields.CharField() #primary_key=True
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
@@ -106,7 +108,7 @@ class MDBHelper():
                                         if metric_item in fold.validation.metrics]
                 if value_list_validation:
                     metrics_test.append(MDBFoldMetric(operation=op, metric_name=metric_item,
-                                                                   value=calculate_single_metric(op, value_list_validation)))
+                                                      value=calculate_single_metric(op, value_list_validation)))
         return metrics_train, metrics_test
 
 
@@ -142,9 +144,9 @@ class MongoDBWriter:
         if self.write_to_db:
             connect(self.connect_url)
             Logger().debug('Write results to mongodb...')
-            results_tree.save()
+            try:
+                results_tree.save()
+            except DocumentTooLarge as e:
+                Logger.error('Could not save document into DB: Document too large')
         else:
             pickle.dump(results_tree.to_son(), open(results_tree.name + '_results.p', 'wb'))
-
-
-
