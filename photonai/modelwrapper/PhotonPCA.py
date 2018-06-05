@@ -6,7 +6,7 @@ from pathlib import Path
 import numpy as np
 from sklearn.externals import joblib
 import os
-from ..logging.Logger import Logger
+from ..photonlogger.Logger import Logger
 
 class PhotonPCA(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"

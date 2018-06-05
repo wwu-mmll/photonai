@@ -7,20 +7,20 @@ from slackclient import SlackClient
 
 from photonai.configuration.PhotonConf import PhotonConf
 
-""" logging is a simple way to emit and store logs.
+""" photonlogger is a simple way to emit and store logs.
 
     The default LogLevel is WARN. It should only be increased 
     (to info or debug) if you need more detailed information,
-    because extensive logging significantly impacts performance
+    because extensive photonlogger significantly impacts performance
     and clutters the database. The logs can also be printed on
     the console by setting print_to_console to True.
     
     Usage: 
     1) Import with
-        from logging import Logger
+        from photonlogger import Logger
     2) Log with
         logger = Logger()
-        logger.debug('logging message!')
+        logger.debug('photonlogger message!')
 """
 
 
@@ -147,7 +147,7 @@ class Logger:
             self._distribute_log(message, 'ERROR')
 
     # Takes a message and inserts it into the given collection
-    # Handles possible console-logging
+    # Handles possible console-photonlogger
     def _distribute_log(self, message: str, log_type: str):
 
         entry = self._generate_log_entry(message, log_type)
@@ -204,7 +204,7 @@ class Logger:
     def store_logger_names(self, name):
         return self.loggers.append(name)
 
-    # Definition of LogLevels, the lower the number, the stronger the logging will be
+    # Definition of LogLevels, the lower the number, the stronger the photonlogger will be
     @total_ordering
     class LogLevel(Enum):
         ERROR = 4

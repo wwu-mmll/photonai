@@ -25,7 +25,7 @@ from pymodm import connect
 
 from photonai.configuration.Register import PhotonRegister
 # from framework.ImbalancedWrapper import ImbalancedDataTransform
-from photonai.logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
 from photonai.optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
 from photonai.validation.ValidateConfig import TestPipeline, OptimizerMetric
@@ -106,7 +106,7 @@ class Hyperpipe(BaseEstimator):
     * 'verbose' [int, default=0]:
         The level of verbosity, 0 is least talkative
 
-    * 'logging' [bool, default=False]:
+    * 'photonlogger' [bool, default=False]:
         If True, prints the output to a log file
 
     * 'logfile' [str]:
@@ -201,7 +201,7 @@ class Hyperpipe(BaseEstimator):
                             inner_cv=KFold(n_splits=10, shuffle=True),
                             metrics=['accuracy', 'precision', 'recall', "f1_score"],
                             best_config_metric='accuracy', eval_final_performance=True,
-                            logging=True, verbose=2)
+                            photonlogger=True, verbose=2)
 
    """
 
@@ -293,9 +293,8 @@ class Hyperpipe(BaseEstimator):
         self._hyperparameters = []
         self._config_grid = []
 
-        # containers for optimization history and logging
+        # containers for optimization history and photonlogger
         self._config_history = []
-        self._performance_history_list = []
         self._parameter_history = []
         self._test_performances = {}
 
@@ -558,7 +557,7 @@ class Hyperpipe(BaseEstimator):
                 else:
                     self.result_tree_name = self.name
 
-                # initialize result logging with hyperpipe class
+                # initialize result photonlogger with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
                 self.result_tree.outer_folds = []
 
@@ -567,7 +566,6 @@ class Hyperpipe(BaseEstimator):
 
                     # give the optimizer the chance to inform about elements
                     self.optimizer.prepare(self.pipeline_elements)
-                    self._performance_history_list = []
 
                     outer_fold_counter += 1
                     outer_fold_fit_start_time = time.time()
@@ -593,7 +591,7 @@ class Hyperpipe(BaseEstimator):
                     self._distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
                                                                    outer_fold_counter=outer_fold_counter)
 
-                    tested_config_counter = 0
+                    no_of_tested_configs = 0
 
                     # add outer fold info object to result tree
                     outer_fold = MDBOuterFold(fold_nr=outer_fold_counter)
@@ -601,24 +599,24 @@ class Hyperpipe(BaseEstimator):
                     self.result_tree.outer_folds.append(outer_fold)
 
                     # do the optimizing
-                    for specific_config in self.optimizer.next_config:
-                        self._distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-                        hp = TestPipeline(self._pipe, specific_config, self.metrics, self.update_mother_inner_fold_nr)
+                    for current_config in self.optimizer.next_config:
+                        self._distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=no_of_tested_configs)
+                        hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr)
                         Logger().debug('optimizing of:' + self.name)
-                        Logger().debug(self._optimize_printing(specific_config))
+                        Logger().debug(self._optimize_printing(current_config))
                         Logger().debug('calculating...')
 
                         # Test the configuration cross validated by inner_cv object
-                        config_item = hp.calculate_cv_score(self._validation_X, self._validation_y, cv_iter,
+                        current_config_mdb = hp.calculate_cv_score(self._validation_X, self._validation_y, cv_iter,
                                                             save_predictions=self.save_all_predictions,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
                                                             calculate_metrics_across_folds=self.calculate_metrics_across_folds)
 
-                        config_item.config_nr = tested_config_counter
-                        config_item.config_dict = specific_config
-                        config_item.pipe_name = self.name
-                        tested_config_counter += 1
-                        config_item.human_readable_config = self.config_to_dict(specific_config)
+                        current_config_mdb.config_nr = no_of_tested_configs
+                        current_config_mdb.config_dict = current_config
+                        current_config_mdb.pipe_name = self.name
+                        no_of_tested_configs += 1
+                        current_config_mdb.human_readable_config = self.config_to_dict(current_config)
 
                         # save the configuration of all children pipelines
                         children_config = {}
@@ -633,77 +631,73 @@ class Hyperpipe(BaseEstimator):
                                     if hyperpipe.local_search and hyperpipe.best_config is not None:
                                         # special case: we need to access pipe over pipeline_stacking element
                                         children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
-                                        # children_config_ref_list.append(hyperpipe.best_config._id)
+                                        # children_config_ref_list.append(hyperpipe.best_config_outer_fold._id)
                         specific_parameters = self._pipe.get_params()
-                        #config_item.full_model_spec = specific_parameters
+                        #current_config_mdb.full_model_spec = specific_parameters
 
-                        config_item.children_config_dict = children_config
-                        config_item.children_config_ref = children_config_ref_list
+                        current_config_mdb.children_config_dict = children_config
+                        current_config_mdb.children_config_ref = children_config_ref_list
 
-                        Logger().verbose(self._optimize_printing(specific_config))
+                        Logger().verbose(self._optimize_printing(current_config))
 
-                        if not config_item.config_failed:
+                        if not current_config_mdb.config_failed:
                             # get optimizer_metric and forward to optimizer
                             # todo: also pass greater_is_better=True/False to optimizer
-                            train_value = MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric)
-                            test_value = MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric, train=False)
+                            metric_train = MDBHelper.get_metric(current_config_mdb, FoldOperations.MEAN, self.config_optimizer.metric)
+                            metric_test = MDBHelper.get_metric(current_config_mdb, FoldOperations.MEAN, self.config_optimizer.metric, train=False)
                             #
-                            # if not train_value or test_value:
+                            # if not metric_train or metric_test:
                             #     raise Exception("Config did not fail, but did not get any metrics either....!!?")
-                            config_score = (train_value, test_value)
+                            config_performance = (metric_train, metric_test)
 
                             # Print Result for config
                             Logger().debug('...done:')
-                            Logger().verbose(self.config_optimizer.metric + str(config_score))
+                            Logger().verbose(self.config_optimizer.metric + str(config_performance))
                         else:
-                             config_score = (-1, -1)
+                             config_performance = (-1, -1)
                              # Print Result for config
                              Logger().debug('...failed:')
-                             Logger().error(config_item.config_error)
-
-                        self._performance_history_list.append(config_score)
+                             Logger().error(current_config_mdb.config_error)
 
                         # add config to result tree and do intermediate saving
-                        self.result_tree.outer_folds[-1].tested_config_list.append(config_item)
+                        self.result_tree.outer_folds[-1].tested_config_list.append(current_config_mdb)
                         self.mongodb_writer.save(self.result_tree)
 
                         # 3. inform optimizer about performance
-                        self.optimizer.evaluate_recent_performance(specific_config, config_score)
+                        self.optimizer.evaluate_recent_performance(current_config, config_performance)
 
-                    # Todo: Do better error checking
-                    if len(self._performance_history_list) > 0:
-                        best_train_config = self.config_optimizer.get_optimum_config(outer_fold.tested_config_list)
+                    if no_of_tested_configs > 0:
+                        best_config_outer_fold = self.config_optimizer.get_optimum_config(outer_fold.tested_config_list)
 
-                        if not best_train_config:
+                        if not best_config_outer_fold:
                             raise Exception("No best config was found!")
-                        best_config_item_test = MDBConfig()
-                        best_config_item_test.children_config_dict = best_train_config.children_config_dict
-                        best_config_item_test.pipe_name = self.name
-                        best_config_item_test.children_config_ref = best_train_config.children_config_ref
-                        # best_config_item_test.best_config_ref_to_train_item = best_train_config._id
-                        best_config_item_test.config_dict = best_train_config.config_dict
-                        best_config_item_test.human_readable_config = best_train_config.human_readable_config
-                        self.best_config = best_config_item_test
+                        best_config_outer_fold_mdb = MDBConfig()
+                        best_config_outer_fold_mdb.children_config_dict = best_config_outer_fold.children_config_dict
+                        best_config_outer_fold_mdb.pipe_name = self.name
+                        best_config_outer_fold_mdb.children_config_ref = best_config_outer_fold.children_config_ref
+                        # best_config_outer_fold_mdb.best_config_ref_to_train_item = best_config_outer_fold._id
+                        best_config_outer_fold_mdb.config_dict = best_config_outer_fold.config_dict
+                        best_config_outer_fold_mdb.human_readable_config = best_config_outer_fold.human_readable_config
+
 
                         # inform user
                         Logger().info('finished optimization of ' + self.name)
                         Logger().verbose('Result')
-                        Logger().verbose('Number of tested configurations:' +
-                                         str(len(self._performance_history_list)))
+                        Logger().verbose('Number of tested configurations:' + str(no_of_tested_configs))
                         Logger().verbose('Optimizer metric: ' + self.config_optimizer.metric + '\n' +
                                          '   --> Greater is better: ' + str(self.config_optimizer.greater_is_better))
-                        Logger().info('Best config: ' + self._optimize_printing(self.best_config.config_dict) +
+                        Logger().info('Best config: ' + self._optimize_printing(best_config_outer_fold_mdb.config_dict) +
                                       '\n' + '... with children config: '
-                                      + self._optimize_printing(self.best_config.children_config_dict))
+                                      + self._optimize_printing(best_config_outer_fold_mdb.children_config_dict))
 
 
                         # ... and create optimal pipeline
                         self.optimum_pipe = self._pipe
                         # set self to best config
-                        self.optimum_pipe.set_params(**self.best_config.config_dict)
+                        self.optimum_pipe.set_params(**best_config_outer_fold_mdb.config_dict)
 
                         # set all children to best config and inform to NOT optimize again, ONLY fit
-                        for child_name, child_config in self.best_config.children_config_dict.items():
+                        for child_name, child_config in best_config_outer_fold_mdb.children_config_dict.items():
                             if child_config:
                                 # in case we have a pipeline stacking we need to identify the particular subhyperpipe
                                 splitted_name = child_name.split('__')
@@ -722,39 +716,39 @@ class Hyperpipe(BaseEstimator):
                         self.optimum_pipe.fit(self._validation_X, self._validation_y)
                         final_fit_duration = time.time() - fit_time_start
 
-                        #self.best_config.full_model_spec = self.optimum_pipe.get_params()
-                        self.best_config.fit_duration_minutes = final_fit_duration
-                        self.result_tree.outer_folds[-1].best_config = self.best_config
+                        #self.best_config_outer_fold.full_model_spec = self.optimum_pipe.get_params()
+                        best_config_outer_fold_mdb.fit_duration_minutes = final_fit_duration
+                        self.result_tree.outer_folds[-1].best_config = best_config_outer_fold_mdb
 
                         if not self.debug_cv_mode and self.eval_final_performance:
                             # Todo: generate mean and std over outer folds as well. move this items to the top
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
 
-                            final_fit_test_item = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
+                            test_score_mdb = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
                                                                      self.metrics, save_predictions=True)
 
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
-                            final_fit_train_item = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
+                            train_score_mdb = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
                                                                       self.metrics, save_predictions=True)
 
                             # save test fold
-                            test_set_fold = MDBInnerFold()
-                            test_set_fold.fold_nr = 1
-                            test_set_fold.number_samples_training = num_samples_train
-                            test_set_fold.number_samples_validation = num_samples_test
-                            test_set_fold.training = final_fit_train_item
-                            test_set_fold.validation = final_fit_test_item
-                            self.result_tree.outer_folds[-1].best_config.inner_folds.append(test_set_fold)
+                            outer_fold_mdb = MDBInnerFold()
+                            outer_fold_mdb.fold_nr = 1
+                            outer_fold_mdb.number_samples_training = num_samples_train
+                            outer_fold_mdb.number_samples_validation = num_samples_test
+                            outer_fold_mdb.training = train_score_mdb
+                            outer_fold_mdb.validation = test_score_mdb
+                            self.result_tree.outer_folds[-1].best_config.inner_folds.append(outer_fold_mdb)
 
 
                             Logger().info('PERFORMANCE TRAIN:')
-                            for m_key, m_value in final_fit_train_item.metrics.items():
+                            for m_key, m_value in train_score_mdb.metrics.items():
                                 Logger().info(str(m_key) + ": " + str(m_value))
 
                             Logger().info('PERFORMANCE TEST:')
-                            for m_key, m_value in final_fit_test_item.metrics.items():
+                            for m_key, m_value in test_score_mdb.metrics.items():
                                     Logger().info(str(m_key) + ": " + str(m_value))
 
 
@@ -763,15 +757,20 @@ class Hyperpipe(BaseEstimator):
                     self._distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
 
                 # Find best config across outer folds
-                best_config_outer_folds = MDBConfig()
+                final_best_config = self.config_optimizer.get_optimum_config_outer_folds(self.result_tree.outer_folds)
+                final_best_config_mdb = MDBConfig()
+                final_best_config_mdb.pipe_name = self.name
+                final_best_config_mdb.config_dict = final_best_config.config_dict
+                final_best_config_mdb.human_readable_config = final_best_config.human_readable_config
 
-                best_config_outer_folds.children_config_dict = best_train_config.children_config_dict
-                best_config_outer_folds.pipe_name = self.name
-                best_config_outer_folds.children_config_ref = best_train_config.children_config_ref
-                best_config_outer_folds.config_dict = best_train_config.config_dict
-                best_config_outer_folds.human_readable_config = best_train_config.human_readable_config
-                self.best_config = best_config_outer_folds
-
+                final_best_config_mdb.children_config_dict = final_best_config.children_config_dict
+                final_best_config_mdb.children_config_ref = final_best_config.children_config_ref
+                self.best_config = final_best_config_mdb
+                Logger().info('OVERALL BEST CONFIGURATION')
+                Logger().info('--------------------------')
+                Logger().info(self._optimize_printing(self.best_config.config_dict) +
+                              '\n' + '... with children config: '
+                              + self._optimize_printing(self.best_config.children_config_dict))
                 # set self to best config
                 self.optimum_pipe = self._pipe
                 self.optimum_pipe.set_params(**self.best_config.config_dict)

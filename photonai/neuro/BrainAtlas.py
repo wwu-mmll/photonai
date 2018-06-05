@@ -3,7 +3,7 @@ from nilearn.image import load_img
 from nilearn.image import new_img_like
 from pathlib import Path
 from sklearn.base import BaseEstimator
-from ..logging.Logger import Logger
+from ..photonlogger.Logger import Logger
 
 
 class BrainAtlas(BaseEstimator):
