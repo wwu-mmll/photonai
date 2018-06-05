@@ -173,7 +173,9 @@ class Hyperpipe(BaseEstimator):
     ----------
     * 'optimum_pipe' [Pipeline]:
         An sklearn pipeline object that is fitted to the training data according to the best hyperparameter
-        configuration found.
+        configuration found. Currently, we don't create an ensemble of all best hyperparameter configs over all folds.
+        We find the best config by comparing the test error across outer folds. The hyperparameter config of the best
+        fold is used as the optimal model and is then trained on the complete set.
 
     * 'best_config' [dict]:
         Dictionary containing the hyperparameters of the best configuration.
@@ -596,45 +598,6 @@ class Hyperpipe(BaseEstimator):
 
                     # do the optimizing
                     for specific_config in self.optimizer.next_config:
-                        # Load Config from Database
-                        # try:
-                        #     loaded_result_tree = list(MDBHyperpipe.objects.raw({'_id':self.result_tree_name}))[0]
-                        #     config_item = loaded_result_tree.outer_folds[outer_fold_counter-1].tested_config_list[tested_config_counter]
-                        #
-                        #     tested_config_counter += 1
-                        #     self.distribute_cv_info_to_hyperpipe_children(reset=True,
-                        #                                                   config_counter=tested_config_counter)
-                        #
-                        #     config_score = (
-                        #     MDBHelper.get_metric(config_item, FoldOperations.MEAN, self.config_optimizer.metric),
-                        #     MDBHelper.get_metric(config_item, FoldOperations.MEAN,
-                        #                          self.config_optimizer.metric, train=False))
-                        #     self.performance_history_list.append(config_score)
-                        #
-                        #     # save the configuration of all children pipelines
-                        #     children_config = {}
-                        #     children_config_ref_list = []
-                        #     for pipe_step in self.pipe.steps:
-                        #         item = pipe_step[1]
-                        #         if isinstance(item, Hyperpipe):
-                        #             if item.local_search and item.best_config is not None:
-                        #                 children_config[item.name] = item.best_config
-                        #         elif isinstance(item, PipelineStacking):
-                        #             for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
-                        #                 if hyperpipe.local_search and hyperpipe.best_config is not None:
-                        #                     # special case: we need to access pipe over pipeline_stacking element
-                        #                     children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
-                        #                     # children_config_ref_list.append(hyperpipe.best_config._id)
-                        #     specific_parameters = self.pipe.get_params()
-                        #     #config_item.full_model_spec = specific_parameters
-                        #
-                        #     config_item.children_config_dict = children_config
-                        #     config_item.children_config_ref = children_config_ref_list
-                        #     self.result_tree.outer_folds[outer_fold_counter-1].tested_config_list.append(config_item)
-                        #     Logger().debug('optimizing of:' + self.name)
-                        #     Logger().debug(self.optimize_printing(specific_config))
-                        #     Logger().info('Loading results for this config from MongoDB')
-                        # except:
                         self._distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
                         hp = TestPipeline(self._pipe, specific_config, self.metrics, self.update_mother_inner_fold_nr)
                         Logger().debug('optimizing of:' + self.name)
@@ -795,8 +758,22 @@ class Hyperpipe(BaseEstimator):
                     self.mongodb_writer.save(self.result_tree)
                     self._distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
 
-                # save result tree to db
-                Logger().info("Saved result tree to database")
+                # Find best config across outer folds
+                best_config_outer_folds = MDBConfig()
+
+                best_config_outer_folds.children_config_dict = best_train_config.children_config_dict
+                best_config_outer_folds.pipe_name = self.name
+                best_config_outer_folds.children_config_ref = best_train_config.children_config_ref
+                best_config_outer_folds.config_dict = best_train_config.config_dict
+                best_config_outer_folds.human_readable_config = best_train_config.human_readable_config
+                self.best_config = best_config_outer_folds
+
+                # set self to best config
+                self.optimum_pipe = self._pipe
+                self.optimum_pipe.set_params(**self.best_config.config_dict)
+                self.optimum_pipe.fit(self._validation_X, self._validation_y)
+
+                # save results
                 self.mongodb_writer.save(self.result_tree)
                 if self.logging:
                     self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
