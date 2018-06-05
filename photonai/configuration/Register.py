@@ -2,7 +2,7 @@
 import inspect
 import json
 import os.path
-from logging import Logger
+from photonlogger import Logger
 
 
 class RegisterPipelineElement:

@@ -2,7 +2,7 @@
 from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from enum import Enum
 import numpy as np
-from photonai.logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
 import pickle
 
 
@@ -68,7 +68,8 @@ class MDBHyperpipe(MongoModel):
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
-    best_config = fields.EmbeddedDocumentField(MDBConfig)
+    best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
+    metrics = fields.EmbeddedDocumentField(MDBFoldMetric, blank=True)
 
 class FoldOperations(Enum):
     MEAN = 0

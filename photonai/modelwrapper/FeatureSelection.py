@@ -10,7 +10,7 @@ from pathlib import Path
 import statsmodels.api as sm
 import multiprocessing
 import os
-from ..logging.Logger import Logger
+from ..photonlogger.Logger import Logger
 
 class PearsonFeatureSelector(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"

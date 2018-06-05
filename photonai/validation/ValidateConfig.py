@@ -3,7 +3,7 @@ import traceback
 import warnings
 
 import numpy as np
-from photonai.logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
 from sklearn.pipeline import Pipeline
 
 from photonai.validation.ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
@@ -379,6 +379,21 @@ class OptimizerMetric(object):
             return list_of_non_failed_configs[best_config_metric_nr]
         except BaseException as e:
             Logger().error(str(e))
+
+    def get_optimum_config_outer_folds(self, outer_folds):
+
+        list_of_scores = list()
+        for outer_fold in outer_folds:
+            metrics = outer_fold.best_config.inner_folds[0].validation.metrics
+            list_of_scores.append(metrics[self.metric])
+
+        if self.greater_is_better:
+            # max metric
+            best_config_metric_nr = np.argmax(list_of_scores)
+        else:
+            # min metric
+            best_config_metric_nr = np.argmin(list_of_scores)
+        return outer_folds[best_config_metric_nr].best_config
 
     def set_optimizer_metric(self, pipeline_elements):
         """

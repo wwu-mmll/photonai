@@ -17,7 +17,7 @@ from keras.models import Sequential, Model
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
-from ..logging.Logger import Logger
+from ..photonlogger.Logger import Logger
 from ..helpers.TFUtilities import binary_to_one_hot
 
 
