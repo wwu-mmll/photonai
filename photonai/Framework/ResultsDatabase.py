@@ -67,6 +67,7 @@ class MDBHyperpipe(MongoModel):
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
+    best_config = fields.EmbeddedDocumentField(MDBConfig)
 
 class FoldOperations(Enum):
     MEAN = 0
