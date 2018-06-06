@@ -1,10 +1,15 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
+from photonai.configuration.Register import PhotonRegister
 
 from sklearn.model_selection import KFold
 
 from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
+
+
+PhotonRegister.info("SVC")
+
 
 my_pipe = Hyperpipe('basic_svm_pipe',
                     optimizer='grid_search',
@@ -14,20 +19,20 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     inner_cv=KFold(n_splits=10),
                     write_to_db=True,
                     mongodb_connect_url="mongodb://localhost:27017/photon_db",
-                    verbose=1,
+                    verbose=0,
                     save_all_predictions=False)
 
 
 svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
-                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
+                                   'C': FloatRange(0.5, 2, "linspace", num=3)})
 
 
-tree = PipelineElement('DecisionTreeClassifier',  {'criterion': Categorical(['gini', 'entropy']),
-                                                   'min_samples_split': IntegerRange(2, 5)})
+tree = PipelineElement('DecisionTreeClassifier',  {'criterion': ['gini'],
+                                                   'min_samples_split': IntegerRange(2, 4)})
 
 branch = PipelineBranch('first_branch')
 branch += PipelineElement('StandardScaler')
-branch += PipelineElement('PCA', {'n_components': [5, 10, None]})
+branch += PipelineElement('PCA', {'n_components': [5, 10]})
 branch += tree
 
 my_pipe_stack = PipelineStacking('final_stack', voting=True)
