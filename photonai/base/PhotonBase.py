@@ -756,16 +756,13 @@ class Hyperpipe(BaseEstimator):
                     self.mongodb_writer.save(self.result_tree)
                     self._distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
 
-                # Find best config across outer folds
-                final_best_config = self.config_optimizer.get_optimum_config_outer_folds(self.result_tree.outer_folds)
-                final_best_config_mdb = MDBConfig()
-                final_best_config_mdb.pipe_name = self.name
-                final_best_config_mdb.config_dict = final_best_config.config_dict
-                final_best_config_mdb.human_readable_config = final_best_config.human_readable_config
+                # Compute all final metrics
+                self.result_tree.metrics_train, self.result_tree.metrics_test = MDBHelper.aggregate_metrics(self.result_tree.outer_folds,
+                                                                                                            self.metrics)
 
-                final_best_config_mdb.children_config_dict = final_best_config.children_config_dict
-                final_best_config_mdb.children_config_ref = final_best_config.children_config_ref
-                self.best_config = final_best_config_mdb
+                # Find best config across outer folds
+                self.best_config = self.config_optimizer.get_optimum_config_outer_folds(self.result_tree.outer_folds)
+                self.result_tree.best_config = self.best_config
                 Logger().info('OVERALL BEST CONFIGURATION')
                 Logger().info('--------------------------')
                 Logger().info(self._optimize_printing(self.best_config.config_dict) +
