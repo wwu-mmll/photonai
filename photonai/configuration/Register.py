@@ -5,37 +5,26 @@ import os.path
 from photonai.logging.Logger import Logger
 
 
-class RegisterPipelineElement:
-
-    def __init__(self, photon_package: str, photon_name: str, class_str: str, element_type=None):
-        """
-        Create new entry information
-        :param photon_package: the photonai module name e.g. photon_core, photon_neuro
-        :param photon_name: the string literal with which you want to access the class
-        :param class_str: the namespace of the class, like in the import statement
-        :param element_type: 'estimator' or 'transformer'
-        """
-
-
-
-
 class PhotonRegister:
     """
     Helper class to manage the PHOTON Element Register.
+
+    Use it to add and remove items into the register.
+    You can also retrieve information about items and its hyperparameters.
+
+    Every item in the register is encoded by a string literal that points to a python class and its namespace.
+    You can access the python class via the string literal.
+    The class PhotonElement imports and instantiates the class for you.
+
     There is a distinct json file with the elements registered for each photon package (core, neuro, genetics, ..)
     There is also a json file for the user's custom elements.
 
-    You can use it to add and remove items into the register.
-    You can also retrieve information about a pipeline element and its hyperparameters.
-    Every item in the register is encoded by a string literal that points to a python class and its namespace.
-    You can access the python class via the string literal.
-
     Example:
     --------
-    # get info about object
+    # get info about object, name, namespace and possible hyperparameters
     PhotonRegister.info("SVC")
 
-    # show all items
+    # show all items that are registered
     PhotonRegister.list()
 
     # register new object
@@ -43,7 +32,6 @@ class PhotonRegister:
 
     # delete it again.
     PhotonRegister.delete("ABC1")
-
 
     """
 
@@ -53,9 +41,21 @@ class PhotonRegister:
         pass
 
     @staticmethod
-    def save(photon_name, class_str, element_type, photon_package="CustomElements"):
+    def save(photon_name: str, class_str: str, element_type: str, photon_package: str = "CustomElements"):
         """
         Save Element information to the JSON file
+
+        Parameters:
+        -----------
+        * 'photon_name' [str]:
+          The string literal with which you want to access the class
+        * 'class_str' [str]:
+          The namespace of the class, like in the import statement
+        * 'element_type' [str]:
+          Can be 'Estimator' or 'Transformer'
+        * 'photon_package' [str]:
+          The photonai module name e.g. photon_core, photon_neuro
+
         """
         # register_element and jsonify
 
@@ -82,8 +82,11 @@ class PhotonRegister:
     def info(photon_name):
         """
         Show information for object that is encoded by this name.
-        :param photon_name:
-        :return:
+
+        Parameters:
+        -----------
+        * 'photon_name' [str]:
+          The string literal which accesses the class
         """
         content = PhotonRegister.get_package_info(PhotonRegister.PHOTON_REGISTERS)  # load existing json
 
@@ -116,6 +119,11 @@ class PhotonRegister:
     def delete(photon_name, photon_package="CustomElements"):
         """
         Delete Element from JSON file
+
+        Parameters:
+        -----------
+        * 'photon_name' [str]:
+          The string literal encoding the class
         """
         content, _ = PhotonRegister.get_json(photon_package)  # load existing json
 
@@ -131,9 +139,17 @@ class PhotonRegister:
         """
         Helper function to check if the entry is either registered by a different name or if the name is already given
         to another class
-        :param content: JSON file as dict
-        :type content: dict
-        :return: bool, False if there is no duplicate
+
+         Parameters:
+        -----------
+        * 'photon_name' [str]:
+          The name with which the class should be accessed
+        * 'class_str' [str]:
+          The namespace.Classname, where the class lives, from where it should be imported.
+
+        Returns:
+        --------
+        Bool, False if there is no key with this name and the class is not already registered with another key
         """
 
         content = PhotonRegister.get_package_info(PhotonRegister.PHOTON_REGISTERS)  # load existing json
@@ -158,9 +174,15 @@ class PhotonRegister:
         Load JSON file in which the elements for the PHOTON submodule are stored.
 
         The JSON files are stored in the framework folder by the name convention 'photon_package.json'
-        :param photon_package: the name of the photonai submodule
-        :type photon_package: str
-        :return: JSON file as dict, file path as str
+
+        Parameters:
+        -----------
+        * 'photon_package' [str]:
+          The name of the photonai submodule
+
+        Returns:
+        --------
+        JSON file as dict, file path as str
         """
         file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
         if os.path.isfile(file_name):
@@ -179,10 +201,13 @@ class PhotonRegister:
     def write2json(content2write: dict, photon_package: str):
         """
         Write json content to file
-        :param content2write: the new information to attach to the file
-        :type content2write: dict
-        :param photon_package: the PHOTON submodule name
-        :type photon_package: str
+
+        Parameters:
+        -----------
+        * 'content2write' [dict]:
+          The new information to attach to the file
+        * 'photon_package' [str]:
+          The PHOTON submodule name to which the new class belongs, so it is written to the correct json file
         """
         file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
         # Writing JSON data
@@ -193,7 +218,15 @@ class PhotonRegister:
     def get_package_info(photon_package: list = PHOTON_REGISTERS) -> dict:
         """
         Collect all registered elements from JSON file
-        :return: dict of registered elements
+
+        Parameters:
+        -----------
+        * 'photon_package' [list]:
+          The names of the PHOTON submodules for which the elements should be retrieved
+
+        Returns
+        -------
+        Dict of registered elements
         """
         class_info = dict()
         for package in photon_package:
@@ -207,8 +240,11 @@ class PhotonRegister:
     def list(photon_package: list = PHOTON_REGISTERS):
         """
         Print info about all items that are registered for the PHOTON submodule to the console.
-        :param photon_package: the name of the PHOTON submodule for which the elements should be retrieved
-        :type photon_package: str
+
+        Parameters:
+        -----------
+        * 'photon_package' [list]:
+          The names of the PHOTON submodules for which the elements should be retrieved
         """
         for package in photon_package:
             content, file_name = PhotonRegister.get_json(package)
