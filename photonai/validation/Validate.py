@@ -68,6 +68,7 @@ class TestPipeline(object):
         overall_y_true_train = []
 
         # if we want to collect the predictions, we need to save them into the tree
+        original_save_predictions= save_predictions
         if calculate_metrics_across_folds:
             save_predictions = True
 
@@ -162,6 +163,18 @@ class TestPipeline(object):
                 else:
                     config_item.metrics_train = db_metrics_train
                     config_item.metrics_test = db_metrics_test
+
+                # we needed to save the true/predicted values to calculate the metrics across folds,
+                # but if the user is uninterested in it we dismiss them after the job is done
+                if not original_save_predictions:
+                    for inner_fold in config_item.inner_folds:
+                        # Todo: What about dismissing feature importances, too?
+                        inner_fold.training.y_true = []
+                        inner_fold.training.y_pred = []
+                        inner_fold.training.indices = []
+                        inner_fold.validation.y_true = []
+                        inner_fold.validation.y_pred = []
+                        inner_fold.validation.indices = []
 
             elif calculate_metrics_per_fold:
                 # calculate mean and std over all fold metrics

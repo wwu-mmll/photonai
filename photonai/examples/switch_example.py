@@ -1,7 +1,5 @@
-
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement
-from photonai.optimization.Hyperparameters import FloatRange, Categorical
-
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch
+from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from sklearn.model_selection import KFold
 
 from sklearn.datasets import load_breast_cancer
@@ -15,14 +13,22 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     inner_cv=KFold(n_splits=10),
                     write_to_db=True,
                     mongodb_connect_url="mongodb://localhost:27017/photon_db",
-                    calculate_metrics_across_folds=True,
-                    eval_final_performance=False)
+                    verbose=1,
+                    save_all_predictions=False)
 
+
+svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
+                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
+
+tree = PipelineElement('DecisionTreeClassifier',  {'criterion': Categorical(['gini', 'entropy']),
+                                                   'min_samples_split': IntegerRange(2, 5)})
+
+switch = PipelineSwitch('estimator_switch')
+switch += svm
+switch += tree
 
 my_pipe += PipelineElement('StandardScaler')
-my_pipe += PipelineElement('PCA', {'n_components': [5, 10, None]})
-my_pipe += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
-                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
+my_pipe += switch
 
 my_pipe.fit(X, y)
 
