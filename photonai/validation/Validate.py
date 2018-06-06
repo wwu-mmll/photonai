@@ -406,9 +406,14 @@ class OptimizerMetric(object):
         else:
             # min metric
             best_config_metric_nr = np.argmin(list_of_scores)
+
         best_config = outer_folds[best_config_metric_nr].best_config
-        best_config.inner_folds = None
-        return best_config
+        best_config_mdb = MDBConfig()
+        best_config_mdb.config_dict = best_config.config_dict
+        best_config_mdb.children_config_ref = best_config.children_config_ref
+        best_config_mdb.children_config_dict = best_config.children_config_dict
+        best_config_mdb.human_readable_config = best_config.human_readable_config
+        return best_config_mdb
 
 
     def set_optimizer_metric(self, pipeline_elements):
