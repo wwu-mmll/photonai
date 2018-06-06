@@ -17,7 +17,7 @@ class TestPipeline(object):
     """
 
     def __init__(self, pipe: Pipeline, specific_config: dict, metrics: list, mother_inner_fold_handle,
-                 raise_error: bool=False, mongo_db_settings=None):
+                 raise_error: bool=False, mongo_db_settings=None, callback_function = None):
         """
         Creates a new TestPipeline object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -38,6 +38,7 @@ class TestPipeline(object):
         self.raise_error = raise_error
         self.mother_inner_fold_handle = mother_inner_fold_handle
         self.mongo_db_settings = mongo_db_settings
+        self.callback_function = callback_function
 
     def calculate_cv_score(self, X, y, cv_iter,
                            calculate_metrics_per_fold: bool = True,
@@ -135,6 +136,11 @@ class TestPipeline(object):
                     inner_fold_list.append(inner_fold)
 
                     fold_cnt += 1
+
+                    if self.callback_function:
+                        if not self.callback_function.shall_continue(inner_fold_list):
+                            Logger().info('Skip further cross validation of config because callback said so.')
+                            break
 
             # save all inner folds to the tree under the config item
             config_item.inner_folds = inner_fold_list

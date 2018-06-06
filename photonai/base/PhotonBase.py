@@ -122,14 +122,8 @@ class Hyperpipe(BaseEstimator):
     * 'set_random_seed' [bool, default=False]:
         If True sets the random seed to 42
 
-    * 'verbose' [int, default=0]:
-        The level of verbosity, 0 is least talkative
-
-    * 'logging' [bool, default=False]:
-        If True, prints the output to a log file
-
-    * 'logfile' [str]:
-        Path to a file in which the log messages are written
+    * 'verbosity' [int, default=0]:
+        The level of verbosity, 0 is least talkative and gives only warn and error, 1 gives adds info and 2 adds debug
 
     * 'groups' [array-like, default=None]:
         Info for advanced cross validation strategies, such as LeaveOneSiteOut-CV about the affiliation
@@ -163,13 +157,6 @@ class Hyperpipe(BaseEstimator):
         - imbalance_type = COMBINE:
             - SMOTEENN,
             - SMOTETomek
-
-    * 'config' [dict, default=None]:
-        If the parameter is set, it constructs the pipeline elements from the information given in the dictionary.
-        Can be used as a shortcut to add the pipeline elements.
-
-    * 'debug_cv_mode' [bool, default=False]:
-        Boolean for the internal unit tests of the nested cross validation
 
     Attributes
     ----------
@@ -213,8 +200,9 @@ class Hyperpipe(BaseEstimator):
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
                  groups=None, set_random_seed: bool=False,
                  filter_element=None, imbalanced_data_strategy_filter: str = '',
-                 verbosity = 0,
-                 persist_options=None):
+                 verbosity=0,
+                 persist_options=None,
+                 inner_cv_callback_function = None):
 
 
         # Re eval_final_performance:
@@ -308,6 +296,8 @@ class Hyperpipe(BaseEstimator):
         self._num_of_folds = 0
         self._is_mother_pipe = True
         self._fold_data_hashes = []
+
+        self.inner_cv_callback_function = inner_cv_callback_function
 
     def __iadd__(self, pipe_element):
         """
@@ -575,7 +565,8 @@ class Hyperpipe(BaseEstimator):
                     for current_config in self.optimizer.next_config:
                         self._distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
                         hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr,
-                                          mongo_db_settings=self.persist_options)
+                                          mongo_db_settings=self.persist_options,
+                                          callback_function=self.inner_cv_callback_function)
                         Logger().debug('optimizing of:' + self.name)
                         Logger().debug(self._optimize_printing(current_config))
                         Logger().debug('calculating...')
