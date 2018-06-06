@@ -94,23 +94,29 @@ class NumberRange(PhotonHyperparam):
 
     def transform(self):
 
+        values = []
+
         if self.range_type == "range":
             if not self.step:
-                self.values = np.arange(self.start, self.stop, dtype=self.num_type, **self.range_params)
+                values = np.arange(self.start, self.stop, dtype=self.num_type, **self.range_params)
             else:
                 self.values = np.arange(self.start, self.stop, self.step, dtype=self.num_type, **self.range_params)
         elif self.range_type == "linspace":
             if self.num:
-                self.values = np.linspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+                values = np.linspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
             else:
-                self.values = np.linspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+                values = np.linspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         elif self.range_type == "logspace":
             if self.num:
-                self.values = np.logspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+                values = np.logspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
             else:
-                self.values = np.logspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
-        else:
-            self.values = []
+                values = np.logspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+
+        # convert to python datatype because mongodb needs it
+        if self.num_type == np.int32:
+            self.values = [int(i) for i in values]
+        elif self.num_type == np.float32:
+            self.values = [float(i) for i in values]
 
 
 class IntegerRange(NumberRange):
@@ -151,7 +157,7 @@ class IntegerRange(NumberRange):
            Further parameters that should be passed to the numpy function chosen with range_type.
        """
 
-    def __init__(self, start, stop, range_type, step=None, num=None, **kwargs):
+    def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
             super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
 
 
@@ -193,5 +199,5 @@ class FloatRange(NumberRange):
             Further parameters that should be passed to the numpy function chosen with range_type.
         """
 
-    def __init__(self, start, stop, range_type, step=None, num=None, **kwargs):
+    def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
             super().__init__(start, stop, range_type, step, num, np.float32, **kwargs)
