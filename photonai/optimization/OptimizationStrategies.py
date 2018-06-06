@@ -3,8 +3,8 @@ import numpy as np
 from itertools import product
 from .Hyperparameters import FloatRange, Categorical, IntegerRange, BooleanSwitch, PhotonHyperparam
 from sklearn.model_selection import ParameterGrid
-from ..logging.Logger import Logger
-from ..helpers.ConfigGrid import create_global_config
+from photonai.photonlogger.Logger import Logger
+from photonai.helpers.ConfigGrid import create_global_config
 
 class GridSearchOptimizer(object):
     def __init__(self):

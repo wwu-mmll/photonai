@@ -27,7 +27,7 @@ from pymodm import connect
 from photonai.configuration.Register import PhotonRegister
 # from framework.ImbalancedWrapper import ImbalancedDataTransform
 from photonai.photonlogger.Logger import Logger
-from helpers.ConfigGrid import create_global_config
+from photonai.helpers.ConfigGrid import create_global_config
 from photonai.optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
 from photonai.validation.Validate import TestPipeline, OptimizerMetric
