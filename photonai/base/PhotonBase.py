@@ -721,7 +721,7 @@ class Hyperpipe(BaseEstimator):
                             outer_fold_mdb.number_samples_validation = num_samples_test
                             outer_fold_mdb.training = train_score_mdb
                             outer_fold_mdb.validation = test_score_mdb
-                            self.result_tree.outer_folds[-1].best_config.inner_folds.append(outer_fold_mdb)
+                            self.result_tree.outer_folds[-1].best_config.inner_folds = [outer_fold_mdb]
 
 
                             Logger().info('PERFORMANCE TRAIN:')
@@ -734,10 +734,10 @@ class Hyperpipe(BaseEstimator):
                         else:
 
                             # save test fold
-                            test_set_fold = MDBInnerFold()
-                            test_set_fold.fold_nr = 1
-                            test_set_fold.number_samples_training = num_samples_train
-                            test_set_fold.number_samples_validation = num_samples_test
+                            outer_fold_mdb = MDBInnerFold()
+                            outer_fold_mdb.fold_nr = 1
+                            outer_fold_mdb.number_samples_training = num_samples_train
+                            outer_fold_mdb.number_samples_validation = num_samples_test
 
                             def _copy_inner_fold_means(metric_dict):
                                 # We copy all mean values from validation to the best config
@@ -752,11 +752,11 @@ class Hyperpipe(BaseEstimator):
                                 return train_item
 
                             # training
-                            test_set_fold.training = _copy_inner_fold_means(best_train_config.metrics_train)
+                            outer_fold_mdb.training = _copy_inner_fold_means(best_config_outer_fold.metrics_train)
                             # validation
-                            test_set_fold.validation = _copy_inner_fold_means(best_train_config.metrics_test)
+                            outer_fold_mdb.validation = _copy_inner_fold_means(best_config_outer_fold.metrics_test)
 
-                            self.result_tree.outer_folds[-1].best_config.inner_folds.append(test_set_fold)
+                            self.result_tree.outer_folds[-1].best_config.inner_folds = [outer_fold_mdb]
 
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
                     self.result_tree.time_of_results = datetime.datetime.now()
