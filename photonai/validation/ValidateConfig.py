@@ -155,7 +155,7 @@ class TestPipeline(object):
 
                 # if we want to have metrics for each fold as well, calculate mean and std.
                 if calculate_metrics_per_fold:
-                    db_metrics_fold_train, db_metrics_fold_test = MDBHelper.calculate_metrics(config_item,
+                    db_metrics_fold_train, db_metrics_fold_test = MDBHelper.aggregate_metrics(config_item,
                                                                                               self.metrics)
                     config_item.metrics_train = db_metrics_train + db_metrics_fold_train
                     config_item.metrics_test = db_metrics_test + db_metrics_fold_test
@@ -165,7 +165,7 @@ class TestPipeline(object):
 
             elif calculate_metrics_per_fold:
                 # calculate mean and std over all fold metrics
-                config_item.metrics_train, config_item.metrics_test = MDBHelper.calculate_metrics(config_item,
+                config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item,
                                                                                                   self.metrics)
 
         except Exception as e:
@@ -393,7 +393,10 @@ class OptimizerMetric(object):
         else:
             # min metric
             best_config_metric_nr = np.argmin(list_of_scores)
-        return outer_folds[best_config_metric_nr].best_config
+        best_config = outer_folds[best_config_metric_nr].best_config
+        best_config.inner_folds = None
+        return best_config
+
 
     def set_optimizer_metric(self, pipeline_elements):
         """
