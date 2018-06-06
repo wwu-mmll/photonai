@@ -17,7 +17,7 @@ class TestPipeline(object):
     """
 
     def __init__(self, pipe: Pipeline, specific_config: dict, metrics: list, mother_inner_fold_handle,
-                 raise_error: bool=False):
+                 raise_error: bool=False, mongo_db_settings=None):
         """
         Creates a new TestPipeline object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -37,8 +37,9 @@ class TestPipeline(object):
         self.metrics = metrics
         self.raise_error = raise_error
         self.mother_inner_fold_handle = mother_inner_fold_handle
+        self.mongo_db_settings = mongo_db_settings
 
-    def calculate_cv_score(self, X, y, cv_iter, save_predictions: bool =False,
+    def calculate_cv_score(self, X, y, cv_iter,
                            calculate_metrics_per_fold: bool = True,
                            calculate_metrics_across_folds: bool =False):
         """
@@ -68,7 +69,9 @@ class TestPipeline(object):
         overall_y_true_train = []
 
         # if we want to collect the predictions, we need to save them into the tree
-        original_save_predictions= save_predictions
+        original_save_predictions = self.mongo_db_settings.save_predictions
+        save_predictions = bool(self.mongo_db_settings.save_predictions)
+        save_feature_importances = self.mongo_db_settings.save_feature_importances
         if calculate_metrics_across_folds:
             save_predictions = True
 
@@ -97,11 +100,13 @@ class TestPipeline(object):
 
                     # score test data
                     curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test,
-                                                        save_predictions=save_predictions)
+                                                        save_predictions=save_predictions,
+                                                        save_feature_importances=save_feature_importances)
 
                     # score train data
                     curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train,
-                                                         save_predictions=save_predictions)
+                                                         save_predictions=save_predictions,
+                                                         save_feature_importances=save_feature_importances)
 
                     if calculate_metrics_across_folds:
                         # if we have one hot encoded values -> concat horizontally
@@ -194,7 +199,8 @@ class TestPipeline(object):
 
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
-              save_predictions=False, calculate_metrics: bool=True):
+              save_predictions=False, save_feature_importances=False,
+              calculate_metrics: bool=True):
         """
         Uses the pipeline to predict the given data, compare it to the truth values and calculate metrics
 
@@ -222,12 +228,13 @@ class TestPipeline(object):
         y_pred = estimator.predict(X)
 
         f_importances = []
-        if hasattr(estimator._final_estimator.base_element, 'coef_'):
-            f_importances = estimator._final_estimator.base_element.coef_
-            f_importances = f_importances.tolist()
-        elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
-            f_importances = estimator._final_estimator.base_element.feature_importances_
-            f_importances = f_importances.tolist()
+        if save_feature_importances:
+            if hasattr(estimator._final_estimator.base_element, 'coef_'):
+                f_importances = estimator._final_estimator.base_element.coef_
+                f_importances = f_importances.tolist()
+            elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
+                f_importances = estimator._final_estimator.base_element.feature_importances_
+                f_importances = f_importances.tolist()
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 
@@ -247,7 +254,12 @@ class TestPipeline(object):
             score_result_object = MDBScoreInformation(metrics=output_metrics,
                                                       score_duration=final_scoring_time,
                                                       y_pred=y_pred.tolist(), y_true=y_true.tolist(),
-                                                      indices=np.asarray(indices).tolist(),
+                                                      indices=np.asarray(indices).tolist())
+            if save_feature_importances:
+                score_result_object.feature_importances = f_importances
+        elif save_feature_importances:
+            score_result_object = MDBScoreInformation(metrics=output_metrics,
+                                                      score_duration=final_scoring_time,
                                                       feature_importances=f_importances)
         else:
             score_result_object = MDBScoreInformation(metrics=output_metrics,

@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch, PersistOptions
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.configuration.Register import PhotonRegister
 
@@ -7,6 +7,12 @@ from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
 
+
+mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
+                                save_predictions=False,
+                                save_feature_importances=False,
+                                json_filename="my_tree.json",
+                                log_filename="my_tree.log")
 
 PhotonRegister.info("SVC")
 
@@ -17,10 +23,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=10),
-                    write_to_db=True,
-                    mongodb_connect_url="mongodb://localhost:27017/photon_db",
-                    verbose=0,
-                    save_all_predictions=False)
+                    persist_options=mongo_settings)
 
 
 svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),

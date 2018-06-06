@@ -1,8 +1,9 @@
 from multiprocessing import Pool
 
 import numpy as np
-from Logging.Logger import Logger
-from photonai.framework.validation import Scorer
+from ..logging.Logger import Logger
+from photonai.validation.Validate import Scorer
+from ..base.PhotonBase import PersistOptions
 
 from photonai.validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 
@@ -160,9 +161,10 @@ def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metri
     perm_pipe = hyperpipe_constructor()
     perm_pipe.verbose = -1
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
-    perm_pipe.mongodb_writer.set_connection(perm_pipe.mongodb_connect_url + '_permutations')
-    perm_pipe.mongodb_writer.set_write_to_db(True)
-    perm_pipe.save_final_predictions = False
+
+    po = PersistOptions(mongodb_connect_url=perm_pipe.persist_options.mongodb_connect_url + '_permutations',
+                        save_predictions=False)
+    perm_pipe.persist_options = po
     perm_pipe.calculate_metrics_across_folds = False
 
     # Fit hyperpipe
