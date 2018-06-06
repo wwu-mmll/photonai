@@ -25,13 +25,30 @@ from sklearn.externals import joblib
 from pymodm import connect
 
 from photonai.configuration.Register import PhotonRegister
-# from framework.ImbalancedWrapper import ImbalancedDataTransform
-from photonai.photonlogger.Logger import Logger
-from photonai.helpers.ConfigGrid import create_global_config
+from .ImbalancedWrapper import ImbalancedDataTransform
+from ..photonlogger.Logger import Logger
+from ..helpers.ConfigGrid import create_global_config
+
 from photonai.optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
 from photonai.validation.Validate import TestPipeline, OptimizerMetric
 from photonai.validation.ResultsDatabase import *
+
+
+class PersistOptions:
+
+    def __init__(self, mongodb_connect_url: str = None,
+                 save_predictions: bool = False,
+                 save_feature_importances: bool = False,
+                 json_filename: str = '',
+                 log_filename: str = ''):
+
+        self.mongodb_connect_url = mongodb_connect_url
+        self.save_predictions = save_predictions
+        # coef_ or feature_importances
+        self.save_feature_importances = save_feature_importances
+        self.json_file = json_filename
+        self.log_file = log_filename
 
 
 class Hyperpipe(BaseEstimator):
@@ -182,7 +199,7 @@ class Hyperpipe(BaseEstimator):
                             inner_cv=KFold(n_splits=10, shuffle=True),
                             metrics=['accuracy', 'precision', 'recall', "f1_score"],
                             best_config_metric='accuracy', eval_final_performance=True,
-                            logging=True, verbose=2)
+                            verbose=2)
 
    """
 
@@ -190,14 +207,14 @@ class Hyperpipe(BaseEstimator):
                             'random_grid_search': RandomGridSearchOptimizer,
                             'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
 
-    def __init__(self, name, inner_cv: BaseCrossValidator,
-                 optimizer='grid_search', optimizer_params: dict = {}, groups=None, config=None, metrics=None,
-                 best_config_metric=None, outer_cv=None,
-                 test_size: float = 0.2, eval_final_performance=True,
+    def __init__(self, name, inner_cv: BaseCrossValidator, outer_cv=None,
+                 optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
+                 best_config_metric=None, eval_final_performance=True, test_size: float = 0.2,
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
-                 set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter: str = None,
-                 logfile: str = '', logging: bool =False, verbose: int =0, write_to_db: bool = True,
-                 mongodb_connect_url: str = None, save_all_predictions: bool = False):
+                 groups=None, set_random_seed: bool=False,
+                 filter_element=None, imbalanced_data_strategy_filter: str = '',
+                 verbosity = 0,
+                 persist_options=None):
 
 
         # Re eval_final_performance:
@@ -227,29 +244,29 @@ class Hyperpipe(BaseEstimator):
 
         self.groups = groups
         self.filter_element = filter_element
-        # self.imbalanced_data_strategy_filter = ImbalancedDataTransform(imbalanced_data_strategy_filter)
-        self.imbalanced_data_strategy_filter = None
-
-
-
-        self.save_all_predictions = save_all_predictions
+        if imbalanced_data_strategy_filter:
+            self.imbalanced_data_strategy_filter = ImbalancedDataTransform(imbalanced_data_strategy_filter)
+        else:
+            self.imbalanced_data_strategy_filter = None
 
         self.fit_duration = 0
 
-        self.logging = logging
         if set_random_seed:
             import random
             random.seed(42)
             print('set random seed to 42')
-        self.verbose = verbose
-        Logger().set_verbosity(self.verbose)
-        if logfile:
-            Logger().set_custom_log_file(logfile)
+
+        # set verbosity level
+        Logger().set_verbosity(verbosity)
 
         # MongoDBWriter setup
-        self.mongodb_connect_url = mongodb_connect_url
-        self.write_to_db = write_to_db
-        self.mongodb_writer = MongoDBWriter(write_to_db=write_to_db, connect_url=self.mongodb_connect_url)
+        if persist_options:
+            self.persist_options = persist_options
+            if self.persist_options.log_file:
+                Logger().set_custom_log_file(self.persist_options.log_file)
+        else:
+            self.persist_options = PersistOptions()
+        self.mongodb_writer = MongoDBWriter(self.persist_options)
 
         self.pipeline_elements = []
         self._pipe = None
@@ -271,9 +288,6 @@ class Hyperpipe(BaseEstimator):
 
         # containers for optimization history and logging
         self._performance_history_list = []
-
-        if isinstance(config, dict):
-            self.create_pipeline_elements_from_config(config)
 
         if isinstance(optimizer, str):
             # instantiate optimizer from string
@@ -473,8 +487,6 @@ class Hyperpipe(BaseEstimator):
             self.X = np.asarray(self.X)
         if isinstance(self.y, list):
             self.y = np.asarray(self.y)
-        #if not isinstance(self.X, np.ndarray): # and isinstance(self.X[0], str):
-        #    self.X = np.asarray(self.X)
 
         # handle neuro Imge paths as data
         # ToDo: Need to check the DATA, not the img paths for neuro
@@ -562,14 +574,14 @@ class Hyperpipe(BaseEstimator):
                     # do the optimizing
                     for current_config in self.optimizer.next_config:
                         self._distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-                        hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr)
+                        hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr,
+                                          mongo_db_settings=self.persist_options)
                         Logger().debug('optimizing of:' + self.name)
                         Logger().debug(self._optimize_printing(current_config))
                         Logger().debug('calculating...')
 
                         # Test the configuration cross validated by inner_cv object
                         current_config_mdb = hp.calculate_cv_score(self._validation_X, self._validation_y, cv_iter,
-                                                            save_predictions=self.save_all_predictions,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
                                                             calculate_metrics_across_folds=self.calculate_metrics_across_folds)
 
@@ -689,13 +701,17 @@ class Hyperpipe(BaseEstimator):
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
 
                             test_score_mdb = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
-                                                                     self.metrics, save_predictions=self.save_all_predictions)
+                                                                self.metrics,
+                                                                save_predictions=self.persist_options.save_predictions,
+                                                                save_feature_importances=self.persist_options.save_feature_importances)
 
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
                             train_score_mdb = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
-                                                                      self.metrics, save_predictions=self.save_all_predictions)
+                                                                 self.metrics,
+                                                                 save_predictions=self.persist_options.save_predictions,
+                                                                 save_feature_importances=self.persist_options.save_feature_importances)
 
                             # save test fold
                             outer_fold_mdb = MDBInnerFold()
@@ -705,7 +721,6 @@ class Hyperpipe(BaseEstimator):
                             outer_fold_mdb.training = train_score_mdb
                             outer_fold_mdb.validation = test_score_mdb
                             self.result_tree.outer_folds[-1].best_config.inner_folds = [outer_fold_mdb]
-
 
                             Logger().info('PERFORMANCE TRAIN:')
                             for m_key, m_value in train_score_mdb.metrics.items():
@@ -749,6 +764,9 @@ class Hyperpipe(BaseEstimator):
                 # Compute all final metrics
                 self.result_tree.metrics_train, self.result_tree.metrics_test = MDBHelper.aggregate_metrics(self.result_tree.outer_folds,
                                                                                                             self.metrics)
+                # save result tree to db or file or both
+                self.mongodb_writer.save(self.result_tree)
+                Logger().info("Saved result tree to database")
 
                 # Find best config across outer folds
                 self.best_config = self.config_optimizer.get_optimum_config_outer_folds(self.result_tree.outer_folds)
@@ -763,10 +781,9 @@ class Hyperpipe(BaseEstimator):
                 self.optimum_pipe.set_params(**self.best_config.config_dict)
                 self.optimum_pipe.fit(self._validation_X, self._validation_y)
 
-                # save results
+                # save results again
                 self.mongodb_writer.save(self.result_tree)
-                if self.logging:
-                    self.result_tree.print_csv_file(self.name + "_" + str(time.time()) + ".csv")
+                Logger().info("Saved overall best config to database")
             ###############################################################################################
             else:
                 self._pipe.fit(self.X, self.y, **fit_params)
@@ -1028,15 +1045,6 @@ class Hyperpipe(BaseEstimator):
             return config_name + '=' + str(config_value)
 
 
-    def create_pipeline_elements_from_config(self, config):
-        """
-        Create the pipeline from a config dict
-        :param config:  dictionary of machine_name: hyperparameter dict
-        """
-        # Todo: Not reassign 'self'!!!
-        for key, all_params in config.items():
-            self += PipelineElement(key, all_params, {})
-
     def config_to_dict(self, specific_config):
         """
         :param specific_config:
@@ -1080,7 +1088,7 @@ class PipelineElement(BaseEstimator):
     3. Attaches a "disable" switch to every element in the pipeline in order to test a complete disable
     """
     # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore', 'PhotonNeuro'])
+    ELEMENT_DICTIONARY = PhotonRegister.get_package_info()
 
     def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False, disabled:bool =False, base_element=None,
                  **kwargs):

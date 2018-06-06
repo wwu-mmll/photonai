@@ -11,10 +11,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=10),
-                    write_to_db=True,
-                    mongodb_connect_url="mongodb://localhost:27017/photon_db",
-                    verbose=1,
-                    save_all_predictions=False)
+                    verbosity=1)
 
 
 svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),

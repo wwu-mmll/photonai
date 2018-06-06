@@ -13,8 +13,6 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=10),
-                    write_to_db=True,
-                    mongodb_connect_url="mongodb://localhost:27017/photon_db",
                     calculate_metrics_across_folds=True,
                     eval_final_performance=False)
 

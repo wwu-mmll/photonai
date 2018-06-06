@@ -161,23 +161,16 @@ class MDBHelper():
 
 
 class MongoDBWriter:
-    def __init__(self, write_to_db, connect_url):
-        self.write_to_db = write_to_db
-        self.connect_url = connect_url
-
-    def set_write_to_db(self, write_to_db: bool):
-        self.write_to_db = write_to_db
-
-    def set_connection(self, connection_url: str):
-        self.connect_url = connection_url
+    def __init__(self, save_settings):
+        self.save_settings = save_settings
 
     def save(self, results_tree):
-        if self.write_to_db:
-            connect(self.connect_url)
+        if self.save_settings.mongodb_connect_url:
+            connect(self.save_settings.mongodb_connect_url)
             Logger().debug('Write results to mongodb...')
             try:
                 results_tree.save()
             except DocumentTooLarge as e:
                 Logger.error('Could not save document into DB: Document too large')
-        else:
+        if self.save_settings.json_file:
             pickle.dump(results_tree.to_son(), open(results_tree.name + '_results.p', 'wb'))
