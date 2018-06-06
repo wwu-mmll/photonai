@@ -3,7 +3,7 @@ from pathlib import Path
 import datetime
 
 class PhotonConf:
-    configfile_path = "../configuration2.ini"
+    configfile_path = "../configuration.ini"
 
     def create_default_config(self):
         self.config['LOGGING'] = {

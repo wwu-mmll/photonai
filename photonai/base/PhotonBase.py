@@ -118,9 +118,6 @@ class Hyperpipe(BaseEstimator):
         Info for advanced cross validation strategies, such as LeaveOneSiteOut-CV about the affiliation
         of the rows in the data
 
-    * 'local_search' [bool, default=True]:
-        If True, the hyperpipe optimizes the hyperparameters of its pipeline elements
-
     * 'filter_element' [SourceFilter, default=None]:
         Instance of SourceFilter Class that transforms the input data, e.g. extracts certain columns
 
@@ -194,9 +191,9 @@ class Hyperpipe(BaseEstimator):
                             'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
 
     def __init__(self, name, inner_cv: BaseCrossValidator,
-                 optimizer='grid_search', optimizer_params: dict = None, local_search: bool =True,
-                 groups=None, config=None, metrics=None, best_config_metric=None, outer_cv=None,
-                 test_size: float = 0.2, eval_final_performance=True, debug_cv_mode=False,
+                 optimizer='grid_search', optimizer_params: dict = {}, groups=None, config=None, metrics=None,
+                 best_config_metric=None, outer_cv=None,
+                 test_size: float = 0.2, eval_final_performance=True,
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
                  set_random_seed: bool=False,  filter_element=None, imbalanced_data_strategy_filter: str = None,
                  logfile: str = '', logging: bool =False, verbose: int =0, write_to_db: bool = True,
@@ -212,34 +209,33 @@ class Hyperpipe(BaseEstimator):
         #    into the test set --> thus we can evaluate more hp configs
         #    later without double dipping
 
-        if optimizer_params is None:
-            optimizer_params = {}
-        self.fit_duration = 0
-        self.fold_list = []
         self.name = name
-        self.hyperparameter_specific_config_cv_object = inner_cv
+        self.inner_cv = inner_cv
+        self.outer_cv = outer_cv
+        self.eval_final_performance = eval_final_performance
+        self.test_size = test_size
         self.cv_iter = None
+        self.data_test_cases = None
+
+        self.calculate_metrics_per_fold = calculate_metrics_per_fold
+        self.calculate_metrics_across_folds = calculate_metrics_across_folds
+
+        # Todo: if self.outer_cv is LeaveOneOut: Set calculate metrics across folds to True -> Print
+
         self.X = None
         self.y = None
+
         self.groups = groups
         self.filter_element = filter_element
         # self.imbalanced_data_strategy_filter = ImbalancedDataTransform(imbalanced_data_strategy_filter)
         self.imbalanced_data_strategy_filter = None
 
-        self.calculate_metrics_per_fold = calculate_metrics_per_fold
-        self.calculate_metrics_across_folds = calculate_metrics_across_folds
 
-        self.data_test_cases = None
-        self._config_history = []
-        self.performance_history = []
-        self.children_config_setup = []
-        self.best_config = None
-        self.best_children_config = None
-        self.best_performance = None
-        self.is_final_fit = False
+
         self.save_all_predictions = save_all_predictions
 
-        self.debug_cv_mode = debug_cv_mode
+        self.fit_duration = 0
+
         self.logging = logging
         if set_random_seed:
             import random
@@ -256,27 +252,25 @@ class Hyperpipe(BaseEstimator):
         self.mongodb_writer = MongoDBWriter(write_to_db=write_to_db, connect_url=self.mongodb_connect_url)
 
         self.pipeline_elements = []
-        self.pipeline_param_list = {}
         self._pipe = None
-
         self.optimum_pipe = None
+
         self.metrics = metrics
         self.best_config_metric = best_config_metric
         self.config_optimizer = None
 
         self.result_tree = None
+        self.best_config = None
+        self.best_children_config = None
+        self.best_performance = None
+        self.is_final_fit = False
+
         self.__mother_outer_fold_counter = 0
         self.__mother_inner_fold_counter = 0
         self.__mother_config_counter = 0
 
-        self._hyperparameters = []
-        self._config_grid = []
-
         # containers for optimization history and logging
-        self._config_history = []
         self._performance_history_list = []
-        self._parameter_history = []
-        self._test_performances = {}
 
         if isinstance(config, dict):
             self.create_pipeline_elements_from_config(config)
@@ -287,17 +281,9 @@ class Hyperpipe(BaseEstimator):
             optimizer_class = self.OPTIMIZER_DICTIONARY[optimizer]
             optimizer_instance = optimizer_class(**optimizer_params)
             self.optimizer = optimizer_instance
-            # we need an object for global search
-            # so with a string it must be local search
-            self.local_search = True
         else:
             # Todo: check if correct object
             self.optimizer = optimizer
-            self.local_search = local_search
-
-        self.eval_final_performance = eval_final_performance
-        self.hyperparameter_fitting_cv_object = outer_cv
-        self.test_size = test_size
 
         self._validation_X = None
         self._validation_y = None
@@ -329,10 +315,6 @@ class Hyperpipe(BaseEstimator):
         #     Todo: raise error
         # raise TypeError("Element must be of type Pipeline Element")
 
-    @property
-    def hyperparameters(self):
-        return self._hyperparameters
-
     def add(self, pipe_element):
         self.__iadd__(pipe_element)
 
@@ -357,8 +339,8 @@ class Hyperpipe(BaseEstimator):
           training and validation set by the parameter test_size with ShuffleSplit
         """
         # if there is a CV Object for cross validating the hyperparameter search
-        if self.hyperparameter_fitting_cv_object:
-            self.data_test_cases = self.hyperparameter_fitting_cv_object.split(self.X, self.y)
+        if self.outer_cv:
+            self.data_test_cases = self.outer_cv.split(self.X, self.y)
         # in case we do not want to divide between validation and test set
         elif not self.eval_final_performance:
             self.data_test_cases = self.__yield_all_data()
@@ -562,7 +544,7 @@ class Hyperpipe(BaseEstimator):
                     self._test_y = self.y[test_indices]
 
                     # Prepare inner cross validation
-                    cv_iter = list(self.hyperparameter_specific_config_cv_object.split(self._validation_X, self._validation_y))
+                    cv_iter = list(self.inner_cv.split(self._validation_X, self._validation_y))
                     num_folds = len(cv_iter)
                     num_samples_train = len(self._validation_y)
                     num_samples_test = len(self._test_y)
@@ -1049,9 +1031,6 @@ class Hyperpipe(BaseEstimator):
         else:
             return config_name + '=' + str(config_value)
 
-    @property
-    def config_grid(self):
-        return self._config_grid
 
     def create_pipeline_elements_from_config(self, config):
         """
@@ -1152,11 +1131,13 @@ class PipelineElement(BaseEstimator):
         # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
         self.test_disabled = test_disabled
-        self._hyperparameters = hyperparameters
-        self._sklearn_hyperparams = {}
         self._sklearn_disabled = self.name + '__disabled'
-        self._config_grid = []
-        self.hyperparameters = self._hyperparameters
+        self._hyperparameters = hyperparameters
+        # check if hyperparameters are already in sklearn style
+        if len(hyperparameters) > 0:
+            key_0 = next(iter(hyperparameters))
+            if self.name not in key_0:
+                self.hyperparameters = hyperparameters
         self.disabled = disabled
 
     def copy_me(self):
@@ -1171,27 +1152,19 @@ class PipelineElement(BaseEstimator):
         return self._hyperparameters
 
     @hyperparameters.setter
-    def hyperparameters(self, value):
-        # Todo: Make sure that set_disabled is not included when generating config_grid and stuff
-        self._hyperparameters = value
-        self.generate_sklearn_hyperparameters()
-        if self.test_disabled:
-            self._hyperparameters.update({'test_disabled': True})
+    def hyperparameters(self, value: dict):
+        self.generate_sklearn_hyperparameters(value)
 
-    @property
-    def sklearn_hyperparams(self):
-        return self._sklearn_hyperparams
-
-    def generate_sklearn_hyperparameters(self):
+    def generate_sklearn_hyperparameters(self, value: dict):
         """
         Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
         :return: dict of hyperparameters
         """
-        self._sklearn_hyperparams = {}
-        for attribute, value_list in self._hyperparameters.items():
-            self._sklearn_hyperparams[self.name + '__' + attribute] = value_list
+        self._hyperparameters = {}
+        for attribute, value_list in value.items():
+            self._hyperparameters[self.name + '__' + attribute] = value_list
         if self.test_disabled:
-            self.sklearn_hyperparams[self._sklearn_disabled] = [True]
+            self._hyperparameters[self._sklearn_disabled] = [True]
 
 
     def get_params(self, deep: bool=True):
@@ -1419,10 +1392,10 @@ class PipelineBranch(PipelineElement):
         Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
         :return: dict of hyperparameters
         """
-        self._sklearn_hyperparams = {}
+        self._hyperparameters = {}
         for element in self.pipeline_elements:
             for attribute, value_list in element.hyperparameters.items():
-                self._sklearn_hyperparams[ self.name + '__' + element.name + '__' + attribute] = value_list
+                self._hyperparameters[self.name + '__' + attribute] = value_list
 
 
 class PipelineStacking(PipelineElement):
@@ -1449,7 +1422,6 @@ class PipelineStacking(PipelineElement):
                                                base_element=True)
 
         self._hyperparameters = {}
-        self._sklearn_hyperparams = {}
         self.pipe_elements = OrderedDict()
         self.voting = voting
         if stacking_elements is not None:
@@ -1468,12 +1440,12 @@ class PipelineStacking(PipelineElement):
         self._hyperparameters[item.name] = item.hyperparameters
 
         # for each configuration
-        tmp_dict = dict(item.sklearn_hyperparams)
+        tmp_dict = dict(item.hyperparameters)
         for key, element in tmp_dict.items():
             if isinstance(item, PipelineElement):
-                self._sklearn_hyperparams[self.name + '__' + key] = tmp_dict[key]
+                self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
             else:
-                self._sklearn_hyperparams[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
+                self._hyperparameters[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
         return self
 
     def add(self, item):
@@ -1488,7 +1460,7 @@ class PipelineStacking(PipelineElement):
         """
         Setting hyperparameters does not make sense, only the items that added can be optimized, not the container (self)
         """
-        return None
+        pass
 
     def get_params(self, deep=True):
         all_params = {}
@@ -1691,7 +1663,6 @@ class PipelineSwitch(PipelineElement):
         self.name = name
         self.sklearn_name = self.name + "__current_element"
         self._hyperparameters = {}
-        self._sklearn_hyperparams = {}
         self._current_element = (1, 1)
         self.disabled = False
         self.pipeline_element_configurations = []
@@ -1739,8 +1710,7 @@ class PipelineSwitch(PipelineElement):
             self.pipeline_element_configurations.append(element_configurations)
             hyperparameters += [(i, nr) for nr in range(len(element_configurations))]
 
-        self._hyperparameters = {'current_element': hyperparameters}
-        self._sklearn_hyperparams = {self.sklearn_name: hyperparameters}
+        self._hyperparameters = {self.sklearn_name: hyperparameters}
 
     @property
     def current_element(self):
