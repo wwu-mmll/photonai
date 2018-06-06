@@ -4,8 +4,8 @@ from ..optimization.Hyperparameters import PhotonHyperparam, FloatRange, Integer
 def create_global_config(pipeline_elements):
     global_hyperparameter_dict = {}
     for p_element in pipeline_elements:
-        if len(p_element.sklearn_hyperparams) > 0:
-            for h_key, h_value in p_element.sklearn_hyperparams.items():
+        if len(p_element.hyperparameters) > 0:
+            for h_key, h_value in p_element.hyperparameters.items():
                 if isinstance(h_value, list):
                     global_hyperparameter_dict[h_key] = h_value
                 elif isinstance(h_value, PhotonHyperparam):
