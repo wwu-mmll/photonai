@@ -126,8 +126,6 @@
     "sklearn.feature_selection.VarianceThreshold",
     "Transformer"
   ],
-
-
   "Binarizer": [
     "sklearn.preprocessing.Binarizer",
     "Transformer"
@@ -172,8 +170,6 @@
     "sklearn.preprocessing.StandardScaler",
     "Transformer"
   ],
-
-
   "DecisionTreeRegressor": [
     "sklearn.tree.DecisionTreeRegressor",
     "Estimator"
@@ -190,8 +186,6 @@
     "sklearn.tree.ExtraDecisionTreeClassifier",
     "Estimator"
   ],
-
-
   "LinearSVC": [
     "sklearn.svm.LinearSVC",
     "Estimator"
@@ -220,8 +214,6 @@
     "sklearn.svm.OneClassSVM",
     "Estimator"
   ],
-
-
   "BernoulliRBM": [
     "sklearn.neural_network.BernoulliRBM",
     "Estimator"
@@ -234,8 +226,6 @@
     "sklearn.neural_network.MLPRegressor",
     "Estimator"
   ],
-
-
   "KNeighborsClassifier": [
     "sklearn.neighbors.KNeighborsClassifier",
     "Estimator"
@@ -256,8 +246,6 @@
     "sklearn.neighbors.NearestCentroid",
     "Estimator"
   ],
-
-
   "BernoulliNB": [
     "sklearn.naive_bayes.BernoulliNB",
     "Estimator"
@@ -270,9 +258,7 @@
     "sklearn.naive_bayes.MultinomialNB",
     "Estimator"
   ],
-
-
-  "BayesianGaussianMixture": [
+    "BayesianGaussianMixture": [
     "sklearn.mixture.BayesianGaussianMixture",
     "Estimator"
   ],
@@ -280,7 +266,6 @@
     "sklearn.mixture.GaussianMixture",
     "Estimator"
   ],
-
 
   "ARDRegression": [
     "sklearn.linear_model.ARDRegression",
@@ -521,6 +506,7 @@
     "Transformer"
   ],
   "DeepPRSClassifier": [
-    "PipelineWrapper.DeepPRS.DeepPRSClassifier"
+    "PipelineWrapper.DeepPRS.DeepPRSClassifier",
+    "Estimator"
   ]
 }

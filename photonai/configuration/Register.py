@@ -2,25 +2,11 @@
 import inspect
 import json
 import os.path
-from logging import Logger
+from photonai.logging.Logger import Logger
 
 
 class RegisterPipelineElement:
-    """
-    Helper class to register new pipeline elements into the element register json file.
 
-    You can use it to add and remove items into the register.
-    Every item in the register is encoded by a string literal that points to a python class and its namespace.
-    You can access the python class via the string literal.
-
-    Example:
-        # Create new entry information
-        new_reg_element = RegisterPipelineElement('photon_core', 'svc', 'sklearn.svm.svc', 'estimator')
-        # Save it to JSON file
-        new_reg_element.save()
-        # Remove it from JSON file
-        new_reg_element.delete()
-    """
     def __init__(self, photon_package: str, photon_name: str, class_str: str, element_type=None):
         """
         Create new entry information
@@ -29,42 +15,119 @@ class RegisterPipelineElement:
         :param class_str: the namespace of the class, like in the import statement
         :param element_type: 'estimator' or 'transformer'
         """
-        self.photon_name = photon_name
-        self.photon_package = photon_package
-        self.class_str = class_str
-        self.element_type = element_type
 
-    def save(self):
+
+
+
+class PhotonRegister:
+    """
+    Helper class to manage the PHOTON Element Register.
+    There is a distinct json file with the elements registered for each photon package (core, neuro, genetics, ..)
+    There is also a json file for the user's custom elements.
+
+    You can use it to add and remove items into the register.
+    You can also retrieve information about a pipeline element and its hyperparameters.
+    Every item in the register is encoded by a string literal that points to a python class and its namespace.
+    You can access the python class via the string literal.
+
+    Example:
+    --------
+    # get info about object
+    PhotonRegister.info("SVC")
+
+    # show all items
+    PhotonRegister.list()
+
+    # register new object
+    PhotonRegister.save("ABC1", "namespace.filename.ABC1", "Transformer")
+
+    # delete it again.
+    PhotonRegister.delete("ABC1")
+
+
+    """
+
+    PHOTON_REGISTERS = ['PhotonCore', 'PhotonNeuro', 'CustomElements']
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def save(photon_name, class_str, element_type, photon_package="CustomElements"):
         """
         Save Element information to the JSON file
         """
         # register_element and jsonify
-        content, _ = PhotonRegister.get_json(self.photon_package)  # load existing json
-        duplicate = self.check_duplicate(content)
-        if not duplicate:
-            Logger().info('Adding PipelineElement ' + self.class_str + ' to ' +
-                          self.photon_package + ' as "' + self.photon_name + '".')
 
+        if element_type != "Estimator" or "Transformer":
+            Logger().error("Variable element_type must be 'Estimator' or 'Transformer'")
+
+        duplicate = PhotonRegister.check_duplicate(photon_name, class_str)
+        if not duplicate:
+            content, _ = PhotonRegister.get_json(photon_package)  # load existing json
             # add new element
-            content[self.photon_name] = self.class_str, self.element_type
+            content[photon_name] = class_str, element_type
 
             # write back to file
-            PhotonRegister.write2json(content, self.photon_package)
+            PhotonRegister.write2json(content, photon_package)
 
-    def delete(self):
+            Logger().info('Adding PipelineElement ' + class_str + ' to ' +
+                          photon_package + ' as "' + photon_name + '".')
+
+
+        else:
+            Logger().error('Could not register pipeline element due to duplicates.')
+
+    @staticmethod
+    def info(photon_name):
+        """
+        Show information for object that is encoded by this name.
+        :param photon_name:
+        :return:
+        """
+        content = PhotonRegister.get_package_info(PhotonRegister.PHOTON_REGISTERS)  # load existing json
+
+        if photon_name in content:
+            element_namespace, element_name = content[photon_name]
+
+            print("----------------------------------")
+            print("Name: " + element_name)
+            print("Namespace: " + element_namespace)
+            print("----------------------------------")
+
+            try:
+                imported_module = __import__(element_namespace, globals(), locals(), element_name, 0)
+                desired_class = getattr(imported_module, element_name)
+                base_element = desired_class()
+                print("Possible Hyperparameters as derived from constructor:")
+                class_args = inspect.signature(base_element.__init__)
+                for item, more_info in class_args.parameters.items():
+                    print("{:<35} {:<75}".format(item, str(more_info)))
+                print("----------------------------------")
+            except Exception as e:
+                Logger().error(e)
+                Logger().error("Could not instantiate class " + element_namespace + "." + element_name)
+        else:
+            Logger().error("Could not find element " + photon_name)
+
+
+
+    @staticmethod
+    def delete(photon_name, photon_package="CustomElements"):
         """
         Delete Element from JSON file
         """
-        content, _ = PhotonRegister.get_json(self.photon_package)  # load existing json
-        Logger().info('Removing the PipelineElement named "{0}" ({1}.{2}) from {3}.'
-                      .format(self.photon_name, content[self.photon_name][0], content[self.photon_name][1],
-                              self.photon_package))
+        content, _ = PhotonRegister.get_json(photon_package)  # load existing json
 
-        if self.photon_name in content:
-            del content[self.photon_name]
-        PhotonRegister.write2json(content, self.photon_package)
+        if photon_name in content:
+            del content[photon_name]
 
-    def check_duplicate(self, content):
+        PhotonRegister.write2json(content, photon_package)
+        Logger().info('Removing the PipelineElement named "{0}" from {1}.'
+                      .format(photon_name, photon_package))
+
+    @staticmethod
+    def check_duplicate(photon_name, class_str):
         """
         Helper function to check if the entry is either registered by a different name or if the name is already given
         to another class
@@ -72,30 +135,21 @@ class RegisterPipelineElement:
         :type content: dict
         :return: bool, False if there is no duplicate
         """
+
+        content = PhotonRegister.get_package_info(PhotonRegister.PHOTON_REGISTERS)  # load existing json
+
         # check for duplicate name (dict key)
         flag = 0
-        if self.photon_name in content:
+        if photon_name in content:
            flag += 1
-           Logger().info('The PipelineElement named "' + self.photon_name + '" has already been registered in '
-                + self.photon_package + ' with ' + content[self.photon_name][0] + '.')
+           Logger().info('A PipelineElement named ' + photon_name + ' has already been registered.')
 
         # check for duplicate class_str
-        if any(self.class_str in s for s in content.values()):
+        if any(class_str in '.'.join([s[0], s[1]]) for s in content.values()):
             flag += 1
-
-            Logger().info('The PipelineElement with the ClassName "' + self.class_str +
-                          '" has already been registered in ' + self.photon_package + '". "' +
-                          self.photon_name + '" not added to ' + self.photon_package + '.')
+            Logger().info('The Class named ' + class_str + ' has already been registered.')
 
         return flag > 0
-
-
-class PhotonRegister:
-    """
-    Manages the JSON files for each PHOTON submodule
-    """
-    def __init__(self):
-        pass
 
     # one json file per Photon Package (Core, Neuro, Genetics, Designer (if necessary)
     @staticmethod
@@ -136,7 +190,7 @@ class PhotonRegister:
             json.dump(content2write, f)
 
     @staticmethod
-    def get_package_info(photon_package: str) -> dict:
+    def get_package_info(photon_package: list = PHOTON_REGISTERS) -> dict:
         """
         Collect all registered elements from JSON file
         :return: dict of registered elements
@@ -150,7 +204,7 @@ class PhotonRegister:
         return class_info
 
     @staticmethod
-    def show_package_info(photon_package: str):
+    def list(photon_package: list = PHOTON_REGISTERS):
         """
         Print info about all items that are registered for the PHOTON submodule to the console.
         :param photon_package: the name of the PHOTON submodule for which the elements should be retrieved
@@ -164,87 +218,21 @@ class PhotonRegister:
                 print("{:<35} {:<75} {:<5}".format(k, class_info, package_type))
 
 
-# if __name__ == '__main__':
-#     ELEMENT_DICTIONARY = PhotonRegister.get_package_info(['PhotonCore'])
-#     PhotonRegister.show_package_info(['PhotonCore'])
-#
-#
-
-# import sklearn
-# import inspect
-# for name, obj in inspect.getmembers(sklearn):
-#     #print(obj)
-#     print(name)
-
-# print(hasattr(PCA(), '_estimator_type'))
-
-# ELEMENT_DICTIONARY = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore', 'PhotonCore2'])
-# print(ELEMENT_DICTIONARY)
-
-# photon_package = 'PhotonCore'  # where to add the element
-# photon_name = 'skjhvr'  # element name
-# class_str = 'sklearn.svm.SljkVR'  # element info
-# element_type = 'Estimator'  # element type
-# RegisterPipelineElement(photon_name=photon_name,
-#                         photon_package=photon_package,
-#                         class_str=class_str,
-#                         element_type=element_type).add()
-#
-# photon_name = 'slkjvr' # elment name
-# class_str = 'sklearn.test'  # element info
-# RegisterPipelineElement(photon_name=photon_name,
-#                         photon_package=photon_package,
-#                         class_str=class_str,
-#                         element_type=element_type).add()
-#
-# photon_name = 'test'  # element name
-# class_str = 'sklearn.svm.SVR'  # element info
-# RegisterPipelineElement(photon_name=photon_name,
-#                         photon_package=photon_package,
-#                         class_str=class_str,
-#                         element_type=element_type).add()
-#
-# photon_name = 'PCA'  # element name
-# class_str = 'sklearn.decomposition.PCA' # element info
-# element_type = 'Transformer' # element type
-# RegisterPipelineElement(photon_name=photon_name,
-#                         photon_package=photon_package,
-#                         class_str=class_str,
-#                         element_type=element_type).add()
-#
-# eldict = RegisterPipelineElement.get_pipeline_element_infos(['PhotonCore'])
-# # eldict = PhotonRegister.get_element_infos('PhotonCore')
-# print(eldict)
+if __name__ == "__main__":
 
 
-# RegisterPipelineElement(photon_name='PCA',
-#                         photon_package=photon_package).remove()
+    # get info about object
+    PhotonRegister.info("SVC")
 
+    # show all items
+    PhotonRegister.list()
 
-# Write complete dict to json (OVERWRITES EVERYTHING IN IT!!!)
+    # register object again -> should fail
+    PhotonRegister.save("SVC", "sklearn.svm.SVC", "Estimator")
+    PhotonRegister.save("SVC2", "sklearn.svm.SVC", "Estimator")
 
-# ELEMENT_DICTIONARY = {'pca': ('sklearn.decomposition.PCA', 'Transformer'),
-#                       'svc': ('sklearn.svm.SVC', 'Estimator'),
-#                       'knn': ('sklearn.neighbors.KNeighborsClassifier', 'Estimator'),
-#                       'logistic': ('sklearn.linear_model.LogisticRegression', 'Estimator'),
-#                       'dnn': ('modelwrapper.TFDNNClassifier.TFDNNClassifier', 'Estimator'),
-#                       'KerasDNNClassifier': ('modelwrapper.KerasDNNClassifier.KerasDNNClassifier', 'Estimator'),
-#                       'standard_scaler': ('sklearn.preprocessing.StandardScaler', 'Transformer'),
-#                       'wrapper_model': ('modelwrapper.WrapperModel.WrapperModel', 'Estimator'),
-#                       'test_wrapper': ('modelwrapper.TestWrapper.WrapperTestElement', 'Estimator'),
-#                       'ae_pca': ('modelwrapper.PCA_AE_Wrapper.PCA_AE_Wrapper', 'Transformer'),
-#                       'rl_cnn': ('photon_core.modelwrapper.RLCNN.RLCNN', 'Estimator'),
-#                       'CNN1d': ('modelwrapper.CNN1d.CNN1d', 'Estimator'),
-#                       'SourceSplitter': ('modelwrapper.SourceSplitter.SourceSplitter', 'Transformer'),
-#                       'f_regression_select_percentile': ('modelwrapper.FeatureSelection.FRegressionSelectPercentile', 'Transformer'),
-#                       'f_classif_select_percentile': ('modelwrapper.FeatureSelection.FClassifSelectPercentile', 'Transformer'),
-#                       'py_esn_r': ('modelwrapper.PyESNWrapper.PyESNRegressor', 'Estimator'),
-#                       'py_esn_c': ('modelwrapper.PyESNWrapper.PyESNClassifier', 'Estimator'),
-#                       'SVR': ('sklearn.svm.SVR', 'Estimator'),
-#                       'KNeighborsRegressor': ('sklearn.neighbors.KNeighborsRegressor', 'Estimator'),
-#                       'DecisionTreeRegressor': ('sklearn.tree.DecisionTreeRegressor', 'Estimator'),
-#                       'RandomForestRegressor': ('sklearn.ensemble.RandomForestRegressor', 'Estimator'),
-#                       'KerasDNNRegressor': ('modelwrapper.KerasDNNRegressor.KerasDNNRegressor', 'Estimator'),
-#                       'PretrainedCNNClassifier': ('modelwrapper.PretrainedCNNClassifier.PretrainedCNNClassifier', 'Estimator')
-#                       }
-# PhotonRegister.write2json(ELEMENT_DICTIONARY, 'PhotonCore')
+    # register new object
+    PhotonRegister.save("ABC1", "namespace.filename.ABC1", "Transformer")
+
+    # delete it again.
+    PhotonRegister.delete("ABC1")
