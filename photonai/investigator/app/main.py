@@ -15,7 +15,7 @@ app.config['pipe_files'] = {}
 app.config['pipe_objects'] = {}
 
 app.config['SECRET_KEY'] = 'Random_Lovely_Key'
-app.config['DEBUG'] = True
+app.config['DEBUG'] = False
 
 
 # this line is important (add all controllers)
