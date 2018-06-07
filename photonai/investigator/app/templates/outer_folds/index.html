@@ -11,7 +11,7 @@
 
                 <h3 class="box-title">Fold {{ outer_fold.fold_nr }}</h3>
                 <div class="pull-right">
-                    <a href="{{ url_for('show_outer_fold', name=name, fold_nr=outer_fold.fold_nr) }}" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-th-list"></span> Show details</a>
+                    <a href="{{ url_for('show_outer_fold', storage=s, name=name, fold_nr=outer_fold.fold_nr) }}" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-th-list"></span> Show details</a>
                 </div>
             </div>
             <!-- /.box-header -->
@@ -46,17 +46,20 @@
 
 {% block breadcrumb %}
     <ol class="breadcrumb">
-        <li><a href="{{ url_for('index_pipeline') }}">Hyperpipe</a></li>
-        <li class="active">Pipeline: {{ pipe.name }}</li>
+        <li><a href="{{ url_for('index_pipeline', storage='m') }}">Hyperpipe</a></li>
+        <li class="active">Pipeline: {{ pipe.pk }}</li>
     </ol>
 {% endblock %}
 
 {% block content %}
     <section class="content-header">
-        <h1>Outer folds of <em>{{pipe.name}}</em></h1>
+        <h1>Outer folds of <em>{{pipe.pk}}</em></h1>
         <small>Click for details</small>
     </section>
     <section class="content">
+        {% if not pipe.eval_final_performance %}
+            <h4 class="btn btn-warning"> Best Configuration selected on validation set performance </h4>
+        {% endif %}
         <div class="box box-solid">
             <div class="box-header">
                 <h1 class="box-title">Overview of all Folds</h1>
@@ -87,7 +90,7 @@
         <div class="row">
             {% if pipe.outer_folds %}
                 {% for outer_fold in pipe.outer_folds %}
-                    {{ render_outer_folds(pipe.name, outer_fold) }}
+                    {{ render_outer_folds(pipe.pk, outer_fold) }}
                 {% endfor %}
             {% else %}
                 <p class="no-posts">Nothing to see yet! Come back soon and check for updates.</p>

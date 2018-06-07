@@ -3,9 +3,9 @@
 
 {% block breadcrumb %}
     <ol class="breadcrumb">
-        <li><a href="{{ url_for('index_pipeline') }}">Hyperpipe</a></li>
-        <li><a href="{{ url_for('show_pipeline', name=pipe.name) }}">Pipeline: {{ pipe.name }}</a></li>
-        <li><a href="{{ url_for('show_outer_fold', name=pipe.name, fold_nr=outer_fold.fold_nr) }}">Fold: {{ outer_fold.fold_nr }}</a></li>
+        <li><a href="{{ url_for('index_pipeline', storage='m') }}">Hyperpipe</a></li>
+        <li><a href="{{ url_for('show_pipeline', storage=s, name=pipe.pk) }}">Pipeline: {{ pipe.name }}</a></li>
+        <li><a href="{{ url_for('show_outer_fold', storage=s, name=pipe.pk, fold_nr=outer_fold.fold_nr) }}">Fold: {{ outer_fold.fold_nr }}</a></li>
         <li class="active">Comparison</li>
     </ol>
 {% endblock %}
