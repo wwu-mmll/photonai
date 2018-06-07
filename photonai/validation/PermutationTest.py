@@ -1,9 +1,9 @@
 from multiprocessing import Pool
 
 import numpy as np
-from ..logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
 from photonai.validation.Validate import Scorer
-from ..base.PhotonBase import PersistOptions
+from photonai.base.PhotonBase import PersistOptions
 
 from photonai.validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 
@@ -38,7 +38,7 @@ class PermutationTest:
         n_outer_folds = len(self.pipe.result_tree.outer_folds)
 
         true_performance = dict()
-        for _, metric  in self.metrics.items():
+        for _, metric in self.metrics.items():
             performance = list()
             for fold in range(n_outer_folds):
                 performance.append(self.pipe.result_tree.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
@@ -66,14 +66,14 @@ class PermutationTest:
         p = self.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics)
 
         # Print results
-        print("""
+        Logger().info("""
         Done with permutations...
 
         Results Permutation test
         ===============================================
         """)
         for _, metric in self.metrics.items():
-            print("""
+            Logger().info("""
                 Metric: {}
                 True Performance: {}
                 p Value: {}
@@ -96,7 +96,8 @@ class PermutationTest:
     def run_parallelized_hyperpipes(self, y_perms, hyperpipe_constructor, X, metrics):
         pool = Pool(processes=self.n_processes)
         for perm_run, y_perm in enumerate(y_perms):
-            pool.apply_async(run_parallized_permutation, args=(hyperpipe_constructor, X, perm_run, y_perm, metrics), callback=self.collect_results, error_callback=error_callback)
+            pool.apply_async(run_parallelized_permutation, args=(hyperpipe_constructor, X, perm_run, y_perm, metrics),
+                             callback=self.collect_results)
         pool.close()
         pool.join()
 
@@ -156,15 +157,15 @@ class PermutationTest:
         return greater_is_better
 
 
-def run_parallized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metrics):
+def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metrics):
     # Create new instance of hyperpipe and set all parameters
     perm_pipe = hyperpipe_constructor()
-    perm_pipe.verbose = -1
+    perm_pipe._set_verbosity(-1)
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
 
-    po = PersistOptions(mongodb_connect_url=perm_pipe.persist_options.mongodb_connect_url + '_permutations',
-                        save_predictions=False)
-    perm_pipe.persist_options = po
+    po = PersistOptions(mongodb_connect_url='', json_filename='', log_filename='',
+                        save_predictions=False, save_feature_importances=False)
+    perm_pipe._set_persist_options(po)
     perm_pipe.calculate_metrics_across_folds = False
 
     # Fit hyperpipe
