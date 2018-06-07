@@ -2,6 +2,7 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from photonai.optimization.SpeedHacks import MinimumPerformance
+from photonai.investigator.Investigator import Investigator
 
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
@@ -25,4 +26,9 @@ my_pipe += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
 
 my_pipe.fit(X, y)
 
+
+Investigator.show(my_pipe)
+
 debug = True
+
+
