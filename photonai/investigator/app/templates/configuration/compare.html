@@ -1,0 +1,72 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends 'base.html' %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('index_pipeline') }}">Hyperpipe</a></li>
+        <li><a href="{{ url_for('show_pipeline', name=pipe.name) }}">Pipeline: {{ pipe.name }}</a></li>
+        <li><a href="{{ url_for('show_outer_fold', name=pipe.name, fold_nr=outer_fold.fold_nr) }}">Fold: {{ outer_fold.fold_nr }}</a></li>
+        <li class="active">Comparison</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+<section class="content-header">
+    <h1>Comparison</h1>
+    <small>Compare your selected configurations</small>
+</section>
+<section class="content">
+    <div class="box box-default">
+        <div class="box-body">
+            <div class="row">
+                <div class="col-md-6">
+                    <div id="comparison_metrics_training">
+                        <!-- graph will be shown here -->
+                    </div>
+
+                    <script>
+                        {{ plot_training.to_plot() | safe }}
+                    </script>
+                </div>
+                <div class="col-md-6">
+                    <div id="comparison_metrics_test">
+                        <!-- graph will be shown here -->
+                    </div>
+
+                    <script>
+                        {{ plot_test.to_plot() | safe }}
+                    </script>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <div class="row">
+        {% for config_dict in config_dict_list %}
+            <div class="col-md-6">
+                <div class="box">
+                    <div class="box-header">
+                        <h3 class="box-title">Configuration for <em>{{ config_dict.name }}</em></h3>
+                    </div>
+                    <div class="box-body">
+                        <table class="table table-hover">
+                            <tr>
+                                <th>Variable</th>
+                                <th>Value</th>
+                            </tr>
+                            {% for item in config_dict.items %}
+                                <tr>
+                                    <td>{{ item.name }}</td>
+                                    <td>{{ item.value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+            </div>
+        {% endfor %}
+    </div>
+
+</section>
+{% endblock %}

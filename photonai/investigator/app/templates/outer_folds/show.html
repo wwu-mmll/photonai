@@ -1,0 +1,243 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends 'base.html' %}
+
+{% macro render_config_list(config) -%}
+    <tr>
+        <td style="vertical-align:middle;"><input type="checkbox" name="config_list" value="{{ config.config_nr }}" /></td>
+        <td style="vertical-align:middle;">{{ config.config_nr }}</td>
+
+        <td>
+            {% for config_dict in config_dict_list %}
+                {% if config_dict.config_nr == config.config_nr %}
+                    {% for item in config_dict.items %}
+                        <strong>{{ item.name }}:</strong> {{ item.value }}<br>
+                    {% endfor %}
+                {% endif %}
+            {% endfor %}
+        </td>
+
+        {% for metric in config.metrics_test %}
+            {% if metric.operation == "FoldOperations.MEAN" %}
+                <td style="vertical-align:middle;">{{'%0.2f' % metric.value|float}}</td>
+            {% endif %}
+        {% endfor %}
+
+        <td style="vertical-align:middle;">
+            <button id="btn-config-{{ config.config_nr }}" type="button" onclick="load_tested_config('{{ pipe.name }}', '{{ outer_fold.fold_nr }}', '{{config.config_nr}}')" class="btn btn-xs btn-default" data-toggle="modal" data-target="#modal-{{ config.config_nr }}"><span class="glyphicon glyphicon-th-list"></span> Show details</button>
+        </td>
+    </tr>
+{%- endmacro %}
+
+{% macro render_modal(config) -%}
+
+<!-- ----------------------------- START MODAL ----------------------------- -->
+
+<div class="modal fade" id="modal-{{ config.config_nr }}">
+    <div class="modal-dialog" style="width: 90%;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Config {{ config.config_nr }}</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-md-5">
+                        <div id="train_config_{{config.config_nr}}">
+                            <!-- plot will be shown here -->
+                        </div>
+                    </div>
+                    <div class="col-md-5">
+                        <div id="test_config_{{config.config_nr}}">
+                            <!-- plot will be shown here -->
+                        </div>
+                    </div>
+                    <div class="col-md-2" style="margin-top: 2em;">
+                        <table class="table table-hover">
+                            <tr>
+                                <th>Variable</th>
+                                <th>Value</th>
+                            </tr>
+                            {% for config_dict in config_dict_list %}
+                                {% if config_dict.config_nr == config.config_nr %}
+                                    {% for item in config_dict.items %}
+                                        <tr>
+                                            <td>{{ item.name }}</td>
+                                            <td>{{ item.value }}</td>
+                                        </tr>
+                                    {% endfor %}
+                                {% endif %}
+                            {% endfor %}
+                        </table>
+
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-md-12">
+                        <div id="modal_tab_{{ config.config_nr }}" class="nav-tabs-custom">
+                            <ul class="nav nav-tabs">
+                                {% for inner_fold in config.inner_folds %}
+                                <li {% if loop.index == 1 %}class="active"{% endif %}><a href="#config_{{ config.config_nr }}_fold_{{ inner_fold.fold_nr }}" data-toggle="tab">Fold {{ inner_fold.fold_nr }}</a></li>
+                                {% endfor %}
+                            </ul>
+                            <div id="ajax_config_{{ config.config_nr }}" class="tab-content"></div>
+                            <!-- /.tab-content -->
+                        </div>
+                        <!-- nav-tabs-custom -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- /.modal-content -->
+    </div>
+    <!-- /.modal-dialog -->
+</div>
+
+<!-- ------------------------------ END MODAL ------------------------------ -->
+
+{%- endmacro %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('index_pipeline') }}">Hyperpipe</a></li>
+        <li><a href="{{ url_for('show_pipeline', name=pipe.name) }}">Pipeline: {{ pipe.name }}</a></li>
+        <li class="active">Fold: {{ outer_fold.fold_nr }}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+    <section class="content-header">
+        <h1>
+            <i class="fa fa-bar-chart"></i> Details of selected outer fold <em>{{ outer_fold.fold_nr }}</em>
+        </h1>
+        <small>
+            Compare values and tested config lists
+        </small>
+    </section>
+    <section class="content">
+
+        <!----------------------------- START BEST CONFIG ----------------------------->
+        <div class="row">
+
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header">
+                        <h3 class="box-title">Best Configuration</h3>
+                    </div>
+                    <div class="box-body">
+                        <!-- Custom Tabs -->
+                        <div class="nav-tabs-custom">
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a href="#tab_1" data-toggle="tab">Overview performance metrics</a></li>
+                                <li><a href="#tab_2" data-toggle="tab">Final values training set</a></li>
+                                <li><a href="#tab_3" data-toggle="tab">Final values validation set</a></li>
+                            </ul>
+                            <div class="tab-content">
+                                <div class="tab-pane active" id="tab_1">
+                                    <div id="best_config_overview">
+                                        <!-- graph best_config_overview will be shown here -->
+                                    </div>
+                                    <script>
+                                        {{ bestConfigPlot.to_plot() | safe }}
+                                    </script>
+                                </div>
+                                <div class="tab-pane" id="tab_2">
+                                    <div id="best_config_training_values">
+                                        <!-- graph will be shown here -->
+                                    </div>
+                                    <script>
+                                        {{ final_value_training_plot.to_plot() | safe }}
+                                    </script>
+                                </div>
+                                <div class="tab-pane" id="tab_3">
+                                    <div id="best_config_validation_values">
+                                        <!-- graph will be shown here -->
+                                    </div>
+                                    <script>
+                                        {{ final_value_validation_plot.to_plot() | safe }}
+                                    </script>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!----------------------------- END BEST CONFIG ----------------------------->
+
+        <!---------------------------- START OTHER CONFIG ---------------------------->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <form action="{{ url_for('compare_configurations', name=pipe.name, fold_nr=outer_fold.fold_nr) }}" method="post">
+                        <div class="box-header">
+                            <h1 class="box-title">Tested config list</h1>
+                            <div class="box-tools pull-right">
+                                <input type="submit" class="btn btn-sm btn-default" value="Compare configurations" />
+                            </div>
+                        </div>
+                        <div class="box-body">
+                            <table class="table table-hover">
+                                <tr>
+                                    <th>Selection</th>
+                                    <th>Config number</th>
+                                    <th>Config dict</th>
+
+                                    {% for metric in outer_fold.tested_config_list[0].metrics_test %}
+                                        {% if metric.operation == "FoldOperations.MEAN" %}
+                                            <th>{{ metric.metric_name }}</th>
+                                        {% endif %}
+                                    {% endfor %}
+
+                                    <th>Options</th>
+                                </tr>
+                                {% for config in outer_fold.tested_config_list %}
+                                    {{ render_config_list(config) }}
+                                {% endfor %}
+                            </table>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!----------------------------- END OTHER CONFIG ----------------------------->
+    </section>
+
+    {% for config in outer_fold.tested_config_list %}
+        {{ render_modal(config) }}
+    {% endfor %}
+
+{% endblock %}
+
+{% block javascripts %}
+
+    <script>
+        function load_tested_config(pipe_name, outer_fold_nr, config_nr) {
+            if ($('#ajax_config_' + config_nr).is(':empty')){
+                $.ajax({
+                    url: '/pipeline/' + pipe_name + '/outer_fold/' + outer_fold_nr + '/config/' + config_nr + '/load',
+                    type: 'GET',
+                    dataType: 'html',
+                    success: function(data) {
+                        if(data) {
+                            $('#modal_tab_' + config_nr).show();
+                            $('#ajax_config_' + config_nr).append(data);
+                            $('#config_' + config_nr + '_fold_1').addClass('active');
+                        } else {
+                            $('#modal_tab_' + config_nr).hide();
+                        }
+                    },
+                    error: function() {
+                        alert('An error occurred.');
+                    }
+                });
+            }
+        }
+    </script>
+
+    {% for error_plot in error_plot_list %}
+        <script>
+            {{ error_plot.to_error_plot() | safe }}
+        </script>
+    {% endfor %}
+
+{% endblock %}

@@ -1,0 +1,31 @@
+{
+  "name": "plotlyjs",
+  "authors": [
+    "Stefan Bechert <bechert@infai.org>"
+  ],
+  "description": "Bower package for plotlyjs.",
+  "main": "plotly.js",
+  "moduleType": [],
+  "keywords": [
+    "Plotlyjs"
+  ],
+  "license": "MIT",
+  "homepage": "https://github.com/b-pos465/plotly_bower",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ],
+  "version": "1.18.1",
+  "_release": "1.18.1",
+  "_resolution": {
+    "type": "version",
+    "tag": "1.18.1",
+    "commit": "b46327db645b07368e226af295e66ab7d07a6616"
+  },
+  "_source": "https://github.com/b-pos465/plotly_bower.git",
+  "_target": "^1.18.1",
+  "_originalSource": "plotly"
+}

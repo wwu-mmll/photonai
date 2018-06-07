@@ -1,0 +1,21 @@
+{
+  "name": "plotlyjs",
+  "authors": [
+    "Stefan Bechert <bechert@infai.org>"
+  ],
+  "description": "Bower package for plotlyjs.",
+  "main": "plotly.js",
+  "moduleType": [],
+  "keywords": [
+    "Plotlyjs"
+  ],
+  "license": "MIT",
+  "homepage": "",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

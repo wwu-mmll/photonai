@@ -1,0 +1,23 @@
+{
+  "name": "photon_investigator",
+  "authors": [
+    "Julian <j_gebk01@uni-muenster.de>"
+  ],
+  "description": "bachelor thesis project",
+  "main": "photon_investigator.py",
+  "license": "MIT",
+  "homepage": "simple-student.de",
+  "private": true,
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "static/assets/",
+    "test",
+    "tests"
+  ],
+  "dependencies": {
+    "admin-lte": "^2.4.3",
+    "plotlyjs": "plotly#^1.18.1"
+  }
+}

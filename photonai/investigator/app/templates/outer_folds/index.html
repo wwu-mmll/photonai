@@ -1,0 +1,105 @@
+<!-- -*- mode: jinja2 -*- -->
+{% extends 'base.html' %}
+
+{% macro render_outer_folds(name, outer_fold) -%}
+
+{#<div class="row">#}
+    <div class="col-md-4">
+        <div class="box box-solid">
+            <div class="box-header with-border">
+                <i class="fa fa-folder-open"></i>
+
+                <h3 class="box-title">Fold {{ outer_fold.fold_nr }}</h3>
+                <div class="pull-right">
+                    <a href="{{ url_for('show_outer_fold', name=name, fold_nr=outer_fold.fold_nr) }}" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-th-list"></span> Show details</a>
+                </div>
+            </div>
+            <!-- /.box-header -->
+            <div class="box-body">
+
+                <div id="outer_fold_{{ outer_fold.fold_nr }}_best_config_overview">
+                    <!-- graph best_config_overview will be shown here -->
+                    <!-- will be filled through javascripts block -->
+                </div>
+
+{#                <h4>Best Configuration Fold {{ outer_fold.fold_nr }}</h4>#}
+                <table class="table table-hover" style="margin-top: 2em;">
+                    <tr>
+                        <th>Variable</th>
+                        <th>Value</th>
+                    </tr>
+                    {% for key, value in outer_fold.best_config.config_dict.items() %}
+                        <tr>
+                            <td>{{ key }}</td>
+                            <td>{{ value }}</td>
+                        </tr>
+                    {% endfor %}
+                </table>
+
+
+            </div>
+    <!-- /.box-body -->
+        </div>
+    </div>
+{#</div>#}
+{%- endmacro %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li><a href="{{ url_for('index_pipeline') }}">Hyperpipe</a></li>
+        <li class="active">Pipeline: {{ pipe.name }}</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+    <section class="content-header">
+        <h1>Outer folds of <em>{{pipe.name}}</em></h1>
+        <small>Click for details</small>
+    </section>
+    <section class="content">
+        <div class="box box-solid">
+            <div class="box-header">
+                <h1 class="box-title">Overview of all Folds</h1>
+            </div>
+            <div class="box-body">
+                <div class="col-md-6">
+                    <div id="overview_plot_training">
+                        <!-- graph best_config_overview will be shown here -->
+
+                        </div>
+                    <script>
+                        {{ overview_plot_train.to_plot() | safe }}
+                    </script>
+
+                </div>
+                <div class="col-md-6">
+                    <div id="overview_plot_test">
+
+                    </div>
+                    <script>
+                    {{ overview_plot_test.to_plot() | safe }}
+                    </script>
+
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            {% if pipe.outer_folds %}
+                {% for outer_fold in pipe.outer_folds %}
+                    {{ render_outer_folds(pipe.name, outer_fold) }}
+                {% endfor %}
+            {% else %}
+                <p class="no-posts">Nothing to see yet! Come back soon and check for updates.</p>
+            {% endif %}
+        </div>
+    </section>
+{% endblock %}
+
+{% block javascripts %}
+    {% for plot in best_config_plot_list %}
+        <script>
+            {{ plot.to_plot() | safe }}
+        </script>
+    {% endfor %}
+{% endblock %}
