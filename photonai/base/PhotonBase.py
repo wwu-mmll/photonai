@@ -551,6 +551,7 @@ class Hyperpipe(BaseEstimator):
                 # initialize result logging with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
                 self.result_tree.outer_folds = []
+                self.result_tree.eval_final_performance = self.eval_final_performance
 
                 # loop over outer cross validation
                 for train_indices, test_indices in self.data_test_cases:

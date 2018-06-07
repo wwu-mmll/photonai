@@ -90,13 +90,15 @@ class MDBHyperpipe(MongoModel):
     class Meta:
         final = True
 
-    name = fields.CharField() #primary_key=True
+    name = fields.CharField(primary_key=True)
+    eval_final_performance = fields.BooleanField(default=True)
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+
 
 class FoldOperations(Enum):
     MEAN = 0
