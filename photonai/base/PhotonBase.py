@@ -299,6 +299,34 @@ class Hyperpipe(BaseEstimator):
 
         self.inner_cv_callback_function = inner_cv_callback_function
 
+    def _set_verbosity(self, verbosity):
+        """
+        Set verbosity level manually
+        Returns None
+
+        Parameters
+        ----------
+        * 'verbosity' [Integer]:
+            Verbosity level can be 0, 1, or 2.
+
+        """
+        Logger().set_verbosity(verbosity)
+
+    def _set_persist_options(self, persist_options):
+        """
+        Set persist options manually
+        Returns None
+
+        Parameters
+        ----------
+        * persist_options' [PersistOptions]:
+
+        """
+        self.persist_options = persist_options
+        if self.persist_options.log_file:
+            Logger().set_custom_log_file(self.persist_options.log_file)
+        self.mongodb_writer = MongoDBWriter(self.persist_options)
+
     def __iadd__(self, pipe_element):
         """
         Add an element to the machine learning pipeline
