@@ -30,7 +30,6 @@ setup(
         'plotly',
         'imblearn',
         'pymodm',
-        'mpl_toolkits',
         'scipy',
         'statsmodels',
         'flask'
