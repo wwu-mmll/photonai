@@ -3,3 +3,4 @@ README.txt
 setup.cfg
 setup.py
 photonai/__init__.py
+recursive-include photonai *
