@@ -3,7 +3,7 @@ from pymodm.errors import DoesNotExist, ConnectionError, ValidationError
 from photonai.investigator.app.main import app
 from photonai.validation.ResultsDatabase import MDBHelper
 from pymodm.connection import connect
-from flask import request
+from flask import request, redirect, url_for
 
 
 def load_pipe_from_db(name):
@@ -17,6 +17,7 @@ def load_pipe_from_db(name):
 
 def load_pipe(storage, name):
     pipe = None
+    error = "Could not load pipeline"
     if storage == "m":
         try:
             pipe = load_pipe_from_db(name)
@@ -28,20 +29,21 @@ def load_pipe(storage, name):
             pipe = app.config['pipe_objects'][name]
         except KeyError as ke:
             # Todo pretty error handling
-            return ke
+            error = ke
     elif storage == "f":
         try:
             pipe_path = app.config['pipe_files'][name]
             pipe = MDBHelper.load_results(pipe_path)
         except KeyError as ke:
             # Todo File not Found
-            return ke
+            error= ke
         except Exception as e:
             # Todo: handle file does not exist
             debug = True
 
     if not pipe or not isinstance(pipe, MDBHyperpipe):
-        return "Could not load pipeline"
+        # return "Could not load pipeline"
+        return error
     return pipe
 
 
