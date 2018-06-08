@@ -1,6 +1,7 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch, PersistOptions
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.configuration.Register import PhotonRegister
+from photonai.investigator.Investigator import Investigator
 
 from sklearn.model_selection import KFold
 
@@ -46,6 +47,9 @@ my_pipe_stack += branch
 
 my_pipe += my_pipe_stack
 
-my_pipe.fit(X, y)
+# my_pipe.fit(X, y)
+
+# Investigator.show(my_pipe)
+Investigator.load_from_file('/home/rleenings/Git/photon_core/photonai/examples/basic_svm_pipe_results.p')
 
 debug = True

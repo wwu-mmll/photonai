@@ -261,6 +261,7 @@ class Hyperpipe(BaseEstimator):
         self.optimum_pipe = None
 
         self.metrics = metrics
+        #  Todo: raise error or warning if metrics and best config_metric is None
         self.best_config_metric = best_config_metric
         self.config_optimizer = None
 
@@ -552,6 +553,7 @@ class Hyperpipe(BaseEstimator):
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
                 self.result_tree.outer_folds = []
                 self.result_tree.eval_final_performance = self.eval_final_performance
+                self.result_tree.best_config_metric = self.best_config_metric
 
                 # loop over outer cross validation
                 for train_indices, test_indices in self.data_test_cases:
