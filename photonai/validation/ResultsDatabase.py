@@ -180,5 +180,5 @@ class MongoDBWriter:
                 #     for outer_fold in results_tree.outer_folds:
                 #         metrics_configs = [outer_fold.tested_configlist
 
-        if self.save_settings.json_file:
-            pickle.dump(results_tree.to_son(), open(results_tree.name + '_results.p', 'wb'))
+        if self.save_settings.local_file:
+            pickle.dump(results_tree.to_son(), open(self.save_settings.local_file, 'wb'))

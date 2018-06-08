@@ -40,14 +40,14 @@ class PersistOptions:
     def __init__(self, mongodb_connect_url: str = None,
                  save_predictions: bool = False,
                  save_feature_importances: bool = False,
-                 json_filename: str = '',
+                 local_file: str = '',
                  log_filename: str = ''):
 
         self.mongodb_connect_url = mongodb_connect_url
         self.save_predictions = save_predictions
         # coef_ or feature_importances
         self.save_feature_importances = save_feature_importances
-        self.json_file = json_filename
+        self.local_file = local_file
         self.log_file = log_filename
 
 
@@ -202,8 +202,7 @@ class Hyperpipe(BaseEstimator):
                  filter_element=None, imbalanced_data_strategy_filter: str = '',
                  verbosity=0,
                  persist_options=None,
-                 inner_cv_callback_function = None):
-
+                 performance_constraints=None):
 
         # Re eval_final_performance:
         # set eval_final_performance to False because
@@ -298,7 +297,7 @@ class Hyperpipe(BaseEstimator):
         self._is_mother_pipe = True
         self._fold_data_hashes = []
 
-        self.inner_cv_callback_function = inner_cv_callback_function
+        self.inner_cv_callback_function = performance_constraints
 
     def _set_verbosity(self, verbosity):
         """

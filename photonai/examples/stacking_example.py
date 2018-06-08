@@ -12,7 +12,7 @@ X, y = load_breast_cancer(True)
 mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
                                 save_predictions=False,
                                 save_feature_importances=False,
-                                json_filename="my_tree.json",
+                                local_file="my_tree.json",
                                 log_filename="my_tree.log")
 
 PhotonRegister.info("SVC")
@@ -50,6 +50,6 @@ my_pipe += my_pipe_stack
 # my_pipe.fit(X, y)
 
 # Investigator.show(my_pipe)
-Investigator.load_from_file('/home/rleenings/Git/photon_core/photonai/examples/basic_svm_pipe_results.p')
+Investigator.load_from_file("my_pipe", '/home/rleenings/Git/photon_core/photonai/examples/basic_svm_pipe_results.p')
 
 debug = True
