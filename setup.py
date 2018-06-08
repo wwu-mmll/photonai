@@ -7,6 +7,7 @@ setup(
       # 'photonai', 'photonai.base', 'photonai.configuration', 'photonai.documentation', 'photonai.examples',
       #         'photonai.genetics', 'photonai.helpers', 'photonai.investigator', 'photonai.modelwrapper', 'photonai.neuro',
       #         'photonai.optimization', 'photonai.photonlogger', 'photonai.sidepackages', 'photonai.test', 'photonai.validation'],
+  include_package_data=True,
   version = '0.3.7',
   description = 'A Python-Based Hyperparameter optimization Toolbox for Neural Networks',
   author = 'PHOTON Team',
