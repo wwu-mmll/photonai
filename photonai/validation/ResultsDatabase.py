@@ -91,6 +91,7 @@ class MDBHyperpipe(MongoModel):
         final = True
 
     name = fields.CharField(primary_key=True)
+    best_config_metric = fields.CharField()
     eval_final_performance = fields.BooleanField(default=True)
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
@@ -173,6 +174,11 @@ class MongoDBWriter:
             try:
                 results_tree.save()
             except DocumentTooLarge as e:
-                Logger.error('Could not save document into DB: Document too large')
+                Logger.error('Could not save document into MongoDB: Document too large')
+                # try to reduce the amount of configs saved
+                # if len(results_tree.outer_folds[0].tested_config_list) > 100:
+                #     for outer_fold in results_tree.outer_folds:
+                #         metrics_configs = [outer_fold.tested_configlist
+
         if self.save_settings.json_file:
             pickle.dump(results_tree.to_son(), open(results_tree.name + '_results.p', 'wb'))

@@ -6,12 +6,15 @@ from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
 from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
 from photonai.investigator.app.model.ConfigItem import ConfigItem
 from photonai.investigator.app.model.Config import Config
-from photonai.investigator.app.controller.helper import load_pipe
+from photonai.investigator.app.controller.helper import load_pipe, load_available_pipes
 
 
 @app.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>/compare_configurations', methods=['POST'])
 def compare_configurations(storage, name, fold_nr):
     try:
+
+        available_pipes = load_available_pipes()
+
         selected_config_nr_list = request.form.getlist('config_list')
 
         config_dict_list = list()
@@ -53,7 +56,8 @@ def compare_configurations(storage, name, fold_nr):
                                , plot_test=plot_test
                                , plot_training=plot_training
                                , config_dict_list=config_dict_list,
-                               s=storage)
+                               s=storage,
+                               available_pipes=available_pipes)
 
     except ValidationError as exc:
         return exc.message

@@ -9,7 +9,7 @@ from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
 from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
 from photonai.investigator.app.model.BestConfigTrace import BestConfigTrace
 from photonai.investigator.app.model.BestConfigPlot import BestConfigPlot
-from photonai.investigator.app.controller.helper import load_pipe
+from photonai.investigator.app.controller.helper import load_pipe, load_available_pipes
 
 
 @app.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>')
@@ -18,6 +18,7 @@ def show_outer_fold(storage, name, fold_nr):
         # best config object always has just one fold
         default_fold_best_config = 0
 
+        available_pipes = load_available_pipes()
         pipe = load_pipe(storage, name)
 
         outer_fold = pipe.outer_folds[int(fold_nr) - 1]
@@ -146,7 +147,8 @@ def show_outer_fold(storage, name, fold_nr):
                                , final_value_training_plot=final_value_training_plot
                                , final_value_validation_plot=final_value_validation_plot
                                , config_dict_list=config_dict_list,
-                               s=storage)
+                               s=storage,
+                               available_pipes=available_pipes)
 
     except ValidationError as exc:
         return exc.message

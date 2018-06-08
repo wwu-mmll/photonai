@@ -1,8 +1,10 @@
 from photonai.validation.ResultsDatabase import MDBHyperpipe
-from pymodm.errors import DoesNotExist, ConnectionError
+from pymodm.errors import DoesNotExist, ConnectionError, ValidationError
 from photonai.investigator.app.main import app
+from photonai.validation.ResultsDatabase import MDBHelper
 from pymodm.connection import connect
-from flask import request, render_template
+from flask import request
+
 
 def load_pipe_from_db(name):
     try:
@@ -18,10 +20,6 @@ def load_pipe(storage, name):
     if storage == "m":
         try:
             pipe = load_pipe_from_db(name)
-        except ConnectionError as exc:
-            # if we are not connected yet, do it
-            connect(app.config['mongo_db_url'])
-            pipe = load_pipe_from_db(name)
         except ValueError as exc:
             connect(app.config['mongo_db_url'])
             pipe = load_pipe_from_db(name)
@@ -31,9 +29,19 @@ def load_pipe(storage, name):
         except KeyError as ke:
             # Todo pretty error handling
             return ke
+    elif storage == "f":
+        try:
+            pipe_path = app.config['pipe_files'][name]
+            pipe = MDBHelper.load_results(pipe_path)
+        except KeyError as ke:
+            # Todo File not Found
+            return ke
+        except Exception as e:
+            # Todo: handle file does not exist
+            debug = True
 
-    if not pipe:
-        return render_template('error.html', error_msg="Could not load pipeline")
+    if not pipe or not isinstance(pipe, MDBHyperpipe):
+        return "Could not load pipeline"
     return pipe
 
 
@@ -42,3 +50,29 @@ def shutdown_server():
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
+
+
+def load_mongo_pipes(available_pipes):
+    try:
+        # Todo: load only name
+        pipeline_list = list(MDBHyperpipe.objects.all())
+        for item in pipeline_list:
+            available_pipes['MONGO'].append(item.pk)
+    except ValidationError as exc:
+        return exc
+    except ConnectionError as exc:
+        return exc
+
+
+def load_available_pipes():
+    available_pipes = dict()
+    available_pipes['RAM'] = app.config['pipe_objects'].keys()
+    available_pipes['FILES'] = app.config['pipe_files'].keys()
+    available_pipes['MONGO'] = []
+    if 'mongo_db_url' in app.config:
+        try:
+            load_mongo_pipes(available_pipes)
+        except ValueError as exc:
+            connect(app.config['mongo_db_url'])
+            load_mongo_pipes(available_pipes)
+    return available_pipes

@@ -7,24 +7,33 @@ from photonai.investigator.app.model.BestConfigTrace import BestConfigTrace
 from photonai.investigator.app.model.BestConfigPlot import BestConfigPlot
 from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
 from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
-from photonai.investigator.app.controller.helper import load_pipe
+from photonai.investigator.app.controller.helper import load_pipe, load_available_pipes
 
 
 @app.route('/pipeline/<storage>')
 def index_pipeline(storage):
     try:
+        available_pipes = load_available_pipes()
         pipeline_list = list(MDBHyperpipe.objects.all())
-        return render_template('pipeline/index.html', s=storage, pipelines=pipeline_list)
+        return render_template('pipeline/index.html', s=storage, pipelines=pipeline_list,
+                               available_pipes=available_pipes)
     except ValidationError as exc:
         return exc.message
     except ConnectionError as exc:
         return exc.message
 
 
+@app.route('/error')
+def show_error(msg):
+    return render_template("default/error.html", error_msg=msg)
+
+
 @app.route('/pipeline/<storage>/<name>')
 def show_pipeline(storage, name):
 
     try:
+
+        available_pipes = load_available_pipes()
         pipe = load_pipe(storage, name)
 
         default_fold_best_config = 0
@@ -110,7 +119,8 @@ def show_pipeline(storage, name):
         return render_template('outer_folds/index.html', pipe=pipe, best_config_plot_list=best_config_plot_list,
                                overview_plot_train=overview_plot_train,
                                overview_plot_test=overview_plot_test,
-                               s=storage)
+                               s=storage,
+                               available_pipes=available_pipes)
     except ValidationError as exc:
         return exc.message
     except ConnectionError as exc:

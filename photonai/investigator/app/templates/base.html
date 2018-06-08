@@ -55,15 +55,16 @@
 
         <aside class="main-sidebar">
             <section class="sidebar">
-                <ul class="sidebar-menu tree" data-widget="tree">
-                    <li class="header">MAIN NAVIGATION</li>
-                    <li {% if request.path == url_for('index') %}class="active"{% endif %}>
-                        <a href="/"><i class="fa fa-home"></i> <span>Home</span></a>
-                    </li>
-                    <li class="{% if request.path == url_for('index_pipeline', storage='m') %}active{% endif %}">
-                        <a href="{{ url_for('index_pipeline', storage='m') }}"><i class="fa fa-database"></i> <span>Hyperpipe</span></a>
-                    </li>
-                </ul>
+                {% include "default/side_navi.html" %}
+                <!--<ul class="sidebar-menu tree" data-widget="tree">-->
+                    <!--<li class="header">MAIN NAVIGATION</li>-->
+                    <!--<li {% if request.path == url_for('index') %}class="active"{% endif %}>-->
+                        <!--<a href="/"><i class="fa fa-home"></i> <span>Home</span></a>-->
+                    <!--</li>-->
+                    <!--<li class="{% if request.path == url_for('index_pipeline', storage='m') %}active{% endif %}">-->
+                        <!--<a href="{{ url_for('index_pipeline', storage='m') }}"><i class="fa fa-database"></i> <span>Hyperpipe</span></a>-->
+                    <!--</li>-->
+                <!--</ul>-->
             </section>
         </aside>
 

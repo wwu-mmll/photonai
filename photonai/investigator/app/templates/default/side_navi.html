@@ -1,10 +1,32 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>$Title$</title>
-</head>
-<body>
-$END$
-</body>
-</html>
+
+{% macro render_pipe_link(storage, pipe_name) -%}
+
+    {% set url_for_pipe = url_for('show_pipeline', storage=storage, name=pipe_name) %}
+    <li class="{% if request.path == url_for_pipe %}active{% endif %}">
+        <a href="{{ url_for_pipe }}"><span>{{pipe_name}}</span></a>
+    </li>
+
+{%- endmacro %}
+
+
+<ul class="sidebar-menu tree" data-widget="tree">
+    {% if available_pipes %}
+        <li class="header"><i class="fa fa-history"></i> <span>Working Memory</span></li>
+
+        {% for a_pipe in available_pipes['RAM'] %}
+            {{ render_pipe_link("a", a_pipe) }}
+        {% endfor %}
+
+        <li class="header"><i class="fa fa-file-code-o"></i> <span>Files</span></li>
+
+        {% for f_pipe in available_pipes['FILES'] %}
+            {{ render_pipe_link("f", f_pipe) }}
+        {% endfor %}
+
+        <li class="header"><i class="fa fa-database"></i> <span>MongoDB</span></li>
+        {% for mongo_pipe in available_pipes['MONGO'] %}
+            {{ render_pipe_link("m", mongo_pipe) }}
+        {% endfor %}
+     {% endif %}
+</ul>
+

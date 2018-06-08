@@ -5,6 +5,7 @@ from photonai.investigator.app.controller.helper import shutdown_server
 from threading import Thread
 from multiprocessing import Process
 import webbrowser
+import os
 from time import sleep as slp
 
 class Investigator:
@@ -17,6 +18,9 @@ class Investigator:
     @staticmethod
     def show(pipe: Hyperpipe):
 
+        assert isinstance(pipe, Hyperpipe), "Investigator.show needs an object of type Hyperpipe"
+        assert pipe is not None, "Investigator.show needs an object of Hyperpipe, is None"
+        assert pipe.result_tree is not None, "Investigator.show needs an Hyperpipe that is already optimized, so it can show the result tree"
         # make sure that Flask is running
         FlaskManager().set_pipe_object(pipe.name, pipe.result_tree)
         url = Investigator.build_url("a", pipe.name)
@@ -41,8 +45,12 @@ class Investigator:
         FlaskManager().run_app()
 
     @staticmethod
-    def load_from_file(file_url: str):
-        pass
+    def load_from_file(name: str, file_url: str):
+        assert os.path.isfile(file_url), "File" + file_url + " does not exist or is not a file. Please give absolute path."
+        FlaskManager().set_pipe_file(name, file_url)
+        url = Investigator.build_url("f", name)
+        Investigator.delayed_browser(url)
+        FlaskManager().run_app()
 
     @staticmethod
     def load_files(file_list: list):
