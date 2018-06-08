@@ -3,7 +3,7 @@ from setuptools import find_packages
 
 setup(
   name = 'photonai',
-  packages = [find_packages()],
+  packages = find_packages(),
       # 'photonai', 'photonai.base', 'photonai.configuration', 'photonai.documentation', 'photonai.examples',
       #         'photonai.genetics', 'photonai.helpers', 'photonai.investigator', 'photonai.modelwrapper', 'photonai.neuro',
       #         'photonai.optimization', 'photonai.photonlogger', 'photonai.sidepackages', 'photonai.test', 'photonai.validation'],
