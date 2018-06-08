@@ -4,16 +4,13 @@ from setuptools import find_packages
 setup(
   name = 'photonai',
   packages = find_packages(),
-      # 'photonai', 'photonai.base', 'photonai.configuration', 'photonai.documentation', 'photonai.examples',
-      #         'photonai.genetics', 'photonai.helpers', 'photonai.investigator', 'photonai.modelwrapper', 'photonai.neuro',
-      #         'photonai.optimization', 'photonai.photonlogger', 'photonai.sidepackages', 'photonai.test', 'photonai.validation'],
   include_package_data=True,
-  version = '0.3.8',
+  version = '0.3.9',
   description = 'A Python-Based Hyperparameter optimization Toolbox for Neural Networks',
   author = 'PHOTON Team',
   author_email = 'hahnt@wwu.de',
   url = 'https://github.com/photonai-team/photonai.git', # use the URL to the github repo
-  download_url = 'https://github.com/photonai-team/photonai/archive/0.3.8.tar.gz', # I'll explain this in a second
+  download_url = 'https://github.com/photonai-team/photonai/archive/0.3.9.tar.gz', # I'll explain this in a second
   keywords = ['machine learning', 'deep learning', 'neural networks', 'hyperparameter'], # arbitrary keywords
   classifiers = [],
   install_requires = [
