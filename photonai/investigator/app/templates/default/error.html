@@ -1,0 +1,20 @@
+{% extends 'base.html' %}
+
+{% block breadcrumb %}
+    <ol class="breadcrumb">
+        <li class="active">Home</li>
+    </ol>
+{% endblock %}
+
+{% block content %}
+    <section class="content-header">
+        <h1>FAIL</h1>
+    </section>
+    <section class="content">
+        <div class="box box-default">
+            <div class="box-body">
+                <p>{{ error_msg }}</p>
+            </div>
+        </div>
+    </section>
+{% endblock %}

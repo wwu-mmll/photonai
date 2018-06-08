@@ -60,8 +60,8 @@
                     <li {% if request.path == url_for('index') %}class="active"{% endif %}>
                         <a href="/"><i class="fa fa-home"></i> <span>Home</span></a>
                     </li>
-                    <li class="{% if request.path == url_for('index_pipeline') %}active{% endif %}">
-                        <a href="{{ url_for('index_pipeline') }}"><i class="fa fa-database"></i> <span>Hyperpipe</span></a>
+                    <li class="{% if request.path == url_for('index_pipeline', storage='m') %}active{% endif %}">
+                        <a href="{{ url_for('index_pipeline', storage='m') }}"><i class="fa fa-database"></i> <span>Hyperpipe</span></a>
                     </li>
                 </ul>
             </section>

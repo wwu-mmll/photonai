@@ -23,7 +23,12 @@
         {% endfor %}
 
         <td style="vertical-align:middle;">
-            <button id="btn-config-{{ config.config_nr }}" type="button" onclick="load_tested_config('{{ pipe.name }}', '{{ outer_fold.fold_nr }}', '{{config.config_nr}}')" class="btn btn-xs btn-default" data-toggle="modal" data-target="#modal-{{ config.config_nr }}"><span class="glyphicon glyphicon-th-list"></span> Show details</button>
+            <button id="btn-config-{{ config.config_nr }}" type="button"
+                    onclick="load_tested_config('{{s}}', '{{ pipe.pk }}', '{{ outer_fold.fold_nr }}', '{{config.config_nr}}')"
+                    class="btn btn-xs btn-default"
+                    data-toggle="modal"
+                    data-target="#modal-{{ config.config_nr }}">
+                <span class="glyphicon glyphicon-th-list"></span> Show details</button>
         </td>
     </tr>
 {%- endmacro %}
@@ -98,8 +103,8 @@
 
 {% block breadcrumb %}
     <ol class="breadcrumb">
-        <li><a href="{{ url_for('index_pipeline') }}">Hyperpipe</a></li>
-        <li><a href="{{ url_for('show_pipeline', name=pipe.name) }}">Pipeline: {{ pipe.name }}</a></li>
+        <li><a href="{{ url_for('index_pipeline', storage='m') }}">Hyperpipe</a></li>
+        <li><a href="{{ url_for('show_pipeline', storage=s, name=pipe.pk) }}">Pipeline: {{ pipe.pk }}</a></li>
         <li class="active">Fold: {{ outer_fold.fold_nr }}</li>
     </ol>
 {% endblock %}
@@ -114,7 +119,9 @@
         </small>
     </section>
     <section class="content">
-
+        {% if not pipe.eval_final_performance %}
+            <h4 class="btn btn-warning"> Best Configuration selected on validation set performance </h4>
+        {% endif %}
         <!----------------------------- START BEST CONFIG ----------------------------->
         <div class="row">
 
@@ -162,13 +169,14 @@
                 </div>
             </div>
         </div>
+
         <!----------------------------- END BEST CONFIG ----------------------------->
 
         <!---------------------------- START OTHER CONFIG ---------------------------->
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-default">
-                    <form action="{{ url_for('compare_configurations', name=pipe.name, fold_nr=outer_fold.fold_nr) }}" method="post">
+                    <form action="{{ url_for('compare_configurations', storage=s, name=pipe.pk, fold_nr=outer_fold.fold_nr) }}" method="post">
                         <div class="box-header">
                             <h1 class="box-title">Tested config list</h1>
                             <div class="box-tools pull-right">
@@ -211,10 +219,10 @@
 {% block javascripts %}
 
     <script>
-        function load_tested_config(pipe_name, outer_fold_nr, config_nr) {
+        function load_tested_config(storage, pipe_name, outer_fold_nr, config_nr) {
             if ($('#ajax_config_' + config_nr).is(':empty')){
                 $.ajax({
-                    url: '/pipeline/' + pipe_name + '/outer_fold/' + outer_fold_nr + '/config/' + config_nr + '/load',
+                    url: '/pipeline/' + storage + '/' + pipe_name + '/outer_fold/' + outer_fold_nr + '/config/' + config_nr + '/load',
                     type: 'GET',
                     dataType: 'html',
                     success: function(data) {

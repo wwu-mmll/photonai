@@ -6,10 +6,11 @@ from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
 from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
 from photonai.investigator.app.model.ConfigItem import ConfigItem
 from photonai.investigator.app.model.Config import Config
+from photonai.investigator.app.controller.helper import load_pipe
 
 
-@app.route('/pipeline/<name>/outer_fold/<fold_nr>/compare_configurations', methods=['POST'])
-def compare_configurations(name, fold_nr):
+@app.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>/compare_configurations', methods=['POST'])
+def compare_configurations(storage, name, fold_nr):
     try:
         selected_config_nr_list = request.form.getlist('config_list')
 
@@ -18,7 +19,7 @@ def compare_configurations(name, fold_nr):
         trace_training_list = list()
         trace_test_list = list()
 
-        pipe = MDBHyperpipe.objects.get({'name': name})
+        pipe = load_pipe(storage, name)
         outer_fold = pipe.outer_folds[int(fold_nr) - 1]
 
         for config in outer_fold.tested_config_list:
@@ -51,7 +52,8 @@ def compare_configurations(name, fold_nr):
         return render_template('configuration/compare.html', pipe=pipe, outer_fold=outer_fold
                                , plot_test=plot_test
                                , plot_training=plot_training
-                               , config_dict_list=config_dict_list)
+                               , config_dict_list=config_dict_list,
+                               s=storage)
 
     except ValidationError as exc:
         return exc.message

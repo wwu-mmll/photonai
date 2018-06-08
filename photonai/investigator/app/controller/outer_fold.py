@@ -9,17 +9,18 @@ from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
 from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
 from photonai.investigator.app.model.BestConfigTrace import BestConfigTrace
 from photonai.investigator.app.model.BestConfigPlot import BestConfigPlot
+from photonai.investigator.app.controller.helper import load_pipe
 
 
-@app.route('/pipeline/<name>/outer_fold/<fold_nr>')
-def show_outer_fold(name, fold_nr):
+@app.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>')
+def show_outer_fold(storage, name, fold_nr):
     try:
         # best config object always has just one fold
         default_fold_best_config = 0
 
-        pipe = MDBHyperpipe.objects.get({'name': name})
-        outer_fold = pipe.outer_folds[int(fold_nr) - 1]
+        pipe = load_pipe(storage, name)
 
+        outer_fold = pipe.outer_folds[int(fold_nr) - 1]
         config_dict_list = list()
         error_plot_list = list()
         metric_training_list = list()
@@ -144,7 +145,8 @@ def show_outer_fold(name, fold_nr):
                                , error_plot_list=error_plot_list, bestConfigPlot=best_config_plot
                                , final_value_training_plot=final_value_training_plot
                                , final_value_validation_plot=final_value_validation_plot
-                               , config_dict_list=config_dict_list)
+                               , config_dict_list=config_dict_list,
+                               s=storage)
 
     except ValidationError as exc:
         return exc.message

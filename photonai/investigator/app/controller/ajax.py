@@ -1,13 +1,11 @@
-from flask import render_template, request
 from photonai.investigator.app.main import app
-from photonai.validation.ResultsDatabase import MDBHyperpipe, MDBOuterFold
-from pymodm.errors import ValidationError, ConnectionError, DoesNotExist
-from photonai.investigator.app.model import PlotlyTrace
+from photonai.validation.ResultsDatabase import MDBHyperpipe
+from photonai.investigator.app.controller.helper import load_pipe
 
 
-@app.route('/pipeline/<name>/outer_fold/<outer_fold>/config/<config_index>/inner_fold/<inner_fold>/load')
-def load_tested_config_for_inner_fold(name, outer_fold, config_index, inner_fold):
-    pipe = MDBHyperpipe.objects.get({'name': name})
+@app.route('/pipeline/<storage>/<name>/outer_fold/<outer_fold>/config/<config_index>/inner_fold/<inner_fold>/load')
+def load_tested_config_for_inner_fold(storage, name, outer_fold, config_index, inner_fold):
+    pipe = load_pipe(storage, name)
 
     config_index = int(config_index)
     outer_fold_index = int(int(outer_fold) - 1)
@@ -69,9 +67,9 @@ def load_tested_config_for_inner_fold(name, outer_fold, config_index, inner_fold
     return result
 
 
-@app.route('/pipeline/<name>/outer_fold/<outer_fold>/config/<config_index>/load')
-def load_inner_fold_data_for_config(name, outer_fold, config_index):
-    pipe = MDBHyperpipe.objects.get({'name': name})
+@app.route('/pipeline/<storage>/<name>/outer_fold/<outer_fold>/config/<config_index>/load')
+def load_inner_fold_data_for_config(storage, name, outer_fold, config_index):
+    pipe = load_pipe(storage, name)
 
     config_index = int(config_index)
     outer_fold_index = int(int(outer_fold) - 1)

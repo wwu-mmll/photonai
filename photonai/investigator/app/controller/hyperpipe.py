@@ -1,28 +1,31 @@
 from flask import render_template
 from photonai.investigator.app.main import app
 from photonai.validation.ResultsDatabase import MDBHyperpipe
-from pymodm.errors import ValidationError, ConnectionError
+from pymodm.errors import ValidationError, ConnectionError, DoesNotExist
 from photonai.investigator.app.model.Metric import Metric
 from photonai.investigator.app.model.BestConfigTrace import BestConfigTrace
 from photonai.investigator.app.model.BestConfigPlot import BestConfigPlot
 from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
 from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
+from photonai.investigator.app.controller.helper import load_pipe
 
-@app.route('/pipeline/')
-def index_pipeline():
+
+@app.route('/pipeline/<storage>')
+def index_pipeline(storage):
     try:
         pipeline_list = list(MDBHyperpipe.objects.all())
-        return render_template('pipeline/index.html', pipelines=pipeline_list)
+        return render_template('pipeline/index.html', s=storage, pipelines=pipeline_list)
     except ValidationError as exc:
         return exc.message
     except ConnectionError as exc:
         return exc.message
 
-@app.route('/pipeline/<name>')
-def show_pipeline(name):
+
+@app.route('/pipeline/<storage>/<name>')
+def show_pipeline(storage, name):
+
     try:
-        # pipe = MDBHyperpipe.objects.get({'name':name})
-        pipe = app.config['pipe_3']
+        pipe = load_pipe(storage, name)
 
         default_fold_best_config = 0
 
@@ -39,19 +42,21 @@ def show_pipeline(name):
             overview_plot_training_trace = PlotlyTrace("fold_" + str(fold.fold_nr) + "_training", trace_color="rgb(91, 91, 91)")
             overview_plot_test_trace = PlotlyTrace("fold_" + str(fold.fold_nr) + "_test", trace_color="rgb(91, 91, 91)")
 
-            # save metrics for training dynamically in list
-            for key, value in fold.best_config.inner_folds[default_fold_best_config].training.metrics.items():
-                overview_plot_training_trace.add_x(key)
-                overview_plot_training_trace.add_y(value)
-                metric = Metric(key, value)
-                metric_training_list.append(metric)
+            if fold.best_config:
 
-            # save metrics for validation dynamically in list
-            for key, value in fold.best_config.inner_folds[default_fold_best_config].validation.metrics.items():
-                overview_plot_test_trace.add_x(key)
-                overview_plot_test_trace.add_y(value)
-                metric = Metric(key, value)
-                metric_validation_list.append(metric)
+                # save metrics for training dynamically in list
+                for key, value in fold.best_config.inner_folds[default_fold_best_config].training.metrics.items():
+                    overview_plot_training_trace.add_x(key)
+                    overview_plot_training_trace.add_y(value)
+                    metric = Metric(key, value)
+                    metric_training_list.append(metric)
+
+                # save metrics for validation dynamically in list
+                for key, value in fold.best_config.inner_folds[default_fold_best_config].validation.metrics.items():
+                    overview_plot_test_trace.add_x(key)
+                    overview_plot_test_trace.add_y(value)
+                    metric = Metric(key, value)
+                    metric_validation_list.append(metric)
 
             overview_plot_train.add_trace(overview_plot_training_trace)
             overview_plot_test.add_trace(overview_plot_test_trace)
@@ -104,7 +109,8 @@ def show_pipeline(name):
 
         return render_template('outer_folds/index.html', pipe=pipe, best_config_plot_list=best_config_plot_list,
                                overview_plot_train=overview_plot_train,
-                               overview_plot_test=overview_plot_test)
+                               overview_plot_test=overview_plot_test,
+                               s=storage)
     except ValidationError as exc:
         return exc.message
     except ConnectionError as exc:
