@@ -163,7 +163,7 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, met
     perm_pipe._set_verbosity(-1)
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
 
-    po = PersistOptions(mongodb_connect_url='', json_filename='', log_filename='',
+    po = PersistOptions(mongodb_connect_url='', local_file='', log_filename='',
                         save_predictions=False, save_feature_importances=False)
     perm_pipe._set_persist_options(po)
     perm_pipe.calculate_metrics_across_folds = False

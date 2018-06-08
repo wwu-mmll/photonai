@@ -138,9 +138,20 @@ class TestPipeline(object):
                     fold_cnt += 1
 
                     if self.callback_function:
-                        if not self.callback_function.shall_continue(inner_fold_list):
-                            Logger().info('Skip further cross validation of config because callback said so.')
-                            break
+                        if isinstance(self.callback_function, list):
+                            break_cv = 0
+                            for cf in self.callback_function:
+                                if not cf.shall_continue(inner_fold_list):
+                                    Logger().info('Skip further cross validation of config because of performance constraints')
+                                    break_cv += 1
+                                    break
+                            if break_cv > 0:
+                                break
+                        else:
+                            if not self.callback_function.shall_continue(inner_fold_list):
+                                Logger().info(
+                                    'Skip further cross validation of config because of performance constraints')
+                                break
 
             # save all inner folds to the tree under the config item
             config_item.inner_folds = inner_fold_list
