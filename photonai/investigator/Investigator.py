@@ -75,20 +75,20 @@ class Investigator:
 class FlaskManager:
 
     def __init__(self):
-        pass
+        self.app = app
 
     def set_mongo_db_url(self, mongo_url):
-        app.config['mongo_db_url'] = mongo_url
+        self.app.config['mongo_db_url'] = mongo_url
 
     def set_pipe_file(self, name, path):
-        app.config['pipe_files'][name] = path
+        self.app.config['pipe_files'][name] = path
 
     def set_pipe_object(self, name, obj):
-        app.config['pipe_objects'][name] = obj
+        self.app.config['pipe_objects'][name] = obj
 
     def run_app(self):
         try:
-            app.run(host='0.0.0.0', port=7273)
+            self.app = app.run(host='0.0.0.0', port=7273)
         except OSError as exc:
             if exc.errno == 98:
                 # app already running
