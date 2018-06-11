@@ -4,7 +4,8 @@ from itertools import product
 from .Hyperparameters import FloatRange, Categorical, IntegerRange, BooleanSwitch, PhotonHyperparam
 from sklearn.model_selection import ParameterGrid
 from photonai.photonlogger.Logger import Logger
-from photonai.helpers.ConfigGrid import create_global_config
+from photonai.helpers.ConfigGrid import create_global_config_grid
+
 
 class GridSearchOptimizer(object):
     def __init__(self):
@@ -16,11 +17,8 @@ class GridSearchOptimizer(object):
     def prepare(self, pipeline_elements):
         self.pipeline_elements = pipeline_elements
         self.next_config = self.next_config_generator()
-        global_hyperparameter_dict = create_global_config(self.pipeline_elements)
-        # marry each hyperparameter value with all others
-        self.param_grid = list(ParameterGrid(global_hyperparameter_dict))
+        self.param_grid = create_global_config_grid(self.pipeline_elements)
         Logger().info("Grid Search generated " + str(len(self.param_grid)) + " configurations")
-
 
     def next_config_generator(self):
         for parameters in self.param_grid:
