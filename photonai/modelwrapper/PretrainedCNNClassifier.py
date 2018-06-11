@@ -10,7 +10,8 @@ from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import KFold, ShuffleSplit
 
-os.environ["CUDA_VISIBLE_DEVICES"]="2"
+os.environ["CUDA_VISIBLE_DEVICES"] = "2"
+
 
 class PretrainedCNNClassifier(BaseEstimator, ClassifierMixin):
 
