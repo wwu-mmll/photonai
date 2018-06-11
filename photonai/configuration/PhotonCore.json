@@ -414,99 +414,99 @@
 
 
   "KerasDNNClassifier": [
-    "modelwrapper.KerasDNNClassifier.KerasDNNClassifier",
+    "photonai.modelwrapper.KerasDNNClassifier.KerasDNNClassifier",
     "Estimator"
   ],
   "KerasDNNRegressor": [
-    "modelwrapper.KerasDNNRegressor.KerasDNNRegressor",
+    "photonai.modelwrapper.KerasDNNRegressor.KerasDNNRegressor",
     "Estimator"
   ],
   "SiameseDNNClassifier": [
-    "modelwrapper.SiameseDNNClassifier.SiameseDNNClassifier",
+    "photonai.modelwrapper.SiameseDNNClassifier.SiameseDNNClassifier",
     "Estimator"
   ],
   "PretrainedCNNClassifier": [
-    "modelwrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
+    "photonai.modelwrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
     "Estimator"
   ],
   "CNN1dClassifier": [
-    "modelwrapper.CNN1d.CNN1d",
+    "photonai.modelwrapper.CNN1d.CNN1d",
     "Estimator"
   ],
   "TensorFlowDNNClassifier": [
-    "modelwrapper.TFDNNClassifier.TFDNNClassifier",
+    "photonai.modelwrapper.TFDNNClassifier.TFDNNClassifier",
     "Estimator"
   ],
   "KerasDNNMultiOutput": [
-    "modelwrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
+    "photonai.modelwrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
     "Estimator"
   ],
   "SimpleAutoencoder": [
-    "modelwrapper.KerasAutoencoder.SimpleAutoencoder",
+    "photonai.modelwrapper.KerasAutoencoder.SimpleAutoencoder",
     "Estimator"
   ],
   "RLCNN": [
-    "modelwrapper.RLCNN.RLCNN",
+    "photonai.modelwrapper.RLCNN.RLCNN",
     "Estimator"
   ],
   "WrapperModel": [
-    "modelwrapper.WrapperModel.WrapperModel",
+    "photonai.modelwrapper.WrapperModel.WrapperModel",
     "Estimator"
   ],
   "LogisticGWASFeatureSelection": [
-    "modelwrapper.FeatureSelection.LogisticGWASFeatureSelection",
+    "photonai.modelwrapper.FeatureSelection.LogisticGWASFeatureSelection",
     "Transformer"
   ],
   "SourceSplitter": [
-    "modelwrapper.SourceSplitter.SourceSplitter",
+    "photonai.modelwrapper.SourceSplitter.SourceSplitter",
     "Transformer"
   ],
   "PyESNClassifier": [
-    "modelwrapper.PyESNWrapper.PyESNClassifier",
+    "photonai.modelwrapper.PyESNWrapper.PyESNClassifier",
     "Estimator"
   ],
   "PyESNRegressor": [
-    "modelwrapper.PyESNWrapper.PyESNRegressor",
+    "photonai.modelwrapper.PyESNWrapper.PyESNRegressor",
     "Estimator"
   ],
   "TestWrapper": [
-    "modelwrapper.TestWrapper.WrapperTestElement",
+    "photonai.modelwrapper.TestWrapper.WrapperTestElement",
     "Estimator"
   ],
   "f_classif_select_p_value": [
-    "modelwrapper.FeatureSelection.FRegressionFilterPValue",
+    "photonai.modelwrapper.FeatureSelection.FRegressionFilterPValue",
     "Transformer"
   ],
   "pearson_feature_selector": [
-    "modelwrapper.FeatureSelection.PearsonFeatureSelector",
+    "photonai.modelwrapper.FeatureSelection.PearsonFeatureSelector",
     "Transformer"
   ],
   "CategorialANOVASelectPercentile": [
-    "modelwrapper.FeatureSelection.AnovaSelectPercentile",
+    "photonai.modelwrapper.FeatureSelection.AnovaSelectPercentile",
     "Transformer"
   ],
   "BioCorex": [
-    "modelwrapper.BioCorex.BioCorex",
+    "photonai.modelwrapper.BioCorex.BioCorex",
     "Transformer"
   ],
   "PhotonPCA": [
-    "modelwrapper.PhotonPCA.PhotonPCA",
+    "photonai.modelwrapper.PhotonPCA.PhotonPCA",
     "Transformer"
   ],
   "PhotonOneClassSVM": [
-    "modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM",
+    "photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM",
     "Estimator"
   ],
-  "SelectModelWrapper": [
-    "modelwrapper.FeatureSelection.ModelSelector",
+  "Selectphotonai.modelwrapper": [
+    "photonai.modelwrapper.FeatureSelection.ModelSelector",
     "Transformer"
   ],
   "ImbalancedDataTransform": [
-    "modelwrapper.ImbalancedWrapper.ImbalancedDataTransform",
+    "photonai.modelwrapper.ImbalancedWrapper.ImbalancedDataTransform",
     "Transformer"
   ],
   "DeepPRSClassifier": [
-    "modelwrapper.DeepPRS.DeepPRSClassifier",
+    "photonai.modelwrapper.DeepPRS.DeepPRSClassifier",
     "Estimator"
   ]
 }
