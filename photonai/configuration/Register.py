@@ -59,7 +59,7 @@ class PhotonRegister:
         """
         # register_element and jsonify
 
-        if element_type != "Estimator" or "Transformer":
+        if element_type != "Estimator" or element_type != "Transformer":
             Logger().error("Variable element_type must be 'Estimator' or 'Transformer'")
 
         duplicate = PhotonRegister.check_duplicate(photon_name, class_str)
@@ -185,10 +185,18 @@ class PhotonRegister:
         JSON file as dict, file path as str
         """
         file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
+        file_content = {}
         if os.path.isfile(file_name):
             # Reading json
             with open(file_name, 'r') as f:
-                file_content = json.load(f)
+                try:
+                    file_content = json.load(f)
+                except json.JSONDecodeError as jde:
+                    # handle empty file
+                    if jde.msg == 'Expecting value':
+                        Logger().error("Package File " + file_name + " was empty.")
+                    else:
+                        raise jde
             file_path = file_name
         else:
             file_content = dict()
@@ -230,7 +238,9 @@ class PhotonRegister:
         """
         class_info = dict()
         for package in photon_package:
+
             content, _ = PhotonRegister.get_json(package)
+
             for key in content:
                 class_path, class_name = os.path.splitext(content[key][0])
                 class_info[key] = class_path, class_name[1:]

@@ -47,9 +47,9 @@ my_pipe_stack += branch
 
 my_pipe += my_pipe_stack
 
-# my_pipe.fit(X, y)
+my_pipe.fit(X, y)
 
 # Investigator.show(my_pipe)
-Investigator.load_from_file("my_pipe", '/home/rleenings/Git/photon_core/photonai/examples/basic_svm_pipe_results.p')
+Investigator.load_from_file("basic_svm_pipe", '/home/rleenings/Git/photon_core/photonai/examples/my_tree.p')
 
 debug = True
