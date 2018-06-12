@@ -322,22 +322,25 @@ class Scorer(object):
 
     ELEMENT_DICTIONARY = {
         # Classification
-        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef'),
-        'confusion_matrix': ('sklearn.metrics', 'confusion_matrix'),
-        'accuracy': ('sklearn.metrics', 'accuracy_score'),
-        'f1_score': ('sklearn.metrics', 'f1_score'),
-        'hamming_loss': ('sklearn.metrics', 'hamming_loss'),
-        'log_loss': ('sklearn.metrics', 'log_loss'),
-        'precision': ('sklearn.metrics', 'precision_score'),
-        'recall': ('sklearn.metrics', 'recall_score'),
+        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', None),
+        'confusion_matrix': ('sklearn.metrics', 'confusion_matrix', None),
+        'accuracy': ('sklearn.metrics', 'accuracy_score', 'score'),
+        'f1_score': ('sklearn.metrics', 'f1_score', 'score'),
+        'hamming_loss': ('sklearn.metrics', 'hamming_loss', 'error'),
+        'log_loss': ('sklearn.metrics', 'log_loss', 'error'),
+        'precision': ('sklearn.metrics', 'precision_score', 'score'),
+        'recall': ('sklearn.metrics', 'recall_score', 'score'),
+        'categorical_accuracy': ('photonai.validation.Metrics', 'categorical_accuracy_score', 'score'),
+        'categorical_crossentropy': ('photonai.validation.Metrics', 'categorical_crossentropy', 'error'),
+
         # Regression
-        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error'),
-        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error'),
-        'explained_variance': ('sklearn.metrics', 'explained_variance_score'),
-        'r2': ('sklearn.metrics', 'r2_score'),
-        'pearson_correlation': ('photon_core.framework.Metrics', 'pearson_correlation'),
-        'variance_explained':  ('photon_core.framework.Metrics', 'variance_explained_score'),
-        'categorical_accuracy': ('photon_core.framework.Metrics','categorical_accuracy_score')
+        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error'),
+        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
+        'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
+        'r2': ('sklearn.metrics', 'r2_score', 'score'),
+        'pearson_correlation': ('photon_core.framework.Metrics', 'pearson_correlation', None),
+        'variance_explained':  ('photon_core.framework.Metrics', 'variance_explained_score', 'score')
+
     }
 
     @classmethod
@@ -456,14 +459,14 @@ class OptimizerMetric(object):
                 # for now do a simple hack and set greater_is_better
                 # by looking at error/score in metric name
                 metric_name = Scorer.ELEMENT_DICTIONARY[self.metric][1]
-                specifier = metric_name.split('_')[-1]
+                specifier = Scorer.ELEMENT_DICTIONARY[self.metric][2]
                 if specifier == 'score':
                     self.greater_is_better = True
                 elif specifier == 'error':
                     self.greater_is_better = False
                 else:
                     # Todo: better error checking?
-                    error_msg = "Metric not suitable for optimizer. Metric is not registered in PHOTON yet."
+                    error_msg = "Metric not suitable for optimizer."
                     Logger().error(error_msg)
                     raise NameError(error_msg)
             else:
