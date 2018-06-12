@@ -6,6 +6,7 @@ from pymodm.connection import connect
 from flask import request, redirect, url_for
 
 
+
 def load_pipe_from_db(name):
     try:
         pipe = MDBHyperpipe.objects.get({'_id': name})
@@ -46,13 +47,11 @@ def load_pipe(storage, name):
         return error
     return pipe
 
-
 def shutdown_server():
     func = request.environ.get('werkzeug.server.shutdown')
     if func is None:
         raise RuntimeError('Not running with the Werkzeug Server')
     func()
-
 
 def load_mongo_pipes(available_pipes):
     try:

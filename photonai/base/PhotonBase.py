@@ -27,7 +27,7 @@ from pymodm import connect
 from photonai.configuration.Register import PhotonRegister
 from .ImbalancedWrapper import ImbalancedDataTransform
 from ..photonlogger.Logger import Logger
-from ..helpers.ConfigGrid import create_global_config
+from ..helpers.ConfigGrid import create_global_config_dict, create_global_config_grid
 
 from photonai.optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
@@ -1111,7 +1111,8 @@ class PipelineElement(BaseEstimator):
     # Registering Pipeline Elements
     ELEMENT_DICTIONARY = PhotonRegister.get_package_info()
 
-    def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False, disabled:bool =False, base_element=None,
+    def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False,
+                 disabled: bool =False, base_element=None,
                  **kwargs):
         """
         Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
@@ -1180,6 +1181,18 @@ class PipelineElement(BaseEstimator):
     def hyperparameters(self, value: dict):
         self.generate_sklearn_hyperparameters(value)
 
+    def generate_config_grid(self):
+        config_dict = create_global_config_dict([self])
+        if len(config_dict) > 0:
+            if self.test_disabled:
+                config_dict.pop(self._sklearn_disabled)
+            config_list = list(ParameterGrid(config_dict))
+            if self.test_disabled:
+                config_list.append({self._sklearn_disabled: True})
+            return config_list
+        else:
+            return []
+
     def generate_sklearn_hyperparameters(self, value: dict):
         """
         Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
@@ -1189,7 +1202,7 @@ class PipelineElement(BaseEstimator):
         for attribute, value_list in value.items():
             self._hyperparameters[self.name + '__' + attribute] = value_list
         if self.test_disabled:
-            self._hyperparameters[self._sklearn_disabled] = [True]
+            self._hyperparameters[self._sklearn_disabled] = [False, True]
 
 
     def get_params(self, deep: bool=True):
@@ -1200,6 +1213,7 @@ class PipelineElement(BaseEstimator):
         :return: dict of params
         """
         return self.base_element.get_params(deep)
+
 
     def set_params(self, **kwargs):
         """
@@ -1412,6 +1426,9 @@ class PipelineBranch(PipelineElement):
         """
         return None
 
+    def generate_config_grid(self):
+        return create_global_config_grid(self.pipeline_elements, self.name)
+
     def generate_sklearn_hyperparameters(self):
         """
         Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
@@ -1486,6 +1503,9 @@ class PipelineStacking(PipelineElement):
         Setting hyperparameters does not make sense, only the items that added can be optimized, not the container (self)
         """
         pass
+
+    def generate_config_grid(self):
+        return create_global_config_grid(self.pipe_elements.values(), self.name)
 
     def get_params(self, deep=True):
         all_params = {}
@@ -1690,18 +1710,19 @@ class PipelineSwitch(PipelineElement):
         self._hyperparameters = {}
         self._current_element = (1, 1)
         self.disabled = False
+        self.test_disabled = False
         self.pipeline_element_configurations = []
         self._estimator_type = _estimator_type
 
         if pipeline_element_list:
             self.pipeline_element_list = pipeline_element_list
-            self.generate_config_grid()
+            self.generate_private_config_grid()
         else:
             self.pipeline_element_list = []
 
     def __iadd__(self, other):
         self.pipeline_element_list.append(other)
-        self.generate_config_grid()
+        self.generate_private_config_grid()
         return self
 
     def add(self, other):
@@ -1716,7 +1737,7 @@ class PipelineSwitch(PipelineElement):
     def hyperparameters(self, value):
         pass
 
-    def generate_config_grid(self):
+    def generate_private_config_grid(self):
         # reset
         self.pipeline_element_configurations = []
 
@@ -1724,16 +1745,23 @@ class PipelineSwitch(PipelineElement):
         hyperparameters = []
         # generate possible combinations for each item respectively - do not mix hyperparameters across items
         for i, pipe_element in enumerate(self.pipeline_element_list):
-            distinct_values_config = create_global_config([pipe_element])
+            # distinct_values_config = create_global_config([pipe_element])
             # add pipeline switch name in the config so that the hyperparameters can be set from other classes
             # pipeline switch will give the hyperparameters to the respective child
-            distinct_values_config_copy = {}
-            for config_key, config_value in distinct_values_config.items():
-                distinct_values_config_copy[self.name + "__" + config_key] = config_value
+            # distinct_values_config_copy = {}
+            # for config_key, config_value in distinct_values_config.items():
+            #     distinct_values_config_copy[self.name + "__" + config_key] = config_value
 
-            element_configurations = list(ParameterGrid(distinct_values_config_copy))
-            self.pipeline_element_configurations.append(element_configurations)
-            hyperparameters += [(i, nr) for nr in range(len(element_configurations))]
+            element_configurations = pipe_element.generate_config_grid()
+            final_configuration_list = []
+            for dict_item in element_configurations:
+                copy_of_dict_item = {}
+                for key, value in dict_item.items():
+                    copy_of_dict_item[self.name + '__' + key] = value
+                final_configuration_list.append(copy_of_dict_item)
+
+            self.pipeline_element_configurations.append(final_configuration_list)
+            hyperparameters += [(i, nr) for nr in range(len(final_configuration_list))]
 
         self._hyperparameters = {self.sklearn_name: hyperparameters}
 
