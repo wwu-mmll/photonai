@@ -1,6 +1,6 @@
 .box.box-solid > .box-header .btn.btn-default, .btn-default{
-    background:  #231c44;
-    color: #f5f4fa;
+    background:  #383839;
+    color: #ffffff;
 }
 
 .skin-purple .main-header .navbar {
@@ -14,7 +14,7 @@
 /*}*/
 
 a {
-     color: #2388fe;
+     color: #a9c2fe;
 }
 
 .content-wrapper {
@@ -22,7 +22,7 @@ a {
 }
 
 .skin-purple .wrapper, .skin-purple .main-sidebar, .skin-purple .left-side {
-    background: #231c44;
+    background: #383839;
 }
 .skin-purple .sidebar-menu > li:hover > a, .skin-purple .sidebar-menu > li.active > a, .skin-purple .sidebar-menu > li.menu-open > a{
     background: transparent;
@@ -31,16 +31,16 @@ a {
 
 .skin-purple .sidebar-menu > li.header {
    color: #a9c2fe;
-   background: #231c44;
+   background: transparent;
 }
 
 .skin-purple .sidebar-menu > li.active > a {
-    border-left-color: #2388fe;
+    border-left-color: #a9c2fe;
 }
 
 .skin-purple .main-header .logo {
     background-color: #0e0e1d;
-    color: #2388fe;
+    color:  #a9c2fe;
     border-bottom: 0 solid transparent;
 }
 .skin-purple .main-header .logo b{
