@@ -36,12 +36,14 @@
     <div class="wrapper">
         <header class="main-header">
             <!-- Logo -->
-            <a href="#" class="logo">
+            <a href="{{ url_for('shutdown')}}" class="logo">
                 <!-- mini logo for sidebar mini 50x50 pixels -->
-                <span class="logo-mini"><b>P</b>I</span>
+                <span class="logo-mini"><b>P</b>I <i class="fa fa-sign-out"></i></span>
                 <!-- logo for regular state and mobile devices -->
-                <span class="logo-lg"><b>photon</b> investigator</span>
+                <span class="logo-lg"><b>photon</b> investigator <i class="fa fa-sign-out"></i></span>
+
             </a>
+
             <nav class="navbar navbar-static-top">
                 <!-- Sidebar toggle button-->
                 <a href="#" class="sidebar-toggle" data-toggle="push-menu", role="button">
