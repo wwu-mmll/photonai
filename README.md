@@ -27,30 +27,6 @@ pip install photonai
 
 PHOTON is designed to leave you deciding the important things and automatizing the rest.
 
-So the first thing to do is choosing your basic setup:
-* Give your pipeline a **name**.
-* Choose a **hyperparameter optimization strategy**.
-
-  Feel free to choose the good old buddy called grid search in order to scan
-  the hyperparameter space for the best configuraton. You can also check out his friends
-   RandomGridSearch or TimeboxedRandomGridSearch.
-   If you have some better ideas (and we bet you have) add your own optimizer
-   by adhering to PHOTON's optimizer interface.
-* Which strategies you want to use for the **nested cross-validation**.
-
-  As PHOTON employs nested cross validation you can pick an outer-cross-validation strategy as
-  well as an inner-cross-validation strategy. PHOTON expects objects adhering to scikit-learns
-  BaseCrossValidator Interface. So any of sklearns cross validation strategies will do.
-* Which **performance metrics** you are interested in
-
-  We registered a lot of performance metrics in PHOTON that you can easily
-  pick by its name, such as 'accuracy', 'precision', 'recall', 'f1_score',
-  'mean_squared_error', 'mean_absolute_error' etc ..
-* Which performance metrics you want to use in order to **pick the best model**
-  After the optimization strategy tested a lot of configuration, you tell PHOTON
-  which performance metric you want to use in order to pick the best from all
-  configurations
-
 ```python
 my_pipe = Hyperpipe('basic_svm_pipe',
                     optimizer='grid_search',
@@ -59,6 +35,42 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=10))
 ```
+
+So the first thing to do is choosing your basic setup:
+
+
+- Give your pipeline a **name**.
+
+
+- Choose a **hyperparameter optimization strategy**.
+
+  Feel free to choose the good old buddy called grid search in order to scan
+  the hyperparameter space for the best configuraton. You can also check out his friends
+   RandomGridSearch or TimeboxedRandomGridSearch.
+   If you have some better ideas (and we bet you have) add your own optimizer
+   by adhering to PHOTON's optimizer interface.
+
+
+- Which strategies you want to use for the **nested cross-validation**.
+
+  As PHOTON employs nested cross validation you can pick an outer-cross-validation strategy as
+  well as an inner-cross-validation strategy. PHOTON expects objects adhering to scikit-learns
+  BaseCrossValidator Interface. So any of sklearns cross validation strategies will do.
+
+
+- Which **performance metrics** you are interested in
+
+  We registered a lot of performance metrics in PHOTON that you can easily
+  pick by its name, such as 'accuracy', 'precision', 'recall', 'f1_score',
+  'mean_squared_error', 'mean_absolute_error' etc ..
+
+
+- Which performance metrics you want to use in order to **pick the best model**
+  After the optimization strategy tested a lot of configuration, you tell PHOTON
+  which performance metric you want to use in order to pick the best from all
+  configurations
+
+
 
 
 
