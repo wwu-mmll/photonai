@@ -1,4 +1,4 @@
-![PHOTON LOGO](PhotonLogo.jpg "PHOTON Logo")
+![PHOTON LOGO](https://bitbucket.org/translap/photon_core/src/beta1/PhotonLogo.jpg "PHOTON Logo")
 
 # PHOTON
 #### A **P**ython-based **H**yperparameter **O**ptimization **To**olbox for **N**eural Networks designed to accelerate and simplify the construction, training, and evaluation of machine learning models.
@@ -14,6 +14,14 @@ with only one line of code.
 
 ## Table of Contents
 [Getting Started](#markdown-header-getting-started)
+[Usage](#markdown-header-usage)
+[PHOTON Investigator] {#markdown-header-photon-investigator}
+[Save your models](#markdown-header-save-your-models)
+[Stacking]{#markdown-header-stacking}
+[Switch Estimators]{#markdown-header-estimators}
+[Speed Hacks]{#markdown-header-speed-hacks}
+[Custom Learning Model]{#markdown-header-custom-learning-model}
+[Complete Code Example]{#markdown-header-complete-code-example}
 
 
 ## Getting Started
@@ -22,6 +30,27 @@ Then install it simply via pip
 ```
 pip install photonai
 ```
+
+You can setup a full stack machine learnig pipeline in a few lines of code:
+
+```python
+my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
+                    optimizer='grid_search',
+                    metrics=['accuracy', 'precision', 'recall'],
+                    best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
+                    outer_cv=KFold(n_splits=3),
+                    inner_cv=KFold(n_splits=10))
+
+my_pipe += PipelineElement('StandardScaler')
+
+my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
+
+my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
+                                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
+
+my_pipe.fit(X, y)
+```
+
 
 ## Usage
 
@@ -83,6 +112,7 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 ```
 
 We are using a very basic setup here:
+
 1. normalize all features using a standard scaler
 2. do feature selection using a PCA
 3. learn the task good old SVM for Classification
@@ -94,12 +124,13 @@ optimum configuration.
 
 You can give PHOTON a list of distinct values of any kind, or use
 PHOTON classes for specifying the hyperparamter space:
+
 - Categorical
 - FloatRange (can generate a range, a linspace or a logspace)
 - IntegerRange (can generate a range, a linspace or a logspace)
 - BooleanSwitch (try both TRUE and FALSE)
 
-### TRAIN AND TEST THE MODEL
+### Train and test the model
 
 You start the training and test procedure including the hyperparamter search
 by simply asking the hyperpipe to fit to the data and targets.
@@ -109,7 +140,7 @@ my_pipe.fit(X, y)
 ```
 
 
-### SAVE BEST PERFORMING MODEL
+### Save best performing pipeline
 
 After the training and testing is done and PHOTON found the optimum
 configuation it automatically fits your pipeline to that best configuration.
@@ -120,7 +151,7 @@ my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
 ```
 
 
-### EXPLORE HYPERPARAMETER SEARCH RESULTS
+### Explore hyperparameter search results
 
 The PHOTON Investigator is a convenient web-based tool for analyzing the training
 and test perofrmances of the configurations explored in the hyperparamter search.
@@ -130,9 +161,25 @@ You start it by calling
 Investigator.show(my_pipe)
 ```
 
+## PHOTON Investigator
+.. to be continued ..
 
+## Speed Hacks
+.. to be continued ..
 
-## COMPLETE EXAMPLE
+## Save your models
+.. to be continued ..
+
+## Stacking
+.. to be continued ..
+
+## Switch Estimators
+.. to be continued ..
+
+## Custom Learning Model
+.. to be continued ..
+
+## Complete Code Example
 
 ```python
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
