@@ -1,4 +1,60 @@
 .box.box-solid > .box-header .btn.btn-default, .btn-default{
-    background: #605ca8;
+    background:  #383839;
     color: #ffffff;
+}
+
+.skin-purple .main-header .navbar {
+    background: #0e0e1d;
+  /*url('/static/assets/img/index_back_small.jpg')right center no-repeat;*/
+
+}
+
+/*.main-footer{*/
+    /*margin-left: -230px;*/
+/*}*/
+
+a {
+     color: #a9c2fe;
+}
+
+.content-wrapper {
+    background-color: #eff3fe;
+}
+
+.skin-purple .wrapper, .skin-purple .main-sidebar, .skin-purple .left-side {
+    background: #383839;
+}
+.skin-purple .sidebar-menu > li:hover > a, .skin-purple .sidebar-menu > li.active > a, .skin-purple .sidebar-menu > li.menu-open > a{
+    background: transparent;
+    margin-top: 5px;
+}
+
+.skin-purple .sidebar-menu > li.header {
+   color: #a9c2fe;
+   background: transparent;
+}
+
+.skin-purple .sidebar-menu > li.active > a {
+    border-left-color: #a9c2fe;
+}
+
+.skin-purple .main-header .logo {
+    background-color: #0e0e1d;
+    color:  #a9c2fe;
+    border-bottom: 0 solid transparent;
+}
+.skin-purple .main-header .logo b{
+    text-transform: uppercase;
+    letter-spacing: 3px;
+    font-size: 14px;
+}
+.skin-purple .main-header .logo span{
+    font-size: 16px;
+}
+
+
+.main-footer {
+    /*background: #0e0e1d url('/static/assets/img/index_back_small.jpg')right center no-repeat;*/
+    /*color: #2388fe;*/
+    border-top: none;
 }
