@@ -13,25 +13,15 @@ with only one line of code.
 ---
 
 ## Table of Contents
-[Getting Started](#markdown-header-getting-started)
-
-[Usage](#markdown-header-usage)
-
-[PHOTON Investigator] (#markdown-header-photon-investigator)
-
-[Save your models](#markdown-header-save-your-models)
-
-[Stacking](#markdown-header-stacking)
-
-[Switch Estimators](#markdown-header-estimators)
-
-[Speed Hacks](#markdown-header-speed-hacks)
-
-[Custom Learning Model](#markdown-header-custom-learning-model)
-
-[Complete Code Example](#markdown-header-complete-code-example)
-
-
+- [Getting Started](#markdown-header-getting-started)
+- [Usage](#markdown-header-usage)
+- [PHOTON Investigator] (#markdown-header-photon-investigator)
+- [Save your models](#markdown-header-save-your-models)
+- [Stacking](#markdown-header-stacking)
+- [Switch Estimators](#markdown-header-estimators)
+- [Speed Hacks](#markdown-header-speed-hacks)
+- [Custom Learning Model](#markdown-header-custom-learning-model)
+- [Complete Code Example](#markdown-header-complete-code-example)
 
 ## Getting Started
 In order to use PHOTON you only need to have your favourite Python IDE ready.
@@ -163,7 +153,7 @@ my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
 ### Explore hyperparameter search results
 
 The PHOTON Investigator is a convenient web-based tool for analyzing the training
-and test perofrmances of the configurations explored in the hyperparamter search.
+and test performances of the configurations explored in the hyperparamter search.
 
 You start it by calling
 ```python
