@@ -14,7 +14,8 @@ with only one line of code.
 
 ## Table of Contents
 - [Getting Started](#markdown-header-getting-started)
-- [Usage](#markdown-header-usage)
+- [Features](#markdown-header-features)
+- [Usage](#markdown-header-usage-step-by-step)
 - [PHOTON Investigator] (#markdown-header-photon-investigator)
 - [Save your models](#markdown-header-save-your-models)
 - [Stacking](#markdown-header-stacking)
@@ -50,8 +51,27 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 my_pipe.fit(X, y)
 ```
 
+## Features
 
-## Usage
+**PHOTON is an object-oriented python framework for optimizing machine learning pipelines,
+designed to leave you deciding the important things and automatizing the rest.**
+
+- includes nested-cross-validation
+- includes hyperparameter optimization strategies
+- add any number of preprocessing steps of your choice
+- add the learning model of your choice
+- compatible with all scikit-learn algorithms
+- add any custom keras or tensorflow models
+- choose the performance metrics of your interest
+- choose according to which performance metric the best configuration is picked
+- add you own models, preprocessing steps, performance metrics, callbacks and optimizers
+- automatic hyperparameter optimization for all your models
+- save best performing models
+- persist hyperparameter search results in local file or MongoDB
+- web-based investigation tool based on microframework Flask
+- convenient exploration of the hyperparameter search results and performance visualization
+
+## Usage Step by Step
 
 PHOTON is designed to leave you deciding the important things and automatizing the rest.
 
