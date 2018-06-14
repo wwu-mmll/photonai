@@ -27,6 +27,8 @@ pip install photonai
 
 PHOTON is designed to leave you deciding the important things and automatizing the rest.
 
+The first thing to do is choosing your basic setup:
+
 ```python
 my_pipe = Hyperpipe('basic_svm_pipe',
                     optimizer='grid_search',
@@ -36,35 +38,97 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     inner_cv=KFold(n_splits=10))
 ```
 
-So the first thing to do is choosing your basic setup:
-
 
 - Give your pipeline a **name**.
 
 - Choose a **hyperparameter optimization strategy**.
- ..Feel free to choose the good old buddy called grid search in order to scan
+
+  ...Feel free to choose the good old buddy called grid search in order to scan
   the hyperparameter space for the best configuraton. You can also check out his friends
-   RandomGridSearch or TimeboxedRandomGridSearch. Add your own optimizer
-   by adhering to PHOTON's optimizer interface.
+  RandomGridSearch or TimeboxedRandomGridSearch. Add your own optimizer
+  by adhering to PHOTON's optimizer interface.
 
 - Which strategies you want to use for the **nested cross-validation**.
-  ..As PHOTON employs nested cross validation you can pick an outer-cross-validation strategy as
+
+  ...As PHOTON employs nested cross validation you can pick an outer-cross-validation strategy as
   well as an inner-cross-validation strategy. PHOTON expects objects adhering to scikit-learns
-  BaseCrossValidator Interface. So any of sklearns cross validation strategies will do.
+  BaseCrossValidator Interface, so you can use any of scikit-learn's
+  already implemented cross validation strategies.
 
 - Which **performance metrics** you are interested in
-  ..We registered a lot of performance metrics in PHOTON that you can easily
+
+  ...We registered a lot of performance metrics in PHOTON that you can easily
   pick by its name, such as 'accuracy', 'precision', 'recall', 'f1_score',
   'mean_squared_error', 'mean_absolute_error' etc ..
 
 
 - Which performance metrics you want to use in order to **pick the best model**
-  ..After the optimization strategy tested a lot of configuration, you tell PHOTON
+
+  ...After the optimization strategy tested a lot of configuration, you tell PHOTON
   which performance metric you want to use in order to pick the best from all
   configurations
 
+### Now you can setup your pipeline elements
+As you have customized the generic training and test procedures
+with the Hyperpipe construct above, you are now free to add any
+preprocessing steps as well as your learning model of choice.
+
+```python
+my_pipe += PipelineElement('StandardScaler')
+
+my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
+
+my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
+                                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
+```
+
+We are using a very basic setup here:
+1. normalize all features using a standard scaler
+2. do feature selection using a PCA
+3. learn the task good old SVM for Classification
 
 
+For each element you can specifiy which hyperparameters to test, that is
+you declare the hyperparameter space in which the optimizer looks for the
+optimum configuration.
+
+You can give PHOTON a list of distinct values of any kind, or use
+PHOTON classes for specifying the hyperparamter space:
+- Categorical
+- FloatRange (can generate a range, a linspace or a logspace)
+- IntegerRange (can generate a range, a linspace or a logspace)
+- BooleanSwitch (try both TRUE and FALSE)
+
+### TRAIN AND TEST THE MODEL
+
+You start the training and test procedure including the hyperparamter search
+by simply asking the hyperpipe to fit to the data and targets.
+
+```python
+my_pipe.fit(X, y)
+```
+
+
+### SAVE BEST PERFORMING MODEL
+
+After the training and testing is done and PHOTON found the optimum
+configuation it automatically fits your pipeline to that best configuration.
+You can save the complete pipeline for further use.
+
+```python
+my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
+```
+
+
+### EXPLORE HYPERPARAMETER SEARCH RESULTS
+
+The PHOTON Investigator is a convenient web-based tool for analyzing the training
+and test perofrmances of the configurations explored in the hyperparamter search.
+
+You start it by calling
+```python
+Investigator.show(my_pipe)
+```
 
 
 
