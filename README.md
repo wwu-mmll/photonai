@@ -72,28 +72,28 @@ my_pipe = Hyperpipe('basic_svm_pipe',
 
 - Choose a **hyperparameter optimization strategy**.
 
-  Feel free to choose the good old buddy called grid search in order to scan
+     Feel free to choose the good old buddy called grid search in order to scan
   the hyperparameter space for the best configuraton. You can also check out his friends
   RandomGridSearch or TimeboxedRandomGridSearch. Add your own optimizer
   by adhering to PHOTON's optimizer interface.
 
 - Which strategies you want to use for the **nested cross-validation**.
 
-  As PHOTON employs nested cross validation you can pick an outer-cross-validation strategy as
+     As PHOTON employs nested cross validation you can pick an outer-cross-validation strategy as
   well as an inner-cross-validation strategy. PHOTON expects objects adhering to scikit-learns
   BaseCrossValidator Interface, so you can use any of scikit-learn's
   already implemented cross validation strategies.
 
 - Which **performance metrics** you are interested in
 
-  We registered a lot of performance metrics in PHOTON that you can easily
+     We registered a lot of performance metrics in PHOTON that you can easily
   pick by its name, such as 'accuracy', 'precision', 'recall', 'f1_score',
   'mean_squared_error', 'mean_absolute_error' etc ..
 
 
 - Which performance metrics you want to use in order to **pick the best model**
 
-  After the optimization strategy tested a lot of configuration, you tell PHOTON
+     After the optimization strategy tested a lot of configuration, you tell PHOTON
   which performance metric you want to use in order to pick the best from all
   configurations
 
