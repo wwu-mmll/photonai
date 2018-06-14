@@ -11,9 +11,8 @@ with only one line of code.
 
 ---
 
-[TOC]
 ### Table of Contents
-[Getting Started](#Getting Started)
+[Getting Started](#markdown-header-getting-started)
 
 
 ## Getting Started
