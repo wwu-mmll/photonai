@@ -14,14 +14,23 @@ with only one line of code.
 
 ## Table of Contents
 [Getting Started](#markdown-header-getting-started)
+
 [Usage](#markdown-header-usage)
+
 [PHOTON Investigator] (#markdown-header-photon-investigator)
+
 [Save your models](#markdown-header-save-your-models)
+
 [Stacking](#markdown-header-stacking)
+
 [Switch Estimators](#markdown-header-estimators)
+
 [Speed Hacks](#markdown-header-speed-hacks)
+
 [Custom Learning Model](#markdown-header-custom-learning-model)
+
 [Complete Code Example](#markdown-header-complete-code-example)
+
 
 
 ## Getting Started
@@ -161,7 +170,7 @@ You start it by calling
 Investigator.show(my_pipe)
 ```
 
-## PHOTON Investigator
+## Photon Investigator
 .. to be continued ..
 
 ## Speed Hacks
