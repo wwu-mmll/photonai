@@ -8,14 +8,16 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import ShuffleSplit
-from Logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
+from photonai.modelwrapper.KerasBaseEstimator import KerasBaseEstimator
 
-class KerasDNNRegressor(BaseEstimator, RegressorMixin):
+
+class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
 
     def __init__(self, hidden_layer_sizes=[10, 20], dropout_rate=0.5, act_func='prelu',
                  learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
-                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, verbosity=0):
-
+                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, batch_size=64, verbosity=0):
+        super(KerasBaseEstimator, self).__init__()
         self.hidden_layer_sizes = hidden_layer_sizes
         self.dropout_rate = dropout_rate
         self.act_func = act_func
@@ -27,16 +29,11 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
         self.eaSt_patience = eaSt_patience
         self.reLe_factor = reLe_factor
         self.reLe_patience = reLe_patience
+        self.verbosity = verbosity
+        self.batch_size = batch_size
 
         self.model = None
 
-        # Todo: Check why Logger singleton doesn't work in this scenario
-        # if Logger().verbosity_level == 2:
-        #     self.verbosity = 2
-        # else:
-        #     self.verbosity = 0
-
-        self.verbosity = verbosity
 
     def fit(self, X, y):
 
@@ -44,8 +41,6 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
         self.model = self.create_model(X.shape[1])
 
         # 2. fit model
-        # start_time = time.time()
-
         # use callbacks only when size of training set is above 100
         if X.shape[0] > 100:
             # get pseudo validation set for keras callbacks
@@ -74,18 +69,18 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin):
 
             # fit the model
             results = self.model.fit(X_train, y_train, validation_data=(X_val, y_val),
-                                     batch_size=128, epochs=self.nb_epoch,
+                                     batch_size=self.batch_size, epochs=self.nb_epoch,
                                      verbose=self.verbosity,  callbacks=callbacks_list)
         else:
             # fit the model
-            print('Cannot use Keras Callbacks because of small sample size...')
-            results = self.model.fit(X, y, batch_size=128,
+            Logger().debug('Cannot use Keras Callbacks because of small sample size...')
+            results = self.model.fit(X, y, batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=self.verbosity)
         return self
 
     def predict(self, X):
-        return np.squeeze(self.model.predict(X, batch_size=128))
+        return np.squeeze(self.model.predict(X, batch_size=self.batch_size))
 
     def create_model(self, input_size):
 

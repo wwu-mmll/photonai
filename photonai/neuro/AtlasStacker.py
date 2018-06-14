@@ -1,9 +1,9 @@
 import pickle
-from photon_core.Framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import ShuffleSplit
 import numpy as np
-from Logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
 
 class RoiFilterElement(BaseEstimator):
 
