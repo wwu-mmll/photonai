@@ -1,5 +1,6 @@
 import numpy as np
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
+import math
+from keras.callbacks import EarlyStopping, ReduceLROnPlateau, LearningRateScheduler
 from keras.layers import Dropout, Dense
 from keras.layers.advanced_activations import PReLU
 from keras.layers.core import Activation
@@ -15,8 +16,9 @@ from photonai.modelwrapper.KerasBaseEstimator import KerasBaseEstimator
 class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
 
     def __init__(self, hidden_layer_sizes=[10, 20], dropout_rate=0.5, act_func='prelu',
-                 learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
-                 eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, batch_size=64, verbosity=0):
+                 learning_rate=0.1, batch_normalization=True, nb_epoch=100, early_stopping_flag=True,
+                 eaSt_patience=20, reLe_factor = 0, reLe_patience=5, reLe_scheduler= False, batch_size=64,
+                 kernel_initializer='random_uniform', verbosity=0):
         super(KerasBaseEstimator, self).__init__()
         self.hidden_layer_sizes = hidden_layer_sizes
         self.dropout_rate = dropout_rate
@@ -29,9 +31,10 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
         self.eaSt_patience = eaSt_patience
         self.reLe_factor = reLe_factor
         self.reLe_patience = reLe_patience
+        self.reLe_scheduler = reLe_scheduler
         self.verbosity = verbosity
         self.batch_size = batch_size
-
+        self.kernel_initializer = kernel_initializer
         self.model = None
 
 
@@ -41,8 +44,8 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
         self.model = self.create_model(X.shape[1])
 
         # 2. fit model
-        # use callbacks only when size of training set is above 100
-        if X.shape[0] > 100:
+
+        if self.early_stopping_flag or self.reLe_factor:
             # get pseudo validation set for keras callbacks
             splitter = ShuffleSplit(n_splits=1, test_size=0.2)
             for train_index, val_index in splitter.split(X):
@@ -60,18 +63,24 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
                 callbacks_list += [early_stopping]
 
             # adjust learning rate when not improving for patience epochs
-            reduce_lr = ReduceLROnPlateau(monitor='val_loss',
-                                          factor=self.reLe_factor,
-                                          patience=self.reLe_patience,
-                                          min_lr=0.001,
-                                          verbose=self.verbosity)
-            callbacks_list += [reduce_lr]
-
+            if self.reLe_factor:
+                reduce_lr = ReduceLROnPlateau(monitor='val_loss',
+                                              factor=self.reLe_factor,
+                                              patience=self.reLe_patience,
+                                              min_lr=0.001,
+                                              verbose=self.verbosity)
+                callbacks_list += [reduce_lr]
+            elif self.reLe_scheduler:
+                #todo: pass scheduler configuration to constructor
+                lr_schedule = LearningRateScheduler(self.learning_rate_schedule)
             # fit the model
             results = self.model.fit(X_train, y_train, validation_data=(X_val, y_val),
                                      batch_size=self.batch_size, epochs=self.nb_epoch,
                                      verbose=self.verbosity,  callbacks=callbacks_list)
         else:
+            if self.reLe_scheduler:
+                # todo: pass scheduler configuration to constructor
+                lr_schedule = LearningRateScheduler(self.learning_rate_schedule)
             # fit the model
             Logger().debug('Cannot use Keras Callbacks because of small sample size...')
             results = self.model.fit(X, y, batch_size=self.batch_size,
@@ -82,15 +91,22 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
     def predict(self, X):
         return np.squeeze(self.model.predict(X, batch_size=self.batch_size))
 
+    def learning_rate_schedule(self, epoch):
+        initial_lrate = 0.1
+        drop = 0.7
+        epochs_drop = 15.0
+        lrate = initial_lrate * math.pow(drop, math.floor((1 + epoch) / epochs_drop))
+        return lrate
+
     def create_model(self, input_size):
 
         model = Sequential()
         input_dim = input_size
         for i, dim in enumerate(self.hidden_layer_sizes):
             if i == 0:
-                model.add(Dense(dim, input_shape=(input_dim,),  kernel_initializer='random_uniform'))
+                model.add(Dense(dim, input_shape=(input_dim,),  kernel_initializer=self.kernel_initializer))
             else:
-                model.add(Dense(dim, kernel_initializer='random_uniform'))
+                model.add(Dense(dim, kernel_initializer=self.kernel_initializer))
 
             if self.batch_normalization == 1:
                 model.add(BatchNormalization())
@@ -110,3 +126,6 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
         # model.compile(loss='mean_squared_error', optimizer=optimizer, metrics=['mean_squared_error'])
 
         return model
+
+    def save(self, filename):
+        KerasBaseEstimator.save(self, filename)

@@ -15,7 +15,7 @@ from photonai.modelwrapper.KerasBaseEstimator import KerasBaseEstimator
 class KerasDNNClassifier(BaseEstimator, ClassifierMixin, KerasBaseEstimator):
 
     def __init__(self, hidden_layer_sizes=[10, 20], dropout_rate=0.5, target_dimension=10, act_func='prelu',
-                 learning_rate=0.1, batch_normalization=True, nb_epoch=10000, early_stopping_flag=True,
+                 learning_rate=0.1, batch_normalization=True, nb_epoch=100, early_stopping_flag=True,
                  eaSt_patience=20, reLe_factor = 0.4, reLe_patience=5, batch_size=64, verbosity=0):
         super(KerasBaseEstimator, self).__init__()
         self.hidden_layer_sizes = hidden_layer_sizes

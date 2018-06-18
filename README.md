@@ -31,7 +31,7 @@ Then install it simply via pip
 pip install photonai
 ```
 
-You can setup a full stack machine learnig pipeline in a few lines of code:
+You can setup a full stack machine learning pipeline in a few lines of code:
 
 ```python
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',

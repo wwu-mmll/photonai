@@ -930,7 +930,7 @@ class Hyperpipe(BaseEstimator):
         file = os.path.splitext(file)[0] + '.photon'
 
         if os.path.exists(folder):
-            raise FileExistsError('Trying to save optimum pipe: The file you specified already exists as a folder.')
+            Logger().warn('The file you specified already exists as a folder.')
         else:
             os.mkdir(folder)
             folder = folder + '/'
