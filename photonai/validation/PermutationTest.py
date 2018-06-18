@@ -1,11 +1,10 @@
 from multiprocessing import Pool
 
 import numpy as np
-from photonai.photonlogger.Logger import Logger
-from photonai.validation.Validate import Scorer
-from photonai.base.PhotonBase import PersistOptions
-
-from photonai.validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
+from ..photonlogger.Logger import Logger
+from ..validation.Validate import Scorer
+from ..base.PhotonBase import PersistOptions
+from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 
 
 class PermutationTest:

@@ -1,4 +1,4 @@
-from ..optimization.Hyperparameters import PhotonHyperparam, FloatRange, IntegerRange, BooleanSwitch, Categorical
+from .Hyperparameters import PhotonHyperparam, FloatRange, IntegerRange, BooleanSwitch, Categorical
 from itertools import product
 
 

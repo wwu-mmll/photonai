@@ -1,4 +1,4 @@
-![PHOTON LOGO](https://bitbucket.org/translap/photon_core/src/beta1/PhotonLogo.jpg "PHOTON Logo")
+![PHOTON LOGO](http://www.photon-ai.com/static/img/PhotonLogo.jpg "PHOTON Logo")
 
 # PHOTON
 #### A **P**ython-based **H**yperparameter **O**ptimization **To**olbox for **N**eural Networks designed to accelerate and simplify the construction, training, and evaluation of machine learning models.
@@ -16,7 +16,7 @@ with only one line of code.
 - [Getting Started](#markdown-header-getting-started)
 - [Features](#markdown-header-features)
 - [Usage](#markdown-header-usage-step-by-step)
-- [PHOTON Investigator] (#markdown-header-photon-investigator)
+- [PHOTON Investigator](#markdown-header-photon-investigator)
 - [Save your models](#markdown-header-save-your-models)
 - [Stacking](#markdown-header-stacking)
 - [Switch Estimators](#markdown-header-estimators)

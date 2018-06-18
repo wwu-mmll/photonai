@@ -98,8 +98,8 @@ def show_outer_fold(storage, name, fold_nr):
         for config in outer_fold.tested_config_list:
             config_dict = Config('config_' + str(config.config_nr), config_nr=config.config_nr)
 
-            error_plot_train = PlotlyPlot('train_config_' + str(config.config_nr), 'train error plot', [], show_legend=False)
-            error_plot_test = PlotlyPlot('test_config_' + str(config.config_nr), 'test error plot', [], show_legend=False)
+            error_plot_train = PlotlyPlot('train_config_' + str(config.config_nr), 'Inner Training Performance', [], show_legend=False)
+            error_plot_test = PlotlyPlot('test_config_' + str(config.config_nr), 'Validation Performance', [], show_legend=False)
 
             for inner_fold in config.inner_folds:
                 trace_training_metrics = PlotlyTrace('training_fold_' + str(inner_fold.fold_nr), 'markers', 'scatter', trace_color="rgb(91, 91, 91)")

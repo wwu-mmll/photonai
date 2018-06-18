@@ -1,5 +1,4 @@
 from photonai.investigator.app.main import app
-from photonai.validation.ResultsDatabase import MDBHyperpipe
 from photonai.investigator.app.controller.helper import load_pipe
 
 

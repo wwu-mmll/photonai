@@ -9,7 +9,7 @@ import tensorflow as tf
 from sklearn.metrics import accuracy_score
 from keras.metrics import categorical_crossentropy as keras_categorical_crossentropy
 from keras import backend as K
-from photonai.helpers.TFUtilities import one_hot_to_binary, binary_to_one_hot
+from ..helpers.TFUtilities import one_hot_to_binary, binary_to_one_hot
 
 
 def categorical_accuracy_score(y_true, y_pred):
