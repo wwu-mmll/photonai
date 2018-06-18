@@ -2,7 +2,7 @@
 import inspect
 import json
 import os.path
-from photonai.photonlogger.Logger import Logger
+from ..photonlogger.Logger import Logger
 
 
 class PhotonRegister:
