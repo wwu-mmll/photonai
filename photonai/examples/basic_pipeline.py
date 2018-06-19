@@ -17,7 +17,7 @@ X, y = load_breast_cancer(True)
 #                                 save_feature_importances=False)
 
 
-save_options = PersistOptions(local_file="/home/photon_user/photon_test/test_item.p")
+# save_options = PersistOptions(local_file="/home/photon_user/photon_test/test_item.p")
 
 
 # DESIGN YOUR PIPELINE
@@ -30,8 +30,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
-                    verbosity=1, # get error, warn and info messages
-                    persist_options=save_options)
+                    verbosity=1) # get error, warn and info message                    )
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
