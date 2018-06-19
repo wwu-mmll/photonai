@@ -5,7 +5,7 @@ from functools import total_ordering
 
 from slackclient import SlackClient
 
-from photonai.configuration.PhotonConf import PhotonConf
+from ..configuration.PhotonConf import PhotonConf
 
 """ photonlogger is a simple way to emit and store logs.
 

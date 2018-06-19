@@ -41,8 +41,7 @@ def show_pipeline(storage, name):
 
         default_fold_best_config = 0
 
-        metric_training_list = list()
-        metric_validation_list = list()
+
         best_config_plot_list = list()
 
         # overview plot on top of the page
@@ -55,6 +54,9 @@ def show_pipeline(storage, name):
             overview_plot_test_trace = PlotlyTrace("fold_" + str(fold.fold_nr) + "_test", trace_color="rgb(91, 91, 91)")
 
             if fold.best_config:
+
+                metric_training_list = list()
+                metric_validation_list = list()
 
                 # save metrics for training dynamically in list
                 for key, value in fold.best_config.inner_folds[default_fold_best_config].training.metrics.items():
@@ -84,36 +86,45 @@ def show_pipeline(storage, name):
         training_mean_trace = PlotlyTrace("mean", trace_size=8, trace_color="rgb(31, 119, 180)")
         test_mean_trace = PlotlyTrace("mean", trace_size=8, trace_color="rgb(214, 123, 25)")
 
-        # Start calculating mean values grouped by metrics and training or validation set
-        temp = {}
-        count = {}
+        for metric in pipe.metrics_train:
+            if metric.operation == 'FoldOperations.MEAN':
+                training_mean_trace.add_x(metric.metric_name)
+                training_mean_trace.add_y(metric.value)
 
-        for metric in metric_training_list:
-            temp[metric.name] = 0
-            count[metric.name] = 0
+        for metric in pipe.metrics_test:
+            if metric.operation == 'FoldOperations.MEAN':
+                test_mean_trace.add_x(metric.metric_name)
+                test_mean_trace.add_y(metric.value)
 
-        for metric in metric_training_list:
-            temp[metric.name] += float(metric.value)
-            count[metric.name] += 1
-
-        for key, value in temp.items():
-            training_mean_trace.add_x(key)
-            training_mean_trace.add_y(value / count[key])
-
-        temp.clear()
-        count.clear()
-
-        for metric in metric_validation_list:
-            temp[metric.name] = 0
-            count[metric.name] = 0
-
-        for metric in metric_validation_list:
-            temp[metric.name] += float(metric.value)
-            count[metric.name] += 1
-
-        for key, value in temp.items():
-            test_mean_trace.add_x(key)
-            test_mean_trace.add_y(value / count[key])
+        # # Start calculating mean values grouped by metrics and training or validation set
+        # temp = {}
+        # count = {}
+        # for metric in metric_training_list:
+        #     temp[metric.name] = 0
+        #     count[metric.name] = 0
+        #
+        # for metric in metric_training_list:
+        #     temp[metric.name] += float(metric.value)
+        #     count[metric.name] += 1
+        #
+        # for key, value in temp.items():
+        #     training_mean_trace.add_x(key)
+        #     training_mean_trace.add_y(value / count[key])
+        #
+        # temp.clear()
+        # count.clear()
+        #
+        # for metric in metric_validation_list:
+        #     temp[metric.name] = 0
+        #     count[metric.name] = 0
+        #
+        # for metric in metric_validation_list:
+        #     temp[metric.name] += float(metric.value)
+        #     count[metric.name] += 1
+        #
+        # for key, value in temp.items():
+        #     test_mean_trace.add_x(key)
+        #     test_mean_trace.add_y(value / count[key])
         # END calculating mean values grouped by metrics and training or validation set
 
         overview_plot_train.add_trace(training_mean_trace)

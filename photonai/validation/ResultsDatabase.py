@@ -3,7 +3,7 @@ from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from pymongo.errors import DocumentTooLarge
 from enum import Enum
 import numpy as np
-from photonai.photonlogger.Logger import Logger
+from ..photonlogger.Logger import Logger
 import pickle
 
 
