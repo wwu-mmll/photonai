@@ -63,6 +63,12 @@ class PermutationTest:
 
         # Calculate p-value
         p = self.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics)
+        p_text = dict()
+        for _, metric in self.metrics.items():
+            if p[metric['name']] == 0:
+                p_text[metric['name']] = "p < {}".format(str(1/self.n_perms))
+            else:
+                p_text[metric['name']] = "p = 0"
 
         # Print results
         Logger().info("""
@@ -77,7 +83,7 @@ class PermutationTest:
                 True Performance: {}
                 p Value: {}
 
-            """.format(metric['name'], true_performance[metric['name']], p[metric['name']]))
+            """.format(metric['name'], true_performance[metric['name']], p_text[metric['name']]))
 
         # Write results to results tree
         perm_results = MDBPermutationResults(n_perms=self.n_perms, random_state=self.random_state)
