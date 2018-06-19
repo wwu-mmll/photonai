@@ -340,6 +340,16 @@ class Hyperpipe(BaseEstimator):
         # raise TypeError("Element must be of type Pipeline Element")
 
     def add(self, pipe_element):
+        """
+           Add an element to the machine learning pipeline
+           Returns self
+
+           Parameters
+           ----------
+           * 'pipe_element' [PipelineElement or Hyperpipe]:
+               The object to add to the machine learning pipeline, being either a transformer or an estimator.
+
+           """
         self.__iadd__(pipe_element)
 
     def __yield_all_data(self):
@@ -373,9 +383,9 @@ class Hyperpipe(BaseEstimator):
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=self.test_size)
             self.data_test_cases = train_test_cv_object.split(self.X, self.y)
 
-    def _distribute_cv_info_to_hyperpipe_children(self, reset: bool =False, reset_final_fit: bool=False,
-                                                  outer_fold_counter: int=None, inner_fold_counter: int =None,
-                                                  num_of_folds: int = None, config_counter: int =None):
+    def __distribute_cv_info_to_hyperpipe_children(self, reset: bool =False, reset_final_fit: bool=False,
+                                                   outer_fold_counter: int=None, inner_fold_counter: int =None,
+                                                   num_of_folds: int = None, config_counter: int =None):
         """
         Informs all elements of the pipeline that are of type hyperpipe (hyperpipe children)
         about the mother's configuration or current state
@@ -440,7 +450,7 @@ class Hyperpipe(BaseEstimator):
         * 'new_inner_fold_nr' [int]:
             in which inner_fold the mother hyperpipe currently is
         """
-        self._distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
+        self.__distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
 
     def fit(self, data, targets, **fit_params):
         """
@@ -573,8 +583,8 @@ class Hyperpipe(BaseEstimator):
                     num_samples_test = len(self._test_y)
 
                     # distribute number of folds to encapsulated child hyperpipes
-                    self._distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
-                                                                   outer_fold_counter=outer_fold_counter)
+                    self.__distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
+                                                                    outer_fold_counter=outer_fold_counter)
 
                     tested_config_counter = 0
 
@@ -585,7 +595,7 @@ class Hyperpipe(BaseEstimator):
 
                     # do the optimizing
                     for current_config in self.optimizer.next_config:
-                        self._distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
+                        self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
                         hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr,
                                           mongo_db_settings=self.persist_options,
                                           callback_function=self.inner_cv_callback_function)
@@ -697,7 +707,7 @@ class Hyperpipe(BaseEstimator):
                                 pipe_element.set_params(**child_config)
                                 pipe_element.is_final_fit = True
 
-                        self._distribute_cv_info_to_hyperpipe_children(reset=True)
+                        self.__distribute_cv_info_to_hyperpipe_children(reset=True)
 
                         Logger().verbose('...now fitting ' + self.name + ' with optimum configuration')
                         fit_time_start = time.time()
@@ -772,7 +782,7 @@ class Hyperpipe(BaseEstimator):
                     Logger().info('This took {} minutes.'.format((time.time() - t1) / 60))
                     self.result_tree.time_of_results = datetime.datetime.now()
                     self.mongodb_writer.save(self.result_tree)
-                    self._distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
+                    self.__distribute_cv_info_to_hyperpipe_children(reset_final_fit=True, outer_fold_counter=outer_fold_counter)
 
                 # Compute all final metrics
                 self.result_tree.metrics_train, self.result_tree.metrics_test = MDBHelper.aggregate_metrics(self.result_tree.outer_folds,
