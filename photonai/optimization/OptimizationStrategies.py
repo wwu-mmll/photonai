@@ -6,7 +6,48 @@ from .ConfigGrid import create_global_config_grid
 from ..photonlogger.Logger import Logger
 
 
-class GridSearchOptimizer(object):
+class PhotonBaseOptimizer:
+    """
+    The PHOTON interface for hyperparameter search optimization algorithms.
+    """
+
+    def __init__(self, *kwargs):
+        pass
+
+    def prepare(self, pipeline_elements: list):
+        """
+        Initializes hyperparameter search.
+        Assembles all hyperparameters of the pipeline_element list in order to prepare the hyperparameter search space.
+        Hyperparameters can be accessed via pipe_element.hyperparameters.
+        """
+        pass
+
+    def next_config(self):
+        """
+        When called, returns the next configuration that should be tested.
+
+        Returns
+        -------
+        next config to test
+        """
+        pass
+
+    def evaluate_recent_performance(self, config, performance):
+        """
+        Parameters
+        ----------
+        * 'config' [dict]:
+            The configuration that has been trained and tested
+        * 'performance' [dict]:
+            Metrics about the configuration's generalization capabilities.
+        """
+        pass
+
+
+class GridSearchOptimizer(PhotonBaseOptimizer):
+    """
+    Searches for the best configuration by iteratively testing all possible hyperparameter combinations.
+    """
     def __init__(self):
         self.param_grid = []
         self.pipeline_elements = None
@@ -29,6 +70,9 @@ class GridSearchOptimizer(object):
 
 
 class RandomGridSearchOptimizer(GridSearchOptimizer):
+    """
+     Searches for the best configuration by randomly testing k possible hyperparameter combinations.
+    """
 
     def __init__(self, k=None):
         super(RandomGridSearchOptimizer, self).__init__()
@@ -44,6 +88,9 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
 
 
 class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
+    """
+    Iteratively tests k possible hyperparameter configurations until a certain time limit is reached.
+    """
 
     def __init__(self, limit_in_minutes=60):
         super(TimeBoxedRandomGridSearchOptimizer, self).__init__()
@@ -63,17 +110,3 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
             if datetime.datetime.now() < self.end_time:
                 yield parameters
 
-
-# class AnyHyperparamOptimizer(object):
-#     def __init__(self, params_to_optimize):
-#         self.params_to_optimize = params_to_optimize
-#         self.next_config = self.next_config_generator()
-#         self.next_config_to_try = 1
-#
-#     def next_config_generator(self):
-#         yield self.next_config_to_try
-#
-#     def evaluate_recent_performance(self, config, performance):
-#         # according to the last performance for the given config,
-#         # the next item should be chosen wisely
-#         self.next_config_to_try = self.params_to_optimize(2)

@@ -1,7 +1,9 @@
 """ PHOTON Classes for defining the hyperparameter search space and optimization strategies"""
 
-from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
+from .OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, \
+    PhotonBaseOptimizer
 from .Hyperparameters import BooleanSwitch, FloatRange, IntegerRange, Categorical
+from .SpeedHacks import PhotonBaseConstraint, MinimumPerformance
 
 __all__ = ("GridSearchOptimizer",
            "RandomGridSearchOptimizer",
@@ -9,4 +11,7 @@ __all__ = ("GridSearchOptimizer",
            "BooleanSwitch",
            "FloatRange",
            "IntegerRange",
-           "Categorical")
+           "Categorical",
+           "PhotonBaseConstraint",
+           "MinimumPerformance",
+           "PhotonBaseOptimizer")
