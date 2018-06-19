@@ -940,11 +940,12 @@ class Hyperpipe(BaseEstimator):
             filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
             element_identifier.append({'element_name': element_name,
                                        'filename': filename})
-            if hasattr(element.base_element, 'save'):
-                element.base_element.save(folder + filename)
+            base_element = element.base_element.base_element
+            if hasattr(base_element, 'save'):
+                base_element.save(folder + filename)
                 element_identifier[-1]['mode'] = 'custom'
-                element_identifier[-1]['wrapper_script'] = os.path.basename(inspect.getfile(element.base_element.__class__))
-                wrapper_files.append(inspect.getfile(element.base_element.__class__))
+                element_identifier[-1]['wrapper_script'] = os.path.basename(inspect.getfile(base_element.__class__))
+                wrapper_files.append(inspect.getfile(base_element.__class__))
                 element_identifier[-1]['test_disabled'] = element.test_disabled
                 element_identifier[-1]['disabled'] = element.disabled
                 element_identifier[-1]['hyperparameters'] = element.hyperparameters
