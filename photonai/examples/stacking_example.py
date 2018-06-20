@@ -1,8 +1,7 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch, PersistOptions
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
-from photonai.configuration.Register import PhotonRegister
 from photonai.investigator.Investigator import Investigator
-
+from photonai.configuration.Register import PhotonRegister
 from sklearn.model_selection import KFold
 
 from sklearn.datasets import load_breast_cancer
@@ -12,13 +11,11 @@ X, y = load_breast_cancer(True)
 mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
                                 save_predictions=False,
                                 save_feature_importances=False,
-                                local_file="my_tree.json",
+                                local_file="my_tree.p",
                                 log_filename="my_tree.log")
 
-PhotonRegister.info("SVC")
 
-
-my_pipe = Hyperpipe('basic_svm_pipe',
+my_pipe = Hyperpipe('basic_stacking',
                     optimizer='grid_search',
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
@@ -26,30 +23,25 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     inner_cv=KFold(n_splits=10),
                     persist_options=mongo_settings)
 
+tree_branch = PipelineBranch('first_branch')
+tree_branch += PipelineElement('StandardScaler')
+tree_branch += PipelineElement('DecisionTreeClassifier', {'criterion': ['gini'],
+                                                          'min_samples_split': IntegerRange(2, 4)})
 
-svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
-                                   'C': FloatRange(0.5, 2, "linspace", num=3)})
+svm_branch = PipelineBranch('svm_branch')
+svm_branch += PipelineElement('StandardScaler')
+svm_branch += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
+                                      'C': FloatRange(0.5, 2, "linspace", num=3)})
 
-
-tree = PipelineElement('DecisionTreeClassifier',  {'criterion': ['gini'],
-                                                   'min_samples_split': IntegerRange(2, 4)})
-
-branch = PipelineBranch('first_branch')
-branch += PipelineElement('StandardScaler')
-branch += PipelineElement('PCA', {'n_components': [5, 10]})
-branch += tree
 
 my_pipe_stack = PipelineStacking('final_stack', voting=True)
-my_pipe_stack += svm
-my_pipe_stack += branch
-
-# my_pipe += PipelineStacking('final_stack', [svm, tree], voting=False)
+my_pipe_stack += svm_branch
+my_pipe_stack += tree_branch
 
 my_pipe += my_pipe_stack
 
 my_pipe.fit(X, y)
 
-# Investigator.show(my_pipe)
-Investigator.load_from_file("basic_svm_pipe", '/home/rleenings/Git/photon_core/photonai/examples/my_tree.p')
+Investigator.load_from_file("basic_svm_pipe", 'my_tree.p')
 
 debug = True

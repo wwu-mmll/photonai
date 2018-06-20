@@ -19,19 +19,21 @@ class PhotonRegister:
     There is a distinct json file with the elements registered for each photon package (core, neuro, genetics, ..)
     There is also a json file for the user's custom elements.
 
-    Example:
-    --------
-    # get info about object, name, namespace and possible hyperparameters
-    PhotonRegister.info("SVC")
+    Example
+    -------
+        from photonai.configuration.Register import PhotonRegister
 
-    # show all items that are registered
-    PhotonRegister.list()
+        # get info about object, name, namespace and possible hyperparameters
+        PhotonRegister.info("SVC")
 
-    # register new object
-    PhotonRegister.save("ABC1", "namespace.filename.ABC1", "Transformer")
+        # show all items that are registered
+        PhotonRegister.list()
 
-    # delete it again.
-    PhotonRegister.delete("ABC1")
+        # register new object
+        PhotonRegister.save("ABC1", "namespace.filename.ABC1", "Transformer")
+
+        # delete it again.
+        PhotonRegister.delete("ABC1")
 
     """
 
