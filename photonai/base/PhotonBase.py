@@ -50,16 +50,16 @@ class Hyperpipe(BaseEstimator):
 
     Parameters
     ----------
-    * 'name' [str]:
+    * `name` [str]:
         Name of hyperpipe instance
 
-    * 'inner_cv' [BaseCrossValidator]:
+    * `inner_cv` [BaseCrossValidator]:
         Cross validation strategy to test hyperparameter configurations, generates the validation set
 
-    * 'outer_cv' [BaseCrossValidator]:
+    * `outer_cv` [BaseCrossValidator]:
         Cross validation strategy to use for the hyperparameter search itself, generates the test set
 
-    * 'optimizer' [str or object, default="grid_search"]:
+    * `optimizer` [str or object, default="grid_search"]:
         Hyperparameter optimization algorithm
 
         - In case a string literal is given:
@@ -68,63 +68,63 @@ class Hyperpipe(BaseEstimator):
                combinations from all possible hyperparameter combinations
             - "timeboxed_random_grid_search": randomly chooses hyperparameter combinations from the set of all
                possible hyperparameter combinations and tests until the given time limit is reached
-               - 'limit_in_minutes': int
+               - `limit_in_minutes`: int
 
         - In case an object is given:
           expects the object to have the following methods:
-           - 'next_config_generator': returns a hyperparameter configuration in form of an dictionary containing
-              key->value pairs in the sklearn parameter encoding 'model_name__parameter_name: parameter_value'
-           - 'prepare': takes a list of pipeline elements and their particular hyperparameters to test
-           - 'evaluate_recent_performance': gets a tested config and the respective performance in order to
+           - `next_config_generator`: returns a hyperparameter configuration in form of an dictionary containing
+              key->value pairs in the sklearn parameter encoding `model_name__parameter_name: parameter_value`
+           - `prepare`: takes a list of pipeline elements and their particular hyperparameters to test
+           - `evaluate_recent_performance`: gets a tested config and the respective performance in order to
               calculate a smart next configuration to process
 
-    * 'metrics' [list of metric names as str]:
+    * `metrics` [list of metric names as str]:
         Metrics that should be calculated for both training, validation and test set
         Use the preimported metrics from sklearn and photonai, or register your own
 
-        - Metrics for 'classification':
-            - 'accuracy': sklearn.metrics.accuracy_score
-            - 'matthews_corrcoef': sklearn.metrics.matthews_corrcoef
-            - 'confusion_matrix': sklearn.metrics.confusion_matrix,
-            - 'f1_score': sklearn.metrics.f1_score
-            - 'hamming_loss': sklearn.metrics.hamming_loss
-            - 'log_loss': sklearn.metrics.log_loss
-            - 'precision': sklearn.metrics.precision_score
-            - 'recall': sklearn.metrics.recall_score
-        - Metrics for 'regression':
-            - 'mean_squared_error': sklearn.metrics.mean_squared_error
-            - 'mean_absolute_error': sklearn.metrics.mean_absolute_error
-            - 'explained_variance': sklearn.metrics.explained_variance_score
-            - 'r2': sklearn.metrics.r2_score
+        - Metrics for `classification`:
+            - `accuracy`: sklearn.metrics.accuracy_score
+            - `matthews_corrcoef`: sklearn.metrics.matthews_corrcoef
+            - `confusion_matrix`: sklearn.metrics.confusion_matrix,
+            - `f1_score`: sklearn.metrics.f1_score
+            - `hamming_loss`: sklearn.metrics.hamming_loss
+            - `log_loss`: sklearn.metrics.log_loss
+            - `precision`: sklearn.metrics.precision_score
+            - `recall`: sklearn.metrics.recall_score
+        - Metrics for `regression`:
+            - `mean_squared_error`: sklearn.metrics.mean_squared_error
+            - `mean_absolute_error`: sklearn.metrics.mean_absolute_error
+            - `explained_variance`: sklearn.metrics.explained_variance_score
+            - `r2`: sklearn.metrics.r2_score
         - Other metrics
-            - 'pearson_correlation': photon_core.framework.Metrics.pearson_correlation
-            - 'variance_explained':  photon_core.framework.Metrics.variance_explained_score
-            - 'categorical_accuracy': photon_core.framework.Metrics.categorical_accuracy_score
+            - `pearson_correlation`: photon_core.framework.Metrics.pearson_correlation
+            - `variance_explained`:  photon_core.framework.Metrics.variance_explained_score
+            - `categorical_accuracy`: photon_core.framework.Metrics.categorical_accuracy_score
 
-    * 'best_config_metric' [str]:
+    * `best_config_metric` [str]:
         The metric that should be maximized or minimized in order to choose the best hyperparameter configuration
 
-    * 'eval_final_performance' [bool, default=True]:
+    * `eval_final_performance` [bool, default=True]:
         If the metrics should be calculated for the test set, otherwise the test set is seperated but not used
 
-    * 'test_size' [float, default=0.2]:
+    * `test_size` [float, default=0.2]:
         the amount of the data that should be left out if no outer_cv is given and
         eval_final_perfomance is set to True
 
-    * 'set_random_seed' [bool, default=False]:
+    * `set_random_seed` [bool, default=False]:
         If True sets the random seed to 42
 
-    * 'verbosity' [int, default=0]:
+    * `verbosity` [int, default=0]:
         The level of verbosity, 0 is least talkative and gives only warn and error, 1 gives adds info and 2 adds debug
 
-    * 'groups' [array-like, default=None]:
+    * `groups` [array-like, default=None]:
         Info for advanced cross validation strategies, such as LeaveOneSiteOut-CV about the affiliation
         of the rows in the data
 
-    * 'filter_element' [SourceFilter, default=None]:
+    * `filter_element` [SourceFilter, default=None]:
         Instance of SourceFilter Class that transforms the input data, e.g. extracts certain columns
 
-    * 'imbalanced_data_strategy_filter' [str, default=None]:
+    * `imbalanced_data_strategy_filter` [str, default=None]:
         Uses the imblearn package to handle imbalanced class distributions in the data
         A strategy is used to transform the data into more balanced distributions before the hyperparameter search
         is started.
@@ -152,22 +152,22 @@ class Hyperpipe(BaseEstimator):
 
     Attributes
     ----------
-    * 'optimum_pipe' [Pipeline]:
+    * `optimum_pipe` [Pipeline]:
         An sklearn pipeline object that is fitted to the training data according to the best hyperparameter
         configuration found. Currently, we don't create an ensemble of all best hyperparameter configs over all folds.
         We find the best config by comparing the test error across outer folds. The hyperparameter config of the best
         fold is used as the optimal model and is then trained on the complete set.
 
-    * 'best_config' [dict]:
+    * `best_config` [dict]:
         Dictionary containing the hyperparameters of the best configuration.
         Contains the parameters in the sklearn interface of model_name__parameter_name: parameter value
 
-    * 'result_tree' [MDBHyperpipe]:
+    * `result_tree` [MDBHyperpipe]:
         Object containing all information about the for the performed hyperparameter search.
         Holds the training and test metrics for all outer folds, inner folds and configurations, as well as
         additional information.
 
-    * 'pipeline_elements' [list]:
+    * `pipeline_elements` [list]:
         Contains all PipelineElement or Hyperpipe objects that are added to the pipeline.
 
     Example
@@ -298,7 +298,7 @@ class Hyperpipe(BaseEstimator):
 
         Parameters
         ----------
-        * 'verbosity' [Integer]:
+        * `verbosity` [Integer]:
             Verbosity level can be 0, 1, or 2.
 
         """
@@ -311,7 +311,7 @@ class Hyperpipe(BaseEstimator):
 
         Parameters
         ----------
-        * persist_options' [PersistOptions]:
+        * `persist_options` [PersistOptions]:
 
         """
         self.persist_options = persist_options
@@ -346,7 +346,7 @@ class Hyperpipe(BaseEstimator):
 
            Parameters
            ----------
-           * 'pipe_element' [PipelineElement or Hyperpipe]:
+           * `pipe_element` [PipelineElement or Hyperpipe]:
                The object to add to the machine learning pipeline, being either a transformer or an estimator.
 
            """
@@ -979,7 +979,7 @@ class Hyperpipe(BaseEstimator):
 
         Parameters
         ----------
-        * 'file' [str]:
+        * `file` [str]:
             File path specifying .photon file to load optimal pipeline from
 
         Returns
@@ -1026,13 +1026,13 @@ class Hyperpipe(BaseEstimator):
 
         Parameters
         ----------
-        * 'hyperparameters' [dict]:
+        * `hyperparameters` [dict]:
             The concrete configuration settings for the pipeline elements
-        * 'data' [array-like]:
+        * `data` [array-like]:
             The training data to which the pipeline is fitted
-        * 'targets' [array-like]:
+        * `targets` [array-like]:
             The truth values for training
-        * 'data_to_inverse' [array-like]:
+        * `data_to_inverse` [array-like]:
             The data that should be inversed after training
 
         Returns
@@ -1116,16 +1116,16 @@ class PipelineElement(BaseEstimator):
 
     Parameters
     ----------
-    * 'name' [str]:
+    * `name` [str]:
        A string literal encoding the class to be instantiated
-    * 'hyperparameters' [dict]:
+    * `hyperparameters` [dict]:
        Which values/value range should be tested for the hyperparameter.
        In form of "Hyperparameter_name: [array of parameter values to be tested]"
-    * 'test_disabled' [bool]:
+    * `test_disabled` [bool]:
         If the hyperparameter search should evaluate a complete disabling of the element
-    * 'disabled' [bool]:
+    * `disabled` [bool]:
         If true, the element is currently disabled and does nothing except return the data it received
-    * 'kwargs' [dict]:
+    * `kwargs` [dict]:
         Any parameters that should be passed to the object to be instantiated, default parameters
 
     """
@@ -1179,6 +1179,8 @@ class PipelineElement(BaseEstimator):
             key_0 = next(iter(hyperparameters))
             if self.name not in key_0:
                 self.hyperparameters = hyperparameters
+        else:
+            self.hyperparameters = hyperparameters
         self.disabled = disabled
 
     def copy_me(self):
@@ -1368,8 +1370,8 @@ class PipelineBranch(PipelineElement):
 
      Parameters
      ----------
-        * 'name' [str]:
-            Name of the encapsulated item and/or summary of the encapsulated element's functions
+        * `name` [str]:
+            Name of the encapsulated item and/or summary of the encapsulated element`s functions
 
         """
 
@@ -1386,7 +1388,7 @@ class PipelineBranch(PipelineElement):
 
         Parameters
         ----------
-        * 'pipe_element' [PipelineElement or Hyperpipe]:
+        * `pipe_element` [PipelineElement or Hyperpipe]:
             The object to add, being either a transformer or an estimator.
 
         """
@@ -1395,6 +1397,16 @@ class PipelineBranch(PipelineElement):
         return self
 
     def add(self, pipe_element):
+        """
+           Add an element to the sub pipeline
+           Returns self
+    
+           Parameters
+           ----------
+           * `pipe_element` [PipelineElement or Hyperpipe]:
+               The object to add, being either a transformer or an estimator.
+    
+           """
         self.__iadd__(pipe_element)
 
     def _prepare_pipeline(self):
@@ -1421,7 +1433,8 @@ class PipelineBranch(PipelineElement):
         return None
 
     def generate_config_grid(self):
-        return create_global_config_grid(self.pipeline_elements, self.name)
+        tmp_grid = create_global_config_grid(self.pipeline_elements, self.name)
+        return tmp_grid
 
     def generate_sklearn_hyperparameters(self):
         """
@@ -1449,11 +1462,11 @@ class PipelineStacking(PipelineElement):
 
         Parameters
         ----------
-        * 'name' [str]:
+        * `name` [str]:
             Give the pipeline element a name
-        * 'stacking_elements' [list, optional]:
+        * `stacking_elements` [list, optional]:
             List of pipeline elements that should run in parallel
-        * 'voting' [bool]:
+        * `voting` [bool]:
             If true, the predictions of the encapsulated pipeline elements are joined to a single prediction
         """
         super(PipelineStacking, self).__init__(name, hyperparameters={}, test_disabled=False, disabled=False,
@@ -1471,19 +1484,20 @@ class PipelineStacking(PipelineElement):
         Adds a new element to the stack.
         Generates sklearn hyperparameter names in order to set the item's hyperparameters in the optimization process.
 
-        * 'item' [PipelineElement or PipelineBranch or Hyperpipe]:
+        * `item` [PipelineElement or PipelineBranch or Hyperpipe]:
             The Element that should be stacked and will run in a vertical parallelization in the original pipe.
         """
         self.pipe_elements[item.name] = item
-        self._hyperparameters[item.name] = item.hyperparameters
+        # self._hyperparameters[item.name] = item.hyperparameters
 
         # for each configuration
         tmp_dict = dict(item.hyperparameters)
         for key, element in tmp_dict.items():
-            if isinstance(item, PipelineElement):
-                self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
-            else:
-                self._hyperparameters[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
+            # if isinstance(item, PipelineBranch):
+            #     self._hyperparameters[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
+            # elif isinstance(item, PipelineElement):
+            self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
+
         return self
 
     def add(self, item):
@@ -1501,7 +1515,8 @@ class PipelineStacking(PipelineElement):
         pass
 
     def generate_config_grid(self):
-        return create_global_config_grid(self.pipe_elements.values(), self.name)
+        tmp_grid = create_global_config_grid(self.pipe_elements.values(), self.name)
+        return tmp_grid
 
     def get_params(self, deep=True):
         all_params = {}
@@ -1625,9 +1640,9 @@ class PipelineStacking(PipelineElement):
 
         Parameters
         ----------
-        * 'a' [ndarray]:
+        * `a` [ndarray]:
             The existing matrix
-        * 'b' [ndarray]:
+        * `b` [ndarray]:
             The matrix that is to be attached horizontally
 
         Returns
@@ -1688,11 +1703,11 @@ class PipelineSwitch(PipelineElement):
 
         Parameters
         ----------
-        * 'name' [str]:
+        * `name` [str]:
             How the element is called in the pipeline
-        * 'pipeline_element_list' [list, optional]:
+        * `pipeline_element_list` [list, optional]:
             The competing pipeline elements
-        * '_estimator_type:
+        * `_estimator_type:
             Used for validation purposes, either classifier or regressor
 
         """
@@ -1711,13 +1726,29 @@ class PipelineSwitch(PipelineElement):
         else:
             self.pipeline_element_list = []
 
-    def __iadd__(self, other):
-        self.pipeline_element_list.append(other)
+    def __iadd__(self, pipeline_element):
+        """
+        Add a new estimator or transformer object to the switch container. All items change positions during testing.
+
+        Parameters
+        ----------
+        * `pipeline_element` [PipelineElement]:
+            Item that should be tested against other competing elements at that position in the pipeline.
+        """
+        self.pipeline_element_list.append(pipeline_element)
         self.generate_private_config_grid()
         return self
 
-    def add(self, other):
-        self.__iadd__(other)
+    def add(self, pipeline_element):
+        """
+        Add a new estimator or transformer object to the switch container. All items change positions during testing.
+
+        Parameters
+        ----------
+        * `pipeline_element` [PipelineElement]:
+            Item that should be tested against other competing elements at that position in the pipeline.
+        """
+        self.__iadd__(pipeline_element)
 
     @property
     def hyperparameters(self):
@@ -1810,7 +1841,7 @@ class PipelineSwitch(PipelineElement):
 
         Returns
         -------
-        * 'prettified_configuration_string' [str]:
+        * `prettified_configuration_string` [str]:
             configuration as prettified string or configuration as dict with prettified keys
         """
 

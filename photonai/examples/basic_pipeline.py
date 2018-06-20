@@ -42,7 +42,7 @@ PhotonRegister.info('SVC')
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
-my_pipe += PipelineElement('StandardScaler')
+my_pipe += PipelineElement('StandardScaler', test_disabled=True)
 # then do feature selection using a PCA, specify which values to try in the hyperparameter search
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
 # engage and optimize the good old SVM for Classification

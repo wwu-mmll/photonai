@@ -2,6 +2,7 @@
 
 from .PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, PipelineStacking, PipelineBranch, PersistOptions
 from .ImbalancedWrapper import ImbalancedDataTransform
+from .BaseModelWrapper import BaseModelWrapper
 
 __all__ = ("Hyperpipe",
            "PipelineElement",
@@ -9,4 +10,5 @@ __all__ = ("Hyperpipe",
            "PipelineStacking",
            "PipelineBranch",
            "PersistOptions",
-           "ImbalancedDataTransform")
+           "ImbalancedDataTransform",
+           "BaseModelWrapper")
