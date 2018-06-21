@@ -21,7 +21,7 @@ my_pipe = Hyperpipe('basic_stacking',
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=10),
-                    persist_options=mongo_settings)
+                    verbosity=1)
 
 tree_branch = PipelineBranch('first_branch')
 tree_branch += PipelineElement('StandardScaler')

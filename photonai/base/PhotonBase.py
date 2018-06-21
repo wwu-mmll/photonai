@@ -1209,7 +1209,12 @@ class PipelineElement(BaseEstimator):
                 config_dict.pop(self._sklearn_disabled)
             config_list = list(ParameterGrid(config_dict))
             if self.test_disabled:
+                for item in config_list:
+                    item[self._sklearn_disabled] = False
                 config_list.append({self._sklearn_disabled: True})
+                if len(config_list) < 2:
+                    config_list.append({self._sklearn_disabled: False})
+
             return config_list
         else:
             return []
