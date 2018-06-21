@@ -4,7 +4,7 @@ from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from photonai.optimization.SpeedHacks import MinimumPerformance
 from photonai.investigator.Investigator import Investigator
 from photonai.configuration.Register import PhotonRegister
-
+5
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 
@@ -42,7 +42,7 @@ PhotonRegister.info('SVC')
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
-my_pipe += PipelineElement('StandardScaler', test_disabled=True)
+my_pipe += PipelineElement('StandardScaler')
 # then do feature selection using a PCA, specify which values to try in the hyperparameter search
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
 # engage and optimize the good old SVM for Classification
