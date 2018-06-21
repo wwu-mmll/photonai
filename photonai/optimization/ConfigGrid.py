@@ -37,13 +37,13 @@ def create_global_config_grid(pipeline_elements, add_name=''):
     if add_name != '':
         praefix = add_name + '__'
 
-    if len(global_hyperparameter_list) == 1:
-        return [dict((praefix + pair[0], pair[1]) for d in global_hyperparameter_list[0] for pair in d.items())]
-    else:
-        config_list = list(product(*global_hyperparameter_list))
-        config_dicts = []
-        # get all configs in one
-        for c in config_list:
+    # if len(global_hyperparameter_list) == 1:
+    #     return [dict((praefix + pair[0], pair[1]) for d in global_hyperparameter_list[0] for pair in d.items())]
+    # else:
+    config_list = list(product(*global_hyperparameter_list))
+    config_dicts = []
+    # get all configs in one
+    for c in config_list:
 
-            config_dicts.append(dict((praefix + pair[0], pair[1]) for d in c for pair in d.items()))
-        return config_dicts
+        config_dicts.append(dict((praefix + pair[0], pair[1]) for d in c for pair in d.items()))
+    return config_dicts
