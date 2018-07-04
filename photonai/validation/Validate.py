@@ -338,8 +338,8 @@ class Scorer(object):
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
         'r2': ('sklearn.metrics', 'r2_score', 'score'),
-        'pearson_correlation': ('photon_core.framework.Metrics', 'pearson_correlation', None),
-        'variance_explained':  ('photon_core.framework.Metrics', 'variance_explained_score', 'score')
+        'pearson_correlation': ('photonai.validation.Metrics', 'pearson_correlation', None),
+        'variance_explained':  ('photonai.validation.Metrics', 'variance_explained_score', 'score')
 
     }
 

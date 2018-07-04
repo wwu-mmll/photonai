@@ -21,7 +21,7 @@ X, y = load_boston(True)
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
-                    metrics=['mean_squared_error'],  # the performance metrics of your interest
+                    metrics=['mean_squared_error', 'pearson_correlation'],  # the performance metrics of your interest
                     best_config_metric='mean_squared_error',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=3),  # test each configuration ten times respectively
