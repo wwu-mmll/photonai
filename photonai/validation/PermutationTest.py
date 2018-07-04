@@ -68,7 +68,7 @@ class PermutationTest:
             if p[metric['name']] == 0:
                 p_text[metric['name']] = "p < {}".format(str(1/self.n_perms))
             else:
-                p_text[metric['name']] = "p = 0"
+                p_text[metric['name']] = "p = {}".format(p[metric['name']])
 
         # Print results
         Logger().info("""
@@ -116,9 +116,9 @@ class PermutationTest:
         p = dict()
         for _, metric in self.metrics.items():
             if metric['greater_is_better']:
-                p[metric['name']] = np.sum(true_performance[metric['name']] < np.asarray(perm_performances[metric['name']]))/self.n_perms
+                p[metric['name']] = np.sum(true_performance[metric['name']] < np.asarray(perm_performances[metric['name']]))/(self.n_perms + 1)
             else:
-                p[metric['name']] = np.sum(true_performance[metric['name']] > np.asarray(perm_performances[metric['name']]))/self.n_perms
+                p[metric['name']] = np.sum(true_performance[metric['name']] > np.asarray(perm_performances[metric['name']]))/(self.n_perms + 1)
         return p
 
     def set_greater_is_better(self, metric):
