@@ -9,6 +9,7 @@ import zipfile
 from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha1
+import importlib
 
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
@@ -1145,17 +1146,15 @@ class PipelineElement(BaseEstimator):
         if hyperparameters is None:
             hyperparameters = {}
 
-        if not base_element:
+        if base_element is None:
             if name in PipelineElement.ELEMENT_DICTIONARY:
                 try:
                     desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
                     desired_class_home = desired_class_info[0]
                     desired_class_name = desired_class_info[1]
-                    imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
+                    imported_module = importlib.import_module(desired_class_home)
                     desired_class = getattr(imported_module, desired_class_name)
-                    base_element = desired_class(**kwargs)
-                    obj = PipelineElement(name, hyperparameters, test_disabled, disabled, base_element)
-                    self.base_element = obj
+                    self.base_element = desired_class(**kwargs)
                 except AttributeError as ae:
                     Logger().error('ValueError: Could not find according class:'
                                    + str(PipelineElement.ELEMENT_DICTIONARY[name]))
