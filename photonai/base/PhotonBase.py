@@ -14,7 +14,7 @@ import importlib
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import ShuffleSplit
+from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.pipeline import Pipeline
@@ -282,8 +282,10 @@ class Hyperpipe(BaseEstimator):
 
         self._validation_X = None
         self._validation_y = None
+        self._validation_group = None
         self._test_X = None
         self._test_y = None
+        self._test_group = None
         self._last_fit_data_hash = None
         self._current_fold = -1
         self._num_of_folds = 0
@@ -374,8 +376,15 @@ class Hyperpipe(BaseEstimator):
           training and validation set by the parameter test_size with ShuffleSplit
         """
         # if there is a CV Object for cross validating the hyperparameter search
-        if self.outer_cv:
-            self.data_test_cases = self.outer_cv.split(self.X, self.y)
+        if self.outer_cv is not None:
+            if self.groups is not None and (isinstance(self.outer_cv, GroupKFold)
+                                            or isinstance(self.outer_cv, GroupShuffleSplit)):
+                try:
+                    self.data_test_cases = self.outer_cv.split(self.X, self.y, self.groups)
+                except:
+                    Logger.error("Could not split data according to groups")
+            else:
+                self.data_test_cases = self.outer_cv.split(self.X, self.y)
         # in case we do not want to divide between validation and test set
         elif not self.eval_final_performance:
             self.data_test_cases = self.__yield_all_data()
@@ -574,11 +583,23 @@ class Hyperpipe(BaseEstimator):
                     # Prepare Train and validation set data
                     self._validation_X = self.X[train_indices]
                     self._validation_y = self.y[train_indices]
+                    if self.groups is not None:
+                        self._validation_group = self.groups[train_indices]
                     self._test_X = self.X[test_indices]
                     self._test_y = self.y[test_indices]
+                    # self._test_group = self.groups[test_indices]
 
                     # Prepare inner cross validation
-                    cv_iter = list(self.inner_cv.split(self._validation_X, self._validation_y))
+                    cv_iter = []
+                    if self.groups is not None and (isinstance(self.inner_cv, GroupKFold)
+                                                    or isinstance(self.inner_cv, GroupShuffleSplit)):
+                        try:
+                            cv_iter = list(self.inner_cv.split(self._validation_X, self._validation_y, self._validation_group))
+                        except BaseException as e:
+                            Logger().error("Could not split data for inner cross validation according to groups: " + str(e))
+                            raise e
+                    else:
+                        cv_iter = list(self.inner_cv.split(self._validation_X, self._validation_y))
                     num_folds = len(cv_iter)
                     num_samples_train = len(self._validation_y)
                     num_samples_test = len(self._test_y)
