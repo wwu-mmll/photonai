@@ -34,14 +34,16 @@ svm_branch += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
                                       'C': FloatRange(0.5, 2, "linspace", num=3)})
 
 
-my_pipe_stack = PipelineStacking('final_stack', voting=True)
+my_pipe_stack = PipelineStacking('final_stack', voting=False)
 my_pipe_stack += svm_branch
 my_pipe_stack += tree_branch
 
 my_pipe += my_pipe_stack
 
+my_pipe += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear'])})
+
 my_pipe.fit(X, y)
 
-Investigator.load_from_file("basic_svm_pipe", 'my_tree.p')
+# Investigator.load_from_file("basic_svm_pipe", 'my_tree.p')
 
 debug = True
