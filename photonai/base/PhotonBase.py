@@ -940,7 +940,7 @@ class Hyperpipe(BaseEstimator):
             filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
             element_identifier.append({'element_name': element_name,
                                        'filename': filename})
-            base_element = element.base_element.base_element
+            base_element = element.base_element
             if hasattr(base_element, 'save'):
                 base_element.save(folder + filename)
                 element_identifier[-1]['mode'] = 'custom'
