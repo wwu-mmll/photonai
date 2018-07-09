@@ -20,8 +20,7 @@ my_pipe = Hyperpipe('basic_switch_pipe',
 svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
                                    'C': FloatRange(0.5, 2, "linspace", num=5)})
 
-tree = PipelineElement('DecisionTreeClassifier',  {'criterion': Categorical(['gini', 'entropy']),
-                                                   'min_samples_split': IntegerRange(2, 5)})
+tree = PipelineElement('DecisionTreeClassifier')
 
 switch = PipelineSwitch('estimator_switch')
 switch += svm
