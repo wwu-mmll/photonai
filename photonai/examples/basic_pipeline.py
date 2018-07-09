@@ -25,7 +25,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     metrics=['accuracy', 'precision', 'recall'],  # the performance metrics of your interest
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
-                    inner_cv=KFold(n_splits=10),  # test each configuration ten times respectively
+                    inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
@@ -52,10 +52,10 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 my_pipe.fit(X, y)
 
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
-Investigator.show(my_pipe)
+#Investigator.show(my_pipe)
 
 # YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE
-my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
+my_pipe.save_optimum_pipe('optimum_pipe.photon')
 
 # YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
 # Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
