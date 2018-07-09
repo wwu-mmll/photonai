@@ -1768,6 +1768,8 @@ class PipelineSwitch(PipelineElement):
 
             element_configurations = pipe_element.generate_config_grid()
             final_configuration_list = []
+            if len(element_configurations) == 0:
+                final_configuration_list.append({})
             for dict_item in element_configurations:
                 copy_of_dict_item = {}
                 for key, value in dict_item.items():
@@ -1818,12 +1820,13 @@ class PipelineSwitch(PipelineElement):
         else:
             self.current_element = config_nr
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
-            # remove name
-            unnamed_config = {}
-            for config_key, config_value in config.items():
-                key_split = config_key.split('__')
-                unnamed_config['__'.join(key_split[2::])] = config_value
-            self.base_element.set_params(**unnamed_config)
+            if config:
+                # remove name
+                unnamed_config = {}
+                for config_key, config_value in config.items():
+                    key_split = config_key.split('__')
+                    unnamed_config['__'.join(key_split[2::])] = config_value
+                self.base_element.set_params(**unnamed_config)
         return self
 
     def prettify_config_output(self, config_name, config_value, return_dict=False):
