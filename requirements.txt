@@ -16,3 +16,7 @@ h5py
 xlrd
 plotly
 imblearn
+pymodm
+scipy
+statsmodels
+flask
