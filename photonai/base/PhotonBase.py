@@ -1585,7 +1585,7 @@ class PipelineStacking(PipelineElement):
         """
         # Todo: strategy for concatenating data from different pipes
         # todo: parallelize prediction
-        predicted_data = np.empty((0, 0))
+        predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
             element_transform = element.predict(data)
             predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
@@ -1600,7 +1600,7 @@ class PipelineStacking(PipelineElement):
         Predict probabilities for every pipe element and
         stack them together. Alternatively, do voting instead.
         """
-        predicted_data = np.empty((0, 0))
+        predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
             element_transform = element.predict_proba(data)
             predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
@@ -1616,7 +1616,7 @@ class PipelineStacking(PipelineElement):
 
         If the encapsulated child is a hyperpipe, also calls predict on the last element in the pipeline.
         """
-        transformed_data = np.empty((0, 0))
+        transformed_data = np.array([])
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
                 element_transform = element.transform(data)
@@ -1663,7 +1663,7 @@ class PipelineStacking(PipelineElement):
         New matrix, that is a and b horizontally joined
 
         """
-        if not a.any():
+        if a.size == 0:
             a = b
         else:
             # Todo: check for right dimensions!
