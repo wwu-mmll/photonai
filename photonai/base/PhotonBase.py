@@ -1071,6 +1071,11 @@ class Hyperpipe(BaseEstimator):
             else:
                 element_list.append((element_info['element_name'], joblib.load(folder + element_info['filename'] + '.pkl')))
 
+        # delete unpacked folder to clean up
+        # ToDo: Don't unpack at all, but use PHOTON file directly
+        from shutil import rmtree
+        rmtree(folder)
+
         return Pipeline(element_list)
 
 
