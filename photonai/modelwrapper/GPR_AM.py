@@ -10,7 +10,7 @@ from abc import ABCMeta, abstractmethod
 from sklearn.base import BaseEstimator
 
 
-class BaseModelWrapper(BaseEstimator):
+class GPR_AM(BaseEstimator):
     """
     The PHOTON interface for implementing custom pipeline elements.
 
@@ -48,7 +48,7 @@ class BaseModelWrapper(BaseEstimator):
         print('Richtig')
         pass
 
-    def fit(self, data, targets=None):
+    def fit(self, data=None, targets=None):
         """
         Adjust the underlying model or method to the data.
 
@@ -56,186 +56,25 @@ class BaseModelWrapper(BaseEstimator):
         -------
         IMPORTANT: must return self!
         """
-
-        """ Estimate a normative model
-
-        This will estimate a model in one of two settings according to the
-        particular parameters specified (see below):
-
-        * under k-fold cross-validation
-        * estimating a training dataset then applying to a second test dataset
-
-        The models are estimated on the basis of data stored on disk in ascii or
-        neuroimaging data formats (nifti or cifti). Ascii data should be in
-        tab or space delimited format with the number of subjects in rows and the
-        number of variables in columns. Neuroimaging data will be reshaped
-        into the appropriate format
-
-        Basic usage::
-
-            estimate(respfile, covfile, [extra_arguments])
-
-        where the variables are defined below. Note that either the cfolds
-        parameter or (testcov, testresp) should be specified, but not both.
-
-        :param respfile: response variables for the normative model
-        :param covfile: covariates used to predict the response variable
-        :param maskfile: mask used to apply to the data (nifti only)
-        :param cvfolds: Number of cross-validation folds
-        :param testcov: Test covariates
-        :param testresp: Test responses
-        :param saveoutput: Save the output to disk? Otherwise returned as arrays
-        :param outputsuffix: Text string to add to the output filenames
-
-        All outputs are written to disk in the same format as the input. These are:
-
-        :outputs: * yhat - predictive mean
-                  * ys2 - predictive variance
-                  * Z - deviance scores
-                  * Rho - Pearson correlation between true and predicted responses
-                  * pRho - parametric p-value for this correlation
-                  * rmse - root mean squared error between true/predicted responses
-                  * smse - standardised mean squared error
-
-        The outputsuffix may be useful to estimate multiple normative models in the
-        same directory (e.g. for custom cross-validation schemes)
-        """
-
-        # load data
-        print("Processing data in " + respfile)
-        X = fileio.load(covfile)
-        Y, maskvol = load_response_vars(respfile, maskfile)
-        if len(Y.shape) == 1:
-            Y = Y[:, np.newaxis]
-        if len(X.shape) == 1:
-            X = X[:, np.newaxis]
-        Nmod = Y.shape[1]
-
-        if testcov is not None:
-            # we have a separate test dataset
-            Xte = fileio.load(testcov)
-            Yte, testmask = load_response_vars(testresp, maskfile)
-            testids = range(X.shape[0], X.shape[0] + Xte.shape[0])
-
-            if len(Yte.shape) == 1:
-                Yte = Yte[:, np.newaxis]
-            if len(Xte.shape) == 1:
-                Xte = Xte[:, np.newaxis]
-
-            # treat as a single train-test split
-            splits = CustomCV((range(0, X.shape[0]),), (testids,))
-
-            Y = np.concatenate((Y, Yte), axis=0)
-            X = np.concatenate((X, Xte), axis=0)
-
-            # force the number of cross-validation folds to 1
-            if cvfolds is not None and cvfolds != 1:
-                print("Ignoring cross-valdation specification (test data given)")
-            cvfolds = 1
-        else:
-            # we are running under cross-validation
-            splits = KFold(n_splits=cvfolds)
-            testids = range(0, X.shape[0])
-
-        # find and remove bad variables from the response variables
-        # note: the covariates are assumed to have already been checked
-        nz = np.where(np.bitwise_and(np.isfinite(Y).any(axis=0),
-                                     np.var(Y, axis=0) != 0))[0]
-
         # starting hyperparameters. Could also do random restarts here
-        covfunc = CovSum(X, ('CovLin', 'CovSqExpARD'))
+        covfunc = CovSum(data, ('CovLin', 'CovSqExpARD'))
         hyp0 = np.zeros(covfunc.get_n_params() + 1)
 
-        # run cross-validation loop
-        Yhat = np.zeros_like(Y)
-        S2 = np.zeros_like(Y)
-        Z = np.zeros_like(Y)
-        nlZ = np.zeros((Nmod, cvfolds))
-        Hyp = np.zeros((Nmod, len(hyp0), cvfolds))
-        for idx in enumerate(splits.split(X)):
-            fold = idx[0]
-            tr = idx[1][0]
-            te = idx[1][1]
-
-            # standardize responses and covariates, ignoring invalid entries
-            iy, jy = np.ix_(tr, nz)
-            mY = np.mean(Y[iy, jy], axis=0)
-            sY = np.std(Y[iy, jy], axis=0)
-            Yz = np.zeros_like(Y)
-            Yz[:, nz] = (Y[:, nz] - mY) / sY
-            mX = np.mean(X[tr, :], axis=0)
-            sX = np.std(X[tr, :], axis=0)
-            Xz = (X - mX) / sX
-
-            # estimate the models for all subjects
-            for i in range(0, len(nz)):  # range(0, Nmod):
-                print("Estimating model ", i + 1, "of", len(nz))
-                gpr = GPR(hyp0, covfunc, Xz[tr, :], Yz[tr, nz[i]])
-                Hyp[nz[i], :, fold] = gpr.estimate(hyp0, covfunc, Xz[tr, :],
-                                                   Yz[tr, nz[i]])
-
-                yhat, s2 = gpr.predict(Hyp[nz[i], :, fold], Xz[tr, :],
-                                       Yz[tr, nz[i]], Xz[te, :])
-
-                Yhat[te, nz[i]] = yhat * sY[i] + mY[i]
-                S2[te, nz[i]] = np.diag(s2) * sY[i] ** 2
-                Z[te, nz[i]] = (Y[te, nz[i]] - Yhat[te, nz[i]]) / \
-                               np.sqrt(S2[te, nz[i]])
-                nlZ[nz[i], fold] = gpr.nlZ
-
-        # compute performance metrics
-        MSE = np.mean((Y[testids, :] - Yhat[testids, :]) ** 2, axis=0)
-        RMSE = np.sqrt(MSE)
-        # for the remaining variables, we need to ignore zero variances
-        SMSE = np.zeros_like(MSE)
-        Rho = np.zeros(Nmod)
-        pRho = np.ones(Nmod)
-        iy, jy = np.ix_(testids, nz)  # ids for tested samples with nonzero values
-        SMSE[nz] = MSE[nz] / np.var(Y[iy, jy], axis=0)
-        Rho[nz], pRho[nz] = compute_pearsonr(Y[iy, jy], Yhat[iy, jy])
-
-        # Set writing options
-        if saveoutput:
-            print("Writing output ...")
-            if fileio.file_type(respfile) == 'cifti' or \
-                    fileio.file_type(respfile) == 'nifti':
-                exfile = respfile
-            else:
-                exfile = None
-            if outputsuffix is not None:
-                ext = str(outputsuffix) + fileio.file_extension(respfile)
-            else:
-                ext = fileio.file_extension(respfile)
-
-            # Write output
-            fileio.save(Yhat[testids, :].T, 'yhat' + ext,
-                        example=exfile, mask=maskvol)
-            fileio.save(S2[testids, :].T, 'ys2' + ext,
-                        example=exfile, mask=maskvol)
-            fileio.save(Z[testids, :].T, 'Z' + ext, example=exfile, mask=maskvol)
-            fileio.save(Rho, 'Rho' + ext, example=exfile, mask=maskvol)
-            fileio.save(pRho, 'pRho' + ext, example=exfile, mask=maskvol)
-            fileio.save(RMSE, 'rmse' + ext, example=exfile, mask=maskvol)
-            fileio.save(SMSE, 'smse' + ext, example=exfile, mask=maskvol)
-            if cvfolds is None:
-                fileio.save(Hyp, 'Hyp' + ext, example=exfile, mask=maskvol)
-            else:
-                for idx in enumerate(splits.split(X)):
-                    fold = idx[0]
-                    fileio.save(Hyp[:, :, fold], 'Hyp_' + str(fold + 1) +
-                                ext, example=exfile, mask=maskvol)
-        else:
-            output = (Yhat, S2, Z, Rho, pRho, RMSE, SMSE)
-            return output
+        # GPR
+        self.gpr = GPR(hyp0, covfunc, data, targets)
+        self.hyp = self.gpr.estimate(hyp0, covfunc, data, targets)
+        return self
 
     def predict(self, data):
         """
         Use the learned model to make predictions.
         """
+        #hyp, X, y, Xs
+        ymu, ys2 = self.gpr.predict(hyp=self.hyp, X=np.zeros_like(data), Xs=data)
+        return ymu
 
 
-
-# Core GP stuff
+# GP stuff
 # --------------------
 # Covariance functions
 # --------------------
@@ -661,3 +500,177 @@ class GPR:
         ys2 = kss - v.T.dot(v) + sn2
 
         return ymu, ys2
+
+
+# Andres original code
+def orig_imp():
+    """ Estimate a normative model
+
+    This will estimate a model in one of two settings according to the
+    particular parameters specified (see below):
+
+    * under k-fold cross-validation
+    * estimating a training dataset then applying to a second test dataset
+
+    The models are estimated on the basis of data stored on disk in ascii or
+    neuroimaging data formats (nifti or cifti). Ascii data should be in
+    tab or space delimited format with the number of subjects in rows and the
+    number of variables in columns. Neuroimaging data will be reshaped
+    into the appropriate format
+
+    Basic usage::
+
+        estimate(respfile, covfile, [extra_arguments])
+
+    where the variables are defined below. Note that either the cfolds
+    parameter or (testcov, testresp) should be specified, but not both.
+
+    :param respfile: response variables for the normative model
+    :param covfile: covariates used to predict the response variable
+    :param maskfile: mask used to apply to the data (nifti only)
+    :param cvfolds: Number of cross-validation folds
+    :param testcov: Test covariates
+    :param testresp: Test responses
+    :param saveoutput: Save the output to disk? Otherwise returned as arrays
+    :param outputsuffix: Text string to add to the output filenames
+
+    All outputs are written to disk in the same format as the input. These are:
+
+    :outputs: * yhat - predictive mean
+              * ys2 - predictive variance
+              * Z - deviance scores
+              * Rho - Pearson correlation between true and predicted responses
+              * pRho - parametric p-value for this correlation
+              * rmse - root mean squared error between true/predicted responses
+              * smse - standardised mean squared error
+
+    The outputsuffix may be useful to estimate multiple normative models in the
+    same directory (e.g. for custom cross-validation schemes)
+    """
+
+    # load data
+    print("Processing data in " + respfile)
+    X = fileio.load(covfile)
+    Y, maskvol = load_response_vars(respfile, maskfile)
+    if len(Y.shape) == 1:
+        Y = Y[:, np.newaxis]
+    if len(X.shape) == 1:
+        X = X[:, np.newaxis]
+    Nmod = Y.shape[1]
+
+    if testcov is not None:
+        # we have a separate test dataset
+        Xte = fileio.load(testcov)
+        Yte, testmask = load_response_vars(testresp, maskfile)
+        testids = range(X.shape[0], X.shape[0] + Xte.shape[0])
+
+        if len(Yte.shape) == 1:
+            Yte = Yte[:, np.newaxis]
+        if len(Xte.shape) == 1:
+            Xte = Xte[:, np.newaxis]
+
+        # treat as a single train-test split
+        splits = CustomCV((range(0, X.shape[0]),), (testids,))
+
+        Y = np.concatenate((Y, Yte), axis=0)
+        X = np.concatenate((X, Xte), axis=0)
+
+        # force the number of cross-validation folds to 1
+        if cvfolds is not None and cvfolds != 1:
+            print("Ignoring cross-valdation specification (test data given)")
+        cvfolds = 1
+    else:
+        # we are running under cross-validation
+        splits = KFold(n_splits=cvfolds)
+        testids = range(0, X.shape[0])
+
+    # find and remove bad variables from the response variables
+    # note: the covariates are assumed to have already been checked
+    nz = np.where(np.bitwise_and(np.isfinite(Y).any(axis=0),
+                                 np.var(Y, axis=0) != 0))[0]
+
+    # starting hyperparameters. Could also do random restarts here
+    covfunc = CovSum(X, ('CovLin', 'CovSqExpARD'))
+    hyp0 = np.zeros(covfunc.get_n_params() + 1)
+
+    # run cross-validation loop
+    Yhat = np.zeros_like(Y)
+    S2 = np.zeros_like(Y)
+    Z = np.zeros_like(Y)
+    nlZ = np.zeros((Nmod, cvfolds))
+    Hyp = np.zeros((Nmod, len(hyp0), cvfolds))
+    for idx in enumerate(splits.split(X)):
+        fold = idx[0]
+        tr = idx[1][0]
+        te = idx[1][1]
+
+        # standardize responses and covariates, ignoring invalid entries
+        iy, jy = np.ix_(tr, nz)
+        mY = np.mean(Y[iy, jy], axis=0)
+        sY = np.std(Y[iy, jy], axis=0)
+        Yz = np.zeros_like(Y)
+        Yz[:, nz] = (Y[:, nz] - mY) / sY
+        mX = np.mean(X[tr, :], axis=0)
+        sX = np.std(X[tr, :], axis=0)
+        Xz = (X - mX) / sX
+
+        # estimate the models for all subjects
+        for i in range(0, len(nz)):  # range(0, Nmod):
+            print("Estimating model ", i + 1, "of", len(nz))
+            gpr = GPR(hyp0, covfunc, Xz[tr, :], Yz[tr, nz[i]])
+            Hyp[nz[i], :, fold] = gpr.estimate(hyp0, covfunc, Xz[tr, :],
+                                               Yz[tr, nz[i]])
+
+            yhat, s2 = gpr.predict(Hyp[nz[i], :, fold], Xz[tr, :],
+                                   Yz[tr, nz[i]], Xz[te, :])
+
+            Yhat[te, nz[i]] = yhat * sY[i] + mY[i]
+            S2[te, nz[i]] = np.diag(s2) * sY[i] ** 2
+            Z[te, nz[i]] = (Y[te, nz[i]] - Yhat[te, nz[i]]) / \
+                           np.sqrt(S2[te, nz[i]])
+            nlZ[nz[i], fold] = gpr.nlZ
+
+    # compute performance metrics
+    MSE = np.mean((Y[testids, :] - Yhat[testids, :]) ** 2, axis=0)
+    RMSE = np.sqrt(MSE)
+    # for the remaining variables, we need to ignore zero variances
+    SMSE = np.zeros_like(MSE)
+    Rho = np.zeros(Nmod)
+    pRho = np.ones(Nmod)
+    iy, jy = np.ix_(testids, nz)  # ids for tested samples with nonzero values
+    SMSE[nz] = MSE[nz] / np.var(Y[iy, jy], axis=0)
+    Rho[nz], pRho[nz] = compute_pearsonr(Y[iy, jy], Yhat[iy, jy])
+
+    # Set writing options
+    if saveoutput:
+        print("Writing output ...")
+        if fileio.file_type(respfile) == 'cifti' or \
+                fileio.file_type(respfile) == 'nifti':
+            exfile = respfile
+        else:
+            exfile = None
+        if outputsuffix is not None:
+            ext = str(outputsuffix) + fileio.file_extension(respfile)
+        else:
+            ext = fileio.file_extension(respfile)
+
+        # Write output
+        fileio.save(Yhat[testids, :].T, 'yhat' + ext,
+                    example=exfile, mask=maskvol)
+        fileio.save(S2[testids, :].T, 'ys2' + ext,
+                    example=exfile, mask=maskvol)
+        fileio.save(Z[testids, :].T, 'Z' + ext, example=exfile, mask=maskvol)
+        fileio.save(Rho, 'Rho' + ext, example=exfile, mask=maskvol)
+        fileio.save(pRho, 'pRho' + ext, example=exfile, mask=maskvol)
+        fileio.save(RMSE, 'rmse' + ext, example=exfile, mask=maskvol)
+        fileio.save(SMSE, 'smse' + ext, example=exfile, mask=maskvol)
+        if cvfolds is None:
+            fileio.save(Hyp, 'Hyp' + ext, example=exfile, mask=maskvol)
+        else:
+            for idx in enumerate(splits.split(X)):
+                fold = idx[0]
+                fileio.save(Hyp[:, :, fold], 'Hyp_' + str(fold + 1) +
+                            ext, example=exfile, mask=maskvol)
+    else:
+        output = (Yhat, S2, Z, Rho, pRho, RMSE, SMSE)
+        return output
