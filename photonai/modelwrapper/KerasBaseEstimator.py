@@ -20,6 +20,19 @@ class KerasBaseEstimator(object):
         loaded_model_json = json_file.read()
         json_file.close()
         loaded_model = model_from_json(loaded_model_json)
-        loaded_model.load_weights(filename + ".h5")
+
         # load weights into new model
+        loaded_model.load_weights(filename + ".h5")
+        self.model = loaded_model
+
+    def load_nounzip(self, archive, element_info):
+        # load json and create model
+        loaded_model_json = archive.read(element_info['filename'] + '.json') #.decode("utf-8")
+        loaded_model = model_from_json(loaded_model_json)
+
+        # load weights into new model
+        # ToDo: fix loading hdf5 without unzipping first
+        loaded_weights = archive.read(element_info['filename'] + '.h5')
+        loaded_model.load_weights(loaded_weights)
+
         self.model = loaded_model
