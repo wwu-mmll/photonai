@@ -1078,6 +1078,46 @@ class Hyperpipe(BaseEstimator):
 
         return Pipeline(element_list)
 
+    @staticmethod
+    def load_optimum_pipe_nounzip(file):
+        """
+        Load optimal pipeline.
+
+
+        Parameters
+        ----------
+        * `file` [str]:
+            File path specifying .photon file to load optimal pipeline from
+
+        Returns
+        -------
+        sklearn Pipeline with all trained photon_pipelines
+        """
+        if file.endswith('.photon'):
+            # ToDo: Do this without sys.path using zipimport directly
+            import sys
+            sys.path.append(file)
+            archive = zipfile.ZipFile(file, 'r')
+        else:
+            raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
+
+        setup_info = pickle.load(archive.open('_optimum_pipe_blueprint.pkl'))
+        element_list = list()
+        for element_info in setup_info:
+            if element_info['mode'] == 'custom':
+                imported_module = importlib.import_module(element_info['element_name'], file)
+                base_element = getattr(imported_module, element_info['element_name'])
+                custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
+                                                 hyperparameters=element_info['hyperparameters'],
+                                                 test_disabled=element_info['test_disabled'],
+                                                 disabled=element_info['disabled'])
+                custom_element.base_element.load_nounzip(archive, element_info)
+                element_list.append((element_info['element_name'], custom_element))
+            else:
+                element_list.append((element_info['element_name'], joblib.load(archive.open(element_info['filename'] + '.pkl'))))
+
+        return Pipeline(element_list)
+
 
     def inverse_transform_pipeline(self, hyperparameters: dict, data, targets, data_to_inverse):
         """
