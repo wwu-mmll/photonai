@@ -1,6 +1,8 @@
 # Photon specific stuff
 configuration.ini
 
+photonai/photonai
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
