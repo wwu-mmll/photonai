@@ -1,5 +1,5 @@
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from photonai.investigator.Investigator import Investigator
 from photonai.configuration.Register import PhotonRegister
@@ -10,10 +10,10 @@ from sklearn.datasets import load_boston
 X, y = load_boston(True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-# mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
-#                                 save_predictions=False,
-#                                 save_feature_importances=False)
-
+# mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db_test",
+#                                 save_predictions='best',
+#                                 save_feature_importances='all')
+#
 
 # save_options = PersistOptions(local_file="/home/photon_user/photon_test/test_item.p")
 
@@ -47,10 +47,10 @@ my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimato
 my_pipe.fit(X, y)
 
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
-Investigator.show(my_pipe)
+#Investigator.show(my_pipe)
 
 # YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE
-my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
+#my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
 
 # YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
 # Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
