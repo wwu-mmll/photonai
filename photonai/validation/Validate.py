@@ -246,12 +246,16 @@ class TestPipeline(object):
 
         f_importances = []
         if save_feature_importances:
-            if hasattr(estimator._final_estimator.base_element, 'coef_'):
-                f_importances = estimator._final_estimator.base_element.coef_
-                f_importances = f_importances.tolist()
-            elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
-                f_importances = estimator._final_estimator.base_element.feature_importances_
-                f_importances = f_importances.tolist()
+            try:
+                if hasattr(estimator._final_estimator.base_element, 'coef_'):
+                    f_importances = estimator._final_estimator.base_element.coef_
+                    f_importances = f_importances.tolist()
+                elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
+                    f_importances = estimator._final_estimator.base_element.feature_importances_
+                    f_importances = f_importances.tolist()
+            except:
+                f_importances = None
+
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
 

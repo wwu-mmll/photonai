@@ -9,8 +9,8 @@ X, y = load_breast_cancer(True)
 
 
 mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
-                                save_predictions=False,
-                                save_feature_importances=False,
+                                save_predictions='best',
+                                save_feature_importances='best',
                                 local_file="my_tree.p",
                                 log_filename="my_tree.log")
 

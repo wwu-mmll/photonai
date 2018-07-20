@@ -31,17 +31,30 @@ from ..validation.Validate import TestPipeline, OptimizerMetric
 class PersistOptions:
 
     def __init__(self, mongodb_connect_url: str = None,
-                 save_predictions: bool = False,
-                 save_feature_importances: bool = False,
+                 save_predictions: str = 'best',
+                 save_feature_importances: str = 'best',
                  local_file: str = '',
                  log_filename: str = ''):
 
         self.mongodb_connect_url = mongodb_connect_url
-        self.save_predictions = save_predictions
-        # coef_ or feature_importances
-        self.save_feature_importances = save_feature_importances
+        self.save_best_config_predictions, self.save_predictions = self._set_save_options(save_predictions)
+        self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
         self.local_file = local_file
         self.log_file = log_filename
+
+    def _set_save_options(self, specifier):
+        if specifier == 'best':
+            save_best = True
+            save_all = False
+        elif specifier == 'all':
+            save_best = True
+            save_all = True
+        elif specifier == 'None':
+            save_best = False
+            save_all = False
+        else:
+            raise ValueError('Possible options for saving predictions or feature importances are: "best", "all", "None"')
+        return save_best, save_all
 
 
 class Hyperpipe(BaseEstimator):
@@ -747,16 +760,16 @@ class Hyperpipe(BaseEstimator):
 
                             test_score_mdb = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
                                                                 self.metrics,
-                                                                save_predictions=self.persist_options.save_predictions,
-                                                                save_feature_importances=self.persist_options.save_feature_importances)
+                                                                save_predictions=self.persist_options.save_best_config_predictions,
+                                                                save_feature_importances=self.persist_options.save_best_config_feature_importances)
 
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
                             train_score_mdb = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
                                                                  self.metrics,
-                                                                 save_predictions=self.persist_options.save_predictions,
-                                                                 save_feature_importances=self.persist_options.save_feature_importances)
+                                                                 save_predictions=self.persist_options.save_best_config_predictions,
+                                                                 save_feature_importances=self.persist_options.save_best_config_feature_importances)
 
                             # save test fold
                             outer_fold_mdb = MDBInnerFold()
@@ -1221,6 +1234,16 @@ class PipelineElement(BaseEstimator):
     @hyperparameters.setter
     def hyperparameters(self, value: dict):
         self.generate_sklearn_hyperparameters(value)
+
+    @property
+    def feature_importances_(self):
+        if hasattr(self.base_element, 'feature_importances_'):
+            return self.base_element.feature_importances_
+
+    @property
+    def coef_(self):
+        if hasattr(self.base_element, 'coef_'):
+            return self.base_element.coef_
 
     def generate_config_grid(self):
         config_dict = create_global_config_dict([self])

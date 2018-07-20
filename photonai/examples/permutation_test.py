@@ -8,8 +8,8 @@ from sklearn.datasets import load_breast_cancer
 
 def create_hyperpipe():
     mongo_settings = PersistOptions(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_tests",
-                                    save_predictions=False,
-                                    save_feature_importances=False)
+                                    save_predictions='best',
+                                    save_feature_importances='best')
 
     my_pipe = Hyperpipe('basic_svm_pipe',
                         optimizer='grid_search',
