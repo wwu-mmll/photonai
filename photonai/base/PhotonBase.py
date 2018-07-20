@@ -29,7 +29,31 @@ from ..validation.Validate import TestPipeline, OptimizerMetric
 
 
 class PersistOptions:
+    """
+    Configuration class that specifies the format in which the results are saved. Results can be saved to a MongoDB
+    or a simple son-file. You can also choose whether to save predictions and/or feature importances.
 
+    Parameters
+    ----------
+    * `mongodb_connect_url` [str]:
+        Valid mongodb connection url that specifies a database for storing the results
+
+    * `save_predictions` [str, default='best']:
+        Possible options are 'best' to save only the predictions of the best configuration for every outer fold, 'all'
+        to save all predictions or 'None' to not save any predictions at all.
+
+    * `save_feature_importances` [str, default='best']:
+        Possible options are 'best' to save only the feature importances of the best configuration for every outer fold,
+        'all' to save all feature importances or 'None' to not save any at all. Feature importances can only be saved
+        if the chosen estimators have an attribute 'coef_' or 'feature_importances_'.
+
+    * `local_file` [str]:
+        String specifying the path and name of the result file in addition to or replacement of the MongoDB.
+        Has to end with '.p'.
+
+    * `log_filename` [str]:
+        String specifying the path and name of the log file. This file saves the console output.
+    """
     def __init__(self, mongodb_connect_url: str = None,
                  save_predictions: str = 'best',
                  save_feature_importances: str = 'best',
