@@ -16,6 +16,20 @@ class ResultsTreeHandler():
         Logger().info(methods_list)
         return methods_list
 
+    # def summary(self):
+    #     """
+    #     This function returns a short summary of analyses and results.
+    #     """
+    #     summary = 'We used PHOTON version ??? \n'
+    #     summary += str(5) + ' hyperparameter configurations were tested using ' + '??? optimizer \n'
+    #     summary += 'The best configuration overall was \n'
+    #     summary += self.results.best_config
+    #     summary += 'Performance'
+    #     summary += Hier die angegebenen Metriken.
+    #     summary += 'Hyperparameters were optimized using ??? Metric'
+    #     Logger().info(summary)
+    #     return summary
+
     def get_val_preds(self):
         """
         This function returns the predictions, true targets, and fold index
