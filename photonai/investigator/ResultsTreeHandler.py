@@ -7,6 +7,12 @@ class ResultsTreeHandler():
     def __init__(self, res_file):
         self.results = MDBHelper.load_results(res_file)
 
+    @staticmethod
+    def get_methods():
+        methods_list = [s for s in dir(ResultsTreeHandler) if not '__' in s]
+        Logger().info(methods_list)
+        return methods_list
+
     def get_val_preds(self):
         y_true = []
         y_pred = []
@@ -30,6 +36,21 @@ class ResultsTreeHandler():
         fold_idx = np.asarray(fold_idx)
         #return {'imps': imps, 'fold_idx': fold_idx}
         return imps
+
+    # def __plotlyfy(matplotlib_figure):
+    #     import plotly.tools as tls
+    #     import plotly.plotly as py
+    #     plotly_fig = tls.mpl_to_plotly(matplotlib_figure)
+    #     unique_url = py.plot(plotly_fig)
+    #     return plotly_fig
+
+    def plot_true_pred(self):
+        import seaborn as sns
+        import matplotlib.pyplot as plt
+        preds = ResultsTreeHandler.get_val_preds(self)
+        ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=95)
+        ax.set(xlabel='Predicted Values', ylabel='True Values')
+        plt.show()
 
     def plot_confusion_matrix(self, classes=None, normalize=False, title='Confusion matrix'):
         """
@@ -72,6 +93,9 @@ class ResultsTreeHandler():
         plt.tight_layout()
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
+        #plotlyFig = ResultsTreeHandler.__plotlyfy(plt)
         plt.show()
+
+
 
 
