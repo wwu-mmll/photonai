@@ -9,11 +9,18 @@ class ResultsTreeHandler():
 
     @staticmethod
     def get_methods():
+        """
+        This function returns a list of all methods availble for ResultsTreeHandler.
+        """
         methods_list = [s for s in dir(ResultsTreeHandler) if not '__' in s]
         Logger().info(methods_list)
         return methods_list
 
     def get_val_preds(self):
+        """
+        This function returns the predictions, true targets, and fold index
+        for the best configuration of each outer fold.
+        """
         y_true = []
         y_pred = []
         fold_idx = []
@@ -27,6 +34,9 @@ class ResultsTreeHandler():
         return {'y_true': y_true, 'y_pred': y_pred, 'fold_idx': fold_idx}
 
     def get_imps(self):
+        """
+        This function returns the importance scores for the best configuration of each outer fold.
+        """
         imps = []
         fold_idx = []
         for i, fold in enumerate(self.results.outer_folds):
@@ -44,11 +54,15 @@ class ResultsTreeHandler():
     #     unique_url = py.plot(plotly_fig)
     #     return plotly_fig
 
-    def plot_true_pred(self):
+    def plot_true_pred(self, confidence_interval=95):
+        """
+        This function plots predictions vs. (true) targets and plots a regression line
+        with confidence interval.
+        """
         import seaborn as sns
         import matplotlib.pyplot as plt
         preds = ResultsTreeHandler.get_val_preds(self)
-        ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=95)
+        ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=confidence_interval)
         ax.set(xlabel='Predicted Values', ylabel='True Values')
         plt.show()
 
