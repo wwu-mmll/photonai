@@ -30,6 +30,38 @@ class ResultsTreeHandler():
     #     Logger().info(summary)
     #     return summary
 
+    def get_performance(self):
+        """
+        This function returns a summary table of the overall results.
+        ToDo: add best_config information!
+        """
+        import pandas as pd
+        from scipy.stats import sem
+        res_tab = pd.DataFrame()
+        for i, folds in enumerate(self.results.outer_folds):
+            # add best config infos
+            res_tab.loc[i, 'best_config'] = 'some cool HPs'
+
+            # add fold index
+            res_tab.loc[i, 'fold'] = folds.best_config.inner_folds[-1].fold_nr
+
+            # add sample size infos
+            res_tab.loc[i, 'n_train'] = folds.best_config.inner_folds[-1].number_samples_training
+            res_tab.loc[i, 'n_validation'] = folds.best_config.inner_folds[-1].number_samples_validation
+
+            # add performance metrics
+            d = folds.best_config.inner_folds[-1].validation.metrics
+            for key, value in d.items():
+                res_tab.loc[i, key] = value
+
+        # add row with overall info
+        for key, value in d.items():
+            m = res_tab.loc[:, key]
+            res_tab.loc[i+1, key] = np.mean(m)
+            res_tab.loc[i + 1, key + '_sem'] = sem(m)   # standard error of the mean
+        res_tab.loc[i + 1, 'best_config'] = 'Overall'
+        return res_tab
+
     def get_val_preds(self):
         """
         This function returns the predictions, true targets, and fold index
