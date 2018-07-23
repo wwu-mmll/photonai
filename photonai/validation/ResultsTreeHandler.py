@@ -1,16 +1,24 @@
+import itertools
 import numpy as np
-from photonai.validation.ResultsDatabase import MDBHelper
-from photonai.photonlogger.Logger import Logger
+import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+
+from scipy.stats import sem
+from sklearn.metrics import confusion_matrix
+
+from ..validation.ResultsDatabase import MDBHelper
+from ..photonlogger.Logger import Logger
 
 
-class ResultsTreeHandler():
+class ResultsTreeHandler:
     def __init__(self, res_file):
         self.results = MDBHelper.load_results(res_file)
 
     @staticmethod
     def get_methods():
         """
-        This function returns a list of all methods availble for ResultsTreeHandler.
+        This function returns a list of all methods available for ResultsTreeHandler.
         """
         methods_list = [s for s in dir(ResultsTreeHandler) if not '__' in s]
         Logger().info(methods_list)
@@ -35,8 +43,7 @@ class ResultsTreeHandler():
         This function returns a summary table of the overall results.
         ToDo: add best_config information!
         """
-        import pandas as pd
-        from scipy.stats import sem
+
         res_tab = pd.DataFrame()
         for i, folds in enumerate(self.results.outer_folds):
             # add best config infos
@@ -71,42 +78,29 @@ class ResultsTreeHandler():
         y_pred = []
         fold_idx = []
         for i, fold in enumerate(self.results.outer_folds):
-            y_true.extend(fold.best_config.inner_folds[-1].validation.y_true)
-            y_pred.extend(fold.best_config.inner_folds[-1].validation.y_pred)
-            fold_idx.extend(np.repeat(i, len(fold.best_config.inner_folds[-1].validation.y_true)))
+            n_samples = len(fold.best_config.inner_folds[0].validation.y_true)
+            y_true.extend(fold.best_config.inner_folds[0].validation.y_true)
+            y_pred.extend(fold.best_config.inner_folds[0].validation.y_pred)
+            fold_idx.extend(np.repeat(i, n_samples))
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         fold_idx = np.asarray(fold_idx)
-        return {'y_true': y_true, 'y_pred': y_pred, 'fold_idx': fold_idx}
+        return {'y_true': y_true, 'y_pred': y_pred, 'fold_indices': fold_idx}
 
-    def get_imps(self):
+    def get_importance_scores(self):
         """
         This function returns the importance scores for the best configuration of each outer fold.
         """
         imps = []
-        fold_idx = []
         for i, fold in enumerate(self.results.outer_folds):
-            imps.append(fold.best_config.inner_folds[-1].training.feature_importances)
-            fold_idx.extend(np.repeat(i, len(fold.best_config.inner_folds[-1].training.y_true)))
-        imps = np.asarray(imps)
-        fold_idx = np.asarray(fold_idx)
-        #return {'imps': imps, 'fold_idx': fold_idx}
+            imps.append(fold.best_config.inner_folds[0].training.feature_importances)
         return imps
-
-    # def __plotlyfy(matplotlib_figure):
-    #     import plotly.tools as tls
-    #     import plotly.plotly as py
-    #     plotly_fig = tls.mpl_to_plotly(matplotlib_figure)
-    #     unique_url = py.plot(plotly_fig)
-    #     return plotly_fig
 
     def plot_true_pred(self, confidence_interval=95):
         """
         This function plots predictions vs. (true) targets and plots a regression line
         with confidence interval.
         """
-        import seaborn as sns
-        import matplotlib.pyplot as plt
         preds = ResultsTreeHandler.get_val_preds(self)
         ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=confidence_interval)
         ax.set(xlabel='Predicted Values', ylabel='True Values')
@@ -117,9 +111,6 @@ class ResultsTreeHandler():
         This function prints and plots the confusion matrix.
         Normalization can be applied by setting `normalize=True`.
         """
-        import matplotlib.pyplot as plt
-        import itertools
-        from sklearn.metrics import confusion_matrix
 
         preds = ResultsTreeHandler.get_val_preds(self)
         cm = confusion_matrix(preds['y_true'], preds['y_pred'])
@@ -157,5 +148,9 @@ class ResultsTreeHandler():
         plt.show()
 
 
-
-
+    # def __plotlyfy(matplotlib_figure):
+    #     import plotly.tools as tls
+    #     import plotly.plotly as py
+    #     plotly_fig = tls.mpl_to_plotly(matplotlib_figure)
+    #     unique_url = py.plot(plotly_fig)
+    #     return plotly_fig
