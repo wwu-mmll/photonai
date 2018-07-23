@@ -1,4 +1,5 @@
 import itertools
+import pickle
 import numpy as np
 import pandas as pd
 import seaborn as sns
@@ -7,13 +8,16 @@ import matplotlib.pyplot as plt
 from scipy.stats import sem
 from sklearn.metrics import confusion_matrix
 
-from ..validation.ResultsDatabase import MDBHelper
+from ..validation.ResultsDatabase import MDBHyperpipe
 from ..photonlogger.Logger import Logger
 
 
 class ResultsTreeHandler:
-    def __init__(self, res_file):
-        self.results = MDBHelper.load_results(res_file)
+    def __init__(self, res_file=None):
+        self.results = self.load(res_file)
+
+    def load(self, results_file: str):
+        return MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
 
     @staticmethod
     def get_methods():
@@ -50,14 +54,14 @@ class ResultsTreeHandler:
             res_tab.loc[i, 'best_config'] = 'some cool HPs'
 
             # add fold index
-            res_tab.loc[i, 'fold'] = folds.best_config.inner_folds[-1].fold_nr
+            res_tab.loc[i, 'fold'] = folds.best_config.inner_folds[0].fold_nr
 
             # add sample size infos
-            res_tab.loc[i, 'n_train'] = folds.best_config.inner_folds[-1].number_samples_training
-            res_tab.loc[i, 'n_validation'] = folds.best_config.inner_folds[-1].number_samples_validation
+            res_tab.loc[i, 'n_train'] = folds.best_config.inner_folds[0].number_samples_training
+            res_tab.loc[i, 'n_validation'] = folds.best_config.inner_folds[0].number_samples_validation
 
             # add performance metrics
-            d = folds.best_config.inner_folds[-1].validation.metrics
+            d = folds.best_config.inner_folds[0].validation.metrics
             for key, value in d.items():
                 res_tab.loc[i, key] = value
 
@@ -68,6 +72,13 @@ class ResultsTreeHandler:
             res_tab.loc[i + 1, key + '_sem'] = sem(m)   # standard error of the mean
         res_tab.loc[i + 1, 'best_config'] = 'Overall'
         return res_tab
+
+    def get_performance_outer_folds(self):
+        performances = dict()
+        for i, fold in enumerate(self.results.outer_folds):
+            for metric, value in fold.best_config.inner_folds[0].validation.metrics:
+                performances[metric].extend(value)
+        return performances
 
     def get_val_preds(self):
         """
