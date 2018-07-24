@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 
 from scipy.stats import sem
 from sklearn.metrics import confusion_matrix
+from pymodm import connect
 
 from ..validation.ResultsDatabase import MDBHyperpipe
 from ..photonlogger.Logger import Logger
@@ -14,10 +15,16 @@ from ..photonlogger.Logger import Logger
 
 class ResultsTreeHandler:
     def __init__(self, res_file=None):
-        self.results = self.load(res_file)
+        if res_file:
+            self.load_from_file(res_file)
 
-    def load(self, results_file: str):
-        return MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
+    def load_from_file(self, results_file: str):
+        self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
+
+    def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
+        connect(mongodb_connect_url)
+        self.results = list(MDBHyperpipe.objects.raw({'_id': pipe_name}))[0]
+
 
     @staticmethod
     def get_methods():
