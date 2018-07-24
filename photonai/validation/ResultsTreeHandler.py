@@ -75,9 +75,11 @@ class ResultsTreeHandler:
 
     def get_performance_outer_folds(self):
         performances = dict()
+        for metric in self.results.outer_folds[0].best_config.inner_folds[0].validation.metrics.keys():
+            performances[metric] = list()
         for i, fold in enumerate(self.results.outer_folds):
-            for metric, value in fold.best_config.inner_folds[0].validation.metrics:
-                performances[metric].extend(value)
+            for metric, value in fold.best_config.inner_folds[0].validation.metrics.items():
+                performances[metric].append(value)
         return performances
 
     def get_val_preds(self):
