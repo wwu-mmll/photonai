@@ -73,6 +73,7 @@ class ResultsTreeHandler:
                 res_tab.loc[i, key] = value
 
         # add row with overall info
+        res_tab.loc[i + 1, 'n_validation'] = np.sum(res_tab['n_validation'])
         for key, value in d.items():
             m = res_tab.loc[:, key]
             res_tab.loc[i+1, key] = np.mean(m)
