@@ -42,7 +42,7 @@ class ResultsTreeHandler:
     #     Logger().info(summary)
     #     return summary
 
-    def get_performance(self):
+    def get_performance_table(self):
         """
         This function returns a summary table of the overall results.
         ToDo: add best_config information!
@@ -51,10 +51,10 @@ class ResultsTreeHandler:
         res_tab = pd.DataFrame()
         for i, folds in enumerate(self.results.outer_folds):
             # add best config infos
-            res_tab.loc[i, 'best_config'] = 'some cool HPs'
+            res_tab.loc[i, 'best_config'] = folds.best_config.human_readable_config
 
             # add fold index
-            res_tab.loc[i, 'fold'] = folds.best_config.inner_folds[0].fold_nr
+            res_tab.loc[i, 'fold'] = folds.fold_nr
 
             # add sample size infos
             res_tab.loc[i, 'n_train'] = folds.best_config.inner_folds[0].number_samples_training
