@@ -9,28 +9,29 @@ import multiprocessing as mp
 class AtlasMapping:
 
     def __init__(self, atlas_info, hyperpipe_constructor, write_to_folder, n_processes=1, write_summary_to_excel=True):
-        # Constructor
         self.atlas_info = atlas_info
         self.hyperpipe_constructor = hyperpipe_constructor
         self.pipe = self.hyperpipe_constructor()
         self.write_to_folder = write_to_folder
         self.n_processes = n_processes
         self.write_summary_to_excel = write_summary_to_excel
+        self.res_list = list()
 
-    def _get_pipe(self, pipe_name):
+    @staticmethod
+    def get_pipe(pipe, new_pipe_name, write_to_folder):
         """
         This function takes a hyperpipe, adjusts the name and results file name/path and returns the new hyperpipe
-        :param hyperpipe: hyperpipe provided by the user
+        :param pipe: hyperpipe provided by the user
         :param write_to_folder: absolute path and filename of the results folder
         :param pipe_name: name of the hyperpipe (adjusted according to ROI)
         :return: the updated hyperpipe
         """
-        pipe = self.pipe
-        pipe.name = pipe_name
-        pipe.persist_options.local_file = self.write_to_folder + 'results_' + pipe_name + '.p'
+        pipe.name = new_pipe_name
+        pipe.persist_options.local_file = write_to_folder + 'results_' + new_pipe_name + '.p'
+        pipe._set_verbosity(-1)
         return pipe
 
-    def mapAtlas(self, dataset_files, targets):
+    def fit(self, dataset_files, targets):
         """
         This function takes MRI (e.g. nifti) images and targets and optimizes the same hyperpipe in each region of an atlas independently
         :param dataset_files: list of absolute paths to MRI files (e.g. nifti or analyze)
@@ -61,7 +62,9 @@ class AtlasMapping:
                 roi_data = roi_atlas_object.transform(dataset_files)
 
                 # get pipeline and fit
-                my_hyperpipe = AtlasMapping._get_pipe(self, pipe_name=roi_label + '_pipe')
+                my_hyperpipe = AtlasMapping.get_pipe(pipe=self.hyperpipe_constructor(),
+                                                     write_to_folder=self.write_to_folder,
+                                                     new_pipe_name=roi_label + '_pipe')
                 my_hyperpipe.fit(data=roi_data, targets=targets)
 
                 # get summary of results
@@ -85,44 +88,43 @@ class AtlasMapping:
 
         # Run parallel pool over all regions of interest
         self.run_parallelized_hyperpipes(atlas_object=atlas_object, dataset_files=dataset_files, targets=targets)
-        return self
+        roi_performance = pd.concat(self.res_list)
+        return roi_performance
 
     def run_parallelized_hyperpipes(self, atlas_object, dataset_files, targets):
         pool = mp.Pool(processes=self.n_processes)
         for roi_label in atlas_object.labels_applied:
-            pool.apply_async(self.run_parallelized_mapping, args=(dataset_files, targets, roi_label, atlas_object),
+            pool.apply_async(run_parallelized_mapping,
+                             args=(self.hyperpipe_constructor, dataset_files, targets, roi_label,
+                                   atlas_object, self.write_to_folder),
                              callback=self.collect_results)
         pool.close()
         pool.join()
 
-        # res_list.append(res_tmp)
-        # results_summary = pd.concat(res_list)
-        # if self.write_summary_to_excel:
-        #     results_summary.to_excel(write_to_folder + 'results_summary_brainMap.xlsx', index=False)
-
     def collect_results(self, result):
         # This is called whenever foo_pool(i) returns a result.
         # result_list is modified only by the main process, not the pool workers.
-        print(result)
-        self.roi_performance = result
+        self.res_list.append(result)
 
-    def run_parallelized_mapping(self, dataset_files, targets, roi_label, atlas_object):
-        # Create new instance of hyperpipe and set all parameters
-        Logger().info(roi_label)
 
-        # get ROI info
-        roi_atlas_info = AtlasInfo(atlas_name=atlas_object.atlas_name, roi_names=[roi_label],
-                                   extraction_mode=atlas_object.extract_mode)
-        roi_atlas_object = BrainAtlas(atlas_info_object=roi_atlas_info)
-        roi_data = roi_atlas_object.transform(dataset_files)
+def run_parallelized_mapping(hyperpipe_constructor, dataset_files, targets, roi_label, atlas_object, write_to_folder):
+    # Create new instance of hyperpipe and set all parameters
+    Logger().info(roi_label)
 
-        # get pipeline and fit
-        my_hyperpipe = AtlasMapping._get_pipe(self, pipe_name=roi_label + '_pipe')
-        my_hyperpipe.fit(data=roi_data, targets=targets)
+    # get ROI info
+    roi_atlas_info = AtlasInfo(atlas_name=atlas_object.atlas_name, roi_names=[roi_label],
+                               extraction_mode=atlas_object.extract_mode)
+    roi_atlas_object = BrainAtlas(atlas_info_object=roi_atlas_info)
+    roi_data = roi_atlas_object.transform(dataset_files)
 
-        # get summary of results
-        res_file = my_hyperpipe.mongodb_writer.save_settings.local_file
-        res_tmp = ResultsTreeHandler(res_file).get_performance_table().tail(n=1).drop(['fold', 'n_train'], axis=1)
-        res_tmp.insert(loc=0, column='Region', value=roi_label)
+    # get pipeline and fit
+    my_hyperpipe = AtlasMapping.get_pipe(pipe=hyperpipe_constructor(), write_to_folder=write_to_folder,
+                                         new_pipe_name=roi_label + '_pipe')
+    my_hyperpipe.fit(data=roi_data, targets=targets)
 
-        return res_tmp
+    # get summary of results
+    res_file = my_hyperpipe.mongodb_writer.save_settings.local_file
+    res_tmp = ResultsTreeHandler(res_file).get_performance_table().tail(n=1).drop(['fold', 'n_train'], axis=1)
+    res_tmp.insert(loc=0, column='Region', value=roi_label)
+
+    return res_tmp
