@@ -58,7 +58,7 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
         self.method_name = method_name
 
         imbalance_type = ''
-        for group, possible_strategies in ImbalancedDataTransform.IMBALANCED_DICT:
+        for group, possible_strategies in ImbalancedDataTransform.IMBALANCED_DICT.items():
             if method_name in possible_strategies:
                 imbalance_type = group
 
@@ -88,8 +88,6 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
         self.y_transformed = None
 
     def fit_sample(self, X, y):
-
-        # ATTENTION: Works only if fit is called before transform!!!
         self.x_transformed, self.y_transformed = self.method.fit_sample(X, y)
         return self.x_transformed, self.y_transformed
 
