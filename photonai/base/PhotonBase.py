@@ -544,8 +544,7 @@ class Hyperpipe(BaseEstimator):
 
         # if the groups are imbalanced, and a strategy is chosen, apply it here
         if self.imbalanced_data_strategy_filter:
-            self.imbalanced_data_strategy_filter.fit(self.X, self.y)
-            self.X, self.y = self.imbalanced_data_strategy_filter.transform()
+            self.X, self.y = self.imbalanced_data_strategy_filter.fit_sample(self.X, self.y)
 
         self._current_fold += 1
 

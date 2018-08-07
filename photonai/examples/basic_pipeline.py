@@ -29,7 +29,8 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
-                    verbosity=1) # get error, warn and info message                    )
+                    verbosity=1,
+                    imbalanced_data_strategy_filter='RandomUnderSampler') # get error, warn and info message                    )
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
