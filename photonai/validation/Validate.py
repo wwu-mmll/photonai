@@ -17,7 +17,8 @@ class TestPipeline(object):
     """
 
     def __init__(self, pipe: Pipeline, specific_config: dict, metrics: list, mother_inner_fold_handle,
-                 raise_error: bool=False, mongo_db_settings=None, callback_function = None):
+                 raise_error: bool=False, mongo_db_settings=None, callback_function=None,
+                 imbalanced_strategy=None):
         """
         Creates a new TestPipeline object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -39,6 +40,7 @@ class TestPipeline(object):
         self.mother_inner_fold_handle = mother_inner_fold_handle
         self.mongo_db_settings = mongo_db_settings
         self.callback_function = callback_function
+        self.imbalanced_strategy = imbalanced_strategy
 
     def calculate_cv_score(self, X, y, cv_iter,
                            calculate_metrics_per_fold: bool = True,
@@ -82,6 +84,13 @@ class TestPipeline(object):
             # do inner cv
             for train, test in cv_iter:
 
+                    # if the groups are imbalanced, and a strategy is chosen, apply it here
+                    if self.imbalanced_strategy:
+                        train_X, train_y = self.imbalanced_strategy.fit_sample(X[train],y[train])
+                    else:
+                        train_X = X[train]
+                        train_y = y[train]
+
                     # set params to current config
                     self.pipe.set_params(**self.params)
 
@@ -91,7 +100,7 @@ class TestPipeline(object):
 
                     # start fitting
                     fit_start_time = time.time()
-                    self.pipe.fit(X[train], y[train])
+                    self.pipe.fit(train_X, train_y)
 
                     # Todo: Fit Process Metrics
 
