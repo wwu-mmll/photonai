@@ -29,7 +29,8 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
                     verbosity=1,
-                    persist_options=mongo_settings)  # get error, warn and info message                    )
+                    persist_options=mongo_settings,
+                    imbalanced_data_strategy_filter='RandomUnderSampler')  # get error, warn and info message                    )
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE

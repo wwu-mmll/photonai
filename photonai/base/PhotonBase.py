@@ -541,10 +541,10 @@ class Hyperpipe(BaseEstimator):
         # in case we need to reduce the dimension of the data due to parallelity of the outer pipe, lets do it.
         if self.filter_element:
             self.X = self.filter_element.transform(self.X)
-
-        # if the groups are imbalanced, and a strategy is chosen, apply it here
-        if self.imbalanced_data_strategy_filter:
-            self.X, self.y = self.imbalanced_data_strategy_filter.fit_sample(self.X, self.y)
+        #
+        # # if the groups are imbalanced, and a strategy is chosen, apply it here
+        # if self.imbalanced_data_strategy_filter:
+        #     self.X, self.y = self.imbalanced_data_strategy_filter.fit_sample(self.X, self.y)
 
         self._current_fold += 1
 
@@ -621,8 +621,13 @@ class Hyperpipe(BaseEstimator):
                     self._validation_y = self.y[train_indices]
                     if self.groups is not None:
                         self._validation_group = self.groups[train_indices]
+                    # validation X will be sub- or oversampled after INNER CV splits.
+
                     self._test_X = self.X[test_indices]
                     self._test_y = self.y[test_indices]
+                    if self.imbalanced_data_strategy_filter:
+                        self._test_X, self._test_y = self.imbalanced_data_strategy_filter.fit_sample(self._test_X, self._test_y)
+
                     # self._test_group = self.groups[test_indices]
 
                     # Prepare inner cross validation
@@ -656,7 +661,8 @@ class Hyperpipe(BaseEstimator):
                         self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
                         hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr,
                                           mongo_db_settings=self.persist_options,
-                                          callback_function=self.inner_cv_callback_function)
+                                          callback_function=self.inner_cv_callback_function,
+                                          imbalanced_strategy=self.imbalanced_data_strategy_filter)
                         Logger().debug('optimizing of:' + self.name)
                         Logger().debug(self._optimize_printing(current_config))
                         Logger().debug('calculating...')
