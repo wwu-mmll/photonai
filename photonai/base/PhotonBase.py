@@ -847,7 +847,7 @@ class Hyperpipe(BaseEstimator):
                                                                                                             self.metrics)
                 # save result tree to db or file or both
                 self.mongodb_writer.save(self.result_tree)
-                Logger().info("Saved result tree to database")
+                Logger().info("Saved result tree.")
 
                 # Find best config across outer folds
                 self.best_config = self.config_optimizer.get_optimum_config_outer_folds(self.result_tree.outer_folds)

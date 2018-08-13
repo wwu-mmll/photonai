@@ -11,8 +11,7 @@ from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-# mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
-#                                 save_predictions='best',
+mongo_settings = PersistOptions(save_predictions='best')
 #                                 save_feature_importances='best')
 
 
@@ -30,7 +29,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
                     verbosity=1,
-                    imbalanced_data_strategy_filter='RandomUnderSampler') # get error, warn and info message                    )
+                    persist_options=mongo_settings)  # get error, warn and info message                    )
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
@@ -46,8 +45,10 @@ my_pipe += PipelineElement('StandardScaler')
 # then do feature selection using a PCA, specify which values to try in the hyperparameter search
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
 # engage and optimize the good old SVM for Classification
-my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
-                                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
+# my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
+#                                                    'C': FloatRange(0.5, 2, "linspace", num=5)})
+
+my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)

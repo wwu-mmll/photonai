@@ -26,6 +26,7 @@ class MDBScoreInformation(EmbeddedMongoModel):
     y_pred = fields.ListField(blank=True)
     indices = fields.ListField(blank=True)
     feature_importances = fields.ListField(blank=True)
+    probabilities = fields.ListField(blank=True)
     metrics_copied_from_inner = fields.BooleanField(default=False)
 
 

@@ -272,10 +272,17 @@ class TestPipeline(object):
 
         final_scoring_time = time.time() - scoring_time_start
         if save_predictions:
+
+            probabilities = []
+            if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
+                probabilities = estimator.predict_proba(X)
+                probabilities = probabilities.tolist()
+
             score_result_object = MDBScoreInformation(metrics=output_metrics,
                                                       score_duration=final_scoring_time,
                                                       y_pred=y_pred.tolist(), y_true=y_true.tolist(),
-                                                      indices=np.asarray(indices).tolist())
+                                                      indices=np.asarray(indices).tolist(),
+                                                      probabilities=probabilities)
             if save_feature_importances:
                 score_result_object.feature_importances = f_importances
         elif save_feature_importances:
