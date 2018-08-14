@@ -6,7 +6,7 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 from scipy.stats import sem
-from sklearn.metrics import confusion_matrix
+from sklearn.metrics import confusion_matrix, roc_curve
 from pymodm import connect
 
 from ..validation.ResultsDatabase import MDBHyperpipe
@@ -170,6 +170,33 @@ class ResultsTreeHandler:
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
         #plotlyFig = ResultsTreeHandler.__plotlyfy(plt)
+        plt.show()
+
+    def plot_roc_curve(self, pos_label=1, y_score_col=1):
+        """
+        This function plots the ROC curve.
+        :param pos_label: In binary classiciation, what is the positive class label?
+        :param y_score_col: In binary classiciation, which column of the probability matrix contains the positive class probabilities?
+        :return: None
+        """
+
+
+        # get predictive probabilities
+        preds = ResultsTreeHandler.get_val_preds(self)
+
+        # get ROC infos
+        fpr, tpr, _ = roc_curve(y_true=preds['y_true'],
+                                y_score=preds['y_pred_probabilities'][:, y_score_col],
+                                pos_label=pos_label)
+
+        # plot ROC curve
+        plt.figure()
+        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot(fpr, tpr)
+        plt.xlabel('False positive rate')
+        plt.ylabel('True positive rate')
+        plt.title('Receiver Operating Characteristic (ROC) Curve')
+        plt.legend(loc='best')
         plt.show()
 
 
