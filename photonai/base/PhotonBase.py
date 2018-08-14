@@ -461,20 +461,20 @@ class Hyperpipe(BaseEstimator):
 
         def _distribute_info_to_object(pipe_object, number_of_folds, reset_folds, reset_final_fit,
                                       outer_fold_counter, inner_fold_counter, config_counter):
-            if pipe_object.local_search:
-                if number_of_folds is not None:
-                    pipe_object.num_of_folds = number_of_folds
-                    pipe_object.is_mother_pipe = False
-                if reset_folds:
-                    pipe_object.current_fold = -1
-                if outer_fold_counter is not None:
-                    pipe_object.mother_outer_fold_counter = outer_fold_counter
-                if inner_fold_counter is not None:
-                    pipe_object.mother_inner_fold_counter = inner_fold_counter
-                if config_counter:
-                    pipe_object.mother_config_counter = config_counter
-                if reset_final_fit:
-                    pipe_object.is_final_fit = False
+            #if pipe_object.local_search:
+            if number_of_folds is not None:
+                pipe_object._num_of_folds = number_of_folds
+                pipe_object._is_mother_pipe = False
+            if reset_folds:
+                pipe_object._current_fold = -1
+            if outer_fold_counter is not None:
+                pipe_object.__mother_outer_fold_counter = outer_fold_counter
+            if inner_fold_counter is not None:
+                pipe_object.__mother_inner_fold_counter = inner_fold_counter
+            if config_counter:
+                pipe_object.__mother_config_counter = config_counter
+            if reset_final_fit:
+                pipe_object.is_final_fit = False
 
         # walk through all children of pipeline, if its a hyperpipe distribute the information
         for element_tuple in self._pipe.steps:
@@ -685,12 +685,12 @@ class Hyperpipe(BaseEstimator):
                         for pipe_step in self._pipe.steps:
                             item = pipe_step[1]
                             if isinstance(item, Hyperpipe):
-                                if item.local_search and item.best_config is not None:
+                                if item.best_config is not None:
                                     children_config[item.name] = item.best_config
                             elif isinstance(item, PipelineStacking):
                                 for subhyperpipe_name, hyperpipe in item.pipe_elements.items():
                                     if isinstance(hyperpipe, Hyperpipe):
-                                        if hyperpipe.local_search and hyperpipe.best_config is not None:
+                                        if hyperpipe.best_config is not None:
                                             # special case: we need to access pipe over pipeline_stacking element
                                             children_config[item.name + '__' + subhyperpipe_name] = hyperpipe.best_config.config_dict
                                         # children_config_ref_list.append(hyperpipe.best_config_outer_fold._id)
@@ -1614,12 +1614,13 @@ class PipelineStacking(PipelineElement):
         # self._hyperparameters[item.name] = item.hyperparameters
 
         # for each configuration
-        tmp_dict = dict(item.hyperparameters)
-        for key, element in tmp_dict.items():
-            # if isinstance(item, PipelineBranch):
-            #     self._hyperparameters[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
-            # elif isinstance(item, PipelineElement):
-            self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
+        if not isinstance(item, Hyperpipe):
+            tmp_dict = dict(item.hyperparameters)
+            for key, element in tmp_dict.items():
+                # if isinstance(item, PipelineBranch):
+                #     self._hyperparameters[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
+                # elif isinstance(item, PipelineElement):
+                self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
 
         return self
 
@@ -1972,3 +1973,16 @@ class PipelineSwitch(PipelineElement):
                 return str(output)
         else:
             return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
+
+    def predict_proba(self, data):
+        """
+        Predict probabilities
+        base element needs predict_proba() function, otherwise throw
+        base exception.
+        """
+        if not self.disabled:
+            if hasattr(self.base_element.base_element, 'predict_proba'):
+                return self.base_element.predict_proba(data)
+            else:
+                return None
+        return data
