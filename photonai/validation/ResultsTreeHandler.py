@@ -97,16 +97,20 @@ class ResultsTreeHandler:
         """
         y_true = []
         y_pred = []
+        y_pred_probabilities = []
         fold_idx = []
         for i, fold in enumerate(self.results.outer_folds):
             n_samples = len(fold.best_config.inner_folds[0].validation.y_true)
             y_true.extend(fold.best_config.inner_folds[0].validation.y_true)
             y_pred.extend(fold.best_config.inner_folds[0].validation.y_pred)
+            y_pred_probabilities.extend(fold.best_config.inner_folds[0].validation.probabilities)
             fold_idx.extend(np.repeat(i, n_samples))
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
+        y_pred_probabilities = np.asarray(y_pred_probabilities)
         fold_idx = np.asarray(fold_idx)
-        return {'y_true': y_true, 'y_pred': y_pred, 'fold_indices': fold_idx}
+        return {'y_true': y_true, 'y_pred': y_pred,
+                'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
 
     def get_importance_scores(self):
         """
