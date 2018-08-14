@@ -285,7 +285,7 @@ class TestPipeline(object):
             probabilities = []
             if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
                 probabilities = estimator.predict_proba(X)
-                if probabilities:
+                if not len(probabilities) == 0:
                     probabilities = probabilities.tolist()
 
             score_result_object = MDBScoreInformation(metrics=output_metrics,
