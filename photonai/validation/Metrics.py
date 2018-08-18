@@ -45,6 +45,13 @@ def specificity(y_true, y_pred):  # = true negative rate
         Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' + str(len(np.unique(y_true))) + ' classes.')
         return np.nan
 
+def balanced_accuracy(y_true, y_pred):  # = true negative rate
+    if len(np.unique(y_true)) == 2:
+        return (specificity(y_true, y_pred) + sensitivity(y_true, y_pred)) / 2
+    else:
+        Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' + str(len(np.unique(y_true))) + ' classes.')
+        return np.nan
+
 
 # def categorical_cross_entropy(y_true, y_pred):
 #     import tensorflow as tf

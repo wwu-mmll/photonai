@@ -353,6 +353,7 @@ class Scorer(object):
         'recall': ('sklearn.metrics', 'recall_score', 'score'),
         'sensitivity': ('photonai.validation.Metrics', 'sensitivity', 'score'),
         'specificity': ('photonai.validation.Metrics', 'specificity', 'score'),
+        'balanced_accuracy': ('photonai.validation.Metrics', 'balanced_accuracy', 'score'),
         'categorical_accuracy': ('photonai.validation.Metrics', 'categorical_accuracy_score', 'score'),
         'categorical_crossentropy': ('photonai.validation.Metrics', 'categorical_crossentropy', 'error'),
 
