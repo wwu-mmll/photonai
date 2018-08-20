@@ -494,5 +494,9 @@
   "GPR_AM": [
     "photonai.modelwrapper.GPR_AM.GPR_AM",
     "Transformer"
+  ],
+  "AnomalyDetectorWrapper": [
+    "photonai.modelwrapper.AnomalyDetectorWrapper.AnomalyDetectorWrapper",
+    "Estimator"
   ]
 }
