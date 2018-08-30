@@ -36,7 +36,7 @@ class AtlasMapping:
         This function takes MRI (e.g. nifti) images and targets and optimizes the same hyperpipe in each region of an atlas independently
         :param dataset_files: list of absolute paths to MRI files (e.g. nifti or analyze)
         :param targets: targets for supervised learning
-        :param atlas_info: The PHOTON Neuro atlas_info object cnntaining details of the atlas and regions to process
+        :param atlas_info: The PHOTON Neuro atlas_info object containing details of the atlas and regions to process
         :param write_to_folder: output folder for all results
         :param write_summary_to_excel: write results to an MS Excel file
         :return: results summary across Regions of Interest as a pandas dataframe
