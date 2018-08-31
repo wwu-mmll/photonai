@@ -2,6 +2,8 @@ from sklearn.utils import check_random_state
 from sklearn.model_selection._split import _BaseKFold
 import numpy as np
 
+from itertools import zip_longest
+
 
 class StratifiedKFoldRegression(_BaseKFold):
     """Stratified K-Folds cross-validator for continuous target values (regression tasks)
@@ -76,6 +78,7 @@ class StratifiedKFoldRegression(_BaseKFold):
             current = stop
         return test_folds
 
+
     def _iter_test_masks(self, X, y, groups=None):
         test_folds = self._make_test_folds(X, y)
         for i in range(self.n_splits):
@@ -85,5 +88,57 @@ class StratifiedKFoldRegression(_BaseKFold):
 
     def split(self, X, y, groups=None):
         return super(StratifiedKFoldRegression, self).split(X, y, groups)
+
+
+
+class OutlierKFold(_BaseKFold):
+
+    def __init__(self, n_splits=3, shuffle=False, random_state=None):
+        super(OutlierKFold, self).__init__(n_splits, shuffle, random_state)
+
+    def _make_test_folds(self, X, y=None):
+
+        rng = self.random_state
+        n_splits = self.n_splits
+        y = np.asarray(y)
+        if y.ndim > 1:
+            raise ValueError('Target data has more than one dimension. Must be single vector of continuous values.')
+        n_samples = y.shape[0]
+        self.n_samples = n_samples
+
+        one_class = np.where(y == 1)[0]
+        outlier = np.where(y == -1)[0]
+
+        one_class_chunks = self.chunk_array(one_class)
+        outlier_chunks = self.chunk_array(outlier)
+
+        folds = [np.concatenate((i, j)) for i, j in zip(one_class_chunks, outlier_chunks)]
+
+        return folds
+
+    def chunk_array(self, index_list: list):
+
+        num_samples = len(index_list)
+        test_samples_per_fold = int(np.ceil(num_samples / self.n_splits))
+        test_folds = []
+
+        for i in range(0, num_samples, test_samples_per_fold):
+            stop = i+test_samples_per_fold
+            if stop > num_samples:
+                stop = num_samples
+            test_folds.append(index_list[i:stop])
+        return test_folds
+
+    def _iter_test_masks(self, X, y, groups=None):
+        test_folds = self._make_test_folds(X, y)
+        for i in range(self.n_splits):
+            test_mask = np.zeros(self.n_samples, dtype=np.bool)
+            test_mask[test_folds[i]] = True
+            yield test_mask
+
+    def split(self, X, y, groups=None):
+        return super(OutlierKFold, self).split(X, y, groups)
+
+
 
 
