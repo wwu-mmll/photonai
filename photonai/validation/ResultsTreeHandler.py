@@ -127,7 +127,7 @@ class ResultsTreeHandler:
         y_pred_probabilities = []
         fold_idx = []
         for i, fold in enumerate(self.results._data['outer_folds'][0]['tested_config_list'][0]['inner_folds']):
-            n_samples = len(validation.y_true)
+            n_samples = len(fold['validation']['y_true'])
             y_true.extend(fold['validation']['y_true'])
             y_pred.extend(fold['validation']['y_pred'])
             y_pred_probabilities.extend(fold['validation']['probabilities'])
