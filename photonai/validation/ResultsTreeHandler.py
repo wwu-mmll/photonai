@@ -119,10 +119,14 @@ class ResultsTreeHandler:
         fold_idx = np.asarray(fold_idx)
         if sort_CV:
             sample_inds = np.asarray(sample_inds)
+            y_true = y_true[sample_inds]
+            y_pred = y_pred[sample_inds]
+            y_pred_probabilities = y_pred_probabilities[sample_inds]
+
         return {'y_true': y_true, 'y_pred': y_pred, 'sample_inds_CV': sample_inds,
                 'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
 
-    def get_inner_val_preds(self, df, sort_CV=True, config_no=0):
+    def get_inner_val_preds(self, sort_CV=True, config_no=0):
         """
         ToDo: sort predictions to match input sequence (i.e. undo CV shuffle=True)
         This function returns the predictions, true targets, and fold index
@@ -151,8 +155,10 @@ class ResultsTreeHandler:
         fold_idx = np.asarray(fold_idx)
         if sort_CV:
             sample_inds = np.asarray(sample_inds)
+            y_true = y_true[sample_inds]
+            y_pred = y_pred[sample_inds]
+            y_pred_probabilities = y_pred_probabilities[sample_inds]
 
-        a = y_true[sample_inds]
         return {'y_true': y_true, 'y_pred': y_pred,
                 'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
 
