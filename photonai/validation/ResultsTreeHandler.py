@@ -121,7 +121,8 @@ class ResultsTreeHandler:
             sample_inds = np.asarray(sample_inds)
             y_true = y_true[sample_inds]
             y_pred = y_pred[sample_inds]
-            y_pred_probabilities = y_pred_probabilities[sample_inds]
+            if len(y_pred_probabilities) != 0:
+                y_pred_probabilities = y_pred_probabilities[sample_inds]
 
         return {'y_true': y_true, 'y_pred': y_pred, 'sample_inds_CV': sample_inds,
                 'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
@@ -157,7 +158,8 @@ class ResultsTreeHandler:
             sample_inds = np.asarray(sample_inds)
             y_true = y_true[sample_inds]
             y_pred = y_pred[sample_inds]
-            y_pred_probabilities = y_pred_probabilities[sample_inds]
+            if len(y_pred_probabilities) != 0:
+                y_pred_probabilities = y_pred_probabilities[sample_inds]
 
         return {'y_true': y_true, 'y_pred': y_pred,
                 'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
