@@ -95,7 +95,6 @@ class ResultsTreeHandler:
 
     def get_val_preds(self, sort_CV=True):
         """
-        ToDo: sort predictions to match input sequence (i.e. undo CV shuffle=True)
         This function returns the predictions, true targets, and fold index
         for the best configuration of each outer fold.
         """
@@ -119,17 +118,17 @@ class ResultsTreeHandler:
         fold_idx = np.asarray(fold_idx)
         if sort_CV:
             sample_inds = np.asarray(sample_inds)
-            y_true = y_true[sample_inds]
-            y_pred = y_pred[sample_inds]
+            sort_index = np.argsort(sample_inds)
+            y_true = y_true[sort_index]
+            y_pred = y_pred[sort_index]
             if len(y_pred_probabilities) != 0:
-                y_pred_probabilities = y_pred_probabilities[sample_inds]
+                y_pred_probabilities = y_pred_probabilities[sort_index]
 
         return {'y_true': y_true, 'y_pred': y_pred, 'sample_inds_CV': sample_inds,
                 'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
 
     def get_inner_val_preds(self, sort_CV=True, config_no=0):
         """
-        ToDo: sort predictions to match input sequence (i.e. undo CV shuffle=True)
         This function returns the predictions, true targets, and fold index
         for the best configuration of each inner fold if outer fold is not set and eval_final_performance is False
         AND there is only 1 config tested!
@@ -156,10 +155,11 @@ class ResultsTreeHandler:
         fold_idx = np.asarray(fold_idx)
         if sort_CV:
             sample_inds = np.asarray(sample_inds)
-            y_true = y_true[sample_inds]
-            y_pred = y_pred[sample_inds]
+            sort_index = np.argsort(sample_inds)
+            y_true = y_true[sort_index]
+            y_pred = y_pred[sort_index]
             if len(y_pred_probabilities) != 0:
-                y_pred_probabilities = y_pred_probabilities[sample_inds]
+                y_pred_probabilities = y_pred_probabilities[sort_index]
 
         return {'y_true': y_true, 'y_pred': y_pred,
                 'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
