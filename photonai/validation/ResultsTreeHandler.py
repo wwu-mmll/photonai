@@ -58,7 +58,10 @@ class ResultsTreeHandler:
         res_tab = pd.DataFrame()
         for i, folds in enumerate(self.results.outer_folds):
             # add best config infos
-            res_tab.loc[i, 'best_config'] = folds.best_config.human_readable_config
+            try:
+                res_tab.loc[i, 'best_config'] = folds.best_config.human_readable_config
+            except:
+                res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
 
             # add fold index
             res_tab.loc[i, 'fold'] = folds.fold_nr
@@ -90,13 +93,15 @@ class ResultsTreeHandler:
                 performances[metric].append(value)
         return performances
 
-    def get_val_preds(self):
+    def get_val_preds(self, sort_CV=True):
         """
         This function returns the predictions, true targets, and fold index
         for the best configuration of each outer fold.
         """
         y_true = []
         y_pred = []
+        if sort_CV:
+            sample_inds = []
         y_pred_probabilities = []
         fold_idx = []
         for i, fold in enumerate(self.results.outer_folds):
@@ -105,10 +110,57 @@ class ResultsTreeHandler:
             y_pred.extend(fold.best_config.inner_folds[0].validation.y_pred)
             y_pred_probabilities.extend(fold.best_config.inner_folds[0].validation.probabilities)
             fold_idx.extend(np.repeat(i, n_samples))
+            if sort_CV:
+                sample_inds.extend(fold['validation']['indices'])
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         y_pred_probabilities = np.asarray(y_pred_probabilities)
         fold_idx = np.asarray(fold_idx)
+        if sort_CV:
+            sample_inds = np.asarray(sample_inds)
+            sort_index = np.argsort(sample_inds)
+            y_true = y_true[sort_index]
+            y_pred = y_pred[sort_index]
+            if len(y_pred_probabilities) != 0:
+                y_pred_probabilities = y_pred_probabilities[sort_index]
+
+        return {'y_true': y_true, 'y_pred': y_pred, 'sample_inds_CV': sample_inds,
+                'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
+
+    def get_inner_val_preds(self, sort_CV=True, config_no=0):
+        """
+        This function returns the predictions, true targets, and fold index
+        for the best configuration of each inner fold if outer fold is not set and eval_final_performance is False
+        AND there is only 1 config tested!
+        :param sort_CV: sort predictions to match input sequence (i.e. undo CV shuffle = True)?
+        :param config_no: which tested config to use?
+        """
+        y_true = []
+        y_pred = []
+        if sort_CV:
+            sample_inds = []
+        y_pred_probabilities = []
+        fold_idx = []
+        for i, fold in enumerate(self.results._data['outer_folds'][0]['tested_config_list'][config_no]['inner_folds']):
+            n_samples = len(fold['validation']['y_true'])
+            y_true.extend(fold['validation']['y_true'])
+            y_pred.extend(fold['validation']['y_pred'])
+            y_pred_probabilities.extend(fold['validation']['probabilities'])
+            fold_idx.extend(np.repeat(i, n_samples))
+            if sort_CV:
+                sample_inds.extend(fold['validation']['indices'])
+        y_true = np.asarray(y_true)
+        y_pred = np.asarray(y_pred)
+        y_pred_probabilities = np.asarray(y_pred_probabilities)
+        fold_idx = np.asarray(fold_idx)
+        if sort_CV:
+            sample_inds = np.asarray(sample_inds)
+            sort_index = np.argsort(sample_inds)
+            y_true = y_true[sort_index]
+            y_pred = y_pred[sort_index]
+            if len(y_pred_probabilities) != 0:
+                y_pred_probabilities = y_pred_probabilities[sort_index]
+
         return {'y_true': y_true, 'y_pred': y_pred,
                 'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
 
