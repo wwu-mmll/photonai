@@ -625,7 +625,7 @@ class Hyperpipe(BaseEstimator):
 
                     self._test_X = self.X[test_indices]
                     self._test_y = self.y[test_indices]
-                    # WRONG: Teset will not be balanced, only TRAINING....
+                    # WRONG: Testset will not be balanced, only TRAINING....
                     # if self.imbalanced_data_strategy_filter:
                     #     self._test_X, self._test_y = self.imbalanced_data_strategy_filter.fit_sample(self._test_X, self._test_y)
 
