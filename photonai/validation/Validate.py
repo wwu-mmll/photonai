@@ -285,9 +285,13 @@ class TestPipeline(object):
             probabilities = []
             if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
                 probabilities = estimator.predict_proba(X)
-                if probabilities != None:
-                    if not len(probabilities) == 0:
-                        probabilities = probabilities.tolist()
+                try:
+                    if probabilities != None:
+                        if not len(probabilities) == 0:
+                            probabilities = probabilities.tolist()
+                except:
+                    warnings.warn('No probabilities available.')
+
 
             score_result_object = MDBScoreInformation(metrics=output_metrics,
                                                       score_duration=final_scoring_time,
