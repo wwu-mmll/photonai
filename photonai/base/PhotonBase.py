@@ -53,18 +53,31 @@ class PersistOptions:
 
     * `log_filename` [str]:
         String specifying the path and name of the log file. This file saves the console output.
+
+     * `user_id` [str]:
+        The user name of the according PHOTON Wizard login
+     * `wizard_object_id` [str]:
+        The object id to map the designed pipeline in the PHOTON Wizard to the results in the PHOTON CORE Database
+     * `wizard_project_name` [str]:
+        How the project is titled in the PHOTON Wizard
     """
     def __init__(self, mongodb_connect_url: str = None,
                  save_predictions: str = 'best',
                  save_feature_importances: str = 'best',
                  local_file: str = '',
-                 log_filename: str = ''):
+                 log_filename: str = '',
+                 user_id: str = '',
+                 wizard_object_id: str = '',
+                 wizard_project_name: str = ''):
 
         self.mongodb_connect_url = mongodb_connect_url
         self.save_best_config_predictions, self.save_predictions = self._set_save_options(save_predictions)
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
         self.local_file = local_file
         self.log_file = log_filename
+        self.user_id = user_id
+        self.wizard_object_id = wizard_object_id
+        self.wizard_project_name = wizard_project_name
 
     def _set_save_options(self, specifier):
         if specifier == 'best':
@@ -598,6 +611,12 @@ class Hyperpipe(BaseEstimator):
 
                 # initialize result logging with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
+
+                # save wizard information to photon db in order to map results to the wizard design object
+                if self.persist_options:
+                    self.result_tree.wizard_object_id = self.persist_options.wizard_object_id
+                    self.result_tree.wizard_system_name = self.persist_options.wizard_project_name
+                    self.result_tree.user_id = self.persist_options.user_id
                 self.result_tree.outer_folds = []
                 self.result_tree.eval_final_performance = self.eval_final_performance
                 self.result_tree.best_config_metric = self.best_config_metric

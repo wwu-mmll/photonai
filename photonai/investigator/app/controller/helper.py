@@ -6,10 +6,19 @@ from pymodm.connection import connect
 from flask import request, redirect, url_for
 
 
-
 def load_pipe_from_db(name):
     try:
         pipe = MDBHyperpipe.objects.get({'_id': name})
+        return pipe
+    except DoesNotExist as dne:
+        # Todo: pretty error handling
+        return dne
+
+
+def load_pipe_from_wizard(obj_id):
+    try:
+        connect('mongodb://trap-umbriel:27017/photon_results')
+        pipe = MDBHyperpipe.objects.get({'wizard_object_id': obj_id})
         return pipe
     except DoesNotExist as dne:
         # Todo: pretty error handling
@@ -25,6 +34,10 @@ def load_pipe(storage, name):
         except ValueError as exc:
             connect(app.config['mongo_db_url'])
             pipe = load_pipe_from_db(name)
+
+    if storage == "w":
+        pipe = load_pipe_from_wizard(name)
+
     elif storage == "a":
         try:
             pipe = app.config['pipe_objects'][name]
