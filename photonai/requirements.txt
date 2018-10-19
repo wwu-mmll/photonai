@@ -1,7 +1,7 @@
 ###### Requirements without Version Specifiers ######
 numpy
 matplotlib
-tensorflow
+# tensorflow
 slackclient
 progressbar2
 Pillow
