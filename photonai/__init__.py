@@ -23,7 +23,7 @@ from .investigator import Investigator
 
 from . import configuration
 from .configuration.Register import PhotonRegister
-__version__ = "0.3.4"
+__version__ = "0.3.5"
 
 
 __all__ = ("base",
