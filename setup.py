@@ -17,7 +17,6 @@ setup(
   install_requires=[
         'numpy',
         'matplotlib',
-        'tensorflow',
         'slackclient',
         'progressbar2',
         'Pillow',
