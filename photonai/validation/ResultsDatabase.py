@@ -103,7 +103,7 @@ class MDBHyperpipe(MongoModel):
 
     # stuff for wizard connection
     user_id = fields.CharField(blank=True)
-    wizard_object_id = fields.CharField(blank=True)
+    wizard_object_id = fields.ObjectIdField(blank=True)
     wizard_system_name = fields.CharField(blank=True)
 
 

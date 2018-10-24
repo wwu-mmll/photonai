@@ -6,10 +6,11 @@ import inspect
 import os
 import time
 import zipfile
+import importlib
 from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha1
-import importlib
+from bson.objectid import ObjectId
 
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
@@ -614,7 +615,7 @@ class Hyperpipe(BaseEstimator):
 
                 # save wizard information to photon db in order to map results to the wizard design object
                 if self.persist_options:
-                    self.result_tree.wizard_object_id = self.persist_options.wizard_object_id
+                    self.result_tree.wizard_object_id = ObjectId(self.persist_options.wizard_object_id)
                     self.result_tree.wizard_system_name = self.persist_options.wizard_project_name
                     self.result_tree.user_id = self.persist_options.user_id
                 self.result_tree.outer_folds = []

@@ -216,6 +216,7 @@ class TestPipeline(object):
             if self.raise_error:
                 raise e
             Logger().error(e)
+            Logger().error(traceback.format_exc())
             traceback.print_exc()
             config_item.config_failed = True
             config_item.config_error = str(e)
@@ -285,7 +286,7 @@ class TestPipeline(object):
             probabilities = []
             if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
                 probabilities = estimator.predict_proba(X)
-                if probabilities != None:
+                if probabilities is not None:
                     if not len(probabilities) == 0:
                         probabilities = probabilities.tolist()
 
