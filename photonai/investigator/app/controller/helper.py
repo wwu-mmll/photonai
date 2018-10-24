@@ -4,13 +4,27 @@ from photonai.investigator.app.main import app
 from photonai.validation.ResultsDatabase import MDBHelper
 from pymodm.connection import connect
 from flask import request, redirect, url_for
-
+from bson.objectid import ObjectId
 
 
 def load_pipe_from_db(name):
     try:
         pipe = MDBHyperpipe.objects.get({'_id': name})
         return pipe
+    except DoesNotExist as dne:
+        # Todo: pretty error handling
+        return dne
+
+
+def load_pipe_from_wizard(obj_id):
+    try:
+        connect('mongodb://trap-umbriel:27017/photon_results')
+        # pipe = MDBHyperpipe.objects.raw({'wizard_object_id': ObjectId(obj_id)})
+        pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': obj_id}))
+        if len(pipe) > 0:
+            return pipe[0]
+        else:
+            return DoesNotExist("Could not find pipe.")
     except DoesNotExist as dne:
         # Todo: pretty error handling
         return dne
@@ -25,6 +39,10 @@ def load_pipe(storage, name):
         except ValueError as exc:
             connect(app.config['mongo_db_url'])
             pipe = load_pipe_from_db(name)
+
+    if storage == "w":
+        pipe = load_pipe_from_wizard(name)
+
     elif storage == "a":
         try:
             pipe = app.config['pipe_objects'][name]
