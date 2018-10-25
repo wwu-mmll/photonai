@@ -9,7 +9,7 @@ from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
 from photonai.optimization.Hyperparameters import Categorical, FloatRange
 
 # Load data
-df = pd.read_excel('/spm-data/Scratch/photon_wizard/rleenings/randomforestshit/features.xlsx')
+df = pd.read_excel('/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/features.xlsx')
 X = np.asarray(df.iloc[:, 2:32])
 y = np.asarray(df.iloc[:, 1])
 # covariates = data[:,0]
@@ -22,8 +22,8 @@ inner_cv = KFold(n_splits=5, shuffle=True)
 persist_options = PersistOptions(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
                                  save_predictions="best",
                                  save_feature_importances="best",
-                                 local_file="/spm-data/Scratch/photon_wizard/rleenings/randomforestshit/photon_results.p",
-                                 log_filename="/spm-data/Scratch/photon_wizard/rleenings/randomforestshit/photon_results.log",
+                                 local_file="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_results.p",
+                                 log_filename="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_results.log",
                                  user_id="rleenings",
                                  wizard_object_id="5bd08900a98112154bfa5c24",
                                  wizard_project_name="randomforestshit")
@@ -31,7 +31,7 @@ persist_options = PersistOptions(mongodb_connect_url="mongodb://trap-umbriel:270
 # Define hyperpipe
 hyperpipe = Hyperpipe('Random Forest Shit',
                       optimizer='random_grid_search', optimizer_params={'k': 100},
-                      metrics=['accuracy'],
+                      metrics=['accuracy', 'auc', 'weird_metric'],
                       best_config_metric='accuracy',
                       outer_cv=outer_cv,
                       inner_cv=inner_cv,
