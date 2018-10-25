@@ -216,8 +216,10 @@ class TestPipeline(object):
             if self.raise_error:
                 raise e
             Logger().error(e)
+            Logger().error(traceback.format_exc())
             traceback.print_exc()
-            config_item.config_failed = True
+            if not isinstance(e, Warning):
+                config_item.config_failed = True
             config_item.config_error = str(e)
             warnings.warn('One test iteration of pipeline failed with error')
 
@@ -285,13 +287,13 @@ class TestPipeline(object):
             probabilities = []
             if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
                 probabilities = estimator.predict_proba(X)
+
                 try:
-                    if probabilities != None:
+                    if probabilities is not None:
                         if not len(probabilities) == 0:
                             probabilities = probabilities.tolist()
                 except:
                     warnings.warn('No probabilities available.')
-
 
             score_result_object = MDBScoreInformation(metrics=output_metrics,
                                                       score_duration=final_scoring_time,
@@ -335,8 +337,11 @@ class TestPipeline(object):
         if metrics:
             for metric in metrics:
                 scorer = Scorer.create(metric)
-                scorer_value = scorer(y_true, y_pred)
-                output_metrics[metric] = scorer_value
+                if scorer is not None:
+                    scorer_value = scorer(y_true, y_pred)
+                    output_metrics[metric] = scorer_value
+                else:
+                    output_metrics[metric] = np.nan
 
         return output_metrics
 
@@ -356,6 +361,7 @@ class Scorer(object):
         'log_loss': ('sklearn.metrics', 'log_loss', 'error'),
         'precision': ('sklearn.metrics', 'precision_score', 'score'),
         'recall': ('sklearn.metrics', 'recall_score', 'score'),
+        'auc': ('sklearn.metrics', 'roc_auc_score', 'score'),
         'sensitivity': ('photonai.validation.Metrics', 'sensitivity', 'score'),
         'specificity': ('photonai.validation.Metrics', 'specificity', 'score'),
         'balanced_accuracy': ('photonai.validation.Metrics', 'balanced_accuracy', 'score'),
@@ -397,7 +403,8 @@ class Scorer(object):
                                  Scorer.ELEMENT_DICTIONARY[metric])
         else:
             Logger().error('NameError: Metric not supported right now:' + metric)
-            raise NameError('Metric not supported right now:', metric)
+            # raise Warning('Metric not supported right now:', metric)
+            return None
 
 
 class OptimizerMetric(object):
@@ -499,8 +506,8 @@ class OptimizerMetric(object):
                     Logger().error(error_msg)
                     raise NameError(error_msg)
             else:
-                Logger().error('NameError: Specify valid metric.')
-                raise NameError('Specify valid metric.')
+                Logger().error('Specify valid metric to choose best config.')
+                raise NameError('Specify valid metric to choose best config.')
         else:
             # if no optimizer metric was chosen, use default scoring method
             self.metric = 'score'
