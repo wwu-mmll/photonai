@@ -55,18 +55,30 @@ class PersistOptions:
     * `log_filename` [str]:
         String specifying the path and name of the log file. This file saves the console output.
 
-     * `user_id` [str]:
-        The user name of the according PHOTON Wizard login
-     * `wizard_object_id` [str]:
-        The object id to map the designed pipeline in the PHOTON Wizard to the results in the PHOTON CORE Database
-     * `wizard_project_name` [str]:
-        How the project is titled in the PHOTON Wizard
+    * `summary_filename` [str]:
+        String specifying the path and name of the summary file containing the most important information
+        from the hyperparameter search results.
+
+    * `pretrained_model_filename` [str]:
+        String specifying the path and name if the model should automatically be saved
+        after training and testing is finished.
+
+    * `user_id` [str]:
+       The user name of the according PHOTON Wizard login
+
+    * `wizard_object_id` [str]:
+       The object id to map the designed pipeline in the PHOTON Wizard to the results in the PHOTON CORE Database
+
+    * `wizard_project_name` [str]:
+       How the project is titled in the PHOTON Wizard
     """
     def __init__(self, mongodb_connect_url: str = None,
                  save_predictions: str = 'best',
                  save_feature_importances: str = 'best',
                  local_file: str = '',
                  log_filename: str = '',
+                 summary_filename: str ='',
+                 pretrained_model_filename: str='',
                  user_id: str = '',
                  wizard_object_id: str = '',
                  wizard_project_name: str = ''):
@@ -76,6 +88,8 @@ class PersistOptions:
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
         self.local_file = local_file
         self.log_file = log_filename
+        self.summary_filename = summary_filename
+        self.pretrained_model_filename = pretrained_model_filename
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
@@ -891,6 +905,13 @@ class Hyperpipe(BaseEstimator):
 
                 # save results again
                 self.mongodb_writer.save(self.result_tree)
+                if self.persist_options.pretrained_model_filename != '':
+                    try:
+                        self.save_optimum_pipe(self.persist_options.pretrained_model_filename)
+                        Logger().info("Saved optimum pipe model to file")
+                    except FileNotFoundError as e:
+                        Logger().info("Could not save optimum pipe model to file")
+                        Logger().error(str(e))
                 Logger().info("Saved overall best config to database")
             ###############################################################################################
             else:
