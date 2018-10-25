@@ -1,7 +1,6 @@
 ###### Requirements without Version Specifiers ######
 numpy
 matplotlib
-# tensorflow
 slackclient
 progressbar2
 Pillow
@@ -20,3 +19,4 @@ pymodm
 scipy
 statsmodels
 flask
+prettytable
