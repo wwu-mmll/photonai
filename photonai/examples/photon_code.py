@@ -15,7 +15,7 @@ y = np.asarray(df.iloc[:, 1])
 # covariates = data[:,0]
 
 # Define cross-validation strategies
-outer_cv = KFold(n_splits=10, shuffle=True)
+outer_cv = KFold(n_splits=2, shuffle=True)
 inner_cv = KFold(n_splits=5, shuffle=True)
 
 # Specify how results are going to be saved
@@ -25,6 +25,7 @@ persist_options = PersistOptions(mongodb_connect_url="mongodb://trap-umbriel:270
                                  local_file="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_results.p",
                                  log_filename="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_results.log",
                                  pretrained_model_filename="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_model.photon",
+                                 summary_filename="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_summary.txt",
                                  user_id="rleenings",
                                  wizard_object_id="5bd08900a98112154bfa5c24",
                                  wizard_project_name="randomforestshit")

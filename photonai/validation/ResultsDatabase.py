@@ -5,7 +5,8 @@ from enum import Enum
 import numpy as np
 from ..photonlogger.Logger import Logger
 import pickle
-
+import pprint
+from prettytable import PrettyTable
 
 class MDBFoldMetric(EmbeddedMongoModel):
     class Meta:
@@ -187,6 +188,129 @@ class MongoDBWriter:
                 #         metrics_configs = [outer_fold.tested_configlist
 
         if self.save_settings.local_file:
-            file_opened = open(self.save_settings.local_file, 'wb')
-            pickle.dump(results_tree.to_son(), file_opened)
-            file_opened.close()
+            try:
+                file_opened = open(self.save_settings.local_file, 'wb')
+                pickle.dump(results_tree.to_son(), file_opened)
+                file_opened.close()
+            except OSError as e:
+                Logger().error("Could not write results to local file")
+                Logger().error(str(e))
+
+        if self.save_settings.summary_filename:
+            self.write_summary(results_tree)
+
+    def write_summary(self, result_tree):
+
+        pp = pprint.PrettyPrinter(indent=4)
+
+        text_list = []
+        intro_text = """
+PHOTON RESULT SUMMARY
+-------------------------------------------------------------------
+
+ANALYSIS NAME: {}
+BEST CONFIG METRIC: {}
+TIME OF RESULT: {}
+        
+        """.format(result_tree.name, result_tree.best_config_metric, result_tree.time_of_results)
+        text_list.append(intro_text)
+
+        if result_tree.best_config:
+            text_list.append("""
+            
+-------------------------------------------------------------------
+OVERALL BEST CONFIG: 
+{}            
+            """.format(pp.pformat(result_tree.best_config.human_readable_config)))
+
+        text_list.append("""
+MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
+        """)
+
+        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_test)
+        text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
+        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_train)
+        text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+
+        for outer_fold in result_tree.outer_folds:
+            text_list.append(self.print_outer_fold(outer_fold))
+
+        final_text = ''.join(text_list)
+
+        try:
+            text_file = open(self.save_settings.summary_filename, "w")
+            text_file.write(final_text)
+            text_file.close()
+            Logger().info("Saved results to summary file.")
+        except OSError as e:
+            Logger().error("Could not write summary file")
+            Logger().error(str(e))
+
+    def get_dict_from_metric_list(self, metric_list):
+        best_config_metrics = {}
+        for train_metric in metric_list:
+            if not train_metric.metric_name in best_config_metrics:
+                best_config_metrics[train_metric.metric_name] = {}
+            operation_strip = train_metric.operation.split(".")[1]
+            best_config_metrics[train_metric.metric_name][operation_strip] = train_metric.value
+        return best_config_metrics
+
+    def print_table_for_performance_overview(self, metric_dict, header):
+        x = PrettyTable()
+        x.field_names = ["Metric Name", "MEAN", "STD"]
+        for element_key, element_dict in metric_dict.items():
+            x.add_row([element_key, element_dict["MEAN"], element_dict["STD"]])
+
+        text = """
+{}:
+{}
+                """.format(header, str(x))
+
+        return text
+
+    def print_outer_fold(self, outer_fold):
+
+        pp = pprint.PrettyPrinter(indent=4)
+        outer_fold_text = []
+
+        if outer_fold.best_config is not None:
+            outer_fold_text.append("""
+-------------------------------------------------------------------
+OUTER FOLD {}
+-------------------------------------------------------------------
+Best Config:
+{}
+
+Number of samples training {}
+Number of samples test {}
+            
+            """.format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config),
+                       outer_fold.best_config.inner_folds[0].number_samples_training,
+                       outer_fold.best_config.inner_folds[0].number_samples_validation))
+
+            if outer_fold.best_config.config_failed:
+                outer_fold_text.append("""
+Config Failed: {}            
+    """.format(outer_fold.best_config.config_error))
+
+            else:
+                x = PrettyTable()
+                x.field_names = ["Metric Name", "Train Value", "Test Value"]
+                metrics_train = outer_fold.best_config.inner_folds[0].training.metrics
+                metrics_test = outer_fold.best_config.inner_folds[0].validation.metrics
+
+                for element_key, element_value in metrics_train.items():
+                    x.add_row([element_key, element_value, metrics_test[element_key]])
+                outer_fold_text.append("""
+PERFORMANCE:
+{}
+
+
+
+                """.format(str(x)))
+
+        return ''.join(outer_fold_text)
+
+
+
+

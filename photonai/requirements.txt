@@ -19,3 +19,4 @@ pymodm
 scipy
 statsmodels
 flask
+prettytable
