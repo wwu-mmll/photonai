@@ -4,6 +4,7 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import KFold, ShuffleSplit
 
+from photonai.investigator.Investigator import Investigator
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
 from photonai.optimization.Hyperparameters import Categorical, FloatRange
 
@@ -52,5 +53,5 @@ hyperpipe += PipelineElement("RandomForestClassifier", {'criterion': ['gini'],
 # Fit hyperpipe
 hyperpipe.fit(X, y)
 
-Investigator.load_from_db('mongodb://trap-umbriel:27017/photon_results', 'BreastCancer')
+Investigator.load_from_db('mongodb://trap-umbriel:27017/photon_results', 'Random Forest Shit')
 debug = True
