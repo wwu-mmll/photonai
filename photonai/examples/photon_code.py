@@ -24,6 +24,7 @@ persist_options = PersistOptions(mongodb_connect_url="mongodb://trap-umbriel:270
                                  save_feature_importances="best",
                                  local_file="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_results.p",
                                  log_filename="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_results.log",
+                                 pretrained_model_filename="/spm-data/Scratch/photon_wizard/rleenings/onewellperformingpipe/photon_model.photon",
                                  user_id="rleenings",
                                  wizard_object_id="5bd08900a98112154bfa5c24",
                                  wizard_project_name="randomforestshit")
