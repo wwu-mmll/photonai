@@ -205,18 +205,28 @@ class BrainAtlas(BaseEstimator):
             self.roi_sizes_applied = [self.roi_sizes[self.labels.index(i)] for i in self.labels_applied]
 
         elif isinstance(whichROIs, list):
-            #Todo: Catch empty list
-            if all(isinstance(item, int) for item in whichROIs): # use list of indices in map (ints)
-                #self.indices_applied = whichROIs
-                self.labels_applied = [self.labels[self.indices.index(i)] for i in whichROIs]
-                self.indices_applied = [self.indices[self.labels.index(i)] for i in self.labels_applied]
-                self.roi_sizes_applied = [self.roi_sizes[self.labels.index(i)] for i in self.labels_applied]
-
-            elif all(isinstance(item, str) for item in whichROIs): # use list of labels (strings)
-                #self.labels_applied = whichROIs
-                self.indices_applied = [self.indices[self.labels.index(i)] for i in whichROIs]
+            if 'all' in whichROIs:
+                # remove background
+                self.indices_applied = []
+                for s in self.indices:
+                    if s != 0:
+                        self.indices_applied.append(s)
+                # get labels_applied and roi_sizes_applied for indices (excluding background)
                 self.labels_applied = [self.labels[self.indices.index(i)] for i in self.indices_applied]
                 self.roi_sizes_applied = [self.roi_sizes[self.labels.index(i)] for i in self.labels_applied]
+            else:
+                #Todo: Catch empty list
+                if all(isinstance(item, int) for item in whichROIs): # use list of indices in map (ints)
+                    #self.indices_applied = whichROIs
+                    self.labels_applied = [self.labels[self.indices.index(i)] for i in whichROIs]
+                    self.indices_applied = [self.indices[self.labels.index(i)] for i in self.labels_applied]
+                    self.roi_sizes_applied = [self.roi_sizes[self.labels.index(i)] for i in self.labels_applied]
+
+                elif all(isinstance(item, str) for item in whichROIs): # use list of labels (strings)
+                    #self.labels_applied = whichROIs
+                    self.indices_applied = [self.indices[self.labels.index(i)] for i in whichROIs]
+                    self.labels_applied = [self.labels[self.indices.index(i)] for i in self.indices_applied]
+                    self.roi_sizes_applied = [self.roi_sizes[self.labels.index(i)] for i in self.labels_applied]
         else:
             Logger().info('Pass a list of indices (ints) or ROI names (strings). Or use all via "all".')
 
