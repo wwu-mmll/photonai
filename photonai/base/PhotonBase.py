@@ -757,8 +757,8 @@ class Hyperpipe(BaseEstimator):
 
                         # add config to result tree and do intermediate saving
                         self.result_tree.outer_folds[-1].tested_config_list.append(current_config_mdb)
-                        # Todo: add try catch in case config cannot be written
-                        self.mongodb_writer.save(self.result_tree)
+                        # # Todo: add try catch in case config cannot be written
+                        # self.mongodb_writer.save(self.result_tree)
 
                         # 3. inform optimizer about performance
                         self.optimizer.evaluate_recent_performance(current_config, config_performance)
