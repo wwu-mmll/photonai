@@ -87,6 +87,13 @@ class MDBPermutationResults(EmbeddedMongoModel):
     random_state = fields.IntegerField(blank=True)
     metrics = fields.EmbeddedDocumentListField(MDBPermutationMetrics, blank=True)
 
+class DummyResults(EmbeddedMongoModel):
+    class Meta:
+        final = True
+
+    strategy = fields.CharField(blank=True)
+    train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+    test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
 
 class MDBHyperpipe(MongoModel):
     class Meta:
@@ -101,6 +108,9 @@ class MDBHyperpipe(MongoModel):
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+
+    # dummy estimator
+    dummy_estimator = fields.EmbeddedDocumentField(DummyResults, blank=True)
 
     # stuff for wizard connection
     user_id = fields.CharField(blank=True)
@@ -215,6 +225,22 @@ TIME OF RESULT: {}
         """.format(result_tree.name, result_tree.best_config_metric, result_tree.time_of_results)
         text_list.append(intro_text)
 
+        if result_tree.dummy_estimator:
+            dummy_text = """
+-------------------------------------------------------------------
+BASELINE - DUMMY ESTIMATOR
+(always predict mean or most frequent target)
+   
+strategy: {}     
+
+            """.format(result_tree.dummy_estimator.strategy)
+            text_list.append(dummy_text)
+            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.test)
+            text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
+            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.train)
+            text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+
+
         if result_tree.best_config:
             text_list.append("""
             
@@ -252,7 +278,7 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
             if not train_metric.metric_name in best_config_metrics:
                 best_config_metrics[train_metric.metric_name] = {}
             operation_strip = train_metric.operation.split(".")[1]
-            best_config_metrics[train_metric.metric_name][operation_strip] = train_metric.value
+            best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
         return best_config_metrics
 
     def print_table_for_performance_overview(self, metric_dict, header):
@@ -300,7 +326,7 @@ Config Failed: {}
                 metrics_test = outer_fold.best_config.inner_folds[0].validation.metrics
 
                 for element_key, element_value in metrics_train.items():
-                    x.add_row([element_key, element_value, metrics_test[element_key]])
+                    x.add_row([element_key, np.round(element_value, 6), np.round(metrics_test[element_key],6)])
                 outer_fold_text.append("""
 PERFORMANCE:
 {}
