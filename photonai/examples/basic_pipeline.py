@@ -11,7 +11,7 @@ from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = PersistOptions(save_predictions='best')
+mongo_settings = PersistOptions(save_predictions='best', summary_filename='photon_summary.txt')
 #                                 save_feature_importances='best')
 
 
@@ -34,10 +34,10 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
-PhotonRegister.list()
+# PhotonRegister.list()
 
 # NOW FIND OUT MORE ABOUT A SPECIFIC ELEMENT
-PhotonRegister.info('SVC')
+# PhotonRegister.info('SVC')
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
