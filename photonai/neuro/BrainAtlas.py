@@ -313,6 +313,10 @@ class BrainAtlas(BaseEstimator):
                         self.roi_sizes_applied[i]) + '\t' + str(self.box_shape[i]) + '\t' + str(box_prod) + '\t' +
                           str("%.0f" % (self.roi_sizes_applied[i] / box_prod * 100)) + '%')
 
+    def return_roi_images(self):
+        # get ROI infos
+        rois = self._getROIs(whichROIs=self.whichROIs, background_id=self.background_id)
+        return rois
 
 # if __name__ == '__main__':
 #
