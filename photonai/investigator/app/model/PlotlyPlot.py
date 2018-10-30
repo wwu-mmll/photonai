@@ -56,7 +56,8 @@ class PlotlyPlot:
                 result += "size: " + str(item.trace_size)
             result += "}};"
 
-        result += str("var layout = { title: '" + str(self.title) + "', yaxis: {range: [-0.25, 1.25]}")
+        result += str("var layout = { title: '" + str(self.title) + "'")
+        # result += str("var layout = { title: '" + str(self.title) + "', yaxis: {range: [-0.25, 1.25]}")
 
         if self.show_legend:
             result += ", showlegend: true };"
