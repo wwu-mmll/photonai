@@ -632,6 +632,7 @@ class Hyperpipe(BaseEstimator):
                 # save wizard information to photon db in order to map results to the wizard design object
                 if self.persist_options and hasattr(self.persist_options, 'wizard_object_id'):
                     if self.persist_options.wizard_object_id:
+                        self.name = self.persist_options.wizard_object_id
                         self.result_tree.wizard_object_id = ObjectId(self.persist_options.wizard_object_id)
                         self.result_tree.wizard_system_name = self.persist_options.wizard_project_name
                         self.result_tree.user_id = self.persist_options.user_id
