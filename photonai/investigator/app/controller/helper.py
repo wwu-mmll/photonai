@@ -19,8 +19,8 @@ def load_pipe_from_db(name):
 def load_pipe_from_wizard(obj_id):
     try:
         connect('mongodb://trap-umbriel:27017/photon_results')
-        # pipe = MDBHyperpipe.objects.raw({'wizard_object_id': ObjectId(obj_id)})
-        pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': obj_id}))
+        pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': ObjectId(obj_id)}))
+        # pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': obj_id}))
         if len(pipe) > 0:
             return pipe[0]
         else:
