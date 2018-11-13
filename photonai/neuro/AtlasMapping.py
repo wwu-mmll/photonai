@@ -8,7 +8,8 @@ import multiprocessing as mp
 
 class AtlasMapping:
 
-    def __init__(self, atlas_info, hyperpipe_constructor, write_to_folder, n_processes=1, write_summary_to_excel=True):
+    def __init__(self, atlas_info, hyperpipe_constructor, write_to_folder, n_processes=1, write_summary_to_excel=True, savePipes=''):
+        self.savePipes = savePipes
         self.atlas_info = atlas_info
         self.hyperpipe_constructor = hyperpipe_constructor
         self.pipe = self.hyperpipe_constructor()
@@ -28,7 +29,7 @@ class AtlasMapping:
         """
         pipe.name = new_pipe_name
         pipe.persist_options.local_file = write_to_folder + 'results_' + new_pipe_name + '.p'
-        pipe._set_verbosity(-1)
+        #pipe._set_verbosity(-1)
         return pipe
 
     def fit(self, dataset_files, targets):
@@ -66,6 +67,9 @@ class AtlasMapping:
                                                      write_to_folder=self.write_to_folder,
                                                      new_pipe_name=roi_label + '_pipe')
                 my_hyperpipe.fit(data=roi_data, targets=targets)
+
+                if self.savePipes != '':
+                    my_hyperpipe.save_optimum_pipe(file=self.savePipes + roi_label + '_model.photon')
 
                 # get summary of results
                 res_file = my_hyperpipe.mongodb_writer.save_settings.local_file
