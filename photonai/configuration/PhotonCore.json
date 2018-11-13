@@ -1,502 +1,506 @@
 {
-  "DictionaryLearning": [
+  "DictionaryLearning":[
     "sklearn.decomposition.DictionaryLearning",
     "Transformer"
   ],
-  "FactorAnalysis": [
+  "FactorAnalysis":[
     "sklearn.decomposition.FactorAnalysis",
     "Transformer"
   ],
-  "FastICA": [
+  "FastICA":[
     "sklearn.decomposition.FastICA",
     "Transformer"
   ],
-  "IncrementalPCA": [
+  "IncrementalPCA":[
     "sklearn.decomposition.IncrementalPCA",
     "Transformer"
   ],
-  "KernelPCA": [
+  "KernelPCA":[
     "sklearn.decomposition.KernelPCA",
     "Transformer"
   ],
-  "LatentDirichletAllocation": [
+  "LatentDirichletAllocation":[
     "sklearn.decomposition.LatentDirichletAllocation",
     "Transformer"
   ],
-  "MiniBatchDictionaryLearning": [
+  "MiniBatchDictionaryLearning":[
     "sklearn.decomposition.MiniBatchDictionaryLearning",
     "Transformer"
   ],
-  "MiniBatchSparsePCA": [
+  "MiniBatchSparsePCA":[
     "sklearn.decomposition.MiniBatchSparsePCA",
     "Transformer"
   ],
-  "NMF": [
+  "NMF":[
     "sklearn.decomposition.NMF",
     "Transformer"
   ],
-  "PCA": [
+  "PCA":[
     "sklearn.decomposition.PCA",
     "Transformer"
   ],
-  "SparsePCA": [
+  "SparsePCA":[
     "sklearn.decomposition.SparsePCA",
     "Transformer"
   ],
-  "SparseCoder": [
+  "SparseCoder":[
     "sklearn.decomposition.SparseCoder",
     "Transformer"
   ],
-  "TruncatedSVD": [
+  "TruncatedSVD":[
     "sklearn.decomposition.TruncatedSVD",
     "Transformer"
   ],
-  "dict_learning": [
+  "dict_learning":[
     "sklearn.decomposition.dict_learning",
     "Transformer"
   ],
-  "dict_learning_online": [
+  "dict_learning_online":[
     "sklearn.decomposition.dict_learning_online",
     "Transformer"
   ],
-  "fastica": [
+  "fastica":[
     "sklearn.decomposition.fastica",
     "Transformer"
   ],
-  "sparse_encode": [
+  "sparse_encode":[
     "sklearn.decomposition.sparse_encode",
     "Transformer"
   ],
-  "CCA": [
+  "CCA":[
     "sklearn.cross_decomposition.CCA",
     "Transformer"
   ],
-  "PLSCanonical": [
+  "PLSCanonical":[
     "sklearn.cross_decomposition.PLSCanonical",
     "Transformer"
   ],
-  "PLSRegression": [
+  "PLSRegression":[
     "sklearn.cross_decomposition.PLSRegression",
     "Transformer"
   ],
-  "PLSSVD": [
+  "PLSSVD":[
     "sklearn.cross_decomposition.PLSSVD",
     "Transformer"
   ],
-  "GenericUnivariateSelect": [
+  "GenericUnivariateSelect":[
     "sklearn.feature_selection.GenericUnivariateSelect",
     "Transformer"
   ],
-  "SelectPercentile": [
+  "SelectPercentile":[
     "sklearn.feature_selection.SelectPercentile",
     "Transformer"
   ],
-  "SelectKBest": [
+  "SelectKBest":[
     "sklearn.feature_selection.SelectKBest",
     "Transformer"
   ],
-  "SelectFpr": [
+  "SelectFpr":[
     "sklearn.feature_selection.SelectFpr",
     "Transformer"
   ],
-  "SelectFdr": [
+  "SelectFdr":[
     "sklearn.feature_selection.SelectFdr",
     "Transformer"
   ],
-  "SelectFromModel": [
+  "SelectFromModel":[
     "sklearn.feature_selection.SelectFromModel",
     "Transformer"
   ],
-  "SelectFwe": [
+  "SelectFwe":[
     "sklearn.feature_selection.SelectFwe",
     "Transformer"
   ],
-  "RFE": [
+  "RFE":[
     "sklearn.feature_selection.RFE",
     "Transformer"
   ],
-  "RFECV": [
+  "RFECV":[
     "sklearn.feature_selection.RFECV",
     "Transformer"
   ],
-  "VarianceThreshold": [
+  "VarianceThreshold":[
     "sklearn.feature_selection.VarianceThreshold",
     "Transformer"
   ],
-  "Binarizer": [
+  "Binarizer":[
     "sklearn.preprocessing.Binarizer",
     "Transformer"
   ],
-  "FunctionTransformer": [
+  "FunctionTransformer":[
     "sklearn.preprocessing.FunctionTransformer",
     "Transformer"
   ],
-  "Imputer": [
-    "sklearn.preprocessing.Imputer",
+  "SimpleImputer":[
+    "sklearn.impute.SimpleImputer",
     "Transformer"
   ],
-  "KernelCenterer": [
+  "KernelCenterer":[
     "sklearn.preprocessing.KernelCenterer",
     "Transformer"
   ],
-  "MaxAbsScaler": [
+  "MaxAbsScaler":[
     "sklearn.preprocessing.MaxAbsScaler",
     "Transformer"
   ],
-  "MinMaxScaler": [
+  "MinMaxScaler":[
     "sklearn.preprocessing.MinMaxScaler",
     "Transformer"
   ],
-  "Normalizer": [
+  "Normalizer":[
     "sklearn.preprocessing.Normalizer",
     "Transformer"
   ],
-  "PolynomialFeatures": [
+  "PolynomialFeatures":[
     "sklearn.preprocessing.PolynomialFeatures",
     "Transformer"
   ],
-  "QuantileTransformer": [
+  "QuantileTransformer":[
     "sklearn.preprocessing.QuantileTransformer",
     "Transformer"
   ],
-  "RobustScaler": [
+  "RobustScaler":[
     "sklearn.preprocessing.RobustScaler",
     "Transformer"
   ],
-  "StandardScaler": [
+  "StandardScaler":[
     "sklearn.preprocessing.StandardScaler",
     "Transformer"
   ],
-  "DecisionTreeRegressor": [
+  "DecisionTreeRegressor":[
     "sklearn.tree.DecisionTreeRegressor",
     "Estimator"
   ],
-  "DecisionTreeClassifier": [
+  "DecisionTreeClassifier":[
     "sklearn.tree.DecisionTreeClassifier",
     "Estimator"
   ],
-  "ExtraDecisionTreeRegressor": [
+  "ExtraDecisionTreeRegressor":[
     "sklearn.tree.ExtraDecisionTreeRegressor",
     "Estimator"
   ],
-  "ExtraDecisionTreeClassifier": [
+  "ExtraDecisionTreeClassifier":[
     "sklearn.tree.ExtraDecisionTreeClassifier",
     "Estimator"
   ],
-  "LinearSVC": [
+  "LinearSVC":[
     "sklearn.svm.LinearSVC",
     "Estimator"
   ],
-  "LinearSVR": [
+  "LinearSVR":[
     "sklearn.svm.LinearSVR",
     "Estimator"
   ],
-  "NuSVC": [
+  "NuSVC":[
     "sklearn.svm.NuSVC",
     "Estimator"
   ],
-  "NuSVR": [
+  "NuSVR":[
     "sklearn.svm.NuSVR",
     "Estimator"
   ],
-  "SVC": [
+  "SVC":[
     "sklearn.svm.SVC",
     "Estimator"
   ],
-  "SVR": [
+  "SVR":[
     "sklearn.svm.SVR",
     "Estimator"
   ],
-  "OneClassSVM": [
+  "OneClassSVM":[
     "sklearn.svm.OneClassSVM",
     "Estimator"
   ],
-  "BernoulliRBM": [
+  "BernoulliRBM":[
     "sklearn.neural_network.BernoulliRBM",
     "Estimator"
   ],
-  "MLPClassifier": [
+  "MLPClassifier":[
     "sklearn.neural_network.MLPClassifier",
     "Estimator"
   ],
-  "MLPRegressor": [
+  "MLPRegressor":[
     "sklearn.neural_network.MLPRegressor",
     "Estimator"
   ],
-  "KNeighborsClassifier": [
+  "KNeighborsClassifier":[
     "sklearn.neighbors.KNeighborsClassifier",
     "Estimator"
   ],
-  "KNeighborsRegressor": [
+  "KNeighborsRegressor":[
     "sklearn.neighbors.KNeighborsRegressor",
     "Estimator"
   ],
-  "RadiusNeighborsClassifier": [
+  "RadiusNeighborsClassifier":[
     "sklearn.neighbors.RadiusNeighborsClassifier",
     "Estimator"
   ],
-  "RadiusNeighborsRegressor": [
+  "RadiusNeighborsRegressor":[
     "sklearn.neighbors.RadiusNeighborsRegressor",
     "Estimator"
   ],
-  "NearestCentroid": [
+  "NearestCentroid":[
     "sklearn.neighbors.NearestCentroid",
     "Estimator"
   ],
-  "BernoulliNB": [
+  "BernoulliNB":[
     "sklearn.naive_bayes.BernoulliNB",
     "Estimator"
   ],
-  "GaussianNB": [
+  "GaussianNB":[
     "sklearn.naive_bayes.GaussianNB",
     "Estimator"
   ],
-  "MultinomialNB": [
+  "MultinomialNB":[
     "sklearn.naive_bayes.MultinomialNB",
     "Estimator"
   ],
-  "BayesianGaussianMixture": [
+  "BayesianGaussianMixture":[
     "sklearn.mixture.BayesianGaussianMixture",
     "Estimator"
   ],
-  "GaussianMixture": [
+  "GaussianMixture":[
     "sklearn.mixture.GaussianMixture",
     "Estimator"
   ],
-  "ARDRegression": [
+  "ARDRegression":[
     "sklearn.linear_model.ARDRegression",
     "Estimator"
   ],
-  "BayesianRidge": [
+  "BayesianRidge":[
     "sklearn.linear_model.BayesianRidge",
     "Estimator"
   ],
-  "ElasticNet": [
+  "ElasticNet":[
     "sklearn.linear_model.ElasticNet",
     "Estimator"
   ],
-  "HuberRegressor": [
+  "HuberRegressor":[
     "sklearn.linear_model.HuberRegressor",
     "Estimator"
   ],
-  "Lars": [
+  "Lars":[
     "sklearn.linear_model.Lars",
     "Estimator"
   ],
-  "Lasso": [
+  "Lasso":[
     "sklearn.linear_model.Lasso",
     "Estimator"
   ],
-  "LassoLars": [
+  "LassoLars":[
     "sklearn.linear_model.LassoLars",
     "Estimator"
   ],
-  "LinearRegression": [
+  "LinearRegression":[
     "sklearn.linear_model.LinearRegression",
     "Estimator"
   ],
-  "LogisticRegression": [
+  "LogisticRegression":[
     "sklearn.linear_model.LogisticRegression",
     "Estimator"
   ],
-  "PassiveAggressiveClassifier": [
+  "PassiveAggressiveClassifier":[
     "sklearn.linear_model.PassiveAggressiveClassifier",
     "Estimator"
   ],
-  "PassiveAggressiveRegressor": [
+  "PassiveAggressiveRegressor":[
     "sklearn.linear_model.PassiveAggressiveRegressor",
     "Estimator"
   ],
-  "Perceptron": [
+  "Perceptron":[
     "sklearn.linear_model.Perceptron",
     "Estimator"
   ],
-  "RANSACRegressor": [
+  "RANSACRegressor":[
     "sklearn.linear_model.RANSACRegressor",
     "Estimator"
   ],
-  "Ridge": [
+  "Ridge":[
     "sklearn.linear_model.Ridge",
     "Estimator"
   ],
-  "RidgeClassifier": [
+  "RidgeClassifier":[
     "sklearn.linear_model.RidgeClassifier",
     "Estimator"
   ],
-  "SGDClassifier": [
+  "SGDClassifier":[
     "sklearn.linear_model.SGDClassifier",
     "Estimator"
   ],
-  "SGDRegressor": [
+  "SGDRegressor":[
     "sklearn.linear_model.SGDRegressor",
     "Estimator"
   ],
-  "TheilSenRegressor": [
+  "TheilSenRegressor":[
     "sklearn.linear_model.TheilSenRegressor",
     "Estimator"
   ],
-  "KernelRidge": [
+  "KernelRidge":[
     "sklearn.kernel_ridge.KernelRidge",
     "Estimator"
   ],
-  "GaussianProcessClassifier": [
+  "GaussianProcessClassifier":[
     "sklearn.gaussian_process.GaussianProcessClassifier",
     "Estimator"
   ],
-  "GaussianProcessRegressor": [
+  "GaussianProcessRegressor":[
     "sklearn.gaussian_process.GaussianProcessRegressor",
     "Estimator"
   ],
-  "AdaBoostClassifier": [
+  "AdaBoostClassifier":[
     "sklearn.ensemble.AdaBoostClassifier",
     "Estimator"
   ],
-  "AdaBoostRegressor": [
+  "AdaBoostRegressor":[
     "sklearn.ensemble.AdaBoostRegressor",
     "Estimator"
   ],
-  "BaggingClassifier": [
+  "BaggingClassifier":[
     "sklearn.ensemble.BaggingClassifier",
     "Estimator"
   ],
-  "BaggingRegressor": [
+  "BaggingRegressor":[
     "sklearn.ensemble.BaggingRegressor",
     "Estimator"
   ],
-  "ExtraTreesClassifier": [
+  "ExtraTreesClassifier":[
     "sklearn.ensemble.ExtraTreesClassifier",
     "Estimator"
   ],
-  "ExtraTreesRegressor": [
+  "ExtraTreesRegressor":[
     "sklearn.ensemble.ExtraTreesRegressor",
     "Estimator"
   ],
-  "GradientBoostingClassifier": [
+  "GradientBoostingClassifier":[
     "sklearn.ensemble.GradientBoostingClassifier",
     "Estimator"
   ],
-  "GradientBoostingRegressor": [
+  "GradientBoostingRegressor":[
     "sklearn.ensemble.GradientBoostingRegressor",
     "Estimator"
   ],
-  "RandomForestRegressor": [
+  "RandomForestRegressor":[
     "sklearn.ensemble.RandomForestRegressor",
     "Estimator"
   ],
-  "RandomForestClassifier": [
+  "RandomForestClassifier":[
     "sklearn.ensemble.RandomForestClassifier",
     "Estimator"
   ],
-  "VotingClassifier": [
+  "VotingClassifier":[
     "sklearn.ensemble.VotingClassifier",
     "Estimator"
   ],
-  "DummyClassifier": [
+  "DummyClassifier":[
     "sklearn.dummy.DummyClassifier",
     "Estimator"
   ],
-  "DummyRegressor": [
+  "DummyRegressor":[
     "sklearn.dummy.DummyRegressor",
     "Estimator"
   ],
-  "KerasDNNClassifier": [
+  "KerasDNNClassifier":[
     "photonai.modelwrapper.KerasDNNClassifier.KerasDNNClassifier",
     "Estimator"
   ],
-  "KerasDNNRegressor": [
+  "KerasDNNRegressor":[
     "photonai.modelwrapper.KerasDNNRegressor.KerasDNNRegressor",
     "Estimator"
   ],
-  "SiameseDNNClassifier": [
+  "SiameseDNNClassifier":[
     "photonai.modelwrapper.SiameseDNNClassifier.SiameseDNNClassifier",
     "Estimator"
   ],
-  "PretrainedCNNClassifier": [
+  "PretrainedCNNClassifier":[
     "photonai.modelwrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
     "Estimator"
   ],
-  "CNN1dClassifier": [
+  "CNN1dClassifier":[
     "photonai.modelwrapper.CNN1d.CNN1d",
     "Estimator"
   ],
-  "TensorFlowDNNClassifier": [
+  "TensorFlowDNNClassifier":[
     "photonai.modelwrapper.TFDNNClassifier.TFDNNClassifier",
     "Estimator"
   ],
-  "KerasDNNMultiOutput": [
+  "KerasDNNMultiOutput":[
     "photonai.modelwrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
     "Estimator"
   ],
-  "SimpleAutoencoder": [
+  "SimpleAutoencoder":[
     "photonai.modelwrapper.KerasAutoencoder.SimpleAutoencoder",
     "Estimator"
   ],
-  "RLCNN": [
+  "RLCNN":[
     "photonai.modelwrapper.RLCNN.RLCNN",
     "Estimator"
   ],
-  "WrapperModel": [
+  "WrapperModel":[
     "photonai.modelwrapper.WrapperModel.WrapperModel",
     "Estimator"
   ],
-  "LogisticGWASFeatureSelection": [
+  "LogisticGWASFeatureSelection":[
     "photonai.modelwrapper.FeatureSelection.LogisticGWASFeatureSelection",
     "Transformer"
   ],
-  "SourceSplitter": [
+  "SourceSplitter":[
     "photonai.modelwrapper.SourceSplitter.SourceSplitter",
     "Transformer"
   ],
-  "PyESNClassifier": [
+  "PyESNClassifier":[
     "photonai.modelwrapper.PyESNWrapper.PyESNClassifier",
     "Estimator"
   ],
-  "PyESNRegressor": [
+  "PyESNRegressor":[
     "photonai.modelwrapper.PyESNWrapper.PyESNRegressor",
     "Estimator"
   ],
-  "TestWrapper": [
+  "TestWrapper":[
     "photonai.modelwrapper.TestWrapper.WrapperTestElement",
     "Estimator"
   ],
-  "f_classif_select_p_value": [
+  "f_classif_select_p_value":[
     "photonai.modelwrapper.FeatureSelection.FRegressionFilterPValue",
     "Transformer"
   ],
-  "pearson_feature_selector": [
+  "pearson_feature_selector":[
     "photonai.modelwrapper.FeatureSelection.PearsonFeatureSelector",
     "Transformer"
   ],
-  "CategorialANOVASelectPercentile": [
+  "CategorialANOVASelectPercentile":[
     "photonai.modelwrapper.FeatureSelection.AnovaSelectPercentile",
     "Transformer"
   ],
-  "BioCorex": [
+  "BioCorex":[
     "photonai.modelwrapper.BioCorex.BioCorex",
     "Transformer"
   ],
-  "PhotonPCA": [
+  "PhotonPCA":[
     "photonai.modelwrapper.PhotonPCA.PhotonPCA",
     "Transformer"
   ],
-  "PhotonOneClassSVM": [
+  "PhotonOneClassSVM":[
     "photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM",
     "Estimator"
   ],
-  "Selectphotonai.modelwrapper": [
+  "Selectphotonai.modelwrapper":[
     "photonai.modelwrapper.FeatureSelection.ModelSelector",
     "Transformer"
   ],
-  "ImbalancedDataTransform": [
+  "ImbalancedDataTransform":[
     "photonai.modelwrapper.ImbalancedWrapper.ImbalancedDataTransform",
     "Transformer"
   ],
-  "GPR_AM": [
+  "GPR_AM":[
     "photonai.modelwrapper.GPR_AM.GPR_AM",
     "Transformer"
   ],
-  "AnomalyDetectorWrapper": [
+  "AnomalyDetectorWrapper":[
     "photonai.modelwrapper.AnomalyDetectorWrapper.AnomalyDetectorWrapper",
+    "Estimator"
+  ],
+  "AutoSklearnRegressor":[
+    "photonai.modelwrapper.AutoSklearnRegressor.AutoSklearnRegressor",
     "Estimator"
   ]
 }

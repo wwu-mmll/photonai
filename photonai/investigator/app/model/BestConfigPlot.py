@@ -28,7 +28,7 @@ class BestConfigPlot:
 
         result = str("var " + self.best_config_training.trace_name + " = { x: [" + self.best_config_training.values_x() + "], y: [" + self.best_config_training.values_y() + "], name: '" + self.best_config_training.trace_name + "', mode: '" + self.best_config_training.trace_mode + "', type: '" + self.best_config_training.trace_type + "'};")
         result += str("var " + self.best_config_validation.trace_name + " = { x: [" + self.best_config_validation.values_x() + "], y: [" + self.best_config_validation.values_y() + "], name: '" + self.best_config_validation.trace_name + "', mode: '" + self.best_config_validation.trace_mode + "', type: '" + self.best_config_validation.trace_type + "'};")
-        result += str("var layout = { title: '" + str(self.title) + "', yaxis: {range: [-0.25, 1.25]}};")
+        result += str("var layout = { title: '" + str(self.title) + "'};") #, yaxis: {range: [-0.25, 1.25]}
         result += str("var data = [" + self.best_config_training.trace_name + ", " + self.best_config_validation.trace_name + "];")
         result += str("Plotly.newPlot('" + str(self.plot_name) + "', data, layout);")
         return result

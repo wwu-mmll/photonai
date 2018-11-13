@@ -84,6 +84,9 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         # create random chaos in list
         np.random.shuffle(self.param_grid)
         if self.k is not None:
+            # k is maximal all grid items
+            if self.k > len(self.param_grid):
+                self.k = len(self.param_grid)
             self.param_grid = self.param_grid[0:self.k]
 
 

@@ -17,6 +17,7 @@ app.config['pipe_objects'] = {}
 app.config['SECRET_KEY'] = 'Random_Lovely_Key'
 app.config['DEBUG'] = False
 
-
+from pymodm.connection import connect
+connect('mongodb://trap-umbriel:27017/photon_results')
 # this line is important (add all controllers)
 from photonai.investigator.app.controller import default, hyperpipe, outer_fold, configuration, ajax

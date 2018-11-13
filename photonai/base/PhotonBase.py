@@ -6,10 +6,11 @@ import inspect
 import os
 import time
 import zipfile
+import importlib
 from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha1
-import importlib
+from bson.objectid import ObjectId
 
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
@@ -18,6 +19,8 @@ from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.pipeline import Pipeline
+from sklearn.model_selection import cross_val_score
+from sklearn.dummy import DummyClassifier, DummyRegressor
 
 from ..optimization.ConfigGrid import create_global_config_dict, create_global_config_grid
 from .ImbalancedWrapper import ImbalancedDataTransform
@@ -53,18 +56,45 @@ class PersistOptions:
 
     * `log_filename` [str]:
         String specifying the path and name of the log file. This file saves the console output.
+
+    * `summary_filename` [str]:
+        String specifying the path and name of the summary file containing the most important information
+        from the hyperparameter search results.
+
+    * `pretrained_model_filename` [str]:
+        String specifying the path and name if the model should automatically be saved
+        after training and testing is finished.
+
+    * `user_id` [str]:
+       The user name of the according PHOTON Wizard login
+
+    * `wizard_object_id` [str]:
+       The object id to map the designed pipeline in the PHOTON Wizard to the results in the PHOTON CORE Database
+
+    * `wizard_project_name` [str]:
+       How the project is titled in the PHOTON Wizard
     """
     def __init__(self, mongodb_connect_url: str = None,
                  save_predictions: str = 'best',
                  save_feature_importances: str = 'best',
                  local_file: str = '',
-                 log_filename: str = ''):
+                 log_filename: str = '',
+                 summary_filename: str ='',
+                 pretrained_model_filename: str='',
+                 user_id: str = '',
+                 wizard_object_id: str = '',
+                 wizard_project_name: str = ''):
 
         self.mongodb_connect_url = mongodb_connect_url
         self.save_best_config_predictions, self.save_predictions = self._set_save_options(save_predictions)
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
         self.local_file = local_file
         self.log_file = log_filename
+        self.summary_filename = summary_filename
+        self.pretrained_model_filename = pretrained_model_filename
+        self.user_id = user_id
+        self.wizard_object_id = wizard_object_id
+        self.wizard_project_name = wizard_project_name
 
     def _set_save_options(self, specifier):
         if specifier == 'best':
@@ -598,9 +628,21 @@ class Hyperpipe(BaseEstimator):
 
                 # initialize result logging with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
+
+                # save wizard information to photon db in order to map results to the wizard design object
+                if self.persist_options and hasattr(self.persist_options, 'wizard_object_id'):
+                    if self.persist_options.wizard_object_id:
+                        self.result_tree.name = self.persist_options.wizard_object_id
+                        self.result_tree.wizard_object_id = ObjectId(self.persist_options.wizard_object_id)
+                        self.result_tree.wizard_system_name = self.persist_options.wizard_project_name
+                        self.result_tree.user_id = self.persist_options.user_id
                 self.result_tree.outer_folds = []
                 self.result_tree.eval_final_performance = self.eval_final_performance
                 self.result_tree.best_config_metric = self.best_config_metric
+
+                # Run Dummy Estimator
+                self.result_tree.dummy_estimator = self.run_dummy_estimator()
+                self._generate_outer_cv_indices()
 
                 # loop over outer cross validation
                 for train_indices, test_indices in self.data_test_cases:
@@ -723,8 +765,8 @@ class Hyperpipe(BaseEstimator):
 
                         # add config to result tree and do intermediate saving
                         self.result_tree.outer_folds[-1].tested_config_list.append(current_config_mdb)
-                        # Todo: add try catch in case config cannot be written
-                        self.mongodb_writer.save(self.result_tree)
+                        # # Todo: add try catch in case config cannot be written
+                        # self.mongodb_writer.save(self.result_tree)
 
                         # 3. inform optimizer about performance
                         self.optimizer.evaluate_recent_performance(current_config, config_performance)
@@ -871,7 +913,14 @@ class Hyperpipe(BaseEstimator):
 
                 # save results again
                 self.mongodb_writer.save(self.result_tree)
-                Logger().info("Saved overall best config to database")
+                if self.persist_options.pretrained_model_filename != '':
+                    try:
+                        self.save_optimum_pipe(self.persist_options.pretrained_model_filename)
+                        Logger().info("Saved optimum pipe model to file")
+                    except FileNotFoundError as e:
+                        Logger().info("Could not save optimum pipe model to file")
+                        Logger().error(str(e))
+                Logger().info("Saved overall best config to database ")
             ###############################################################################################
             else:
                 self._pipe.fit(self.X, self.y, **fit_params)
@@ -1125,6 +1174,52 @@ class Hyperpipe(BaseEstimator):
         return Pipeline(element_list)
 
 
+    def run_dummy_estimator(self):
+        if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
+            type = self.pipeline_elements[-1].base_element._estimator_type
+        else:
+            type = None
+
+        if type == 'regressor':
+            strategy = 'mean'
+            dummy = DummyRegressor(strategy=strategy)
+        elif type == 'classifier':
+            strategy = 'most_frequent'
+            dummy = DummyClassifier(strategy=strategy)
+        else:
+            Logger().info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
+                          'step skipped.')
+            return
+
+        fold_list = list()
+        config_item = MDBConfig()
+        config_item.inner_folds = []
+        config_item.metrics_test = []
+        config_item.metrics_train = []
+
+        for train, test in self.data_test_cases:
+            if self.imbalanced_data_strategy_filter:
+                train_X, train_y = self.imbalanced_data_strategy_filter.fit_sample(self.X[train], self.y[train])
+            else:
+                train_X, train_y = self.X[train], self.y[train]
+            test_X, test_y = self.X[test], self.y[test]
+            dummy.fit(train_X, train_y)
+            train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.metrics)
+            test_scores = TestPipeline.score(dummy, test_X, test_y, metrics=self.metrics)
+            # fill result tree with fold information
+            inner_fold = MDBInnerFold()
+            inner_fold.training = train_scores
+            inner_fold.validation = test_scores
+            fold_list.append(inner_fold)
+        config_item.inner_folds = fold_list
+        config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item, self.metrics)
+        dummy_results = DummyResults()
+        dummy_results.strategy = strategy
+        dummy_results.train = config_item.metrics_train
+        dummy_results.test = config_item.metrics_test
+        return dummy_results
+
+
     def inverse_transform_pipeline(self, hyperparameters: dict, data, targets, data_to_inverse):
         """
         Inverse transform data for a pipeline with specific hyperparameter configuration
@@ -1186,15 +1281,16 @@ class Hyperpipe(BaseEstimator):
     def config_to_dict(self, specific_config):
         """
         """
-        config = {}
-        for key, value in specific_config.items():
-            items = key.split('__')
-            name = items[0]
-            rest = '__'.join(items[1::])
-            if name in self._pipe.named_steps:
-                config.update(self._pipe.named_steps[name].prettify_config_output(rest, value, return_dict=True))
-                #config[name] = value
-        return config
+        return specific_config
+        # config = {}
+        # for key, value in specific_config.items():
+        #     items = key.split('__')
+        #     name = items[0]
+        #     rest = '__'.join(items[1::])
+        #     if name in self._pipe.named_steps:
+        #         config.update(self._pipe.named_steps[name].prettify_config_output(rest, value, return_dict=True))
+        #         #config[name] = value
+        # return config
 
 
 class SourceFilter(BaseEstimator):

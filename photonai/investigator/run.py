@@ -1,2 +1,2 @@
-from app.main import app
-app.run(host='0.0.0.0', port=7273)
+from photonai.investigator.app.main import app
+app.run(host='127.0.0.1', port=7275)
