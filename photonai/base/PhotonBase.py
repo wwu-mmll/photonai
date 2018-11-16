@@ -1176,12 +1176,12 @@ class Hyperpipe(BaseEstimator):
 
     def run_dummy_estimator(self):
         if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
+            type = self.pipeline_elements[-1].base_element._estimator_type
+        else:
             if isinstance(self.pipeline_elements[-1], PipelineSwitch):
                 type = self.pipeline_elements[-1].base_element.base_element._estimator_type
             else:
-                type = self.pipeline_elements[-1].base_element._estimator_type
-        else:
-            type = None
+                type = None
 
         if type == 'regressor':
             strategy = 'mean'
