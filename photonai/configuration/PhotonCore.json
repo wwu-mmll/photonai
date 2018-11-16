@@ -459,20 +459,24 @@
     "photonai.modelwrapper.TestWrapper.WrapperTestElement",
     "Estimator"
   ],
-  "f_classif_select_p_value":[
-    "photonai.modelwrapper.FeatureSelection.FRegressionFilterPValue",
-    "Transformer"
-  ],
-  "pearson_feature_selector":[
-    "photonai.modelwrapper.FeatureSelection.PearsonFeatureSelector",
-    "Transformer"
-  ],
   "CategorialANOVASelectPercentile":[
     "photonai.modelwrapper.FeatureSelection.AnovaSelectPercentile",
     "Transformer"
   ],
-  "BioCorex":[
-    "photonai.modelwrapper.BioCorex.BioCorex",
+  "FClassifSelectPercentile":[
+    "photonai.modelwrapper.FeatureSelection.FClassifSelectPercentile",
+    "Transformer"
+  ],
+  "PearsonFeatureSelector":[
+    "photonai.modelwrapper.FeatureSelection.PearsonFeatureSelector",
+    "Transformer"
+  ],
+  "FRegressionFilterPValue":[
+    "photonai.modelwrapper.FeatureSelection.FRegressionFilterPValue",
+    "Transformer"
+  ],
+  "FRegressionSelectPercentile":[
+    "photonai.modelwrapper.FeatureSelection.FRegressionSelectPercentile",
     "Transformer"
   ],
   "PhotonPCA":[
