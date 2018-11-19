@@ -27,6 +27,7 @@ from .ImbalancedWrapper import ImbalancedDataTransform
 from ..configuration.Register import PhotonRegister
 from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
+from ..optimization.SkOpt import SkOptOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import TestPipeline, OptimizerMetric
 
@@ -252,7 +253,8 @@ class Hyperpipe(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
-                            'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
+                            'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
+                            'sk_opt': SkOptOptimizer}
 
     def __init__(self, name, inner_cv: BaseCrossValidator, outer_cv=None,
                  optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
@@ -700,7 +702,7 @@ class Hyperpipe(BaseEstimator):
                     self.result_tree.outer_folds.append(outer_fold)
 
                     # do the optimizing
-                    for current_config in self.optimizer.next_config:
+                    for current_config in self.optimizer.ask:
                         self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
                         hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr,
                                           mongo_db_settings=self.persist_options,
@@ -769,7 +771,7 @@ class Hyperpipe(BaseEstimator):
                         # self.mongodb_writer.save(self.result_tree)
 
                         # 3. inform optimizer about performance
-                        self.optimizer.evaluate_recent_performance(current_config, config_performance)
+                        self.optimizer.tell(current_config, config_performance)
 
                     if tested_config_counter > 0:
                         best_config_outer_fold = self.config_optimizer.get_optimum_config(outer_fold.tested_config_list)

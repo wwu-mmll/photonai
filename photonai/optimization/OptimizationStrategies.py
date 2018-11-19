@@ -22,7 +22,7 @@ class PhotonBaseOptimizer:
         """
         pass
 
-    def next_config(self):
+    def ask(self):
         """
         When called, returns the next configuration that should be tested.
 
@@ -32,7 +32,7 @@ class PhotonBaseOptimizer:
         """
         pass
 
-    def evaluate_recent_performance(self, config, performance):
+    def tell(self, config, performance):
         """
         Parameters
         ----------
@@ -52,11 +52,11 @@ class GridSearchOptimizer(PhotonBaseOptimizer):
         self.param_grid = []
         self.pipeline_elements = None
         self.parameter_iterable = None
-        self.next_config = self.next_config_generator()
+        self.ask = self.next_config_generator()
 
     def prepare(self, pipeline_elements):
         self.pipeline_elements = pipeline_elements
-        self.next_config = self.next_config_generator()
+        self.ask = self.next_config_generator()
         self.param_grid = create_global_config_grid(self.pipeline_elements)
         Logger().info("Grid Search generated " + str(len(self.param_grid)) + " configurations")
 
@@ -64,7 +64,7 @@ class GridSearchOptimizer(PhotonBaseOptimizer):
         for parameters in self.param_grid:
             yield parameters
 
-    def evaluate_recent_performance(self, config, performance):
+    def tell(self, config, performance):
         # influence return value of next_config
         pass
 
