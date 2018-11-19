@@ -20,3 +20,4 @@ scipy
 statsmodels
 flask
 prettytable
+scikit-optimize
