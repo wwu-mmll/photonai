@@ -7,7 +7,7 @@ import numpy as np
 from sklearn.model_selection import KFold, ShuffleSplit
 
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
-from photonai.optimization.Hyperparameters import Categorical, FloatRange
+from photonai.optimization.Hyperparameters import Categorical, FloatRange, IntegerRange
 
 # Load data
 df = pd.read_excel('/spm-data/Scratch/photon_wizard/rleenings/examples/boston_housing/boston_data.xlsx')
@@ -44,13 +44,13 @@ hyperpipe = Hyperpipe('Boston Housing',
 
 # Add transformer elements
 hyperpipe += PipelineElement("StandardScaler", {'with_mean': [True], 'with_std': [True]}, test_disabled=True)
-hyperpipe += PipelineElement("PCA", {'n_components': [None, 10], 'random_state': [15], 'whiten': [False]},
+hyperpipe += PipelineElement("PCA", {'n_components': IntegerRange(3, 13), 'random_state': [15], 'whiten': [False]},
                              test_disabled=False)
 # Add estimator
-hyperpipe += PipelineElement("SVR", {'C': [0.5, 1.0, 1.5, 2.0],
+hyperpipe += PipelineElement("SVR", {'C': FloatRange(0.5, 2.0),
                                      'epsilon': [0.1],
                                      'gamma': [],
-                                     'kernel': ['linear', 'rbf']})
+                                     'kernel': Categorical(['linear', 'rbf'])})
 
 # Fit hyperpipe
 hyperpipe.fit(X, y)
