@@ -650,7 +650,7 @@ class Hyperpipe(BaseEstimator):
                 for train_indices, test_indices in self.data_test_cases:
 
                     # give the optimizer the chance to inform about elements
-                    self.optimizer.prepare(self.pipeline_elements)
+                    self.optimizer.prepare(self.pipeline_elements, self.config_optimizer.greater_is_better)
 
                     outer_fold_counter += 1
                     outer_fold_fit_start_time = time.time()

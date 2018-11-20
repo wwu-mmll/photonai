@@ -14,7 +14,7 @@ class PhotonBaseOptimizer:
     def __init__(self, *kwargs):
         pass
 
-    def prepare(self, pipeline_elements: list):
+    def prepare(self, pipeline_elements: list, maximize_metric: bool):
         """
         Initializes hyperparameter search.
         Assembles all hyperparameters of the pipeline_element list in order to prepare the hyperparameter search space.
@@ -54,7 +54,7 @@ class GridSearchOptimizer(PhotonBaseOptimizer):
         self.parameter_iterable = None
         self.ask = self.next_config_generator()
 
-    def prepare(self, pipeline_elements):
+    def prepare(self, pipeline_elements, maximize_metric):
         self.pipeline_elements = pipeline_elements
         self.ask = self.next_config_generator()
         self.param_grid = create_global_config_grid(self.pipeline_elements)
@@ -78,7 +78,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         super(RandomGridSearchOptimizer, self).__init__()
         self.k = k
 
-    def prepare(self, pipeline_elements):
+    def prepare(self, pipeline_elements, maximize_metric):
         super(RandomGridSearchOptimizer, self).prepare(pipeline_elements)
         self.param_grid = list(self.param_grid)
         # create random chaos in list
@@ -101,7 +101,7 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
         self.start_time = None
         self.end_time = None
 
-    def prepare(self, pipeline_elements):
+    def prepare(self, pipeline_elements, maximize_metric):
         super(TimeBoxedRandomGridSearchOptimizer, self).prepare(pipeline_elements)
         self.start_time = None
 
