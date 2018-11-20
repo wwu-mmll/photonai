@@ -1,9 +1,11 @@
 from photonai.neuro.AtlasStacker import AtlasInfo
 from photonai.neuro.BrainAtlas import BrainAtlas
+from photonai.base.PhotonBase import Hyperpipe
 from photonai.photonlogger.Logger import Logger
 from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 import pandas as pd
 import multiprocessing as mp
+import numpy as np
 
 
 class AtlasMapping:
@@ -32,15 +34,11 @@ class AtlasMapping:
         #pipe._set_verbosity(-1)
         return pipe
 
-    def fit(self, dataset_files, targets):
+    def fit(self, dataset_files, targets, TIV=None):
         """
         This function takes MRI (e.g. nifti) images and targets and optimizes the same hyperpipe in each region of an atlas independently
         :param dataset_files: list of absolute paths to MRI files (e.g. nifti or analyze)
         :param targets: targets for supervised learning
-        :param atlas_info: The PHOTON Neuro atlas_info object containing details of the atlas and regions to process
-        :param write_to_folder: output folder for all results
-        :param write_summary_to_excel: write results to an MS Excel file
-        :return: results summary across Regions of Interest as a pandas dataframe
         ToDo: get labels_applied more elegantly
         """
         if self.n_processes > 1:
@@ -62,6 +60,15 @@ class AtlasMapping:
                 roi_atlas_object = BrainAtlas(atlas_info_object=roi_atlas_info)
                 roi_data = roi_atlas_object.transform(dataset_files)
 
+                # apply individual TIV correction (cf. Gaser mail and VBM8)
+                if TIV is not None:
+                    print('Removing TIV...')
+                    roi_data_new = np.empty(roi_data.shape)
+                    for i in range(roi_data.shape[0]):
+                        gaserFactor = 1520 / TIV[i]  # 1530 is meanTIV from IXI dataset
+                        roi_data_new[i, :] = roi_data[i, :] * gaserFactor
+                    roi_data = roi_data_new
+
                 # get pipeline and fit
                 my_hyperpipe = AtlasMapping.get_pipe(pipe=self.hyperpipe_constructor(),
                                                      write_to_folder=self.write_to_folder,
@@ -69,7 +76,7 @@ class AtlasMapping:
                 my_hyperpipe.fit(data=roi_data, targets=targets)
 
                 if self.savePipes != '':
-                    my_hyperpipe.save_optimum_pipe(file=self.savePipes + roi_label + '_model.photon')
+                    my_hyperpipe.save_optimum_pipe(file=self.write_to_folder + self.savePipes + roi_label + '_model.photon')
 
                 # get summary of results
                 res_file = my_hyperpipe.mongodb_writer.save_settings.local_file
@@ -110,6 +117,43 @@ class AtlasMapping:
         # result_list is modified only by the main process, not the pool workers.
         self.res_list.append(result)
 
+    @staticmethod
+    def predict(dataset_files, brainAtlas, model_folder):
+        """
+        This function takes an atlas info object and returns a prediction per region and sample if a PHOTON model for the ROI can be found
+        :param atlas_info: The PHOTON Neuro atlas_info object containing details of the atlas and regions to process
+        :param model_folder: absolute path of the folder containing the PHOTON models trained using AtlasMapping.fit()
+        :return: prediction per region and sample
+        """
+        predictions = dict()
+        for roi_label in atlas_info.roi_names:
+            # load the PHOTON model
+            my_model = Hyperpipe.load_optimum_pipe(model_folder + roi_label + '_model.photon')
+            # my_model.get_params()  # get model details
+
+            # for each Region of Interest
+            Logger().info(roi_label)
+            # get ROI info
+            atlas = BrainAtlas(atlas_info_object=brainAtlas)
+            roi_atlas_info = AtlasInfo(atlas_name=atlas.atlas_name, roi_names=[roi_label],
+                                       extraction_mode=atlas.extract_mode)
+            roi_atlas_object = BrainAtlas(atlas_info_object=roi_atlas_info)
+            roi_data = np.squeeze(roi_atlas_object.transform(dataset_files))
+
+            # # apply individual TIV correction (cf. Gaser mail and VBM8)
+            # if TIV is not None:
+            #     print('Removing TIV...')
+            #     roi_data_new = np.empty(roi_data.shape)
+            #     for i in range(roi_data.shape[0]):
+            #         gaserFactor = 1520 / TIV[i]  # 1530 is meanTIV from IXI dataset
+            #         roi_data_new[i, :] = roi_data[i, :] * gaserFactor
+            #     roi_data = roi_data_new
+
+            # predict label for new data using this model
+            predictions[roi_label] = my_model.predict(roi_data)
+
+        return predictions
+
 
 def run_parallelized_mapping(hyperpipe_constructor, dataset_files, targets, roi_label, atlas_object, write_to_folder):
     # Create new instance of hyperpipe and set all parameters
@@ -132,3 +176,44 @@ def run_parallelized_mapping(hyperpipe_constructor, dataset_files, targets, roi_
     res_tmp.insert(loc=0, column='Region', value=roi_label)
 
     return res_tmp
+
+if __name__ == "__main__":
+    # get data
+    where = 'remote'
+    if where == 'home':
+        folder = 'D:/myGoogleDrive/work/all_skripts/py_code/checks/ageResults/'
+    if where == 'work':
+        folder = 'C:/Users/hahnt/myGoogleDrive/work/all_skripts/py_code/checks/ageResults/'
+    if where == 'remote':
+        folder = '/spm-data/Scratch/spielwiese_tim/checks/ageResults/'
+
+    dataset_files = np.load(file=folder+'img_data_resampled_' + str(3) + '.npy')
+
+
+    # img_file = [
+    #     '/spm-data/vault-data1/ImageDatabase_2018/CAT12 r1184/FOR2107/mri/mwp10001_t1mprsagp2iso20140911PSYCHMACS0001A1s003a1001.nii']  # df index 0
+    # age = 26
+
+    # img_file = '/spm-data/vault-data1/ImageDatabase_2018/CAT12 r1184/MuensterNeuroimagingCohort/mri/mwp1N0969_NAE_N169.nii' # df index 1000
+    # age = 23
+
+    # img_file = '/spm-data/vault-data1/ImageDatabase_2018/CAT12 r1184/BiDirect/mri/mwp1BD30354_T1_BD30354.nii'   # df index 1500
+    # age = 49.6
+
+    # get info for the atlas
+    # BrainAtlas.whichAtlases()
+
+    # atlas_info = AtlasInfo(atlas_name='HarvardOxford-cort-maxprob-thr50', roi_names='all', extraction_mode='mean')
+    # atlas_info = AtlasInfo(atlas_name='AAL', roi_names='all', extraction_mode='vec')
+    atlas_info = AtlasInfo(atlas_name='AAL', roi_names=['Precentral_L', 'Frontal_Sup_R'], extraction_mode='vec')
+    # atlas_info = AtlasInfo(atlas_name='AAL', roi_names=[2001, 2002, 2102], extraction_mode='vec')
+    # atlas_info = AtlasInfo(atlas_name='AAL', roi_names='all', extraction_mode='box')
+    #atlas = 'HarvardOxford-cort-maxprob-thr25'
+    #atlas = 'HarvardOxford-sub-maxprob-thr25'
+    #atlas = 'AAL'
+    #atlas_info = AtlasInfo(atlas_name=atlas, roi_names='all', extraction_mode='vec')
+
+    model_folder = folder + '/AAL/'
+    test = AtlasMapping.predict(dataset_files=dataset_files, brainAtlas=atlas_info, model_folder=model_folder)
+
+    debug = True
