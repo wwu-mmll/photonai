@@ -46,10 +46,10 @@ my_pipe += PipelineElement('StandardScaler')
 # then do feature selection using a PCA, specify which values to try in the hyperparameter search
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
 # engage and optimize the good old SVM for Classification
-# my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
-#                                                    'C': FloatRange(0.5, 2, "linspace", num=5)})
+my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
+                                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
 
-my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
+# my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)

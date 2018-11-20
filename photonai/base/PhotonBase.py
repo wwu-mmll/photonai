@@ -27,6 +27,7 @@ from .ImbalancedWrapper import ImbalancedDataTransform
 from ..configuration.Register import PhotonRegister
 from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
+from ..optimization.SkOpt import SkOptOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import TestPipeline, OptimizerMetric
 
@@ -252,7 +253,8 @@ class Hyperpipe(BaseEstimator):
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
-                            'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer}
+                            'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
+                            'sk_opt': SkOptOptimizer}
 
     def __init__(self, name, inner_cv: BaseCrossValidator, outer_cv=None,
                  optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
@@ -648,7 +650,7 @@ class Hyperpipe(BaseEstimator):
                 for train_indices, test_indices in self.data_test_cases:
 
                     # give the optimizer the chance to inform about elements
-                    self.optimizer.prepare(self.pipeline_elements)
+                    self.optimizer.prepare(self.pipeline_elements, self.config_optimizer.greater_is_better)
 
                     outer_fold_counter += 1
                     outer_fold_fit_start_time = time.time()
@@ -700,7 +702,7 @@ class Hyperpipe(BaseEstimator):
                     self.result_tree.outer_folds.append(outer_fold)
 
                     # do the optimizing
-                    for current_config in self.optimizer.next_config:
+                    for current_config in self.optimizer.ask:
                         self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
                         hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr,
                                           mongo_db_settings=self.persist_options,
@@ -710,8 +712,29 @@ class Hyperpipe(BaseEstimator):
                         Logger().debug(self._optimize_printing(current_config))
                         Logger().debug('calculating...')
 
+                        specific_cv_iter = list(cv_iter)
+                        if hasattr(self.optimizer, 'request_special_params'):
+                            special_params = self.optimizer.request_special_params()
+
+                            if "subset_frac" in special_params:
+                                subset_frac = special_params["subset_frac"]
+                                # Some algorithms (like fabolas) train only on a fraction of the whole set
+                                # This generates a random subset
+                                specific_cv_iter = []
+                                if subset_frac > 1:
+                                    for cv_test, cv_train in cv_iter:
+                                        specific_cv_iter.append((
+                                            np.random.choice(cv_test, int(len(cv_test) / subset_frac), False),
+                                            cv_train
+                                        ))
+                                    Logger().verbose(
+                                        'using subset 1/' + str(subset_frac) + ' to train the model'
+                                                                               ' (' + str(
+                                            len(specific_cv_iter[0][0])) + ' items)'
+                                    )
+
                         # Test the configuration cross validated by inner_cv object
-                        current_config_mdb = hp.calculate_cv_score(self._validation_X, self._validation_y, cv_iter,
+                        current_config_mdb = hp.calculate_cv_score(self._validation_X, self._validation_y, specific_cv_iter,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
                                                             calculate_metrics_across_folds=self.calculate_metrics_across_folds)
 
@@ -769,7 +792,7 @@ class Hyperpipe(BaseEstimator):
                         # self.mongodb_writer.save(self.result_tree)
 
                         # 3. inform optimizer about performance
-                        self.optimizer.evaluate_recent_performance(current_config, config_performance)
+                        self.optimizer.tell(current_config, config_performance)
 
                     if tested_config_counter > 0:
                         best_config_outer_fold = self.config_optimizer.get_optimum_config(outer_fold.tested_config_list)
@@ -1178,7 +1201,10 @@ class Hyperpipe(BaseEstimator):
         if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
             type = self.pipeline_elements[-1].base_element._estimator_type
         else:
-            type = None
+            if isinstance(self.pipeline_elements[-1], PipelineSwitch):
+                type = self.pipeline_elements[-1].base_element.base_element._estimator_type
+            else:
+                type = None
 
         if type == 'regressor':
             strategy = 'mean'
