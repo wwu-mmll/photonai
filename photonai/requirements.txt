@@ -21,3 +21,4 @@ statsmodels
 flask
 prettytable
 scikit-optimize
+george
