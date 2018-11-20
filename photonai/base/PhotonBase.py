@@ -1051,7 +1051,7 @@ class Hyperpipe(BaseEstimator):
                 pipeline_steps.append((cpy.name, cpy))
         return Pipeline(pipeline_steps)
 
-    def save_optimum_pipe(self, file):
+    def save_optimum_pipe(self, file, password=None):
         """
         Save optimal pipeline only. Complete hyperpipe will no not be saved.
 
@@ -1059,6 +1059,9 @@ class Hyperpipe(BaseEstimator):
         ----------
         * 'file' [str]:
             File path as string specifying file to save pipeline to
+        * 'password' [str]:
+            Password used to encrypt the pipeline file
+
         """
         element_number = 0
         element_identifier = list()
@@ -1100,16 +1103,22 @@ class Hyperpipe(BaseEstimator):
 
         # get all files
         files = glob.glob(folder + '_optimum_pipe_*')
-        with zipfile.ZipFile(file, 'w') as myzip:
-            for f in files:
-                myzip.write(f, os.path.basename(f))
-                os.remove(f)
-            for f in wrapper_files:
-                myzip.write(f, os.path.splitext(os.path.basename(f))[0] + '.py')
+
+        if password is not None:
+            # ToDo: Do this without the need for pyminizip's C++ requirements
+            import pyminizip
+            pyminizip.compress(files, file, password)
+        else:
+            with zipfile.ZipFile(file, 'w') as myzip:
+                for f in files:
+                    myzip.write(f, os.path.basename(f))
+                    os.remove(f)
+                for f in wrapper_files:
+                    myzip.write(f, os.path.splitext(os.path.basename(f))[0] + '.py')
         os.removedirs(folder)
 
     @staticmethod
-    def load_optimum_pipe(file):
+    def load_optimum_pipe(file, password=None):
         """
         Load optimal pipeline.
 
@@ -1127,7 +1136,7 @@ class Hyperpipe(BaseEstimator):
             archive_name = os.path.splitext(file)[0]
             folder = archive_name + '/'
             zf = zipfile.ZipFile(file)
-            zf.extractall(folder)
+            zf.extractall(folder, pwd=password)
         else:
             raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
 
@@ -1157,7 +1166,7 @@ class Hyperpipe(BaseEstimator):
         return Pipeline(element_list)
 
     @staticmethod
-    def load_optimum_pipe_nounzip(file):
+    def load_optimum_pipe_nounzip(file, password=None):
         """
         Load optimal pipeline.
 
@@ -1179,7 +1188,7 @@ class Hyperpipe(BaseEstimator):
         else:
             raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
 
-        setup_info = pickle.load(archive.open('_optimum_pipe_blueprint.pkl'))
+        setup_info = pickle.load(archive.open('_optimum_pipe_blueprint.pkl', pwd=password))
         element_list = list()
         for element_info in setup_info:
             if element_info['mode'] == 'custom':
