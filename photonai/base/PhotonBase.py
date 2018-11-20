@@ -712,8 +712,29 @@ class Hyperpipe(BaseEstimator):
                         Logger().debug(self._optimize_printing(current_config))
                         Logger().debug('calculating...')
 
+                        specific_cv_iter = list(cv_iter)
+                        if hasattr(self.optimizer, 'request_special_params'):
+                            special_params = self.optimizer.request_special_params()
+
+                            if "subset_frac" in special_params:
+                                subset_frac = special_params["subset_frac"]
+                                # Some algorithms (like fabolas) train only on a fraction of the whole set
+                                # This generates a random subset
+                                specific_cv_iter = []
+                                if subset_frac > 1:
+                                    for cv_test, cv_train in cv_iter:
+                                        specific_cv_iter.append((
+                                            np.random.choice(cv_test, int(len(cv_test) / subset_frac), False),
+                                            cv_train
+                                        ))
+                                    Logger().verbose(
+                                        'using subset 1/' + str(subset_frac) + ' to train the model'
+                                                                               ' (' + str(
+                                            len(specific_cv_iter[0][0])) + ' items)'
+                                    )
+
                         # Test the configuration cross validated by inner_cv object
-                        current_config_mdb = hp.calculate_cv_score(self._validation_X, self._validation_y, cv_iter,
+                        current_config_mdb = hp.calculate_cv_score(self._validation_X, self._validation_y, specific_cv_iter,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
                                                             calculate_metrics_across_folds=self.calculate_metrics_across_folds)
 
