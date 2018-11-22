@@ -20,5 +20,9 @@ scipy
 statsmodels
 flask
 prettytable
+# sk optimize
 scikit-optimize
+# fabolas: you need FORTRAN compiler: sudo apt-get install gfortran
 george
+emcee
+DIRECT

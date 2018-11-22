@@ -33,7 +33,7 @@ persist_options = PersistOptions(mongodb_connect_url="mongodb://trap-umbriel:270
 
 # Define hyperpipe
 hyperpipe = Hyperpipe('Boston Housing',
-                      optimizer='sk_opt', optimizer_params={},
+                      optimizer='fabolas', optimizer_params={'n_min_train_data': 50, 'n_train_data': len(y)},
                       metrics=['mean_absolute_error'],
                       best_config_metric='mean_absolute_error',
                       outer_cv=outer_cv,
