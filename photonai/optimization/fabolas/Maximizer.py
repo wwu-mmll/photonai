@@ -12,7 +12,7 @@ from scipy.stats import norm
 from multiprocessing import Pool, cpu_count
 from functools import partial
 
-from Logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
 
 
 class BaseMaximizer(object):

@@ -123,7 +123,8 @@ class FoldOperations(Enum):
     STD = 1
     RAW = 2
 
-class MDBHelper():
+
+class MDBHelper:
     OPERATION_DICT = {FoldOperations.MEAN: np.mean, FoldOperations.STD: np.std}
 
     @staticmethod

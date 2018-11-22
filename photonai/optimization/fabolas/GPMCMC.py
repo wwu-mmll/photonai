@@ -10,7 +10,8 @@ from functools import partial
 from copy import deepcopy
 from . import normalization
 
-from Logging.Logger import Logger
+from photonai.photonlogger.Logger import Logger
+
 
 class BaseModel(object):
     __metaclass__ = abc.ABCMeta

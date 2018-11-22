@@ -11,6 +11,7 @@ from .GPMCMC import FabolasGPMCMC
 from .Priors import EnvPrior
 from .Maximizer import InformationGainPerUnitCost, Direct, MarginalizationGPMCMC
 from photonai.photonlogger.Logger import Logger
+from ..Hyperparameters import FloatRange, IntegerRange, Categorical
 
 def _quadratic_bf(x):
     '''
@@ -134,38 +135,72 @@ class Fabolas:
         # Todo: Edit to list, FloatRange, Categorial and IntegerRange
         for pelem in pipeline_elements:
             for key, val in pelem.hyperparameters.items():
-                key = pipeline_elements[0].name + '__' + key
-                if val is bool:
-                    val = [bool, 0, 1]
-                if isinstance(val, list) and len(val) > 0 and isinstance(val[0], type):
-                    lo = 0
-                    up = 0
-                    if val[0] is bool:
-                        lo = 0
-                        up = 1
-
-                    if val[0] in [float, int]:
-                        if len(val) < 3 or val[1] > val[2]:
-                            raise ValueError(
-                                "Error for param '" + key + "'."
-                                "First value must be lower bound, second value must be upper bound."
-                            )
-                        lo = val[1]
-                        up = val[2]
-
-                    if val[0] is str:
-                        if len(val) < 3:
-                            raise ValueError(
-                                'Please provide at least two strings or use "param=\'mystring\''
-                            )
-                        lo = 0
-                        up = np.log(len(val)-1)
-
+                # key = pipeline_elements[0].name + '__' + key
+                if val:
                     self._number_param_keys.append(key)
-                    self._lower.append(lo)
-                    self._upper.append(up)
-                    self._param_types.append(val[0])
-                self._param_dict.update({key: val})
+
+                    if val is bool:
+                        val = [bool, 0, 1]
+
+                    # if we have a list that uses original fabolas hyperparam specification [type, lower, upper]
+                    if isinstance(val, list) and len(val) > 0 and isinstance(val[0], type):
+                        lo = 0
+                        up = 0
+                        if val[0] is bool:
+                            lo = 0
+                            up = 1
+
+                        if val[0] in [float, int]:
+                            if len(val) < 3 or val[1] > val[2]:
+                                raise ValueError(
+                                    "Error for param '" + key + "'."
+                                    "First value must be lower bound, second value must be upper bound."
+                                )
+                            lo = val[1]
+                            up = val[2]
+
+                        if val[0] is str:
+                            if len(val) < 3:
+                                raise ValueError(
+                                    'Please provide at least two strings or use "param=\'mystring\''
+                                )
+                            lo = 0
+                            up = np.log(len(val)-1)
+
+                        self._lower.append(lo)
+                        self._upper.append(up)
+                        self._param_types.append(val[0])
+
+                    # if we have a list that contains distinct values like [0, 1, 2, 3, 4]
+                    if isinstance(val, list) and len(val) > 0 and not isinstance(val[0], type):
+                        if isinstance(val[0], str):
+                            self._lower.append(0)
+                            self._upper.append(np.log(len(val) - 1))
+                            self._param_types.append(str)
+                        elif isinstance(val[0], bool):
+                            self._lower.append(0)
+                            self._upper.append(1)
+                            self._param_types.append(bool)
+                        elif type(val[0]) in [int, float]:
+                            sorted_list = np.sort(val)
+                            self._lower.append(sorted_list[0])
+                            self._upper.append(sorted_list[-1])
+                            self._param_types.append(type(val[0]))
+
+                    # if we have a Photon Number Representation or a Photon Categorical representation
+                    if isinstance(val, IntegerRange) or isinstance(val, FloatRange):
+                        self._lower.append(val.start)
+                        self._upper.append(val.stop)
+                        if isinstance(val, IntegerRange):
+                            self._param_types.append(int)
+                        elif isinstance(val, FloatRange):
+                            self._param_types.append(float)
+                    if isinstance(val, Categorical):
+                        self._number_param_keys.append(key)
+                        self._lower.append(0)
+                        self._upper.append(np.log(len(val.values)-1))
+                        self._param_types.append(str)
+                    self._param_dict.update({key: val})
 
         n_dims = len(self._lower)
         self._lower = np.array(self._lower)
