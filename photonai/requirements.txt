@@ -22,7 +22,8 @@ flask
 prettytable
 # sk optimize
 scikit-optimize
-# fabolas: you need FORTRAN compiler: sudo apt-get install gfortran
+# fabolas
 george
 emcee
+# you need FORTRAN compiler for the DIRECT package: sudo apt-get install gfortran
 DIRECT

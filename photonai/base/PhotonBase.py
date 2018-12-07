@@ -31,6 +31,7 @@ from ..optimization.SkOpt import SkOptOptimizer
 from ..optimization.FabolasOptimizer import FabolasOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import TestPipeline, OptimizerMetric
+from .PhotonPipeline import PhotonPipeline
 
 
 class PersistOptions:
@@ -1024,7 +1025,7 @@ class Hyperpipe(BaseEstimator):
             pipeline_steps.append((item.name, item))
 
         # build pipeline...
-        self._pipe = Pipeline(pipeline_steps)
+        self._pipe = PhotonPipeline(pipeline_steps)
 
     def copy_me(self):
         """
@@ -1376,8 +1377,7 @@ class PipelineElement(BaseEstimator):
     ELEMENT_DICTIONARY = PhotonRegister.get_package_info()
 
     def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False,
-                 disabled: bool =False, base_element=None,
-                 **kwargs):
+                 disabled: bool =False, base_element=None, **kwargs):
         """
         Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
 
@@ -1423,6 +1423,9 @@ class PipelineElement(BaseEstimator):
         else:
             self.hyperparameters = hyperparameters
         self.disabled = disabled
+
+        self.needs_y = False
+        self.needs_covariates = False
 
     def copy_me(self):
         return deepcopy(self)
@@ -1964,6 +1967,9 @@ class PipelineSwitch(PipelineElement):
         self.test_disabled = False
         self.pipeline_element_configurations = []
         self._estimator_type = _estimator_type
+
+        self.needs_y = False
+        self.needs_covariates = False
 
         if pipeline_element_list:
             self.pipeline_element_list = pipeline_element_list
