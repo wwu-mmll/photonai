@@ -229,7 +229,7 @@ class Fabolas:
             kernel *= george.kernels.Matern52Kernel(
                 np.ones([1]) * 0.01,
                 ndim=n_dims+1,
-                dim=d
+                # dim=d
             )
 
         env_kernel = george.kernels.BayesianLinearRegressionKernel(
