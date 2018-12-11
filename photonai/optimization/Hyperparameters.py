@@ -20,6 +20,12 @@ class Categorical(PhotonHyperparam):
     def __init__(self, values: list):
         self.values = values
 
+    def __getitem__(self, item):
+        return self.values.__getitem__(item)
+
+    def index(self, obj):
+        return self.values.index(obj)
+
 
 class BooleanSwitch(PhotonHyperparam):
     """

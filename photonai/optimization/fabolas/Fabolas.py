@@ -191,12 +191,12 @@ class Fabolas:
                     if isinstance(val, IntegerRange) or isinstance(val, FloatRange):
                         self._lower.append(val.start)
                         self._upper.append(val.stop)
+                        # self._upper.append(np.log(val.stop))
                         if isinstance(val, IntegerRange):
                             self._param_types.append(int)
                         elif isinstance(val, FloatRange):
                             self._param_types.append(float)
                     if isinstance(val, Categorical):
-                        self._number_param_keys.append(key)
                         self._lower.append(0)
                         self._upper.append(np.log(len(val.values)-1))
                         self._param_types.append(str)
@@ -232,12 +232,12 @@ class Fabolas:
                 # dim=d
             )
 
-        env_kernel = george.kernels.BayesianLinearRegressionKernel(
+        env_kernel = george.kernels.LinearKernel(
             n_dims+1,
-            dim=n_dims,
-            degree=degree
+            ndim=n_dims+1,
+            order=degree
         )
-        env_kernel[:] = np.ones([degree + 1]) * 0.1
+        # env_kernel[:] = np.ones([degree + 1]) * 0.1
 
         kernel *= env_kernel
 
@@ -270,10 +270,10 @@ class Fabolas:
         )
 
         cost_degree = 1
-        cost_env_kernel = george.kernels.BayesianLinearRegressionKernel(
+        cost_env_kernel = george.kernels.LinearKernel(
             n_dims+1,
-            dim=n_dims,
-            degree=cost_degree
+            ndim=n_dims+1,
+            order=cost_degree
         )
         cost_kernel = 1  # 1 = covariance amplitude
 
@@ -282,10 +282,10 @@ class Fabolas:
             cost_kernel *= george.kernels.Matern52Kernel(
                 np.ones([1]) * 0.01,
                 ndim=n_dims+1,
-                dim=d
+                # dim=d
             )
 
-        cost_env_kernel[:] = np.ones([cost_degree + 1]) * 0.1
+        # cost_env_kernel[:] = np.ones([cost_degree + 1]) * 0.1
 
         cost_kernel *= cost_env_kernel
 
@@ -350,7 +350,7 @@ class Fabolas:
         :return: next configuration to test, subset-frag to use, tracking-vars
         :rtype: dict, int, dict
         '''
-        Logger().debug('Fabolas: Starting initialization')
+        Logger().info('**Fabolas: Starting initialization')
         for self._it in range(0, self._n_init):
             Logger().debug('Fabolas: step ' + str(self._it) + ' (init)')
             start = time()
@@ -363,7 +363,7 @@ class Fabolas:
         self._Y = np.array(self._Y)
         self._cost = np.array(self._cost)
 
-        Logger().debug('Fabolas: Starting optimization')
+        Logger().info('**Fabolas: Starting optimization')
         for self._it in range(self._n_init, self._num_iterations):
             Logger().debug('Fabolas: step ' + str(self._it) + ' (opt)')
             start = time()
@@ -372,7 +372,7 @@ class Fabolas:
             Logger().debug('Fabolas: needed {t!s}s'.format(t=tracking['overhead_time']))
             yield self._create_param_dict(result, tracking)
 
-        Logger().debug('Fabolas: Final config')
+        Logger().info('Fabolas: Final config')
         start = time()
         self._model_objective.train(self._X, self._Y, do_optimize=True)
         result = self.get_incumbent()
@@ -455,12 +455,12 @@ class Fabolas:
             elif type is int:
                 paramlist[i] = int(np.round(paramlist[i]))
             elif type is str:
-                choices = self._param_dict[self._number_param_keys[i]]
-                paramlist[i] = np.round(paramlist[i])
+                choices = self._param_dict[self._number_param_keys[i]].values
+                paramlist[i] = np.round(np.exp(paramlist[i]))
                 paramlist[i] = max(paramlist[i], 1)
                 paramlist[i] = min(paramlist[i], len(choices)-1)
                 paramlist[i] = str(choices[int(paramlist[i])])
-        return params
+        return paramlist
 
     def _create_param_dict(self, params, tracking=None):
         '''
@@ -477,12 +477,14 @@ class Fabolas:
         params, s = params
         if tracking is not None:
             tracking.update({'config_log': dict(zip(self._number_param_keys, params))})
-        params = self._adjust_param_types(np.exp(params))
+
+        # exp_params = np.exp(params)
+        adjusted_params = self._adjust_param_types(params)
         pdict = copy(self._param_dict)
         pdict.update(
             dict(zip(
                 self._number_param_keys,
-                params
+                adjusted_params
             ))
         )
 
@@ -509,10 +511,9 @@ class Fabolas:
             if self._param_types[i] is bool:
                 pdict[key] = int(pdict[key])
             if self._param_types[i] is str:
-                pdict[key] = self._param_dict[key].index(pdict[key])
+                pdict[key] = np.log(self._param_dict[key].index(pdict[key]))
             params.append(pdict[key])
-        return np.log(params)
-
+        return params
 
     def _init_models(self):
         '''

@@ -56,7 +56,7 @@ class PhotonPipeline(_BaseComposition):
                             "'%s' (type %s) doesn't"
                             % (estimator, type(estimator)))
 
-    def stepwise_transform(self, transformer, X, y=None, **kwargs):
+    def stepwise_transform(self, transformer, X, y, **kwargs):
 
         # Case| transforms X | needs_y | needs_covariates
         # -------------------------------------------------------

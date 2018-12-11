@@ -27,5 +27,5 @@ class FabolasOptimizer(PhotonBaseOptimizer):
 
     def tell(self, config, performance):
         score = performance[1]
-        cost = datetime.datetime.now - self.last_request_time
+        cost = (datetime.datetime.now() - self.last_request_time).total_seconds()
         self._fabolas.process_result(config, score, cost)

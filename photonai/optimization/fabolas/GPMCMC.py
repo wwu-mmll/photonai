@@ -768,7 +768,7 @@ class FabolasGPMCMC(GaussianProcessMCMC):
         if do_optimize:
             # We have one walker for each hyperparameter configuration
             sampler = emcee.EnsembleSampler(self.n_hypers,
-                                            len(self.kernel.pars) + 1,
+                                            len(self.kernel) + 1,
                                             self.loglikelihood)
 
             # Do a burn-in in the first iteration
