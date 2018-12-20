@@ -256,8 +256,8 @@ class Hyperpipe(BaseEstimator):
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
                             'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
-                            'sk_opt': SkOptOptimizer,
-                            'fabolas': FabolasOptimizer}
+                            'sk_opt': SkOptOptimizer } #,
+                            # 'fabolas': FabolasOptimizer}
 
     def __init__(self, name, inner_cv: BaseCrossValidator, outer_cv=None,
                  optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
