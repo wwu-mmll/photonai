@@ -98,7 +98,7 @@ class PhotonPipeline(_BaseComposition):
             X, y, kwargs = self.stepwise_transform(transformer, X, y, **kwargs)
 
         if self._final_estimator is not None:
-            if hasattr(self._final_estimator, 'transform'):
+            if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
                 X, y, kwargs = self.stepwise_transform(self._final_estimator, X, y, **kwargs)
         return X
 

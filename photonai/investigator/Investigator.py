@@ -5,6 +5,7 @@ from ..investigator.app.main import app
 import webbrowser
 import os
 from time import sleep as slp
+from threading import Thread
 
 
 class Investigator:
@@ -18,7 +19,7 @@ class Investigator:
         """
         creates a localhost url for displaying a pipeline according to its source (working memory, file or mongodb)
         """
-        url = "http://localhost:7273/pipeline/" + storage + "/" + name
+        url = "http://localhost:7275/pipeline/" + storage + "/" + name
         return url
 
     @staticmethod
@@ -41,6 +42,7 @@ class Investigator:
         url = Investigator.__build_url("a", pipe.name)
         Investigator.__delayed_browser(url)
         FlaskManager().run_app()
+
 
     @staticmethod
     def load_from_db(mongo_connect_url: str, pipe_name: str):
@@ -121,10 +123,10 @@ class Investigator:
 
     @staticmethod
     def __delayed_browser(url):
-        Investigator.__open_browser(url)
-        # thread = Thread(target=Investigator.open_browser, args=(url, ))
-        # thread.start()
-        # thread.join()
+        # Investigator.__open_browser(url)
+        thread = Thread(target=Investigator.__open_browser, args=(url, ))
+        thread.start()
+        thread.join()
 
 
 @Singleton

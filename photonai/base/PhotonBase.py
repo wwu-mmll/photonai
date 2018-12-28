@@ -1407,6 +1407,8 @@ class PipelineElement(BaseEstimator):
         else:
             self.base_element = base_element
 
+        self.is_transformer = hasattr(self.base_element, "transform")
+        self.is_estimator = hasattr(self.base_element, "predict")
 
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
@@ -2069,7 +2071,7 @@ class PipelineSwitch(PipelineElement):
 
         config_nr = None
         if self.sklearn_name in kwargs:
-            config_nr = kwargs[self._sklearn_curr_element]
+            config_nr = kwargs[self.sklearn_name]
         elif 'current_element' in kwargs:
             config_nr = kwargs['current_element']
 
