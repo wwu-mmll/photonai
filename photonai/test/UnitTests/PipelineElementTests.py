@@ -3,13 +3,14 @@ import unittest
 from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 
-from Framework.PhotonBase import PipelineElement, Hyperpipe, PipelineSwitch
+from photonai.base.PhotonBase import PipelineElement, Hyperpipe, PipelineSwitch
+
 
 class HyperpipeTests(unittest.TestCase):
 
     def setUp(self):
-        self.pca_pipe_element = PipelineElement.create('pca', {'n_components': [1, 2]}, test_disabled=True)
-        self.svc_pipe_element = PipelineElement.create('svc', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True)
+        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.cv_object = KFold(n_splits=3)
         self.hyperpipe = Hyperpipe('god', self.cv_object)
         self.hyperpipe += self.pca_pipe_element
@@ -22,43 +23,19 @@ class HyperpipeTests(unittest.TestCase):
         self.assertIs(self.hyperpipe._pipe.steps[0][1], self.pca_pipe_element)
         self.assertIs(self.hyperpipe._pipe.steps[1][1], self.svc_pipe_element)
 
-    def test_hyperparameters(self):
-        # hyperparameters
-        self.assertDictEqual(self.hyperpipe.hyperparameters, {'pca': {'n_components': [1, 2], 'test_disabled': True},
-                                                              'svc': {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']}})
-        # sklearn params
-        # Todo: has no sklearn attribute
-        # config grid
-        # print(self.hyperpipe.config_grid)
-        expected_config_grid = [{'pca__n_components': 1, 'pca__disabled': False, 'svc__C': 0.1, 'svc__kernel': 'rbf'},
-                                {'pca__n_components': 1, 'pca__disabled': False, 'svc__C': 0.1, 'svc__kernel': 'sigmoid'},
-                                {'pca__n_components': 1, 'pca__disabled': False, 'svc__C': 1, 'svc__kernel': 'rbf'},
-                                {'pca__n_components': 1, 'pca__disabled': False, 'svc__C': 1, 'svc__kernel': 'sigmoid'},
-                                {'pca__n_components': 2, 'pca__disabled': False, 'svc__C': 0.1, 'svc__kernel': 'rbf'},
-                                {'pca__n_components': 2, 'pca__disabled': False, 'svc__C': 0.1, 'svc__kernel': 'sigmoid'},
-                                {'pca__n_components': 2, 'pca__disabled': False, 'svc__C': 1, 'svc__kernel': 'rbf'},
-                                {'pca__n_components': 2, 'pca__disabled': False, 'svc__C': 1,'svc__kernel': 'sigmoid'},
-                                {'pca__disabled': True, 'svc__C': 0.1, 'svc__kernel': 'rbf'},
-                                {'pca__disabled': True, 'svc__C': 0.1, 'svc__kernel': 'sigmoid'},
-                                {'pca__disabled': True, 'svc__C': 1, 'svc__kernel': 'rbf'},
-                                {'pca__disabled': True, 'svc__C': 1, 'svc__kernel': 'sigmoid'}]
-        expected_config_grid = [sorted(i) for i in expected_config_grid]
-        actual_config_grid = [sorted(i) for i in self.hyperpipe.config_grid]
-        self.assertListEqual(actual_config_grid, expected_config_grid)
-
 
 class PipelineElementTests(unittest.TestCase):
 
     def setUp(self):
-        self.pca_pipe_element = PipelineElement.create('pca', {'n_components': [1, 2]}, test_disabled=True)
-        self.svc_pipe_element = PipelineElement.create('svc', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True)
+        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
 
     def tearDown(self):
         pass
 
     def test_create_failure(self):
         with self.assertRaises(NameError):
-            PipelineElement.create('dusihdaushdisuhdusiahd', {})
+            PipelineElement('NONSENSEName', {})
 
     def test_pipeline_element_create(self):
         # test name, set_disabled and base_element
@@ -66,30 +43,33 @@ class PipelineElementTests(unittest.TestCase):
 
         # set_disabled is passed correctly
         self.assertTrue(self.pca_pipe_element.test_disabled)
+
         # correct name
-        self.assertEqual(self.pca_pipe_element.name, 'pca')
+        self.assertEqual(self.pca_pipe_element.name, 'PCA')
 
     def test_one_hyperparameter_setup(self):
         # sklearn attributes are generated
-        self.assertDictEqual(self.pca_pipe_element.sklearn_hyperparams, {'pca__n_components': [1, 2]})
+        self.assertDictEqual(self.pca_pipe_element.hyperparameters, {'PCA__n_components': [1, 2],
+                                                                     'PCA__disabled': [False, True]})
+
         # config_grid is created as expected
-        self.assertListEqual(self.pca_pipe_element.config_grid, [{'pca__n_components': 1, 'pca__disabled': False},
-                                                                 {'pca__n_components': 2, 'pca__disabled': False},
-                                                                 {'pca__disabled': True}])
-        # hyperparameter dictionary is returned as expected
-        self.assertDictEqual(self.pca_pipe_element.hyperparameters, {'n_components': [1, 2], 'test_disabled': True})
+        self.assertListEqual(self.pca_pipe_element.generate_config_grid(), [{'PCA__n_components': 1,
+                                                                             'PCA__disabled': False},
+                                                                            {'PCA__n_components': 2,
+                                                                             'PCA__disabled': False},
+                                                                            {'PCA__disabled': True}])
 
     def test_more_hyperparameters_setup(self):
         # sklearn attributes are generated
-        self.assertDictEqual(self.svc_pipe_element.sklearn_hyperparams, {'svc__C': [0.1, 1],
-                                                                         'svc__kernel': ['rbf', 'sigmoid']})
+        self.assertDictEqual(self.svc_pipe_element.hyperparameters, {'SVC__C': [0.1, 1],
+                                                                     'SVC__kernel': ['rbf', 'sigmoid']})
+
         # config_grid is created as expected
-        self.assertListEqual(self.svc_pipe_element.config_grid, [{'svc__C': 0.1, 'svc__kernel': 'rbf'},
-                                                                 {'svc__C': 0.1, 'svc__kernel': 'sigmoid'},
-                                                                 {'svc__C': 1, 'svc__kernel': 'rbf'},
-                                                                 {'svc__C': 1, 'svc__kernel': 'sigmoid'}])
-        # hyperparameter dictionary is returned as expected
-        self.assertDictEqual(self.svc_pipe_element.hyperparameters, {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        self.assertListEqual(self.svc_pipe_element.generate_config_grid(), [{'SVC__C': 0.1, 'SVC__kernel': 'rbf'},
+                                                                            {'SVC__C': 0.1, 'SVC__kernel': 'sigmoid'},
+                                                                            {'SVC__C': 1, 'SVC__kernel': 'rbf'},
+                                                                            {'SVC__C': 1, 'SVC__kernel': 'sigmoid'}])
+
 
     def test_set_params(self):
         config = {'n_components': 3, 'disabled': False}
@@ -106,8 +86,8 @@ class PipelineElementTests(unittest.TestCase):
 class PipelineSwitchTests(unittest.TestCase):
 
     def setUp(self):
-        self.svc_pipe_element = PipelineElement.create('svc', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
-        self.lr_pipe_element = PipelineElement.create('logistic', {'C': [0.1, 0.3, 1]})
+        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        self.lr_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
         self.pipe_switch = PipelineSwitch('switch', [self.svc_pipe_element, self.lr_pipe_element])
 
     def test_init(self):
@@ -121,26 +101,20 @@ class PipelineSwitchTests(unittest.TestCase):
         self.assertEqual(len(self.pipe_switch.pipeline_element_configurations[1]), 3)
 
         # hyperparameters
-        self.assertDictEqual(self.pipe_switch.hyperparameters, {'current_element': [(0, 0), (0, 1), (0, 2), (0, 3),
-                                                                                    (1, 0), (1, 1), (1, 2)]})
-
-        # sklearn dict
-        self.assertDictEqual(self.pipe_switch.sklearn_hyperparams, {'switch__current_element': [(0, 0), (0, 1), (0, 2),
-                                                                                                (0, 3), (1, 0), (1, 1),
-                                                                                                (1, 2)]})
+        self.assertDictEqual(self.pipe_switch.hyperparameters, {'switch__current_element': [(0, 0), (0, 1),
+                                                                                            (0, 2), (0, 3),
+                                                                                            (1, 0), (1, 1),
+                                                                                            (1, 2)]})
 
         # config grid
-        self.assertListEqual(self.pipe_switch.config_grid, [{'switch__current_element': (0, 0)},
-                                                            {'switch__current_element': (0, 1)},
-                                                            {'switch__current_element': (0, 2)},
-                                                            {'switch__current_element': (0, 3)},
-                                                            {'switch__current_element': (1, 0)},
-                                                            {'switch__current_element': (1, 1)},
-                                                            {'switch__current_element': (1, 2)}])
+        self.assertListEqual(self.pipe_switch.generate_config_grid(), [{'switch__current_element': (0, 0)},
+                                                                       {'switch__current_element': (0, 1)},
+                                                                       {'switch__current_element': (0, 2)},
+                                                                       {'switch__current_element': (0, 3)},
+                                                                       {'switch__current_element': (1, 0)},
+                                                                       {'switch__current_element': (1, 1)},
+                                                                       {'switch__current_element': (1, 2)}])
 
-        # correct stacking of options
-        self.assertDictEqual(self.pipe_switch.pipeline_element_configurations[0][1],
-                             self.svc_pipe_element.config_grid[1])
 
     def test_set_params(self):
         false_config = {'current_element': 1}
@@ -153,7 +127,7 @@ class PipelineSwitchTests(unittest.TestCase):
         self.assertEqual(self.pipe_switch.base_element.base_element.kernel, 'sigmoid')
 
     def test_base_element(self):
-        self.pipe_switch.set_params(**{'current_element': (1, 1)})
+        self.pipe_switch.set_params(**{'switch__current_element': (1, 1)})
         self.assertIs(self.pipe_switch.base_element, self.lr_pipe_element)
         self.assertIs(self.pipe_switch.base_element.base_element, self.lr_pipe_element.base_element)
 
