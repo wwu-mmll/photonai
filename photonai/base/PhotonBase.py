@@ -291,8 +291,7 @@ class Hyperpipe(BaseEstimator):
 
         # Todo: if self.outer_cv is LeaveOneOut: Set calculate metrics across folds to True -> Print
 
-        self.X = None
-        self.y = None
+
 
         self.groups = groups
         self.filter_element = filter_element
@@ -324,11 +323,27 @@ class Hyperpipe(BaseEstimator):
         self._pipe = None
         self.optimum_pipe = None
 
+        # --------------------- Validity of metrics ----------------
         self.metrics = metrics
-        #  Todo: raise error or warning if metrics and best config_metric is None
+        if self.metrics is None or len(self.metrics) == 0:
+            metric_error_text = "List of Metrics to calculate should not be empty"
+            Logger().error(metric_error_text)
+            raise ValueError(metric_error_text)
         self.best_config_metric = best_config_metric
-        self.config_optimizer = None
+        if isinstance(self.best_config_metric, list) or not isinstance(self.best_config_metric, str):
+            warning_text = "Best Config Metric must be a single metric given as string, no list. PHOTON chose the first " \
+                           "one from the list of metrics to calculate."
+            self.best_config_metric = self.metrics[0]
+            Logger().warn(warning_text)
+            raise Warning(warning_text)
+        if self.best_config_metric is None:
+            self.best_config_metric = self.metrics[0]
+            warning_text = "No best config metric was given, so PHOTON chose the first in the list of metrics as " \
+                           "criteria for choosing the best configuration."
+            Logger().warn(warning_text)
+            raise Warning(warning_text)
 
+        self.config_optimizer = None
         self.result_tree = None
         self.best_config = None
         self.best_children_config = None
@@ -352,12 +367,17 @@ class Hyperpipe(BaseEstimator):
             # Todo: check if correct object
             self.optimizer = optimizer
 
+        self.X = None
+        self.y = None
+        self.kwargs = None
         self._validation_X = None
         self._validation_y = None
         self._validation_group = None
+        self._validation_kwargs = {}
         self._test_X = None
         self._test_y = None
         self._test_group = None
+        self._test_kwargs = {}
         self._last_fit_data_hash = None
         self._current_fold = -1
         self._num_of_folds = 0
@@ -365,6 +385,8 @@ class Hyperpipe(BaseEstimator):
         self._fold_data_hashes = []
 
         self.inner_cv_callback_function = performance_constraints
+
+        self.preprocessing_pipe = None
 
     def _set_verbosity(self, verbosity):
         """
@@ -401,18 +423,20 @@ class Hyperpipe(BaseEstimator):
 
         Parameters
         ----------
-        * 'pipe_element' [PipelineElement or Hyperpipe]:
+        * 'pipe_element' [PipelineElement]:
             The object to add to the machine learning pipeline, being either a transformer or an estimator.
 
         """
-        # if isinstance(pipe_element, PipelineElement):
-        self.pipeline_elements.append(pipe_element)
-        # Todo: is repeated each time element is added....
-        self._prepare_pipeline()
+        if isinstance(pipe_element, Preprocessing):
+            self.preprocessing_pipe = pipe_element
+        else:
+            if isinstance(pipe_element, PipelineElement):
+                self.pipeline_elements.append(pipe_element)
+                # Todo: is repeated each time element is added....
+                self._prepare_pipeline()
+            else:
+                raise TypeError("Element must be of type Pipeline Element")
         return self
-        # else:
-        #     Todo: raise error
-        # raise TypeError("Element must be of type Pipeline Element")
 
     def add(self, pipe_element):
         """
@@ -534,7 +558,7 @@ class Hyperpipe(BaseEstimator):
         """
         self.__distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
 
-    def fit(self, data, targets, **fit_params):
+    def fit(self, data, targets, **kwargs):
         """
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
 
@@ -564,11 +588,14 @@ class Hyperpipe(BaseEstimator):
 
         """
 
-        # in case we want to inject some data from outside the pipeline
+        # if there is a preprocessing pipeline, we apply it first.
+        if self.preprocessing_pipe is not None:
+            self.preprocessing_pipe.fit(data, targets, **kwargs)
+            data, targets, kwargs = self.preprocessing_pipe.transform(data, targets, **kwargs)
 
         self.X = data
         self.y = targets
-
+        self.kwargs = kwargs
 
         # !!!!!!!!!!!!!!!! FIT ONLY IF DATA CHANGED !!!!!!!!!!!!!!!!!!!
         # -------------------------------------------------------------
@@ -668,15 +695,17 @@ class Hyperpipe(BaseEstimator):
                     self._validation_y = self.y[train_indices]
                     if self.groups is not None:
                         self._validation_group = self.groups[train_indices]
-                    # validation X will be sub- or oversampled after INNER CV splits.
-
                     self._test_X = self.X[test_indices]
                     self._test_y = self.y[test_indices]
-                    # WRONG: Testset will not be balanced, only TRAINING....
-                    # if self.imbalanced_data_strategy_filter:
-                    #     self._test_X, self._test_y = self.imbalanced_data_strategy_filter.fit_sample(self._test_X, self._test_y)
 
-                    # self._test_group = self.groups[test_indices]
+                    # iterate over all kwargs list to prepare them for cross validation
+                    if len(self.kwargs) > 0:
+                        self._validation_kwargs = {}
+                        self._test_kwargs = {}
+                        for name, list_item in self.kwargs.items():
+                            if isinstance(list_item, (list, np.ndarray)):
+                                self._validation_kwargs[name] = list_item[train_indices]
+                                self._test_kwargs[name] = list_item[test_indices]
 
                     # Prepare inner cross validation
                     cv_iter = []
@@ -739,7 +768,8 @@ class Hyperpipe(BaseEstimator):
                         # Test the configuration cross validated by inner_cv object
                         current_config_mdb = hp.calculate_cv_score(self._validation_X, self._validation_y, specific_cv_iter,
                                                             calculate_metrics_per_fold=self.calculate_metrics_per_fold,
-                                                            calculate_metrics_across_folds=self.calculate_metrics_across_folds)
+                                                            calculate_metrics_across_folds=self.calculate_metrics_across_folds,
+                                                                   **self._validation_kwargs)
 
                         current_config_mdb.config_nr = tested_config_counter
                         current_config_mdb.config_dict = current_config
@@ -844,7 +874,7 @@ class Hyperpipe(BaseEstimator):
 
                         Logger().verbose('...now fitting ' + self.name + ' with optimum configuration')
                         fit_time_start = time.time()
-                        self.optimum_pipe.fit(self._validation_X, self._validation_y)
+                        self.optimum_pipe.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
                         final_fit_duration = time.time() - fit_time_start
 
                         #self.best_config_outer_fold.full_model_spec = self.optimum_pipe.get_params()
@@ -859,7 +889,8 @@ class Hyperpipe(BaseEstimator):
                             test_score_mdb = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
                                                                 self.metrics,
                                                                 save_predictions=self.persist_options.save_best_config_predictions,
-                                                                save_feature_importances=self.persist_options.save_best_config_feature_importances)
+                                                                save_feature_importances=self.persist_options.save_best_config_feature_importances,
+                                                                **self._test_kwargs)
 
                             Logger().info('.. calculating metrics for test set (' + self.name + ')')
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
@@ -867,7 +898,9 @@ class Hyperpipe(BaseEstimator):
                             train_score_mdb = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
                                                                  self.metrics,
                                                                  save_predictions=self.persist_options.save_best_config_predictions,
-                                                                 save_feature_importances=self.persist_options.save_best_config_feature_importances)
+                                                                 save_feature_importances=self.persist_options.save_best_config_feature_importances,
+                                                                 training=True,
+                                                                 **self._validation_kwargs)
 
                             # save test fold
                             outer_fold_mdb = MDBInnerFold()
@@ -949,7 +982,7 @@ class Hyperpipe(BaseEstimator):
                 Logger().info("Saved overall best config to database ")
             ###############################################################################################
             else:
-                self._pipe.fit(self.X, self.y, **fit_params)
+                self._pipe.fit(self.X, self.y, **kwargs)
 
         else:
             Logger().verbose("Avoided fitting of " + self.name + " on fold "
@@ -1426,8 +1459,16 @@ class PipelineElement(BaseEstimator):
             self.hyperparameters = hyperparameters
         self.disabled = disabled
 
-        self.needs_y = False
-        self.needs_covariates = False
+        # check if self.base element needs y for fitting and transforming
+        if hasattr(self.base_element, 'needs_y'):
+            self.needs_y = self.base_element.needs_y
+        else:
+            self.needs_y = False
+        # or if it maybe needs covariates for fitting and transforming
+        if hasattr(self.base_element, 'needs_covariates'):
+            self.needs_covariates = self.base_element.needs_covariates
+        else:
+            self.needs_covariates = False
 
     def copy_me(self):
         return deepcopy(self)
@@ -1491,7 +1532,6 @@ class PipelineElement(BaseEstimator):
         """
         return self.base_element.get_params(deep)
 
-
     def set_params(self, **kwargs):
         """
         Forwards the set_params request to the wrapped base element
@@ -1507,7 +1547,7 @@ class PipelineElement(BaseEstimator):
         self.base_element.set_params(**kwargs)
         return self
 
-    def fit(self, data, targets=None):
+    def fit(self, data, targets=None, **kwargs):
         """
         Calls the fit function of the base element
 
@@ -1517,29 +1557,21 @@ class PipelineElement(BaseEstimator):
         """
         if not self.disabled:
             obj = self.base_element
-            obj.fit(data, targets)
+            obj.fit(data, targets, **kwargs)
             # self.base_element.fit(data, targets)
         return self
 
-    def predict(self, data):
+    def predict(self, data, y=None, **kwargs):
         """
         Calls predict function on the base element.
-
-        IF PREDICT IS NOT AVAILABLE CALLS TRANSFORM.
-        This is for the case that the encapsulated hyperpipe only part of another hyperpipe, and works as a transformer.
-        Sklearn usually expects the last element to predict.
-        Also this is needed in case we are using an autoencoder which is firstly trained by using predict, and after
-        training only used for transforming.
         """
         if not self.disabled:
             if hasattr(self.base_element, 'predict'):
                 return self.base_element.predict(data)
-            elif hasattr(self.base_element, 'transform'):
-                return self.base_element.transform(data)
             else:
                 Logger().error('BaseException. base Element should have function ' +
-                               'predict, or at least transform.')
-                raise BaseException('base Element should have function predict, or at least transform.')
+                               'predict.')
+                raise BaseException('base Element should have function predict.')
         else:
             return data
 
@@ -1554,7 +1586,7 @@ class PipelineElement(BaseEstimator):
                 return self.base_element.predict_proba(data)
             else:
                 Logger().error('BaseException. base Element should have "predict_proba" function.')
-            raise BaseException('base Element should have predict_proba function.')
+                raise BaseException('base Element should have predict_proba function.')
         return data
 
     # def fit_predict(self, data, targets):
@@ -1563,7 +1595,7 @@ class PipelineElement(BaseEstimator):
     #     else:
     #         return data
 
-    def transform(self, data):
+    def transform(self, X, y=None, **kwargs):
         """
         Calls transform on the base element.
 
@@ -1572,14 +1604,40 @@ class PipelineElement(BaseEstimator):
         """
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
-                return self.base_element.transform(data)
+                # Case| transforms X | needs_y | needs_covariates
+                # -------------------------------------------------------
+                #   1         yes        no           no     = transform(X) -> returns Xt
+                #   2         yes        yes          no     = transform(X, y) -> returns Xt, yt
+                #   3         yes        yes          yes    = transform(X, y, kwargs) -> returns Xt, yt, kwargst
+                #   4         yes        no           yes    = transform(X, kwargs) -> returns Xt, kwargst
+                #   5         no      yes or no      yes or no      = NOT ALLOWED
+
+                if self.needs_y:
+                    # if we dont have any target vector we are in the application state,
+                    # so we skip all training_only steps
+                    if y is not None:
+                        if self.needs_covariates:
+                            X, y, kwargs = self.base_element.transform(X, y, **kwargs)
+                        else:
+                            X, y, _ = self.base_element.transform(X, y)
+                elif self.needs_covariates:
+                    # we need an extra arrangement here, because we reuse code
+                    if isinstance(self, (PipelineBranch, PipelineStacking)):
+                        X, _, _ = self.base_element.transform(X, None, **kwargs)
+                    else:
+                        X, kwargs = self.base_element.transform(X, **kwargs)
+                else:
+                    X = self.base_element.transform(X)
+
+                return X, y, kwargs
+
             elif hasattr(self.base_element, 'predict'):
-                return self.base_element.predict(data)
+                return self.base_element.predict(X)
             else:
                 Logger().error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
         else:
-            return data
+            return X, y, kwargs
 
     def inverse_transform(self, data):
         """
@@ -1640,7 +1698,11 @@ class PipelineBranch(PipelineElement):
 
         super().__init__(name, {}, test_disabled=False, disabled=False, base_element=True)
 
+        # in case any of the children needs y or covariates we need to request them
+        self.needs_y = False
+        self.needs_covariates = True
         self.pipeline_elements = []
+        self.has_hyperparameters = True
 
     def __iadd__(self, pipe_element):
         """
@@ -1653,6 +1715,8 @@ class PipelineBranch(PipelineElement):
             The object to add, being either a transformer or an estimator.
 
         """
+        if pipe_element.needs_y:
+            raise ValueError("Child Element of PipelineBranch must not transform y")
         self.pipeline_elements.append(pipe_element)
         self._prepare_pipeline()
         return self
@@ -1679,8 +1743,9 @@ class PipelineBranch(PipelineElement):
             pipeline_steps.append((item.name, item))
             self._hyperparameters[item.name] = item.hyperparameters
 
-        self.generate_sklearn_hyperparameters()
-        self.base_element = Pipeline(pipeline_steps)
+        if self.has_hyperparameters:
+            self.generate_sklearn_hyperparameters()
+        self.base_element = PhotonPipeline(pipeline_steps)
 
     @property
     def hyperparameters(self):
@@ -1694,8 +1759,11 @@ class PipelineBranch(PipelineElement):
         return None
 
     def generate_config_grid(self):
-        tmp_grid = create_global_config_grid(self.pipeline_elements, self.name)
-        return tmp_grid
+        if self.has_hyperparameters:
+            tmp_grid = create_global_config_grid(self.pipeline_elements, self.name)
+            return tmp_grid
+        else:
+            return []
 
     def generate_sklearn_hyperparameters(self):
         """
@@ -1707,6 +1775,40 @@ class PipelineBranch(PipelineElement):
                 self._hyperparameters[self.name + '__' + attribute] = value_list
 
 
+class Preprocessing(PipelineBranch):
+
+    def __init__(self):
+        super().__init__('Preprocessing')
+        self.has_hyperparameters = False
+        self.needs_y = True
+        self.needs_covariates = True
+
+    def __iadd__(self, pipe_element):
+        """
+        Add an element to the sub pipeline
+        Returns self
+
+        Parameters
+        ----------
+        * `pipe_element` [PipelineElement]:
+            The transformer object to add.
+
+        """
+        if hasattr(pipe_element, "transform"):
+            if len(pipe_element.hyperparameters) > 0:
+                raise ValueError("A preprocessing transformer must not have hyperparameters, "
+                                 "because it is not part of the pipeline")
+            self.pipeline_elements.append(pipe_element)
+            self._prepare_pipeline()
+        else:
+            raise ValueError("Pipeline Element must have transform function")
+        return self
+
+    def predict(self, data, **kwargs):
+        raise Warning("There is no predict function of the preprocessing pipe, it is a transformer only.")
+        pass
+
+
 class PipelineStacking(PipelineElement):
     """
     Creates a vertical stacking/parallelization of pipeline items.
@@ -1716,7 +1818,7 @@ class PipelineStacking(PipelineElement):
     and horizontally concatenated.
 
     """
-    def __init__(self, name: str, stacking_elements=None, voting: bool=True):
+    def __init__(self, name: str, stacking_elements=None, voting: bool=False):
         """
         Creates a new PipelineStacking element.
         Collects all possible hyperparameter combinations of the children
@@ -1740,6 +1842,10 @@ class PipelineStacking(PipelineElement):
             for item_to_stack in stacking_elements:
                 self.__iadd__(item_to_stack)
 
+        # in case any of the children needs y or the covariates, we have to request them
+        self.needs_y = True
+        self.needs_covariates = True
+
     def __iadd__(self, item):
         """
         Adds a new element to the stack.
@@ -1748,6 +1854,11 @@ class PipelineStacking(PipelineElement):
         * `item` [PipelineElement or PipelineBranch or Hyperpipe]:
             The Element that should be stacked and will run in a vertical parallelization in the original pipe.
         """
+
+        if item.needs_y:
+            raise ValueError("Elements in stacking must not transform y because you cannot seriously want to "
+                             "concatenate target vectors after parallelization of items finished.")
+
         self.pipe_elements[item.name] = item
         # self._hyperparameters[item.name] = item.hyperparameters
 
@@ -1807,7 +1918,7 @@ class PipelineStacking(PipelineElement):
                 raise NameError('Could not find element ', name)
         return self
 
-    def fit(self, data, targets=None):
+    def fit(self, data, targets=None, **kwargs):
         """
         Calls fit iteratively on every child
         """
@@ -1816,7 +1927,7 @@ class PipelineStacking(PipelineElement):
             element.fit(data, targets)
         return self
 
-    def predict(self, data):
+    def predict(self, data, targets=None, **kwargs):
         """
         Iteratively calls predict on every child.
         """
@@ -1824,7 +1935,7 @@ class PipelineStacking(PipelineElement):
         # todo: parallelize prediction
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
-            element_transform = element.predict(data)
+            element_transform = element.predict(data, **kwargs)
             predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
@@ -1847,7 +1958,7 @@ class PipelineStacking(PipelineElement):
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data
 
-    def transform(self, data):
+    def transform(self, data, targets=None, **kwargs):
         """
         Calls transform on every child.
 
@@ -1856,32 +1967,10 @@ class PipelineStacking(PipelineElement):
         transformed_data = np.array([])
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
-                element_transform = element.transform(data)
+                element_transform, _, _ = element.transform(data, targets, **kwargs)
                 transformed_data = PipelineStacking.stack_data(transformed_data, element_transform)
 
         return transformed_data
-
-    # def fit_predict(self, data, targets):
-    #     predicted_data = None
-    #     for name, element in self.pipe_elements.items():
-    #         element_transform = element.fit_predict(data)
-    #         predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
-    #     return predicted_data
-    #
-    # def fit_transform(self, data, targets=None):
-    #     transformed_data = np.empty((0, 0))
-    #     for name, element in self.pipe_elements.items():
-    #         # if it is a hyperpipe with a final estimator, we want to use predict:
-    #         if hasattr(element, 'pipe'):
-    #             if element.pipe._final_estimator:
-    #                 element.fit(data, targets)
-    #                 element_transform = element.predict(data)
-    #             else:
-    #                 # if it is just a preprocessing pipe we want to use transform
-    #                 element.fit(data)
-    #                 element_transform = element.transform(data)
-    #             transformed_data = PipelineStacking.stack_data(transformed_data, element_transform)
-    #     return transformed_data
 
     @classmethod
     def stack_data(cls, a, b):
@@ -1907,8 +1996,9 @@ class PipelineStacking(PipelineElement):
             if a.ndim == 1 and b.ndim == 1:
                 a = np.column_stack((a, b))
             else:
-                b = np.reshape(b, (b.shape[0], 1))
-                a = np.concatenate((a, b), 1)
+                # b = np.reshape(b, (b.shape[0], 1))
+                # a = np.concatenate((a, b), 1)
+                a = np.concatenate((a, b), axis=1)
         return a
 
     def score(self, X_test, y_test):

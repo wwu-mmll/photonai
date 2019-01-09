@@ -18,7 +18,7 @@ class TestPipeline(object):
 
     def __init__(self, pipe: Pipeline, specific_config: dict, metrics: list, mother_inner_fold_handle,
                  raise_error: bool=False, mongo_db_settings=None, callback_function=None,
-                 imbalanced_strategy=None):
+                 imbalanced_strategy=None, training: bool = False):
         """
         Creates a new TestPipeline object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -41,10 +41,11 @@ class TestPipeline(object):
         self.mongo_db_settings = mongo_db_settings
         self.callback_function = callback_function
         self.imbalanced_strategy = imbalanced_strategy
+        self.training = training
 
     def calculate_cv_score(self, X, y, cv_iter,
                            calculate_metrics_per_fold: bool = True,
-                           calculate_metrics_across_folds: bool =False):
+                           calculate_metrics_across_folds: bool =False, **kwargs):
         """
         Iterates over cross-validation folds and trains the pipeline, then uses it for predictions.
         Calculates metrics per fold and averages them over fold.
@@ -90,6 +91,13 @@ class TestPipeline(object):
                     else:
                         train_X = X[train]
                         train_y = y[train]
+                        kwargs_cv_train = {}
+                        kwargs_cv_test = {}
+                        if len(kwargs) > 0:
+                            for name, sublist in kwargs.items():
+                                if isinstance(sublist, (list, np.ndarray)):
+                                    kwargs_cv_train[name] = sublist[train]
+                                    kwargs_cv_test[name] = sublist[test]
 
                     # set params to current config
                     self.pipe.set_params(**self.params)
@@ -100,7 +108,7 @@ class TestPipeline(object):
 
                     # start fitting
                     fit_start_time = time.time()
-                    self.pipe.fit(train_X, train_y)
+                    self.pipe.fit(train_X, train_y, **kwargs_cv_train)
 
                     # Todo: Fit Process Metrics
 
@@ -111,12 +119,13 @@ class TestPipeline(object):
                     # score test data
                     curr_test_fold = TestPipeline.score(self.pipe, X[test], y[test], self.metrics, indices=test,
                                                         save_predictions=save_predictions,
-                                                        save_feature_importances=save_feature_importances)
+                                                        save_feature_importances=save_feature_importances, **kwargs_cv_test)
 
                     # score train data
                     curr_train_fold = TestPipeline.score(self.pipe, X[train], y[train], self.metrics, indices=train,
                                                          save_predictions=save_predictions,
-                                                         save_feature_importances=save_feature_importances)
+                                                         save_feature_importances=save_feature_importances,
+                                                         training=True, **kwargs_cv_train)
 
                     if calculate_metrics_across_folds:
                         # if we have one hot encoded values -> concat horizontally
@@ -228,7 +237,7 @@ class TestPipeline(object):
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
               save_predictions=False, save_feature_importances=False,
-              calculate_metrics: bool=True):
+              calculate_metrics: bool=True, training: bool=False, **kwargs):
         """
         Uses the pipeline to predict the given data, compare it to the truth values and calculate metrics
 
@@ -238,6 +247,8 @@ class TestPipeline(object):
         :param metrics: the metrics to be calculated
         :param indices: the indices of the given data and targets that are logged into the result tree
         :param save_predictions: if True, the predicted value array is stored in to the result tree
+        :param save_feature_importances: if True, the feature importances of the estimator, if any, are stored to the result tree
+        :param training: if True, all training_only pipeline steps are executed, if False they are skipped
         :param calculate_metrics: if True, calculates metrics for given data
         :return: ScoreInformation object
         """
@@ -246,14 +257,22 @@ class TestPipeline(object):
 
         output_metrics = {}
         non_default_score_metrics = list(metrics)
-        if 'score' in metrics:
-            if hasattr(estimator, 'score'):
-                # Todo: Here it is potentially slowing down!!!!!!!!!!!!!!!!
-                default_score = estimator.score(X, y_true)
-                output_metrics['score'] = default_score
-                non_default_score_metrics.remove('score')
+        # that does not work because it is not an exact match and also reacts to e.g. f1_score
+        # if 'score' in metrics:
+        # so we use this:
+        checklist = ['score']
+        matches = set(checklist).intersection(set(non_default_score_metrics))
+        if len(matches) > 0:
+            # Todo: Here it is potentially slowing down!!!!!!!!!!!!!!!!
+            default_score = estimator.score(X, y_true)
+            output_metrics['score'] = default_score
+            non_default_score_metrics.remove('score')
 
-        y_pred = estimator.predict(X)
+        if not training:
+            y_pred = estimator.predict(X, **kwargs)
+        else:
+            X, y_true, kwargs = estimator.transform(X, y_true, **kwargs)
+            y_pred = estimator.predict(X, training=True, **kwargs)
 
         f_importances = []
         if save_feature_importances:
