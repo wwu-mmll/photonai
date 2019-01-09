@@ -44,8 +44,7 @@ class PhotonPipeline(_BaseComposition):
         for t in transformers:
             if t is None:
                 continue
-            if (not (hasattr(t, "fit") or hasattr(t, "fit_transform")) or not
-            hasattr(t, "transform")):
+            if not (hasattr(t, "fit") or not hasattr(t, "transform")):
                 raise TypeError("All intermediate steps should be "
                                 "transformers and implement fit and transform."
                                 " '%s' (type %s) doesn't" % (t, type(t)))
@@ -57,27 +56,8 @@ class PhotonPipeline(_BaseComposition):
                             % (estimator, type(estimator)))
 
     def stepwise_transform(self, transformer, X, y, **kwargs):
-
-        # Case| transforms X | needs_y | needs_covariates
-        # -------------------------------------------------------
-        #   1         yes        no           no     = transform(X) -> returns Xt
-        #   2         yes        yes          no     = transform(X, y) -> returns Xt, yt
-        #   3         yes        yes          yes    = transform(X, y, kwargs) -> returns Xt, yt, kwargst
-        #   4         yes        no           yes    = transform(X, kwargs) -> returns Xt, kwargst
-        #   5         no      yes or no      yes or no      = NOT ALLOWED
-
-        if transformer.needs_y:
-            if transformer.needs_covariates:
-                X, y, kwargs = transformer.transform(X, y, **kwargs)
-            else:
-                X, y = transformer.transform(X, y)
-        elif transformer.needs_covariates:
-            X, kwargs = transformer.transform(X, **kwargs)
-        else:
-            X = transformer.transform(X)
-
+        X, y, kwargs = transformer.transform(X, y, **kwargs)
         return X, y, kwargs
-
 
     def fit(self, X, y=None, **kwargs):
 
@@ -93,31 +73,46 @@ class PhotonPipeline(_BaseComposition):
         return self
 
     def transform(self, X, y=None, **kwargs):
+        """
+        Calls transform on every step that offers a transform function
+        including the last step if it has the transformer flag,
+        and excluding the last step if it has the estimator flag but no transformer flag.
 
+        Returns transformed X, y and kwargs
+        """
         for (name, transformer) in self.steps[:-1]:
             X, y, kwargs = self.stepwise_transform(transformer, X, y, **kwargs)
 
         if self._final_estimator is not None:
             if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
                 X, y, kwargs = self.stepwise_transform(self._final_estimator, X, y, **kwargs)
-        return X
+        return X, y, kwargs
 
+    def predict(self, X, training=False, **kwargs):
+        """
+        Transforms the data for every step that offers a transform function
+        and then calls the estimator with predict on transformed data.
+        It returns the predictions made.
 
-    def predict(self, X, y=None, **kwargs):
-        for (name, transformer) in self.steps[:-1]:
-            X, y, kwargs = self.stepwise_transform(transformer, X, y, **kwargs)
+        In case the last step is no estimator, it returns the transformed data.
+        """
+        # first transform
+        if not training:
+            X, _, kwargs = self.transform(X, y=None, **kwargs)
 
+        # then call predict on final estimator
         if self._final_estimator is not None:
-            if hasattr(self._final_estimator, 'predict'):
-                y_pred = self._final_estimator.predict(X)
+            if self._final_estimator.is_estimator:
+                y_pred = self._final_estimator.predict(X, **kwargs)
                 return y_pred
+            else:
+                return X
         else:
             return None
 
-
     def inverse_transform(self, X, y, **kwargs):
         # simply use X to apply inverse_transform
-        # does not work on any transformers changing or kwargs!
+        # does not work on any transformers changing y or kwargs!
         Xt = X
         for name, transform in self.steps[::-1]:
             if hasattr(transform, 'inverse_transform'):
@@ -133,8 +128,6 @@ class PhotonPipeline(_BaseComposition):
 
     def predict_proba(self, X):
         raise NotImplementedError('predict_proba not yet implemented in PHOTON Pipeline')
-
-
 
     @property
     def _estimator_type(self):
