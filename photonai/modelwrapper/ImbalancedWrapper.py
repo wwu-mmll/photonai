@@ -23,7 +23,7 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
         'combine': ["SMOTEENN", "SMOTETomek"]
     }
 
-    def __init__(self, method_name: str, **kwargs):
+    def __init__(self, method_name: str='RandomUnderSampler', **kwargs):
         """
         Instantiates an object that transforms the data into balanced groups according to the given method
 
@@ -56,6 +56,7 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
         """
 
         self.method_name = method_name
+        self.needs_y = True
 
         imbalance_type = ''
         for group, possible_strategies in ImbalancedDataTransform.IMBALANCED_DICT.items():
@@ -90,4 +91,10 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
     def fit_sample(self, X, y):
         self.x_transformed, self.y_transformed = self.method.fit_sample(X, y)
         return self.x_transformed, self.y_transformed
+
+    def fit(self, X, y, **kwargs):
+        return self
+
+    def transform(self, X, y=None, **kwargs):
+        return self.fit_sample(X, y)
 
