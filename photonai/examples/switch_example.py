@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, PersistOptions
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.investigator.Investigator import Investigator
 from sklearn.model_selection import KFold
@@ -7,7 +7,7 @@ from photonai.optimization.SpeedHacks import MinimumPerformance
 from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
 
-persist_options = PersistOptions(save_feature_importances='best',
+persist_options = OutputSettings(save_feature_importances='best',
                                  mongodb_connect_url="mongodb://trap-umbriel:27017/photon_db_test")
 
 my_pipe = Hyperpipe('basic_switch_pipe',
@@ -18,7 +18,7 @@ my_pipe = Hyperpipe('basic_switch_pipe',
                     inner_cv=KFold(n_splits=10),
                     verbosity=1,
                     performance_constraints=MinimumPerformance('accuracy', 0.9),
-                    persist_options=persist_options)
+                    output_settings=persist_options)
 
 
 svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),

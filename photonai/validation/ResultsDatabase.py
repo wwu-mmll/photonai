@@ -152,12 +152,13 @@ class MDBHelper:
         for metric_item in metrics:
             for op in operations:
                 value_list_train = [fold.training.metrics[metric_item] for fold in folds
-                                    if metric_item in fold.training.metrics]
+                                    if fold.training is not None and metric_item in fold.training.metrics]
                 if value_list_train:
                     metrics_train.append(MDBFoldMetric(operation=op, metric_name=metric_item,
-                                                                   value=calculate_single_metric(op, value_list_train)))
+                                                       value=calculate_single_metric(op, value_list_train)))
+
                 value_list_validation = [fold.validation.metrics[metric_item] for fold in folds
-                                         if metric_item in fold.validation.metrics]
+                                         if fold.validation is not None and metric_item in fold.validation.metrics]
                 if value_list_validation:
                     metrics_test.append(MDBFoldMetric(operation=op, metric_name=metric_item,
                                                       value=calculate_single_metric(op, value_list_validation)))

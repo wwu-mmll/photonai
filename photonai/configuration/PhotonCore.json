@@ -399,6 +399,14 @@
     "sklearn.dummy.DummyRegressor",
     "Estimator"
   ],
+  "LabelEncoder": [
+    "photonai.modelwrapper.LabelEncoder.LabelEncoder",
+    "Transformer"
+  ],
+  "ConfounderRemoval":[
+    "photonai.modelwrapper.ConfounderRemoval.ConfounderRemoval",
+    "Transformer"
+  ],
   "KerasDNNClassifier":[
     "photonai.modelwrapper.KerasDNNClassifier.KerasDNNClassifier",
     "Estimator"

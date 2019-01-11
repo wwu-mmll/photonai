@@ -1559,7 +1559,7 @@ and managing the optimization of the hyperparameters</p>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">:</span>
                 <span class="n">Logger</span><span class="p">()</span><span class="o">.</span><span class="n">set_custom_log_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">PersistOptions</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">OutputSettings</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mongodb_writer</span> <span class="o">=</span> <span class="n">MongoDBWriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_elements</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1626,7 +1626,7 @@ and managing the optimization of the hyperparameters</p>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        * persist_options&#39; [PersistOptions]:</span>
+<span class="sd">        * persist_options&#39; [OutputSettings]:</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">persist_options</span>
@@ -2475,7 +2475,7 @@ and managing the optimization of the hyperparameters</p>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">:</span>
             <span class="n">Logger</span><span class="p">()</span><span class="o">.</span><span class="n">set_custom_log_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">PersistOptions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">OutputSettings</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">mongodb_writer</span> <span class="o">=</span> <span class="n">MongoDBWriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_elements</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_pipe</span> <span class="o">=</span> <span class="bp">None</span>

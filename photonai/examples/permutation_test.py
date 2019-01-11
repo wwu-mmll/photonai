@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from photonai.validation.PermutationTest import PermutationTest
 
@@ -7,7 +7,7 @@ from sklearn.datasets import load_breast_cancer
 
 
 def create_hyperpipe():
-    mongo_settings = PersistOptions(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_tests",
+    mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_tests",
                                     save_predictions='best',
                                     save_feature_importances='best')
 
@@ -19,7 +19,7 @@ def create_hyperpipe():
                         inner_cv=KFold(n_splits=3),
                         calculate_metrics_across_folds=True,
                         eval_final_performance=True,
-                        verbosity=1, persist_options=mongo_settings)
+                        verbosity=1, output_settings=mongo_settings)
 
     my_pipe += PipelineElement('StandardScaler')
     my_pipe += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),

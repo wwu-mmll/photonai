@@ -18,7 +18,7 @@ class TestPipeline(object):
 
     def __init__(self, pipe: Pipeline, specific_config: dict, metrics: list, mother_inner_fold_handle,
                  raise_error: bool=False, mongo_db_settings=None, callback_function=None,
-                 imbalanced_strategy=None, training: bool = False):
+                 training: bool = False):
         """
         Creates a new TestPipeline object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -40,7 +40,6 @@ class TestPipeline(object):
         self.mother_inner_fold_handle = mother_inner_fold_handle
         self.mongo_db_settings = mongo_db_settings
         self.callback_function = callback_function
-        self.imbalanced_strategy = imbalanced_strategy
         self.training = training
 
     def calculate_cv_score(self, X, y, cv_iter,
@@ -85,19 +84,15 @@ class TestPipeline(object):
             # do inner cv
             for train, test in cv_iter:
 
-                    # if the groups are imbalanced, and a strategy is chosen, apply it here
-                    if self.imbalanced_strategy:
-                        train_X, train_y = self.imbalanced_strategy.fit_sample(X[train],y[train])
-                    else:
-                        train_X = X[train]
-                        train_y = y[train]
-                        kwargs_cv_train = {}
-                        kwargs_cv_test = {}
-                        if len(kwargs) > 0:
-                            for name, sublist in kwargs.items():
-                                if isinstance(sublist, (list, np.ndarray)):
-                                    kwargs_cv_train[name] = sublist[train]
-                                    kwargs_cv_test[name] = sublist[test]
+                    train_X = X[train]
+                    train_y = y[train]
+                    kwargs_cv_train = {}
+                    kwargs_cv_test = {}
+                    if len(kwargs) > 0:
+                        for name, sublist in kwargs.items():
+                            if isinstance(sublist, (list, np.ndarray)):
+                                kwargs_cv_train[name] = sublist[train]
+                                kwargs_cv_test[name] = sublist[test]
 
                     # set params to current config
                     self.pipe.set_params(**self.params)

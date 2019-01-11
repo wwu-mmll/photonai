@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch, PersistOptions
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.investigator.Investigator import Investigator
 from photonai.configuration.Register import PhotonRegister
@@ -6,13 +6,6 @@ from sklearn.model_selection import KFold
 
 from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
-
-
-mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
-                                save_predictions='best',
-                                save_feature_importances='best',
-                                local_file="my_tree.p",
-                                log_filename="my_tree.log")
 
 
 my_pipe = Hyperpipe('basic_stacking',
