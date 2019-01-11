@@ -9,6 +9,8 @@ from sklearn.decomposition.pca import PCA
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
+from sklearn.tree import DecisionTreeClassifier
+
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
 # assertTrue(x) 	bool(x) is True
@@ -55,6 +57,7 @@ class PipelineTests(unittest.TestCase):
         self.p_pca = PipelineElement("PCA", {}, random_state=3)
         self.p_svm = PipelineElement("SVC", {}, random_state=3)
         self.p_ss = PipelineElement("StandardScaler", {})
+        self.p_dt = PipelineElement("DecisionTreeClassifier", random_state=3)
 
         dummy_element = DummyYAndCovariatesTransformer()
         self.dummy_photon_element = PipelineElement.create("DummyTransformer", dummy_element, {})
@@ -62,6 +65,7 @@ class PipelineTests(unittest.TestCase):
         self.sk_pca = PCA(random_state=3)
         self.sk_svc = SVC(random_state=3)
         self.sk_ss = StandardScaler()
+        self.sk_dt = DecisionTreeClassifier(random_state=3)
 
     def tearDown(self):
         pass
@@ -139,7 +143,6 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue("sample1_edit" in kwargst)
         self.assertTrue(np.array_equal(kwargst["sample1_edit"], kwargs["sample1"] + 5))
 
-
     def test_predict_with_training_flag(self):
         # manually edit labels
         sk_pipe = SKPipeline([("SS", self.sk_ss), ("SVC", self.sk_svc)])
@@ -157,3 +160,32 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sk_standardized_X, input_of_y_transformer))
 
         self.assertTrue(np.array_equal(sk_pred, p_pred))
+
+    def test_inverse_tansform(self):
+        sk_pipe = SKPipeline([("SS", self.sk_ss), ("PCA", self.sk_pca)])
+        sk_pipe.fit(self.X, self.y)
+        sk_transform = sk_pipe.transform(self.X)
+        sk_inverse_transformed = sk_pipe.inverse_transform(sk_transform)
+
+        photon_pipe = PhotonPipeline([("SS", self.p_ss), ("PCA", self.p_pca)])
+        photon_pipe.fit(self.X, self.y)
+        p_transform, _, _ = photon_pipe.transform(self.X)
+        p_inverse_transformed, _, _ = photon_pipe.inverse_transform(p_transform)
+
+        self.assertTrue(np.array_equal(sk_inverse_transformed, p_inverse_transformed))
+
+    # Todo: add tests for kwargs
+
+    def test_predict_proba(self):
+
+        sk_pipe = SKPipeline([("SS", self.sk_ss), ("SVC", self.sk_dt)])
+        sk_pipe.fit(self.X, self.y)
+        sk_proba = sk_pipe.predict_proba(self.X)
+
+        photon_pipe = PhotonPipeline([("SS", self.p_ss), ("SVC", self.p_dt)])
+        photon_pipe.fit(self.X, self.y)
+        photon_proba = photon_pipe.predict_proba(self.X)
+
+        self.assertTrue(np.array_equal(sk_proba, photon_proba))
+
+

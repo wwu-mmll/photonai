@@ -1081,7 +1081,7 @@ table {
 
         </li>
         <li class="mono">
-        <span class="class_name"><a href="#photonai.base.PersistOptions">PersistOptions</a></span>
+        <span class="class_name"><a href="#photonai.base.PersistOptions">OutputSettings</a></span>
         
           
   <ul>
@@ -1203,7 +1203,7 @@ table {
   <div id="source-photonai.base" class="source">
     <div class="codehilite"><pre><span></span><span class="sd">&quot;&quot;&quot; PHOTON Base Classes enabling the nested-cross-validated hyperparameter search.&quot;&quot;&quot;</span>
 
-<span class="kn">from</span> <span class="nn">.PhotonBase</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">PipelineSwitch</span><span class="p">,</span> <span class="n">PipelineStacking</span><span class="p">,</span> <span class="n">PipelineBranch</span><span class="p">,</span> <span class="n">PersistOptions</span>
+<span class="kn">from</span> <span class="nn">.PhotonBase</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">PipelineSwitch</span><span class="p">,</span> <span class="n">PipelineStacking</span><span class="p">,</span> <span class="n">PipelineBranch</span><span class="p">,</span> <span class="n">OutputSettings</span>
 <span class="kn">from</span> <span class="nn">.ImbalancedWrapper</span> <span class="kn">import</span> <span class="n">ImbalancedDataTransform</span>
 
 <span class="n">__all__</span> <span class="o">=</span> <span class="p">(</span><span class="s2">&quot;Hyperpipe&quot;</span><span class="p">,</span>
@@ -1211,7 +1211,7 @@ table {
            <span class="s2">&quot;PipelineSwitch&quot;</span><span class="p">,</span>
            <span class="s2">&quot;PipelineStacking&quot;</span><span class="p">,</span>
            <span class="s2">&quot;PipelineBranch&quot;</span><span class="p">,</span>
-           <span class="s2">&quot;PersistOptions&quot;</span><span class="p">,</span>
+           <span class="s2">&quot;OutputSettings&quot;</span><span class="p">,</span>
            <span class="s2">&quot;ImbalancedDataTransform&quot;</span><span class="p">)</span>
 </pre></div>
 
@@ -1603,7 +1603,7 @@ and managing the optimization of the hyperparameters</p>
             <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">:</span>
                 <span class="n">Logger</span><span class="p">()</span><span class="o">.</span><span class="n">set_custom_log_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
-            <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">PersistOptions</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">OutputSettings</span><span class="p">()</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">mongodb_writer</span> <span class="o">=</span> <span class="n">MongoDBWriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="p">)</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_elements</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1670,7 +1670,7 @@ and managing the optimization of the hyperparameters</p>
 
 <span class="sd">        Parameters</span>
 <span class="sd">        ----------</span>
-<span class="sd">        * persist_options&#39; [PersistOptions]:</span>
+<span class="sd">        * persist_options&#39; [OutputSettings]:</span>
 
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">persist_options</span>
@@ -2519,7 +2519,7 @@ and managing the optimization of the hyperparameters</p>
         <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">:</span>
             <span class="n">Logger</span><span class="p">()</span><span class="o">.</span><span class="n">set_custom_log_file</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="o">.</span><span class="n">log_file</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">PersistOptions</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span> <span class="o">=</span> <span class="n">OutputSettings</span><span class="p">()</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">mongodb_writer</span> <span class="o">=</span> <span class="n">MongoDBWriter</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">persist_options</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_elements</span> <span class="o">=</span> <span class="p">[]</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_pipe</span> <span class="o">=</span> <span class="bp">None</span>
@@ -4126,13 +4126,13 @@ component of a nested object.</p>
       </div>
       
       <div class="item">
-      <p id="photonai.base.PersistOptions" class="name">class <span class="ident">PersistOptions</span></p>
+      <p id="photonai.base.PersistOptions" class="name">class <span class="ident">OutputSettings</span></p>
       
   
   <div class="source_cont">
   <p class="source_link"><a href="javascript:void(0);" onclick="toggle('source-photonai.base.PersistOptions', this);">Show source &equiv;</a></p>
   <div id="source-photonai.base.PersistOptions" class="source">
-    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">PersistOptions</span><span class="p">:</span>
+    <div class="codehilite"><pre><span></span><span class="k">class</span> <span class="nc">OutputSettings</span><span class="p">:</span>
 
     <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">mongodb_connect_url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="bp">None</span><span class="p">,</span>
                  <span class="n">save_predictions</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="bp">False</span><span class="p">,</span>
@@ -4155,7 +4155,7 @@ component of a nested object.</p>
       <div class="class">
           <h3>Ancestors (in MRO)</h3>
           <ul class="class_list">
-          <li><a href="#photonai.base.PersistOptions">PersistOptions</a></li>
+          <li><a href="#photonai.base.PersistOptions">OutputSettings</a></li>
           <li>builtins.object</li>
           </ul>
           <h3>Static methods</h3>

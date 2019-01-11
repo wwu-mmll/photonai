@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, PersistOptions
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, OutputSettings
 from photonai.neuro.AtlasStacker import AtlasInfo
 from photonai.neuro.AtlasMapping import AtlasMapping
 from sklearn.model_selection import KFold, ShuffleSplit, GroupKFold
@@ -16,7 +16,7 @@ folder = ''
 #BrainAtlas.whichAtlases()
 
 # define hyperpipe to be applied to each ROI as usual
-pers_opts = PersistOptions(local_file='dummy_file',
+pers_opts = OutputSettings(local_file='dummy_file',
                            save_predictions='best',
                            save_feature_importances='None')
 my_pipe = Hyperpipe(name='dummy_pipe',  # the name of your pipeline
@@ -25,7 +25,7 @@ my_pipe = Hyperpipe(name='dummy_pipe',  # the name of your pipeline
                     best_config_metric='mean_absolute_error',
                     outer_cv=KFold(n_splits=3, shuffle=True, random_state=42),
                     inner_cv=KFold(n_splits=3, shuffle=True, random_state=42),
-                    persist_options=pers_opts,
+                    output_settings=pers_opts,
                     verbosity=0)
 my_pipe += PipelineElement('StandardScaler')
 my_pipe += PipelineElement('SVR', {'kernel': ['linear', 'rbf']})

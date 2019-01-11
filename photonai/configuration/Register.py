@@ -260,10 +260,11 @@ class PhotonRegister:
         """
         for package in photon_package:
             content, file_name = PhotonRegister.get_json(package)
-            print('\n' + package + ' (' + file_name + ')')
-            for k, v in sorted(content.items()):
-                class_info, package_type = v
-                print("{:<35} {:<75} {:<5}".format(k, class_info, package_type))
+            if len(content) > 0 and file_name is not None:
+                print('\n' + package + ' (' + file_name + ')')
+                for k, v in sorted(content.items()):
+                    class_info, package_type = v
+                    print("{:<35} {:<75} {:<5}".format(k, class_info, package_type))
 
 
 if __name__ == "__main__":

@@ -3,11 +3,10 @@ from photonai.neuro.AtlasMapping import AtlasMapping
 
 def hyperpipe_constructor():
     # hyperpipe construtor
-    from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
+    from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
     from sklearn.model_selection import KFold
 
-    pers_opts = PersistOptions(local_file='dummy_file',
-                               save_predictions='best',
+    pers_opts = OutputSettings(save_predictions='best',
                                save_feature_importances='None')
 
     my_pipe = Hyperpipe(name='dummy_pipe',  # the name of your pipeline
@@ -16,7 +15,7 @@ def hyperpipe_constructor():
                         best_config_metric='mean_absolute_error',
                         outer_cv=KFold(n_splits=3, shuffle=True, random_state=42),
                         inner_cv=KFold(n_splits=3, shuffle=True, random_state=42),
-                        persist_options=pers_opts,
+                        output_settings=pers_opts,
                         verbosity=0)
 
     my_pipe += PipelineElement('StandardScaler')

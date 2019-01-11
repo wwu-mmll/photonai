@@ -58,7 +58,7 @@ class HyperpipeTests(unittest.TestCase):
                             inner_cv=KFold(n_splits=3),
                             outer_cv=KFold(n_splits=3),
                             eval_final_performance=True,
-                            persist_options=PersistOptions(save_predictions='all'))
+                            output_settings=OutputSettings(save_predictions='all'))
 
         my_pipe += PipelineElement('StandardScaler')
         my_pipe += PipelineElement('PCA', {'n_components': [pca_n_components]}, random_state=3)
@@ -129,10 +129,34 @@ class HyperpipeTests(unittest.TestCase):
 
             tmp_counter += 1
 
+    def test_eval_final_performance(self):
+
+        pca_n_components = 10
+        svc_c = 1
+        svc_kernel = "rbf"
+
+        # SET UP HYPERPIPE
+        my_pipe = Hyperpipe('primary_pipe', optimizer='grid_search', optimizer_params={},
+                            metrics=['accuracy', 'precision', 'f1_score'],
+                            best_config_metric='accuracy',
+                            inner_cv=KFold(n_splits=3),
+                            # outer_cv=KFold(n_splits=3),
+                            eval_final_performance=True,
+                            output_settings=OutputSettings(save_predictions='all'))
+
+        my_pipe += PipelineElement('StandardScaler')
+        my_pipe += PipelineElement('PCA', {'n_components': [pca_n_components]}, random_state=3)
+        my_pipe += PipelineElement('SVC', {'C': [svc_c], 'kernel': [svc_kernel]}, random_state=3)
+
+        # START HYPERPARAMETER SEARCH
+        my_pipe.fit(self.__X, self.__y)
+
+        # Todo: check that no outer fold metrics have been created
+
 
     def test_preprocessing(self):
 
-        prepro_pipe = Preprocessing()
+        prepro_pipe = PreprocessingPipe()
         prepro_pipe += PipelineElement.create("dummy", DummyYAndCovariatesTransformer(), {})
 
         self.hyperpipe += prepro_pipe

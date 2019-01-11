@@ -1,5 +1,5 @@
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from photonai.optimization.SpeedHacks import MinimumPerformance
 from photonai.investigator.Investigator import Investigator
@@ -14,7 +14,7 @@ X, y = load_breast_cancer(True)
 y[y == 0] = -1
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = PersistOptions(save_predictions='best', local_file='test_ocsvm.p')
+mongo_settings = OutputSettings(save_predictions='best')
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipeline
@@ -27,13 +27,13 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
                     verbosity=1,
-                    persist_options=mongo_settings)  # get error, warn and info message                    )
+                    output_settings=mongo_settings)  # get error, warn and info message                    )
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
 my_pipe += PipelineElement('StandardScaler')
 my_pipe += PipelineElement('AnomalyDetectorWrapper', hyperparameters={'wrapped_estimator': ['OneClassSVM'],
-                                                                                       'kernel': ['linear', 'rbf']})
+                                                                      'kernel': ['linear', 'rbf']})
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)

@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from photonai.investigator.Investigator import Investigator
 from photonai.configuration.Register import PhotonRegister
@@ -10,7 +10,7 @@ X, y = load_boston(True)
 
 # setup Hyperpipe
 pipe_name = 'autoSklearn_pipe'
-pers_opts = PersistOptions(local_file=pipe_name + '.p',
+pers_opts = OutputSettings(local_file=pipe_name + '.p',
                            save_predictions='best', save_feature_importances='None')
 
 # DESIGN YOUR PIPELINE
@@ -19,7 +19,7 @@ my_pipe = Hyperpipe(pipe_name, optimizer='grid_search',
                     best_config_metric='mean_absolute_error',
                     #outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=2),
-                    persist_options=pers_opts,
+                    output_settings=pers_opts,
                     verbosity=1)
 
 

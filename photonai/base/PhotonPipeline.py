@@ -55,17 +55,13 @@ class PhotonPipeline(_BaseComposition):
                             "'%s' (type %s) doesn't"
                             % (estimator, type(estimator)))
 
-    def stepwise_transform(self, transformer, X, y, **kwargs):
-        X, y, kwargs = transformer.transform(X, y, **kwargs)
-        return X, y, kwargs
-
     def fit(self, X, y=None, **kwargs):
 
         self._validate_steps()
 
         for (name, transformer) in self.steps[:-1]:
             transformer.fit(X, y, **kwargs)
-            X, y, kwargs = self.stepwise_transform(transformer, X, y, **kwargs)
+            X, y, kwargs = transformer.transform(X, y, **kwargs)
 
         if self._final_estimator is not None:
             self._final_estimator.fit(X, y, **kwargs)
@@ -81,11 +77,11 @@ class PhotonPipeline(_BaseComposition):
         Returns transformed X, y and kwargs
         """
         for (name, transformer) in self.steps[:-1]:
-            X, y, kwargs = self.stepwise_transform(transformer, X, y, **kwargs)
+            X, y, kwargs = transformer.transform(X, y, **kwargs)
 
         if self._final_estimator is not None:
             if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
-                X, y, kwargs = self.stepwise_transform(self._final_estimator, X, y, **kwargs)
+                X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
         return X, y, kwargs
 
     def predict(self, X, training=False, **kwargs):
@@ -110,14 +106,23 @@ class PhotonPipeline(_BaseComposition):
         else:
             return None
 
-    def inverse_transform(self, X, y, **kwargs):
+    def predict_proba(self, X, **kwargs):
+        X, _, kwargs = self.transform(X, y=None, **kwargs)
+
+        if self._final_estimator is not None:
+            if self._final_estimator.is_estimator:
+                if hasattr(self._final_estimator, "predict_proba"):
+                    return self._final_estimator.predict_proba(X, **kwargs)
+
+        raise NotImplementedError("The final estimator does not have a predict_proba method")
+
+    def inverse_transform(self, X, y=None, **kwargs):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
-        Xt = X
         for name, transform in self.steps[::-1]:
             if hasattr(transform, 'inverse_transform'):
-                Xt = transform.inverse_transform(Xt)
-        return Xt
+                X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
+        return X, y, kwargs
 
     def fit_transform(self, X, y=None, **kwargs):
         # return self.fit(X, y, **kwargs).transform(X, y, **kwargs)
@@ -126,8 +131,6 @@ class PhotonPipeline(_BaseComposition):
     def fit_predict(self, X, y=None, **kwargs):
         raise NotImplementedError('fit_predict not yet implemented in PHOTON Pipeline')
 
-    def predict_proba(self, X):
-        raise NotImplementedError('predict_proba not yet implemented in PHOTON Pipeline')
 
     @property
     def _estimator_type(self):

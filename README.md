@@ -214,12 +214,11 @@ from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-# mongo_settings = PersistOptions(mongodb_connect_url="mongodb://localhost:27017/photon_db",
-#                                 save_predictions=False,
+OutputSettings                                 save_predictions=False,
 #                                 save_feature_importances=False)
 
 
-save_options = PersistOptions(local_file="/home/photon_user/photon_test/test_item.p")
+save_options = OutputSettings(local_file="/home/photon_user/photon_test/test_item.p")
 
 
 # DESIGN YOUR PIPELINE
