@@ -300,7 +300,7 @@ class TestPipeline(object):
 
             probabilities = []
             if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
-                probabilities = estimator.predict_proba(X)
+                probabilities = estimator.predict_proba(X, training=training)
 
                 try:
                     if probabilities is not None:

@@ -16,6 +16,7 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         self.ask = self.ask_generator()
         self.num_iterations = num_iterations
         self.maximize_metric = True
+        self.constant_dictionary = {}
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool):
 
@@ -25,6 +26,13 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         space = []
         for pipe_element in pipeline_elements:
             for name, value in pipe_element.hyperparameters.items():
+                # if we only have one value we do not need to optimize
+                if isinstance(value, list) and len(value) < 2:
+                    self.constant_dictionary[name] = value[0]
+                    continue
+                if isinstance(value, PhotonCategorical) and len(value.values) < 2:
+                    self.constant_dictionary[name] = value.values[0]
+                    continue
                 skopt_param = self._convert_PHOTON_to_skopt_space(value, name)
                 if skopt_param is not None:
                     space.append(skopt_param)
