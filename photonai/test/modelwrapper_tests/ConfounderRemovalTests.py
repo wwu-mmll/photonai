@@ -32,4 +32,3 @@ class ConfounderRemovalTests(unittest.TestCase):
     def test_key_error(self):
 
         with self.assertRaises(KeyError):
-            self.cr.fit(self.X, self.y)

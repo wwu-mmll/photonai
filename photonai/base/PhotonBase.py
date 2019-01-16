@@ -1750,8 +1750,8 @@ class PreprocessingPipe(PipelineBranch):
         """
         if hasattr(pipe_element, "transform"):
             if len(pipe_element.hyperparameters) > 0:
-                raise ValueError("A preprocessing transformer must not have hyperparameters, "
-                                 "because it is not part of the pipeline")
+                raise ValueError("A preprocessing transformer must not have any hyperparameter "
+                                 "because it is not part of the optimization and cross validation procedure")
             self.pipeline_elements.append(pipe_element)
             self._prepare_pipeline()
         else:
