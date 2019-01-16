@@ -48,7 +48,7 @@ class ResamplingImgs(BaseEstimator):
     def transform(self, X, y=None):
         from nilearn.image import resample_img
         target_affine = np.diag(self.voxel_size)
-        Logger().info('Resampling Voxel Size to ' + str(self.voxel_size))
+        #Logger().info('Resampling Voxel Size to ' + str(self.voxel_size))
         out_imgs = []
         for x_in in X:
             resImg = resample_img(x_in, target_affine=target_affine, interpolation='nearest')
@@ -59,7 +59,7 @@ class ResamplingImgs(BaseEstimator):
                 out_imgs.append(resImg)
 
         if not self.output_img:
-            Logger().info('Generating numpy array.')
+            #Logger().info('Generating numpy array.')
             out_imgs = np.asarray(out_imgs)
 
         return out_imgs
