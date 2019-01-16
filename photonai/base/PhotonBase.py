@@ -82,7 +82,10 @@ class OutputSettings:
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
 
         if project_folder == '':
-            project_folder = os.path.dirname(__main__.__file__)
+            self.project_folder = os.path.dirname(__main__.__file__)
+        else:
+            self.project_folder = project_folder
+
         self.save_output = save_output
 
         if self.save_output:
@@ -117,6 +120,20 @@ class OutputSettings:
         else:
             raise ValueError('Possible options for saving predictions or feature importances are: "best", "all", "None"')
         return save_best, save_all
+
+    def _update_settings(self, name):
+        if self.save_output:
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
+            os.mkdir(self.results_folder)
+            self.local_file = self._add_timestamp(self.local_file)
+            self.log_file = self._add_timestamp(self.log_file)
+            self.summary_filename = self._add_timestamp(self.summary_filename)
+            self.pretrained_model_filename = self._add_timestamp(self.pretrained_model_filename)
+
+    def _add_timestamp(self, file):
+        return os.path.join(self.results_folder, os.path.basename(file))
+
 
 
 class Hyperpipe(BaseEstimator):
@@ -618,6 +635,9 @@ class Hyperpipe(BaseEstimator):
                                             + '_inner_fold_' + str(self.__mother_inner_fold_counter)
                 else:
                     self.result_tree_name = self.name
+
+                # update output options to add pipe name and timestamp
+                self.output_settings._update_settings(self.name)
 
                 # initialize result logging with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
