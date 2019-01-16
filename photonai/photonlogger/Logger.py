@@ -3,26 +3,6 @@ import inspect
 from enum import Enum
 from functools import total_ordering
 
-from slackclient import SlackClient
-
-from ..configuration.PhotonConf import PhotonConf
-
-""" photonlogger is a simple way to emit and store logs.
-
-    The default LogLevel is WARN. It should only be increased 
-    (to info or debug) if you need more detailed information,
-    because extensive photonlogger significantly impacts performance
-    and clutters the database. The logs can also be printed on
-    the console by setting print_to_console to True.
-    
-    Usage: 
-    1) Import with
-        from photonlogger import Logger
-    2) Log with
-        logger = Logger()
-        logger.debug('photonlogger message!')
-"""
-
 
 class Singleton:
     """
@@ -65,8 +45,11 @@ class Singleton:
 class Logger:
     def __init__(self):
         # load configuration
-        conf = PhotonConf()
-        logging_conf = conf.config['LOGGING']
+        self.config = {
+            'print_to_console': True,
+            'print_to_file': True,
+            'logfile_name': 'photon.log'
+        }
 
         # handle multiple instances of hyperpipe
         self.loggers = []
@@ -78,26 +61,19 @@ class Logger:
         self.verbosity_level = 0
 
         self.log_level_console = self.LogLevel.INFO
-        self.log_level_slack = self.LogLevel.INFO
         self.log_level_file = self.LogLevel.INFO
 
         # Should the log also be printed to the console?
         # Recommendation: Set to True during development, false in production-environment
-        self._print_to_console = logging_conf.getboolean('print_to_console')
-        self._print_to_slack = logging_conf.getboolean('print_to_slack')
-        self._slack_token = logging_conf['slack_token']
-        self._slack_channel = logging_conf['slack_channel']
-        self._print_to_file = logging_conf.getboolean('print_to_file')
-        self._logfile_name = logging_conf['logfile_name']
+        self._print_to_console = self.config['print_to_console']
+        self._print_to_file = self.config['print_to_file']
+        self._logfile_name = self.config['logfile_name']
         with open(self._logfile_name, "w") as text_file:
             text_file.write('PHOTON LOGFILE - ' + str(datetime.datetime.utcnow()))
 
     @staticmethod
     def set_print_to_console(self, status: bool):
         self._print_to_console = status
-
-    def set_print_to_slack(self, status: bool):
-        self._print_to_slack = status
 
     def set_log_level(self, level):
         """" Use this method to change the log level. """
@@ -156,25 +132,8 @@ class Logger:
             self._print_entry(entry)
         if self._print_to_file:
             self._write_to_file(entry)
-        if self._print_to_slack:
-            self._send_to_slack(entry)
 
-    def _send_to_slack(self, entry: dict):
-        if self._slack_token:
-            try:
-                sc = SlackClient(self._slack_token)
 
-                sc.api_call(
-                    "chat.postMessage",
-                    channel=self._slack_channel,
-                    text="{}: {}".format(entry['log_type'], entry['message'])
-                )
-            except:
-                # Todo: catch channel not found exception
-                print("Could not print to Slack") # <- cant use Logger here because it would cause an endless loop
-                pass
-        else:
-            print('Error: No Slack Token Set')
 
     @staticmethod
     def _print_entry(entry: dict):
