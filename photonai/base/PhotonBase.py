@@ -7,6 +7,7 @@ import time
 import re
 import zipfile
 import importlib
+import __main__
 from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha1
@@ -81,8 +82,7 @@ class OutputSettings:
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
 
         if project_folder == '':
-            project_folder = os.path.dirname(os.path.realpath(__file__))
-
+            project_folder = os.path.dirname(__main__.__file__)
         self.save_output = save_output
 
         if self.save_output:
