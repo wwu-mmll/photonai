@@ -1,9 +1,9 @@
 from sklearn.base import BaseEstimator
+from photonai.photonlogger.Logger import Logger
 import numpy as np
-from Logging.Logger import Logger
+
 
 # Smoothing and voxel-size Resampling capabilities
-
 # img = True generates nilearn output images in memory;
 # img = False generates np arrays for use in PHOTON Core
 # PHOTON-Neuro internal format is always img=True
@@ -63,21 +63,3 @@ class ResamplingImgs(BaseEstimator):
             out_imgs = np.asarray(out_imgs)
 
         return out_imgs
-
-
-#if __name__ == '__main__':
-#
-#     from nilearn.datasets import MNI152_FILE_PATH
-#     dataset_files = [MNI152_FILE_PATH, MNI152_FILE_PATH]
-#
-#     resImg = ResamplingImgs(voxel_size=[5, 5, 5], output_img=True).transform(dataset_files)
-#     smImg = SmoothImgs(fwhr=[6, 6, 6], output_img=True).transform(resImg)
-#
-#     from Photon_Neuro0.BrainAtlas import BrainAtlas
-#     myAtlas = BrainAtlas(atlas_name='AAL',
-#                          extract_mode='vec',
-#                          whichROIs='all')
-#     roi_data = myAtlas.transform(X=smImg)
-#     myAtlas.getInfo()
-#
-#     Logger().info('')
