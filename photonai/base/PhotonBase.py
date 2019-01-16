@@ -15,7 +15,7 @@ from bson.objectid import ObjectId
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit
+from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit, LeaveOneGroupOut
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.pipeline import Pipeline
@@ -443,7 +443,8 @@ class Hyperpipe(BaseEstimator):
         # if there is a CV Object for cross validating the hyperparameter search
         if self.outer_cv is not None:
             if self.groups is not None and (isinstance(self.outer_cv, GroupKFold)
-                                            or isinstance(self.outer_cv, GroupShuffleSplit)):
+                                            or isinstance(self.outer_cv, GroupShuffleSplit)
+                                            or isinstance(self.outer_cv, LeaveOneGroupOut)):
                 try:
                     self.data_test_cases = self.outer_cv.split(self.X, self.y, self.groups)
                 except:
@@ -625,6 +626,7 @@ class Hyperpipe(BaseEstimator):
                 # save wizard information to photon db in order to map results to the wizard design object
                 if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
                     if self.output_settings.wizard_object_id:
+                        self.name = self.output_settings.wizard_object_id
                         self.result_tree.name = self.output_settings.wizard_object_id
                         self.result_tree.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
                         self.result_tree.wizard_system_name = self.output_settings.wizard_project_name
@@ -671,7 +673,8 @@ class Hyperpipe(BaseEstimator):
                     # Prepare inner cross validation
                     cv_iter = []
                     if self.groups is not None and (isinstance(self.inner_cv, GroupKFold)
-                                                    or isinstance(self.inner_cv, GroupShuffleSplit)):
+                                                    or isinstance(self.inner_cv, GroupShuffleSplit)
+                                                    or isinstance(self.inner_cv, LeaveOneGroupOut)):
                         try:
                             cv_iter = list(self.inner_cv.split(self._validation_X, self._validation_y, self._validation_group))
                         except BaseException as e:
