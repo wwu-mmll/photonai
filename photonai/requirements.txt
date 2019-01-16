@@ -1,7 +1,6 @@
 ###### Requirements without Version Specifiers ######
 numpy
 matplotlib
-slackclient
 progressbar2
 Pillow
 scikit-learn
