@@ -3,6 +3,7 @@ from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from pymongo.errors import DocumentTooLarge
 from enum import Enum
 import numpy as np
+import pandas as pd
 from ..photonlogger.Logger import Logger
 import pickle
 import pprint
@@ -210,6 +211,33 @@ class MongoDBWriter:
 
         if self.save_settings.summary_filename:
             self.write_summary(results_tree)
+
+        self.write_predictions_file(results_tree)
+
+    def write_predictions_file(self, result_tree):
+        if self.save_settings.save_predictions or self.save_settings.save_best_config_predictions:
+
+            fold_nr_array = []
+            y_pred_array = []
+            y_true_array = []
+            indices_array = []
+
+            def concat_array(a1, a2):
+                if len(a1) == 0:
+                    return a2
+                else:
+                    return np.concatenate((a1, a2))
+
+            for outer_fold in result_tree.outer_folds:
+                score_info = outer_fold.best_config.inner_folds[0].validation
+                y_pred_array = concat_array(y_pred_array, score_info.y_pred)
+                y_true_array = concat_array(y_true_array, score_info.y_true)
+                indices_array = concat_array(indices_array, score_info.indices)
+                fold_nr_array = concat_array(fold_nr_array, np.ones((len(score_info.y_true),)) * outer_fold.fold_nr)
+
+            save_df = pd.DataFrame(data={'indices': indices_array, 'fold': fold_nr_array,
+                                         'y_pred': y_pred_array, 'y_true': y_true_array})
+            save_df.to_csv(self.save_settings.predictions_filename)
 
     def write_summary(self, result_tree):
 
