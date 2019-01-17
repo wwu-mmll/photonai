@@ -93,15 +93,18 @@ class OutputSettings:
             log_filename: str = 'photon_output.log'
             summary_filename: str = 'photon_summary.txt'
             pretrained_model_filename: str = 'photon_best_model.photon'
+            predictions_filename: str = 'outer_fold_predictions.csv'
             self.local_file = os.path.join(project_folder, local_file)
             self.log_file = os.path.join(project_folder, log_filename)
             self.summary_filename = os.path.join(project_folder, summary_filename)
             self.pretrained_model_filename = os.path.join(project_folder, pretrained_model_filename)
+            self.predictions_filename = os.path.join(project_folder, predictions_filename)
         else:
             self.local_file = ''
             self.log_file = ''
             self.summary_filename = ''
             self.pretrained_model_filename = ''
+            self.predictions_filename = ''
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
@@ -124,12 +127,15 @@ class OutputSettings:
     def _update_settings(self, name):
         if self.save_output:
             timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            # Todo: give rights to user if this is done by docker container
             self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
             os.mkdir(self.results_folder)
             self.local_file = self._add_timestamp(self.local_file)
             self.log_file = self._add_timestamp(self.log_file)
+            Logger().set_custom_log_file(self.log_file)
             self.summary_filename = self._add_timestamp(self.summary_filename)
             self.pretrained_model_filename = self._add_timestamp(self.pretrained_model_filename)
+            self.predictions_filename = self._add_timestamp(self.predictions_filename)
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
@@ -299,8 +305,6 @@ class Hyperpipe(BaseEstimator):
         # MongoDBWriter setup
         if output_settings:
             self.output_settings = output_settings
-            if self.output_settings.log_file:
-                Logger().set_custom_log_file(self.output_settings.log_file)
         else:
             self.output_settings = OutputSettings()
         self.mongodb_writer = MongoDBWriter(self.output_settings)
@@ -398,9 +402,7 @@ class Hyperpipe(BaseEstimator):
 
         """
         self.output_settings = persist_options
-        if self.output_settings.log_file:
-            Logger().set_custom_log_file(self.output_settings.log_file)
-        self.mongodb_writer = MongoDBWriter(self.output_settings)
+
 
     def __iadd__(self, pipe_element):
         """
@@ -639,6 +641,7 @@ class Hyperpipe(BaseEstimator):
 
                 # update output options to add pipe name and timestamp
                 self.output_settings._update_settings(self.name)
+                self.mongodb_writer = MongoDBWriter(self.output_settings)
 
                 # initialize result logging with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
@@ -869,8 +872,9 @@ class Hyperpipe(BaseEstimator):
                             # Todo: generate mean and std over outer folds as well. move this items to the top
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
 
+
                             test_score_mdb = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
-                                                                self.metrics,
+                                                                indices=test_indices, metrics=self.metrics,
                                                                 save_predictions=self.output_settings.save_best_config_predictions,
                                                                 save_feature_importances=self.output_settings.save_best_config_feature_importances,
                                                                 **self._test_kwargs)
@@ -879,7 +883,7 @@ class Hyperpipe(BaseEstimator):
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
                             train_score_mdb = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
-                                                                 self.metrics,
+                                                                 indices=train_indices, metrics=self.metrics,
                                                                  save_predictions=self.output_settings.save_best_config_predictions,
                                                                  save_feature_importances=self.output_settings.save_best_config_feature_importances,
                                                                  training=True,
