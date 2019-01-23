@@ -6,6 +6,8 @@ from sklearn.preprocessing import StandardScaler
 import numpy as np
 import statsmodels.api as sm
 import os
+from scipy.stats import norm
+from scipy.linalg import cholesky
 
 
 class ConfounderRemovalTests(unittest.TestCase):
@@ -61,8 +63,40 @@ class ConfounderRemovalTests(unittest.TestCase):
             self.X_transformed_standardized[:, i] = np.asarray(
                 np.squeeze(self.X[:, i]) - np.matmul(scaled_covs, np.squeeze(model.params)))
 
+        # prepare statistical testing of confounder removal
+        # Generate samples from three independent normally distributed random
+        # variables (with mean 0 and std. dev. 1).
+        x = norm.rvs(size=(4, 300))
+
+        # desired covariance matrix
+        r = np.array([
+            [1, .9, .9, .9],
+            [.9, 1, .9, .9],
+            [.9, .9, 1, .9],
+            [.9, .9, .9, 1],
+        ])
+        c = cholesky(r, lower=True)
+
+        # convert the data to correlated random variables
+        self.z = np.dot(c, x).T
+
     def tearDown(self):
         pass
+
+    def test_confounder_removal_statistically(self):
+        cr = PipelineElement("ConfounderRemoval", {}, standardize_covariates=False)
+        cr.fit(self.z[:,1:3], self.z[:, 0], **{'covariates': self.z[:, 3]})
+
+        # use transform to write data to cache
+        z_transformed = cr.transform(self.z[:,1:3], **{'covariates': self.z[:,3]})
+        corr = np.corrcoef(np.concatenate([self.z[:,0].reshape(-1,1), z_transformed[0],
+                                           self.z[:,3].reshape(-1,1)], axis=1), rowvar=False)
+        # correlation between target and feature should be lower than 0.25 in this case
+        # correlation between covariate and feature should be near zero
+        self.assertLess(corr[1, 0], 0.25)
+        self.assertLess(corr[2, 0], 0.25)
+        self.assertAlmostEqual(corr[3, 1], 0)
+        self.assertAlmostEqual(corr[3, 2], 0)
 
     def test_multiple_confounders(self):
         self.cr.fit(self.X, self.y, **{'covariates': self.multiple_confounders})
