@@ -2,7 +2,7 @@ from multiprocessing import Pool
 
 import numpy as np
 from ..photonlogger.Logger import Logger
-from ..validation.Validate import Scorer
+from ..validation.Validate import Scorer, OptimizerMetric
 from ..base.PhotonBase import OutputSettings
 from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 
@@ -142,23 +142,7 @@ class PermutationTest:
                                           'whether it is a classifier, regressor, transformer or '
                                           'clusterer.')
         else:
-            if metric in Scorer.ELEMENT_DICTIONARY:
-                # for now do a simple hack and set greater_is_better
-                # by looking at error/score in metric name
-                metric_name = Scorer.ELEMENT_DICTIONARY[metric][1]
-                specifier = metric_name.split('_')[-1]
-                if specifier == 'score':
-                    greater_is_better = True
-                elif specifier == 'error':
-                    greater_is_better = False
-                else:
-                    # Todo: better error checking?
-                    error_msg = "Metric is not registered in PHOTON yet."
-                    Logger().error(error_msg)
-                    raise NameError(error_msg)
-            else:
-                Logger().error('NameError: Specify valid metric.')
-                raise NameError('Specify valid metric.')
+            greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
         return greater_is_better
 
 
