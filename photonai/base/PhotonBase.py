@@ -126,7 +126,7 @@ class OutputSettings:
 
     def _update_settings(self, name):
         if self.save_output:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H:%M:%S")
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             # Todo: give rights to user if this is done by docker container
             self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
             os.mkdir(self.results_folder)
