@@ -19,6 +19,10 @@
     "sklearn.decomposition.KernelPCA",
     "Transformer"
   ],
+  "PowerTransformer":[
+    "sklearn.preprocessing.PowerTransformer",
+    "Transformer"
+  ],
   "LatentDirichletAllocation":[
     "sklearn.decomposition.LatentDirichletAllocation",
     "Transformer"

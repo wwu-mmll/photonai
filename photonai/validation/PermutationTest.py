@@ -2,18 +2,22 @@ from multiprocessing import Pool
 
 import numpy as np
 from ..photonlogger.Logger import Logger
-from ..validation.Validate import Scorer
+from ..validation.Validate import Scorer, OptimizerMetric
 from ..base.PhotonBase import OutputSettings
 from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
 
 
 class PermutationTest:
 
-    def __init__(self, hyperpipe_constructor, n_perms=1000, n_processes=1,
-                 random_state=15):
+    def __init__(self, hyperpipe_constructor, n_perms=1000, n_processes=1, random_state=15):
 
         self.hyperpipe_constructor = hyperpipe_constructor
         self.pipe = self.hyperpipe_constructor()
+
+        # we need a mongodb to collect the results!
+        if not self.pipe.output_settings.mongodb_connect_url:
+            raise ValueError("MongoDB Connection String must be given for permutation tests")
+
         self.n_perms = n_perms
         self.n_processes = n_processes
         self.random_state = random_state
@@ -111,7 +115,6 @@ class PermutationTest:
         # result_list is modified only by the main process, not the pool workers.
         self.perm_performances[result['ind_perm']] = result
 
-
     def calculate_p(self, true_performance, perm_performances):
         p = dict()
         for _, metric in self.metrics.items():
@@ -142,23 +145,7 @@ class PermutationTest:
                                           'whether it is a classifier, regressor, transformer or '
                                           'clusterer.')
         else:
-            if metric in Scorer.ELEMENT_DICTIONARY:
-                # for now do a simple hack and set greater_is_better
-                # by looking at error/score in metric name
-                metric_name = Scorer.ELEMENT_DICTIONARY[metric][1]
-                specifier = metric_name.split('_')[-1]
-                if specifier == 'score':
-                    greater_is_better = True
-                elif specifier == 'error':
-                    greater_is_better = False
-                else:
-                    # Todo: better error checking?
-                    error_msg = "Metric is not registered in PHOTON yet."
-                    Logger().error(error_msg)
-                    raise NameError(error_msg)
-            else:
-                Logger().error('NameError: Specify valid metric.')
-                raise NameError('Specify valid metric.')
+            greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
         return greater_is_better
 
 
@@ -168,13 +155,13 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, met
     perm_pipe._set_verbosity(-1)
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
 
-    po = OutputSettings(mongodb_connect_url='', local_file='', log_filename='',
-                        save_predictions='None', save_feature_importances='None')
+    po = OutputSettings(mongodb_connect_url=perm_pipe.output_settings.mongodb_connect_url,
+                        save_predictions='None', save_feature_importances='None', save_output=False)
     perm_pipe._set_persist_options(po)
     perm_pipe.calculate_metrics_across_folds = False
 
     # Fit hyperpipe
-    print('Fitting permutation...')
+    print('Fitting permutation ' + str(perm_run) + ' ...')
     perm_pipe.fit(X, y_perm)
 
     # collect test set predictions

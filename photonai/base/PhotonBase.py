@@ -7,6 +7,7 @@ import time
 import re
 import zipfile
 import importlib
+import __main__
 from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha1
@@ -15,10 +16,9 @@ from bson.objectid import ObjectId
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit
+from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit, LeaveOneGroupOut
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.pipeline import Pipeline
 from sklearn.dummy import DummyClassifier, DummyRegressor
 
 from ..optimization.ConfigGrid import create_global_config_dict, create_global_config_grid
@@ -81,7 +81,9 @@ class OutputSettings:
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
 
         if project_folder == '':
-            project_folder = os.path.dirname(os.path.realpath(__file__))
+            self.project_folder = os.path.dirname(__main__.__file__)
+        else:
+            self.project_folder = project_folder
 
         self.save_output = save_output
 
@@ -90,15 +92,18 @@ class OutputSettings:
             log_filename: str = 'photon_output.log'
             summary_filename: str = 'photon_summary.txt'
             pretrained_model_filename: str = 'photon_best_model.photon'
+            predictions_filename: str = 'outer_fold_predictions.csv'
             self.local_file = os.path.join(project_folder, local_file)
             self.log_file = os.path.join(project_folder, log_filename)
             self.summary_filename = os.path.join(project_folder, summary_filename)
             self.pretrained_model_filename = os.path.join(project_folder, pretrained_model_filename)
+            self.predictions_filename = os.path.join(project_folder, predictions_filename)
         else:
             self.local_file = ''
             self.log_file = ''
             self.summary_filename = ''
             self.pretrained_model_filename = ''
+            self.predictions_filename = ''
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
@@ -117,6 +122,23 @@ class OutputSettings:
         else:
             raise ValueError('Possible options for saving predictions or feature importances are: "best", "all", "None"')
         return save_best, save_all
+
+    def _update_settings(self, name):
+        if self.save_output:
+            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+            # Todo: give rights to user if this is done by docker container
+            self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
+            os.mkdir(self.results_folder)
+            self.local_file = self._add_timestamp(self.local_file)
+            self.log_file = self._add_timestamp(self.log_file)
+            Logger().set_custom_log_file(self.log_file)
+            self.summary_filename = self._add_timestamp(self.summary_filename)
+            self.pretrained_model_filename = self._add_timestamp(self.pretrained_model_filename)
+            self.predictions_filename = self._add_timestamp(self.predictions_filename)
+
+    def _add_timestamp(self, file):
+        return os.path.join(self.results_folder, os.path.basename(file))
+
 
 
 class Hyperpipe(BaseEstimator):
@@ -282,8 +304,6 @@ class Hyperpipe(BaseEstimator):
         # MongoDBWriter setup
         if output_settings:
             self.output_settings = output_settings
-            if self.output_settings.log_file:
-                Logger().set_custom_log_file(self.output_settings.log_file)
         else:
             self.output_settings = OutputSettings()
         self.mongodb_writer = MongoDBWriter(self.output_settings)
@@ -381,9 +401,7 @@ class Hyperpipe(BaseEstimator):
 
         """
         self.output_settings = persist_options
-        if self.output_settings.log_file:
-            Logger().set_custom_log_file(self.output_settings.log_file)
-        self.mongodb_writer = MongoDBWriter(self.output_settings)
+
 
     def __iadd__(self, pipe_element):
         """
@@ -443,7 +461,8 @@ class Hyperpipe(BaseEstimator):
         # if there is a CV Object for cross validating the hyperparameter search
         if self.outer_cv is not None:
             if self.groups is not None and (isinstance(self.outer_cv, GroupKFold)
-                                            or isinstance(self.outer_cv, GroupShuffleSplit)):
+                                            or isinstance(self.outer_cv, GroupShuffleSplit)
+                                            or isinstance(self.outer_cv, LeaveOneGroupOut)):
                 try:
                     self.data_test_cases = self.outer_cv.split(self.X, self.y, self.groups)
                 except:
@@ -619,12 +638,17 @@ class Hyperpipe(BaseEstimator):
                 else:
                     self.result_tree_name = self.name
 
+                # update output options to add pipe name and timestamp
+                self.output_settings._update_settings(self.name)
+                self.mongodb_writer = MongoDBWriter(self.output_settings)
+
                 # initialize result logging with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
 
                 # save wizard information to photon db in order to map results to the wizard design object
                 if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
                     if self.output_settings.wizard_object_id:
+                        self.name = self.output_settings.wizard_object_id
                         self.result_tree.name = self.output_settings.wizard_object_id
                         self.result_tree.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
                         self.result_tree.wizard_system_name = self.output_settings.wizard_project_name
@@ -671,7 +695,8 @@ class Hyperpipe(BaseEstimator):
                     # Prepare inner cross validation
                     cv_iter = []
                     if self.groups is not None and (isinstance(self.inner_cv, GroupKFold)
-                                                    or isinstance(self.inner_cv, GroupShuffleSplit)):
+                                                    or isinstance(self.inner_cv, GroupShuffleSplit)
+                                                    or isinstance(self.inner_cv, LeaveOneGroupOut)):
                         try:
                             cv_iter = list(self.inner_cv.split(self._validation_X, self._validation_y, self._validation_group))
                         except BaseException as e:
@@ -846,8 +871,9 @@ class Hyperpipe(BaseEstimator):
                             # Todo: generate mean and std over outer folds as well. move this items to the top
                             Logger().verbose('...now predicting ' + self.name + ' unseen data')
 
+
                             test_score_mdb = TestPipeline.score(self.optimum_pipe, self._test_X, self._test_y,
-                                                                self.metrics,
+                                                                indices=test_indices, metrics=self.metrics,
                                                                 save_predictions=self.output_settings.save_best_config_predictions,
                                                                 save_feature_importances=self.output_settings.save_best_config_feature_importances,
                                                                 **self._test_kwargs)
@@ -856,7 +882,7 @@ class Hyperpipe(BaseEstimator):
                             Logger().verbose('...now predicting ' + self.name + ' final model with training data')
 
                             train_score_mdb = TestPipeline.score(self.optimum_pipe, self._validation_X, self._validation_y,
-                                                                 self.metrics,
+                                                                 indices=train_indices, metrics=self.metrics,
                                                                  save_predictions=self.output_settings.save_best_config_predictions,
                                                                  save_feature_importances=self.output_settings.save_best_config_feature_importances,
                                                                  training=True,
@@ -1040,7 +1066,7 @@ class Hyperpipe(BaseEstimator):
                     pipeline_steps.append((new_step.name, new_step))
             else:
                 pipeline_steps.append((cpy.name, cpy))
-        return Pipeline(pipeline_steps)
+        return PhotonPipeline(pipeline_steps)
 
     def save_optimum_pipe(self, file, password=None):
         """
@@ -1147,54 +1173,32 @@ class Hyperpipe(BaseEstimator):
                 custom_element.base_element.load(folder + element_info['filename'])
                 element_list.append((element_info['element_name'], custom_element))
             else:
-                element_list.append((element_info['element_name'], joblib.load(folder + element_info['filename'] + '.pkl')))
+                
+                loaded_pipeline_element = joblib.load(folder + element_info['filename'] + '.pkl')
+
+                # This is only for compatibility with older versions
+                if not hasattr(loaded_pipeline_element, 'needs_y'):
+                    if hasattr(loaded_pipeline_element.base_element, 'needs_y'):
+                        loaded_pipeline_element.needs_y = loaded_pipeline_element.base_element.needs_y
+                    else:
+                        loaded_pipeline_element.needs_y = False
+                if not hasattr(loaded_pipeline_element, 'needs_covariates'):
+                    if hasattr(loaded_pipeline_element.base_element, 'needs_covariates'):
+                        loaded_pipeline_element.needs_covariates = loaded_pipeline_element.base_element.needs_covariates
+                    else:
+                        loaded_pipeline_element.needs_covariates = False
+
+                loaded_pipeline_element.is_transformer = hasattr(loaded_pipeline_element.base_element, "transform")
+                loaded_pipeline_element.is_estimator = hasattr(loaded_pipeline_element.base_element, "predict")
+                
+                element_list.append((element_info['element_name'], loaded_pipeline_element))
 
         # delete unpacked folder to clean up
         # ToDo: Don't unpack at all, but use PHOTON file directly
         from shutil import rmtree
         rmtree(folder)
 
-        return Pipeline(element_list)
-
-    @staticmethod
-    def load_optimum_pipe_nounzip(file, password=None):
-        """
-        Load optimal pipeline.
-
-
-        Parameters
-        ----------
-        * `file` [str]:
-            File path specifying .photon file to load optimal pipeline from
-
-        Returns
-        -------
-        sklearn Pipeline with all trained photon_pipelines
-        """
-        if file.endswith('.photon'):
-            # ToDo: Do this without sys.path using zipimport directly
-            import sys
-            sys.path.append(file)
-            archive = zipfile.ZipFile(file, 'r')
-        else:
-            raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
-
-        setup_info = pickle.load(archive.open('_optimum_pipe_blueprint.pkl', pwd=password))
-        element_list = list()
-        for element_info in setup_info:
-            if element_info['mode'] == 'custom':
-                imported_module = importlib.import_module(element_info['element_name'], file)
-                base_element = getattr(imported_module, element_info['element_name'])
-                custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
-                                                 hyperparameters=element_info['hyperparameters'],
-                                                 test_disabled=element_info['test_disabled'],
-                                                 disabled=element_info['disabled'])
-                custom_element.base_element.load_nounzip(archive, element_info)
-                element_list.append((element_info['element_name'], custom_element))
-            else:
-                element_list.append((element_info['element_name'], joblib.load(archive.open(element_info['filename'] + '.pkl'))))
-
-        return Pipeline(element_list)
+        return PhotonPipeline(element_list)
 
     def run_dummy_estimator(self):
         if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
