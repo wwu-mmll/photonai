@@ -106,8 +106,9 @@ class PhotonPipeline(_BaseComposition):
         else:
             return None
 
-    def predict_proba(self, X, **kwargs):
-        X, _, kwargs = self.transform(X, y=None, **kwargs)
+    def predict_proba(self, X, training: bool=False, **kwargs):
+        if not training:
+            X, _, kwargs = self.transform(X, y=None, **kwargs)
 
         if self._final_estimator is not None:
             if self._final_estimator.is_estimator:

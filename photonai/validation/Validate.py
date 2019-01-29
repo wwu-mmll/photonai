@@ -300,7 +300,7 @@ class TestPipeline(object):
 
             probabilities = []
             if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
-                probabilities = estimator.predict_proba(X)
+                probabilities = estimator.predict_proba(X, training=training)
 
                 try:
                     if probabilities is not None:
@@ -497,6 +497,25 @@ class OptimizerMetric(object):
         best_config_mdb.human_readable_config = best_config.human_readable_config
         return best_config_mdb
 
+    @staticmethod
+    def greater_is_better_distinction(metric):
+        if metric in Scorer.ELEMENT_DICTIONARY:
+            # for now do a simple hack and set greater_is_better
+            # by looking at error/score in metric name
+            metric_name = Scorer.ELEMENT_DICTIONARY[metric][1]
+            specifier = Scorer.ELEMENT_DICTIONARY[metric][2]
+            if specifier == 'score':
+                return True
+            elif specifier == 'error':
+                return False
+            else:
+                # Todo: better error checking?
+                error_msg = "Metric not suitable for optimizer."
+                Logger().error(error_msg)
+                raise NameError(error_msg)
+        else:
+            Logger().error('Specify valid metric to choose best config.')
+            raise NameError('Specify valid metric to choose best config.')
 
     def set_optimizer_metric(self, pipeline_elements):
         """
@@ -505,23 +524,7 @@ class OptimizerMetric(object):
         :param pipeline_elements: the items of the pipeline
         """
         if isinstance(self.metric, str):
-            if self.metric in Scorer.ELEMENT_DICTIONARY:
-                # for now do a simple hack and set greater_is_better
-                # by looking at error/score in metric name
-                metric_name = Scorer.ELEMENT_DICTIONARY[self.metric][1]
-                specifier = Scorer.ELEMENT_DICTIONARY[self.metric][2]
-                if specifier == 'score':
-                    self.greater_is_better = True
-                elif specifier == 'error':
-                    self.greater_is_better = False
-                else:
-                    # Todo: better error checking?
-                    error_msg = "Metric not suitable for optimizer."
-                    Logger().error(error_msg)
-                    raise NameError(error_msg)
-            else:
-                Logger().error('Specify valid metric to choose best config.')
-                raise NameError('Specify valid metric to choose best config.')
+            self.greater_is_better = self.greater_is_better_distinction(self.metric)
         else:
             # if no optimizer metric was chosen, use default scoring method
             self.metric = 'score'
