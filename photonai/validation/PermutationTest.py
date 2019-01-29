@@ -9,8 +9,7 @@ from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMe
 
 class PermutationTest:
 
-    def __init__(self, hyperpipe_constructor, n_perms=1000, n_processes=1,
-                 random_state=15):
+    def __init__(self, hyperpipe_constructor, n_perms=1000, n_processes=1, random_state=15):
 
         self.hyperpipe_constructor = hyperpipe_constructor
         self.pipe = self.hyperpipe_constructor()
@@ -111,7 +110,6 @@ class PermutationTest:
         # result_list is modified only by the main process, not the pool workers.
         self.perm_performances[result['ind_perm']] = result
 
-
     def calculate_p(self, true_performance, perm_performances):
         p = dict()
         for _, metric in self.metrics.items():
@@ -152,8 +150,7 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, met
     perm_pipe._set_verbosity(-1)
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
 
-    po = OutputSettings(mongodb_connect_url='', local_file='', log_filename='',
-                        save_predictions='None', save_feature_importances='None')
+    po = OutputSettings(save_predictions='None', save_feature_importances='None', save_output=False)
     perm_pipe._set_persist_options(po)
     perm_pipe.calculate_metrics_across_folds = False
 
