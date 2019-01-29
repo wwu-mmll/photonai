@@ -13,6 +13,11 @@ class PermutationTest:
 
         self.hyperpipe_constructor = hyperpipe_constructor
         self.pipe = self.hyperpipe_constructor()
+
+        # we need a mongodb to collect the results!
+        if not self.pipe.output_settings.mongodb_connect_url:
+            raise ValueError("MongoDB Connection String must be given for permutation tests")
+
         self.n_perms = n_perms
         self.n_processes = n_processes
         self.random_state = random_state
@@ -150,12 +155,13 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, met
     perm_pipe._set_verbosity(-1)
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
 
-    po = OutputSettings(save_predictions='None', save_feature_importances='None', save_output=False)
+    po = OutputSettings(mongodb_connect_url=perm_pipe.output_settings.mongodb_connect_url,
+                        save_predictions='None', save_feature_importances='None', save_output=False)
     perm_pipe._set_persist_options(po)
     perm_pipe.calculate_metrics_across_folds = False
 
     # Fit hyperpipe
-    print('Fitting permutation...')
+    print('Fitting permutation ' + str(perm_run) + ' ...')
     perm_pipe.fit(X, y_perm)
 
     # collect test set predictions
