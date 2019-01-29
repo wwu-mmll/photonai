@@ -11,7 +11,7 @@ group_var = None
 
 def create_hyperpipe():
     # Define cross-validation strategies
-    outer_cv = KFold(n_splits=5, shuffle=True)
+    outer_cv = KFold(n_splits=2, shuffle=True)
     inner_cv = KFold(n_splits=5, shuffle=True)
 
     # Specify how results are going to be saved
