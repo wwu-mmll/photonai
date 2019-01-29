@@ -19,7 +19,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit, LeaveOneGroupOut
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.pipeline import Pipeline
 from sklearn.dummy import DummyClassifier, DummyRegressor
 
 from ..optimization.ConfigGrid import create_global_config_dict, create_global_config_grid
@@ -1067,7 +1066,7 @@ class Hyperpipe(BaseEstimator):
                     pipeline_steps.append((new_step.name, new_step))
             else:
                 pipeline_steps.append((cpy.name, cpy))
-        return Pipeline(pipeline_steps)
+        return PhotonPipeline(pipeline_steps)
 
     def save_optimum_pipe(self, file, password=None):
         """
@@ -1174,54 +1173,32 @@ class Hyperpipe(BaseEstimator):
                 custom_element.base_element.load(folder + element_info['filename'])
                 element_list.append((element_info['element_name'], custom_element))
             else:
-                element_list.append((element_info['element_name'], joblib.load(folder + element_info['filename'] + '.pkl')))
+                
+                loaded_pipeline_element = joblib.load(folder + element_info['filename'] + '.pkl')
+
+                # This is only for compatibility with older versions
+                if not hasattr(loaded_pipeline_element, 'needs_y'):
+                    if hasattr(loaded_pipeline_element.base_element, 'needs_y'):
+                        loaded_pipeline_element.needs_y = loaded_pipeline_element.base_element.needs_y
+                    else:
+                        loaded_pipeline_element.needs_y = False
+                if not hasattr(loaded_pipeline_element, 'needs_covariates'):
+                    if hasattr(loaded_pipeline_element.base_element, 'needs_covariates'):
+                        loaded_pipeline_element.needs_covariates = loaded_pipeline_element.base_element.needs_covariates
+                    else:
+                        loaded_pipeline_element.needs_covariates = False
+
+                loaded_pipeline_element.is_transformer = hasattr(loaded_pipeline_element.base_element, "transform")
+                loaded_pipeline_element.is_estimator = hasattr(loaded_pipeline_element.base_element, "predict")
+                
+                element_list.append((element_info['element_name'], loaded_pipeline_element))
 
         # delete unpacked folder to clean up
         # ToDo: Don't unpack at all, but use PHOTON file directly
         from shutil import rmtree
         rmtree(folder)
 
-        return Pipeline(element_list)
-
-    @staticmethod
-    def load_optimum_pipe_nounzip(file, password=None):
-        """
-        Load optimal pipeline.
-
-
-        Parameters
-        ----------
-        * `file` [str]:
-            File path specifying .photon file to load optimal pipeline from
-
-        Returns
-        -------
-        sklearn Pipeline with all trained photon_pipelines
-        """
-        if file.endswith('.photon'):
-            # ToDo: Do this without sys.path using zipimport directly
-            import sys
-            sys.path.append(file)
-            archive = zipfile.ZipFile(file, 'r')
-        else:
-            raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
-
-        setup_info = pickle.load(archive.open('_optimum_pipe_blueprint.pkl', pwd=password))
-        element_list = list()
-        for element_info in setup_info:
-            if element_info['mode'] == 'custom':
-                imported_module = importlib.import_module(element_info['element_name'], file)
-                base_element = getattr(imported_module, element_info['element_name'])
-                custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
-                                                 hyperparameters=element_info['hyperparameters'],
-                                                 test_disabled=element_info['test_disabled'],
-                                                 disabled=element_info['disabled'])
-                custom_element.base_element.load_nounzip(archive, element_info)
-                element_list.append((element_info['element_name'], custom_element))
-            else:
-                element_list.append((element_info['element_name'], joblib.load(archive.open(element_info['filename'] + '.pkl'))))
-
-        return Pipeline(element_list)
+        return PhotonPipeline(element_list)
 
     def run_dummy_estimator(self):
         if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
