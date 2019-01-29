@@ -656,6 +656,9 @@ class Hyperpipe(BaseEstimator):
                 self.output_settings._update_settings(self.name)
                 self.mongodb_writer = MongoDBWriter(self.output_settings)
 
+                # update settings for photon logger
+                Logger().config['logfile_name'] = self.output_settings.log_file
+
                 # initialize result logging with hyperpipe class
                 self.result_tree = MDBHyperpipe(name=self.result_tree_name)
 
