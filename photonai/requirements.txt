@@ -22,7 +22,7 @@ prettytable
 # sk optimize
 scikit-optimize
 # fabolas
-george
-emcee
+# george
+# emcee
 # you need FORTRAN compiler for the DIRECT package: sudo apt-get install gfortran
-DIRECT
+# DIRECT
