@@ -1,4 +1,5 @@
-        
+import sys
+sys.path.append("/home/rleenings/photon_core")
 # -------------------- GENERATED WITH PHOTON WIZARD (beta) ------------------------------
 # PHOTON Code File (Photon Syntax): 
 # /spm-data/Scratch/photon_wizard/nopel/enigmasvmnewpca/photon_code.py

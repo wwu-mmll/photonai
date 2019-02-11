@@ -1,4 +1,5 @@
-        
+import sys
+sys.path.append("/home/rleenings/photon_core")
 # -------------------- GENERATED WITH PHOTON WIZARD (beta) ------------------------------
 # PHOTON Code File (Photon Syntax): 
 # /spm-data/Scratch/photon_wizard/nopel/enigmasvmnewpca/photon_code.py
@@ -59,6 +60,6 @@ def create_hyperpipe():
     hyperpipe += PipelineElement("SVC", hyperparameters={'C': FloatRange(0.5, 2)}, gamma='scale', kernel='rbf')
     return hyperpipe
 
-             
+
 perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, random_state=11)
 perm_tester.fit(X, y)
