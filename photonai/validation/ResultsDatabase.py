@@ -9,6 +9,7 @@ import pickle
 import pprint
 from prettytable import PrettyTable
 
+
 class MDBFoldMetric(EmbeddedMongoModel):
     class Meta:
         final = True
