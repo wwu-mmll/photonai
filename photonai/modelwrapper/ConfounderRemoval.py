@@ -45,6 +45,7 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
             raise ValueError(err_msg)
 
     def _standardize(self, covariates, is_fit):
+        Logger().debug('Standardizing covariates before confounder removal.')
         scaled_covs = list()
         if is_fit:
             # standardize covariates
@@ -87,6 +88,7 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None, **kwargs):
+        Logger().debug('Regress out confounder.')
         sample_ols_confounder = self.__check_for_covariates(kwargs)
         self.__validate_dimension(X, sample_ols_confounder)
 
@@ -94,7 +96,7 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
         hash_data = sha1(np.asarray(X, order='C')).hexdigest()
         hash_covs = sha1(np.asarray(sample_ols_confounder, order='C')).hexdigest()
 
-        hash_file = Path(str(self.cache_dir + '/' + hash_data + '_' + hash_covs + '.npz'))
+        hash_file = Path(str(self.cache_dir + '/' + hash_data + '_' + hash_covs  + '_' + str(self.standardize_covariates) + '.npz'))
 
         if hash_file.is_file() and self.cache_dir:
             X_new = np.load(hash_file)['arr_0']

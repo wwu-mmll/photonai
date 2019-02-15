@@ -17,7 +17,7 @@ from bson.objectid import ObjectId
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
-from sklearn.model_selection import ShuffleSplit, GroupKFold, GroupShuffleSplit, LeaveOneGroupOut
+from sklearn.model_selection import *
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.dummy import DummyClassifier, DummyRegressor
@@ -29,6 +29,7 @@ from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGri
 from ..optimization.SkOpt import SkOptOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import TestPipeline, OptimizerMetric
+from ..validation.cross_validation import StratifiedKFoldRegression
 from .PhotonPipeline import PhotonPipeline
 
 
@@ -218,7 +219,9 @@ class Hyperpipe(BaseEstimator):
 
     * `groups` [array-like, default=None]:
         Info for advanced cross validation strategies, such as LeaveOneSiteOut-CV about the affiliation
-        of the rows in the data
+        of the rows in the data. Also works with continuous values and StratifiedKFoldRegression. In case a group
+        variable and a StratifiedCV is passed, the targets will be ignored and only the group variable will be used
+        for the stratification.
 
     Attributes
     ----------
@@ -455,19 +458,29 @@ class Hyperpipe(BaseEstimator):
         Returns a tuple of training and test indices
 
         - If there is a strategy given for the outer cross validation the strategy is called to split the data
+            - additionally, if a group variable and a GroupCV is passed, split data according to groups
+            - if a group variable and a StratifiedCV is passed, split data according to groups and ignore targets when
+            stratifying the data
+            - if no group variable but a StratifiedCV is passed, split data according to targets
         - If no strategy is given and eval_final_performance is True, all data is used for training
         - If no strategy is given and eval_final_performance is False: a test set is seperated from the
           training and validation set by the parameter test_size with ShuffleSplit
         """
         # if there is a CV Object for cross validating the hyperparameter search
         if self.outer_cv is not None:
-            if self.groups is not None and (isinstance(self.outer_cv, GroupKFold)
-                                            or isinstance(self.outer_cv, GroupShuffleSplit)
-                                            or isinstance(self.outer_cv, LeaveOneGroupOut)):
+            if self.groups is not None and (isinstance(self.outer_cv, (GroupKFold, GroupShuffleSplit, LeaveOneGroupOut))):
                 try:
                     self.data_test_cases = self.outer_cv.split(self.X, self.y, self.groups)
                 except:
-                    Logger.error("Could not split data according to groups")
+                    Logger().error("Could not split data according to groups")
+            elif self.groups is not None and (isinstance(self.outer_cv, (StratifiedKFoldRegression,
+                                                                         StratifiedKFold,
+                                                                         StratifiedShuffleSplit))):
+                try:
+                    self.data_test_cases = self.outer_cv.split(self.X, self.groups)
+                except:
+                    Logger().error("Could not stratify data for outer cross validation according to "
+                                   "group variable")
             else:
                 self.data_test_cases = self.outer_cv.split(self.X, self.y)
         # in case we do not want to divide between validation and test set
@@ -636,7 +649,7 @@ class Hyperpipe(BaseEstimator):
 
                     if not self._is_mother_pipe:
                         self.result_tree_name = self.name + '_outer_fold_' + str(self.__mother_outer_fold_counter)  \
-                                                + '_inner_fold_' + str(self.__mother_inner_fold_counter)
+                            + '_inner_fold_' + str(self.__mother_inner_fold_counter)
                     else:
                         self.result_tree_name = self.name
 
