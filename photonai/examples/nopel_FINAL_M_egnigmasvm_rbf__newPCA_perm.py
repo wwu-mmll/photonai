@@ -61,5 +61,6 @@ def create_hyperpipe():
     return hyperpipe
 
 
-perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, random_state=11)
+perm_tester = PermutationTest(create_hyperpipe, n_perms=21, n_processes=3, random_state=11,
+                              permutation_id='NOPEL123489358934823982892jhsjhsdasdsdasd')
 perm_tester.fit(X, y)
