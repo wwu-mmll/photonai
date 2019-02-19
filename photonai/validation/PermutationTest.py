@@ -45,7 +45,7 @@ class PermutationTest:
         # Check if it already exists in DB
         try:
             existing_reference = MDBHyperpipe.objects.raw({'permutation_id': self.mother_permutation_id,
-                                                           'permutation_failed': False}).first()
+                                                           'computation_completed': True}).first()
             # check if all outer folds exist
             Logger().info("Found hyperpipe computation with true targets, skipping the optimization process with true targets")
         except DoesNotExist:
@@ -54,14 +54,16 @@ class PermutationTest:
             self.pipe.permutation_id = self.mother_permutation_id
             try:
                 self.pipe.fit(X, y_true)
-            except:
+                self.pipe.result_tree.computation_completed = True
+                self.pipe.result_tree.save()
+            except Exception as e:
                 if self.pipe.result_tree is not None:
-                    self.pipe.result_tree.permutation_failed = True
+                    self.pipe.result_tree.permutation_failed = str(e)
                     self.pipe.result_tree.save()
 
         # find how many permutations have been computed already:
         existing_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
-                                                          'permutation_failed': False}).count()
+                                                          'computation_completed': True}).count()
 
         # we do one more permutation than is left in case the last permutation runs broke, one for each parallel
         if existing_permutations > 0 and (self.n_perms - existing_permutations) > 0:
@@ -99,9 +101,9 @@ class PermutationTest:
     def calculate_results(self):
 
         mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': self.mother_permutation_id,
-                                                       'permutation_failed': False}).first()
+                                                       'computation_completed': True}).first()
         all_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
-                                                     'permutation_failed': False})
+                                                     'computation_completed': True})
         number_of_permutations = all_permutations.count()
 
         # collect true performance
@@ -235,11 +237,11 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, per
         # Fit hyperpipe
         print('Fitting permutation ' + str(perm_run) + ' ...')
         perm_pipe.fit(X, y_perm)
-
+        perm_pipe.result_tree.computation_completed = True
         perm_pipe.result_tree.save()
-    except:
+    except Exception as e:
         if perm_pipe.result_tree is not None:
-            perm_pipe.result_tree.permutation_failed = True
+            perm_pipe.result_tree.permutation_failed = str(e)
             perm_pipe.result_tree.save()
     return perm_run
 

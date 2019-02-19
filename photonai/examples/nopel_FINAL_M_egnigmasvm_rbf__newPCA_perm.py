@@ -23,7 +23,7 @@ group_var = None
 def create_hyperpipe():
 
     # Define cross-validation strategies
-    outer_cv = KFold(n_splits=5,shuffle=True)
+    outer_cv = KFold(n_splits=5, shuffle=True)
     inner_cv = KFold(n_splits=5, shuffle=True)
 
     # Specify how results are going to be saved
@@ -61,6 +61,6 @@ def create_hyperpipe():
     return hyperpipe
 
 
-perm_tester = PermutationTest(create_hyperpipe, n_perms=21, n_processes=3, random_state=11,
-                              permutation_id='NOPEL123489358934823982892jhsjhsdasdsdasd')
+perm_tester = PermutationTest(create_hyperpipe, n_perms=3, n_processes=3, random_state=11,
+                              permutation_id='NOPELFINALMENIGMASVM191348')
 perm_tester.fit(X, y)

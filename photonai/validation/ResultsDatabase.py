@@ -97,12 +97,14 @@ class DummyResults(EmbeddedMongoModel):
     train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
 
+
 class MDBHyperpipe(MongoModel):
     class Meta:
         final = True
 
     name = fields.CharField(primary_key=True)
     permutation_id = fields.CharField()
+    permutation_failed = fields.CharField(blank=True)
     computation_completed = fields.BooleanField(default=False)
     best_config_metric = fields.CharField()
     eval_final_performance = fields.BooleanField(default=True)
