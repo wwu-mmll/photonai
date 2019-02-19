@@ -1,0 +1,8 @@
+version: '2'
+services:
+  webapi:
+     build:
+       context: .
+       dockerfile: DOCKERFILE
+     ports:
+      - "0.0.0.0:8002:80"

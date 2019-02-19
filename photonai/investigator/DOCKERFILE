@@ -1,0 +1,13 @@
+FROM tiangolo/uwsgi-nginx-flask:python3.6
+ADD photonai/investigator/requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+ADD ./photonai /photonai
+
+WORKDIR /photonai/investigator/app
+ENV PYTHONPATH = /
+
+ENV STATIC_URL /main/static
+# Absolute path in where the static files wil be
+ENV STATIC_PATH photonai/investigator/app/main/static
+
+
