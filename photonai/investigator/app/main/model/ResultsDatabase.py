@@ -4,10 +4,9 @@ from pymongo.errors import DocumentTooLarge
 from enum import Enum
 import numpy as np
 import pandas as pd
-from ..photonlogger.Logger import Logger
+# from ..photonlogger.Logger import Logger
 import pickle
 import pprint
-from prettytable import PrettyTable
 
 
 class MDBFoldMetric(EmbeddedMongoModel):

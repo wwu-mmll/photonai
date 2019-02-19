@@ -1,4 +1,4 @@
-from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
+from ..model.PlotlyTrace import PlotlyTrace
 
 
 class PlotlyPlot:

@@ -1,8 +1,8 @@
-from photonai.investigator.app.main import app
-from photonai.investigator.app.controller.helper import load_pipe
+from ..main import application
+from .helper import load_pipe
 
 
-@app.route('/pipeline/<storage>/<name>/outer_fold/<outer_fold>/config/<config_index>/inner_fold/<inner_fold>/load')
+@application.route('/pipeline/<storage>/<name>/outer_fold/<outer_fold>/config/<config_index>/inner_fold/<inner_fold>/load')
 def load_tested_config_for_inner_fold(storage, name, outer_fold, config_index, inner_fold):
     pipe = load_pipe(storage, name)
 
@@ -66,7 +66,7 @@ def load_tested_config_for_inner_fold(storage, name, outer_fold, config_index, i
     return result
 
 
-@app.route('/pipeline/<storage>/<name>/outer_fold/<outer_fold>/config/<config_index>/load')
+@application.route('/pipeline/<storage>/<name>/outer_fold/<outer_fold>/config/<config_index>/load')
 def load_inner_fold_data_for_config(storage, name, outer_fold, config_index):
     pipe = load_pipe(storage, name)
 

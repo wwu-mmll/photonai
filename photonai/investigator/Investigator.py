@@ -1,6 +1,6 @@
 from ..base.PhotonBase import Hyperpipe
 from ..photonlogger.Logger import Singleton, Logger
-from ..investigator.app.main import app
+from ..investigator.app.main import application
 
 import webbrowser
 import os
@@ -133,7 +133,7 @@ class Investigator:
 class FlaskManager:
 
     def __init__(self):
-        self.app = app
+        self.app = application
 
     def set_mongo_db_url(self, mongo_url):
         self.app.config['mongo_db_url'] = mongo_url
@@ -146,7 +146,7 @@ class FlaskManager:
 
     def run_app(self):
         try:
-            self.app = app.run(host='0.0.0.0', port=7275)
+            self.app = application.run(host='0.0.0.0', port=7275)
         except OSError as exc:
             if exc.errno == 98:
                 # app already running
