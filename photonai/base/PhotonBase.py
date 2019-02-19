@@ -268,7 +268,8 @@ class Hyperpipe(BaseEstimator):
                  groups=None, set_random_seed: bool=False,
                  verbosity=0,
                  output_settings=None,
-                 performance_constraints=None):
+                 performance_constraints=None,
+                 permutation_id: str=None):
 
         # Re eval_final_performance:
         # set eval_final_performance to False because
@@ -280,6 +281,7 @@ class Hyperpipe(BaseEstimator):
         #    later without double dipping
 
         self.name = re.sub(r'\W+', '', name)
+        self.permutation_id = permutation_id
 
         self.inner_cv = inner_cv
         self.outer_cv = outer_cv
@@ -660,6 +662,9 @@ class Hyperpipe(BaseEstimator):
                     # initialize result logging with hyperpipe class
                     self.result_tree = MDBHyperpipe(name=self.result_tree_name)
 
+                    if self.permutation_id is not None:
+                        self.result_tree.permutation_id = self.permutation_id
+
                     # save wizard information to photon db in order to map results to the wizard design object
                     if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
                         if self.output_settings.wizard_object_id:
@@ -972,6 +977,7 @@ class Hyperpipe(BaseEstimator):
                     self.optimum_pipe.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
 
                     # save results again
+                    self.result_tree.computation_completed = True
                     self.mongodb_writer.save(self.result_tree)
                     if self.output_settings.pretrained_model_filename != '':
                         try:
