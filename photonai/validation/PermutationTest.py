@@ -53,9 +53,10 @@ class PermutationTest:
         except DoesNotExist:
             # if we havent computed the reference value do it:
             Logger().info("Calculating Reference Values with true targets.")
-            self.pipe.permutation_id = self.mother_permutation_id
             try:
+                self.pipe.permutation_id = self.mother_permutation_id
                 self.pipe.fit(X, y_true)
+                self.pipe.result_tree.name += "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                 self.pipe.result_tree.computation_completed = True
                 self.pipe.result_tree.save()
             except Exception as e:
