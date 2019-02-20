@@ -4,11 +4,13 @@ from ..main import application
 from ..model.ResultsDatabase import MDBHelper
 from pymodm.connection import connect
 from bson.objectid import ObjectId
+from pymongo import DESCENDING
+from flask import request
 
 
 def load_pipe_from_db(name):
     try:
-        pipe = MDBHyperpipe.objects.get({'_id': name})
+        pipe = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': name}).first()
         return pipe
     except DoesNotExist as dne:
         # Todo: pretty error handling
@@ -18,12 +20,8 @@ def load_pipe_from_db(name):
 def load_pipe_from_wizard(obj_id):
     try:
         connect('mongodb://trap-umbriel:27017/photon_results')
-        pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': ObjectId(obj_id)}))
-        # pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': obj_id}))
-        if len(pipe) > 0:
-            return pipe[0]
-        else:
-            return DoesNotExist("Could not find pipe.")
+        pipe = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'wizard_object_id': ObjectId(obj_id)}).first()
+        return pipe
     except DoesNotExist as dne:
         # Todo: pretty error handling
         return dne
