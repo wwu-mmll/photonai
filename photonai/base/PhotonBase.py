@@ -125,9 +125,8 @@ class OutputSettings:
             raise ValueError('Possible options for saving predictions or feature importances are: "best", "all", "None"')
         return save_best, save_all
 
-    def _update_settings(self, name):
+    def _update_settings(self, name, timestamp):
         if self.save_output:
-            timestamp = datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
             # Todo: give rights to user if this is done by docker container
             self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
             os.mkdir(self.results_folder)
@@ -378,6 +377,7 @@ class Hyperpipe(BaseEstimator):
         self._num_of_folds = 0
         self._is_mother_pipe = True
         self._fold_data_hashes = []
+        self._fitting_timestamp = None
 
         self.inner_cv_callback_function = performance_constraints
 
@@ -649,14 +649,15 @@ class Hyperpipe(BaseEstimator):
 
                     outer_fold_counter = 0
 
+                    self._fitting_timestamp =  datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
                     if not self._is_mother_pipe:
-                        self.result_tree_name = self.name + '_outer_fold_' + str(self.__mother_outer_fold_counter)  \
+                        self.result_tree_name = self.name + "_" + self._fitting_timestamp + '_outer_fold_' + str(self.__mother_outer_fold_counter)  \
                             + '_inner_fold_' + str(self.__mother_inner_fold_counter)
                     else:
-                        self.result_tree_name = self.name
+                        self.result_tree_name = self.name + "_" + self._fitting_timestamp
 
                     # update output options to add pipe name and timestamp
-                    self.output_settings._update_settings(self.name)
+                    self.output_settings._update_settings(self.name, self._fitting_timestamp)
                     self.mongodb_writer = MongoDBWriter(self.output_settings)
 
                     # initialize result logging with hyperpipe class
@@ -669,7 +670,7 @@ class Hyperpipe(BaseEstimator):
                     if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
                         if self.output_settings.wizard_object_id:
                             self.name = self.output_settings.wizard_object_id
-                            self.result_tree.name = self.output_settings.wizard_object_id
+                            self.result_tree.name = self.output_settings.wizard_object_id + "_" + self._fitting_timestamp
                             self.result_tree.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
                             self.result_tree.wizard_system_name = self.output_settings.wizard_project_name
                             self.result_tree.user_id = self.output_settings.user_id
