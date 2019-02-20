@@ -81,14 +81,15 @@ def load_mongo_pipes(available_pipes):
 
 
 def load_available_pipes():
-    available_pipes = dict()
-    available_pipes['RAM'] = application.config['pipe_objects'].keys()
-    available_pipes['FILES'] = application.config['pipe_files'].keys()
-    available_pipes['MONGO'] = []
-    if 'mongo_db_url' in application.config:
-        try:
-            load_mongo_pipes(available_pipes)
-        except ValueError as exc:
-            connect(application.config['mongo_db_url'])
-            load_mongo_pipes(available_pipes)
+    # available_pipes = dict()
+    # available_pipes['RAM'] = application.config['pipe_objects'].keys()
+    # available_pipes['FILES'] = application.config['pipe_files'].keys()
+    # available_pipes['MONGO'] = []
+    # if 'mongo_db_url' in application.config:
+    #     try:
+    #         load_mongo_pipes(available_pipes)
+    #     except ValueError as exc:
+    #         connect(application.config['mongo_db_url'])
+    #         load_mongo_pipes(available_pipes)
+    available_pipes = None
     return available_pipes
