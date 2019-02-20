@@ -102,10 +102,11 @@ class MDBHyperpipe(MongoModel):
     class Meta:
         final = True
 
-    name = fields.CharField(primary_key=True)
+    name = fields.CharField()
     permutation_id = fields.CharField()
     permutation_failed = fields.CharField(blank=True)
     computation_completed = fields.BooleanField(default=False)
+    computation_start_time = fields.DateTimeField(blank=True)
     best_config_metric = fields.CharField()
     eval_final_performance = fields.BooleanField(default=True)
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)

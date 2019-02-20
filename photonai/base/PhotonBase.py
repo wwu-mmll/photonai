@@ -378,6 +378,7 @@ class Hyperpipe(BaseEstimator):
         self._is_mother_pipe = True
         self._fold_data_hashes = []
         self._fitting_timestamp = None
+        self._fitting_time = None
 
         self.inner_cv_callback_function = performance_constraints
 
@@ -649,12 +650,13 @@ class Hyperpipe(BaseEstimator):
 
                     outer_fold_counter = 0
 
-                    self._fitting_timestamp =  datetime.datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+                    self._fitting_time = datetime.datetime.now()
+                    self._fitting_timestamp = self._fitting_time.strftime("%Y-%m-%d_%H-%M-%S")
                     if not self._is_mother_pipe:
-                        self.result_tree_name = self.name + "_" + self._fitting_timestamp + '_outer_fold_' + str(self.__mother_outer_fold_counter)  \
+                        self.result_tree_name = self.name + '_outer_fold_' + str(self.__mother_outer_fold_counter)  \
                             + '_inner_fold_' + str(self.__mother_inner_fold_counter)
                     else:
-                        self.result_tree_name = self.name + "_" + self._fitting_timestamp
+                        self.result_tree_name = self.name
 
                     # update output options to add pipe name and timestamp
                     self.output_settings._update_settings(self.name, self._fitting_timestamp)
@@ -662,6 +664,7 @@ class Hyperpipe(BaseEstimator):
 
                     # initialize result logging with hyperpipe class
                     self.result_tree = MDBHyperpipe(name=self.result_tree_name)
+                    self.result_tree.computation_start_time = self._fitting_time
 
                     if self.permutation_id is not None:
                         self.result_tree.permutation_id = self.permutation_id

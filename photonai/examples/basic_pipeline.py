@@ -11,7 +11,7 @@ from sklearn.datasets import load_breast_cancer
 X, y = load_breast_cancer(True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(save_predictions='best')
+mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results", save_predictions='best')
 
 
 # save_options = OutputSettings(local_file="/home/photon_user/photon_test/test_item.p")
@@ -51,12 +51,12 @@ my_pipe += PipelineElement('StandardScaler')
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}, test_disabled=True)
 # engage and optimize the good old SVM for Classification
 my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
-                                                   'C': FloatRange(0.5, 2)})
+                                                   'C': FloatRange(0.5, 2)}, gamma='scale')
 
 # my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
 
 # NOW TRAIN YOUR PIPELINE
-my_pipe.fit(X, y)
+# my_pipe.fit(X, y)
 
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
 # Investigator.show(my_pipe)
@@ -64,10 +64,10 @@ my_pipe.fit(X, y)
 
 
 # YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE
-my_pipe.save_optimum_pipe('optimum_pipe.photon')
+# my_pipe.save_optimum_pipe('optimum_pipe.photon')
 
 # YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
-# Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
+Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
 
 debug = True
 

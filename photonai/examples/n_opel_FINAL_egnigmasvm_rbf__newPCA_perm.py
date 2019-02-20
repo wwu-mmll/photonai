@@ -31,21 +31,18 @@ def create_hyperpipe():
                                      save_predictions="best",
                                      save_feature_importances="None",
                                      project_folder="/spm-data/Scratch/photon_wizard/nopel/FINAL_svm5fold",
-                                     user_id="nopel",
-                                     wizard_object_id="5c5c37f8fb753a9f3e5af976",
-                                     wizard_project_name="enigmasvmnewpca")
-
+                                     user_id="nopel")
     # Define hyperpipe
-    hyperpipe = Hyperpipe('enigmasvmnewpca',
-                        optimizer='sk_opt', optimizer_params={},
-                        metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy', 'sensitivity', 'specificity', 'f1_score', 'auc'],
-                        best_config_metric='f1_score',
-                        outer_cv=outer_cv,
-                        inner_cv=inner_cv,
-                        eval_final_performance=True,
-                        verbosity=1,
-                        output_settings=output_settings,
-                        groups=group_var)
+    hyperpipe = Hyperpipe('enigmasvmnewpca_basic',
+                          optimizer='sk_opt', optimizer_params={},
+                          metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy', 'sensitivity', 'specificity', 'f1_score', 'auc'],
+                          best_config_metric='f1_score',
+                          outer_cv=outer_cv,
+                          inner_cv=inner_cv,
+                          eval_final_performance=True,
+                          verbosity=1,
+                          output_settings=output_settings,
+                          groups=group_var)
 
     # Add transformer elements
     hyperpipe += PipelineElement("SimpleImputer", hyperparameters={},

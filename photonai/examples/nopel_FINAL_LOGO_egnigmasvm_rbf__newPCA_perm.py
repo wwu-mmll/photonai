@@ -36,16 +36,16 @@ def create_hyperpipe():
                                      wizard_project_name="enigmasvmnewpca")
 
     # Define hyperpipe
-    hyperpipe = Hyperpipe('enigmasvmnewpca',
-                        optimizer='sk_opt', optimizer_params={},
-                        metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy', 'sensitivity', 'specificity', 'f1_score', 'auc'],
-                        best_config_metric='f1_score',
-                        outer_cv=outer_cv,
-                        inner_cv=inner_cv,
-                        eval_final_performance=True,
-                        verbosity=1,
-                        output_settings=output_settings,
-                        groups=group_var)
+    hyperpipe = Hyperpipe('enigmasvmnewpca_final_logo',
+                          optimizer='sk_opt', optimizer_params={},
+                          metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy', 'sensitivity', 'specificity', 'f1_score', 'auc'],
+                          best_config_metric='f1_score',
+                          outer_cv=outer_cv,
+                          inner_cv=inner_cv,
+                          eval_final_performance=True,
+                          verbosity=1,
+                          output_settings=output_settings,
+                          groups=group_var)
 
     # Add transformer elements
     hyperpipe += PipelineElement("SimpleImputer", hyperparameters={},
