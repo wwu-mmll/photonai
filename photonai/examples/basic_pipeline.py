@@ -6,6 +6,7 @@ from photonai.investigator.Investigator import Investigator
 from photonai.configuration.Register import PhotonRegister
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
+import time
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
@@ -24,7 +25,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
-                    verbosity=1,
+                    verbosity=-1,
                     output_settings=mongo_settings)  # get error, warn and info message
                     #imbalanced_data_strategy_filter='RandomUnderSampler'
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
@@ -55,9 +56,14 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 
 # my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
 
-# NOW TRAIN YOUR PIPELINE
-# my_pipe.fit(X, y)
 
+
+start_time = time.time()
+# NOW TRAIN YOUR PIPELINE
+my_pipe.fit(X, y)
+# your code
+elapsed_time = time.time() - start_time
+print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
 # Investigator.show(my_pipe)
 
@@ -67,7 +73,7 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 # my_pipe.save_optimum_pipe('optimum_pipe.photon')
 
 # YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
-Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
+# Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
 
 debug = True
 

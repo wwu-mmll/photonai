@@ -746,7 +746,7 @@ class Hyperpipe(BaseEstimator):
                         # do the optimizing
                         for current_config in self.optimizer.ask:
                             self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-                            hp = TestPipeline(self._pipe, current_config, self.metrics, self.update_mother_inner_fold_nr,
+                            hp = TestPipeline(self._copy_pipeline, current_config, self.metrics, self.update_mother_inner_fold_nr,
                                               mongo_db_settings=self.output_settings,
                                               callback_function=self.inner_cv_callback_function)
                             Logger().debug('optimizing of:' + self.name)
