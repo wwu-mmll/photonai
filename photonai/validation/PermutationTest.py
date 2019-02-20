@@ -56,7 +56,6 @@ class PermutationTest:
             try:
                 self.pipe.permutation_id = self.mother_permutation_id
                 self.pipe.fit(X, y_true)
-                self.pipe.result_tree.name += "_" + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
                 self.pipe.result_tree.computation_completed = True
                 self.pipe.result_tree.save()
             except Exception as e:
@@ -266,7 +265,7 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, per
     # Create new instance of hyperpipe and set all parameters
     perm_pipe = hyperpipe_constructor()
     perm_pipe._set_verbosity(-1)
-    perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run) + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+    perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
     perm_pipe.permutation_id = permutation_id
 
     # print(y_perm)
