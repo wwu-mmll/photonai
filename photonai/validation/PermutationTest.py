@@ -1,6 +1,8 @@
-from multiprocessing import Pool
-
+from multiprocessing import Pool, Process, Queue, current_process
+import queue
+import datetime
 import numpy as np
+import os
 from ..photonlogger.Logger import Logger
 from ..validation.Validate import Scorer, OptimizerMetric
 from ..base.PhotonBase import OutputSettings
@@ -89,13 +91,31 @@ class PermutationTest:
         return self
 
     def run_parallelized_hyperpipes(self, y_perms, hyperpipe_constructor, X, permutation_id, skip=0):
-        pool = Pool(processes=self.n_processes)
+
+        job_list = Queue()
+
         for perm_run, y_perm in enumerate(y_perms):
-            perm_run = perm_run + skip
-            pool.apply_async(run_parallelized_permutation, args=(hyperpipe_constructor, X, perm_run, y_perm, permutation_id),
-                             callback=self.collect_results)
-        pool.close()
-        pool.join()
+            perm_run_skip = perm_run + skip
+            job_list.put([hyperpipe_constructor, X, perm_run_skip, y_perm, permutation_id])
+
+        processes = []
+
+        for w in range(self.n_processes):
+            p = Process(target=do_jobs, args=(job_list,))
+            processes.append(p)
+            p.start()
+
+            # completing process
+        for p in processes:
+            p.join()
+
+        # pool = Pool(processes=self.n_processes, maxtasksperchild=1)
+        # for perm_run, y_perm in enumerate(y_perms):
+        #     perm_run = perm_run + skip
+        #     pool.apply_async(run_parallelized_permutation, args=(hyperpipe_constructor, X, perm_run, y_perm, permutation_id),
+        #                      callback=self.collect_results)
+        # pool.close()
+        # pool.join()
 
 
     def calculate_results(self):
@@ -222,13 +242,33 @@ class PermutationTest:
         return greater_is_better
 
 
+def do_jobs(tasks_to_accomplish):
+    while True:
+        try:
+            task = tasks_to_accomplish.get_nowait()
+        except queue.Empty:
+            break
+        else:
+            hyperpipe_construct = task[0]
+            X = task[1]
+            perm_run = task[2]
+            y_perm = task[3]
+            permutation_id = task[4]
+
+            print(os.getpid())
+            print("Starting permutation " + str(perm_run) + " from process number " + current_process().name)
+            run_parallelized_permutation(hyperpipe_construct, X, perm_run, y_perm, permutation_id)
+    return True
+
+
 def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id):
     # Create new instance of hyperpipe and set all parameters
     perm_pipe = hyperpipe_constructor()
     perm_pipe._set_verbosity(-1)
-    perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
+    perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run) + datetime.datetime.now().strftime("%Y%m%d%H%M%S")
     perm_pipe.permutation_id = permutation_id
 
+    # print(y_perm)
     po = OutputSettings(mongodb_connect_url=perm_pipe.output_settings.mongodb_connect_url,
                         save_predictions='None', save_feature_importances='None', save_output=False)
     perm_pipe._set_persist_options(po)
@@ -239,10 +279,12 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, per
         perm_pipe.fit(X, y_perm)
         perm_pipe.result_tree.computation_completed = True
         perm_pipe.result_tree.save()
+        print('Finished permutation ' + str(perm_run) + ' ...')
     except Exception as e:
         if perm_pipe.result_tree is not None:
             perm_pipe.result_tree.permutation_failed = str(e)
             perm_pipe.result_tree.save()
+            print('Failed permutation ' + str(perm_run) + ' ...')
     return perm_run
 
 
