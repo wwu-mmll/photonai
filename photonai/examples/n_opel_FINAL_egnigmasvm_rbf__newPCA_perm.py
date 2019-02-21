@@ -61,4 +61,8 @@ def create_hyperpipe():
                 
 perm_tester = PermutationTest(create_hyperpipe, n_perms=1000, n_processes=3, random_state=11,
                               permutation_id="NOPEL01FINALENIGMA191620")
-perm_tester.fit(X, y)
+# perm_tester.fit(X, y)
+
+# perm_tester._calculate_results(perm_tester.permutation_id, perm_tester.metrics, False)
+result = perm_tester.get_permutation_status(perm_tester.permutation_id)
+debug = True
