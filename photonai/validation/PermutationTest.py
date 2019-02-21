@@ -1,6 +1,5 @@
 from multiprocessing import Pool, Process, Queue, current_process
 import queue
-import datetime
 import numpy as np
 import os
 from ..photonlogger.Logger import Logger
@@ -8,8 +7,8 @@ from ..validation.Validate import Scorer, OptimizerMetric
 from ..base.PhotonBase import OutputSettings
 from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
 
-from pymodm.errors import DoesNotExist
-
+from pymodm.errors import DoesNotExist, ConnectionError
+from pymodm import connect
 
 class PermutationTest:
 
@@ -24,18 +23,24 @@ class PermutationTest:
 
         self.n_perms = n_perms
         self.permutation_id = permutation_id
-        self.mother_permutation_id = permutation_id + "_reference"
+        self.mother_permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
         self.n_processes = n_processes
         self.random_state = random_state
 
         # Get all specified metrics
-        self.metrics = dict()
-        for metric in self.pipe.metrics:
-            self.metrics[metric] = {'name': metric, 'greater_is_better': self.set_greater_is_better(metric)}
+        self.metrics = PermutationTest.manage_metrics(self.pipe.metrics, self.pipe.pipeline_elements[-1])
         best_config_metric = self.pipe.best_config_metric
         if best_config_metric not in self.metrics.keys():
             self.metrics[best_config_metric] = {'name': best_config_metric,
                                                 'greater_is_better': self.set_greater_is_better(best_config_metric)}
+
+
+    @staticmethod
+    def manage_metrics(metrics, last_element=None):
+        metric_dict = dict()
+        for metric in metrics:
+            metric_dict[metric] = {'name': metric, 'greater_is_better': PermutationTest.set_greater_is_better(metric, last_element)}
+        return metric_dict
 
     def fit(self, X, y):
 
@@ -76,7 +81,7 @@ class PermutationTest:
         if existing_permutations < self.n_perms:
 
             # Compute permutations
-            np.random.seed(self.random_state)
+            # np.random.seed(self.random_state)
             y_perms = list()
             for perm in range(n_perms_todo):
                 y_perms.append(np.random.permutation(y_true))
@@ -86,7 +91,7 @@ class PermutationTest:
             self.run_parallelized_hyperpipes(y_perms, self.hyperpipe_constructor, X, self.permutation_id,
                                              skip=existing_permutations)
 
-        self.calculate_results()
+        self._calculate_results(self.permutation_id, self.metrics)
 
         return self
 
@@ -117,115 +122,152 @@ class PermutationTest:
         # pool.close()
         # pool.join()
 
+    @staticmethod
+    def get_mother_permutation_id(permutation_id):
+        m_perm = permutation_id + "_reference"
+        return m_perm
 
-    def calculate_results(self):
+    @staticmethod
+    def _calculate_results(permutation_id,  metrics, save_to_db=True):
 
-        mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': self.mother_permutation_id,
-                                                       'computation_completed': True}).first()
-        all_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
-                                                     'computation_completed': True})
-        number_of_permutations = all_permutations.count()
+        try:
+            mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
+                                                           'computation_completed': True}).first()
 
-        # collect true performance
-        # collect test set performances and calculate mean
-        n_outer_folds = len(mother_permutation.outer_folds)
-        true_performance = dict()
-        for _, metric in self.metrics.items():
-            performance = list()
-            for fold in range(n_outer_folds):
-                performance.append(mother_permutation.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
-            true_performance[metric['name']] = np.mean(performance)
+        except DoesNotExist:
+            return None, None
+        else:
+            all_permutations = MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
+                                                         'computation_completed': True})
+            number_of_permutations = all_permutations.count()
 
-        # collect perm performances
+            # collect true performance
+            # collect test set performances and calculate mean
+            n_outer_folds = len(mother_permutation.outer_folds)
+            true_performance = dict()
+            for _, metric in metrics.items():
+                performance = list()
+                for fold in range(n_outer_folds):
+                    performance.append(mother_permutation.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
+                true_performance[metric['name']] = np.mean(performance)
 
-        perm_performances_global = list()
-        for index, perm_pipe in enumerate(all_permutations):
-            try:
-                # collect test set predictions
-                n_outer_folds = len(perm_pipe.outer_folds)
-                perm_performances = dict()
-                for _, metric in self.metrics.items():
-                    performance = list()
-                    for fold in range(n_outer_folds):
-                        performance.append(
-                            perm_pipe.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[
-                                metric['name']])
-                    perm_performances[metric['name']] = np.mean(performance)
-                perm_performances['ind_perm'] = index
-                perm_performances_global.append(perm_performances)
-            except Exception as e:
-                # we suspect that the task was killed during computation of this permutation
-                Logger().error("Dismissed one permutation from calculation:")
-                Logger().error(e)
+            # collect perm performances
 
-        # Reorder results
-        perm_perf_metrics = dict()
-        for _, metric in self.metrics.items():
-            perms = list()
-            for i in range(len(perm_performances_global)):
-                perms.append(perm_performances_global[i][metric['name']])
-            perm_perf_metrics[metric['name']] = perms
+            perm_performances_global = list()
+            for index, perm_pipe in enumerate(all_permutations):
+                try:
+                    # collect test set predictions
+                    n_outer_folds = len(perm_pipe.outer_folds)
+                    perm_performances = dict()
+                    for _, metric in metrics.items():
+                        performance = list()
+                        for fold in range(n_outer_folds):
+                            performance.append(
+                                perm_pipe.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[
+                                    metric['name']])
+                        perm_performances[metric['name']] = np.mean(performance)
+                    perm_performances['ind_perm'] = index
+                    perm_performances_global.append(perm_performances)
+                except Exception as e:
+                    # we suspect that the task was killed during computation of this permutation
+                    Logger().error("Dismissed one permutation from calculation:")
+                    Logger().error(e)
 
-        # Calculate p-value
-        p = self.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics)
-        p_text = dict()
-        for _, metric in self.metrics.items():
-            if p[metric['name']] == 0:
-                p_text[metric['name']] = "p < {}".format(str(1/self.n_perms))
-            else:
-                p_text[metric['name']] = "p = {}".format(p[metric['name']])
+            # Reorder results
+            perm_perf_metrics = dict()
+            for _, metric in metrics.items():
+                perms = list()
+                for i in range(len(perm_performances_global)):
+                    perms.append(perm_performances_global[i][metric['name']])
+                perm_perf_metrics[metric['name']] = perms
 
-        # Print results
-        Logger().info("""
-        Done with permutations...
+            # Calculate p-value
+            p = PermutationTest.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics,
+                                            metrics=metrics, n_perms=number_of_permutations)
+            p_text = dict()
+            for _, metric in metrics.items():
+                if p[metric['name']] == 0:
+                    p_text[metric['name']] = "p < {}".format(str(1/number_of_permutations))
+                else:
+                    p_text[metric['name']] = "p = {}".format(p[metric['name']])
 
-        Results Permutation test
-        ===============================================
-        """)
-        for _, metric in self.metrics.items():
+            # Print results
             Logger().info("""
-                Metric: {}
-                True Performance: {}
-                p Value: {}
+            Done with permutations...
+    
+            Results Permutation test
+            ===============================================
+            """)
+            for _, metric in metrics.items():
+                Logger().info("""
+                    Metric: {}
+                    True Performance: {}
+                    p Value: {}
+    
+                """.format(metric['name'], true_performance[metric['name']], p_text[metric['name']]))
 
-            """.format(metric['name'], true_performance[metric['name']], p_text[metric['name']]))
+            if save_to_db:
+                # Write results to results tree
+                perm_results = MDBPermutationResults(n_perms=number_of_permutations)
+                results_all_metrics = list()
+                for _, metric in metrics.items():
+                    perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']], metric_value=true_performance[metric['name']])
+                    perm_metrics.values_permutations = perm_perf_metrics[metric['name']]
+                    results_all_metrics.append(perm_metrics)
+                perm_results.metrics = results_all_metrics
+                mother_permutation.permutation_test = perm_results
+                mother_permutation.save()
 
-        # Write results to results tree
-        perm_results = MDBPermutationResults(n_perms=self.n_perms, random_state=self.random_state)
-        results_all_metrics = list()
-        for _, metric in self.metrics.items():
-            perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']], metric_value=true_performance[metric['name']])
-            perm_metrics.values_permutations = perm_perf_metrics[metric['name']]
-            results_all_metrics.append(perm_metrics)
-        perm_results.metrics = results_all_metrics
-        mother_permutation.permutation_test = perm_results
-        mother_permutation.save()
+            return true_performance, perm_perf_metrics
 
-        return true_performance, perm_perf_metrics
+
+    @staticmethod
+    def get_permutation_status(permutation_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results",
+                               save_to_db = False):
+
+        def _find_mummy(permutation_id):
+            return MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
+                                             'computation_completed': True}).first()
+        try:
+            mother_permutation = _find_mummy(permutation_id)
+        except DoesNotExist:
+            return None, None
+        except ConnectionError:
+            # in case we haven't been connected try again
+            connect(mongo_db_connect_url)
+            try:
+                mother_permutation =_find_mummy(permutation_id)
+            except DoesNotExist:
+                return None, None,
+
+        # find distinct list of metrics
+        metric_list = list(set([m.metric_name for m in mother_permutation.metrics_test]))
+        metric_dict = PermutationTest.manage_metrics(metric_list, None)
+        return PermutationTest._calculate_results(permutation_id, metric_dict, save_to_db)
 
     def collect_results(self, result):
         # This is called whenever foo_pool(i) returns a result.
         # result_list is modified only by the main process, not the pool workers.
         Logger().info("Finished Permutation Run" + str(result))
 
-    def calculate_p(self, true_performance, perm_performances):
+    @staticmethod
+    def calculate_p(true_performance, perm_performances, metrics, n_perms):
         p = dict()
-        for _, metric in self.metrics.items():
+        for _, metric in metrics.items():
             if metric['greater_is_better']:
-                p[metric['name']] = np.sum(true_performance[metric['name']] < np.asarray(perm_performances[metric['name']]))/(self.n_perms + 1)
+                p[metric['name']] = np.sum(true_performance[metric['name']] < np.asarray(perm_performances[metric['name']]))/(n_perms + 1)
             else:
-                p[metric['name']] = np.sum(true_performance[metric['name']] > np.asarray(perm_performances[metric['name']]))/(self.n_perms + 1)
+                p[metric['name']] = np.sum(true_performance[metric['name']] > np.asarray(perm_performances[metric['name']]))/(n_perms + 1)
         return p
 
-    def set_greater_is_better(self, metric):
+    @staticmethod
+    def set_greater_is_better(metric, last_element = None):
         """
         Set greater_is_better for metric
         :param string specifying metric
         """
-        if metric == 'score':
+        if metric == 'score' and last_element is not None:
             # if no specific metric was chosen, use default scoring method
-
-            last_element = self.pipe.pipeline_elements[-1]
             if hasattr(last_element.base_element, '_estimator_type'):
                 greater_is_better = True
             else:
