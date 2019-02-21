@@ -30,7 +30,7 @@ setup(
         'xlrd',
         'plotly',
         'imblearn',
-        'pymodm==0.5.0',
+        'pymodm==0.4.1',
         'scipy',
         'statsmodels',
         'flask',
