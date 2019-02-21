@@ -70,6 +70,9 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         config_values = [config[name] for name in self.hyperparameter_list]
         best_config_metric_performance = performance[1]
         if self.maximize_metric:
+            if isinstance(best_config_metric_performance, list):
+                print("BEST CONFIG METRIC PERFORMANCE: " + str(best_config_metric_performance))
+                best_config_metric_performance = best_config_metric_performance[0]
             best_config_metric_performance = -best_config_metric_performance
         # random_accuracy = np.random.randn(1)[0]
         self.optimizer.tell(config_values, best_config_metric_performance)

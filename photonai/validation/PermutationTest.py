@@ -1,15 +1,19 @@
-from multiprocessing import Pool
-
+from multiprocessing import Pool, Process, Queue, current_process
+import queue
+import datetime
 import numpy as np
+import os
 from ..photonlogger.Logger import Logger
 from ..validation.Validate import Scorer, OptimizerMetric
 from ..base.PhotonBase import OutputSettings
-from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics
+from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
+
+from pymodm.errors import DoesNotExist
 
 
 class PermutationTest:
 
-    def __init__(self, hyperpipe_constructor, n_perms=1000, n_processes=1, random_state=15):
+    def __init__(self, hyperpipe_constructor, permutation_id:str, n_perms=1000, n_processes=1, random_state=15):
 
         self.hyperpipe_constructor = hyperpipe_constructor
         self.pipe = self.hyperpipe_constructor()
@@ -19,6 +23,8 @@ class PermutationTest:
             raise ValueError("MongoDB Connection String must be given for permutation tests")
 
         self.n_perms = n_perms
+        self.permutation_id = permutation_id
+        self.mother_permutation_id = permutation_id + "_reference"
         self.n_processes = n_processes
         self.random_state = random_state
 
@@ -32,37 +38,132 @@ class PermutationTest:
                                                 'greater_is_better': self.set_greater_is_better(best_config_metric)}
 
     def fit(self, X, y):
+
+        # at first we do a reference optimization
         y_true = y
 
         # Run with true labels
-        self.pipe.fit(X, y_true)
 
+        # Check if it already exists in DB
+        try:
+            existing_reference = MDBHyperpipe.objects.raw({'permutation_id': self.mother_permutation_id,
+                                                           'computation_completed': True}).first()
+            # check if all outer folds exist
+            Logger().info("Found hyperpipe computation with true targets, skipping the optimization process with true targets")
+        except DoesNotExist:
+            # if we havent computed the reference value do it:
+            Logger().info("Calculating Reference Values with true targets.")
+            try:
+                self.pipe.permutation_id = self.mother_permutation_id
+                self.pipe.fit(X, y_true)
+                self.pipe.result_tree.computation_completed = True
+                self.pipe.result_tree.save()
+            except Exception as e:
+                if self.pipe.result_tree is not None:
+                    self.pipe.result_tree.permutation_failed = str(e)
+                    self.pipe.result_tree.save()
+
+        # find how many permutations have been computed already:
+        existing_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
+                                                          'computation_completed': True}).count()
+
+        # we do one more permutation than is left in case the last permutation runs broke, one for each parallel
+        if existing_permutations > 0 and (self.n_perms - existing_permutations) > 0:
+            n_perms_todo = self.n_perms - existing_permutations # + self.n_processes
+        else:
+            n_perms_todo = self.n_perms
+
+        if existing_permutations < self.n_perms:
+
+            # Compute permutations
+            np.random.seed(self.random_state)
+            y_perms = list()
+            for perm in range(n_perms_todo):
+                y_perms.append(np.random.permutation(y_true))
+
+            Logger().info(str(n_perms_todo) + " permutation runs todo")
+            # Run parallel pool
+            self.run_parallelized_hyperpipes(y_perms, self.hyperpipe_constructor, X, self.permutation_id,
+                                             skip=existing_permutations)
+
+        self.calculate_results()
+
+        return self
+
+    def run_parallelized_hyperpipes(self, y_perms, hyperpipe_constructor, X, permutation_id, skip=0):
+
+        job_list = Queue()
+
+        for perm_run, y_perm in enumerate(y_perms):
+            perm_run_skip = perm_run + skip
+            job_list.put([hyperpipe_constructor, X, perm_run_skip, y_perm, permutation_id])
+
+        processes = []
+
+        for w in range(self.n_processes):
+            p = Process(target=do_jobs, args=(job_list,))
+            processes.append(p)
+            p.start()
+
+            # completing process
+        for p in processes:
+            p.join()
+
+        # pool = Pool(processes=self.n_processes, maxtasksperchild=1)
+        # for perm_run, y_perm in enumerate(y_perms):
+        #     perm_run = perm_run + skip
+        #     pool.apply_async(run_parallelized_permutation, args=(hyperpipe_constructor, X, perm_run, y_perm, permutation_id),
+        #                      callback=self.collect_results)
+        # pool.close()
+        # pool.join()
+
+
+    def calculate_results(self):
+
+        mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': self.mother_permutation_id,
+                                                       'computation_completed': True}).first()
+        all_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
+                                                     'computation_completed': True})
+        number_of_permutations = all_permutations.count()
+
+        # collect true performance
         # collect test set performances and calculate mean
-        n_outer_folds = len(self.pipe.result_tree.outer_folds)
-
+        n_outer_folds = len(mother_permutation.outer_folds)
         true_performance = dict()
         for _, metric in self.metrics.items():
             performance = list()
             for fold in range(n_outer_folds):
-                performance.append(self.pipe.result_tree.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
+                performance.append(mother_permutation.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
             true_performance[metric['name']] = np.mean(performance)
 
-        # Compute permutations
-        np.random.seed(self.random_state)
-        y_perms = list()
-        for perm in range(self.n_perms):
-            y_perms.append(np.random.permutation(y_true))
+        # collect perm performances
 
-        # Run parallel pool
-        self.perm_performances = [None]*self.n_perms
-        self.run_parallelized_hyperpipes(y_perms, self.hyperpipe_constructor, X, self.metrics)
+        perm_performances_global = list()
+        for index, perm_pipe in enumerate(all_permutations):
+            try:
+                # collect test set predictions
+                n_outer_folds = len(perm_pipe.outer_folds)
+                perm_performances = dict()
+                for _, metric in self.metrics.items():
+                    performance = list()
+                    for fold in range(n_outer_folds):
+                        performance.append(
+                            perm_pipe.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[
+                                metric['name']])
+                    perm_performances[metric['name']] = np.mean(performance)
+                perm_performances['ind_perm'] = index
+                perm_performances_global.append(perm_performances)
+            except Exception as e:
+                # we suspect that the task was killed during computation of this permutation
+                Logger().error("Dismissed one permutation from calculation:")
+                Logger().error(e)
 
         # Reorder results
         perm_perf_metrics = dict()
         for _, metric in self.metrics.items():
             perms = list()
-            for i in range(self.n_perms):
-                perms.append(self.perm_performances[i][metric['name']])
+            for i in range(len(perm_performances_global)):
+                perms.append(perm_performances_global[i][metric['name']])
             perm_perf_metrics[metric['name']] = perms
 
         # Calculate p-value
@@ -97,23 +198,15 @@ class PermutationTest:
             perm_metrics.values_permutations = perm_perf_metrics[metric['name']]
             results_all_metrics.append(perm_metrics)
         perm_results.metrics = results_all_metrics
-        self.pipe.result_tree.permutation_test = perm_results
-        self.pipe.mongodb_writer.save(self.pipe.result_tree)
+        mother_permutation.permutation_test = perm_results
+        mother_permutation.save()
 
-        return {'pipe': self.pipe, 'p': p, 'true_performance': true_performance, 'perm_performances': perm_perf_metrics}
-
-    def run_parallelized_hyperpipes(self, y_perms, hyperpipe_constructor, X, metrics):
-        pool = Pool(processes=self.n_processes)
-        for perm_run, y_perm in enumerate(y_perms):
-            pool.apply_async(run_parallelized_permutation, args=(hyperpipe_constructor, X, perm_run, y_perm, metrics),
-                             callback=self.collect_results)
-        pool.close()
-        pool.join()
+        return true_performance, perm_perf_metrics
 
     def collect_results(self, result):
         # This is called whenever foo_pool(i) returns a result.
         # result_list is modified only by the main process, not the pool workers.
-        self.perm_performances[result['ind_perm']] = result
+        Logger().info("Finished Permutation Run" + str(result))
 
     def calculate_p(self, true_performance, perm_performances):
         p = dict()
@@ -149,33 +242,53 @@ class PermutationTest:
         return greater_is_better
 
 
-def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, metrics):
+def do_jobs(tasks_to_accomplish):
+    while True:
+        try:
+            task = tasks_to_accomplish.get_nowait()
+        except queue.Empty:
+            break
+        else:
+            hyperpipe_construct = task[0]
+            X = task[1]
+            perm_run = task[2]
+            y_perm = task[3]
+            permutation_id = task[4]
+
+            print(os.getpid())
+            print("Starting permutation " + str(perm_run) + " from process number " + current_process().name)
+            run_parallelized_permutation(hyperpipe_construct, X, perm_run, y_perm, permutation_id)
+    return True
+
+
+def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id):
     # Create new instance of hyperpipe and set all parameters
     perm_pipe = hyperpipe_constructor()
     perm_pipe._set_verbosity(-1)
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
+    perm_pipe.permutation_id = permutation_id
 
+    # print(y_perm)
     po = OutputSettings(mongodb_connect_url=perm_pipe.output_settings.mongodb_connect_url,
                         save_predictions='None', save_feature_importances='None', save_output=False)
     perm_pipe._set_persist_options(po)
     perm_pipe.calculate_metrics_across_folds = False
+    try:
+        # Fit hyperpipe
+        print('Fitting permutation ' + str(perm_run) + ' ...')
+        perm_pipe.fit(X, y_perm)
+        perm_pipe.result_tree.computation_completed = True
+        perm_pipe.result_tree.save()
+        print('Finished permutation ' + str(perm_run) + ' ...')
+    except Exception as e:
+        if perm_pipe.result_tree is not None:
+            perm_pipe.result_tree.permutation_failed = str(e)
+            perm_pipe.result_tree.save()
+            print('Failed permutation ' + str(perm_run) + ' ...')
+    return perm_run
 
-    # Fit hyperpipe
-    print('Fitting permutation ' + str(perm_run) + ' ...')
-    perm_pipe.fit(X, y_perm)
 
-    # collect test set predictions
-    n_outer_folds = len(perm_pipe.result_tree.outer_folds)
 
-    perm_performances = dict()
-    for _, metric in metrics.items():
-        performance = list()
-        for fold in range(n_outer_folds):
-            performance.append(
-                perm_pipe.result_tree.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
-        perm_performances[metric['name']] = np.mean(performance)
-    perm_performances['ind_perm'] = perm_run
-    return perm_performances
 
 
 
