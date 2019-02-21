@@ -218,7 +218,7 @@ class PermutationTest:
                 mother_permutation.permutation_test = perm_results
                 mother_permutation.save()
 
-            return true_performance, perm_perf_metrics
+            return true_performance, perm_perf_metrics, p
 
 
     @staticmethod
