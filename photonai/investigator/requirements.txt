@@ -2,3 +2,4 @@ flask
 numpy
 pymodm
 pandas
+prettytable
