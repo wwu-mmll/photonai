@@ -47,13 +47,13 @@
 {% block breadcrumb %}
     <ol class="breadcrumb">
         <li><a href="#">Hyperpipe</a></li>
-        <li class="active">Pipeline: {{ pipe.pk }}</li>
+        <li class="active">Pipeline: {{ pipe.name }}</li>
     </ol>
 {% endblock %}
 
 {% block content %}
     <section class="content-header">
-        <h1>Outer folds of <em>{{pipe.pk}}</em></h1>
+        <h1>Outer folds of <em>{{pipe.name}}</em></h1>
         <small>Click for details</small>
     </section>
     <section class="content">
@@ -90,7 +90,7 @@
         <div class="row">
             {% if pipe.outer_folds %}
                 {% for outer_fold in pipe.outer_folds %}
-                    {{ render_outer_folds(pipe.pk, outer_fold) }}
+                    {{ render_outer_folds(pipe.name, outer_fold) }}
                 {% endfor %}
             {% else %}
                 <p class="no-posts">Nothing to see yet! Come back soon and check for updates.</p>

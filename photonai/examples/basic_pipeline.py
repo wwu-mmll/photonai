@@ -61,12 +61,11 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 start_time = time.time()
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-# your code
 elapsed_time = time.time() - start_time
 print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
 Investigator.show(my_pipe)
-
+# Investigator.load_from_file(my_pipe.name, my_pipe.output_settings.local_file)
 
 
 # YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE

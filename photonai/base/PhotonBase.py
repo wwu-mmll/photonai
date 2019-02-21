@@ -87,6 +87,7 @@ class OutputSettings:
         else:
             self.project_folder = project_folder
 
+        self.results_folder = None
         self.save_output = save_output
 
         if self.save_output:
