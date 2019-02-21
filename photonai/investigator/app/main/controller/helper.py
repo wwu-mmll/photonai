@@ -57,7 +57,8 @@ def load_pipe(storage, name):
             # Todo: handle file does not exist
             debug = True
 
-    if not pipe or not isinstance(pipe, MDBHyperpipe):
+    if not pipe:
+        # or not isinstance(pipe, MDBHyperpipe):
         # return "Could not load pipeline"
         return error
     return pipe

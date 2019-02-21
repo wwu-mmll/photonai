@@ -65,7 +65,7 @@ my_pipe.fit(X, y)
 elapsed_time = time.time() - start_time
 print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
-# Investigator.show(my_pipe)
+Investigator.show(my_pipe)
 
 
 

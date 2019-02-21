@@ -36,8 +36,8 @@ def show_pipeline(storage, name):
         available_pipes = load_available_pipes()
         pipe = load_pipe(storage, name)
 
-        if not isinstance(pipe, MDBHyperpipe):
-            return render_template("default/error.html", error_msg=pipe)
+        # if not isinstance(pipe, MDBHyperpipe):
+        #     return render_template("default/error.html", error_msg=pipe)
 
         default_fold_best_config = 0
 
