@@ -104,7 +104,7 @@
 {% block breadcrumb %}
     <ol class="breadcrumb">
         <li><a href="#">Hyperpipe</a></li>
-        <li><a href="{{ url_for('show_pipeline', storage=s, name=pipe.pk) }}">Pipeline: {{ pipe.pk }}</a></li>
+        <li><a href="{{ url_for('show_pipeline', storage=s, name=pipe.name) }}">Pipeline: {{ pipe.name }}</a></li>
         <li class="active">Fold: {{ outer_fold.fold_nr }}</li>
     </ol>
 {% endblock %}

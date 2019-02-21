@@ -90,7 +90,7 @@
         <div class="row">
             {% if pipe.outer_folds %}
                 {% for outer_fold in pipe.outer_folds %}
-                    {{ render_outer_folds(pipe.pk, outer_fold) }}
+                    {{ render_outer_folds(pipe.name, outer_fold) }}
                 {% endfor %}
             {% else %}
                 <p class="no-posts">Nothing to see yet! Come back soon and check for updates.</p>
