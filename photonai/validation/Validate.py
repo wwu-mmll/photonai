@@ -1,6 +1,7 @@
 import time
 import traceback
 import warnings
+import os
 
 import numpy as np
 from sklearn.pipeline import Pipeline
@@ -21,7 +22,7 @@ class TestPipeline(object):
 
     def __init__(self, pipe_ctor, specific_config: dict, metrics: list, mother_inner_fold_handle,
                  raise_error: bool=False, mongo_db_settings=None, callback_function=None,
-                 training: bool = False, parallel_cv: bool = False):
+                 training: bool = False, parallel_cv: bool = False, nr_of_parrallel_processes: int = 4):
         """
         Creates a new TestPipeline object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -45,7 +46,7 @@ class TestPipeline(object):
         self.callback_function = callback_function
         self.training = training
         self.parallel_cv = parallel_cv
-        self.parallel_cv = True
+        self.nr_of_parallel_processes = nr_of_parrallel_processes
 
 
     def calculate_cv_score(self, X, y, cv_iter,
@@ -80,7 +81,7 @@ class TestPipeline(object):
             save_predictions = True
 
         if self.parallel_cv:
-            nr_of_processes = 3
+            nr_of_processes = min(self.nr_of_parallel_processes, )
             folds_to_do = Queue()
             folds_done = Queue()
 
