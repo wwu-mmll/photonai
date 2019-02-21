@@ -17,12 +17,11 @@ setup(
   install_requires=[
         'numpy',
         'matplotlib',
-        'slackclient',
         'progressbar2',
         'Pillow',
         'scikit-learn',
         'keras',
-        'nilearn',
+        'nilearn==0.5.0',
         'pandas',
         'nibabel',
         'pandas',
@@ -31,9 +30,11 @@ setup(
         'xlrd',
         'plotly',
         'imblearn',
-        'pymodm',
+        'pymodm==0.5.0',
         'scipy',
         'statsmodels',
-        'flask'
+        'flask',
+        'prettytable',
+        'scikit-optimize'
   ]
 )
