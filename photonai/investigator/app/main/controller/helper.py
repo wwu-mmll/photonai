@@ -1,15 +1,16 @@
-from photonai.validation.ResultsDatabase import MDBHyperpipe
+from ..model.ResultsDatabase import MDBHyperpipe
 from pymodm.errors import DoesNotExist, ConnectionError, ValidationError
-from photonai.investigator.app.main import app
-from photonai.validation.ResultsDatabase import MDBHelper
+from ..main import application
+from ..model.ResultsDatabase import MDBHelper
 from pymodm.connection import connect
-from flask import request, redirect, url_for
 from bson.objectid import ObjectId
+from pymongo import DESCENDING
+from flask import request
 
 
 def load_pipe_from_db(name):
     try:
-        pipe = MDBHyperpipe.objects.get({'_id': name})
+        pipe = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': name}).first()
         return pipe
     except DoesNotExist as dne:
         # Todo: pretty error handling
@@ -19,12 +20,8 @@ def load_pipe_from_db(name):
 def load_pipe_from_wizard(obj_id):
     try:
         connect('mongodb://trap-umbriel:27017/photon_results')
-        pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': ObjectId(obj_id)}))
-        # pipe = list(MDBHyperpipe.objects.raw({'wizard_object_id': obj_id}))
-        if len(pipe) > 0:
-            return pipe[0]
-        else:
-            return DoesNotExist("Could not find pipe.")
+        pipe = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'wizard_object_id': ObjectId(obj_id)}).first()
+        return pipe
     except DoesNotExist as dne:
         # Todo: pretty error handling
         return dne
@@ -37,7 +34,7 @@ def load_pipe(storage, name):
         try:
             pipe = load_pipe_from_db(name)
         except ValueError as exc:
-            connect(app.config['mongo_db_url'])
+            connect(application.config['mongo_db_url'])
             pipe = load_pipe_from_db(name)
 
     if storage == "w":
@@ -45,13 +42,13 @@ def load_pipe(storage, name):
 
     elif storage == "a":
         try:
-            pipe = app.config['pipe_objects'][name]
+            pipe = application.config['pipe_objects'][name]
         except KeyError as ke:
             # Todo pretty error handling
             error = ke
     elif storage == "f":
         try:
-            pipe_path = app.config['pipe_files'][name]
+            pipe_path = application.config['pipe_files'][name]
             pipe = MDBHelper.load_results(pipe_path)
         except KeyError as ke:
             # Todo File not Found
@@ -84,14 +81,15 @@ def load_mongo_pipes(available_pipes):
 
 
 def load_available_pipes():
-    available_pipes = dict()
-    available_pipes['RAM'] = app.config['pipe_objects'].keys()
-    available_pipes['FILES'] = app.config['pipe_files'].keys()
-    available_pipes['MONGO'] = []
-    if 'mongo_db_url' in app.config:
-        try:
-            load_mongo_pipes(available_pipes)
-        except ValueError as exc:
-            connect(app.config['mongo_db_url'])
-            load_mongo_pipes(available_pipes)
+    # available_pipes = dict()
+    # available_pipes['RAM'] = application.config['pipe_objects'].keys()
+    # available_pipes['FILES'] = application.config['pipe_files'].keys()
+    # available_pipes['MONGO'] = []
+    # if 'mongo_db_url' in application.config:
+    #     try:
+    #         load_mongo_pipes(available_pipes)
+    #     except ValueError as exc:
+    #         connect(application.config['mongo_db_url'])
+    #         load_mongo_pipes(available_pipes)
+    available_pipes = None
     return available_pipes

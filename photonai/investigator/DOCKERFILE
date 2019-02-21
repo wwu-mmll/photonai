@@ -1,0 +1,13 @@
+FROM tiangolo/uwsgi-nginx-flask:python3.6
+ADD /requirements.txt requirements.txt
+RUN pip install -r requirements.txt
+ADD ./app /app
+
+WORKDIR /
+ENV PYTHONPATH = /
+
+ENV STATIC_URL /main/static
+# Absolute path in where the static files wil be
+ENV STATIC_PATH /app/main/static
+
+

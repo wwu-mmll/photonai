@@ -1,4 +1,4 @@
-from photonai.investigator.app.model.BestConfigTrace import BestConfigTrace
+from ..model.BestConfigTrace import BestConfigTrace
 
 
 class BestConfigPlot:

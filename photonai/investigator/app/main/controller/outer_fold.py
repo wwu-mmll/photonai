@@ -1,18 +1,17 @@
 from flask import render_template
-from photonai.investigator.app.main import app
-from photonai.validation.ResultsDatabase import MDBHyperpipe
+from ..main import application
 from pymodm.errors import ValidationError, ConnectionError
-from photonai.investigator.app.model.ConfigItem import ConfigItem
-from photonai.investigator.app.model.Config import Config
-from photonai.investigator.app.model.Metric import Metric
-from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
-from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
-from photonai.investigator.app.model.BestConfigTrace import BestConfigTrace
-from photonai.investigator.app.model.BestConfigPlot import BestConfigPlot
-from photonai.investigator.app.controller.helper import load_pipe, load_available_pipes
+from ..model.ConfigItem import ConfigItem
+from ..model.Config import Config
+from ..model.Metric import Metric
+from ..model.PlotlyPlot import PlotlyPlot
+from ..model.PlotlyTrace import PlotlyTrace
+from ..model.BestConfigTrace import BestConfigTrace
+from ..model.BestConfigPlot import BestConfigPlot
+from .helper import load_pipe, load_available_pipes
 
 
-@app.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>')
+@application.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>')
 def show_outer_fold(storage, name, fold_nr):
     try:
         # best config object always has just one fold

@@ -1,16 +1,16 @@
 from flask import render_template
-from photonai.investigator.app.main import app
-from photonai.validation.ResultsDatabase import MDBHyperpipe
-from pymodm.errors import ValidationError, ConnectionError, DoesNotExist
-from photonai.investigator.app.model.Metric import Metric
-from photonai.investigator.app.model.BestConfigTrace import BestConfigTrace
-from photonai.investigator.app.model.BestConfigPlot import BestConfigPlot
-from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
-from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
-from photonai.investigator.app.controller.helper import load_pipe, load_available_pipes
+from ..main import application
+from ..model.ResultsDatabase import MDBHyperpipe
+from pymodm.errors import ValidationError, ConnectionError
+from ..model.Metric import Metric
+from ..model.BestConfigTrace import BestConfigTrace
+from ..model.BestConfigPlot import BestConfigPlot
+from ..model.PlotlyTrace import PlotlyTrace
+from ..model.PlotlyPlot import PlotlyPlot
+from .helper import load_pipe, load_available_pipes
 
 
-@app.route('/pipeline/<storage>')
+@application.route('/pipeline/<storage>')
 def index_pipeline(storage):
     try:
         available_pipes = load_available_pipes()
@@ -23,12 +23,12 @@ def index_pipeline(storage):
         return exc.message
 
 
-@app.route('/error')
+@application.route('/error')
 def show_error(msg):
     return render_template("default/error.html", error_msg=msg)
 
 
-@app.route('/pipeline/<storage>/<name>')
+@application.route('/pipeline/<storage>/<name>')
 def show_pipeline(storage, name):
 
     try:

@@ -1,15 +1,14 @@
 from flask import render_template, request
-from photonai.investigator.app.main import app
-from photonai.validation.ResultsDatabase import MDBHyperpipe
+from ..main import application
 from pymodm.errors import ValidationError, ConnectionError
-from photonai.investigator.app.model.PlotlyTrace import PlotlyTrace
-from photonai.investigator.app.model.PlotlyPlot import PlotlyPlot
-from photonai.investigator.app.model.ConfigItem import ConfigItem
-from photonai.investigator.app.model.Config import Config
-from photonai.investigator.app.controller.helper import load_pipe, load_available_pipes
+from ..model.PlotlyTrace import PlotlyTrace
+from ..model.PlotlyPlot import PlotlyPlot
+from ..model.ConfigItem import ConfigItem
+from ..model.Config import Config
+from .helper import load_pipe, load_available_pipes
 
 
-@app.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>/compare_configurations', methods=['POST'])
+@application.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>/compare_configurations', methods=['POST'])
 def compare_configurations(storage, name, fold_nr):
     try:
 

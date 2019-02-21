@@ -1,4 +1,4 @@
-from photonai.investigator.app.model.ConfigItem import ConfigItem
+from ..model.ConfigItem import ConfigItem
 
 
 class Config:
