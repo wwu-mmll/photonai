@@ -6,7 +6,7 @@
         <td>{{ pipeline.name }}</td>
         <td>{{ pipeline.time_of_results }}</td>
         <td>
-            <a href="{{ url_for('show_pipeline', storage=s, name=pipeline.pk) }}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-th-list"></span> Show details</a>
+            <a href="{{ url_for('show_pipeline', storage=s, name=pipeline.name) }}" class="btn btn-xs btn-default"><span class="glyphicon glyphicon-th-list"></span> Show details</a>
         </td>
     </tr>
 {%- endmacro %}

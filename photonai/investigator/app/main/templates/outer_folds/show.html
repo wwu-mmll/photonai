@@ -24,7 +24,7 @@
 
         <td style="vertical-align:middle;">
             <button id="btn-config-{{ config.config_nr }}" type="button"
-                    onclick="load_tested_config('{{s}}', '{{ pipe.pk }}', '{{ outer_fold.fold_nr }}', '{{config.config_nr}}')"
+                    onclick="load_tested_config('{{s}}', '{{ pipe.name }}', '{{ outer_fold.fold_nr }}', '{{config.config_nr}}')"
                     class="btn btn-xs btn-default"
                     data-toggle="modal"
                     data-target="#modal-{{ config.config_nr }}">
@@ -176,7 +176,7 @@
         <div class="row">
             <div class="col-md-12">
                 <div class="box box-default">
-                    <form action="{{ url_for('compare_configurations', storage=s, name=pipe.pk, fold_nr=outer_fold.fold_nr) }}" method="post">
+                    <form action="{{ url_for('compare_configurations', storage=s, name=pipe.name, fold_nr=outer_fold.fold_nr) }}" method="post">
                         <div class="box-header">
                             <h1 class="box-title">Tested config list</h1>
                             <div class="box-tools pull-right">
