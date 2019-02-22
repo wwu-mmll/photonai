@@ -4,17 +4,22 @@ from .Hyperparameters import Categorical as PhotonCategorical
 from skopt import Optimizer
 from skopt.space import Real, Integer
 from skopt.space import Categorical as skoptCategorical
+from skopt.plots import plot_evaluations, plot_objective
+from sklearn.preprocessing import LabelEncoder
 import numpy as np
+import matplotlib.pylab as plt
 
 
 class SkOptOptimizer(PhotonBaseOptimizer):
 
-    def __init__(self, num_iterations: int=20):
+    def __init__(self, num_iterations: int=20, acq_func: str = 'gp_hedge', acq_func_kwargs: dict = None):
         self.optimizer = None
         self.hyperparameter_list = []
         self.metric_to_optimize = ''
         self.ask = self.ask_generator()
         self.num_iterations = num_iterations
+        self.acq_func = acq_func
+        self.acq_func_kwargs = acq_func_kwargs
         self.maximize_metric = True
         self.constant_dictionary = {}
 
@@ -36,7 +41,7 @@ class SkOptOptimizer(PhotonBaseOptimizer):
                 skopt_param = self._convert_PHOTON_to_skopt_space(value, name)
                 if skopt_param is not None:
                     space.append(skopt_param)
-        self.optimizer = Optimizer(space, "ET")
+        self.optimizer = Optimizer(space, "ET", acq_func=self.acq_func, acq_func_kwargs=self.acq_func_kwargs)
         self.ask = self.ask_generator()
 
     def _convert_PHOTON_to_skopt_space(self, hyperparam: object, name: str):
@@ -48,7 +53,12 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         elif isinstance(hyperparam, list):
             return skoptCategorical(hyperparam, name=name)
         elif isinstance(hyperparam, FloatRange):
-            return Real(hyperparam.start, hyperparam.stop, name=name)
+            if hyperparam.range_type == 'linspace':
+                return Real(hyperparam.start, hyperparam.stop, name=name, prior='uniform')
+            elif hyperparam.range_type == 'logspace':
+                return Real(hyperparam.start, hyperparam.stop, name=name, prior='log-uniform')
+            else:
+                return Real(hyperparam.start, hyperparam.stop, name=name)
         elif isinstance(hyperparam, IntegerRange):
             return Integer(hyperparam.start, hyperparam.stop, name=name)
 
@@ -76,3 +86,47 @@ class SkOptOptimizer(PhotonBaseOptimizer):
             best_config_metric_performance = -best_config_metric_performance
         # random_accuracy = np.random.randn(1)[0]
         self.optimizer.tell(config_values, best_config_metric_performance)
+
+    def plot_evaluations(self):
+        results = SkoptResults()
+        results.space = self.optimizer.space
+        results.x_iters = self.optimizer.Xi
+        results = self._convert_categorical_hyperparameters(results)
+        results.x = results.x_iters[np.argmin(self.optimizer.yi)]
+        plt.figure(figsize=(10, 10))
+        return plot_evaluations(results)
+
+    def plot_objective(self):
+        results = SkoptResults()
+        results.space = self.optimizer.space
+        results.x_iters = self.optimizer.Xi
+        results = self._convert_categorical_hyperparameters(results)
+        results.x = results.x_iters[np.argmin(self.optimizer.yi)]
+        results.models = self.optimizer.models
+        plt.figure(figsize=(10, 10))
+        return plot_objective(results)
+
+    def _convert_categorical_hyperparameters(self, results):
+        parameter_types = list()
+
+        for i, dim in enumerate(results.space.dimensions):
+            if isinstance(dim, skoptCategorical):
+                parameter_types.append(dim.transformer)
+                setattr(results.space.dimensions[i], 'categories', dim.transformed_bounds)
+            else:
+                parameter_types.append(False)
+
+        for i, xs in enumerate(results.x_iters):
+            for k, xsk in enumerate(xs):
+                if parameter_types[k]:
+                    results.x_iters[i][k] = parameter_types[k].transform([xsk])
+        return results
+
+
+
+class SkoptResults:
+    def __init__(self):
+        self.space = None
+        self.x_iters = None
+        self.x = None
+        self.models = None
