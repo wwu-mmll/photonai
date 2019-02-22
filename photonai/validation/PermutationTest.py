@@ -233,14 +233,14 @@ class PermutationTest:
                 # we guess?
                 n_perms = 1000
 
-            result = PermutationTest.PermutationResult(true_performance, perm_performances, p, number_of_permutations,
+            result = PermutationTest.PermutationResult(true_performance, perm_perf_metrics, p, number_of_permutations,
                                                        n_perms)
 
             return result
 
     class PermutationResult:
 
-        def __init__(self, true_performances: dict = {}, perm_performances: list = {},
+        def __init__(self, true_performances: dict = {}, perm_performances: dict = {},
                      p_values: dict = {}, n_perms_done: int = 0, n_perms: int = 0):
 
             self.true_performances = true_performances
