@@ -9,6 +9,7 @@ from ..validation.ResultsDatabase import MDBPermutationResults, MDBPermutationMe
 
 from pymodm.errors import DoesNotExist, ConnectionError
 from pymodm import connect
+from typing import Union
 
 class PermutationTest:
 
@@ -62,7 +63,11 @@ class PermutationTest:
                 self.pipe.permutation_id = self.mother_permutation_id
                 self.pipe.fit(X, y_true)
                 self.pipe.result_tree.computation_completed = True
+
+                perm_results = MDBPermutationResults(n_perms=self.n_perms)
+                self.pipe.result_tree.permutation_test = perm_results
                 self.pipe.result_tree.save()
+
             except Exception as e:
                 if self.pipe.result_tree is not None:
                     self.pipe.result_tree.permutation_failed = str(e)
@@ -208,7 +213,11 @@ class PermutationTest:
 
             if save_to_db:
                 # Write results to results tree
-                perm_results = MDBPermutationResults(n_perms=number_of_permutations)
+                if mother_permutation.permutation_test is None:
+                    perm_results = MDBPermutationResults(n_perms=number_of_permutations)
+                else:
+                    perm_results = mother_permutation.permutation_test
+                perm_results.n_perms_done = number_of_permutations
                 results_all_metrics = list()
                 for _, metric in metrics.items():
                     perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']], metric_value=true_performance[metric['name']])
@@ -218,7 +227,27 @@ class PermutationTest:
                 mother_permutation.permutation_test = perm_results
                 mother_permutation.save()
 
-            return true_performance, perm_perf_metrics, p
+            if mother_permutation.permutation_test is not None:
+                n_perms = mother_permutation.permutation_test.n_perms
+            else:
+                # we guess?
+                n_perms = 1000
+
+            result = PermutationTest.PermutationResult(true_performance, perm_performances, p, number_of_permutations,
+                                                       n_perms)
+
+            return result
+
+    class PermutationResult:
+
+        def __init__(self, true_performances: dict = {}, perm_performances: list = {},
+                     p_values: dict = {}, n_perms_done: int = 0, n_perms: int = 0):
+
+            self.true_performances = true_performances
+            self.perm_performances = perm_performances
+            self.p_values = p_values
+            self.n_perms_done = n_perms_done
+            self.n_perms = n_perms
 
 
     @staticmethod
