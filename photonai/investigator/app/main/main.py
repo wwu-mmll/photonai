@@ -15,6 +15,8 @@ application = Flask(__name__, template_folder=template_dir)
 application.config['pipe_files'] = {}
 application.config['pipe_objects'] = {}
 
+application.config['wizard'] = True
+
 application.config['SECRET_KEY'] = 'Random_Lovely_Key'
 application.config['DEBUG'] = False
 
