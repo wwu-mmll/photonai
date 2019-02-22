@@ -146,7 +146,7 @@ class BrainAtlas(BaseEstimator):
                 i += 1
                 continue
             else:
-                masker = NiftiMasker(mask_img=roi, target_affine=img.affine, target_shape=img.shape)
+                masker = NiftiMasker(mask_img=roi, target_affine=img.affine, target_shape=img.shape, dtype='float32')
                 try:
                     single_roi = masker.fit_transform(X)
                 except BaseException as e:
