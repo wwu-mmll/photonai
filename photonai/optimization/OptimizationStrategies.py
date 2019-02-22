@@ -79,7 +79,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         self.k = k
 
     def prepare(self, pipeline_elements, maximize_metric):
-        super(RandomGridSearchOptimizer, self).prepare(pipeline_elements)
+        super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
         self.param_grid = list(self.param_grid)
         # create random chaos in list
         np.random.shuffle(self.param_grid)
@@ -102,7 +102,7 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
         self.end_time = None
 
     def prepare(self, pipeline_elements, maximize_metric):
-        super(TimeBoxedRandomGridSearchOptimizer, self).prepare(pipeline_elements)
+        super(TimeBoxedRandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
         self.start_time = None
 
     def next_config_generator(self):

@@ -21,11 +21,11 @@ mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:2701
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
-                    metrics=['accuracy', 'precision', 'recall'],  # the performance metrics of your interest
+                    metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],  # the performance metrics of your interest
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
-                    verbosity=-1,
+                    verbosity=1,
                     output_settings=mongo_settings)  # get error, warn and info message
                     #imbalanced_data_strategy_filter='RandomUnderSampler'
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
