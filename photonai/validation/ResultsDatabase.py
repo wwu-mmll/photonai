@@ -86,6 +86,7 @@ class MDBPermutationResults(EmbeddedMongoModel):
         final = True
 
     n_perms = fields.IntegerField(blank=True)
+    n_perms_done = fields.IntegerField(blank=True)
     random_state = fields.IntegerField(blank=True)
     metrics = fields.EmbeddedDocumentListField(MDBPermutationMetrics, blank=True)
 

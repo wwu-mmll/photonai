@@ -10,5 +10,7 @@ def index():
 
 @application.route('/shutdown', methods=['GET'])
 def shutdown():
-    shutdown_server()
-    return render_template('default/shutdown.html')
+    if not application.config['wizard']:
+        shutdown_server()
+        return render_template('default/shutdown.html')
+
