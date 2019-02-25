@@ -13,6 +13,7 @@ from prettytable import PrettyTable
 class MDBFoldMetric(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     operation = fields.CharField(blank=True)
     metric_name = fields.CharField(blank=True)
@@ -22,6 +23,7 @@ class MDBFoldMetric(EmbeddedMongoModel):
 class MDBScoreInformation(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     metrics = fields.DictField(blank=True)
     score_duration = fields.IntegerField(blank=True)
@@ -36,6 +38,7 @@ class MDBScoreInformation(EmbeddedMongoModel):
 class MDBInnerFold(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     fold_nr = fields.IntegerField()
     training = fields.EmbeddedDocumentField(MDBScoreInformation, blank=True)
@@ -47,6 +50,7 @@ class MDBInnerFold(EmbeddedMongoModel):
 class MDBConfig(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     inner_folds = fields.EmbeddedDocumentListField(MDBInnerFold, default=[], blank=True)
     fit_duration_minutes = fields.IntegerField(blank=True)
@@ -67,6 +71,7 @@ class MDBConfig(EmbeddedMongoModel):
 class MDBOuterFold(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     fold_nr = fields.IntegerField(blank=True)
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
@@ -75,6 +80,7 @@ class MDBOuterFold(EmbeddedMongoModel):
 class MDBPermutationMetrics(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     metric_name = fields.CharField(blank=True)
     metric_value = fields.FloatField(blank=True)
@@ -84,6 +90,7 @@ class MDBPermutationMetrics(EmbeddedMongoModel):
 class MDBPermutationResults(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     n_perms = fields.IntegerField(blank=True)
     n_perms_done = fields.IntegerField(blank=True)
@@ -93,6 +100,7 @@ class MDBPermutationResults(EmbeddedMongoModel):
 class DummyResults(EmbeddedMongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     strategy = fields.CharField(blank=True)
     train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
@@ -102,6 +110,7 @@ class DummyResults(EmbeddedMongoModel):
 class MDBHyperpipe(MongoModel):
     class Meta:
         final = True
+        connection_alias = 'photon_core'
 
     name = fields.CharField()
     permutation_id = fields.CharField()
@@ -196,7 +205,7 @@ class MongoDBWriter:
 
     def save(self, results_tree):
         if self.save_settings.mongodb_connect_url:
-            connect(self.save_settings.mongodb_connect_url)
+            connect(self.save_settings.mongodb_connect_url, alias='photon_core')
             Logger().debug('Write results to mongodb...')
             try:
                 results_tree.save()

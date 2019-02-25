@@ -252,7 +252,7 @@ class PermutationTest:
 
     @staticmethod
     def get_permutation_status(permutation_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results",
-                               save_to_db = False):
+                               save_to_db=False):
 
         def _find_mummy(permutation_id):
             return MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
@@ -263,7 +263,7 @@ class PermutationTest:
             return None, None
         except ConnectionError:
             # in case we haven't been connected try again
-            connect(mongo_db_connect_url)
+            connect(mongo_db_connect_url, alias="photon_core")
             try:
                 mother_permutation =_find_mummy(permutation_id)
             except DoesNotExist:
