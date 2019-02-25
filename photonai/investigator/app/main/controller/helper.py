@@ -19,7 +19,7 @@ def load_pipe_from_db(name):
 
 def load_pipe_from_wizard(obj_id):
     try:
-        connect('mongodb://trap-umbriel:27017/photon_results')
+        connect('mongodb://trap-umbriel:27017/photon_results', alias='photon_core')
         pipe = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'wizard_object_id': ObjectId(obj_id)}).first()
         return pipe
     except DoesNotExist as dne:
@@ -34,7 +34,7 @@ def load_pipe(storage, name):
         try:
             pipe = load_pipe_from_db(name)
         except ValueError as exc:
-            connect(application.config['mongo_db_url'])
+            connect(application.config['mongo_db_url'], alias='photon_core')
             pipe = load_pipe_from_db(name)
 
     if storage == "w":
