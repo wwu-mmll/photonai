@@ -97,6 +97,7 @@ class MDBPermutationResults(EmbeddedMongoModel):
     random_state = fields.IntegerField(blank=True)
     metrics = fields.EmbeddedDocumentListField(MDBPermutationMetrics, blank=True)
 
+
 class DummyResults(EmbeddedMongoModel):
     class Meta:
         final = True
