@@ -9,6 +9,7 @@ import re
 import zipfile
 import importlib
 import __main__
+import shutil
 from collections import OrderedDict
 from copy import deepcopy
 from hashlib import sha1
@@ -82,8 +83,9 @@ class OutputSettings:
         self.save_best_config_predictions, self.save_predictions = self._set_save_options(save_predictions)
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
 
+        self.__main_file__ = __main__.__file__
         if project_folder == '':
-            self.project_folder = os.path.dirname(__main__.__file__)
+            self.project_folder = os.path.dirname(self.__main_file__)
         else:
             self.project_folder = project_folder
 
@@ -131,6 +133,7 @@ class OutputSettings:
             # Todo: give rights to user if this is done by docker container
             self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
             os.mkdir(self.results_folder)
+            shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
             self.local_file = self._add_timestamp(self.local_file)
             self.log_file = self._add_timestamp(self.log_file)
             Logger().set_custom_log_file(self.log_file)
