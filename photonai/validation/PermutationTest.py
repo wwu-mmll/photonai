@@ -258,6 +258,8 @@ class PermutationTest:
             return MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
                                              'computation_completed': True}).first()
         try:
+            # in case we haven't been connected try again
+            connect(mongo_db_connect_url, alias="photon_core")
             mother_permutation = _find_mummy(permutation_id)
         except DoesNotExist:
             return None, None
