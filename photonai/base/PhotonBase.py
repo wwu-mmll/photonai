@@ -677,7 +677,7 @@ class Hyperpipe(BaseEstimator):
                     if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
                         if self.output_settings.wizard_object_id:
                             self.name = self.output_settings.wizard_object_id
-                            self.result_tree.name = self.output_settings.wizard_object_id + "_" + self._fitting_timestamp
+                            self.result_tree.name = self.output_settings.wizard_object_id
                             self.result_tree.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
                             self.result_tree.wizard_system_name = self.output_settings.wizard_project_name
                             self.result_tree.user_id = self.output_settings.user_id
