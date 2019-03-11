@@ -1,6 +1,7 @@
 from .OptimizationStrategies import PhotonBaseOptimizer
 from .Hyperparameters import FloatRange, IntegerRange
 from .Hyperparameters import Categorical as PhotonCategorical
+from ..photonlogger.Logger import Logger
 from skopt import Optimizer
 from skopt.space import Real, Integer
 from skopt.space import Categorical as skoptCategorical
@@ -41,7 +42,11 @@ class SkOptOptimizer(PhotonBaseOptimizer):
                 skopt_param = self._convert_PHOTON_to_skopt_space(value, name)
                 if skopt_param is not None:
                     space.append(skopt_param)
-        self.optimizer = Optimizer(space, "ET", acq_func=self.acq_func, acq_func_kwargs=self.acq_func_kwargs)
+        if len(space) == 0:
+            Logger().warn("Did not find any hyperparameters to convert into skopt space")
+            self.optimizer = None
+        else:
+            self.optimizer = Optimizer(space, "ET", acq_func=self.acq_func, acq_func_kwargs=self.acq_func_kwargs)
         self.ask = self.ask_generator()
 
     def _convert_PHOTON_to_skopt_space(self, hyperparam: object, name: str):
@@ -63,10 +68,13 @@ class SkOptOptimizer(PhotonBaseOptimizer):
             return Integer(hyperparam.start, hyperparam.stop, name=name)
 
     def ask_generator(self):
-        for i in range(self.num_iterations):
-            next_config_list = self.optimizer.ask()
-            next_config_dict = {self.hyperparameter_list[number]: self._convert_to_native(value) for number, value in enumerate(next_config_list)}
-            yield next_config_dict
+        if self.optimizer is None:
+            yield {}
+        else:
+            for i in range(self.num_iterations):
+                next_config_list = self.optimizer.ask()
+                next_config_dict = {self.hyperparameter_list[number]: self._convert_to_native(value) for number, value in enumerate(next_config_list)}
+                yield next_config_dict
 
     def _convert_to_native(self, obj):
         # check if we have a numpy object, if so convert it to python native
@@ -77,15 +85,16 @@ class SkOptOptimizer(PhotonBaseOptimizer):
 
     def tell(self, config, performance):
         # convert dictionary to list in correct order
-        config_values = [config[name] for name in self.hyperparameter_list]
-        best_config_metric_performance = performance[1]
-        if self.maximize_metric:
-            if isinstance(best_config_metric_performance, list):
-                print("BEST CONFIG METRIC PERFORMANCE: " + str(best_config_metric_performance))
-                best_config_metric_performance = best_config_metric_performance[0]
-            best_config_metric_performance = -best_config_metric_performance
-        # random_accuracy = np.random.randn(1)[0]
-        self.optimizer.tell(config_values, best_config_metric_performance)
+        if self.optimizer is not None:
+            config_values = [config[name] for name in self.hyperparameter_list]
+            best_config_metric_performance = performance[1]
+            if self.maximize_metric:
+                if isinstance(best_config_metric_performance, list):
+                    print("BEST CONFIG METRIC PERFORMANCE: " + str(best_config_metric_performance))
+                    best_config_metric_performance = best_config_metric_performance[0]
+                best_config_metric_performance = -best_config_metric_performance
+            # random_accuracy = np.random.randn(1)[0]
+            self.optimizer.tell(config_values, best_config_metric_performance)
 
     def plot_evaluations(self):
         results = SkoptResults()
