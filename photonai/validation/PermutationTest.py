@@ -11,6 +11,7 @@ from pymodm.errors import DoesNotExist, ConnectionError
 from pymodm import connect
 from typing import Union
 
+
 class PermutationTest:
 
     def __init__(self, hyperpipe_constructor, permutation_id:str, n_perms=1000, n_processes=1, random_state=15):
@@ -220,7 +221,8 @@ class PermutationTest:
                 perm_results.n_perms_done = number_of_permutations
                 results_all_metrics = list()
                 for _, metric in metrics.items():
-                    perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']], metric_value=true_performance[metric['name']])
+                    perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']],
+                                                         metric_value=true_performance[metric['name']])
                     perm_metrics.values_permutations = perm_perf_metrics[metric['name']]
                     results_all_metrics.append(perm_metrics)
                 perm_results.metrics = results_all_metrics

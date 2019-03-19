@@ -2057,6 +2057,9 @@ class PipelineSwitch(PipelineElement):
 
         self.needs_y = False
         self.needs_covariates = False
+        # we assume we test models against each other, but only guessing
+        self.is_estimator = True
+        self.is_transformer = False
 
         if pipeline_element_list:
             self.pipeline_element_list = pipeline_element_list
@@ -2073,6 +2076,16 @@ class PipelineSwitch(PipelineElement):
         * `pipeline_element` [PipelineElement]:
             Item that should be tested against other competing elements at that position in the pipeline.
         """
+        if hasattr(pipeline_element, "is_estimator"):
+            self.is_estimator = pipeline_element.is_estimator
+        else:
+            Logger.warn("Could not find out if pipeline switch is an estimator element, so assuming it is")
+            self.is_estimator = True
+        if hasattr(pipeline_element, "is_transformer"):
+            self.is_transformer = pipeline_element.is_transformer
+        else:
+            Logger.warn("Could not find out if pipeline switch is an transformer element, so assuming it is not.")
+            self.is_estimator = False
         self.pipeline_element_list.append(pipeline_element)
         self.generate_private_config_grid()
         return self
