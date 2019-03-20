@@ -1933,7 +1933,7 @@ class PipelineStacking(PipelineElement):
             if hasattr(predicted_data, 'shape'):
                 if len(predicted_data.shape) > 1:
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
-        return predicted_data
+        return predicted_data, targets, kwargs
 
     def predict_proba(self, data):
         """
@@ -1962,7 +1962,7 @@ class PipelineStacking(PipelineElement):
                 element_transform, _, _ = element.transform(data, targets, **kwargs)
                 transformed_data = PipelineStacking.stack_data(transformed_data, element_transform)
 
-        return transformed_data
+        return transformed_data, targets, kwargs
 
     @classmethod
     def stack_data(cls, a, b):
