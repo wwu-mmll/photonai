@@ -1927,7 +1927,7 @@ class PipelineStacking(PipelineElement):
         # todo: parallelize prediction
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
-            element_transform = element.predict(data, **kwargs)
+            element_transform, _, _ = element.predict(data, **kwargs)
             predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
