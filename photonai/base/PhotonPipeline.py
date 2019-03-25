@@ -113,7 +113,13 @@ class PhotonPipeline(_BaseComposition):
         if self._final_estimator is not None:
             if self._final_estimator.is_estimator:
                 if hasattr(self._final_estimator, "predict_proba"):
-                    return self._final_estimator.predict_proba(X, **kwargs)
+                    if hasattr(self._final_estimator, 'needs_covariates'):
+                        if self._final_estimator.needs_covariates:
+                            return self._final_estimator.predict_proba(X, **kwargs)
+                        else:
+                            return self._final_estimator.predict_proba(X)
+                    else:
+                        return self._final_estimator.predict_proba(X)
 
         raise NotImplementedError("The final estimator does not have a predict_proba method")
 
