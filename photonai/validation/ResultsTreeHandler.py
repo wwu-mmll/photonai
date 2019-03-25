@@ -100,8 +100,7 @@ class ResultsTreeHandler:
         """
         y_true = []
         y_pred = []
-        if sort_CV:
-            sample_inds = []
+        sample_inds = []
         y_pred_probabilities = []
         fold_idx = []
         for i, fold in enumerate(self.results.outer_folds):
