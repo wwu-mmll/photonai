@@ -518,5 +518,9 @@
   "AutoSklearnRegressor":[
     "photonai.modelwrapper.AutoSklearnRegressor.AutoSklearnRegressor",
     "Estimator"
+  ],
+  "SamplePairingRegression": [
+    "photonai.modelwrapper.SamplePairing.SamplePairingRegression",
+    "Transformer"
   ]
 }
