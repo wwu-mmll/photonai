@@ -30,7 +30,7 @@ import itertools
 class SamplePairingRegression(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
 
-    def __init__(self, generator='random_pair', distance_metric=None, draw_limit=10000, rand_seed=True):
+    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, rand_seed=True):
 
         self.needs_covariates = True
         self.needs_y = True
