@@ -5,6 +5,7 @@ from sklearn.model_selection import ShuffleSplit
 import numpy as np
 from photonai.photonlogger.Logger import Logger
 
+
 class RoiFilterElement(BaseEstimator):
 
     def __init__(self, roi_index):
@@ -13,6 +14,7 @@ class RoiFilterElement(BaseEstimator):
     def fit(self, X, y=None):
         return self
 
+
     def transform(self, X, y=None):
         return_data = X[self.roi_index]
         if isinstance(return_data, list):
@@ -20,8 +22,7 @@ class RoiFilterElement(BaseEstimator):
         return return_data
 
 
-
-class AtlasInfo():
+class AtlasInfo:
 
     def __init__(self, atlas_name, roi_names, extraction_mode='mean', background_id=0, mask_threshold=None):
         self.atlas_name = atlas_name

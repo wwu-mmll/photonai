@@ -40,7 +40,7 @@ class ImageTransformBase(BaseEstimator):
                 folds_done.put(fold_output)
         return True
 
-    def apply_transform(self, X, delegate, transform_kwargs):
+    def apply_transform(self, X, delegate, **transform_kwargs):
 
         jobs_done = Queue()
         jobs_to_do = Queue()
@@ -58,8 +58,8 @@ class ImageTransformBase(BaseEstimator):
         for p in process_list:
             p.join()
 
+        output_images = []
         while not jobs_done.empty():
-            output_images = []
             smoothed_img = self.folds_done.get()
             if not self.output_img:
                 output_images.append(np.asarray(smoothed_img.dataobj))
@@ -74,12 +74,13 @@ class ImageTransformBase(BaseEstimator):
 
 # Smoothing
 class SmoothImages(ImageTransformBase):
-    def __init__(self, fwhr=[2, 2, 2], output_img=True, nr_of_processes=3):
+    def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=3):
         super(SmoothImages, self).__init__(output_img, nr_of_processes)
-        self.fwhr = fwhr
+        self.fwhm = fwhm
 
     def transform(self, X, y=None, **kwargs):
-        return self.apply_transform(X, smooth_img, **{'fwhm': self.fwhr})
+        kwargs_dict = {'fwhm': self.fwhm}
+        return self.apply_transform(X, smooth_img, **kwargs_dict)
 
 
 class ResampleImages(ImageTransformBase):
@@ -94,3 +95,4 @@ class ResampleImages(ImageTransformBase):
         target_affine = np.diag(self.voxel_size)
         delegate_kwargs = {'target_affine': target_affine, 'interpolation': 'nearest'}
         return self.apply_transform(X, resample_img, **delegate_kwargs)
+
