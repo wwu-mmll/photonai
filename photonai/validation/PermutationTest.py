@@ -51,6 +51,7 @@ class PermutationTest:
 
         # Run with true labels
 
+        connect(self.pipe.output_settings.mongodb_connect_url, alias="photon_core")
         # Check if it already exists in DB
         try:
             existing_reference = MDBHyperpipe.objects.raw({'permutation_id': self.mother_permutation_id,

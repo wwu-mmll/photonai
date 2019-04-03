@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from ..neuro.NeuroBase import NeuroBatch
+from ..base.PhotonBatchElement import PhotonBatchElement
 
 
 class DummyBatchTransformer:
@@ -41,7 +41,8 @@ class NeuroBatchTests(unittest.TestCase):
         self.data = None
         self.targets = None
 
-        self.neuro_batch = NeuroBatch(DummyBatchTransformer(), batch_size=self.batch_size)
+        self.neuro_batch = PhotonBatchElement("dummy_batch", batch_size=self.batch_size,
+                                              base_element=DummyBatchTransformer())
 
         for element in origin_list:
             features = [element + str(i) for i in range(0, nr_features)]

@@ -34,6 +34,13 @@ from ..validation.cross_validation import StratifiedKFoldRegression
 from .PhotonPipeline import PhotonPipeline
 
 
+
+class PhotonNative:
+    """only for checking if code is meeting requirements"""
+    pass
+
+
+
 class OutputSettings:
     """
     Configuration class that specifies the format in which the results are saved. Results can be saved to a MongoDB
@@ -428,7 +435,7 @@ class Hyperpipe(BaseEstimator):
         if isinstance(pipe_element, PreprocessingPipe):
             self.preprocessing_pipe = pipe_element
         else:
-            if isinstance(pipe_element, PipelineElement):
+            if isinstance(pipe_element, PipelineElement) or issubclass(type(pipe_element), PhotonNative):
                 self.pipeline_elements.append(pipe_element)
                 # Todo: is repeated each time element is added....
                 self._prepare_pipeline()
