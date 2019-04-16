@@ -1290,12 +1290,13 @@ class Hyperpipe(BaseEstimator):
 
             fold_list.append(inner_fold)
 
-        config_item.inner_folds = fold_list
-        config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item, self.metrics)
         dummy_results = DummyResults()
-        dummy_results.strategy = strategy
-        dummy_results.train = config_item.metrics_train
-        dummy_results.test = config_item.metrics_test
+        if len(fold_list) > 0:
+            config_item.inner_folds = fold_list
+            config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item, self.metrics)
+            dummy_results.strategy = strategy
+            dummy_results.train = config_item.metrics_train
+            dummy_results.test = config_item.metrics_test
         return dummy_results
 
 
