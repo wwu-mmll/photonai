@@ -223,16 +223,18 @@ class SamplePairingClassification(SamplePairingBase):
                 nDiff.append(self.draw_limit)
 
         # run get_samples for each class independently
-        X_new = np.empty([])
-        y_new = np.empty([])
         kwargs_new = kwargs
 
         for t, limit in zip(np.unique(y), nDiff):
             X_new_class, y_new_class, kwargs = self._get_samples(X[y == t], y[y == t],
                                                    generator=self.generator, distance_metric=self.distance_metric,
                                                    draw_limit=limit, rand_seed=self.rand_seed, **kwargs)
-            X_new = np.concatenate((X_new, X_new_class))
-            y_new = np.concatenate((y_new, y_new_class))
+            if 'X_new' not in locals():
+                X_new = X_new_class
+                y_new = y_new_class
+            else:
+                X_new = np.concatenate((X_new, X_new_class))
+                y_new = np.concatenate((y_new, y_new_class))
             # get the corresponding kwargs
             if kwargs:
                 for name, kwarg in kwargs.items():

@@ -522,5 +522,9 @@
   "SamplePairingRegression": [
     "photonai.modelwrapper.SamplePairing.SamplePairingRegression",
     "Transformer"
+  ],
+  "SamplePairingClassification": [
+    "photonai.modelwrapper.SamplePairing.SamplePairingClassification",
+    "Transformer"
   ]
 }
