@@ -1243,17 +1243,17 @@ class Hyperpipe(BaseEstimator):
 
     def run_dummy_estimator(self):
         if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
-            type = self.pipeline_elements[-1].base_element._estimator_type
+            est_type = self.pipeline_elements[-1].base_element._estimator_type
         else:
             if isinstance(self.pipeline_elements[-1], PipelineSwitch):
-                type = self.pipeline_elements[-1].base_element.base_element._estimator_type
+                est_type = self.pipeline_elements[-1].base_element.base_element._estimator_type
             else:
-                type = None
+                est_type = None
 
-        if type == 'regressor':
+        if est_type == 'regressor':
             strategy = 'mean'
             dummy = DummyRegressor(strategy=strategy)
-        elif type == 'classifier':
+        elif est_type == 'classifier':
             strategy = 'most_frequent'
             dummy = DummyClassifier(strategy=strategy)
         else:
@@ -1270,6 +1270,12 @@ class Hyperpipe(BaseEstimator):
         for train, test in self.data_test_cases:
 
             train_X, train_y = self.X[train], self.y[train]
+
+            if isinstance(train_X, np.ndarray):
+                if len(train_X.shape) > 2:
+                    Logger().info("Skipping dummy estimator because of too much dimensions")
+                    break
+
             dummy.fit(train_X, train_y)
             train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.metrics)
 
@@ -1283,6 +1289,7 @@ class Hyperpipe(BaseEstimator):
                 inner_fold.validation = test_scores
 
             fold_list.append(inner_fold)
+
         config_item.inner_folds = fold_list
         config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item, self.metrics)
         dummy_results = DummyResults()
