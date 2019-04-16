@@ -27,66 +27,7 @@ import math
 import itertools
 
 
-class SamplePairingRegression(BaseEstimator, TransformerMixin):
-    _estimator_type = "transformer"
-
-    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, rand_seed=True):
-
-        self.needs_covariates = True
-        self.needs_y = True
-        self.generator = generator
-        self.distance_metric = distance_metric
-        self.draw_limit = draw_limit
-        self.rand_seed = rand_seed
-
-    def fit(self, X, y=None, **kwargs):
-        return self
-
-    def transform(self, X, y=None, **kwargs):
-        """
-        Generates "new samples" by computing the mean between all or n_draws pairs of existing samples and appends them to X
-        The target for each new sample is computed as the mean between the constituent targets
-        :param X: data
-        :param y: targets (optional)
-        :param draw_limit: in case the full number of combinations is > 10k, how many to draw?
-        :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
-        :return: X_new: X and X_augmented; (y_new: the correspoding targets)
-        """
-        # generate combinations
-        combs = self._get_combinations(X=X,
-                                  generator=self.generator,
-                                  distance_metric=self.distance_metric,
-                                  draw_limit=self.draw_limit,
-                                  rand_seed=self.rand_seed)
-
-        # compute mean over sample pairs
-        X_aug = np.empty([len(combs), X.shape[1]])
-        i = 0
-        for c in combs:
-            X_aug[i] = np.mean([X[c[0]], X[c[1]]], axis=0)
-            i += 1
-        # add augmented samples to existing data
-        X_new = np.concatenate((X, X_aug), axis=0)
-
-        # get the corrsponding targets
-        if kwargs:
-            for name, kwarg in kwargs.items():
-                kwarg_new = np.empty(len(combs))
-                for i, c in enumerate(combs):
-                    kwarg_new[i] = np.mean([kwargs[name][c[0]], kwargs[name][c[1]]])
-                kwargs[name] = np.concatenate((np.asarray(kwargs[name]), kwarg_new))
-
-        if y is not None:
-            y_aug = np.empty(len(combs))
-            i = 0
-            for c in combs:
-                y_aug[i] = np.mean([y[c[0]], y[c[1]]])
-                i += 1
-            # add augmented samples to existing data
-            y_new = np.concatenate((y, y_aug))
-            return X_new, y_new, kwargs
-        else:
-            return X_new, None, kwargs
+class SamplePairingBase(BaseEstimator, TransformerMixin):
 
     def _stirling(self, n):
         # http://en.wikipedia.org/wiki/Stirling%27s_approximation
@@ -169,3 +110,131 @@ class SamplePairingRegression(BaseEstimator, TransformerMixin):
             # get all combinations of samples
             combs = list(itertools.combinations(items, 2))
         return combs
+
+    def _get_samples(self, X, y, generator, distance_metric, draw_limit, rand_seed, **kwargs):
+        """
+                Generates "new samples" by computing the mean between all or n_draws pairs of existing samples and appends them to X
+                The target for each new sample is computed as the mean between the constituent targets
+                :param X: data
+                :param y: targets (optional)
+                :param draw_limit: in case the full number of combinations is > 10k, how many to draw?
+                :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
+                :return: X_new: X and X_augmented; (y_new: the correspoding targets)
+                """
+        # generate combinations
+        combs = self._get_combinations(X=X,
+                                       generator=generator,
+                                       distance_metric=distance_metric,
+                                       draw_limit=draw_limit,
+                                       rand_seed=rand_seed)
+
+        # compute mean over sample pairs
+        X_aug = np.empty([len(combs), X.shape[1]])
+        i = 0
+        for c in combs:
+            X_aug[i] = np.mean([X[c[0]], X[c[1]]], axis=0)
+            i += 1
+        # add augmented samples to existing data
+        X_new = np.concatenate((X, X_aug), axis=0)
+
+        # get the corresponding targets and kwargs
+        if kwargs:
+            for name, kwarg in kwargs.items():
+                kwarg_new = np.empty(len(combs))
+                for i, c in enumerate(combs):
+                    kwarg_new[i] = np.mean([kwargs[name][c[0]], kwargs[name][c[1]]])
+                kwargs[name] = np.concatenate((np.asarray(kwargs[name]), kwarg_new))
+
+        if y is not None:
+            y_aug = np.empty(len(combs))
+            i = 0
+            for c in combs:
+                y_aug[i] = np.mean([y[c[0]], y[c[1]]])
+                i += 1
+            # add augmented samples to existing data
+            y_new = np.concatenate((y, y_aug))
+            return X_new, y_new, kwargs
+        else:
+            return X_new, None, kwargs
+
+class SamplePairingRegression(SamplePairingBase):
+    _estimator_type = "transformer"
+
+    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, rand_seed=True):
+
+        self.needs_covariates = True
+        self.needs_y = True
+        self.generator = generator
+        self.distance_metric = distance_metric
+        self.draw_limit = draw_limit
+        self.rand_seed = rand_seed
+
+    def fit(self, X, y=None, **kwargs):
+        return self
+
+    def transform(self, X, y=None, **kwargs):
+        """
+        Generates "new samples" by computing the mean between all or n_draws pairs of existing samples and appends them to X
+        The target for each new sample is computed as the mean between the constituent targets
+        :param X: data
+        :param y: targets (optional)
+        :param draw_limit: in case the full number of combinations is > 10k, how many to draw?
+        :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
+        :return: X_new: X and X_augmented; (y_new: the correspoding targets)
+        """
+        return self._get_samples(X, y, self.generator, self.distance_metric, self.draw_limit, self.rand_seed, **kwargs)
+
+
+
+class SamplePairingClassification(SamplePairingBase):
+    _estimator_type = "transformer"
+
+    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, rand_seed=True,
+                 balance_classes=True):
+
+        self.needs_covariates = True
+        self.needs_y = True
+        self.generator = generator
+        self.distance_metric = distance_metric
+        self.draw_limit = draw_limit
+        self.rand_seed = rand_seed
+        self.balance_classes = balance_classes
+
+    def fit(self, X, y=None, **kwargs):
+        return self
+
+    def transform(self, X, y=None, **kwargs):
+        """
+        Generates "new samples" by computing the mean between all or n_draws pairs of existing samples and appends them to X
+        The target for each new sample is computed as the mean between the constituent targets
+        :param X: data
+        :param y: targets (optional)
+        :param draw_limit: in case the full number of combinations is > 10k, how many to draw?
+        :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
+        :return: X_new: X and X_augmented; (y_new: the correspoding targets)
+        """
+
+        # ensure class balance in the training set if balance_classes is True
+        nDiff = list()
+        for t in np.unique(y):
+            if self.balance_classes == True:
+                nDiff.append(self.draw_limit - np.sum(y == t))
+            else:
+                nDiff.append(self.draw_limit)
+
+        # run get_samples for each class independently
+        X_new = np.empty([])
+        y_new = np.empty([])
+        kwargs_new = kwargs
+
+        for t, limit in zip(np.unique(y), nDiff):
+            X_new_class, y_new_class, kwargs = self._get_samples(X[y == t], y[y == t],
+                                                   generator=self.generator, distance_metric=self.distance_metric,
+                                                   draw_limit=limit, rand_seed=self.rand_seed, **kwargs)
+            X_new = np.concatenate((X_new, X_new_class))
+            y_new = np.concatenate((y_new, y_new_class))
+            # get the corresponding kwargs
+            if kwargs:
+                for name, kwarg in kwargs.items():
+                    kwargs_new[name] = np.concatenate((np.asarray(kwargs_new[name]), kwarg))
+        return X_new, y_new, kwargs_new
