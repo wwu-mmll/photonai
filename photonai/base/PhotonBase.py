@@ -34,11 +34,9 @@ from ..validation.cross_validation import StratifiedKFoldRegression
 from .PhotonPipeline import PhotonPipeline
 
 
-
 class PhotonNative:
     """only for checking if code is meeting requirements"""
     pass
-
 
 
 class OutputSettings:
