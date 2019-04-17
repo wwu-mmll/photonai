@@ -1,7 +1,9 @@
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.Logger import Logger
-from multiprocessing import Pool, Process, Queue, current_process
+from multiprocessing import Process, Queue, current_process, Value
 import queue
+import time
+import os
 from nilearn.image import resample_img, smooth_img
 import numpy as np
 
@@ -23,52 +25,90 @@ class ImageTransformBase(BaseEstimator):
 
     class ImageJob:
 
-        def __init__(self, data, delegate, delegate_kwargs):
+        def __init__(self, data, delegate, delegate_kwargs, transform_name='transforming mri image'):
             self.data = data
             self.delegate = delegate
             self.delegate_kwargs = delegate_kwargs
+            self.transform_name = transform_name
 
     @staticmethod
-    def parallel_application(folds_to_do, folds_done):
+    def parallel_application(folds_to_do, folds_done, num_jobs_done):
         while True:
             try:
                 task = folds_to_do.get_nowait()
             except queue.Empty:
+                folds_done.close()
                 break
             else:
+                Logger().debug(task.transform_name + " - " + str(os.getpid()))
+                print(task.transform_name + " - " + str(os.getpid()))
                 fold_output = task.delegate(task.data, **task.delegate_kwargs)
                 folds_done.put(fold_output)
+                num_jobs_done.value = num_jobs_done.value + 1
+                print(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
         return True
 
-    def apply_transform(self, X, delegate, **transform_kwargs):
-
-        jobs_done = Queue()
-        jobs_to_do = Queue()
-
-        for x_in in X:
-            new_job = ImageTransformBase.ImageJob(x_in, delegate, transform_kwargs)
-            jobs_to_do.put(new_job)
-
-        process_list = list()
-        for w in range(self.nr_of_processes):
-            p = Process(target=ImageTransformBase.parallel_application, args=(jobs_to_do, jobs_done))
-            process_list.append(p)
-            p.start()
-
-        for p in process_list:
-            p.join()
+    def apply_transform(self, X, delegate, transform_name="transformation", **transform_kwargs):
 
         output_images = []
-        while not jobs_done.empty():
-            smoothed_img = self.folds_done.get()
-            if not self.output_img:
-                output_images.append(np.asarray(smoothed_img.dataobj))
-            else:
-                output_images.append(smoothed_img)
+        if self.nr_of_processes > 1:
+
+            jobs_done = Queue()
+            jobs_to_do = Queue()
+
+            num_of_jobs_todo = 0
+            for x_in in X:
+                # print(hex(id(x_in)))
+                new_job = ImageTransformBase.ImageJob(x_in, delegate, transform_kwargs, transform_name=transform_name)
+                num_of_jobs_todo += 1
+                jobs_to_do.put(new_job)
+
+            num_jobs_done = Value('i', 0)
+
+            process_list = list()
+            for w in range(self.nr_of_processes):
+                p = Process(target=ImageTransformBase.parallel_application, args=(jobs_to_do, jobs_done, num_jobs_done))
+                process_list.append(p)
+                p.start()
+
+            # time.sleep(2)
+            # print("collecting results")
+            while num_jobs_done.value <= num_of_jobs_todo:
+                while True:
+                    try:
+                        smoothed_img = jobs_done.get()
+                        if not self.output_img:
+                            output_images.append(np.asarray(smoothed_img.dataobj))
+                        else:
+                            # print("appending img")
+                            output_images.append(smoothed_img)
+                    except queue.Empty:
+                        # print("breaking queue because get resulting in empty error")
+                        break
+                    if num_jobs_done.value == num_of_jobs_todo and jobs_done.empty():
+                        # print("breaking inner while because num of jobs is reached and jobs_done is empty")
+                        break
+                if num_jobs_done.value == num_of_jobs_todo and jobs_done.empty():
+                    # print("breaking outer while because num of jobs is reached and jobs_done is empty")
+                    break
+                time.sleep(2)
+                # print(num_jobs_done.value)
+                # print(num_jobs_done.value == num_of_jobs_todo)
+
+            jobs_done.close()
+            jobs_to_do.close()
+            # print("finished collecting results")
+
+            for p in process_list:
+                # print("joining process " + str(p))
+                p.join()
+        else:
+            output_images = delegate(X, **transform_kwargs)
 
         if not self.output_img:
             output_images = np.asarray(output_images)
 
+        print("returning images: " + str(len(output_images)))
         return output_images
 
 
@@ -80,7 +120,7 @@ class SmoothImages(ImageTransformBase):
 
     def transform(self, X, y=None, **kwargs):
         kwargs_dict = {'fwhm': self.fwhm}
-        return self.apply_transform(X, smooth_img, **kwargs_dict)
+        return self.apply_transform(X, smooth_img, transform_name="smoothing mri image", **kwargs_dict)
 
 
 class ResampleImages(ImageTransformBase):
@@ -94,5 +134,5 @@ class ResampleImages(ImageTransformBase):
     def transform(self, X, y=None, **kwargs):
         target_affine = np.diag(self.voxel_size)
         delegate_kwargs = {'target_affine': target_affine, 'interpolation': 'nearest'}
-        return self.apply_transform(X, resample_img, **delegate_kwargs)
+        return self.apply_transform(X, resample_img, transform_name="resampling mri image", **delegate_kwargs)
 

@@ -187,6 +187,9 @@ class BrainAtlas(BaseEstimator):
 
     def transform(self, X, y=None, **kwargs):
 
+        if len(X) < 1:
+            raise Exception("Brain Atlas: Did not get any data in parameter X")
+
         # 1. validate if all X are in the same space and have the same voxelsize and have the same orientation
 
         # 2. load sample data to get target affine and target shape to adapt the brain atlas
@@ -204,8 +207,6 @@ class BrainAtlas(BaseEstimator):
         atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, img.affine, img.shape, self.mask_threshold)
         roi_objects = self._get_rois(atlas_obj, which_rois=self.rois, background_id=self.background_id)
 
-        if len(X) < 1:
-            raise Exception("Brain Atlas: Did not get any data in parameter X")
 
         roi_data = []
 

@@ -7,7 +7,7 @@ import numpy as np
 class NeuroTest(unittest.TestCase):
 
     def setUp(self):
-        self.test_folder = '/spm-data/Scratch/spielwiese_ramona/test_photon_neuro_equal/'
+        self.test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data/')
         self.atlas_name = "AAL"
 
     def tearDown(self):
@@ -22,7 +22,7 @@ class NeuroTest(unittest.TestCase):
         self.assertTrue(np.array_equal(man_map, brain_atlas.map))
 
     def test_brain_atlas(self):
-        X = AtlasLibrary().get_nii_files_from_folder(self.test_folder)
+        X = AtlasLibrary().get_nii_files_from_folder(self.test_folder, extension=".nii")
 
         # 4101
         # Hippocampus_L
