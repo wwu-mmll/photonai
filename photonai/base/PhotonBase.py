@@ -98,11 +98,11 @@ class OutputSettings:
         self.save_output = save_output
 
         if self.save_output:
-            local_file: str = 'photon_result_file.p'
-            log_filename: str = 'photon_output.log'
-            summary_filename: str = 'photon_summary.txt'
-            pretrained_model_filename: str = 'photon_best_model.photon'
-            predictions_filename: str = 'outer_fold_predictions.csv'
+            local_file = 'photon_result_file.p'
+            log_filename = 'photon_output.log'
+            summary_filename = 'photon_summary.txt'
+            pretrained_model_filename = 'photon_best_model.photon'
+            predictions_filename = 'outer_fold_predictions.csv'
             self.local_file = os.path.join(project_folder, local_file)
             self.log_file = os.path.join(project_folder, log_filename)
             self.summary_filename = os.path.join(project_folder, summary_filename)
@@ -1450,6 +1450,8 @@ class PipelineElement(BaseEstimator):
         self.is_transformer = hasattr(self.base_element, "transform")
         self.is_estimator = hasattr(self.base_element, "predict")
 
+        self.kwargs = kwargs
+
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
         # Todo: map any hyperparameter to a possible default list of values to try
@@ -1478,7 +1480,12 @@ class PipelineElement(BaseEstimator):
             self.needs_covariates = False
 
     def copy_me(self):
-        return deepcopy(self)
+        if hasattr(self.base_element, 'copy_me'):
+            # new_base_element = self.base_element.copy_me()
+            # TODO !!!!!!!
+            return PipelineElement(self.name, self.hyperparameters, **self.kwargs)
+        else:
+            return deepcopy(self)
 
     @classmethod
     def create(cls, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False, **kwargs):
