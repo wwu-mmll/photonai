@@ -19,6 +19,7 @@ scipy
 statsmodels
 flask
 prettytable
+seaborn
 # sk optimize
 scikit-optimize
 # fabolas

@@ -25,7 +25,8 @@ os.environ["CUDA_DEVICE_ORDER"]="PCI_BUS_ID"
 os.environ["CUDA_VISIBLE_DEVICES"]="2"
 
 
-RandomCtrlData = np.ones((1792, 121, 145, 121))
+# RandomCtrlData = np.ones((1792, 121, 145, 121))
+RandomCtrlData = np.ones((172, 121, 145, 121))
 RandomCtrlLabels = np.random.randn((RandomCtrlData.shape[0]))
 
 
@@ -42,15 +43,15 @@ RandomCtrlLabels = np.random.randn((RandomCtrlData.shape[0]))
 
 
 
-
-PhotonRegister.save(photon_name='Brain_Age_Splitting_Wrapper',
-                        class_str='photonai.modelwrapper.Brain_Age_Splitting_Wrapper.Brain_Age_Splitting_Wrapper', element_type="Transformer")
-
-PhotonRegister.save(photon_name='Brain_Age_Splitting_CNN',
-                        class_str='photonai.modelwrapper.Brain_Age_Splitting_CNN.Brain_Age_Splitting_CNN', element_type="Estimator")
-
-PhotonRegister.save(photon_name='Brain_Age_Random_Forest',
-                        class_str='photonai.modelwrapper.Brain_Age_Random_Forest.Brain_Age_Random_Forest', element_type="Estimator")
+#
+# PhotonRegister.save(photon_name='Brain_Age_Splitting_Wrapper',
+#                         class_str='photonai.modelwrapper.Brain_Age_Splitting_Wrapper.Brain_Age_Splitting_Wrapper', element_type="Transformer")
+#
+# PhotonRegister.save(photon_name='Brain_Age_Splitting_CNN',
+#                         class_str='photonai.modelwrapper.Brain_Age_Splitting_CNN.Brain_Age_Splitting_CNN', element_type="Estimator")
+#
+# PhotonRegister.save(photon_name='Brain_Age_Random_Forest',
+#                         class_str='photonai.modelwrapper.Brain_Age_Random_Forest.Brain_Age_Random_Forest', element_type="Estimator")
 
 my_pipe = Hyperpipe('BrainAgePipe',
                         optimizer='grid_search',
@@ -60,8 +61,10 @@ my_pipe = Hyperpipe('BrainAgePipe',
                         outer_cv=KFold(n_splits=5, shuffle=True, random_state=42),
                         eval_final_performance=False)
 
-transformer = PipelineElement("Brain_Age_Splitting_Wrapper", hyperparameters={})
-batched_transformer = PhotonBatchElement("batched_trans", batch_size=10, base_element=transformer)
+# transformer = PipelineElement(, hyperparameters={})
+# base_element=transformer
+batched_transformer = PhotonBatchElement("PatchImages", hyperparameters={'patch_size': [25, 10]}, batch_size=10,
+                                         nr_of_processes=20)
 my_pipe += batched_transformer
 
 #my_pipe += PipelineElement('Brain_Age_Splitting_Wrapper')

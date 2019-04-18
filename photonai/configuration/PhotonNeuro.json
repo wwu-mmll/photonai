@@ -10,5 +10,9 @@
    "BrainAtlas":[
       "photonai.neuro.BrainAtlas.BrainAtlas",
       "Transformer"
+   ],
+   "PatchImages":[
+      "photonai.neuro.ImageBasics.PatchImages",
+      "Transformer"
    ]
 }
