@@ -424,7 +424,7 @@
     "Estimator"
   ],
   "PretrainedCNNClassifier":[
-    "photonai.modelwrapper.PretrainedCNNClassifier.PretrainedCNNClassifier",
+    "photonai.modelwrapper.PretrainedCNN.PretrainedCNNClassifier",
     "Estimator"
   ],
   "CNN1dClassifier":[
@@ -526,5 +526,9 @@
   "SamplePairingClassification": [
     "photonai.modelwrapper.SamplePairing.SamplePairingClassification",
     "Transformer"
+  ],
+  "PretrainedCNNRegressor": [
+    "photonai.modelwrapper.PretrainedCNN.PretrainedCNNRegressor",
+    "Estimator"
   ]
 }
