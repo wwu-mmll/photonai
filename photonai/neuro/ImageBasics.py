@@ -14,6 +14,8 @@ import pickle
 import numpy as np
 from pymongo import MongoClient
 import gridfs
+import bcolz
+import shutil
 
 
 
@@ -23,14 +25,17 @@ import gridfs
 # PHOTON-Neuro internal format is always img=True
 class ImageTransformBase(BaseEstimator):
 
-    def __init__(self, output_img=True, nr_of_processes=1):
+
+
+    def __init__(self, output_img=True, nr_of_processes=1, cache_folder = '/spm-data/vault-data1/tmp/photon_cache/'):
         self.output_img = output_img
         self.needs_y = False
         self.needs_covariates = False
         self.nr_of_processes = nr_of_processes
-        self.client = MongoClient('trap-umbriel', 27017)
-        self.db = self.client['photon_cache']
-        self.fs = gridfs.GridFS(self.db)
+        self.cache_folder = cache_folder
+        # self.client = MongoClient('trap-umbriel', 27017)
+        # self.db = self.client['photon_cache']
+        # self.fs = gridfs.GridFS(self.db)
 
     def fit(self, X, y):
         return self
@@ -38,19 +43,18 @@ class ImageTransformBase(BaseEstimator):
     class ImageJob:
 
         def __init__(self, data, delegate, delegate_kwargs, saved_to_db: bool = False,
-                     transform_name='transforming mri image'):
+                     transform_name='transforming mri image', job_index = 0):
             self.data = data
             self.saved_to_db = saved_to_db
             self.delegate = delegate
             self.delegate_kwargs = delegate_kwargs
             self.transform_name = transform_name
+            self.job_index = job_index
 
     @staticmethod
-    def parallel_application(folds_to_do, folds_done, num_jobs_done):
+    def parallel_application(folds_to_do, folds_done, num_jobs_done, cache_dir):
 
-        client = MongoClient('trap-umbriel', 27017)
-        db = client['photon_cache']
-        fs = gridfs.GridFS(db)
+        # fs = gridfs.GridFS(db)
 
         while True:
             try:
@@ -59,36 +63,37 @@ class ImageTransformBase(BaseEstimator):
                 folds_done.close()
                 break
             else:
-                Logger().info(task.transform_name + " - " + str(os.getpid()))
-                # print(task.transform_name + " - " + str(os.getpid()))
+                # Logger().info(task.transform_name + " - " + str(os.getpid()))
+                print(task.transform_name + " - " + str(os.getpid()))
+                print(num_jobs_done)
                 # load data from db
                 try:
 
                     # load data
-                    if task.saved_to_db:
-                        # get data obj
-                        data_obj = ParallelData.objects.get({'_id': task.data})
-                        data = pickle.loads(fs.get(data_obj.unprocessed_data).read())
-                        if isinstance(data, np.ndarray):
-                            if not data.flags['C_CONTIGUOUS']:
-                                data = np.ascontiguousarray(data)
-                    else:
-                        data = task.data
+                    data = task.data
                     # apply transform
-
                     delegate_output = task.delegate(data, **task.delegate_kwargs)
-                    # binarize output
-                    binary_output = pickle.dumps(delegate_output, protocol=2)
-                    # save to db
-                    data_obj.processed_data = fs.put(binary_output)
-                    data_obj.save()
+
+                    # save ouput
+                    save_filename = os.path.join(cache_dir, task.job_index)
+                    if os.path.isdir(save_filename):
+                        shutil.rmtree(save_filename)
+                    c = bcolz.carray(delegate_output, rootdir=save_filename)
+                    c.flush()
+
+                    # # binarize output
+                    # binary_output = pickle.dumps(delegate_output, protocol=2)
+                    # # save to db
+                    # data_obj.processed_data = fs.put(binary_output)
+                    # data_obj.save()
                 except DoesNotExist as e:
-                    Logger().error("Could not process task because data is not found with id " + str(task.data))
+                    print(e)
+                    # Logger().error("Could not process task because data is not found with id " + str(task.data))
                 # folds_done.put(fold_output)
-                folds_done.put(task.data)
+                folds_done.put(save_filename)
                 num_jobs_done.value = num_jobs_done.value + 1
-                # print(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
-                Logger().info(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
+                print(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
+                # Logger().info(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
         return True
 
     def apply_transform(self, X, delegate, transform_name="transformation", **transform_kwargs):
@@ -99,21 +104,26 @@ class ImageTransformBase(BaseEstimator):
             jobs_done = Queue()
             jobs_to_do = Queue()
 
+            process_name = "debug_parallel_"
+
             num_of_jobs_todo = 0
             for x_in in X:
                 # print(hex(id(x_in)))
                 # x_in = np.random.randint(0, 100)
                 # save data to database
-                data_entry = ParallelData()
-                if isinstance(x_in, Nifti1Image):
-                    x_in = x_in.dataobj
-                fs_saved_data = self.fs.put(pickle.dumps(x_in, protocol=2))
-                data_entry.unprocessed_data = fs_saved_data
-                data_entry.save()
+                # data_entry = ParallelData()
+                # if isinstance(x_in, Nifti1Image):
+                #     x_in = x_in.dataobj
+
+                # fs_saved_data = self.fs.put(pickle.dumps(x_in, protocol=2))
+                # data_entry.unprocessed_data = fs_saved_data
+
+                # data_entry.save()
                 # write new job to queue
-                new_job = ImageTransformBase.ImageJob(data_entry._id, delegate, transform_kwargs,
-                                                      saved_to_db=True,
-                                                      transform_name=transform_name)
+                new_job = ImageTransformBase.ImageJob(x_in, delegate, transform_kwargs,
+                                                      saved_to_db=False,
+                                                      transform_name=transform_name,
+                                                      job_index= process_name + str(num_of_jobs_todo))
                 num_of_jobs_todo += 1
                 jobs_to_do.put(new_job)
 
@@ -122,7 +132,8 @@ class ImageTransformBase(BaseEstimator):
             process_list = list()
             Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
             for w in range(self.nr_of_processes):
-                p = Process(target=ImageTransformBase.parallel_application, args=(jobs_to_do, jobs_done, num_jobs_done))
+                p = Process(target=ImageTransformBase.parallel_application, args=(jobs_to_do, jobs_done, num_jobs_done,
+                                                                                  self.cache_folder))
                 process_list.append(p)
                 p.start()
 
@@ -134,17 +145,23 @@ class ImageTransformBase(BaseEstimator):
                         finished_data_id = jobs_done.get()
                         # get db entry
                         try:
-                            loaded_data_obj = ParallelData.objects.get({'_id': finished_data_id})
-                            processed_data = pickle.loads(self.fs.get(loaded_data_obj.processed_data).read())
-                            if not self.output_img:
+                            processed_data = bcolz.open(rootdir=finished_data_id)
+                            if isinstance(processed_data, Nifti1Image):
                                 output_images.append(np.asarray(processed_data.dataobj))
                             else:
-                                # print("appending img")
                                 output_images.append(processed_data)
-                            # after we loaded it, we can delete it in order to keep db nice and clean
-                            self.fs.delete(loaded_data_obj.unprocessed_data)
-                            self.fs.delete(loaded_data_obj.processed_data)
-                            loaded_data_obj.delete()
+                            # shutil.rmtree(finished_data_id)
+                            # loaded_data_obj = ParallelData.objects.get({'_id': finished_data_id})
+                            # processed_data = pickle.loads(self.fs.get(loaded_data_obj.processed_data).read())
+                            # if not self.output_img:
+                            #     output_images.append(np.asarray(processed_data.dataobj))
+                            # else:
+                            #     # print("appending img")
+                            #     output_images.append(processed_data)
+                            # # after we loaded it, we can delete it in order to keep db nice and clean
+                            # self.fs.delete(loaded_data_obj.unprocessed_data)
+                            # self.fs.delete(loaded_data_obj.processed_data)
+                            # loaded_data_obj.delete()
                         except DoesNotExist:
                             Logger().error("Could not load processed data with id " + str(finished_data_id))
                     except queue.Empty:
@@ -174,7 +191,8 @@ class ImageTransformBase(BaseEstimator):
         if not self.output_img:
             output_images = np.asarray(output_images)
 
-        print("returning images: " + str(len(output_images)))
+        if isinstance(output_images, list):
+            print("returning images: " + str(len(output_images)))
         return output_images
 
 
@@ -219,32 +237,41 @@ class PatchImages(ImageTransformBase):
                                              transform_name="patching mri image",
                                              **{'patch_size': self.patch_size})
 
-        return np.asarray(transformed_X)
+        return transformed_X
 
     @staticmethod
     def draw_patches(patch_x, patch_size):
+        if not isinstance(patch_x, list):
+            return PatchImages.draw_patch_from_mri(patch_x, patch_size)
+        else:
+            return_list = []
+            for p in patch_x:
+                print(str(p))
+                return_list.append(PatchImages.draw_patch_from_mri(p, patch_size))
+            return return_list
 
-        Logger().info("drawing patch..!")
+    @staticmethod
+    def draw_patch_from_mri(patch_x, patch_size):
+        # Logger().info("drawing patch..")
+        if isinstance(patch_x, str):
+            from nilearn import image
+            patch_x = np.ascontiguousarray(image.load_img(patch_x).get_data())
 
         if isinstance(patch_x, Nifti1Image):
-            patch_x = patch_x.dataobj
+            patch_x = np.ascontiguousarray(patch_x.dataobj)
 
-        Benis = view_as_windows(patch_x, (patch_size, patch_size, 1), step=1)
-        # print(Benis.shape)
+        patches_drawn = view_as_windows(patch_x, (patch_size, patch_size, 1), step=1)
 
-        BenisLänge = Benis.shape[0]
-        BenisBreite = Benis.shape[1]
-        # BenisSchritte = BenisLänge / self.patch_size
+        patch_list_length = patches_drawn.shape[0]
+        patch_list_width = patches_drawn.shape[1]
 
-        BenisMatrix = Benis[0:BenisLänge:patch_size, 0:BenisBreite:patch_size, :, :]
-        # print(BenisMatrix.shape)
+        output_matrix = patches_drawn[0:patch_list_length:patch_size, 0:patch_list_width:patch_size, :, :]
 
         # TODO: Reshape First 3 Matrix Dimensions into 1, which will give 900 images
-        BenisMatrix = BenisMatrix.reshape((-1, BenisMatrix.shape[3], BenisMatrix.shape[4], BenisMatrix.shape[5]))
-        BenisMatrix = np.squeeze(BenisMatrix)
-        # print(BenisMatrix.shape)
+        output_matrix = output_matrix.reshape((-1, output_matrix.shape[3], output_matrix.shape[4], output_matrix.shape[5]))
+        output_matrix = np.squeeze(output_matrix)
 
-        return BenisMatrix
+        return output_matrix
 
     def copy_me(self):
         return PatchImages(self.patch_size, self.random_state, self.nr_of_processes)
