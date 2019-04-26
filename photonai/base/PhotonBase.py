@@ -754,8 +754,14 @@ class Hyperpipe(BaseEstimator):
 
                         # do the optimizing
                         for current_config in self.optimizer.ask:
+
+                            if hasattr(self.optimizer, 'ask_for_pipe'):
+                                pipe_ctor = self.optimizer.ask_for_pipe()
+                            else:
+                                pipe_ctor = self._copy_pipeline
+
                             self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-                            hp = TestPipeline(self._copy_pipeline, current_config, self.metrics, self.update_mother_inner_fold_nr,
+                            hp = TestPipeline(pipe_ctor, current_config, self.metrics, self.update_mother_inner_fold_nr,
                                               mongo_db_settings=self.output_settings,
                                               callback_function=self.inner_cv_callback_function)
                             Logger().debug('optimizing of:' + self.name)
@@ -1274,6 +1280,7 @@ class Hyperpipe(BaseEstimator):
                     Logger().info("Skipping dummy estimator because of too much dimensions")
                     break
 
+            # dummy.fit(train_X, train_y)
             dummy.fit(train_X, train_y)
             train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.metrics)
 
