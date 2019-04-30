@@ -3,6 +3,7 @@ import tensorflow as tf
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.svm import LinearSVR
 from sklearn.utils import shuffle
 
 class Brain_Age_Random_Forest(BaseEstimator, ClassifierMixin):
@@ -29,28 +30,38 @@ class Brain_Age_Random_Forest(BaseEstimator, ClassifierMixin):
 
     def fit(self, X, y):
         # Reshape X to add dimension for CNN (RGB channel)
+        if not isinstance(X, np.ndarray):
+            print("Loading data")
+            X = np.asarray(X)
+
         print("Starting Fitting")
         y = np.repeat(y, X.shape[1])
         #make patches per person a training case
         print(X.shape)
         X = np.reshape(X, (-1, X.shape[2], X.shape[3]))
         #flatten training cases for reshape
-        X = np.reshape(X, (X.shape[0]), -1)
+        X = np.reshape(X, (X.shape[0], -1))
         #shuffle the the data so there won't be long strands of same-aged people
-        X, y = shuffle(X, y, random_state = self.random_state)
+        X, y = shuffle(X, y, random_state=42)
 
         #model is a random forest regressor
-        self.photon_rfr = RandomForestRegressor()
-        self.photon_rfr.fit[X, y]
+        self.photon_rfr = LinearSVR()
+        # self.photon_rfr = RandomForestRegressor()
+        self.photon_rfr.fit(X, y)
         print("Fitting done")
 
         return self
 
     def predict(self, X):
-        X_to_predict = X.reshape(X.shape[0], X.shape[1])
+
+        if not isinstance(X, np.ndarray):
+            print("Loading data")
+            X = np.asarray(X)
+
+        X_to_predict = X.reshape(X.shape[0], X.shape[1], -1)
         predict_result = []
         for i in range(X.shape[0]):
-            predict_interim_result = self.photon_rfr.predict(X[i, :, :])
+            predict_interim_result = self.photon_rfr.predict(X_to_predict[i, :, :])
             predict_result_to_append = np.mean(predict_interim_result)
             predict_result.append(predict_result_to_append)
         return predict_result
