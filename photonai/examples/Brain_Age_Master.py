@@ -38,8 +38,8 @@ X = df["PAC_ID"]
 X = [os.path.join(root_folder, 'data_all/' + x + ".nii") for x in X]
 y = df["Age"].values
 
-X = X[0:150]
-y = y[0:150]
+X = X[0:1500]
+y = y[0:1500]
 
 #
 # PhotonRegister.save(photon_name='Brain_Age_Splitting_Wrapper',
@@ -52,12 +52,13 @@ y = y[0:150]
 #                         class_str='photonai.modelwrapper.Brain_Age_Random_Forest.Brain_Age_Random_Forest', element_type="Estimator")
 
 my_pipe = Hyperpipe('BrainAgePipe',
-                        optimizer='grid_search',
-                        metrics=['mean_absolute_error'],
-                        best_config_metric='mean_absolute_error',
-                        inner_cv=KFold(n_splits=5, shuffle=True, random_state=42),
-                        outer_cv=KFold(n_splits=5, shuffle=True, random_state=42),
-                        eval_final_performance=False)
+                    optimizer='grid_search',
+                    metrics=['mean_absolute_error'],
+                    best_config_metric='mean_absolute_error',
+                    inner_cv=KFold(n_splits=5, shuffle=True, random_state=42),
+                    outer_cv=KFold(n_splits=5, shuffle=True, random_state=42),
+                    eval_final_performance=False,
+                    verbosity=2)
 
 # transformer = PipelineElement(, hyperparameters={})
 # base_element=transformer
