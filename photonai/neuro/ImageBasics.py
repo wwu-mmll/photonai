@@ -1,22 +1,19 @@
 from ..photonlogger.Logger import Logger
-from ..validation.ResultsDatabase import ParallelData
 from sklearn.base import BaseEstimator
 from skimage.util.shape import view_as_windows
 from multiprocessing import Process, Queue, current_process, Value
 from nilearn.image import resample_img, smooth_img
 from nibabel.nifti1 import Nifti1Image
 from pymodm.errors import DoesNotExist
-from pymodm.files import File as PymodmFile
 import queue
 import time
 import os
-import pickle
 import numpy as np
-from pymongo import MongoClient
-import gridfs
+import json
 import bcolz
+import pickle
 import shutil
-
+import uuid
 
 
 # Smoothing and voxel-size Resampling capabilities
@@ -25,9 +22,7 @@ import shutil
 # PHOTON-Neuro internal format is always img=True
 class ImageTransformBase(BaseEstimator):
 
-
-
-    def __init__(self, output_img=True, nr_of_processes=1, cache_folder = '/spm-data/vault-data1/tmp/photon_cache/'):
+    def __init__(self, output_img=True, nr_of_processes=1, cache_folder=None):
         self.output_img = output_img
         self.needs_y = False
         self.needs_covariates = False
@@ -43,13 +38,16 @@ class ImageTransformBase(BaseEstimator):
     class ImageJob:
 
         def __init__(self, data, delegate, delegate_kwargs, saved_to_db: bool = False,
-                     transform_name='transforming mri image', job_index = 0):
+                     transform_name='transforming mri image', job_key=0, sort_index=0,
+                     config_key=None):
             self.data = data
             self.saved_to_db = saved_to_db
             self.delegate = delegate
             self.delegate_kwargs = delegate_kwargs
             self.transform_name = transform_name
-            self.job_index = job_index
+            self.sort_index = sort_index
+            self.job_index = job_key
+            self.config_key = config_key
 
     @staticmethod
     def parallel_application(folds_to_do, folds_done, num_jobs_done, cache_dir):
@@ -64,8 +62,8 @@ class ImageTransformBase(BaseEstimator):
                 break
             else:
                 # Logger().info(task.transform_name + " - " + str(os.getpid()))
-                print(task.transform_name + " - " + str(os.getpid()))
-                print(num_jobs_done)
+                # print(task.transform_name + " - " + str(os.getpid()))
+
                 # load data from db
                 try:
 
@@ -75,11 +73,13 @@ class ImageTransformBase(BaseEstimator):
                     delegate_output = task.delegate(data, **task.delegate_kwargs)
 
                     # save ouput
-                    save_filename = os.path.join(cache_dir, task.job_index)
+                    save_filename = os.path.join(cache_dir, str(task.job_index))
                     if os.path.isdir(save_filename):
                         shutil.rmtree(save_filename)
                     c = bcolz.carray(delegate_output, rootdir=save_filename)
                     c.flush()
+
+                    print("Process " + str(os.getpid()) + " finished job nr " + str(num_jobs_done))
 
                     # # binarize output
                     # binary_output = pickle.dumps(delegate_output, protocol=2)
@@ -90,44 +90,57 @@ class ImageTransformBase(BaseEstimator):
                     print(e)
                     # Logger().error("Could not process task because data is not found with id " + str(task.data))
                 # folds_done.put(fold_output)
-                folds_done.put(save_filename)
+                folds_done.put((save_filename, task.sort_index))
                 num_jobs_done.value = num_jobs_done.value + 1
-                print(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
+                # print(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
                 # Logger().info(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
         return True
 
-    def apply_transform(self, X, delegate, transform_name="transformation", **transform_kwargs):
+    def apply_transform(self, X, delegate, transform_name="transformation", config_dict=None, **transform_kwargs):
 
         output_images = []
         if self.nr_of_processes > 1:
 
             jobs_done = Queue()
             jobs_to_do = Queue()
+            num_jobs_done = Value('i', 0)
 
             process_name = "debug_parallel_"
+            job_cache_dict_filename = os.path.join(self.cache_folder, process_name + "cache.p")
+            if os.path.isfile(job_cache_dict_filename):
+                job_cache_dict = pickle.load(open(job_cache_dict_filename, 'rb'))
+            else:
+                job_cache_dict = {}
 
             num_of_jobs_todo = 0
             for x_in in X:
-                # print(hex(id(x_in)))
-                # x_in = np.random.randint(0, 100)
-                # save data to database
-                # data_entry = ParallelData()
-                # if isinstance(x_in, Nifti1Image):
-                #     x_in = x_in.dataobj
 
-                # fs_saved_data = self.fs.put(pickle.dumps(x_in, protocol=2))
-                # data_entry.unprocessed_data = fs_saved_data
-
-                # data_entry.save()
                 # write new job to queue
-                new_job = ImageTransformBase.ImageJob(x_in, delegate, transform_kwargs,
-                                                      saved_to_db=False,
-                                                      transform_name=transform_name,
-                                                      job_index= process_name + str(num_of_jobs_todo))
-                num_of_jobs_todo += 1
-                jobs_to_do.put(new_job)
+                if config_dict is not None:
+                    config_dict_copy = dict(config_dict)
+                    config_dict_copy["data_in_key"] = x_in
+                    config_dict_hash = json.dumps(config_dict_copy, sort_keys=True)
+                else:
+                    config_dict_hash = json.dumps(x_in)
 
-            num_jobs_done = Value('i', 0)
+                # write anything to dictionary so that is easily indexable
+                if not config_dict_hash in job_cache_dict:
+                    unique_key = uuid.uuid4()
+                    new_job = ImageTransformBase.ImageJob(data=x_in, delegate=delegate,
+                                                          delegate_kwargs=transform_kwargs,
+                                                          transform_name=transform_name,
+                                                          job_key=unique_key,
+                                                          sort_index=num_of_jobs_todo,
+                                                          config_key=config_dict_hash)
+                    job_cache_dict[config_dict_hash] = str(unique_key)
+                    jobs_to_do.put(new_job)
+                else:
+                    num_jobs_done.value = num_jobs_done.value + 1
+                    jobs_done.put((os.path.join(self.cache_folder, job_cache_dict[config_dict_hash]), num_of_jobs_todo))
+
+                num_of_jobs_todo += 1
+
+            pickle.dump(job_cache_dict, open(job_cache_dict_filename, 'wb'))
 
             process_list = list()
             Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
@@ -137,12 +150,12 @@ class ImageTransformBase(BaseEstimator):
                 process_list.append(p)
                 p.start()
 
-            # time.sleep(2)
-            # print("collecting results")
+            sort_index_list =[]
             while num_jobs_done.value <= num_of_jobs_todo:
                 while True:
                     try:
-                        finished_data_id = jobs_done.get()
+                        (finished_data_id, sort_index) = jobs_done.get()
+                        print("collecting image nr " + str(sort_index))
                         # get db entry
                         try:
                             processed_data = bcolz.open(rootdir=finished_data_id)
@@ -150,18 +163,7 @@ class ImageTransformBase(BaseEstimator):
                                 output_images.append(np.asarray(processed_data.dataobj))
                             else:
                                 output_images.append(processed_data)
-                            # shutil.rmtree(finished_data_id)
-                            # loaded_data_obj = ParallelData.objects.get({'_id': finished_data_id})
-                            # processed_data = pickle.loads(self.fs.get(loaded_data_obj.processed_data).read())
-                            # if not self.output_img:
-                            #     output_images.append(np.asarray(processed_data.dataobj))
-                            # else:
-                            #     # print("appending img")
-                            #     output_images.append(processed_data)
-                            # # after we loaded it, we can delete it in order to keep db nice and clean
-                            # self.fs.delete(loaded_data_obj.unprocessed_data)
-                            # self.fs.delete(loaded_data_obj.processed_data)
-                            # loaded_data_obj.delete()
+                                sort_index_list.append(sort_index)
                         except DoesNotExist:
                             Logger().error("Could not load processed data with id " + str(finished_data_id))
                     except queue.Empty:
@@ -174,13 +176,14 @@ class ImageTransformBase(BaseEstimator):
                     # print("breaking outer while because num of jobs is reached and jobs_done is empty")
                     break
                 Logger().info("Waiting 2 seocnds before looking for data to collect")
-                time.sleep(2)
-                # print(num_jobs_done.value)
-                # print(num_jobs_done.value == num_of_jobs_todo)
+                time.sleep(1)
 
             jobs_done.close()
             jobs_to_do.close()
-            # print("finished collecting results")
+            print("finished collecting results")
+            print("sorting results")
+            sort_order = np.argsort(sort_index_list)
+            output_images = [output_images[i] for i in sort_order]
 
             for p in process_list:
                 # print("joining process " + str(p))
@@ -221,20 +224,21 @@ class ResampleImages(ImageTransformBase):
         return self.apply_transform(X, resample_img, transform_name="resampling mri image", **delegate_kwargs)
 
 
-
 class PatchImages(ImageTransformBase):
 
-    def __init__(self, patch_size=25, random_state=42, nr_of_processes=3):
+    def __init__(self, patch_size=25, random_state=42, nr_of_processes=3, cache_folder=None):
         Logger().info("Nr or processes: " + str(nr_of_processes))
-        super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes)
+        super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes, cache_folder=cache_folder)
+        # Todo: give cache folder to mother class
+
         self.patch_size = patch_size
         self.random_state = random_state
-
 
     def transform(self, X, y=None, **kwargs):
         Logger().info("Drawing patches")
         transformed_X = self.apply_transform(X, PatchImages.draw_patches,
                                              transform_name="patching mri image",
+                                             config_dict={'patch_size': self.patch_size},
                                              **{'patch_size': self.patch_size})
 
         return transformed_X
