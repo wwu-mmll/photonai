@@ -38,8 +38,8 @@ X = df["PAC_ID"]
 X = [os.path.join(root_folder, 'data_all/' + x + ".nii") for x in X]
 y = df["Age"].values
 
-X = X[0:1500]
-y = y[0:1500]
+X = X[0:150]
+y = y[0:150]
 
 #
 # PhotonRegister.save(photon_name='Brain_Age_Splitting_Wrapper',
@@ -63,7 +63,7 @@ my_pipe = Hyperpipe('BrainAgePipe',
 # transformer = PipelineElement(, hyperparameters={})
 # base_element=transformer
 batched_transformer = PhotonBatchElement("PatchImages", hyperparameters={'patch_size': [25, 10]}, batch_size=10,
-                                         nr_of_processes=10)
+                                         nr_of_processes=10, cache_folder='/spm-data/vault-data1/tmp/photon_cache/')
 my_pipe += batched_transformer
 
 #my_pipe += PipelineElement('Brain_Age_Splitting_Wrapper')
