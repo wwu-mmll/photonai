@@ -1,55 +1,66 @@
 import numpy as np
-from sklearn.base import BaseEstimator, RegressorMixin
+import tensorflow as tf
+from sklearn.base import BaseEstimator, ClassifierMixin
+from sklearn.model_selection import ShuffleSplit
 from sklearn.ensemble import RandomForestRegressor
-from sklearn.svm import LinearSVR
 from sklearn.utils import shuffle
 
-
-class Brain_Age_Random_Forest(BaseEstimator, RegressorMixin):
-    _estimator_type = "regressor"
-
+class Brain_Age_Random_Forest(BaseEstimator, ClassifierMixin):
     # todo: BUGFIX --> pooling doesnt work
-    def __init__(self):
-        pass
+    def __init__(self, target_dimension=2,
+                 loss='mse', metrics=['accuracy'],
+                 gpu_device='/gpu:0', random_state = 42,
+                 early_stopping_flag=True, eaSt_patience=20,
+                 reLe_factor=0.4, reLe_patience=5):
+
+        self.target_dimension = target_dimension
+        self.loss = loss
+        self.metrics = metrics
+        self.random_state = random_state
+        self.gpu_device = gpu_device
+        self.early_stopping_flag = early_stopping_flag
+        self.eaSt_patience = eaSt_patience
+        self.reLe_factor = reLe_factor
+        self.reLe_patience = reLe_patience
+
+        self.x = None
+        self.y_ = None
+        self.model = None
 
     def fit(self, X, y):
-
-        print("hello here is random forest ")
-
-        if not isinstance(X, np.ndarray):
-            print("converting data to numpy array")
-            X = np.asarray(X)
-
         # Reshape X to add dimension for CNN (RGB channel)
         print("Starting Fitting")
         y = np.repeat(y, X.shape[1])
-        # make patches per person a training case
+        #make patches per person a training case
         print(X.shape)
         X = np.reshape(X, (-1, X.shape[2], X.shape[3]))
-        # flatten training cases for reshape
-        X = np.reshape(X, (X.shape[0], -1))
-        # shuffle the the data so there won't be long strands of same-aged people
-        X, y = shuffle(X, y, random_state=42)
+        #flatten training cases for reshape
+        X = np.reshape(X, (X.shape[0]), -1)
+        #shuffle the the data so there won't be long strands of same-aged people
+        X, y = shuffle(X, y, random_state = self.random_state)
 
-        # model is a random forest regressor
-        # RandomForestRegressor()
-        self.photon_rfr = LinearSVR()
-        self.photon_rfr.fit(X, y)
+        #model is a random forest regressor
+        self.photon_rfr = RandomForestRegressor()
+        self.photon_rfr.fit[X, y]
         print("Fitting done")
 
         return self
 
     def predict(self, X):
+        X_to_predict = X.reshape(X.shape[0], X.shape[1])
+        predict_result = []
+        for i in range(X.shape[0]):
+            predict_interim_result = self.photon_rfr.predict(X[i, :, :])
+            predict_result_to_append = np.mean(predict_interim_result)
+            predict_result.append(predict_result_to_append)
+        return predict_result
 
-        print("hello here is random forest ")
 
-        if not isinstance(X, np.ndarray):
-            print("converting data to numpy array")
-            X = np.asarray(X)
-
-        X = np.reshape(X, (-1, X.shape[2], X.shape[3]))
-        # flatten training cases for reshape
-        X = np.reshape(X, (X.shape[0], -1))
-        X = shuffle(X, random_state=42)
-        print("now predicting")
-        return self.photon_rfr.predict(X)
+    @staticmethod
+    def dense_to_one_hot(labels_dense, num_classes):
+        """Convert class labels from scalars to one-hot vectors."""
+        num_labels = labels_dense.shape[0]
+        index_offset = np.arange(num_labels) * num_classes
+        labels_one_hot = np.zeros((num_labels, num_classes))
+        labels_one_hot.flat[index_offset + labels_dense.ravel()] = 1
+        return labels_one_hot
