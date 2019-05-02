@@ -38,18 +38,18 @@ X = df["PAC_ID"]
 X = [os.path.join(root_folder, 'data_all/' + x + ".nii") for x in X]
 y = df["Age"].values
 
-X = X[0:150]
-y = y[0:150]
+X = X[0:1500]
+y = y[0:1500]
 
 #
-# PhotonRegister.save(photon_name='Brain_Age_Splitting_Wrapper',
-#                         class_str='photonai.modelwrapper.Brain_Age_Splitting_Wrapper.Brain_Age_Splitting_Wrapper', element_type="Transformer")
+PhotonRegister.save(photon_name='Brain_Age_Splitting_Wrapper',
+                        class_str='photonai.modelwrapper.Brain_Age_Splitting_Wrapper.Brain_Age_Splitting_Wrapper', element_type="Transformer")
 #
 # PhotonRegister.save(photon_name='Brain_Age_Splitting_CNN',
 #                         class_str='photonai.modelwrapper.Brain_Age_Splitting_CNN.Brain_Age_Splitting_CNN', element_type="Estimator")
 #
-# PhotonRegister.save(photon_name='Brain_Age_Random_Forest',
-#                         class_str='photonai.modelwrapper.Brain_Age_Random_Forest.Brain_Age_Random_Forest', element_type="Estimator")
+PhotonRegister.save(photon_name='Brain_Age_Random_Forest',
+                        class_str='photonai.modelwrapper.Brain_Age_Random_Forest.Brain_Age_Random_Forest', element_type="Estimator")
 
 my_pipe = Hyperpipe('BrainAgePipe',
                     optimizer='grid_search',
@@ -62,8 +62,8 @@ my_pipe = Hyperpipe('BrainAgePipe',
 
 # transformer = PipelineElement(, hyperparameters={})
 # base_element=transformer
-batched_transformer = PhotonBatchElement("PatchImages", hyperparameters={'patch_size': [25, 10]}, batch_size=10,
-                                         nr_of_processes=10, cache_folder='/spm-data/vault-data1/tmp/photon_cache/')
+batched_transformer = PhotonBatchElement("PatchImages", hyperparameters={'patch_size': [10, 25, 50, 75, 100]}, batch_size=10,
+                                         nr_of_processes=10, cache_folder='/spm-data/vault-data1/tmp/photon_cache_vincent/')
 my_pipe += batched_transformer
 
 #my_pipe += PipelineElement('Brain_Age_Splitting_Wrapper')
@@ -75,3 +75,24 @@ my_pipe.fit(X, y)
 
 
 
+
+
+
+
+
+inner_performances = list()
+for i, fold in enumerate(my_pipe.result_tree.outer_folds[0].tested_config_list):
+    inner_performances.append((fold.config_dict, fold.metrics_test[0].value))
+print(inner_performances)
+
+plt.ylim(0.2, 0.8)
+plt.xticks(rotation=90)
+plt.margins(0.3)
+
+for i, lelles in inner_performances:
+    print(i, lelles)
+    Benis = ",".join(("{}={}".format(*p) for p in i.items()))
+    plt.plot(Benis, lelles, 'ro')
+
+
+plt.show()
