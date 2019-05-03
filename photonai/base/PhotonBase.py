@@ -1633,6 +1633,7 @@ class PipelineElement(BaseEstimator):
             if hasattr(self.base_element, 'transform'):
                 return self.adjusted_delegate_call(self.base_element.transform, X, y, **kwargs)
             elif hasattr(self.base_element, 'predict', **kwargs):
+                raise Warning("used prediction instead of transform " + self.name)
                 return self.base_element.predict(X)
             else:
                 Logger().error('BaseException: transform-predict-mess')

@@ -66,11 +66,14 @@ batched_transformer = PhotonBatchElement("PatchImages", hyperparameters={'patch_
                                          nr_of_processes=10, cache_folder='/spm-data/vault-data1/tmp/photon_cache_vincent/')
 my_pipe += batched_transformer
 
+
 #my_pipe += PipelineElement('Brain_Age_Splitting_Wrapper')
 
 my_pipe += PipelineElement('Brain_Age_Random_Forest')
 
 my_pipe.fit(X, y)
+
+# batched_transformer.clear_cache()
 
 
 
