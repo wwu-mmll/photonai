@@ -7,9 +7,7 @@ from sklearn.model_selection import KFold
 #from skopt import dummy_minimize
 import scipy.io as sio
 import keras
-from photonai import Hyperpipe
-from photonai import PipelineElement
-from photonai import PhotonRegister
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PhotonRegister
 from photonai.base.PhotonBatchElement import PhotonBatchElement
 from photonai.validation import ResultsTreeHandler
 from photonai.neuro.BrainAtlas import AtlasLibrary
@@ -62,8 +60,10 @@ my_pipe = Hyperpipe('BrainAgePipe',
 
 # transformer = PipelineElement(, hyperparameters={})
 # base_element=transformer
-batched_transformer = PhotonBatchElement("PatchImages", hyperparameters={'patch_size': [10, 25, 50, 75, 100]}, batch_size=10,
-                                         nr_of_processes=10, cache_folder='/spm-data/vault-data1/tmp/photon_cache_vincent/')
+batched_transformer = PhotonBatchElement("PatchImages", hyperparameters={'patch_size': [10, 25, 50, 75, 100]},
+                                         batch_size=100,
+                                         nr_of_processes=10,
+                                         cache_folder='/spm-data/vault-data1/tmp/photon_cache_vincent/')
 my_pipe += batched_transformer
 
 
