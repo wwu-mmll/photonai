@@ -134,7 +134,12 @@ class ImageTransformBase(BaseEstimator):
                     config_dict_hash = json.dumps(x_in)
 
                 # write anything to dictionary so that is easily indexable
-                if not config_dict_hash in job_cache_dict:
+                if config_dict_hash in job_cache_dict and os.path.isfile(os.path.join(self.cache_folder,
+                                                                                      job_cache_dict[config_dict_hash] + ".p")):
+                    num_jobs_done.value = num_jobs_done.value + 1
+                    jobs_done.put((os.path.join(self.cache_folder, job_cache_dict[config_dict_hash]), num_of_jobs_todo))
+
+                else:
                     unique_key = uuid.uuid4()
                     new_job = ImageTransformBase.ImageJob(data=x_in, delegate=delegate,
                                                           delegate_kwargs=transform_kwargs,
@@ -144,9 +149,6 @@ class ImageTransformBase(BaseEstimator):
                                                           config_key=config_dict_hash)
                     job_cache_dict[config_dict_hash] = str(unique_key)
                     jobs_to_do.put(new_job)
-                else:
-                    num_jobs_done.value = num_jobs_done.value + 1
-                    jobs_done.put((os.path.join(self.cache_folder, job_cache_dict[config_dict_hash]), num_of_jobs_todo))
 
                 num_of_jobs_todo += 1
 

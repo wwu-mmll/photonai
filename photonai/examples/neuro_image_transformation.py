@@ -11,7 +11,7 @@ my_pipe = Hyperpipe('BatchAndSmooth',  # the name of your pipeline
                     best_config_metric='mean_absolute_error',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=2),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=2),  # test each configuration ten times respectively,
-                    verbosity=1)
+                    verbosity=2)
 
 
 root_folder = "/spm-data/Scratch/spielwiese_ramona/test_photon_neuro/*.nii"

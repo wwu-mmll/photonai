@@ -1633,7 +1633,8 @@ class PipelineElement(BaseEstimator):
             if hasattr(self.base_element, 'transform'):
                 return self.adjusted_delegate_call(self.base_element.transform, X, y, **kwargs)
             elif hasattr(self.base_element, 'predict', **kwargs):
-                raise Warning("used prediction instead of transform " + self.name)
+                # Logger().warn("used prediction instead of transform " + self.name)
+                # raise Warning()
                 return self.base_element.predict(X)
             else:
                 Logger().error('BaseException: transform-predict-mess')
@@ -1863,7 +1864,7 @@ class PipelineStacking(PipelineElement):
                 self.__iadd__(item_to_stack)
 
         # in case any of the children needs y or the covariates, we have to request them
-        self.needs_y = True
+        self.needs_y = False
         self.needs_covariates = True
 
     def __iadd__(self, item):
@@ -1944,7 +1945,7 @@ class PipelineStacking(PipelineElement):
         """
         for name, element in self.pipe_elements.items():
             # Todo: parallellize fitting
-            element.fit(data, targets)
+            element.fit(data, targets, **kwargs)
         return self
 
     def predict(self, data, targets=None, **kwargs):
@@ -2009,7 +2010,7 @@ class PipelineStacking(PipelineElement):
         New matrix, that is a and b horizontally joined
 
         """
-        if a.size == 0:
+        if a is None or (isinstance(a, np.ndarray) and a.size == 0):
             a = b
         else:
             # Todo: check for right dimensions!
