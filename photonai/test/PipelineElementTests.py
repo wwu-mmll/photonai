@@ -317,7 +317,7 @@ class PipelineBranchTests(unittest.TestCase):
         stacking_element += branch2
 
         stacking_element.fit(self.X, self.y)
-        trans = stacking_element.transform(self.X)
+        trans, _, _ = stacking_element.transform(self.X)
         pred = stacking_element.predict(self.X)
 
         self.assertTrue(np.array_equal(trans, pred))
