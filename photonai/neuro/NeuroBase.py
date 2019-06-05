@@ -1,5 +1,7 @@
-from photonai.base.PhotonBase import PipelineBranch
-from photonai.configuration.Register import PhotonRegister
+from ..base.PhotonBase import PipelineBranch, PipelineElement
+from ..configuration.Register import PhotonRegister
+from sklearn.base import BaseEstimator
+import numpy as np
 
 
 class NeuroModuleBranch(PipelineBranch):
@@ -39,6 +41,8 @@ class NeuroModuleBranch(PipelineBranch):
             raise ValueError('PipelineElement {} is not part of the Neuro module:'.format(pipe_element.name))
 
         return self
+
+
 
 
 

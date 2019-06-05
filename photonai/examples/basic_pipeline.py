@@ -12,14 +12,15 @@ import time
 X, y = load_breast_cancer(True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results", save_predictions='best')
+mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
+                                save_predictions='best')
 
 
 # save_options = OutputSettings(local_file="/home/photon_user/photon_test/test_item.p")
 
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipeline
+my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],  # the performance metrics of your interest
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
@@ -27,7 +28,6 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
                     verbosity=1,
                     output_settings=mongo_settings)  # get error, warn and info message
-                    #imbalanced_data_strategy_filter='RandomUnderSampler'
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     # performance_constraints = [MinimumPerformance('accuracy', 0.96),
                     #                            MinimumPerformance('precision', 0.96)]
@@ -47,7 +47,7 @@ my_pipe += preprocessing
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
-my_pipe += PipelineElement('StandardScaler')
+my_pipe.add(PipelineElement('StandardScaler'))
 # then do feature selection using a PCA, specify which values to try in the hyperparameter search
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}, test_disabled=True)
 # engage and optimize the good old SVM for Classification
@@ -60,7 +60,7 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 
 start_time = time.time()
 # NOW TRAIN YOUR PIPELINE
-# my_pipe.fit(X, y)
+my_pipe.fit(X, y)
 elapsed_time = time.time() - start_time
 print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL

@@ -451,6 +451,7 @@ class TestPipeline(object):
                 scorer = Scorer.create(metric)
                 if scorer is not None:
                     scorer_value = scorer(y_true, y_pred)
+                    Logger().debug(str(scorer_value))
                     output_metrics[metric] = scorer_value
                 else:
                     output_metrics[metric] = np.nan
