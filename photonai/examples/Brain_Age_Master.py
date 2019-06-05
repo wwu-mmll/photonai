@@ -73,7 +73,7 @@ my_pipe += PipelineElement('Brain_Age_Random_Forest')
 
 my_pipe.fit(X, y)
 
-# batched_transformer.clear_cache()
+batched_transformer.base_element.clear_cache()
 
 
 

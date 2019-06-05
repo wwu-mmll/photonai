@@ -1,4 +1,5 @@
 from .PhotonBase import PipelineElement
+from ..photonlogger import Logger
 import numpy as np
 
 
@@ -30,7 +31,12 @@ class PhotonBatchElement(PipelineElement):
         else:
             nr = len(X)
             dim = 1
+
+        batch_idx = 0
         for start, stop in PhotonBatchElement.chunker(nr, self.batch_size):
+
+            batch_idx += 1
+            Logger().debug(self.name + " is processing batch nr " + str(batch_idx))
 
             # split data in batches
             if dim > 1:
@@ -76,7 +82,10 @@ class PhotonBatchElement(PipelineElement):
     def stack_results(new_a, existing_a):
         if existing_a is not None:
             if isinstance(new_a, list) or (isinstance(new_a, np.ndarray) and len(new_a.shape) < 2):
-                existing_a = np.hstack((existing_a, new_a))
+                if isinstance(existing_a, list):
+                    existing_a = existing_a + new_a
+                else:
+                    existing_a = np.hstack((existing_a, new_a))
             else:
                 existing_a = np.vstack((existing_a, new_a))
         else:
