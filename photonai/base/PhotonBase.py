@@ -34,6 +34,11 @@ from ..validation.cross_validation import StratifiedKFoldRegression
 from .PhotonPipeline import PhotonPipeline
 
 
+class PhotonNative:
+    """only for checking if code is meeting requirements"""
+    pass
+
+
 class OutputSettings:
     """
     Configuration class that specifies the format in which the results are saved. Results can be saved to a MongoDB
@@ -93,11 +98,11 @@ class OutputSettings:
         self.save_output = save_output
 
         if self.save_output:
-            local_file: str = 'photon_result_file.p'
-            log_filename: str = 'photon_output.log'
-            summary_filename: str = 'photon_summary.txt'
-            pretrained_model_filename: str = 'photon_best_model.photon'
-            predictions_filename: str = 'outer_fold_predictions.csv'
+            local_file = 'photon_result_file.p'
+            log_filename = 'photon_output.log'
+            summary_filename = 'photon_summary.txt'
+            pretrained_model_filename = 'photon_best_model.photon'
+            predictions_filename = 'outer_fold_predictions.csv'
             self.local_file = os.path.join(project_folder, local_file)
             self.log_file = os.path.join(project_folder, log_filename)
             self.summary_filename = os.path.join(project_folder, summary_filename)
@@ -428,7 +433,7 @@ class Hyperpipe(BaseEstimator):
         if isinstance(pipe_element, PreprocessingPipe):
             self.preprocessing_pipe = pipe_element
         else:
-            if isinstance(pipe_element, PipelineElement):
+            if isinstance(pipe_element, PipelineElement) or issubclass(type(pipe_element), PhotonNative):
                 self.pipeline_elements.append(pipe_element)
                 # Todo: is repeated each time element is added....
                 self._prepare_pipeline()
@@ -749,8 +754,14 @@ class Hyperpipe(BaseEstimator):
 
                         # do the optimizing
                         for current_config in self.optimizer.ask:
+
+                            if hasattr(self.optimizer, 'ask_for_pipe'):
+                                pipe_ctor = self.optimizer.ask_for_pipe()
+                            else:
+                                pipe_ctor = self._copy_pipeline
+
                             self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-                            hp = TestPipeline(self._copy_pipeline, current_config, self.metrics, self.update_mother_inner_fold_nr,
+                            hp = TestPipeline(pipe_ctor, current_config, self.metrics, self.update_mother_inner_fold_nr,
                                               mongo_db_settings=self.output_settings,
                                               callback_function=self.inner_cv_callback_function)
                             Logger().debug('optimizing of:' + self.name)
@@ -1236,17 +1247,17 @@ class Hyperpipe(BaseEstimator):
 
     def run_dummy_estimator(self):
         if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
-            type = self.pipeline_elements[-1].base_element._estimator_type
+            est_type = self.pipeline_elements[-1].base_element._estimator_type
         else:
             if isinstance(self.pipeline_elements[-1], PipelineSwitch):
-                type = self.pipeline_elements[-1].base_element.base_element._estimator_type
+                est_type = self.pipeline_elements[-1].base_element.base_element._estimator_type
             else:
-                type = None
+                est_type = None
 
-        if type == 'regressor':
+        if est_type == 'regressor':
             strategy = 'mean'
             dummy = DummyRegressor(strategy=strategy)
-        elif type == 'classifier':
+        elif est_type == 'classifier':
             strategy = 'most_frequent'
             dummy = DummyClassifier(strategy=strategy)
         else:
@@ -1263,6 +1274,13 @@ class Hyperpipe(BaseEstimator):
         for train, test in self.data_test_cases:
 
             train_X, train_y = self.X[train], self.y[train]
+
+            if isinstance(train_X, np.ndarray):
+                if len(train_X.shape) > 2:
+                    Logger().info("Skipping dummy estimator because of too much dimensions")
+                    break
+
+            # dummy.fit(train_X, train_y)
             dummy.fit(train_X, train_y)
             train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.metrics)
 
@@ -1276,12 +1294,14 @@ class Hyperpipe(BaseEstimator):
                 inner_fold.validation = test_scores
 
             fold_list.append(inner_fold)
-        config_item.inner_folds = fold_list
-        config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item, self.metrics)
+
         dummy_results = DummyResults()
-        dummy_results.strategy = strategy
-        dummy_results.train = config_item.metrics_train
-        dummy_results.test = config_item.metrics_test
+        if len(fold_list) > 0:
+            config_item.inner_folds = fold_list
+            config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item, self.metrics)
+            dummy_results.strategy = strategy
+            dummy_results.train = config_item.metrics_train
+            dummy_results.test = config_item.metrics_test
         return dummy_results
 
 
@@ -1437,6 +1457,8 @@ class PipelineElement(BaseEstimator):
         self.is_transformer = hasattr(self.base_element, "transform")
         self.is_estimator = hasattr(self.base_element, "predict")
 
+        self.kwargs = kwargs
+
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
         # Todo: map any hyperparameter to a possible default list of values to try
@@ -1465,7 +1487,12 @@ class PipelineElement(BaseEstimator):
             self.needs_covariates = False
 
     def copy_me(self):
-        return deepcopy(self)
+        if hasattr(self.base_element, 'copy_me'):
+            # new_base_element = self.base_element.copy_me()
+            # TODO !!!!!!!
+            return PipelineElement(self.name, self.hyperparameters, **self.kwargs)
+        else:
+            return deepcopy(self)
 
     @classmethod
     def create(cls, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False, **kwargs):
@@ -1606,6 +1633,8 @@ class PipelineElement(BaseEstimator):
             if hasattr(self.base_element, 'transform'):
                 return self.adjusted_delegate_call(self.base_element.transform, X, y, **kwargs)
             elif hasattr(self.base_element, 'predict', **kwargs):
+                # Logger().warn("used prediction instead of transform " + self.name)
+                # raise Warning()
                 return self.base_element.predict(X)
             else:
                 Logger().error('BaseException: transform-predict-mess')
@@ -1835,7 +1864,7 @@ class PipelineStacking(PipelineElement):
                 self.__iadd__(item_to_stack)
 
         # in case any of the children needs y or the covariates, we have to request them
-        self.needs_y = True
+        self.needs_y = False
         self.needs_covariates = True
 
     def __iadd__(self, item):
@@ -1916,7 +1945,7 @@ class PipelineStacking(PipelineElement):
         """
         for name, element in self.pipe_elements.items():
             # Todo: parallellize fitting
-            element.fit(data, targets)
+            element.fit(data, targets, **kwargs)
         return self
 
     def predict(self, data, targets=None, **kwargs):
@@ -1981,7 +2010,7 @@ class PipelineStacking(PipelineElement):
         New matrix, that is a and b horizontally joined
 
         """
-        if a.size == 0:
+        if a is None or (isinstance(a, np.ndarray) and a.size == 0):
             a = b
         else:
             # Todo: check for right dimensions!

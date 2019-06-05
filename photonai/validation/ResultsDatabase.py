@@ -141,6 +141,10 @@ class FoldOperations(Enum):
     STD = 1
     RAW = 2
 
+class ParallelData(MongoModel):
+
+    unprocessed_data = fields.ObjectIdField()
+    processed_data = fields.ObjectIdField()
 
 class MDBHelper:
     OPERATION_DICT = {FoldOperations.MEAN: np.mean, FoldOperations.STD: np.std}

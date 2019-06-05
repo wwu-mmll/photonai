@@ -157,6 +157,7 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
         else:
             return X_new, None, kwargs
 
+
 class SamplePairingRegression(SamplePairingBase):
     _estimator_type = "transformer"
 
@@ -183,7 +184,6 @@ class SamplePairingRegression(SamplePairingBase):
         :return: X_new: X and X_augmented; (y_new: the correspoding targets)
         """
         return self._get_samples(X, y, self.generator, self.distance_metric, self.draw_limit, self.rand_seed, **kwargs)
-
 
 
 class SamplePairingClassification(SamplePairingBase):
@@ -227,17 +227,18 @@ class SamplePairingClassification(SamplePairingBase):
 
         X_new = list()
         y_new = list()
+
         for t, limit in zip(np.unique(y), nDiff):
             X_new_class, y_new_class, kwargs = self._get_samples(X[y == t], y[y == t],
-                                                   generator=self.generator, distance_metric=self.distance_metric,
-                                                   draw_limit=limit, rand_seed=self.rand_seed, **kwargs)
+                                                                 generator=self.generator, distance_metric=self.distance_metric,
+                                                                 draw_limit=limit, rand_seed=self.rand_seed, **kwargs)
 
             X_new.append(X_new_class)
             y_new.append(y_new_class)
+
             # get the corresponding kwargs
             if kwargs:
                 for name, kwarg in kwargs.items():
                     kwargs_new[name] = np.concatenate((np.asarray(kwargs_new[name]), kwarg))
-        X_new = np.concatenate(X_new)
-        y_new = np.concatenate(y_new)
+
         return X_new, y_new, kwargs_new
