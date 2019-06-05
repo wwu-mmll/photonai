@@ -95,7 +95,6 @@ class PipelineTests(unittest.TestCase):
         # sk_transformed_X = sk_pipe.transform(X)
         # self.assertTrue(np.array_equal(photon_transformed_X, sk_transformed_X))
 
-
     def test_no_estimator(self):
 
         no_estimator_pipe = PhotonPipeline([("StandardScaler", self.p_ss), ("PCA", self.p_pca)])

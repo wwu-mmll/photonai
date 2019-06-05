@@ -419,57 +419,13 @@
     "photonai.modelwrapper.KerasDNNRegressor.KerasDNNRegressor",
     "Estimator"
   ],
-  "SiameseDNNClassifier":[
-    "photonai.modelwrapper.SiameseDNNClassifier.SiameseDNNClassifier",
-    "Estimator"
-  ],
-  "PretrainedCNNClassifier":[
-    "photonai.modelwrapper.PretrainedCNN.PretrainedCNNClassifier",
-    "Estimator"
-  ],
-  "CNN1dClassifier":[
-    "photonai.modelwrapper.CNN1d.CNN1d",
-    "Estimator"
-  ],
-  "TensorFlowDNNClassifier":[
-    "photonai.modelwrapper.TFDNNClassifier.TFDNNClassifier",
-    "Estimator"
-  ],
   "KerasDNNMultiOutput":[
     "photonai.modelwrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
     "Estimator"
   ],
-  "SimpleAutoencoder":[
-    "photonai.modelwrapper.KerasAutoencoder.SimpleAutoencoder",
-    "Estimator"
-  ],
-  "RLCNN":[
-    "photonai.modelwrapper.RLCNN.RLCNN",
-    "Estimator"
-  ],
-  "WrapperModel":[
-    "photonai.modelwrapper.WrapperModel.WrapperModel",
-    "Estimator"
-  ],
-  "LogisticGWASFeatureSelection":[
-    "photonai.modelwrapper.FeatureSelection.LogisticGWASFeatureSelection",
-    "Transformer"
-  ],
   "SourceSplitter":[
     "photonai.modelwrapper.SourceSplitter.SourceSplitter",
     "Transformer"
-  ],
-  "PyESNClassifier":[
-    "photonai.modelwrapper.PyESNWrapper.PyESNClassifier",
-    "Estimator"
-  ],
-  "PyESNRegressor":[
-    "photonai.modelwrapper.PyESNWrapper.PyESNRegressor",
-    "Estimator"
-  ],
-  "TestWrapper":[
-    "photonai.modelwrapper.TestWrapper.WrapperTestElement",
-    "Estimator"
   ],
   "CategorialANOVASelectPercentile":[
     "photonai.modelwrapper.FeatureSelection.AnovaSelectPercentile",
@@ -499,16 +455,8 @@
     "photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM",
     "Estimator"
   ],
-  "Selectphotonai.modelwrapper":[
-    "photonai.modelwrapper.FeatureSelection.ModelSelector",
-    "Transformer"
-  ],
   "ImbalancedDataTransform":[
     "photonai.modelwrapper.ImbalancedWrapper.ImbalancedDataTransform",
-    "Transformer"
-  ],
-  "GPR_AM":[
-    "photonai.modelwrapper.GPR_AM.GPR_AM",
     "Transformer"
   ],
   "AnomalyDetectorWrapper":[
@@ -526,9 +474,6 @@
   "SamplePairingClassification": [
     "photonai.modelwrapper.SamplePairing.SamplePairingClassification",
     "Transformer"
-  ],
-  "PretrainedCNNRegressor": [
-    "photonai.modelwrapper.PretrainedCNN.PretrainedCNNRegressor",
-    "Estimator"
   ]
+
 }

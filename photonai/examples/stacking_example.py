@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking,
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from sklearn.model_selection import KFold
 

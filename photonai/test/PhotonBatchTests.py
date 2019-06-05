@@ -13,7 +13,7 @@ class DummyBatchTransformer:
     def fit(self, X, y, **kwargs):
         pass
 
-    def transform(self, X, y, **kwargs):
+    def transform(self, X, y=None, **kwargs):
         X_new = []
         for i, x in enumerate(X):
             X_new.append([str(sub_x) + str(y[i]) for sub_x in x])

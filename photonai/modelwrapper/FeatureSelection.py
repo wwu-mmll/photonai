@@ -4,7 +4,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, \
     VarianceThreshold, mutual_info_classif, mutual_info_regression, SelectKBest, chi2
 from scipy.stats import pearsonr, f_oneway
-from sklearn.decomposition import PCA, RandomizedPCA, IncrementalPCA
+from sklearn.decomposition import PCA, IncrementalPCA
 from hashlib import sha1
 from pathlib import Path
 import statsmodels.api as sm

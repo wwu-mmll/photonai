@@ -1,5 +1,5 @@
 from .PhotonBase import PipelineElement
-from ..photonlogger import Logger
+from ..photonlogger.Logger import Logger
 import numpy as np
 
 

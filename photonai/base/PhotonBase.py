@@ -1635,7 +1635,7 @@ class PipelineElement(BaseEstimator):
             elif hasattr(self.base_element, 'predict', **kwargs):
                 # Logger().warn("used prediction instead of transform " + self.name)
                 # raise Warning()
-                return self.base_element.predict(X)
+                return self.base_element.predict(X), y, kwargs
             else:
                 Logger().error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
@@ -1956,7 +1956,7 @@ class PipelineStacking(PipelineElement):
         # todo: parallelize prediction
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
-            element_transform, _, _ = element.predict(data, **kwargs)
+            element_transform = element.predict(data, **kwargs)
             predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
@@ -2216,6 +2216,14 @@ class PipelineSwitch(PipelineElement):
                     unnamed_config['__'.join(key_split[2::])] = config_value
                 self.base_element.set_params(**unnamed_config)
         return self
+
+    def copy_me(self):
+
+        ps = PipelineSwitch(self.name)
+        for element in self.pipeline_element_list:
+            new_element = element.copy_me()
+            ps += new_element
+        return ps
 
     def prettify_config_output(self, config_name, config_value, return_dict=False):
 
