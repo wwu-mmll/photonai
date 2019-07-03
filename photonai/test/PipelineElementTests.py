@@ -258,6 +258,8 @@ class PipelineSwitchTests(unittest.TestCase):
 
 
     def test_set_params(self):
+
+        # test for grid search
         false_config = {'current_element': 1}
         with self.assertRaises(ValueError):
             self.pipe_switch.set_params(**false_config)
@@ -267,8 +269,20 @@ class PipelineSwitchTests(unittest.TestCase):
         self.assertEqual(self.pipe_switch.base_element.base_element.C, 0.1)
         self.assertEqual(self.pipe_switch.base_element.base_element.kernel, 'sigmoid')
 
+        # test for other optimizers
+        smac_config = {'switch__SVC__C': 2, 'switch__SVC__kernel': 'rbf'}
+        self.pipe_switch.set_params(**smac_config)
+        self.assertEqual(self.pipe_switch.base_element.base_element.C, 2)
+        self.assertEqual(self.pipe_switch.base_element.base_element.kernel, 'rbf')
+
     def test_base_element(self):
+        # grid search
         self.pipe_switch.set_params(**{'switch__current_element': (1, 1)})
+        self.assertIs(self.pipe_switch.base_element, self.lr_pipe_element)
+        self.assertIs(self.pipe_switch.base_element.base_element, self.lr_pipe_element.base_element)
+
+        # other optimizer
+        self.pipe_switch.set_params(**{'switch__DecisionTreeClassifier__min_samples_split': 2})
         self.assertIs(self.pipe_switch.base_element, self.lr_pipe_element)
         self.assertIs(self.pipe_switch.base_element.base_element, self.lr_pipe_element.base_element)
 

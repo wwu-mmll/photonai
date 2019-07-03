@@ -1,10 +1,9 @@
-from ..base.PhotonBase import PipelineBranch, PipelineElement
+from ..base.PhotonBase import PipelineBranch
 from ..configuration.Register import PhotonRegister
-from sklearn.base import BaseEstimator
-import numpy as np
+from .ImageBasics import ImageTransformBase
 
 
-class NeuroModuleBranch(PipelineBranch):
+class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
     """
     A substream of neuro elements that are encapsulated into a single block of PipelineElements that all perform
     transformations on MRI data. A NeuroModuleBranch takes niftis or nifti paths as input and should pass a numpy array
@@ -18,11 +17,14 @@ class NeuroModuleBranch(PipelineBranch):
     """
     NEURO_ELEMENTS = PhotonRegister.get_package_info(['PhotonNeuro'])
 
-    def __init__(self, name):
-        super().__init__(name)
+    def __init__(self, name, nr_of_processes=1, cache_folder=None):
+        super().__init__(name, nr_of_processes, cache_folder,
+                         copy_delegate=True, output_img=False)
+
         self.has_hyperparameters = True
         self.needs_y = False
         self.needs_covariates = True
+        self.current_config = None
 
     def __iadd__(self, pipe_element):
         """
@@ -43,6 +45,16 @@ class NeuroModuleBranch(PipelineBranch):
         return self
 
 
+    def transform(self, X, y=None, **kwargs):
+
+        # build new copy
+        # set params
+        # set delegate function -> new copy.super-transform
+        return self.apply_transform(X, )
 
 
 
+
+    def set_params(self, **kwargs):
+        self.current_config = kwargs
+        super(NeuroModuleBranch, self).set_params(**kwargs)

@@ -22,11 +22,13 @@ import uuid
 # PHOTON-Neuro internal format is always img=True
 class ImageTransformBase(BaseEstimator):
 
-    def __init__(self, output_img=True, nr_of_processes=1, cache_folder=None):
+    def __init__(self, output_img=True, nr_of_processes=1, cache_folder=None,
+                 copy_delegate=False):
         self.output_img = output_img
         self.needs_y = False
         self.needs_covariates = False
         self.nr_of_processes = nr_of_processes
+        self.copy_delegate = copy_delegate
         self.cache_folder = cache_folder
         # self.client = MongoClient('trap-umbriel', 27017)
         # self.db = self.client['photon_cache']
@@ -103,7 +105,9 @@ class ImageTransformBase(BaseEstimator):
                 # Logger().info(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
         return True
 
-    def apply_transform(self, X, delegate, transform_name="transformation", config_dict=None, **transform_kwargs):
+    def apply_transform(self, X, delegate, transform_name="transformation",
+                        config_dict=None, copy_object=None,
+                        **transform_kwargs):
 
         output_images = []
         if self.nr_of_processes > 1:
@@ -141,7 +145,12 @@ class ImageTransformBase(BaseEstimator):
 
                 else:
                     unique_key = uuid.uuid4()
-                    new_job = ImageTransformBase.ImageJob(data=x_in, delegate=delegate,
+                    job_delegate = delegate
+                    if self.copy_delegate:
+                        copy = copy_object.copy_me()
+                        job_delegate = getattr(copy, delegate)
+
+                    new_job = ImageTransformBase.ImageJob(data=x_in, delegate=job_delegate,
                                                           delegate_kwargs=transform_kwargs,
                                                           transform_name=transform_name,
                                                           job_key=unique_key,
