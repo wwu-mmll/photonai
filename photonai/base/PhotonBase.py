@@ -1458,6 +1458,7 @@ class PipelineElement(BaseEstimator):
         self.is_estimator = hasattr(self.base_element, "predict")
 
         self.kwargs = kwargs
+        self.current_config = None
 
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
@@ -1466,6 +1467,7 @@ class PipelineElement(BaseEstimator):
         self.test_disabled = test_disabled
         self._sklearn_disabled = self.name + '__disabled'
         self._hyperparameters = hyperparameters
+        # self.initalize_hyperparameters = hyperparameters
         # check if hyperparameters are already in sklearn style
         if len(hyperparameters) > 0:
             key_0 = next(iter(hyperparameters))
@@ -1487,12 +1489,17 @@ class PipelineElement(BaseEstimator):
             self.needs_covariates = False
 
     def copy_me(self):
-        if hasattr(self.base_element, 'copy_me'):
-            # new_base_element = self.base_element.copy_me()
-            # TODO !!!!!!!
-            return PipelineElement(self.name, self.hyperparameters, **self.kwargs)
-        else:
-            return deepcopy(self)
+        # TODO !!!!!!!
+        copy = PipelineElement(self.name, self.hyperparameters, **self.kwargs)
+        if self.current_config is not None:
+            copy.set_params(**self.current_config)
+        return copy
+        # if hasattr(self.base_element, 'copy_me'):
+        #     # new_base_element = self.base_element.copy_me()
+
+        #     return PipelineElement(self.name, self.hyperparameters, **self.kwargs)
+        # else:
+        #     return deepcopy(self)
 
     @classmethod
     def create(cls, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False, **kwargs):
@@ -1558,6 +1565,8 @@ class PipelineElement(BaseEstimator):
         Forwards the set_params request to the wrapped base element
         Takes care of the disabled parameter which is additionally attached by the PHOTON wrapper
         """
+        # this is an ugly hack to approximate the right settings when copying the element
+        self.current_config = kwargs
         # element disable is a construct used for this container only
         if self._sklearn_disabled in kwargs:
             self.disabled = kwargs[self._sklearn_disabled]
@@ -1762,6 +1771,16 @@ class PipelineBranch(PipelineElement):
         if self.has_hyperparameters:
             self.generate_sklearn_hyperparameters()
         self.base_element = PhotonPipeline(pipeline_steps)
+
+    def copy_me(self):
+        new_copy_of_me = PipelineBranch(self.name)
+        for item in self.pipeline_elements:
+            if hasattr(item, 'copy_me'):
+                copy_item = item.copy_me()
+            else:
+                copy_item = deepcopy(item)
+            new_copy_of_me += copy_item
+        return new_copy_of_me
 
     @property
     def hyperparameters(self):
@@ -2088,11 +2107,15 @@ class PipelineSwitch(PipelineElement):
         self.needs_covariates = False
         # we assume we test models against each other, but only guessing
         self.is_estimator = True
-        self.is_transformer = False
+        self.is_transformer = True
+
+        self.pipeline_element_dict = {}
 
         if pipeline_element_list:
             self.pipeline_element_list = pipeline_element_list
             self.generate_private_config_grid()
+            for p_element in pipeline_element_list:
+                self.pipeline_element_dict[p_element.name] = p_element
         else:
             self.pipeline_element_list = []
 
@@ -2108,14 +2131,20 @@ class PipelineSwitch(PipelineElement):
         if hasattr(pipeline_element, "is_estimator"):
             self.is_estimator = pipeline_element.is_estimator
         else:
-            Logger.warn("Could not find out if pipeline switch is an estimator element, so assuming it is")
+            Logger().warn("Could not find out if pipeline switch is an estimator element, so assuming it is")
             self.is_estimator = True
         if hasattr(pipeline_element, "is_transformer"):
             self.is_transformer = pipeline_element.is_transformer
         else:
-            Logger.warn("Could not find out if pipeline switch is an transformer element, so assuming it is not.")
+            Logger().warn("Could not find out if pipeline switch is an transformer element, so assuming it is not.")
             self.is_estimator = False
         self.pipeline_element_list.append(pipeline_element)
+        if not pipeline_element.name in self.pipeline_element_dict:
+            self.pipeline_element_dict[pipeline_element.name] = pipeline_element
+        else:
+            error_msg = "Already added a pipeline element with that name to the pipeline switch " + self.name
+            Logger().error(error_msg)
+            raise Exception(error_msg)
         self.generate_private_config_grid()
         return self
 
@@ -2176,17 +2205,18 @@ class PipelineSwitch(PipelineElement):
     @current_element.setter
     def current_element(self, value):
         self._current_element = value
+        self.base_element = self.pipeline_element_list[self.current_element[0]]
         # pass the right config to the element
         # config = self.pipeline_element_configurations[value[0]][value[1]]
         # self.base_element.set_params(config)
-
-    @property
-    def base_element(self):
-        """
-        Returns the currently active element
-        """
-        obj = self.pipeline_element_list[self.current_element[0]]
-        return obj
+    #
+    # @property
+    # def base_element(self):
+    #     """
+    #     Returns the currently active element
+    #     """
+    #     obj = self.pipeline_element_list[self.current_element[0]]
+    #     return obj
 
     def set_params(self, **kwargs):
 
@@ -2197,24 +2227,41 @@ class PipelineSwitch(PipelineElement):
         """
 
         config_nr = None
+        config = None
+
+        # in case we are operating with grid search
         if self.sklearn_name in kwargs:
             config_nr = kwargs[self.sklearn_name]
         elif 'current_element' in kwargs:
             config_nr = kwargs['current_element']
 
-        if config_nr is None or not isinstance(config_nr, (tuple, list)):
-            Logger().error('ValueError: current_element must be of type Tuple')
-            raise ValueError('current_element must be of type Tuple')
+        # in case we are operating with another optimizer
+        if config_nr is None:
+
+            # we need to identify the element to activate by checking for which element the optimizer gave params
+            if kwargs is not None:
+                config = kwargs
+                # ugly hack because subscription is somehow not possible, we use the for loop but break
+                for kwargs_key, kwargs_value in kwargs.items():
+                    first_element_name = kwargs_key.split("__")[1]
+                    self.base_element = self.pipeline_element_dict[first_element_name]
+                    break
         else:
+            if not isinstance(config_nr, (tuple, list)):
+                Logger().error('ValueError: current_element must be of type Tuple')
+                raise ValueError('current_element must be of type Tuple')
+
+            # grid search hack
             self.current_element = config_nr
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
-            if config:
-                # remove name
-                unnamed_config = {}
-                for config_key, config_value in config.items():
-                    key_split = config_key.split('__')
-                    unnamed_config['__'.join(key_split[2::])] = config_value
-                self.base_element.set_params(**unnamed_config)
+
+        if config:
+            # remove name
+            unnamed_config = {}
+            for config_key, config_value in config.items():
+                key_split = config_key.split('__')
+                unnamed_config['__'.join(key_split[2::])] = config_value
+            self.base_element.set_params(**unnamed_config)
         return self
 
     def copy_me(self):
