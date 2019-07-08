@@ -474,6 +474,9 @@
   "SamplePairingClassification": [
     "photonai.modelwrapper.SamplePairing.SamplePairingClassification",
     "Transformer"
+  ],
+  "FeatureEncoder":[
+    "photonai.modelwrapper.OrdinalEncoder.FeatureEncoder",
+    "Transformer"
   ]
-
 }

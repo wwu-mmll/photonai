@@ -156,7 +156,7 @@ class AtlasLibrary:
 
 
 class BrainAtlas(BaseEstimator):
-    def __init__(self, atlas_name: str, extract_mode: str, mask_threshold=None, background_id=0, rois='all'):
+    def __init__(self, atlas_name: str, extract_mode: str='vec', mask_threshold=None, background_id=0, rois='all'):
 
         # ToDo
         # + add-own-atlas capability

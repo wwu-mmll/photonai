@@ -603,25 +603,45 @@ class Hyperpipe(BaseEstimator):
         """
         try:
 
-            # if there is a preprocessing pipeline, we apply it first.
-            if self.preprocessing_pipe is not None:
-                self.preprocessing_pipe.fit(data, targets, **kwargs)
-                data, targets, kwargs = self.preprocessing_pipe.transform(data, targets, **kwargs)
-
             self.X = data
             self.y = targets
             self.kwargs = kwargs
-
-            # !!!!!!!!!!!!!!!! FIT ONLY IF DATA CHANGED !!!!!!!!!!!!!!!!!!!
-            # -------------------------------------------------------------
-
-            self._current_fold += 1
 
             # be compatible to list of (image-) files
             if isinstance(self.X, list):
                 self.X = np.asarray(self.X)
             if isinstance(self.y, list):
                 self.y = np.asarray(self.y)
+
+            # if there is a preprocessing pipeline, we apply it first.
+            if self.preprocessing_pipe is not None:
+                self.preprocessing_pipe.fit(data, targets, **kwargs)
+                self.X, self.y, self.kwargs = self.preprocessing_pipe.transform(data, targets, **kwargs)
+
+            # at first first, erase all rows where y is Nan if preprocessing has not done it already
+            try:
+                nans_in_y = np.isnan(self.y)
+                nr_of_nans = len(np.where(nans_in_y == 1))
+                if nr_of_nans > 0:
+                    Logger().info("You have " + str(nr_of_nans) + " Nans in your target vector, "
+                                                                      "PHOTON erases every data item that has a Nan Target")
+                    self.X = self.X[~nans_in_y]
+                    self.y = self.y[~nans_in_y]
+            except:
+                # This is only for convenience so if it fails then never mind
+                pass
+
+            Logger().info("Hyperpipe is training with " + str(self.X.shape[0]) + " data items.")
+
+
+
+
+            # !!!!!!!!!!!!!!!! FIT ONLY IF DATA CHANGED !!!!!!!!!!!!!!!!!!!
+            # -------------------------------------------------------------
+
+            self._current_fold += 1
+
+
 
             # handle neuro Imge paths as data
             # ToDo: Need to check the DATA, not the img paths for neuro
@@ -1246,13 +1266,15 @@ class Hyperpipe(BaseEstimator):
         return PhotonPipeline(element_list)
 
     def run_dummy_estimator(self):
-        if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
-            est_type = self.pipeline_elements[-1].base_element._estimator_type
-        else:
-            if isinstance(self.pipeline_elements[-1], PipelineSwitch):
-                est_type = self.pipeline_elements[-1].base_element.base_element._estimator_type
+        if isinstance(self.pipeline_elements[-1], PipelineSwitch):
+            est_type = self.pipeline_elements[-1]._estimator_type
+        elif hasattr(self.pipeline_elements[-1], 'base_element'):
+            if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
+                est_type = self.pipeline_elements[-1].base_element._estimator_type
             else:
                 est_type = None
+        else:
+            est_type = None
 
         if est_type == 'regressor':
             strategy = 'mean'
@@ -1271,29 +1293,33 @@ class Hyperpipe(BaseEstimator):
         config_item.metrics_test = []
         config_item.metrics_train = []
 
-        for train, test in self.data_test_cases:
+        try:
+            for train, test in self.data_test_cases:
 
-            train_X, train_y = self.X[train], self.y[train]
+                train_X, train_y = self.X[train], self.y[train]
 
-            if isinstance(train_X, np.ndarray):
-                if len(train_X.shape) > 2:
-                    Logger().info("Skipping dummy estimator because of too much dimensions")
-                    break
+                if isinstance(train_X, np.ndarray):
+                    if len(train_X.shape) > 2:
+                        Logger().info("Skipping dummy estimator because of too much dimensions")
+                        break
 
-            # dummy.fit(train_X, train_y)
-            dummy.fit(train_X, train_y)
-            train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.metrics)
+                # dummy.fit(train_X, train_y)
+                dummy.fit(train_X, train_y)
+                train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.metrics)
 
-            # fill result tree with fold information
-            inner_fold = MDBInnerFold()
-            inner_fold.training = train_scores
+                # fill result tree with fold information
+                inner_fold = MDBInnerFold()
+                inner_fold.training = train_scores
 
-            if self.eval_final_performance:
-                test_X, test_y = self.X[test], self.y[test]
-                test_scores = TestPipeline.score(dummy, test_X, test_y, metrics=self.metrics)
-                inner_fold.validation = test_scores
+                if self.eval_final_performance:
+                    test_X, test_y = self.X[test], self.y[test]
+                    test_scores = TestPipeline.score(dummy, test_X, test_y, metrics=self.metrics)
+                    inner_fold.validation = test_scores
 
-            fold_list.append(inner_fold)
+                fold_list.append(inner_fold)
+        except Exception as e:
+            Logger().error(e)
+            Logger().info("Skipping dummy because of error..")
 
         dummy_results = DummyResults()
         if len(fold_list) > 0:
@@ -1303,6 +1329,7 @@ class Hyperpipe(BaseEstimator):
             dummy_results.train = config_item.metrics_train
             dummy_results.test = config_item.metrics_test
         return dummy_results
+
 
 
     def inverse_transform_pipeline(self, hyperparameters: dict, data, targets, data_to_inverse):
@@ -2036,7 +2063,8 @@ class PipelineStacking(PipelineElement):
             if a.ndim == 1 and b.ndim == 1:
                 a = np.column_stack((a, b))
             else:
-                # b = np.reshape(b, (b.shape[0], 1))
+                if b.ndim == 1:
+                    b = np.reshape(b, (b.shape[0], 1))
                 # a = np.concatenate((a, b), 1)
                 a = np.concatenate((a, b), axis=1)
         return a
@@ -2102,6 +2130,7 @@ class PipelineSwitch(PipelineElement):
         self.test_disabled = False
         self.pipeline_element_configurations = []
         self._estimator_type = _estimator_type
+        self.base_element = None
 
         self.needs_y = False
         self.needs_covariates = False
@@ -2218,6 +2247,12 @@ class PipelineSwitch(PipelineElement):
     #     obj = self.pipeline_element_list[self.current_element[0]]
     #     return obj
 
+    def get_params(self, deep: bool=True):
+        if self.base_element:
+            return self.base_element.get_params(deep)
+        else:
+            return {}
+
     def set_params(self, **kwargs):
 
         """
@@ -2270,7 +2305,9 @@ class PipelineSwitch(PipelineElement):
         for element in self.pipeline_element_list:
             new_element = element.copy_me()
             ps += new_element
+        ps.base_element = self.base_element
         return ps
+
 
     def prettify_config_output(self, config_name, config_value, return_dict=False):
 

@@ -214,9 +214,26 @@ class ImageTransformBase(BaseEstimator):
 
 # Smoothing
 class SmoothImages(ImageTransformBase):
-    def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=3, cache_folder=None):
+    def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=1, cache_folder=None):
         super(SmoothImages, self).__init__(output_img, nr_of_processes, cache_folder)
+
+        # initialize private variable and
+        self._fwhm = None
         self.fwhm = fwhm
+
+    @property
+    def fwhm(self):
+        return self._fwhm
+
+    @fwhm.setter
+    def fwhm(self, fwhm):
+        if isinstance(fwhm, int):
+            self._fwhm = [fwhm, fwhm, fwhm]
+        elif isinstance(fwhm, list):
+            if len(fwhm) != 3:
+                raise Exception("fwhm parameter should be either an integer (3) or a in the form of [3, 3, 3]")
+            else:
+                self._fwhm = fwhm
 
     def transform(self, X, y=None, **kwargs):
         kwargs_dict = {'fwhm': self.fwhm}
@@ -227,9 +244,24 @@ class ResampleImages(ImageTransformBase):
     """
      Resampling voxel size
     """
-    def __init__(self, voxel_size=[3, 3, 3], output_img=True, nr_of_processes=3, cache_folder=None):
+    def __init__(self, voxel_size=[3, 3, 3], output_img=True, nr_of_processes=1, cache_folder=None):
         super(ResampleImages, self).__init__(output_img, nr_of_processes, cache_folder)
+        self._voxel_size = None
         self.voxel_size = voxel_size
+
+    @property
+    def voxel_size(self):
+        return self._voxel_size
+
+    @voxel_size.setter
+    def voxel_size(self, voxel_size):
+        if isinstance(voxel_size, int):
+            self._voxel_size = [voxel_size, voxel_size, voxel_size]
+        elif isinstance(voxel_size, list):
+            if len(voxel_size) != 3:
+                raise Exception("voxel_size parameter should be either an integer (3) or a in the form of [3, 3, 3]")
+            else:
+                self._voxel_size = voxel_size
 
     def transform(self, X, y=None, **kwargs):
         target_affine = np.diag(self.voxel_size)
