@@ -1,6 +1,0 @@
-estimator_switch__algos categorical {estimator_switch__SVC, estimator_switch__DecisionTreeClassifier} [estimator_switch__SVC]
-estimator_switch__SVC__C real [0.5, 2.0] [1.25]
-estimator_switch__SVC__kernel categorical {rbf, linear} [rbf]
-
-estimator_switch__SVC__C | estimator_switch__algos in {estimator_switch__SVC}
-estimator_switch__SVC__kernel | estimator_switch__algos in {estimator_switch__SVC}
