@@ -1,0 +1,51 @@
+{
+  "hyperparameters": [
+    {
+      "name": "estimator_switch__algos",
+      "type": "categorical",
+      "choices": [
+        "estimator_switch__SVC",
+        "estimator_switch__DecisionTreeClassifier"
+      ],
+      "default": "estimator_switch__SVC"
+    },
+    {
+      "name": "estimator_switch__SVC__C",
+      "type": "uniform_float",
+      "log": false,
+      "lower": 0.5,
+      "upper": 2.0,
+      "default": 1.25
+    },
+    {
+      "name": "estimator_switch__SVC__kernel",
+      "type": "categorical",
+      "choices": [
+        "rbf",
+        "linear"
+      ],
+      "default": "rbf"
+    }
+  ],
+  "conditions": [
+    {
+      "child": "estimator_switch__SVC__C",
+      "parent": "estimator_switch__algos",
+      "type": "IN",
+      "values": [
+        "estimator_switch__SVC"
+      ]
+    },
+    {
+      "child": "estimator_switch__SVC__kernel",
+      "parent": "estimator_switch__algos",
+      "type": "IN",
+      "values": [
+        "estimator_switch__SVC"
+      ]
+    }
+  ],
+  "forbiddens": [],
+  "python_module_version": "0.4.10",
+  "json_format_version": 0.1
+}
