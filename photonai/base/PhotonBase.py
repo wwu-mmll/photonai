@@ -572,6 +572,16 @@ class Hyperpipe(BaseEstimator):
         """
         self.__distribute_cv_info_to_hyperpipe_children(inner_fold_counter=new_inner_fold_nr)
 
+
+    def _data_overview(self, y):
+        if len(y.shape) > 1:
+            # one hot encoded
+            Logger().info("One Hot Encoded data fold information not yet implemented")
+            return {}
+        else:
+            unique, counts = np.unique(y, return_counts=True)
+            return dict(zip(unique, counts))
+
     def fit(self, data, targets, **kwargs):
         """
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
@@ -635,15 +645,10 @@ class Hyperpipe(BaseEstimator):
             Logger().info("Hyperpipe is training with " + str(self.X.shape[0]) + " data items.")
 
 
-
-
             # !!!!!!!!!!!!!!!! FIT ONLY IF DATA CHANGED !!!!!!!!!!!!!!!!!!!
             # -------------------------------------------------------------
 
             self._current_fold += 1
-
-
-
             # handle neuro Imge paths as data
             # ToDo: Need to check the DATA, not the img paths for neuro
             new_data_hash = sha1(np.asarray(self.X, order='C')).hexdigest()
@@ -761,6 +766,8 @@ class Hyperpipe(BaseEstimator):
                         num_folds = len(cv_iter)
                         num_samples_train = len(self._validation_y)
                         num_samples_test = len(self._test_y)
+                        info_about_class_distribution_train = self._data_overview(self._validation_y)
+                        info_about_class_distribution_test = self._data_overview(self._test_y)
 
                         # distribute number of folds to encapsulated child hyperpipes
                         self.__distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
@@ -770,6 +777,13 @@ class Hyperpipe(BaseEstimator):
 
                         # add outer fold info object to result tree
                         outer_fold = MDBOuterFold(fold_nr=outer_fold_counter)
+                        outer_fold.number_samples_test = num_samples_test
+                        outer_fold.number_samples_validation = num_samples_train
+                        # todo: hack for assuming we do classification
+                        if self.config_optimizer.greater_is_better:
+                            outer_fold.class_distribution_test = info_about_class_distribution_test
+                            outer_fold.class_distribution_validation = info_about_class_distribution_train
+
                         outer_fold.tested_config_list = []
                         self.result_tree.outer_folds.append(outer_fold)
 

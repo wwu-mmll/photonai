@@ -5,6 +5,7 @@ from sklearn.feature_selection import f_regression, f_classif, SelectPercentile,
     VarianceThreshold, mutual_info_classif, mutual_info_regression, SelectKBest, chi2
 from scipy.stats import pearsonr, f_oneway
 from sklearn.decomposition import PCA, IncrementalPCA
+from sklearn.linear_model import Lasso
 from hashlib import sha1
 from pathlib import Path
 import statsmodels.api as sm
@@ -255,8 +256,6 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
         except:
             return 1
 
-from sklearn.feature_selection import SelectFromModel
-
 
 class ModelSelector(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
@@ -289,9 +288,7 @@ class ModelSelector(BaseEstimator, TransformerMixin):
 
         return importances
 
-
-
-    def fit(self, X, y):
+    def fit(self, X, y=None, **kwargs):
         # 1. fit estimator
         self.estimator_obj.fit(X, y)
         # penalty = "l1"
@@ -301,6 +298,8 @@ class ModelSelector(BaseEstimator, TransformerMixin):
             self.selected_indices = np.where(self.importance_scores >= self.threshold)[0]
         else:
             # Todo: works only for binary classification, not for multiclass
+            if self.threshold > 1:
+                raise ValueError("Threshold should not be greater than 1")
             ordered_importances = np.sort(self.importance_scores)
             index = int(np.floor((1-self.threshold) * X.shape[1]))
             percentile_thres = ordered_importances[index]
@@ -309,7 +308,7 @@ class ModelSelector(BaseEstimator, TransformerMixin):
             pass
         return self
 
-    def transform(self, X):
+    def transform(self, X, y=None, **kwargs):
 
         X_new = X[:, self.selected_indices]
 
@@ -329,6 +328,27 @@ class ModelSelector(BaseEstimator, TransformerMixin):
         return self.estimator_obj.get_params(deep)
 
 
+class LassoFeatureSelection(BaseEstimator, TransformerMixin):
 
+    def __init__(self, percentile_to_keep=0.3, alpha=1, **kwargs):
 
+        self.percentile_to_keep = percentile_to_keep
+        self.alpha = alpha
+        self.model_selector = None
+        self.Lasso_kwargs = kwargs
+        self.needs_covariates=False
+        self.needs_y = False
 
+    def fit(self, X, y=None, **kwargs):
+        self.model_selector = ModelSelector(Lasso(alpha=self.alpha, **self.Lasso_kwargs),
+                                            threshold=self.percentile_to_keep, percentile=True)
+
+        self.model_selector.fit(X, y, **kwargs)
+        return self
+
+    def transform(self, X, y=None, **kwargs):
+        selected_features = self.model_selector.transform(X, y, **kwargs)
+        return selected_features
+
+    def set_params(self, **params):
+        super(LassoFeatureSelection, self).set_params(**params)

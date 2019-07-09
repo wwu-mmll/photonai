@@ -106,7 +106,7 @@ class NumberRange(PhotonHyperparam):
             if not self.step:
                 values = np.arange(self.start, self.stop, dtype=self.num_type, **self.range_params)
             else:
-                self.values = np.arange(self.start, self.stop, self.step, dtype=self.num_type, **self.range_params)
+                values = np.arange(self.start, self.stop, self.step, dtype=self.num_type, **self.range_params)
         elif self.range_type == "linspace":
             if self.num:
                 values = np.linspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)

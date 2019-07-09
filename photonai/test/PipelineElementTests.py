@@ -45,6 +45,11 @@ class HyperpipeTests(unittest.TestCase):
         with self.assertRaises(Warning):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.cv_object, metrics=["accuracy", "f1_score"])
 
+    def test_class_distribution_info(self):
+        unique, counts = np.unique(self.__y, return_counts=True)
+        nr_dict = self.hyperpipe._data_overview(self.__y)
+        self.assertEqual(counts[1], nr_dict[1])
+
     def test_easy_use_case(self):
 
         pca_n_components = 10
