@@ -613,11 +613,6 @@ class Hyperpipe(BaseEstimator):
             if isinstance(self.y, list):
                 self.y = np.asarray(self.y)
 
-            # if there is a preprocessing pipeline, we apply it first.
-            if self.preprocessing_pipe is not None:
-                self.preprocessing_pipe.fit(data, targets, **kwargs)
-                self.X, self.y, self.kwargs = self.preprocessing_pipe.transform(data, targets, **kwargs)
-
             # at first first, erase all rows where y is Nan if preprocessing has not done it already
             try:
                 nans_in_y = np.isnan(self.y)
@@ -627,9 +622,15 @@ class Hyperpipe(BaseEstimator):
                                                                       "PHOTON erases every data item that has a Nan Target")
                     self.X = self.X[~nans_in_y]
                     self.y = self.y[~nans_in_y]
-            except:
+            except Exception as e:
                 # This is only for convenience so if it fails then never mind
+                Logger().error("Removing Nans in target vector failed: " + str(e))
                 pass
+
+            # if there is a preprocessing pipeline, we apply it first.
+            if self.preprocessing_pipe is not None:
+                self.preprocessing_pipe.fit(self.X, self.y, **self.kwargs)
+                self.X, self.y, self.kwargs = self.preprocessing_pipe.transform(self.X, self.y, **self.kwargs)
 
             Logger().info("Hyperpipe is training with " + str(self.X.shape[0]) + " data items.")
 
