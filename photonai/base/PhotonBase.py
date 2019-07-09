@@ -819,7 +819,7 @@ class Hyperpipe(BaseEstimator):
                             current_config_mdb.config_dict = current_config
                             current_config_mdb.pipe_name = self.name
                             tested_config_counter += 1
-                            current_config_mdb.human_readable_config = self.config_to_dict(current_config)
+                            current_config_mdb.human_readable_config = self.config_to_human_readable_dict(current_config)
 
                             # save the configuration of all children pipelines
                             children_config = {}
@@ -1390,10 +1390,21 @@ class Hyperpipe(BaseEstimator):
             return config_name + '=' + str(config_value)
 
 
-    def config_to_dict(self, specific_config):
+    def config_to_human_readable_dict(self, specific_config):
         """
         """
-        return specific_config
+        prettified_config = {}
+        for el_key, el_value in specific_config.items():
+            items = el_key.split('__')
+            name = items[0]
+            rest = '__'.join(items[1::])
+            if name in self._pipe.named_steps:
+                prettified_config[name] = self._pipe.named_steps[name].prettify_config_output(rest, el_value)
+            else:
+                Logger().error('ValueError: Item is not contained in pipeline:' + name)
+                raise ValueError('Item is not contained in pipeline:' + name)
+        return prettified_config
+
         # config = {}
         # for key, value in specific_config.items():
         #     items = key.split('__')
