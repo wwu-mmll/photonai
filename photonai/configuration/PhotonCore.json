@@ -478,5 +478,9 @@
   "FeatureEncoder":[
     "photonai.modelwrapper.OrdinalEncoder.FeatureEncoder",
     "Transformer"
+  ],
+  "LassoFeatureSelection":[
+    "photonai.modelwrapper.FeatureSelection.LassoFeatureSelection",
+    "Transformer"
   ]
 }

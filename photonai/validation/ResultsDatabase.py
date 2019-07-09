@@ -76,6 +76,10 @@ class MDBOuterFold(EmbeddedMongoModel):
     fold_nr = fields.IntegerField(blank=True)
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
     tested_config_list = fields.EmbeddedDocumentListField(MDBConfig, default=[], blank=True)
+    number_samples_test = fields.IntegerField(blank=True)
+    class_distribution_test = fields.DictField(blank=True, default={})
+    class_distribution_validation = fields.DictField(blank=True, default={})
+    number_samples_validation = fields.IntegerField(blank=True)
 
 class MDBPermutationMetrics(EmbeddedMongoModel):
     class Meta:
@@ -359,11 +363,15 @@ Best Config:
 {}
 
 Number of samples training {}
+Class distribution training {}
 Number of samples test {}
+Class distribution test {}
             
             """.format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config),
                        outer_fold.best_config.inner_folds[0].number_samples_training,
-                       outer_fold.best_config.inner_folds[0].number_samples_validation))
+                       outer_fold.class_distribution_validation,
+                       outer_fold.best_config.inner_folds[0].number_samples_validation,
+                       outer_fold.class_distribution_test))
 
             if outer_fold.best_config.config_failed:
                 outer_fold_text.append("""

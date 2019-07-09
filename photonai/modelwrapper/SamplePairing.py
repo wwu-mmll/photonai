@@ -233,8 +233,8 @@ class SamplePairingClassification(SamplePairingBase):
                                                                  generator=self.generator, distance_metric=self.distance_metric,
                                                                  draw_limit=limit, rand_seed=self.rand_seed, **kwargs)
 
-            X_new.append(X_new_class)
-            y_new.append(y_new_class)
+            X_new.extend(X_new_class)
+            y_new.extend(y_new_class)
 
             # get the corresponding kwargs
             if kwargs:
