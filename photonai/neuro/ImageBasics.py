@@ -201,6 +201,8 @@ class ImageTransformBase(BaseEstimator):
                 p.join()
         else:
             output_images = []
+            if isinstance(X, str):
+                X = [X]
             for el in X:
                 output_images.append(delegate(el, **transform_kwargs))
 

@@ -19,6 +19,7 @@ Translationale Psychiatrie
 Universitaetsklinikum Muenster
 """
 
+from ..photonlogger.Logger import Logger
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 import random
@@ -76,9 +77,14 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
         inds = np.triu_indices(X.shape[0], k=1)
         while True:
             # get index tuple for the closest draw_limit samples
+            if i > len(res_order) - 1:
+                # Todo: find out why this is the case?
+                raise StopIteration
             pair = (inds[0][res_order[i]], (inds[1][res_order[i]]))
             i += 1
             yield pair
+
+
 
     def _get_combinations(self, X, draw_limit, rand_seed, distance_metric, generator='random_pair'):
         """
@@ -214,6 +220,8 @@ class SamplePairingClassification(SamplePairingBase):
         :return: X_new: X and X_augmented; (y_new: the correspoding targets)
         """
 
+        Logger().debug("Pairing " + str(self.draw_limit) + " samples...")
+
         # ensure class balance in the training set if balance_classes is True
         nDiff = list()
         for t in np.unique(y):
@@ -229,6 +237,7 @@ class SamplePairingClassification(SamplePairingBase):
         y_new = list()
 
         for t, limit in zip(np.unique(y), nDiff):
+
             X_new_class, y_new_class, kwargs = self._get_samples(X[y == t], y[y == t],
                                                                  generator=self.generator, distance_metric=self.distance_metric,
                                                                  draw_limit=limit, rand_seed=self.rand_seed, **kwargs)

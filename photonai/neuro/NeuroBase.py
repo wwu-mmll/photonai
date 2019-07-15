@@ -1,7 +1,10 @@
 from ..base.PhotonBase import PipelineBranch
 from ..configuration.Register import PhotonRegister
-from .ImageBasics import ImageTransformBase
-
+from ..neuro.ImageBasics import ImageTransformBase
+from ..neuro.BrainAtlas import BrainAtlas
+from nibabel.nifti1 import Nifti1Image
+import numpy as np
+import os
 
 class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
     """
@@ -51,10 +54,20 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
 
         return self
 
-    def test_transform(self, X, nr_of_tests=1, save_to_folder='.'):
+    def test_transform(self, X, nr_of_tests=1, save_to_folder='.', **kwargs):
 
-        self.output_img = True
+
         nr_of_tested = 0
+
+        if kwargs and len(kwargs) > 0:
+            self.set_params(**kwargs)
+
+        copy_of_me = self.copy_me()
+        copy_of_me.nr_of_processes = 1
+        copy_of_me.output_img = True
+        for p_element in copy_of_me.pipeline_elements:
+            if isinstance(p_element.base_element, BrainAtlas):
+                p_element.base_element.extract_mode = 'img'
 
         filename = self.name + "_testcase_"
 
@@ -62,11 +75,17 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
             if nr_of_tested > nr_of_tests:
                 break
 
-            new_pic = self.transform(x_el)
-            new_pic.to_filename(filename + str(nr_of_tested) + ".nii")
+            new_pic, _, _ = copy_of_me.transform(x_el)
+
+            if isinstance(new_pic, list):
+                new_pic = new_pic[0]
+            if not isinstance(new_pic, Nifti1Image):
+                raise ValueError("last element of branch does not return a nifti image")
+
+            new_filename = os.path.join(save_to_folder, filename + str(nr_of_tested) + "_transformed.nii")
+            new_pic.to_filename(new_filename)
 
             nr_of_tested += 1
-        self.output_img = False
 
     def transform(self, X, y=None, **kwargs):
 

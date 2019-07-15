@@ -1,12 +1,60 @@
 from photonai.neuro.AtlasStacker import AtlasInfo
-from photonai.neuro.BrainAtlas import BrainAtlas
+from photonai.neuro.BrainAtlas import BrainAtlas, AtlasLibrary
 from photonai.base.PhotonBase import Hyperpipe
 from photonai.photonlogger.Logger import Logger
 from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 import pandas as pd
 import multiprocessing as mp
 import numpy as np
+import os
 
+
+class AtlasMapper:
+
+    def generate_mappings(self, hyperpipe, folder):
+
+        roi_list = list()
+        target_element_name = ""
+
+        def found_brain_atlas(element):
+            roi_list = element.base_element.rois
+            if isinstance(roi_list, str):
+                if roi_list == 'all':
+                    atlas_obj = AtlasLibrary().get_atlas(element.base_element.atlas_name)
+                    roi_list = atlas_obj.roi_list
+                else:
+                   roi_list = [roi_list]
+            return roi_list
+
+        # find brain atlas
+        # first check preprocessing pipe
+        if hyperpipe.preprocessing_pipe is not None:
+            pass
+
+        # then check usual pipeline_elements for a) NeuroModuleBranch -> check children and b) BrainAtlas directly
+        for element in hyperpipe.pipeline_elements:
+            if isinstance(element.base_element, BrainAtlas):
+                target_element_name = element.name
+                roi_list = found_brain_atlas(element)
+
+
+        hyperpipes_to_fit = list()
+
+        if len(roi_list) > 0:
+            for param in roi_list:
+                copy_of_hyperpipe = hyperpipe.copy_me()
+                copy_of_hyperpipe.set_params({target_element_name + "__rois": param})
+                # mkdir could be needed?
+                copy_of_hyperpipe.output_settings.project_folder = os.path.join(folder, "_" + param)
+                hyperpipes_to_fit.append(copy_of_hyperpipe)
+        else:
+            raise Exception("No Rois found...")
+
+    def fit(self, X, y=None, **kwargs):
+        pass
+
+    def predict(self, X, **kwargs):
+        pass
 
 class AtlasMapping:
 

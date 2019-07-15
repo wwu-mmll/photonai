@@ -228,6 +228,9 @@ class BrainAtlas(BaseEstimator):
                     roi_data.append(tmp)
                 elif self.extract_mode == 'box':
                     roi_data.append(self._get_box(X, roi))
+                elif self.extract_mode == 'img':
+                    roi_img = masker.inverse_transform(single_roi)
+                    roi_data.append(roi_img)
                 else:
                     Logger().error("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
                     # # any function which can work on a vector passed as a string
