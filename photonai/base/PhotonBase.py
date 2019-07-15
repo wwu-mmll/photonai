@@ -769,6 +769,8 @@ class Hyperpipe(BaseEstimator):
                         info_about_class_distribution_train = self._data_overview(self._validation_y)
                         info_about_class_distribution_test = self._data_overview(self._test_y)
 
+                        best_metric_yet = None
+
                         # distribute number of folds to encapsulated child hyperpipes
                         self.__distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
                                                                         outer_fold_counter=outer_fold_counter)
@@ -868,10 +870,21 @@ class Hyperpipe(BaseEstimator):
                                 # if not metric_train or metric_test:
                                 #     raise Exception("Config did not fail, but did not get any metrics either....!!?")
                                 config_performance = (metric_train, metric_test)
+                                if best_metric_yet is None:
+                                    best_metric_yet = config_performance
+                                else:
+                                    # check if we have the next superstar around that exceeds any old performance
+                                    if self.config_optimizer.greater_is_better:
+                                        if metric_test > best_metric_yet[1]:
+                                            best_metric_yet = config_performance
+                                    else:
+                                        if metric_test < best_metric_yet[1]:
+                                            best_metric_yet = config_performance
 
                                 # Print Result for config
                                 Logger().debug('...done:')
                                 Logger().verbose(self.config_optimizer.metric + str(config_performance))
+                                Logger().verbose('best config performance so far: ' + str(best_metric_yet))
                             else:
                                  config_performance = (-1, -1)
                                  # Print Result for config

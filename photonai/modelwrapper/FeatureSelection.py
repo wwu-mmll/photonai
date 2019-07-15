@@ -301,6 +301,8 @@ class ModelSelector(BaseEstimator, TransformerMixin):
             if self.threshold > 1:
                 raise ValueError("Threshold should not be greater than 1")
             ordered_importances = np.sort(self.importance_scores)
+            if isinstance(X, list):
+                X = np.array(X)
             index = int(np.floor((1-self.threshold) * X.shape[1]))
             percentile_thres = ordered_importances[index]
             self.selected_indices = np.where(self.importance_scores >= percentile_thres)[0]
@@ -309,6 +311,9 @@ class ModelSelector(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None, **kwargs):
+
+        if isinstance(X, list):
+            X = np.array(X)
 
         X_new = X[:, self.selected_indices]
 
