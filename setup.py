@@ -41,6 +41,8 @@ setup(
         'statsmodels',
         'flask',
         'prettytable',
-        'scikit-optimize'
+        'scikit-optimize',
+        'scikit-image',
+        'bcolz'
   ]
 )
