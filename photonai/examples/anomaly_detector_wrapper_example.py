@@ -13,9 +13,6 @@ X, y = load_breast_cancer(True)
 # targets have to be 1 and -1
 y[y == 0] = -1
 
-# YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(save_predictions='best')
-
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
@@ -26,8 +23,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
-                    verbosity=1,
-                    output_settings=mongo_settings)  # get error, warn and info message                    )
+                    verbosity=1)  # get error, warn and info message                    )
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
