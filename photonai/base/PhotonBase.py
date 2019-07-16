@@ -28,6 +28,7 @@ from ..configuration.Register import PhotonRegister
 from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
 from ..optimization.SkOpt import SkOptOptimizer
+from ..optimization.Smac3Opt import SMACOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import TestPipeline, OptimizerMetric
 from ..validation.cross_validation import StratifiedKFoldRegression
@@ -266,7 +267,8 @@ class Hyperpipe(BaseEstimator):
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
                             'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
-                            'sk_opt': SkOptOptimizer } #,
+                            'sk_opt': SkOptOptimizer,
+                            'smac': SMACOptimizer } #,
                             # 'fabolas': FabolasOptimizer}
 
     def __init__(self, name, inner_cv: BaseCrossValidator, outer_cv=None,
