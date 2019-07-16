@@ -8,10 +8,6 @@ import time
 import os
 import pandas as pd
 
-# YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(save_predictions='best')
-
-
 
 file = '/home/rleenings/Projects/TestNeuro/PAC2018_age.csv'
 data_folder = '/spm-data/Scratch/spielwiese_ramona/PAC2018/data_all/'
@@ -31,8 +27,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     best_config_metric='mean_absolute_error',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
-                    verbosity=1,
-                    output_settings=mongo_settings)  # get error, warn and info message
+                    verbosity=1)  # get error, warn and info message
 
 preprocessing = PreprocessingPipe()
 preprocessing += PipelineElement("LabelEncoder")

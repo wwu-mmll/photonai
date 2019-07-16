@@ -1,0 +1,46 @@
+
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
+from photonai.investigator.Investigator import Investigator
+from sklearn.model_selection import KFold
+from sklearn.datasets import load_breast_cancer
+
+# WE USE THE BREAST CANCER SET FROM SKLEARN
+X, y = load_breast_cancer(True)
+
+# YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
+mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
+                                save_predictions='best',
+                                save_feature_importances='None')
+
+
+# DESIGN YOUR PIPELINE
+my_pipe = Hyperpipe('basic_MongoDB_pipe',  # the name of your pipeline
+                    optimizer='grid_search',
+                    metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
+                    best_config_metric='accuracy',
+                    outer_cv=KFold(n_splits=3),
+                    inner_cv=KFold(n_splits=5),
+                    verbosity=1,
+                    output_settings=mongo_settings) # append the output_settings argument to hand over the mongo_setting to your pipeline
+
+
+
+
+# ADD ELEMENTS TO YOUR PIPELINE
+# first normalize all features
+my_pipe.add(PipelineElement('StandardScaler'))
+# then do feature selection using a PCA, specify which values to try in the hyperparameter search
+my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}, test_disabled=True)
+# engage and optimize the good old SVM for Classification
+my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
+                                                   'C': FloatRange(0.5, 2)}, gamma='scale')
+
+# NOW TRAIN YOUR PIPELINE
+my_pipe.fit(X, y)
+
+# YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
+Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
+
+
+
