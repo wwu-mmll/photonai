@@ -629,7 +629,7 @@ class Hyperpipe(BaseEstimator):
                 nr_of_nans = len(np.where(nans_in_y == 1))
                 if nr_of_nans > 0:
                     Logger().info("You have " + str(nr_of_nans) + " Nans in your target vector, "
-                                                                      "PHOTON erases every data item that has a Nan Target")
+                                                                  "PHOTON erases every data item that has a Nan Target")
                     self.X = self.X[~nans_in_y]
                     self.y = self.y[~nans_in_y]
             except Exception as e:
