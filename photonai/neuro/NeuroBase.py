@@ -95,7 +95,7 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
             # set delegate function -> new copy.base_element.transform
             return self.apply_transform(X, delegate='base_element.transform',
                                         transform_name='applying neuro methods',
-                                        copy_object=True)
+                                        copy_object=self)
         else:
             return self.base_element.transform(X, y, **kwargs)
 
