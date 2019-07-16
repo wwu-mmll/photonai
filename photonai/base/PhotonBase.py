@@ -2257,11 +2257,12 @@ class PipelineSwitch(PipelineElement):
             final_configuration_list = []
             if len(element_configurations) == 0:
                 final_configuration_list.append({})
+            # else:
             for dict_item in element_configurations:
-                copy_of_dict_item = {}
-                for key, value in dict_item.items():
-                    copy_of_dict_item[self.name + '__' + key] = value
-                final_configuration_list.append(copy_of_dict_item)
+                # copy_of_dict_item = {}
+                # for key, value in dict_item.items():
+                #     copy_of_dict_item[self.name + '__' + key] = value
+                final_configuration_list.append(dict(dict_item))
 
             self.pipeline_element_configurations.append(final_configuration_list)
             hyperparameters += [(i, nr) for nr in range(len(final_configuration_list))]
@@ -2319,7 +2320,7 @@ class PipelineSwitch(PipelineElement):
                 config = kwargs
                 # ugly hack because subscription is somehow not possible, we use the for loop but break
                 for kwargs_key, kwargs_value in kwargs.items():
-                    first_element_name = kwargs_key.split("__")[1]
+                    first_element_name = kwargs_key.split("__")[0]
                     self.base_element = self.pipeline_element_dict[first_element_name]
                     break
         else:
@@ -2336,7 +2337,7 @@ class PipelineSwitch(PipelineElement):
             unnamed_config = {}
             for config_key, config_value in config.items():
                 key_split = config_key.split('__')
-                unnamed_config['__'.join(key_split[2::])] = config_value
+                unnamed_config['__'.join(key_split[1::])] = config_value
             self.base_element.set_params(**unnamed_config)
         return self
 
