@@ -142,15 +142,16 @@ class OutputSettings:
                 self.results_folder = os.path.join(self.project_folder, name + '_results')
             else:
                 self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
+            self.summary_filename = self._add_timestamp(self.summary_filename)
+            self.pretrained_model_filename = self._add_timestamp(self.pretrained_model_filename)
+            self.predictions_filename = self._add_timestamp(self.predictions_filename)
             if not os.path.exists(self.results_folder):
                 os.mkdir(self.results_folder)
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
             self.local_file = self._add_timestamp(self.local_file)
             self.log_file = self._add_timestamp(self.log_file)
             Logger().set_custom_log_file(self.log_file)
-            self.summary_filename = self._add_timestamp(self.summary_filename)
-            self.pretrained_model_filename = self._add_timestamp(self.pretrained_model_filename)
-            self.predictions_filename = self._add_timestamp(self.predictions_filename)
+
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
@@ -1142,12 +1143,28 @@ class Hyperpipe(BaseEstimator):
 
     def copy_me(self):
         """
-        Helper function to copy all pipeline elements
+        Helper function to copy an entire Hyperpipe
+        :return: Hyperpipe
         """
-        item_list =[]
-        for item in self.pipeline_elements:
-            item_list.append(item.copy_me())
-        return item_list
+        # create new Hyperpipe instance
+        pipe_copy = Hyperpipe(name=self.__dict__['name'], inner_cv=self.__dict__['inner_cv'],
+                              best_config_metric=self.__dict__['best_config_metric'], metrics=self.__dict__['metrics'])
+
+        signature = inspect.getfullargspec(self.__init__)[0]
+        for attr in signature:
+            if hasattr(self, attr):
+                setattr(pipe_copy, attr, getattr(self, attr))
+
+        if hasattr(self, 'preprocessing_pipe'):
+            preprocessing = PreprocessingPipe()
+            for element in self.preprocessing_pipe.pipeline_elements:
+                preprocessing += element.copy_me()
+            pipe_copy += preprocessing
+        if hasattr(self, 'pipeline_elements'):
+            for element in self.pipeline_elements:
+                pipe_copy += element.copy_me()
+        return pipe_copy
+
 
     def _copy_pipeline(self):
         """
@@ -1179,6 +1196,29 @@ class Hyperpipe(BaseEstimator):
             Password used to encrypt the pipeline file
 
         """
+        def save_element(element, element_number, element_name, folder, wrapper_files):
+            filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
+            element_identifier.append({'element_name': element_name,
+                                       'filename': filename})
+            base_element = element.base_element
+            if hasattr(base_element, 'save'):
+                base_element.save(os.path.join(folder + filename))
+                element_identifier[-1]['mode'] = 'custom'
+                element_identifier[-1]['wrapper_script'] = os.path.basename(inspect.getfile(base_element.__class__))
+                wrapper_files.append(inspect.getfile(base_element.__class__))
+                element_identifier[-1]['test_disabled'] = element.test_disabled
+                element_identifier[-1]['disabled'] = element.disabled
+                element_identifier[-1]['hyperparameters'] = element.hyperparameters
+
+            else:
+                try:
+                    joblib.dump(element, os.path.join(folder + filename) + '.pkl', compress=1)
+                    element_identifier[-1]['mode'] = 'pickle'
+                except:
+                    raise NotImplementedError("Custom pipeline element must implement .save() method or "
+                                              "allow pickle.")
+            return wrapper_files
+
         element_number = 0
         element_identifier = list()
         folder = os.path.splitext(file)[0]
@@ -1191,28 +1231,15 @@ class Hyperpipe(BaseEstimator):
             folder = folder + '/'
         wrapper_files = list()
 
-        for element_name, element in self.optimum_pipe.named_steps.items():
-            filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
-            element_identifier.append({'element_name': element_name,
-                                       'filename': filename})
-            base_element = element.base_element
-            if hasattr(base_element, 'save'):
-                base_element.save(folder + filename)
-                element_identifier[-1]['mode'] = 'custom'
-                element_identifier[-1]['wrapper_script'] = os.path.basename(inspect.getfile(base_element.__class__))
-                wrapper_files.append(inspect.getfile(base_element.__class__))
-                element_identifier[-1]['test_disabled'] = element.test_disabled
-                element_identifier[-1]['disabled'] = element.disabled
-                element_identifier[-1]['hyperparameters'] = element.hyperparameters
-
-            else:
-                try:
-                    joblib.dump(element, folder + filename + '.pkl', compress=1)
-                    element_identifier[-1]['mode'] = 'pickle'
-                except:
-                    raise NotImplementedError("Custom pipeline element must implement .save() method or "
-                                              "allow pickle.")
+        for element in self.preprocessing_pipe.pipeline_elements:
+            element_name = element.name
+            wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
             element_number += 1
+
+        for element_name, element in self.optimum_pipe.named_steps.items():
+            wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
+            element_number += 1
+
         # save pipeline blueprint to make loading of pipeline easier
         with open(folder + '_optimum_pipe_blueprint.pkl', 'wb') as f:
             pickle.dump(element_identifier, f)
@@ -1232,6 +1259,8 @@ class Hyperpipe(BaseEstimator):
                 for f in wrapper_files:
                     myzip.write(f, os.path.splitext(os.path.basename(f))[0] + '.py')
         os.removedirs(folder)
+
+
 
     @staticmethod
     def load_optimum_pipe(file, password=None):
