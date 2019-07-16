@@ -6,6 +6,7 @@ from nibabel.nifti1 import Nifti1Image
 import numpy as np
 import os
 
+
 class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
     """
     A substream of neuro elements that are encapsulated into a single block of PipelineElements that all perform
