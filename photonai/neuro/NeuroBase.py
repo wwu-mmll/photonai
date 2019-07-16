@@ -6,6 +6,7 @@ from nibabel.nifti1 import Nifti1Image
 import numpy as np
 import os
 
+
 class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
     """
     A substream of neuro elements that are encapsulated into a single block of PipelineElements that all perform
@@ -95,7 +96,7 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
             # set delegate function -> new copy.base_element.transform
             return self.apply_transform(X, delegate='base_element.transform',
                                         transform_name='applying neuro methods',
-                                        copy_object=True)
+                                        copy_object=self)
         else:
             return self.base_element.transform(X, y, **kwargs)
 

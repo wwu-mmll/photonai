@@ -71,6 +71,7 @@ print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 # my_pipe.save_optimum_pipe('optimum_pipe.photon')
 
 # YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
+# ---------------------------
 Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
 
 debug = True

@@ -37,7 +37,6 @@ class AtlasMapper:
                 target_element_name = element.name
                 roi_list = found_brain_atlas(element)
 
-
         hyperpipes_to_fit = list()
 
         if len(roi_list) > 0:
