@@ -22,6 +22,8 @@ prettytable
 seaborn
 # sk optimize
 scikit-optimize
+scikit-image
+bcolz
 # fabolas
 # george
 # emcee
