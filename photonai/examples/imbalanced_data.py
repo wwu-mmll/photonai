@@ -10,10 +10,6 @@ from sklearn.datasets import load_breast_cancer
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
 
-# YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(save_predictions='best')
-#                                 save_feature_importances='best')
-
 
 # save_options = OutputSettings(local_file="/home/photon_user/photon_test/test_item.p")
 
@@ -25,8 +21,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
-                    verbosity=1,
-                    output_settings=mongo_settings)  # get error, warn and info message
+                    verbosity=1)  # get error, warn and info message
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
