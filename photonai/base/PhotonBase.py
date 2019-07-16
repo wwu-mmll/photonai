@@ -78,12 +78,14 @@ class OutputSettings:
                  save_predictions: str = 'best',
                  save_feature_importances: str = 'best',
                  save_output: bool = True,
+                 overwrite_results: bool = False,
                  project_folder = '',
                  user_id: str = '',
                  wizard_object_id: str = '',
                  wizard_project_name: str = ''):
 
         self.mongodb_connect_url = mongodb_connect_url
+        self.overwrite_results = overwrite_results
 
         self.save_best_config_predictions, self.save_predictions = self._set_save_options(save_predictions)
         self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
@@ -136,8 +138,12 @@ class OutputSettings:
     def _update_settings(self, name, timestamp):
         if self.save_output:
             # Todo: give rights to user if this is done by docker container
-            self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
-            os.mkdir(self.results_folder)
+            if self.overwrite_results:
+                self.results_folder = os.path.join(self.project_folder, name + '_results')
+            else:
+                self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
+            if not os.path.exists(self.results_folder):
+                os.mkdir(self.results_folder)
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
             self.local_file = self._add_timestamp(self.local_file)
             self.log_file = self._add_timestamp(self.log_file)
