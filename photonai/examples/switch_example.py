@@ -1,3 +1,6 @@
+import sys
+sys.path.append('/home/agrover/Desktop/TRaP/photon_core')
+
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.investigator.Investigator import Investigator
@@ -11,7 +14,8 @@ persist_options = OutputSettings(save_feature_importances='best',
                                  mongodb_connect_url="mongodb://trap-umbriel:27017/photon_db_test")
 
 my_pipe = Hyperpipe('basic_switch_pipe',
-                    optimizer='grid_search',
+                    optimizer='smac',
+                    optimizer_params={"run_obj": 'quality', "wallclock_limit": 10},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
