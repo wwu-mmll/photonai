@@ -11,13 +11,6 @@ import time
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
 
-# YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(save_predictions='best') #mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
-
-
-# save_options = OutputSettings(local_file="/home/photon_user/photon_test/test_item.p")
-
-
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
@@ -25,8 +18,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
-                    verbosity=1,
-                    output_settings=mongo_settings)  # get error, warn and info message
+                    verbosity=1)  # get error, warn and info message
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     # performance_constraints = [MinimumPerformance('accuracy', 0.96),
                     #                            MinimumPerformance('precision', 0.96)]
@@ -70,9 +62,6 @@ print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 # YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE
 # my_pipe.save_optimum_pipe('optimum_pipe.photon')
 
-# YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
-# ---------------------------
-Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
 
 debug = True
 
