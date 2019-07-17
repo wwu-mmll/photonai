@@ -1,6 +1,8 @@
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import BrainAtlas, AtlasLibrary
 from photonai.base.PhotonBase import Hyperpipe
+from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+import pandas as pd
 import os
 import json
 
@@ -74,14 +76,18 @@ class AtlasMapper:
             raise Exception("No hyperpipes to fit. Did you call 'generate_mappings'?")
 
         hyperpipe_infos = dict()
+        hyperpipe_results = dict()
         for roi_name, hyperpipe in self.hyperpipes_to_fit.items():
             hyperpipe.fit(X, y, **kwargs)
             hyperpipe_infos[roi_name] = {'hyperpipe_name': hyperpipe.name,
                                          'model_filename': hyperpipe.output_settings.pretrained_model_filename}
+            hyperpipe_results[roi_name] = ResultsTreeHandler(hyperpipe.result_tree).get_performance_outer_folds()
 
         self.hyperpipe_infos = hyperpipe_infos
         with open(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_meta.json'), 'w') as fp:
             json.dump(self.hyperpipe_infos, fp)
+        df = pd.DataFrame(hyperpipe_results)
+        df.to_csv(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_results.csv'))
 
     def predict(self, X, **kwargs):
         if len(self.hyperpipes_to_fit) == 0:

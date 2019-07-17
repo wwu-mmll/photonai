@@ -14,9 +14,8 @@ from ..photonlogger.Logger import Logger
 
 
 class ResultsTreeHandler:
-    def __init__(self, res_file=None):
-        if res_file:
-            self.load_from_file(res_file)
+    def __init__(self, result_tree: MDBHyperpipe = None):
+        self.results = result_tree
 
     def load_from_file(self, results_file: str):
         self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
@@ -34,20 +33,6 @@ class ResultsTreeHandler:
         methods_list = [s for s in dir(ResultsTreeHandler) if not '__' in s]
         Logger().info(methods_list)
         return methods_list
-
-    # def summary(self):
-    #     """
-    #     This function returns a short summary of analyses and results.
-    #     """
-    #     summary = 'We used PHOTON version ??? \n'
-    #     summary += str(5) + ' hyperparameter configurations were tested using ' + '??? optimizer \n'
-    #     summary += 'The best configuration overall was \n'
-    #     summary += self.results.best_config
-    #     summary += 'Performance'
-    #     summary += Hier die angegebenen Metriken.
-    #     summary += 'Hyperparameters were optimized using ??? Metric'
-    #     Logger().info(summary)
-    #     return summary
 
     def get_performance_table(self):
         """
@@ -250,10 +235,3 @@ class ResultsTreeHandler:
         plt.legend(loc='best')
         plt.show()
 
-
-    # def __plotlyfy(matplotlib_figure):
-    #     import plotly.tools as tls
-    #     import plotly.plotly as py
-    #     plotly_fig = tls.mpl_to_plotly(matplotlib_figure)
-    #     unique_url = py.plot(plotly_fig)
-    #     return plotly_fig

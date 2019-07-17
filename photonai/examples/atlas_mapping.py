@@ -32,7 +32,7 @@ mongo_settings = OutputSettings(save_predictions='best')
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
-                    metrics=['mean_absolute_error'],  # the performance metrics of your interest
+                    metrics=['mean_absolute_error', 'mean_squared_error'],  # the performance metrics of your interest
                     best_config_metric='mean_absolute_error',
                     inner_cv=KFold(n_splits=2),  # test each configuration ten times respectively,
                     verbosity=1,
