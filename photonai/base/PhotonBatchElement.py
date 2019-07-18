@@ -97,3 +97,11 @@ class PhotonBatchElement(PipelineElement):
 
     def predict(self, X, y=None, **kwargs):
         return self.batch_call(self.base_element.predict, X, y, call_with_y=False, **kwargs)
+
+    def copy_me(self):
+        copy = PhotonBatchElement(name=self.name, hyperparameters=self.hyperparameters,
+                                  batch_size=self.batch_size, **self.kwargs)
+
+        if self.current_config is not None:
+            copy.set_params(**self.current_config)
+        return copy
