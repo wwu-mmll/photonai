@@ -470,7 +470,7 @@ class Scorer(object):
 
     ELEMENT_DICTIONARY = {
         # Classification
-        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', None),
+        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', 'score'),
         'confusion_matrix': ('sklearn.metrics', 'confusion_matrix', None),
         'accuracy': ('sklearn.metrics', 'accuracy_score', 'score'),
         'f1_score': ('sklearn.metrics', 'f1_score', 'score'),
@@ -490,7 +490,7 @@ class Scorer(object):
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
         'r2': ('sklearn.metrics', 'r2_score', 'score'),
-        'pearson_correlation': ('photonai.validation.Metrics', 'pearson_correlation', None),
+        'pearson_correlation': ('photonai.validation.Metrics', 'pearson_correlation', 'score'),
         'variance_explained':  ('photonai.validation.Metrics', 'variance_explained_score', 'score')
 
     }
