@@ -1,6 +1,7 @@
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import BrainAtlas, AtlasLibrary
-from photonai.base.PhotonBase import Hyperpipe
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement
+from photonai.base.PhotonBatchElement import PhotonBatchElement
 from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 import pandas as pd
 import os
@@ -54,6 +55,7 @@ class AtlasMapper:
 
         if len(roi_list) > 0:
             for roi_name in roi_list:
+                roi_name = roi_name.label
                 copy_of_hyperpipe = hyperpipe.copy_me()
                 new_pipe_name = copy_of_hyperpipe.name + '_Atlas_Mapper_' + roi_name
                 copy_of_hyperpipe.name = new_pipe_name
