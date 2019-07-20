@@ -709,7 +709,7 @@ class Hyperpipe(BaseEstimator):
                     # initialize result logging with hyperpipe class
                     self.result_tree = MDBHyperpipe(name=self.result_tree_name)
                     self.result_tree.computation_start_time = self._fitting_time
-
+                    self.result_tree.metrics = self.metrics
                     if self.permutation_id is not None:
                         self.result_tree.permutation_id = self.permutation_id
 
@@ -1233,10 +1233,11 @@ class Hyperpipe(BaseEstimator):
             folder = folder + '/'
         wrapper_files = list()
 
-        for element in self.preprocessing_pipe.pipeline_elements:
-            element_name = element.name
-            wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
-            element_number += 1
+        if isinstance(self.preprocessing_pipe, PreprocessingPipe):
+            for element in self.preprocessing_pipe.pipeline_elements:
+                element_name = element.name
+                wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
+                element_number += 1
 
         for element_name, element in self.optimum_pipe.named_steps.items():
             wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
