@@ -11,6 +11,7 @@ from pymodm import connect
 
 from ..validation.ResultsDatabase import MDBHyperpipe
 from ..photonlogger.Logger import Logger
+from .Validate import OptimizerMetric
 
 
 class ResultsTreeHandler:
@@ -31,7 +32,6 @@ class ResultsTreeHandler:
         This function returns a list of all methods available for ResultsTreeHandler.
         """
         methods_list = [s for s in dir(ResultsTreeHandler) if not '__' in s]
-        Logger().info(methods_list)
         return methods_list
 
     def get_performance_table(self):
@@ -77,6 +77,100 @@ class ResultsTreeHandler:
             for metric, value in fold.best_config.inner_folds[0].validation.metrics.items():
                 performances[metric].append(value)
         return performances
+
+    def get_config_evaluations(self):
+        """
+        Return the test performance of every tested configuration in every outer fold.
+        :return:
+        """
+        config_performances = list()
+        for outer_fold in self.results.outer_folds:
+            performance = dict()
+            for metric in self.results.metrics:
+                performance[metric] = list()
+
+            for config in outer_fold.tested_config_list:
+                for metric in self.results.metrics:
+                    if config.config_failed:
+                        performance[metric].append(np.nan)
+                    else:
+                        for item in config.metrics_test:
+                            if (item.operation == 'FoldOperations.MEAN') and (item.metric_name == metric):
+                                performance[metric].append(item.value)
+            config_performances.append(performance)
+
+        config_performances_dict = dict()
+        for metric in self.results.metrics:
+            config_performances_dict[metric] = list()
+            for fold in config_performances:
+                config_performances_dict[metric].append(fold[metric])
+
+        return config_performances_dict
+
+    def get_minimum_config_evaluations(self):
+        config_evaluations = self.get_config_evaluations()
+        minimum_config_evaluations = dict()
+
+        for metric, evaluations in config_evaluations.items():
+            minimum_config_evaluations[metric] = list()
+            greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
+
+            for fold in evaluations:
+                fold_evaluations = list()
+
+                if greater_is_better:
+                    for i, config in enumerate(fold):
+                        if i == 0:
+                            last_config = config
+                        else:
+                            if config > last_config:
+                                last_config = config
+                        fold_evaluations.append(last_config)
+                else:
+                    last_config = np.inf
+                    for i, config in enumerate(fold):
+                        if i == 0:
+                            last_config = config
+                        else:
+                            if config < last_config:
+                                last_config = config
+                        fold_evaluations.append(last_config)
+                minimum_config_evaluations[metric].append(fold_evaluations)
+
+        return minimum_config_evaluations
+
+    def plot_optimizer_history(self, metric, file: str = None):
+        if metric not in self.results.metrics:
+            raise ValueError('Metric "{}" not stored in results tree'.format(metric))
+
+        config_evaluations = self.get_config_evaluations()
+        minimum_config_evaluations = self.get_minimum_config_evaluations()
+
+        mean = np.nanmean(np.asarray(config_evaluations[metric]), axis=0)
+        std = np.nanstd(np.asarray(config_evaluations[metric]), axis=0)
+        mean_min = np.nanmean(np.asarray(minimum_config_evaluations[metric]), axis=0)
+        std_min = np.nanstd(np.asarray(minimum_config_evaluations[metric]), axis=0)
+
+        xfit = np.arange(0, len(mean_min))
+        yfit = mean_min
+        dyfit = std_min
+
+        plt.plot(xfit, yfit, '-', color='gray', label='Minimum Performance of Configs')
+
+        plt.fill_between(xfit, yfit - dyfit, yfit + dyfit,
+                         color='gray', alpha=0.2)
+
+        plt.plot(xfit, mean, '-', color='red', label='Performance of Configs')
+
+        plt.fill_between(xfit, mean - std, mean + std,
+                         color='red', alpha=0.2)
+        plt.ylabel(metric.replace('_', ' '))
+        plt.xlabel('No of Evaluations')
+        plt.legend()
+        plt.title('Optimizer History')
+        if file:
+            plt.savefig(file)
+        plt.show()
 
     def get_val_preds(self, sort_CV=True):
         """
