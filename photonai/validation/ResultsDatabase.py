@@ -130,6 +130,7 @@ class MDBHyperpipe(MongoModel):
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+    metrics = fields.ListField(blank=True)
 
     # dummy estimator
     dummy_estimator = fields.EmbeddedDocumentField(DummyResults, blank=True)
