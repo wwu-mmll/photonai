@@ -1833,6 +1833,15 @@ class PipelineBranch(PipelineElement):
         self.pipeline_elements = []
         self.has_hyperparameters = True
 
+    def fit(self, X, y=None, **kwargs):
+        return super().fit(X, y, **kwargs)
+
+    def transform(self, X, y=None, **kwargs):
+        return super().transform(X, y, **kwargs)
+
+    def predict(self, data, y=None, **kwargs):
+        return super().predict(data, y, **kwargs)
+
     def __iadd__(self, pipe_element):
         """
         Add an element to the sub pipeline
@@ -1877,7 +1886,7 @@ class PipelineBranch(PipelineElement):
         self.base_element = PhotonPipeline(pipeline_steps)
 
     def copy_me(self):
-        new_copy_of_me = PipelineBranch(self.name)
+        new_copy_of_me = self.__class__(self.name)
         for item in self.pipeline_elements:
             if hasattr(item, 'copy_me'):
                 copy_item = item.copy_me()
