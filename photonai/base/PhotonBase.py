@@ -709,7 +709,7 @@ class Hyperpipe(BaseEstimator):
                     # initialize result logging with hyperpipe class
                     self.result_tree = MDBHyperpipe(name=self.result_tree_name)
                     self.result_tree.computation_start_time = self._fitting_time
-
+                    self.result_tree.metrics = self.metrics
                     if self.permutation_id is not None:
                         self.result_tree.permutation_id = self.permutation_id
 
