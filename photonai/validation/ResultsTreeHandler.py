@@ -139,7 +139,14 @@ class ResultsTreeHandler:
 
         return minimum_config_evaluations
 
-    def plot_optimizer_history(self, metric, file: str = None):
+    def plot_optimizer_history(self, metric, title: str = 'Optimizer History', type: str = 'plot', file: str = None):
+        """
+
+        :param metric: specify metric that has been stored within the PHOTON results tree
+        :param type: 'plot' or 'scatter'
+        :param file: specify a filename if you want to save the plot
+        :return:
+        """
         if metric not in self.results.metrics:
             raise ValueError('Metric "{}" not stored in results tree'.format(metric))
 
@@ -156,18 +163,22 @@ class ResultsTreeHandler:
         dyfit = std_min
 
         plt.plot(xfit, yfit, '-', color='gray', label='Minimum Performance of Configs')
+        plt.fill_between(xfit, yfit - dyfit, yfit + dyfit, color='gray', alpha=0.2)
 
-        plt.fill_between(xfit, yfit - dyfit, yfit + dyfit,
-                         color='gray', alpha=0.2)
+        if type == 'plot':
+            plt.plot(xfit, mean, '-', color='red', label='Performance of Configs')
+            plt.fill_between(xfit, mean - std, mean + std, color='red', alpha=0.2)
+        elif type == 'scatter':
+            yfit = np.asarray(config_evaluations[metric]).flatten()
+            xfit = np.repeat(xfit, len(config_evaluations[metric]))
+            plt.scatter(xfit, yfit, color='gray', alpha=0.3, label='Performance of Configs')
+        else:
+            raise ValueError('Please specify either "plot" or "scatter".')
 
-        plt.plot(xfit, mean, '-', color='red', label='Performance of Configs')
-
-        plt.fill_between(xfit, mean - std, mean + std,
-                         color='red', alpha=0.2)
         plt.ylabel(metric.replace('_', ' '))
         plt.xlabel('No of Evaluations')
         plt.legend()
-        plt.title('Optimizer History')
+        plt.title(title)
         if file:
             plt.savefig(file)
         plt.show()
