@@ -1,4 +1,5 @@
 from sklearn.utils.metaestimators import _BaseComposition
+import numpy as np
 
 
 class PhotonPipeline(_BaseComposition):
@@ -68,6 +69,13 @@ class PhotonPipeline(_BaseComposition):
 
         return self
 
+    def check_for_numpy_array(self, list_object):
+        # be compatible to list of (image-) files
+        if isinstance(list_object, list):
+            return np.asarray(list_object)
+        else:
+            return list_object
+
     def transform(self, X, y=None, **kwargs):
         """
         Calls transform on every step that offers a transform function
@@ -82,6 +90,9 @@ class PhotonPipeline(_BaseComposition):
         if self._final_estimator is not None:
             if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
                 X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
+                # always work with numpy arrays to avoid checking for shape attribute
+                X = self.check_for_numpy_array(X)
+                y = self.check_for_numpy_array(y)
         return X, y, kwargs
 
     def predict(self, X, training=False, **kwargs):
