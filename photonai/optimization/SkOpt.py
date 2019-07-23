@@ -31,17 +31,18 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         # build space
         space = []
         for pipe_element in pipeline_elements:
-            for name, value in pipe_element.hyperparameters.items():
-                # if we only have one value we do not need to optimize
-                if isinstance(value, list) and len(value) < 2:
-                    self.constant_dictionary[name] = value[0]
-                    continue
-                if isinstance(value, PhotonCategorical) and len(value.values) < 2:
-                    self.constant_dictionary[name] = value.values[0]
-                    continue
-                skopt_param = self._convert_PHOTON_to_skopt_space(value, name)
-                if skopt_param is not None:
-                    space.append(skopt_param)
+            if hasattr(pipe_element, 'hyperparameters'):
+                for name, value in pipe_element.hyperparameters.items():
+                    # if we only have one value we do not need to optimize
+                    if isinstance(value, list) and len(value) < 2:
+                        self.constant_dictionary[name] = value[0]
+                        continue
+                    if isinstance(value, PhotonCategorical) and len(value.values) < 2:
+                        self.constant_dictionary[name] = value.values[0]
+                        continue
+                    skopt_param = self._convert_PHOTON_to_skopt_space(value, name)
+                    if skopt_param is not None:
+                        space.append(skopt_param)
         if len(space) == 0:
             Logger().warn("Did not find any hyperparameters to convert into skopt space")
             self.optimizer = None

@@ -161,3 +161,5 @@ class PhotonPipeline(_BaseComposition):
     @property
     def _final_estimator(self):
         return self.steps[-1][1]
+
+
