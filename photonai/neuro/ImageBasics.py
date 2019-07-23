@@ -20,7 +20,7 @@ import uuid
 # img = True generates nilearn output images in memory;
 # img = False generates np arrays for use in PHOTON Core
 # PHOTON-Neuro internal format is always img=True
-class ImageTransformBase(BaseEstimator):
+class ImageTransformBase:
 
     def __init__(self, output_img=True, nr_of_processes=1, cache_folder=None,
                  copy_delegate=False):
@@ -33,9 +33,6 @@ class ImageTransformBase(BaseEstimator):
         # self.client = MongoClient('trap-umbriel', 27017)
         # self.db = self.client['photon_cache']
         # self.fs = gridfs.GridFS(self.db)
-
-    def fit(self, X, y):
-        return self
 
     def clear_cache(self):
         if self.cache_folder is not None:
@@ -108,7 +105,19 @@ class ImageTransformBase(BaseEstimator):
     def apply_transform(self, X, delegate, transform_name="transformation",
                         config_dict=None, copy_object=None,
                         **transform_kwargs):
+        """
 
+        :param X: the data to which the delegate should be applied paralelly
+        :param delegate: the function to call
+        :param transform_name: how the function can be named in the logger
+        :param config_dict: configuration of the whole pipeline used for caching
+        :param copy_object: if the function should make a copy of the object instead of calling a function
+        :param transform_kwargs: configuration to use in the delegate function
+        :return:
+        """
+
+        if transform_kwargs is None:
+            transform_kwargs = {}
         output_images = []
         if self.nr_of_processes > 1:
 
@@ -117,52 +126,51 @@ class ImageTransformBase(BaseEstimator):
             num_jobs_done = Value('i', 0)
 
             process_name = "debug_parallel_"
-            job_cache_dict_filename = os.path.join(self.cache_folder, process_name + "cache.p")
+            # job_cache_dict_filename = os.path.join(self.cache_folder, process_name + "cache.p")
             if not os.path.isdir(self.cache_folder):
                 os.mkdir(self.cache_folder)
-            if os.path.isfile(job_cache_dict_filename):
-                with open(job_cache_dict_filename, 'rb') as ojd:
-                    job_cache_dict = pickle.load(ojd)
-            else:
-                job_cache_dict = {}
+            # if os.path.isfile(job_cache_dict_filename):
+            #     with open(job_cache_dict_filename, 'rb') as ojd:
+            #         job_cache_dict = pickle.load(ojd)
+            # else:
+            #     job_cache_dict = {}
 
             num_of_jobs_todo = 0
             for x_in in X:
 
-                # write new job to queue
-                if config_dict is not None:
-                    config_dict_copy = dict(config_dict)
-                    config_dict_copy["data_in_key"] = x_in
-                    config_dict_hash = json.dumps(config_dict_copy, sort_keys=True)
-                else:
-                    config_dict_hash = json.dumps(x_in)
+                # # write new job to queue
+                # if config_dict is not None:
+                #     config_dict_copy = dict(config_dict)
+                #     config_dict_copy["data_in_key"] = x_in
+                #     config_dict_hash = json.dumps(config_dict_copy, sort_keys=True)
+                # else:
+                #     config_dict_hash = json.dumps(x_in)
+                #
+                # # write anything to dictionary so that is easily indexable
+                # if config_dict_hash in job_cache_dict and os.path.isfile(os.path.join(self.cache_folder,
+                #                                                                       job_cache_dict[config_dict_hash] + ".p")):
+                #     num_jobs_done.value = num_jobs_done.value + 1
+                #     jobs_done.put((os.path.join(self.cache_folder, job_cache_dict[config_dict_hash]), num_of_jobs_todo))
+                #
+                # else:
+                unique_key = uuid.uuid4()
+                job_delegate = delegate
+                if self.copy_delegate:
+                    copy = copy_object.copy_me(with_parallelization_info=False)
+                    job_delegate = getattr(copy, delegate)
 
-                # write anything to dictionary so that is easily indexable
-                if config_dict_hash in job_cache_dict and os.path.isfile(os.path.join(self.cache_folder,
-                                                                                      job_cache_dict[config_dict_hash] + ".p")):
-                    num_jobs_done.value = num_jobs_done.value + 1
-                    jobs_done.put((os.path.join(self.cache_folder, job_cache_dict[config_dict_hash]), num_of_jobs_todo))
-
-                else:
-                    unique_key = uuid.uuid4()
-                    job_delegate = delegate
-                    if self.copy_delegate:
-                        copy = copy_object.copy_me()
-                        job_delegate = getattr(copy, delegate)
-
-                    new_job = ImageTransformBase.ImageJob(data=x_in, delegate=job_delegate,
-                                                          delegate_kwargs=transform_kwargs,
-                                                          transform_name=transform_name,
-                                                          job_key=unique_key,
-                                                          sort_index=num_of_jobs_todo,
-                                                          config_key=config_dict_hash)
-                    job_cache_dict[config_dict_hash] = str(unique_key)
-                    jobs_to_do.put(new_job)
+                new_job = ImageTransformBase.ImageJob(data=x_in, delegate=job_delegate,
+                                                      delegate_kwargs=transform_kwargs,
+                                                      transform_name=transform_name,
+                                                      job_key=unique_key,
+                                                      sort_index=num_of_jobs_todo)
+                # job_cache_dict[config_dict_hash] = str(unique_key)
+                jobs_to_do.put(new_job)
 
                 num_of_jobs_todo += 1
 
-            with open(job_cache_dict_filename, 'wb') as jd:
-                pickle.dump(job_cache_dict, jd)
+            # with open(job_cache_dict_filename, 'wb') as jd:
+            #     pickle.dump(job_cache_dict, jd)
 
             process_list = list()
             # Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
@@ -215,13 +223,16 @@ class ImageTransformBase(BaseEstimator):
 
 
 # Smoothing
-class SmoothImages(ImageTransformBase):
+class SmoothImages(ImageTransformBase, BaseEstimator):
     def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=1, cache_folder=None):
         super(SmoothImages, self).__init__(output_img, nr_of_processes, cache_folder)
 
         # initialize private variable and
         self._fwhm = None
         self.fwhm = fwhm
+
+    def fit(self, X, y=None, **kwargs):
+        return self
 
     @property
     def fwhm(self):
@@ -239,10 +250,11 @@ class SmoothImages(ImageTransformBase):
 
     def transform(self, X, y=None, **kwargs):
         kwargs_dict = {'fwhm': self.fwhm}
-        return self.apply_transform(X, smooth_img, transform_name="smoothing mri image", **kwargs_dict)
+        return self.apply_transform(X, smooth_img, config_dict=kwargs_dict,
+                                    transform_name="smoothing mri image", **kwargs_dict)
 
 
-class ResampleImages(ImageTransformBase):
+class ResampleImages(ImageTransformBase, BaseEstimator):
     """
      Resampling voxel size
     """
@@ -250,6 +262,9 @@ class ResampleImages(ImageTransformBase):
         super(ResampleImages, self).__init__(output_img, nr_of_processes, cache_folder)
         self._voxel_size = None
         self.voxel_size = voxel_size
+
+    def fit(self, X, y=None, **kwargs):
+        return self
 
     @property
     def voxel_size(self):
@@ -271,7 +286,7 @@ class ResampleImages(ImageTransformBase):
         return self.apply_transform(X, resample_img, transform_name="resampling mri image", **delegate_kwargs)
 
 
-class PatchImages(ImageTransformBase):
+class PatchImages(ImageTransformBase, BaseEstimator):
 
     def __init__(self, patch_size=25, random_state=42, nr_of_processes=3, cache_folder=None):
         Logger().info("Nr or processes: " + str(nr_of_processes))
@@ -280,6 +295,9 @@ class PatchImages(ImageTransformBase):
 
         self.patch_size = patch_size
         self.random_state = random_state
+
+    def fit(self, X, y=None, **kwargs):
+        return self
 
     def transform(self, X, y=None, **kwargs):
         Logger().info("Drawing patches")

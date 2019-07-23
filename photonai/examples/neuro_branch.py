@@ -21,7 +21,7 @@ X = X[:10]
 y = y[:10]
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
+my_pipe = Hyperpipe('amygdala_pipe',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
                     metrics=['mean_absolute_error'],  # the performance metrics of your interest
                     best_config_metric='mean_absolute_error',  # after hyperparameter search, the metric declares the winner config
@@ -43,9 +43,9 @@ neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippoca
                                 atlas_name="AAL", extract_mode='vec')
 
 
-neuro_branch.test_transform(X, 3, '/home/rleenings/Projects/TestNeuro/', **{'BrainAtlas__rois': ['Amygdala_L'],
-                                                                          'SmoothImages__fwhm': [10, 10, 10],
-                                                                          'ResampleImages__voxel_size': [3, 3, 3]})
+# neuro_branch.test_transform(X, 3, '/home/rleenings/Projects/TestNeuro/', **{'BrainAtlas__rois': ['Amygdala_L'],
+#                                                                           'SmoothImages__fwhm': [10, 10, 10],
+#                                                                           'ResampleImages__voxel_size': [3, 3, 3]})
 
 my_pipe += neuro_branch
 

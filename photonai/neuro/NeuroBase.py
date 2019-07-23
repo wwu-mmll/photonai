@@ -94,12 +94,22 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
             # build new copy
             # set params
             # set delegate function -> new copy.base_element.transform
-            return self.apply_transform(X, delegate='base_element.transform',
-                                        transform_name='applying neuro methods',
-                                        copy_object=self)
+            X_new = self.apply_transform(X, delegate='transform',
+                                         transform_name='applying neuro methods',
+                                         copy_object=self)
+            return X_new, y, kwargs
         else:
             return self.base_element.transform(X, y, **kwargs)
 
     def set_params(self, **kwargs):
         self.current_config = kwargs
         super(NeuroModuleBranch, self).set_params(**kwargs)
+
+    def copy_me(self, with_parallelization_info=True):
+        new_copy = super().copy_me()
+        if with_parallelization_info:
+            new_copy.nr_of_processes = self.nr_of_processes
+            new_copy.cache_folder = self.cache_folder
+        return new_copy
+
+

@@ -75,7 +75,7 @@ class AtlasLibrary:
 
         # check labels
         if Path(atlas_obj.labels_file).is_file():  # if we have a file with indices and labels
-            Logger().info('Using labels from file (' + str(atlas_obj.labels_file) + ')')
+            # Logger().info('Using labels from file (' + str(atlas_obj.labels_file) + ')')
             labels_dict = dict()
 
             with open(atlas_obj.labels_file) as f:
@@ -108,7 +108,8 @@ class AtlasLibrary:
         for roi in atlas_obj.roi_list:
 
             if roi.size == 0:
-                Logger().info('ROI with index ' + str(roi.index) + ' and label ' + roi.label + ' does not exist!')
+                continue
+                # Logger().info('ROI with index ' + str(roi.index) + ' and label ' + roi.label + ' does not exist!')
 
             roi.mask = image.new_img_like(atlas_obj.path, atlas_obj.map == roi.index)
             if target_affine is not None and target_shape is not None:
@@ -120,12 +121,13 @@ class AtlasLibrary:
                 orient_roi = ''.join(nib.aff2axcodes(roi.mask.affine))
                 orient_ok = orient_roi == orient_data
                 if not orient_ok:
-                    Logger().info('Orientation of mask and data are not the same: '
-                                  + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
+                    pass
+                    # Logger().info('Orientation of mask and data are not the same: '
+                    #               + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
 
             # check if roi is empty
             if np.sum(roi.mask.dataobj != 0) == 0:
-                Logger().info('No voxels in ROI after resampling (' + roi.label + ').')
+                # Logger().info('No voxels in ROI after resampling (' + roi.label + ').')
                 roi.is_empty = True
 
         if self.loaded_atlasses is None:
@@ -193,10 +195,8 @@ class BrainAtlas(BaseEstimator):
         # 1. validate if all X are in the same space and have the same voxelsize and have the same orientation
 
         # 2. load sample data to get target affine and target shape to adapt the brain atlas
-        if isinstance(X[0], str):
-            img = image.load_img(X[0])
-        else:
-            img = X[0]
+
+        affine, shape = BrainMasker.get_format_info_from_first_image(X)
 
         # for x_file in X:
         #     img_new = image.load_img(x_file)
@@ -204,47 +204,14 @@ class BrainAtlas(BaseEstimator):
         #     print(np.array_equal(img_new.shape, img.shape))
 
         # get ROI mask
-        atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, img.affine, img.shape, self.mask_threshold)
+        atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, affine, shape, self.mask_threshold)
         roi_objects = self._get_rois(atlas_obj, which_rois=self.rois, background_id=self.background_id)
-
 
         roi_data = []
 
         for roi in roi_objects:
-            if not roi.is_empty:
-                masker = NiftiMasker(mask_img=roi.mask, target_affine=img.affine, target_shape=img.shape, dtype='float32')
-                try:
-                    single_roi = masker.fit_transform(X)
-                except BaseException as e:
-                    Logger().info(e)
-                    Logger().error("Could not apply roi " + roi.label + " to the data ")
-
-                if self.extract_mode == 'vec':
-                    roi_data.append(single_roi)
-                elif self.extract_mode == 'mean':
-                    tmp = []
-                    for sample_ind in range(len(single_roi)):
-                        tmp.append(np.mean(single_roi[sample_ind]))
-                    roi_data.append(tmp)
-                elif self.extract_mode == 'box':
-                    roi_data.append(self._get_box(X, roi))
-                elif self.extract_mode == 'img':
-                    roi_img = masker.inverse_transform(single_roi)
-                    roi_data.append(roi_img)
-                else:
-                    Logger().error("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
-                    # # any function which can work on a vector passed as a string
-                    # tmp = []
-                    # # ToDo
-                    # # find something safer than eval!
-                    # any_func = lambda ex, data, opt_args=None: eval(ex)(data, opt_args)
-                    # expr = self.extract_mode
-                    # for sample_ind in range(0, len(single_roi)):
-                    #     t = any_func(expr, single_roi[sample_ind])
-                    #     tmp.append(t)
-                    # roi_data.append(tmp)
-            else:
-                Logger().warn("Skipping roi " + roi.label + " because it is empty.")
+            masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode=self.extract_mode)
+            roi_data.append(masker.transform(X))
 
         if len(roi_data) == 1:
             roi_data = roi_data[0]
@@ -272,6 +239,29 @@ class BrainAtlas(BaseEstimator):
             else:
                 return AtlasLibrary().find_rois_by_index(atlas_obj, which_rois)
 
+
+class BrainMasker(BaseEstimator):
+
+    def __init__(self, mask_image=None, affine=None, shape=None, extract_mode='vec'):
+        self.mask_image = mask_image
+        self.affine = affine
+        self.shape = shape
+        self.masker = None
+        self.extract_mode = extract_mode
+
+    @staticmethod
+    def get_format_info_from_first_image(X):
+        if isinstance(X[0], str):
+            img = image.load_img(X[0])
+        elif isinstance(X[0], nib.Nifti1Image):
+            img = X[0]
+        else:
+            error_msg = "Can only process strings as file paths to nifti images or nifti image object"
+            Logger().error(error_msg)
+            raise ValueError(error_msg)
+
+        return img.affine, img.shape
+
     @staticmethod
     def _get_box(in_imgs, roi):
         # get ROI infos
@@ -288,3 +278,48 @@ class BrainAtlas(BaseEstimator):
             tmp = data[corner1[0]:corner2[0] + 1, corner1[1]:corner2[1] + 1, corner1[2]:corner2[2] + 1]
             box.append(tmp)
         return np.asarray(box)
+
+    def transform(self, X, y=None, **kwargs):
+
+        if self.affine is None or self.shape is None:
+            self.affine, self.shape = BrainMasker.get_format_info_from_first_image(X)
+
+        if not self.mask_image.is_empty:
+            self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
+                                      target_shape=self.shape, dtype='float32')
+            try:
+                single_roi = self.masker.fit_transform(X)
+            except BaseException as e:
+                print(e)
+                # Logger().info(e)
+                # Logger().error("Could not apply roi " + self.mask_image.label + " to the data ")
+            if single_roi is not None:
+                if self.extract_mode == 'vec':
+                    return single_roi
+                elif self.extract_mode == 'mean':
+                    tmp = []
+                    for sample_ind in range(len(single_roi)):
+                        tmp.append(np.mean(single_roi[sample_ind]))
+                    return np.array(tmp)
+                elif self.extract_mode == 'box':
+                    return BrainMasker._get_box(X, self.mask_image)
+                elif self.extract_mode == 'img':
+                    roi_img = self.masker.inverse_transform(single_roi)
+                    return roi_img
+                else:
+                    Logger().error("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
+                # # any function which can work on a vector passed as a string
+                # tmp = []
+                # # ToDo
+                # # find something safer than eval!
+                # any_func = lambda ex, data, opt_args=None: eval(ex)(data, opt_args)
+                # expr = self.extract_mode
+                # for sample_ind in range(0, len(single_roi)):
+                #     t = any_func(expr, single_roi[sample_ind])
+                #     tmp.append(t)
+                # roi_data.append(tmp)
+            else:
+                print("Extracting ROI failed.")
+        else:
+            print("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
+            # Logger().warn("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
