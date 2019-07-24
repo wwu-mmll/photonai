@@ -1,4 +1,5 @@
 from ..photonlogger.Logger import Logger
+from ..base.PhotonBatchElement import PhotonBatchElement
 from sklearn.base import BaseEstimator
 from skimage.util.shape import view_as_windows
 from multiprocessing import Process, Queue, current_process, Value
@@ -23,13 +24,14 @@ import uuid
 class ImageTransformBase:
 
     def __init__(self, output_img=True, nr_of_processes=1, cache_folder=None,
-                 copy_delegate=False):
+                 copy_delegate=False, batch_size=2):
         self.output_img = output_img
         self.needs_y = False
         self.needs_covariates = False
         self.nr_of_processes = nr_of_processes
         self.copy_delegate = copy_delegate
         self.cache_folder = cache_folder
+        self.batch_size=batch_size
         # self.client = MongoClient('trap-umbriel', 27017)
         # self.db = self.client['photon_cache']
         # self.fs = gridfs.GridFS(self.db)
@@ -125,6 +127,11 @@ class ImageTransformBase:
             jobs_to_do = Queue()
             num_jobs_done = Value('i', 0)
 
+            # ----------- faking parallelization -----------------------
+            # jobs_unparallel = list()
+            # jobs_unparallel_done = list()
+            # ----------- faking parallelization -----------------------
+
             process_name = "debug_parallel_"
             # job_cache_dict_filename = os.path.join(self.cache_folder, process_name + "cache.p")
             if not os.path.isdir(self.cache_folder):
@@ -136,7 +143,16 @@ class ImageTransformBase:
             #     job_cache_dict = {}
 
             num_of_jobs_todo = 0
-            for x_in in X:
+            for start, stop in PhotonBatchElement.chunker(len(X), self.batch_size):
+
+                # split data in batches
+                # if dim > 1:
+                #     x_in = X[start:stop, :]
+                # else:
+                x_in = X[start:stop]
+
+
+            # for x_in in X:
 
                 # # write new job to queue
                 # if config_dict is not None:
@@ -163,9 +179,13 @@ class ImageTransformBase:
                                                       delegate_kwargs=transform_kwargs,
                                                       transform_name=transform_name,
                                                       job_key=unique_key,
-                                                      sort_index=num_of_jobs_todo)
+                                                      sort_index=(start, stop))
                 # job_cache_dict[config_dict_hash] = str(unique_key)
                 jobs_to_do.put(new_job)
+
+                # ----------- faking parallelization -----------------------
+                # jobs_unparallel.append(new_job)
+                # ----------- faking parallelization -----------------------
 
                 num_of_jobs_todo += 1
 
@@ -180,17 +200,38 @@ class ImageTransformBase:
                 process_list.append(p)
                 p.start()
 
+            # ----------- faking parallelization -----------------------
+            # for job in jobs_unparallel:
+            #     data = job.data
+            #
+            #     delegate_output = job.delegate(data, **job.delegate_kwargs)
+            #
+            #     save_filename = os.path.join(self.cache_folder, str(job.job_index))
+            #     if os.path.isdir(save_filename):
+            #         shutil.rmtree(save_filename)
+            #
+            #     with open(save_filename + ".p", 'wb') as f:
+            #         pickle.dump(delegate_output, f, protocol=2)
+            #     jobs_unparallel_done.append((save_filename, job.sort_index))
+
+            # ----------- faking parallelization -----------------------
+
             sort_index_list =[]
-            while len(output_images) < num_of_jobs_todo:
+            while len(output_images) < len(X):
                 try:
                     (finished_data_id, sort_index) = jobs_done.get()
-                    # print("collecting image nr " + str(sort_index))
+                    # ----------- faking parallelization -----------------------
+                    # (finished_data_id, sort_index) = jobs_unparallel_done.pop()
+                    # ----------- faking parallelization -----------------------
+
                     try:
                         # processed_data = bcolz.open(rootdir=finished_data_id)
                         with open(finished_data_id + ".p", 'rb') as of:
                             processed_data = pickle.load(of)
-
-                        output_images.append(processed_data)
+                        if not copy_object:
+                            output_images.extend(processed_data)
+                        else:
+                            output_images.extend(processed_data[0])
                         sort_index_list.append(sort_index)
                     except DoesNotExist:
                         Logger().error("Could not load processed data with id " + str(finished_data_id))
@@ -201,9 +242,21 @@ class ImageTransformBase:
             jobs_to_do.close()
             # print("finished collecting results")
             # print("sorting results")
-            sort_order = np.argsort(sort_index_list)
-            output_images = [output_images[i] for i in sort_order]
+            sort_order = np.argsort([i[0] for i in sort_index_list])
 
+            output_images_sorted = list()
+            # Todo: list comprehension
+            for idx in sort_order:
+                start = sort_index_list[idx]
+                for img in output_images[start[0]:start[1]]:
+                    output_images_sorted.append(img)
+
+            output_images = output_images_sorted
+
+            if len(output_images) > 1:
+                output_images = np.squeeze(np.asarray(output_images))
+
+            # pickle.dump(output_images, open("/home/rleenings/Projects/TestNeuro/output/output_images.p", "wb"))
             for p in process_list:
                 # print("joining process " + str(p))
                 p.join()
@@ -219,13 +272,13 @@ class ImageTransformBase:
 
         # if isinstance(output_images, list):
             # print("returning images: " + str(len(output_images)))
-        return output_images
+        return np.asarray(output_images)
 
 
 # Smoothing
 class SmoothImages(ImageTransformBase, BaseEstimator):
-    def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=1, cache_folder=None):
-        super(SmoothImages, self).__init__(output_img, nr_of_processes, cache_folder)
+    def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=1, cache_folder=None, batch_size=10):
+        super(SmoothImages, self).__init__(output_img, nr_of_processes, cache_folder, batch_size=batch_size)
 
         # initialize private variable and
         self._fwhm = None
@@ -258,8 +311,8 @@ class ResampleImages(ImageTransformBase, BaseEstimator):
     """
      Resampling voxel size
     """
-    def __init__(self, voxel_size=[3, 3, 3], output_img=True, nr_of_processes=1, cache_folder=None):
-        super(ResampleImages, self).__init__(output_img, nr_of_processes, cache_folder)
+    def __init__(self, voxel_size=[3, 3, 3], output_img=True, nr_of_processes=1, cache_folder=None, batch_size=10):
+        super(ResampleImages, self).__init__(output_img, nr_of_processes, cache_folder, batch_size=batch_size)
         self._voxel_size = None
         self.voxel_size = voxel_size
 
@@ -288,9 +341,10 @@ class ResampleImages(ImageTransformBase, BaseEstimator):
 
 class PatchImages(ImageTransformBase, BaseEstimator):
 
-    def __init__(self, patch_size=25, random_state=42, nr_of_processes=3, cache_folder=None):
+    def __init__(self, patch_size=25, random_state=42, nr_of_processes=3, cache_folder=None, batch_size=10):
         Logger().info("Nr or processes: " + str(nr_of_processes))
-        super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes, cache_folder=cache_folder)
+        super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes,
+                                          cache_folder=cache_folder, batch_size=batch_size)
         # Todo: give cache folder to mother class
 
         self.patch_size = patch_size

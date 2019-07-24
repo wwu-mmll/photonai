@@ -21,12 +21,12 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
     """
     NEURO_ELEMENTS = PhotonRegister.get_package_info(['PhotonNeuro'])
 
-    def __init__(self, name, nr_of_processes=1, cache_folder=None):
+    def __init__(self, name, nr_of_processes=1, cache_folder=None, batch_size=10):
         PipelineBranch.__init__(self, name)
         ImageTransformBase.__init__(self, nr_of_processes=nr_of_processes,
                                     cache_folder=cache_folder,
                                     copy_delegate=True,
-                                    output_img=False)
+                                    output_img=False, batch_size=batch_size)
         # super().__init__(name, nr_of_processes, cache_folder,
         #                  copy_delegate=True, output_img=False)
 
@@ -93,7 +93,7 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
         if self.nr_of_processes > 1:
             # build new copy
             # set params
-            # set delegate function -> new copy.base_element.transform
+            # set delegate function -> new copy.transform
             X_new = self.apply_transform(X, delegate='transform',
                                          transform_name='applying neuro methods',
                                          copy_object=self)

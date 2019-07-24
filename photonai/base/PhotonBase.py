@@ -2433,3 +2433,27 @@ class PipelineSwitch(PipelineElement):
             else:
                 return None
         return data
+
+
+class CallbackElement(PhotonNative):
+
+    def __init__(self, name, delegate_function, method_to_monitor='transform'):
+
+        self.needs_covariates = True
+        self.needs_y = True
+        self.name = name
+        self.delegate_function = delegate_function
+        self.method_to_monitor = method_to_monitor
+
+    def fit(self, X, y=None, **kwargs):
+        if self.method_to_monitor == 'fit':
+            self.delegate_function(X, y, **kwargs)
+        return self
+
+    def transform(self, X, y=None, **kwargs):
+        if self.method_to_monitor == 'transform':
+            self.delegate_function(X, y, **kwargs)
+        return X, y, kwargs
+
+    def copy_me(self):
+        return self.__class__(self.name, self.delegate_function, self.method_to_monitor)
