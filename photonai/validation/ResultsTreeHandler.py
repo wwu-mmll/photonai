@@ -139,14 +139,22 @@ class ResultsTreeHandler:
 
         return minimum_config_evaluations
 
-    def plot_optimizer_history(self, metric, title: str = 'Optimizer History', type: str = 'plot', file: str = None):
+    def plot_optimizer_history(self, metric,
+                               title: str = 'Optimizer History',
+                               type: str = 'plot',
+                               smoothing_kernel: int = 1,
+                               file: str = None):
         """
 
         :param metric: specify metric that has been stored within the PHOTON results tree
         :param type: 'plot' or 'scatter'
+        :param smoothing_kernel: integer, takes running average over array to smooth visualization
         :param file: specify a filename if you want to save the plot
         :return:
         """
+        def smooth_array(x, N):
+            return np.convolve(x, np.ones((N,)) / N, mode='same')
+
         if metric not in self.results.metrics:
             raise ValueError('Metric "{}" not stored in results tree'.format(metric))
 
@@ -158,20 +166,31 @@ class ResultsTreeHandler:
         mean_min = np.nanmean(np.asarray(minimum_config_evaluations[metric]), axis=0)
         std_min = np.nanstd(np.asarray(minimum_config_evaluations[metric]), axis=0)
 
+        # now do smoothing
+        if smoothing_kernel > 1:
+            mean = smooth_array(mean, smoothing_kernel)
+            std = smooth_array(std, smoothing_kernel)
+            mean_min = smooth_array(mean_min, smoothing_kernel)
+            std_min = smooth_array(std_min, smoothing_kernel)
+
         xfit = np.arange(0, len(mean_min))
         yfit = mean_min
         dyfit = std_min
 
-        plt.plot(xfit, yfit, '-', color='gray', label='Minimum Performance of Configs')
-        plt.fill_between(xfit, yfit - dyfit, yfit + dyfit, color='gray', alpha=0.2)
+        plt.plot(xfit, yfit, '-', color='gray', label='Minimum Performance of Configs (MEAN)')
+        plt.fill_between(xfit, yfit - dyfit, yfit + dyfit, color='gray', alpha=0.2, label='Minimum Performance of Configs (STD)')
 
         if type == 'plot':
-            plt.plot(xfit, mean, '-', color='red', label='Performance of Configs')
-            plt.fill_between(xfit, mean - std, mean + std, color='red', alpha=0.2)
+            plt.plot(xfit, mean, '-', color='red', label='Performance of Configs (MEAN)')
+            plt.fill_between(xfit, mean - std, mean + std, color='red', alpha=0.2, label='Performance of Configs (STD)')
         elif type == 'scatter':
-            yfit = np.asarray(config_evaluations[metric]).flatten()
-            xfit = np.repeat(xfit, len(config_evaluations[metric]))
-            plt.scatter(xfit, yfit, color='gray', alpha=0.3, label='Performance of Configs')
+            xfit = np.tile(xfit, len(config_evaluations[metric]))[0::smoothing_kernel]
+            folds = list()
+            for fold in config_evaluations[metric]:
+                folds.append(np.mean(np.asarray(fold).reshape(-1, smoothing_kernel), axis=1))
+            yfit = np.asarray(folds).flatten()
+            # calculate mean over n configuration --> this makes the plot less cluttered; n = smoothing_kernel
+            plt.scatter(xfit, yfit, color='gray', alpha=0.3, label='Performance of Configs', marker='.')
         else:
             raise ValueError('Please specify either "plot" or "scatter".')
 
