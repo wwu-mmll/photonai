@@ -1,5 +1,5 @@
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe, CallbackElement
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 
@@ -9,7 +9,7 @@ import os
 import pandas as pd
 
 
-file = '/home/rleenings/Projects/TestNeuro/PAC2018_age.csv'
+file = '/spm-data/Scratch/spielwiese_ramona/PAC2018/test/PAC2018_age.csv'
 data_folder = '/spm-data/Scratch/spielwiese_ramona/PAC2018/data_all/'
 
 df = pd.read_csv(file)
@@ -17,12 +17,13 @@ X = [os.path.join(data_folder, f) + ".nii" for f in df["PAC_ID"]]
 y = df["Age"]
 
 
-X = X[:10]
-y = y[:10]
+X = X[:50]
+y = y[:50]
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('amygdala_pipe',  # the name of your pipeline
-                    optimizer='grid_search',  # which optimizer PHOTON shall use
+                    optimizer='sk_opt',  # which optimizer PHOTON shall use
+                    optimizer_params={'num_iterations': 50},
                     metrics=['mean_absolute_error'],  # the performance metrics of your interest
                     best_config_metric='mean_absolute_error',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
@@ -34,7 +35,8 @@ preprocessing += PipelineElement("LabelEncoder")
 my_pipe += preprocessing
 
 
-neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=3, cache_folder="/home/rleenings/Projects/TestNeuro/")
+neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=3, cache_folder="/home/rleenings/Projects/TestNeuro/",
+                                 batch_size=10)
 
 neuro_branch += PipelineElement('SmoothImages', hyperparameters={'fwhm': IntegerRange(3, 15)})
 neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': IntegerRange(1, 5)})
@@ -49,6 +51,13 @@ neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippoca
 
 my_pipe += neuro_branch
 
+
+def my_monitor(X, y=None, **kwargs):
+    debug = True
+
+
+my_pipe += CallbackElement("monitor_parallel_branch", my_monitor)
+
 my_pipe.add(PipelineElement('StandardScaler'))
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': None}, test_disabled=True)
 my_pipe += PipelineElement('SVR', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
@@ -61,6 +70,7 @@ my_pipe.fit(X, y)
 elapsed_time = time.time() - start_time
 print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 
+neuro_branch.clear_cache()
 
 debug = True
 
