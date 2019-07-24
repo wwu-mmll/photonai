@@ -53,5 +53,5 @@ minimum_config_evaluations = handler.get_minimum_config_evaluations()
 
 # handler.plot_optimizer_history('mean_squared_error', 'RGS 40 Eval (Scatter)', 'scatter',
 #                                '/spm-data/Scratch/spielwiese_nils_winter/optimizer_history_random_grid_search_40_scatter.png')
-handler.plot_optimizer_history('mean_squared_error', 'Scikit Optimize 40 Eval (Scatter)', 'scatter',
+handler.plot_optimizer_history('mean_squared_error', 'Scikit Optimize 40 Eval (Scatter)', 'scatter', 1,
                                '/spm-data/Scratch/spielwiese_nils_winter/optimizer_history_scikit_optimize_40_scatter.png')
