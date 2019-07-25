@@ -168,6 +168,6 @@ class PhotonPipeline(_BaseComposition):
 
 
 class CacheManager:
-
+    pass
 
 

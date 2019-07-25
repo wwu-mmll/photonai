@@ -20,6 +20,7 @@ statsmodels
 flask
 prettytable
 seaborn
+joblib
 # sk optimize
 scikit-optimize
 scikit-image
