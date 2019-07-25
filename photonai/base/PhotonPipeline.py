@@ -6,6 +6,7 @@ class PhotonPipeline(_BaseComposition):
 
     def __init__(self, steps):
         self.steps = steps
+        self.current_config = None
 
     def get_params(self, deep=True):
         """Get parameters for this estimator.
@@ -28,6 +29,7 @@ class PhotonPipeline(_BaseComposition):
         -------
         self
         """
+        self.current_config = kwargs
         self._set_params('steps', **kwargs)
 
         return self
@@ -161,5 +163,11 @@ class PhotonPipeline(_BaseComposition):
     @property
     def _final_estimator(self):
         return self.steps[-1][1]
+
+
+
+
+class CacheManager:
+
 
 
