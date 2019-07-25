@@ -35,7 +35,7 @@ preprocessing += PipelineElement("LabelEncoder")
 my_pipe += preprocessing
 
 
-neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=3, cache_folder="/home/rleenings/Projects/TestNeuro/",
+neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=12, cache_folder="/home/rleenings/Projects/TestNeuro/",
                                  batch_size=10)
 
 neuro_branch += PipelineElement('SmoothImages', hyperparameters={'fwhm': IntegerRange(3, 15)})
@@ -46,7 +46,7 @@ neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippoca
 
 
 # neuro_branch.test_transform(X, 3, '/home/rleenings/Projects/TestNeuro/', **{'BrainAtlas__rois': ['Amygdala_L'],
-#                                                                           'SmoothImages__fwhm': [10, 10, 10],
+#                                                                                           'SmoothImages__fwhm': [10, 10, 10],
 #                                                                           'ResampleImages__voxel_size': [3, 3, 3]})
 
 my_pipe += neuro_branch

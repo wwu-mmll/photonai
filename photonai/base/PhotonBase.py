@@ -369,15 +369,10 @@ class Hyperpipe(BaseEstimator):
         # containers for optimization history and logging
         self._performance_history_list = []
 
-        if isinstance(optimizer, str):
-            # instantiate optimizer from string
-            #  Todo: check if optimizer strategy is already implemented
-            optimizer_class = self.OPTIMIZER_DICTIONARY[optimizer]
-            optimizer_instance = optimizer_class(**optimizer_params)
-            self.optimizer = optimizer_instance
-        else:
-            # Todo: check if correct object
-            self.optimizer = optimizer
+        # initialize hyperparameter optimizer
+        self.optimizer_input = optimizer
+        self.optimizer_params = optimizer_params
+        self.optimizer = self._get_optimizer()
 
         self.X = None
         self.y = None
@@ -401,6 +396,17 @@ class Hyperpipe(BaseEstimator):
         self.inner_cv_callback_function = performance_constraints
 
         self.preprocessing_pipe = None
+
+    def _get_optimizer(self):
+        if isinstance(self.optimizer_input, str):
+            # instantiate optimizer from string
+            #  Todo: check if optimizer strategy is already implemented
+            optimizer_class = self.OPTIMIZER_DICTIONARY[self.optimizer_input]
+            optimizer_instance = optimizer_class(**self.optimizer_params)
+            return optimizer_instance
+        else:
+            # Todo: check if object has the right interface
+            return self.optimizer_input
 
     def _set_verbosity(self, verbosity):
         """
@@ -1202,7 +1208,10 @@ class Hyperpipe(BaseEstimator):
             filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
             element_identifier.append({'element_name': element_name,
                                        'filename': filename})
-            base_element = element.base_element
+            if hasattr(element, 'base_element'):
+                base_element = element.base_element
+            else:
+                base_element = element
             if hasattr(base_element, 'save'):
                 base_element.save(os.path.join(folder + filename))
                 element_identifier[-1]['mode'] = 'custom'
