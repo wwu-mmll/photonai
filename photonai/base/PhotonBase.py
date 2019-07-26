@@ -649,6 +649,29 @@ class Hyperpipe(BaseEstimator):
         self.data.y = targets
         self.data.kwargs = kwargs
 
+        try:
+            if self.data.X is None:
+                raise ValueError("(Input-)data is a NoneType.")
+            if self.data.y is None:
+                raise ValueError("(Input-)target is a NoneType.")
+
+            shape_X = np.shape(self.data.X)
+            shape_y = np.shape(self.data.y)
+            if len(shape_y) != 1:
+                raise ValueError("Target is not one-dimensional.")
+            if not shape_X[0] == shape_y[0]:
+                raise IndexError(
+                    "Size of targets mismatch to the size of the data: " + str(shape_X[0]) + " - " + str(shape_y[0]))
+        except IndexError as ie:
+            Logger().error("IndexError: " + str(ie))
+            raise ie
+        except ValueError as ve:
+            Logger().error("ValueError: " + str(ve))
+            raise ve
+        except Exception as e:
+            Logger().error("Error: " + str(e))
+            raise e
+
         # be compatible to list of (image-) files
         if isinstance(self.data.X, list):
             self.data.X = np.asarray(self.data.X)
@@ -1080,6 +1103,10 @@ class PipelineElement(BaseEstimator):
         self.test_disabled = test_disabled
         self._sklearn_disabled = self.name + '__disabled'
         self._hyperparameters = hyperparameters
+
+        # check if hyperparameters are members of the class
+        self._check_hyper(BaseEstimator)
+
         # self.initalize_hyperparameters = hyperparameters
         # check if hyperparameters are already in sklearn style
         if len(hyperparameters) > 0:
@@ -1100,6 +1127,16 @@ class PipelineElement(BaseEstimator):
             self.needs_covariates = self.base_element.needs_covariates
         else:
             self.needs_covariates = False
+
+    def _check_hyper(self,BaseEstimator):
+        # check if hyperparameters are members of the class
+        not_supp_hyper = list(
+            set([key.split("__")[-1] for key in self._hyperparameters.keys()]) - set(BaseEstimator.get_params(self.base_element).keys()))
+        if not_supp_hyper:
+            Logger().error(
+                'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + str(not_supp_hyper))
+            raise ValueError(
+                'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + str(not_supp_hyper))
 
     def copy_me(self):
         # TODO !!!!!!!
@@ -1431,6 +1468,9 @@ class PipelineBranch(PipelineElement):
             for attribute, value_list in element.hyperparameters.items():
                 self._hyperparameters[self.name + '__' + attribute] = value_list
 
+    def _check_hyper(self,BaseEstimator):
+        pass
+
 
 class PreprocessingPipe(PipelineBranch):
     """
@@ -1680,6 +1720,8 @@ class PipelineStacking(PipelineElement):
     def inverse_transform(self, X, y, **kwargs):
         raise NotImplementedError("Inverse Transform is not yet implemented for a Stacking Element in PHOTON")
 
+    def _check_hyper(self,BaseEstimator):
+        pass
 
 class PipelineSwitch(PipelineElement):
     """
@@ -1942,6 +1984,9 @@ class PipelineSwitch(PipelineElement):
             else:
                 return None
         return data
+
+    def _check_hyper(self,BaseEstimator):
+        pass
 
 
 class CallbackElement(PhotonNative):
