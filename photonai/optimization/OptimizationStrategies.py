@@ -43,6 +43,14 @@ class PhotonBaseOptimizer:
         """
         pass
 
+    def plot(self, results_folder):
+        """
+        Plot optimizer specific visualizations
+        :param results_folder:
+        :return:
+        """
+        pass
+
     def plot_objective(self):
         """
         Uses plot_objective function of Scikit-Optimize to plot hyperparameters and partial dependences.
