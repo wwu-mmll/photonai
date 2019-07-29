@@ -30,6 +30,7 @@ from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGri
 from ..optimization.SkOpt import SkOptOptimizer
 from ..optimization.Smac3Opt import SMACOptimizer
 from ..validation.ResultsDatabase import *
+from ..validation.ResultsTreeHandler import ResultsTreeHandler
 from ..validation.Validate import TestPipeline, OptimizerMetric
 from ..validation.cross_validation import StratifiedKFoldRegression
 from .PhotonPipeline import PhotonPipeline
@@ -79,6 +80,7 @@ class OutputSettings:
                  save_predictions: str = 'best',
                  save_feature_importances: str = 'best',
                  save_output: bool = True,
+                 plots: bool = True,
                  overwrite_results: bool = False,
                  project_folder = '',
                  user_id: str = '',
@@ -111,6 +113,7 @@ class OutputSettings:
             self.summary_filename = os.path.join(project_folder, summary_filename)
             self.pretrained_model_filename = os.path.join(project_folder, pretrained_model_filename)
             self.predictions_filename = os.path.join(project_folder, predictions_filename)
+            self.plots = plots
         else:
             self.local_file = ''
             self.log_file = ''
@@ -1055,6 +1058,16 @@ class Hyperpipe(BaseEstimator):
                     # save results again
                     self.result_tree.computation_completed = True
                     self.mongodb_writer.save(self.result_tree)
+
+                    # create plots
+                    if self.output_settings.plots:
+                        handler = ResultsTreeHandler(self.result_tree)
+                        handler.plot_optimizer_history(metric=self.best_config_metric, title='Optimizer History',
+                                                       type='scatter', reduce_scatter_by='auto',
+                                                       file=os.path.join(self.output_settings.results_folder,
+                                                                         'optimizer_history.png'))
+                        self.optimizer.plot(self.output_settings.results_folder)
+
                     if self.output_settings.pretrained_model_filename != '':
                         try:
                             self.save_optimum_pipe(self.output_settings.pretrained_model_filename)

@@ -12,12 +12,12 @@ X, y = load_boston(True)
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('skopt_example',
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
-                    optimizer_params={'num_iterations': 40, 'acq_func_kwargs': {'kappa': 1}},
+                    optimizer_params={'num_iterations': 30, 'acq_func_kwargs': {'kappa': 1}},
                     #optimizer='random_grid_search',  # which optimizer PHOTON shall use, in this case sk_opt
                     #optimizer_params={'k': 40},
                     metrics=['mean_squared_error'],
                     best_config_metric='mean_squared_error',
-                    outer_cv=ShuffleSplit(n_splits=5, test_size=0.2),
+                    outer_cv=ShuffleSplit(n_splits=3, test_size=0.2),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1)
 
@@ -51,7 +51,8 @@ handler = ResultsTreeHandler(my_pipe.result_tree)
 config_evaluations = handler.get_config_evaluations()
 minimum_config_evaluations = handler.get_minimum_config_evaluations()
 
-# handler.plot_optimizer_history('mean_squared_error', 'RGS 40 Eval (Scatter)', 'scatter',
-#                                '/spm-data/Scratch/spielwiese_nils_winter/optimizer_history_random_grid_search_40_scatter.png')
-handler.plot_optimizer_history('mean_squared_error', 'Scikit Optimize 40 Eval (Scatter)', 'scatter', 1,
-                               '/spm-data/Scratch/spielwiese_nils_winter/optimizer_history_scikit_optimize_40_scatter.png')
+handler.plot_optimizer_history(metric='mean_squared_error',
+                               title='Scikit Optimize 30 Eval (Scatter)',
+                               type='scatter',
+                               reduce_scatter_by=1,
+                               file='/spm-data/Scratch/spielwiese_nils_winter/new_optimizer_history_scikit_optimize_30_scatter.png')
