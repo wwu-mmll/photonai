@@ -1131,7 +1131,7 @@ class PipelineElement(BaseEstimator):
     def _check_hyper(self,BaseEstimator):
         # check if hyperparameters are members of the class
         not_supp_hyper = list(
-            set([key.split("__")[-1] for key in self._hyperparameters.keys()]) - set(BaseEstimator.get_params(self.base_element).keys()))
+            set([key.split("__")[-1] for key in self._hyperparameters.keys() if key.split("__")[-1]!="disabled"]) - set(BaseEstimator.get_params(self.base_element).keys()))
         if not_supp_hyper:
             Logger().error(
                 'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + str(not_supp_hyper))

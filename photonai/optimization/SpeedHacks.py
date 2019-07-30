@@ -8,7 +8,7 @@ class PhotonBaseConstraint:
     def __init__(self, *kwargs):
         pass
 
-    def shall_continue(self, inner_folds):
+    def shall_continue(self, config_item):
         """
         Function to evaluate if the constraint is reached.
         If it returns True, the testing of the configuration is continued.
@@ -16,8 +16,8 @@ class PhotonBaseConstraint:
 
         Parameters
         ----------
-        * 'inner_folds' [List of MDBInnerFold]:
-            All performance metrics and other scoring information for the current configuration's performance.
+        * 'config_item' [MDBConfig]:
+            All performance metrics and other scoring information for all configuration's performance.
             Can be used to evaluate if the configuration has any potential to serve the model's learning task.
         """
         pass
@@ -37,8 +37,8 @@ class MinimumPerformance:
         self.metric = metric
         self.smaller_than = smaller_than
 
-    def shall_continue(self, inner_folds):
-        if inner_folds[0].validation.metrics[self.metric] < self.smaller_than:
+    def shall_continue(self, config_item):
+        if config_item.inner_folds[0].validation.metrics[self.metric] < self.smaller_than:
             return False
         else:
             return True
