@@ -1,5 +1,8 @@
 from sklearn.utils.metaestimators import _BaseComposition
 import numpy as np
+import os
+import pickle
+import uuid
 
 
 class PhotonPipeline(_BaseComposition):
@@ -165,9 +168,62 @@ class PhotonPipeline(_BaseComposition):
         return self.steps[-1][1]
 
 
-
-
 class CacheManager:
-    pass
+
+    def __init__(self, hash, cache_folder):
+        self.hash = hash
+
+        self.pipe_order = None
+        self.cache_index = None
+
+        self.cache_folder = cache_folder
+        cache_name = 'photon_cache_index.p'
+        self.cache_file_name = os.path.join(self.cache_folder, self.cache_name)
+
+    def prepare(self, pipe_elements):
+        if os.path.isfile(self.cache_file_name):
+            self.cache_index = pickle.load(open(self.cache_file_name, 'rb'))
+        else:
+            self.cache_index = {}
+        for el in pipe_elements:
+            if hasattr(el, 'name'):
+                self.pipe_order.append(el.name)
+
+    def _find_config_for_element(self, pipe_element_name, config):
+        relevant_keys = list()
+        for item in self.pipe_order:
+            if item != pipe_element_name:
+                relevant_keys.append(item)
+            elif item == pipe_element_name:
+                relevant_keys.append(item)
+                break
+
+        relevant_dict = dict()
+        for key_name, key_value in config.items():
+            key_name_list = key_name.split("__")
+            if len(key_name_list) > 0:
+                item_name = key_name_list[0]
+            else:
+                item_name = key_name
+
+            if item_name in relevant_keys:
+                relevant_dict[key_name] = key_value
+
+        return hash(frozenset(relevant_dict.items()))
+
+    def load_cached_data(self, pipe_element_name, config):
+        config_hash = self._find_config_for_element(pipe_element_name, config)
+        if (pipe_element_name, self.hash, config_hash) in self.cache_index:
+            (X, y, kwargs) = pickle.load(open(self.cache_index[(pipe_element_name, self.hash, config_hash)], 'rb'))
+            return X, y, kwargs
+        return None
+
+    def save_data_to_cache(self, pipe_element_name, config, data):
+        config_hash = self._find_config_for_element(pipe_element_name, config)
+        pass
+
+    def save_cache_index(self):
+        pickle.dump(self.cache_index, open(self.cache_file_name, 'wb'))
+
 
 

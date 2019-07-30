@@ -115,6 +115,8 @@ class TestPipeline(object):
 
                     curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
                     list_of_score_results.append((curr_test_fold, curr_train_fold))
+                    if not job_data.shall_continue:
+                        break
 
                     TestPipeline.process_fit_results(list_of_score_results, config_item,
                                                      self.cross_validation_infos.calculate_metrics_across_folds,
@@ -193,6 +195,7 @@ class TestPipeline(object):
             self.test_data = test_data
             self.save_predictions = save_predictions
             self.save_feature_importances = save_feature_importances
+            self.shall_continue = True
 
     @staticmethod
     def parallel_inner_cv(folds_to_do, folds_done):
