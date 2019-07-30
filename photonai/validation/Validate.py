@@ -116,6 +116,29 @@ class TestPipeline(object):
                     curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
                     list_of_score_results.append((curr_test_fold, curr_train_fold))
 
+                    TestPipeline.process_fit_results(list_of_score_results, config_item,
+                                                     self.cross_validation_infos.calculate_metrics_across_folds,
+                                                     self.cross_validation_infos.calculate_metrics_per_fold,
+                                                     original_save_predictions, self.optimization_infos.metrics)
+
+
+                    if self.optimization_infos.inner_cv_callback_functions:
+                        if isinstance(self.optimization_infos.inner_cv_callback_functions, list):
+                            break_cv = 0
+                            for cf in self.optimization_infos.inner_cv_callback_functions:
+                                if not cf.shall_continue(config_item):
+                                    Logger().info(
+                                        'Skip further cross validation of config because of performance constraints')
+                                    break_cv += 1
+                                    break
+                            if break_cv > 0:
+                                break
+                        else:
+                            if not self.optimization_infos.inner_cv_callback_functions.shall_continue(config_item):
+                                Logger().info(
+                                    'Skip further cross validation of config because of performance constraints')
+                                break
+
                     fold_cnt += 1
                 else:
                     folds_to_do.put(job_data)
@@ -133,7 +156,7 @@ class TestPipeline(object):
                 while not folds_done.empty():
                     list_of_score_results.append(folds_done.get())
 
-            TestPipeline.process_fit_results(list_of_score_results, config_item,
+                TestPipeline.process_fit_results(list_of_score_results, config_item,
                                              self.cross_validation_infos.calculate_metrics_across_folds,
                                              self.cross_validation_infos.calculate_metrics_per_fold,
                                              original_save_predictions, self.optimization_infos.metrics)
@@ -307,21 +330,6 @@ class TestPipeline(object):
                                              save_feature_importances=job.save_feature_importances,
                                              training=True, **job.train_data.cv_kwargs)
 
-        # if self.callback_function:
-        #     if isinstance(self.callback_function, list):
-        #         break_cv = 0
-        #         for cf in self.callback_function:
-        #             if not cf.shall_continue(inner_fold_list):
-        #                 Logger().info('Skip further cross validation of config because of performance constraints')
-        #                 break_cv += 1
-        #                 break
-        #         if break_cv > 0:
-        #             break
-        #     else:
-        #         if not self.callback_function.shall_continue(inner_fold_list):
-        #             Logger().info(
-        #                 'Skip further cross validation of config because of performance constraints')
-        #             break
 
         return curr_test_fold, curr_train_fold
 
