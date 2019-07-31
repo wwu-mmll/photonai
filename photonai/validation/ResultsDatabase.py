@@ -35,6 +35,10 @@ class MDBScoreInformation(EmbeddedMongoModel):
     metrics_copied_from_inner = fields.BooleanField(default=False)
 
 
+    def __str__(self):
+        return str(self.metrics)
+
+
 class MDBInnerFold(EmbeddedMongoModel):
     class Meta:
         final = True

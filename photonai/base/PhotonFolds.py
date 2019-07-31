@@ -1,9 +1,11 @@
 from ..photonlogger.Logger import Logger
 from ..base.Helper import PHOTONPrintHelper
+from ..base.PhotonPipeline import CacheManager
 from ..validation.cross_validation import StratifiedKFoldRegression
 from ..validation.Validate import TestPipeline
 from ..validation.ResultsDatabase import MDBHelper, FoldOperations, MDBInnerFold, MDBConfig, MDBScoreInformation
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedKFold, StratifiedShuffleSplit, ShuffleSplit
+
 import datetime
 import numpy as np
 import uuid
@@ -107,7 +109,9 @@ class OuterFoldManager:
                  outer_fold_id,
                  cross_validation_info,
                  save_predictions: bool=False,
-                 save_feature_importances: bool=False):
+                 save_feature_importances: bool=False,
+                 cache_folder=None,
+                 cache_updater=None):
         # Information from the Hyperpipe about the design choices
         self.outer_fold_id = outer_fold_id
         self.cross_validaton_info = cross_validation_info
@@ -116,6 +120,8 @@ class OuterFoldManager:
 
         self.save_predictions = save_predictions
         self.save_feature_importances = save_feature_importances
+        self.cache_folder = cache_folder
+        self.cache_updater = cache_updater
 
         # Information about the optimization progress
         self.current_best_config = None
@@ -204,10 +210,13 @@ class OuterFoldManager:
                               self.optimization_info,
                               self.cross_validaton_info, self.outer_fold_id,
                               save_predictions=self.save_predictions,
-                              save_feature_importances=self.save_feature_importances)
+                              save_feature_importances=self.save_feature_importances,
+                              cache_folder=self.cache_folder,
+                              cache_updater=self.cache_updater)
 
             # Todo: each and everytime the pipe is instantiated just for printing.. that's bad!! WORKAROUND PIPE!!
             example_pipe = pipe_ctor()
+
             Logger().debug(PHOTONPrintHelper._optimize_printing(example_pipe, current_config))
             Logger().debug('calculating...')
 
@@ -277,6 +286,7 @@ class OuterFoldManager:
 
             # ... and create optimal pipeline
             optimum_pipe = self.copy_pipe_fnc()
+            optimum_pipe.caching = False
             # set self to best config
             optimum_pipe.set_params(**best_config_outer_fold_mdb.config_dict)
 
@@ -364,9 +374,36 @@ class OuterFoldManager:
 
         Logger().info('This took {} minutes.'.format((datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
+        if self.cache_folder is not None:
+            Logger().info("Clearing Cache")
+            CacheManager.clear_cache_files(self.cache_folder)
 
+    def fit_dummy(self, X, y, dummy):
 
-class InnerFoldManager:
+        try:
+            train_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
+            train_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
 
-    def __init__(self, fold_info: FoldInfo):
-        pass
+            if isinstance(train_X, np.ndarray):
+                if len(train_X.shape) > 2:
+                    Logger().info("Skipping dummy estimator because of too much dimensions")
+
+            dummy.fit(train_X, train_y)
+            train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.optimization_info.metrics)
+
+            # fill result tree with fold information
+            inner_fold = MDBInnerFold()
+            inner_fold.training = train_scores
+
+            if self.cross_validaton_info.eval_final_performance:
+                test_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
+                test_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
+                test_scores = TestPipeline.score(dummy, test_X, test_y, metrics=self.optimization_info.metrics)
+                Logger().info("Dummy Results: " + str(test_scores))
+                inner_fold.validation = test_scores
+
+            return inner_fold
+        except Exception as e:
+            Logger().error(e)
+            Logger().info("Skipping dummy because of error..")
+            return None

@@ -23,23 +23,18 @@ import uuid
 # PHOTON-Neuro internal format is always img=True
 class ImageTransformBase:
 
-    def __init__(self, output_img=True, nr_of_processes=1, cache_folder=None,
-                 copy_delegate=False, batch_size=2):
+    def __init__(self, output_img=True, nr_of_processes=1, copy_delegate=False, batch_size=1, _cache_folder=None):
         self.output_img = output_img
         self.needs_y = False
         self.needs_covariates = False
         self.nr_of_processes = nr_of_processes
         self.copy_delegate = copy_delegate
-        self.cache_folder = cache_folder
-        self.batch_size=batch_size
-        # self.client = MongoClient('trap-umbriel', 27017)
-        # self.db = self.client['photon_cache']
-        # self.fs = gridfs.GridFS(self.db)
+        self.batch_size = batch_size
+        self._cache_folder = _cache_folder
 
-    def clear_cache(self):
-        if self.cache_folder is not None:
-            if os.path.isdir(self.cache_folder):
-                shutil.rmtree(self.cache_folder)
+    @property
+    def cache_folder(self):
+        return self._cache_folder
 
     class ImageJob:
 
@@ -58,8 +53,6 @@ class ImageTransformBase:
     @staticmethod
     def parallel_application(folds_to_do, folds_done, num_jobs_done, cache_dir):
 
-        # fs = gridfs.GridFS(db)
-
         while True:
             try:
                 task = folds_to_do.get_nowait()
@@ -67,10 +60,6 @@ class ImageTransformBase:
                 folds_done.close()
                 break
             else:
-                # Logger().info(task.transform_name + " - " + str(os.getpid()))
-                # print(task.transform_name + " - " + str(os.getpid()))
-
-                # load data from db
                 try:
 
                     # load data
@@ -83,29 +72,18 @@ class ImageTransformBase:
                     if os.path.isdir(save_filename):
                         shutil.rmtree(save_filename)
 
-                    # c = bcolz.carray(delegate_output, rootdir=save_filename)
-                    # c.flush()
                     with open(save_filename + ".p", 'wb') as f:
                         pickle.dump(delegate_output, f, protocol=2)
-                    # print("Process " + str(os.getpid()) + " finished job nr " + str(num_jobs_done.value))
 
-                    # binarize output
-
-                    # # save to db
-                    # data_obj.processed_data = fs.put(binary_output)
-                    # data_obj.save()
                 except DoesNotExist as e:
                     print(e)
-                    # Logger().error("Could not process task because data is not found with id " + str(task.data))
-                # folds_done.put(fold_output)
+
                 folds_done.put((save_filename, task.sort_index))
                 num_jobs_done.value = num_jobs_done.value + 1
-                # print(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
-                # Logger().info(task.transform_name + " - " + str(os.getpid()) + " - DONE!")
+
         return True
 
-    def apply_transform(self, X, delegate, transform_name="transformation",
-                        config_dict=None, copy_object=None,
+    def apply_transform(self, X, delegate, transform_name="transformation", copy_object=None,
                         **transform_kwargs):
         """
 
@@ -132,16 +110,6 @@ class ImageTransformBase:
             # jobs_unparallel_done = list()
             # ----------- faking parallelization -----------------------
 
-            process_name = "debug_parallel_"
-            # job_cache_dict_filename = os.path.join(self.cache_folder, process_name + "cache.p")
-            if not os.path.isdir(self.cache_folder):
-                os.mkdir(self.cache_folder)
-            # if os.path.isfile(job_cache_dict_filename):
-            #     with open(job_cache_dict_filename, 'rb') as ojd:
-            #         job_cache_dict = pickle.load(ojd)
-            # else:
-            #     job_cache_dict = {}
-
             num_of_jobs_todo = 0
             for start, stop in PhotonBatchElement.chunker(len(X), self.batch_size):
 
@@ -151,24 +119,6 @@ class ImageTransformBase:
                 # else:
                 x_in = X[start:stop]
 
-
-            # for x_in in X:
-
-                # # write new job to queue
-                # if config_dict is not None:
-                #     config_dict_copy = dict(config_dict)
-                #     config_dict_copy["data_in_key"] = x_in
-                #     config_dict_hash = json.dumps(config_dict_copy, sort_keys=True)
-                # else:
-                #     config_dict_hash = json.dumps(x_in)
-                #
-                # # write anything to dictionary so that is easily indexable
-                # if config_dict_hash in job_cache_dict and os.path.isfile(os.path.join(self.cache_folder,
-                #                                                                       job_cache_dict[config_dict_hash] + ".p")):
-                #     num_jobs_done.value = num_jobs_done.value + 1
-                #     jobs_done.put((os.path.join(self.cache_folder, job_cache_dict[config_dict_hash]), num_of_jobs_todo))
-                #
-                # else:
                 unique_key = uuid.uuid4()
                 job_delegate = delegate
                 if self.copy_delegate:
@@ -188,9 +138,6 @@ class ImageTransformBase:
                 # ----------- faking parallelization -----------------------
 
                 num_of_jobs_todo += 1
-
-            # with open(job_cache_dict_filename, 'wb') as jd:
-            #     pickle.dump(job_cache_dict, jd)
 
             process_list = list()
             # Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
@@ -256,7 +203,6 @@ class ImageTransformBase:
             if len(output_images) > 1:
                 output_images = np.squeeze(np.asarray(output_images))
 
-            # pickle.dump(output_images, open("/home/rleenings/Projects/TestNeuro/output/output_images.p", "wb"))
             for p in process_list:
                 # print("joining process " + str(p))
                 p.join()
@@ -277,8 +223,8 @@ class ImageTransformBase:
 
 # Smoothing
 class SmoothImages(ImageTransformBase, BaseEstimator):
-    def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=1, cache_folder=None, batch_size=10):
-        super(SmoothImages, self).__init__(output_img, nr_of_processes, cache_folder, batch_size=batch_size)
+    def __init__(self, fwhm=[2, 2, 2], output_img=True, nr_of_processes=1):
+        super(SmoothImages, self).__init__(output_img, nr_of_processes)
 
         # initialize private variable and
         self._fwhm = None
@@ -303,16 +249,15 @@ class SmoothImages(ImageTransformBase, BaseEstimator):
 
     def transform(self, X, y=None, **kwargs):
         kwargs_dict = {'fwhm': self.fwhm}
-        return self.apply_transform(X, smooth_img, config_dict=kwargs_dict,
-                                    transform_name="smoothing mri image", **kwargs_dict)
+        return self.apply_transform(X, smooth_img, transform_name="smoothing mri image", **kwargs_dict)
 
 
 class ResampleImages(ImageTransformBase, BaseEstimator):
     """
      Resampling voxel size
     """
-    def __init__(self, voxel_size=[3, 3, 3], output_img=True, nr_of_processes=1, cache_folder=None, batch_size=10):
-        super(ResampleImages, self).__init__(output_img, nr_of_processes, cache_folder, batch_size=batch_size)
+    def __init__(self, voxel_size=[3, 3, 3], output_img=True, nr_of_processes=1):
+        super(ResampleImages, self).__init__(output_img, nr_of_processes)
         self._voxel_size = None
         self.voxel_size = voxel_size
 
@@ -341,10 +286,9 @@ class ResampleImages(ImageTransformBase, BaseEstimator):
 
 class PatchImages(ImageTransformBase, BaseEstimator):
 
-    def __init__(self, patch_size=25, random_state=42, nr_of_processes=3, cache_folder=None, batch_size=10):
+    def __init__(self, patch_size=25, random_state=42, nr_of_processes=3):
         Logger().info("Nr or processes: " + str(nr_of_processes))
-        super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes,
-                                          cache_folder=cache_folder, batch_size=batch_size)
+        super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes)
         # Todo: give cache folder to mother class
 
         self.patch_size = patch_size
@@ -357,7 +301,6 @@ class PatchImages(ImageTransformBase, BaseEstimator):
         Logger().info("Drawing patches")
         transformed_X = self.apply_transform(X, PatchImages.draw_patches,
                                              transform_name="patching mri image",
-                                             config_dict={'patch_size': self.patch_size},
                                              **{'patch_size': self.patch_size})
 
         return transformed_X

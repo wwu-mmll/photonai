@@ -1,10 +1,9 @@
-import datetime
+
 import glob
 import importlib.util
 import inspect
 import os
 import traceback
-import time
 import re
 import zipfile
 import importlib
@@ -12,17 +11,15 @@ import __main__
 import shutil
 from collections import OrderedDict
 from copy import deepcopy
-from hashlib import sha1
 from bson.objectid import ObjectId
 
 from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
+from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.model_selection import *
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.dummy import DummyClassifier, DummyRegressor
-
 
 from .PhotonFolds import  *
 from .Helper import PHOTONPrintHelper
@@ -33,7 +30,7 @@ from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGri
 from ..optimization.SkOpt import SkOptOptimizer
 from ..optimization.Smac3Opt import SMACOptimizer
 from ..validation.ResultsDatabase import *
-from ..validation.Validate import TestPipeline, Scorer
+from ..validation.Validate import  Scorer
 from .PhotonPipeline import PhotonPipeline
 
 
@@ -279,10 +276,12 @@ class Hyperpipe(BaseEstimator):
                  verbosity=0,
                  output_settings=None,
                  performance_constraints=None,
-                 permutation_id: str=None):
+                 permutation_id: str=None,
+                 cache_folder: str=None):
 
         self.name = re.sub(r'\W+', '', name)
         self.permutation_id = permutation_id
+        self.cache_folder = cache_folder
 
         # ====================== Cross Validation ===========================
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
@@ -573,6 +572,39 @@ class Hyperpipe(BaseEstimator):
            """
         self.__iadd__(pipe_element)
 
+    def _prepare_dummy_estimator(self):
+        Logger().info("Running Dummy Estimator.")
+        last_pipeline_element = self.pipeline_elements[-1]
+        if isinstance(last_pipeline_element, PipelineSwitch):
+            est_type = last_pipeline_element._estimator_type
+        elif hasattr(last_pipeline_element, 'base_element'):
+            if hasattr(last_pipeline_element.base_element, '_estimator_type'):
+                est_type = last_pipeline_element.base_element._estimator_type
+            else:
+                est_type = None
+        else:
+            est_type = None
+
+        # Run Dummy Estimator
+        self.result_tree.dummy_estimator = DummyResults()
+
+        if est_type == 'regressor':
+            self.result_tree.dummy_estimator.strategy = 'mean'
+            return DummyRegressor(strategy=self.result_tree.dummy_estimator.strategy)
+        elif est_type == 'classifier':
+            self.result_tree.dummy_estimator.strategy = 'most_frequent'
+            return DummyClassifier(strategy=self.result_tree.dummy_estimator.strategy)
+        else:
+            Logger().info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
+                          'step skipped.')
+            return
+
+    def _evaluate_dummy_estimator(self, fold_list):
+        config_item = MDBConfig()
+        config_item.inner_folds = [f for f in fold_list if f is not None]
+        if len(config_item.inner_folds) > 0:
+            self.result_tree.dummy_estimator.train, self.result_tree.dummy_estimator.test = MDBHelper.aggregate_metrics(config_item,
+                                                                                            self.optimization.metrics)
 
     def _prepare_result_logging(self, start_time):
         result_tree_name = self.name
@@ -681,7 +713,7 @@ class Hyperpipe(BaseEstimator):
         # at first first, erase all rows where y is Nan if preprocessing has not done it already
         try:
             nans_in_y = np.isnan(self.data.y)
-            nr_of_nans = len(np.where(nans_in_y == 1))
+            nr_of_nans = len(np.where(nans_in_y == 1)[0])
             if nr_of_nans > 0:
                 Logger().info("You have " + str(nr_of_nans) + " Nans in your target vector, "
                                                               "PHOTON erases every data item that has a Nan Target")
@@ -693,6 +725,29 @@ class Hyperpipe(BaseEstimator):
             pass
 
         Logger().info("Hyperpipe is training with " + str(self.data.y.shape[0]) + " data items.")
+
+    @staticmethod
+    def prepare_caching(cache_folder):
+        if not os.path.isdir(cache_folder):
+            os.mkdir(cache_folder)
+
+    @staticmethod
+    def recursive_cash_folder_propagation(new_pipe, cache_folder, inner_fold_id):
+        new_pipe.cache_folder = cache_folder
+        new_pipe.fold_id = inner_fold_id
+        new_pipe.caching = True
+
+        for step_name, step_obj in new_pipe.steps:
+            if isinstance(step_obj, PipelineBranch):
+                sub_cache = os.path.join(cache_folder, step_name)
+                Hyperpipe.prepare_caching(sub_cache)
+                Hyperpipe.recursive_cash_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
+            elif isinstance(step_obj, PipelineStacking):
+                for child in step_obj.pipe_elements:
+                    if isinstance(child, PipelineBranch):
+                        sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
+                        Hyperpipe.prepare_caching(sub_cache)
+                        Hyperpipe.recursive_cash_folder_propagation(child.base_element, sub_cache, inner_fold_id)
 
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
@@ -758,7 +813,13 @@ class Hyperpipe(BaseEstimator):
                 self.cross_validation.outer_folds = {f.fold_id: f for f in outer_folds}
 
                 # Run Dummy Estimator
-                self.result_tree.dummy_estimator = self.run_dummy_estimator(outer_folds)
+                dummy_estimator = self._prepare_dummy_estimator()
+                dummy_results = []
+
+                if self.cache_folder is not None:
+                    Logger().info("Removing Cache Files")
+                    CacheManager.clear_cache_files(self.cache_folder)
+
 
                 # loop over outer cross validation
                 for outer_f in outer_folds:
@@ -772,11 +833,14 @@ class Hyperpipe(BaseEstimator):
                                                              outer_f.fold_id,
                                                              self.cross_validation,
                                                              save_feature_importances=self.output_settings.save_feature_importances,
-                                                             save_predictions=self.output_settings.save_predictions)
+                                                             save_predictions=self.output_settings.save_predictions,
+                                                             cache_folder=self.cache_folder,
+                                                             cache_updater=self.recursive_cash_folder_propagation)
                     # 2. prepare
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
                     self.result_tree.outer_folds.append(outer_fold)
                     outer_fold_computator.prepare_optimization(self.pipeline_elements, outer_fold)
+                    dummy_results.append(outer_fold_computator.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
                     # 3. fit
                     outer_fold_computator.fit(self.data.X, self.data.y, self.data.kwargs)
@@ -785,6 +849,7 @@ class Hyperpipe(BaseEstimator):
                     self.mongodb_writer.save(self.result_tree)
 
                 # evaluate hyperparameter optimization results for best config
+                self._evaluate_dummy_estimator(dummy_results)
                 self._finalize_optimization()
 
             ###############################################################################################
@@ -903,7 +968,8 @@ class Hyperpipe(BaseEstimator):
                     pipeline_steps.append((new_step.name, new_step))
             else:
                 pipeline_steps.append((cpy.name, cpy))
-        return PhotonPipeline(pipeline_steps)
+        new_pipe = PhotonPipeline(pipeline_steps)
+        return new_pipe
 
     def save_optimum_pipe(self, filename=None, password=None):
         if filename is None:
@@ -913,73 +979,6 @@ class Hyperpipe(BaseEstimator):
     @staticmethod
     def load_optimum_pipe(file, password=None):
         return PhotonModelPersistor.load_optimum_pipe(file, password)
-
-    def run_dummy_estimator(self, outer_folds):
-        if isinstance(self.pipeline_elements[-1], PipelineSwitch):
-            est_type = self.pipeline_elements[-1]._estimator_type
-        elif hasattr(self.pipeline_elements[-1], 'base_element'):
-            if hasattr(self.pipeline_elements[-1].base_element, '_estimator_type'):
-                est_type = self.pipeline_elements[-1].base_element._estimator_type
-            else:
-                est_type = None
-        else:
-            est_type = None
-
-        if est_type == 'regressor':
-            strategy = 'mean'
-            dummy = DummyRegressor(strategy=strategy)
-        elif est_type == 'classifier':
-            strategy = 'most_frequent'
-            dummy = DummyClassifier(strategy=strategy)
-        else:
-            Logger().info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
-                          'step skipped.')
-            return
-
-        fold_list = list()
-        config_item = MDBConfig()
-        config_item.inner_folds = []
-        config_item.metrics_test = []
-        config_item.metrics_train = []
-
-        try:
-            for fold_obj in outer_folds:
-
-                train_X = self.data.X[fold_obj.train_indices]
-                train_y = self.data.y[fold_obj.train_indices]
-
-                if isinstance(train_X, np.ndarray):
-                    if len(train_X.shape) > 2:
-                        Logger().info("Skipping dummy estimator because of too much dimensions")
-                        break
-
-                # dummy.fit(train_X, train_y)
-                dummy.fit(train_X, train_y)
-                train_scores = TestPipeline.score(dummy, train_X, train_y, metrics=self.optimization.metrics)
-
-                # fill result tree with fold information
-                inner_fold = MDBInnerFold()
-                inner_fold.training = train_scores
-
-                if self.cross_validation.eval_final_performance:
-                    test_X, test_y = self.data.X[fold_obj.test_indices], self.data.y[fold_obj.test_indices]
-                    test_scores = TestPipeline.score(dummy, test_X, test_y, metrics=self.optimization.metrics)
-                    inner_fold.validation = test_scores
-
-                fold_list.append(inner_fold)
-        except Exception as e:
-            Logger().error(e)
-            Logger().info("Skipping dummy because of error..")
-
-        dummy_results = DummyResults()
-        if len(fold_list) > 0:
-            config_item.inner_folds = fold_list
-            config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item,
-                                                                                              self.optimization.metrics)
-            dummy_results.strategy = strategy
-            dummy_results.train = config_item.metrics_train
-            dummy_results.test = config_item.metrics_test
-        return dummy_results
 
     def config_to_human_readable_dict(self, specific_config):
         return PHOTONPrintHelper.config_to_human_readable_dict(self._pipe, specific_config)
