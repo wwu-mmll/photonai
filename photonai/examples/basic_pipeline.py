@@ -18,7 +18,8 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
-                    verbosity=1)  # get error, warn and info message
+                    verbosity=0,
+                    cache_folder='/home/rleenings/Projects/TestNeuro/cache/')  # get error, warn and info message
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     # performance_constraints = [MinimumPerformance('accuracy', 0.96),
                     #                            MinimumPerformance('precision', 0.96)]

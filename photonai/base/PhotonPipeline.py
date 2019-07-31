@@ -3,13 +3,29 @@ import numpy as np
 import os
 import pickle
 import uuid
+import shutil
+from ..photonlogger.Logger import Logger
 
 
 class PhotonPipeline(_BaseComposition):
 
     def __init__(self, steps):
         self.steps = steps
+
         self.current_config = None
+        self._fold_id = None
+        self.cache_folder = None
+        self.caching = False
+
+        self.cache_man = CacheManager(self._fold_id, self.cache_folder)
+
+    @property
+    def fold_id(self):
+        return self._fold_id
+
+    @fold_id.setter
+    def fold_id(self, value: uuid.UUID):
+        self._fold_id = str(value)
 
     def get_params(self, deep=True):
         """Get parameters for this estimator.
@@ -65,9 +81,7 @@ class PhotonPipeline(_BaseComposition):
 
         self._validate_steps()
 
-        for (name, transformer) in self.steps[:-1]:
-            transformer.fit(X, y, **kwargs)
-            X, y, kwargs = transformer.transform(X, y, **kwargs)
+        X, y, kwargs = self._caching_fit_transform(X, y, kwargs, fit=True)
 
         if self._final_estimator is not None:
             self._final_estimator.fit(X, y, **kwargs)
@@ -89,16 +103,57 @@ class PhotonPipeline(_BaseComposition):
 
         Returns transformed X, y and kwargs
         """
-        for (name, transformer) in self.steps[:-1]:
-            X, y, kwargs = transformer.transform(X, y, **kwargs)
+        X, y, kwargs = self._caching_fit_transform(X, y, kwargs)
 
         if self._final_estimator is not None:
             if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
-                X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
-                # always work with numpy arrays to avoid checking for shape attribute
-                X = self.check_for_numpy_array(X)
-                y = self.check_for_numpy_array(y)
+                if self.caching and len(self.current_config) > 0:
+                    X, y, kwargs = self.load_or_save_cached_data(self._final_estimator.name, X, y, kwargs, self._final_estimator)
+                else:
+                    X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
+
+        if self.caching:
+            self.cache_man.save_cache_index()
+
         return X, y, kwargs
+
+    def load_or_save_cached_data(self, name, X, y, kwargs, transformer, fit=False):
+        cached_result = self.cache_man.load_cached_data(name)
+        if cached_result is None:
+            if fit:
+                transformer.fit(X, y, **kwargs)
+            X, y, kwargs = transformer.transform(X, y, **kwargs)
+            self.cache_man.save_data_to_cache(name, (X, y, kwargs))
+        else:
+            X, y, kwargs = cached_result[0], cached_result[1], cached_result[2]
+        return X, y, kwargs
+
+    def _caching_fit_transform(self, X, y, kwargs, fit=False):
+
+        if self.caching:
+            # update infos, just in case
+            self.cache_man.hash = self._fold_id
+            self.cache_man.cache_folder = self.cache_folder
+            self.cache_man.prepare([name for name, e in self.steps], X, self.current_config)
+
+        for (name, transformer) in self.steps[:-1]:
+            if not self.caching or self.current_config is None:
+                if fit:
+                    transformer.fit(X, y, **kwargs)
+                X, y, kwargs = transformer.transform(X, y, **kwargs)
+            else:
+                X, y, kwargs = self.load_or_save_cached_data(name, X, y, kwargs, transformer, fit)
+
+            # always work with numpy arrays to avoid checking for shape attribute
+            X = self.check_for_numpy_array(X)
+            y = self.check_for_numpy_array(y)
+
+        if self.caching:
+            self.cache_man.save_cache_index()
+
+        return X, y, kwargs
+
+
 
     def predict(self, X, training=False, **kwargs):
         """
@@ -108,6 +163,7 @@ class PhotonPipeline(_BaseComposition):
 
         In case the last step is no estimator, it returns the transformed data.
         """
+
         # first transform
         if not training:
             X, _, kwargs = self.transform(X, y=None, **kwargs)
@@ -170,26 +226,60 @@ class PhotonPipeline(_BaseComposition):
 
 class CacheManager:
 
-    def __init__(self, hash, cache_folder):
-        self.hash = hash
+    def __init__(self, _hash=None, cache_folder=None):
+        self._hash = _hash
+        self.cache_folder = cache_folder
 
         self.pipe_order = None
         self.cache_index = None
+        self.state = None
+        self.cache_file_name = None
 
-        self.cache_folder = cache_folder
+    @property
+    def hash(self):
+        return self._hash
+
+    @hash.setter
+    def hash(self, value):
+        if not isinstance(value, str):
+            self._hash = str(value)
+        else:
+            self._hash = value
+
+    class State:
+        def __init__(self, config=None, nr_items=None,
+                     first_data_hash=None, first_data_str: str = None):
+            self.config = config
+            self.nr_items = nr_items
+            self.first_data_hash = first_data_hash
+            self.first_data_str = first_data_str
+
+    def prepare(self, pipe_elements, X, config):
+
         cache_name = 'photon_cache_index.p'
-        self.cache_file_name = os.path.join(self.cache_folder, self.cache_name)
+        self.cache_file_name = os.path.join(self.cache_folder, cache_name)
 
-    def prepare(self, pipe_elements):
         if os.path.isfile(self.cache_file_name):
-            self.cache_index = pickle.load(open(self.cache_file_name, 'rb'))
+            with open(self.cache_file_name, 'rb') as f:
+                self.cache_index = pickle.load(f)
         else:
             self.cache_index = {}
-        for el in pipe_elements:
-            if hasattr(el, 'name'):
-                self.pipe_order.append(el.name)
+        self.pipe_order = pipe_elements
 
-    def _find_config_for_element(self, pipe_element_name, config):
+        first_item_hash = hash(str(X[0]))
+        self.state = CacheManager.State(config=config, first_data_hash=first_item_hash)
+
+        if isinstance(X, str):
+            self.state.nr_items = 0
+            self.state.first_data_str = X
+        elif isinstance(X, np.ndarray):
+            self.state.nr_items = X.shape[0]
+            self.state.first_data_str = str(self.state.first_data_hash)
+        else:
+            self.state.nr_items = len(X)
+            self.state.first_data_str = str(self.state.first_data_hash)
+
+    def _find_config_for_element(self, pipe_element_name):
         relevant_keys = list()
         for item in self.pipe_order:
             if item != pipe_element_name:
@@ -199,31 +289,58 @@ class CacheManager:
                 break
 
         relevant_dict = dict()
-        for key_name, key_value in config.items():
-            key_name_list = key_name.split("__")
-            if len(key_name_list) > 0:
-                item_name = key_name_list[0]
-            else:
-                item_name = key_name
+        if self.state.config is not None and len(self.state.config) > 0:
+            for key_name, key_value in self.state.config.items():
+                key_name_list = key_name.split("__")
+                if len(key_name_list) > 0:
+                    item_name = key_name_list[0]
+                else:
+                    item_name = key_name
 
-            if item_name in relevant_keys:
-                relevant_dict[key_name] = key_value
+                if item_name in relevant_keys:
+                    relevant_dict[key_name] = key_value
 
         return hash(frozenset(relevant_dict.items()))
 
-    def load_cached_data(self, pipe_element_name, config):
-        config_hash = self._find_config_for_element(pipe_element_name, config)
-        if (pipe_element_name, self.hash, config_hash) in self.cache_index:
-            (X, y, kwargs) = pickle.load(open(self.cache_index[(pipe_element_name, self.hash, config_hash)], 'rb'))
+    def load_cached_data(self, pipe_element_name):
+        config_hash = self._find_config_for_element(pipe_element_name)
+        cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
+        if cache_query in self.cache_index:
+            Logger().debug("Loading data from cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
+                          + self.state.first_data_str + " - " + str(self.state.config))
+            with open(self.cache_index[cache_query], 'rb') as f:
+                (X, y, kwargs) = pickle.load(f)
             return X, y, kwargs
         return None
 
-    def save_data_to_cache(self, pipe_element_name, config, data):
-        config_hash = self._find_config_for_element(pipe_element_name, config)
-        pass
+    def save_data_to_cache(self, pipe_element_name, data):
+        config_hash = self._find_config_for_element(pipe_element_name)
+        filename = os.path.join(self.cache_folder, str(uuid.uuid4()) + ".p")
+        self.cache_index[(pipe_element_name, self.hash, config_hash, self.state.nr_items,
+                          self.state.first_data_hash)] = filename
+        Logger().debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
+                      + self.state.first_data_str + " - " + str(self.state.config))
+        with open(filename, 'wb') as f:
+            pickle.dump(data, f)
 
     def save_cache_index(self):
-        pickle.dump(self.cache_index, open(self.cache_file_name, 'wb'))
+        with open(self.cache_file_name, 'wb') as f:
+            pickle.dump(self.cache_index, f)
 
+    def clear_cache(self):
+        CacheManager.clear_cache_files(self.cache_folder)
 
+    @staticmethod
+    def clear_cache_files(cache_folder):
+        if cache_folder is not None:
+            if os.path.isdir(cache_folder):
+                for the_file in os.listdir(cache_folder):
+                    file_path = os.path.join(cache_folder, the_file)
+                    try:
+                        if os.path.isfile(file_path):
+                            os.unlink(file_path)
+                        elif os.path.isdir(file_path):
+                            shutil.rmtree(file_path)
+                    except Exception as e:
+                        print(e)
 
