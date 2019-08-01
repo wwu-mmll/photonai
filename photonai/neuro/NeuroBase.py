@@ -21,10 +21,10 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
     """
     NEURO_ELEMENTS = PhotonRegister.get_package_info(['PhotonNeuro'])
 
-    def __init__(self, name, nr_of_processes=1, batch_size=1):
+    def __init__(self, name, nr_of_processes=1, batch_size=1, parallelization_cache_folder=None):
         PipelineBranch.__init__(self, name)
         ImageTransformBase.__init__(self, nr_of_processes=nr_of_processes,
-                                    copy_delegate=True,
+                                    copy_delegate=True, parallelization_cache_folder=parallelization_cache_folder,
                                     output_img=False, batch_size=batch_size)
         # super().__init__(name, nr_of_processes, cache_folder,
         #                  copy_delegate=True, output_img=False)
@@ -33,10 +33,17 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
         self.needs_y = False
         self.needs_covariates = True
         self.current_config = None
+        self.skip_caching = True
+        self.fix_fold_id = True
+        self.do_not_delete_cache_folder = True
 
-    @property
-    def cache_folder(self):
-        return self.base_element.cache_folder
+    def fit(self, X, y=None, **kwargs):
+        # do nothing here!!
+        return self
+
+    # @property
+    # def cache_folder(self):
+    #     return self.base_element.cache_folder
 
     def __iadd__(self, pipe_element):
         """
@@ -103,8 +110,7 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
             # do it item-wise for caching
             output = list()
             for x_in in X:
-                self.base_element.fold_id = None
-                x_new, _, _ = self.base_element.transform(x_in)
+                x_new, _, _ = self.base_element.transform([x_in])
                 output.append(x_new[0])
             output = np.asarray(output)
             return output, y, kwargs
@@ -115,10 +121,10 @@ class NeuroModuleBranch(PipelineBranch, ImageTransformBase):
 
     def copy_me(self, with_parallelization_info=True):
         new_copy = super().copy_me()
+        new_copy.base_element._cache_folder = self.base_element.cache_folder
         if with_parallelization_info:
             new_copy.nr_of_processes = self.nr_of_processes
-            new_copy._cache_folder = self.base_element.cache_folder
-            new_copy.base_element.fold_id = None
+            new_copy.parallelization_cache_folder = self.parallelization_cache_folder
         return new_copy
 
 

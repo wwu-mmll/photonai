@@ -23,18 +23,15 @@ import uuid
 # PHOTON-Neuro internal format is always img=True
 class ImageTransformBase:
 
-    def __init__(self, output_img=True, nr_of_processes=1, copy_delegate=False, batch_size=1, _cache_folder=None):
+    def __init__(self, output_img=True, nr_of_processes=1, copy_delegate=False, batch_size=1,
+                 parallelization_cache_folder=None):
         self.output_img = output_img
         self.needs_y = False
         self.needs_covariates = False
         self.nr_of_processes = nr_of_processes
         self.copy_delegate = copy_delegate
         self.batch_size = batch_size
-        self._cache_folder = _cache_folder
-
-    @property
-    def cache_folder(self):
-        return self._cache_folder
+        self.parallelization_cache_folder = parallelization_cache_folder
 
     class ImageJob:
 
@@ -143,7 +140,7 @@ class ImageTransformBase:
             # Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
             for w in range(self.nr_of_processes):
                 p = Process(target=ImageTransformBase.parallel_application, args=(jobs_to_do, jobs_done, num_jobs_done,
-                                                                                  self.cache_folder))
+                                                                                  self.parallelization_cache_folder))
                 process_list.append(p)
                 p.start()
 

@@ -12,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.base import BaseEstimator
 
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
@@ -27,7 +28,7 @@ from sklearn.tree import DecisionTreeClassifier
 # assertNotIsInstance(a, b) 	not isinstance(a, b) 	3.2
 
 
-class DummyYAndCovariatesTransformer:
+class DummyYAndCovariatesTransformer(BaseEstimator):
 
     def __init__(self):
         self.needs_y = True
