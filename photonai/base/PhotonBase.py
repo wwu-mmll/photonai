@@ -740,14 +740,16 @@ class Hyperpipe(BaseEstimator):
         for step_name, step_obj in new_pipe.steps:
             if isinstance(step_obj, PipelineBranch):
                 sub_cache = os.path.join(cache_folder, step_name)
-                Hyperpipe.prepare_caching(sub_cache)
+                # Hyperpipe.prepare_caching(sub_cache)
                 Hyperpipe.recursive_cash_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
+                Hyperpipe.prepare_caching(step_obj.base_element.cache_folder)
             elif isinstance(step_obj, PipelineStacking):
                 for child in step_obj.pipe_elements:
                     if isinstance(child, PipelineBranch):
                         sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
-                        Hyperpipe.prepare_caching(sub_cache)
+                        # Hyperpipe.prepare_caching(sub_cache)
                         Hyperpipe.recursive_cash_folder_propagation(child.base_element, sub_cache, inner_fold_id)
+                        Hyperpipe.prepare_caching(child.base_element.cache_folder)
 
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
@@ -934,8 +936,8 @@ class Hyperpipe(BaseEstimator):
         :return: Hyperpipe
         """
         # create new Hyperpipe instance
-        pipe_copy = Hyperpipe(name=self.__dict__['name'], inner_cv=self.__dict__['inner_cv'],
-                              best_config_metric=self.__dict__['best_config_metric'], metrics=self.__dict__['metrics'])
+        pipe_copy = Hyperpipe(name=self.name, inner_cv=self.cross_validation.inner_cv,
+                              best_config_metric=self.optimization.best_config_metric, metrics=self.optimization.metrics)
 
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
@@ -1378,6 +1380,10 @@ class PipelineBranch(PipelineElement):
         self.pipeline_elements = []
         self.has_hyperparameters = True
 
+        # needed for caching on individual level
+        self.fix_fold_id = False
+        self.do_not_delete_cache_folder = False
+
     def fit(self, X, y=None, **kwargs):
         return super().fit(X, y, **kwargs)
 
@@ -1428,7 +1434,10 @@ class PipelineBranch(PipelineElement):
 
         if self.has_hyperparameters:
             self.generate_sklearn_hyperparameters()
-        self.base_element = PhotonPipeline(pipeline_steps)
+        new_pipe = PhotonPipeline(pipeline_steps)
+        new_pipe.fix_fold_id = self.fix_fold_id
+        new_pipe.do_not_delete_cache_folder = self.do_not_delete_cache_folder
+        self.base_element = new_pipe
 
     def copy_me(self):
         new_copy_of_me = self.__class__(self.name)

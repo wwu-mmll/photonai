@@ -14,7 +14,9 @@ class PhotonPipeline(_BaseComposition):
 
         self.current_config = None
         self._fold_id = None
-        self.cache_folder = None
+        self.fix_fold_id = False
+        self._cache_folder = None
+        self.do_not_delete_cache_folder = False
         self.caching = False
 
         self.cache_man = CacheManager(self._fold_id, self.cache_folder)
@@ -25,7 +27,24 @@ class PhotonPipeline(_BaseComposition):
 
     @fold_id.setter
     def fold_id(self, value: uuid.UUID):
-        self._fold_id = str(value)
+        if self.fix_fold_id:
+            self._fold_id = "fixed_fold_id"
+        else:
+            self._fold_id = str(value)
+
+    @property
+    def cache_folder(self):
+        return self._cache_folder
+
+    @cache_folder.setter
+    def cache_folder(self, value):
+        if not self.do_not_delete_cache_folder:
+            self._cache_folder = value
+        else:
+            if isinstance(value, str):
+                self._cache_folder = value + "DND"
+            else:
+                self._cache_folder = value
 
     def get_params(self, deep=True):
         """Get parameters for this estimator.
@@ -80,7 +99,6 @@ class PhotonPipeline(_BaseComposition):
     def fit(self, X, y=None, **kwargs):
 
         self._validate_steps()
-
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs, fit=True)
 
         if self._final_estimator is not None:
@@ -135,14 +153,30 @@ class PhotonPipeline(_BaseComposition):
             self.cache_man.hash = self._fold_id
             self.cache_man.cache_folder = self.cache_folder
             self.cache_man.prepare([name for name, e in self.steps], X, self.current_config)
+            last_cached_item = None
 
-        for (name, transformer) in self.steps[:-1]:
-            if not self.caching or self.current_config is None:
+        # all steps except the last one
+        num_steps = len(self.steps) - 1
+
+        for num, (name, transformer) in enumerate(self.steps[:-1]):
+            if not self.caching or self.current_config is None or \
+                    (hasattr(transformer, 'skip_caching') and transformer.skip_caching):
                 if fit:
                     transformer.fit(X, y, **kwargs)
                 X, y, kwargs = transformer.transform(X, y, **kwargs)
             else:
-                X, y, kwargs = self.load_or_save_cached_data(name, X, y, kwargs, transformer, fit)
+                # load data when the first item occurs that needs new calculation
+                if self.cache_man.check_cache(name):
+                    # as long as we find something cached, we remember what it was
+                    last_cached_item = name
+                    # if it is the last step, we need to load the data now
+                    if num + 1 == num_steps:
+                        X, y, kwargs = self.load_or_save_cached_data(last_cached_item, X, y, kwargs, transformer, fit)
+                else:
+                    if last_cached_item is not None:
+                        # we load the cached data when the first transformation on this data is upcoming
+                        X, y, kwargs = self.load_or_save_cached_data(last_cached_item, X, y, kwargs, transformer, fit)
+                    X, y, kwargs = self.load_or_save_cached_data(name, X, y, kwargs, transformer, fit)
 
             # always work with numpy arrays to avoid checking for shape attribute
             X = self.check_for_numpy_array(X)
@@ -152,8 +186,6 @@ class PhotonPipeline(_BaseComposition):
             self.cache_man.save_cache_index()
 
         return X, y, kwargs
-
-
 
     def predict(self, X, training=False, **kwargs):
         """
@@ -266,18 +298,19 @@ class CacheManager:
             self.cache_index = {}
         self.pipe_order = pipe_elements
 
-        first_item_hash = hash(str(X[0]))
+        first_item = X[0]
+        first_item_hash = hash(str(first_item))
         self.state = CacheManager.State(config=config, first_data_hash=first_item_hash)
 
-        if isinstance(X, str):
-            self.state.nr_items = 0
-            self.state.first_data_str = X
-        elif isinstance(X, np.ndarray):
+        if isinstance(X, np.ndarray):
             self.state.nr_items = X.shape[0]
             self.state.first_data_str = str(self.state.first_data_hash)
         else:
             self.state.nr_items = len(X)
-            self.state.first_data_str = str(self.state.first_data_hash)
+            if isinstance(first_item, str):
+                self.state.first_data_str = first_item
+            else:
+                self.state.first_data_str = str(self.state.first_data_hash)
 
     def _find_config_for_element(self, pipe_element_name):
         relevant_keys = list()
@@ -303,15 +336,28 @@ class CacheManager:
         return hash(frozenset(relevant_dict.items()))
 
     def load_cached_data(self, pipe_element_name):
+
+        if pipe_element_name in ["SmoothImages", "ResampleImages", "BrainAtlas"]:
+            debug = True
+
         config_hash = self._find_config_for_element(pipe_element_name)
         cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
         if cache_query in self.cache_index:
-            Logger().debug("Loading data from cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
-                          + self.state.first_data_str + " - " + str(self.state.config))
+            Logger().debug("Loading data from cache for " + pipe_element_name + ": "
+                           + str(self.state.nr_items) + " items " + self.state.first_data_str
+                           + " - " + str(self.state.config))
             with open(self.cache_index[cache_query], 'rb') as f:
                 (X, y, kwargs) = pickle.load(f)
             return X, y, kwargs
         return None
+
+    def check_cache(self, pipe_element_name):
+        config_hash = self._find_config_for_element(pipe_element_name)
+        cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
+        if cache_query in self.cache_index:
+            return True
+        else:
+            return False
 
     def save_data_to_cache(self, pipe_element_name, data):
         config_hash = self._find_config_for_element(pipe_element_name)
@@ -319,7 +365,7 @@ class CacheManager:
         self.cache_index[(pipe_element_name, self.hash, config_hash, self.state.nr_items,
                           self.state.first_data_hash)] = filename
         Logger().debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
-                      + self.state.first_data_str + " - " + str(self.state.config))
+                       + self.state.first_data_str + " - " + str(self.state.config))
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
@@ -340,7 +386,8 @@ class CacheManager:
                         if os.path.isfile(file_path):
                             os.unlink(file_path)
                         elif os.path.isdir(file_path):
-                            shutil.rmtree(file_path)
+                            if not file_path.endswith("DND"):
+                                shutil.rmtree(file_path)
                     except Exception as e:
                         print(e)
 
