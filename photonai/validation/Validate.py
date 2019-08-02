@@ -23,7 +23,7 @@ class TestPipeline(object):
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
                  cross_validation_infos, outer_fold_id,
                  raise_error: bool=False, save_predictions: bool=False, save_feature_importances: bool=False,
-                 training: bool = False,
+                 training: bool = False, cache_folder = None, cache_updater = None,
                  parallel_cv: bool = False, nr_of_parrallel_processes: int = 4):
         """
         Creates a new TestPipeline object
@@ -43,6 +43,8 @@ class TestPipeline(object):
 
         self.save_predictions = save_predictions
         self.save_feature_importances = save_feature_importances
+        self.cache_folder = cache_folder
+        self.cache_updater = cache_updater
 
         self.raise_error = raise_error
         self.training = training
@@ -98,7 +100,11 @@ class TestPipeline(object):
                             kwargs_cv_train[name] = sublist[train]
                             kwargs_cv_test[name] = sublist[test]
 
-                job_data = TestPipeline.InnerCVJob(pipe=self.pipe(),
+                new_pipe = self.pipe()
+                if self.cache_folder is not None and self.cache_updater is not None:
+                    self.cache_updater(new_pipe, self.cache_folder, inner_fold_id)
+
+                job_data = TestPipeline.InnerCVJob(pipe=new_pipe,
                                                    config=dict(self.params),
                                                    metrics=list(self.optimization_infos.metrics),
                                                    callbacks=self.optimization_infos.inner_cv_callback_functions,
@@ -115,6 +121,32 @@ class TestPipeline(object):
 
                     curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
                     list_of_score_results.append((curr_test_fold, curr_train_fold))
+
+                    if not job_data.shall_continue:
+                        break
+
+                    TestPipeline.process_fit_results(list_of_score_results, config_item,
+                                                     self.cross_validation_infos.calculate_metrics_across_folds,
+                                                     self.cross_validation_infos.calculate_metrics_per_fold,
+                                                     original_save_predictions, self.optimization_infos.metrics)
+
+
+                    if self.optimization_infos.inner_cv_callback_functions:
+                        if isinstance(self.optimization_infos.inner_cv_callback_functions, list):
+                            break_cv = 0
+                            for cf in self.optimization_infos.inner_cv_callback_functions:
+                                if not cf.shall_continue(config_item):
+                                    Logger().info(
+                                        'Skip further cross validation of config because of performance constraints')
+                                    break_cv += 1
+                                    break
+                            if break_cv > 0:
+                                break
+                        else:
+                            if not self.optimization_infos.inner_cv_callback_functions.shall_continue(config_item):
+                                Logger().info(
+                                    'Skip further cross validation of config because of performance constraints')
+                                break
 
                     fold_cnt += 1
                 else:
@@ -133,7 +165,7 @@ class TestPipeline(object):
                 while not folds_done.empty():
                     list_of_score_results.append(folds_done.get())
 
-            TestPipeline.process_fit_results(list_of_score_results, config_item,
+                TestPipeline.process_fit_results(list_of_score_results, config_item,
                                              self.cross_validation_infos.calculate_metrics_across_folds,
                                              self.cross_validation_infos.calculate_metrics_per_fold,
                                              original_save_predictions, self.optimization_infos.metrics)
@@ -170,6 +202,7 @@ class TestPipeline(object):
             self.test_data = test_data
             self.save_predictions = save_predictions
             self.save_feature_importances = save_feature_importances
+            self.shall_continue = True
 
     @staticmethod
     def parallel_inner_cv(folds_to_do, folds_done):
@@ -307,21 +340,6 @@ class TestPipeline(object):
                                              save_feature_importances=job.save_feature_importances,
                                              training=True, **job.train_data.cv_kwargs)
 
-        # if self.callback_function:
-        #     if isinstance(self.callback_function, list):
-        #         break_cv = 0
-        #         for cf in self.callback_function:
-        #             if not cf.shall_continue(inner_fold_list):
-        #                 Logger().info('Skip further cross validation of config because of performance constraints')
-        #                 break_cv += 1
-        #                 break
-        #         if break_cv > 0:
-        #             break
-        #     else:
-        #         if not self.callback_function.shall_continue(inner_fold_list):
-        #             Logger().info(
-        #                 'Skip further cross validation of config because of performance constraints')
-        #             break
 
         return curr_test_fold, curr_train_fold
 
@@ -362,7 +380,12 @@ class TestPipeline(object):
         if not training:
             y_pred = estimator.predict(X, **kwargs)
         else:
-            X, y_true, kwargs = estimator.transform(X, y_true, **kwargs)
+            # durchs Cachen kommt hier X mit zu wenig items zurück...
+            X, y_true_new, kwargs_new = estimator.transform(X, y_true, **kwargs)
+            if y_true_new is not None:
+                y_true = y_true_new
+            if kwargs_new is not None and len(kwargs_new) > 0:
+                kwargs = kwargs_new
             y_pred = estimator.predict(X, training=True, **kwargs)
 
         f_importances = []
