@@ -93,9 +93,16 @@ class PhotonBatchElement(PipelineElement):
         return existing_a
 
     def transform(self, X, y=None, **kwargs):
+
+        if not isinstance(X, list) or not isinstance(X, np.ndarray):
+            Logger().warn("Cannot do batching on a single entity.")
+            return super(PhotonBatchElement, self).transform(X, y, **kwargs)
         return self.batch_call(self.base_element.transform, X, y, **kwargs)
 
     def predict(self, X, y=None, **kwargs):
+        if not isinstance(X, list) or not isinstance(X, np.ndarray):
+            Logger().warn("Cannot do batching on a single entity.")
+            return super(PhotonBatchElement, self).predict(X, y, **kwargs)
         return self.batch_call(self.base_element.predict, X, y, call_with_y=False, **kwargs)
 
     def copy_me(self):

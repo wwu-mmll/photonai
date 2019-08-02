@@ -149,8 +149,11 @@ class OuterFoldManager:
 
         self.result_object = outer_fold_result_obj
 
-        # Todo: copy constraint objects.
-        self.constraint_objects = list(self.optimization.inner_cv_callback_functions)
+        # copy constraint objects.
+        if self.optimization_info.inner_cv_callback_functions is not None:
+            self.constraint_objects = [original.copy_me() for original in self.optimization_info.inner_cv_callback_functions]
+        else:
+            self.constraint_objects = None
 
     def _prepare_data(self, X, y=None, groups=None, **kwargs):
         # Prepare Train and validation set data
@@ -292,6 +295,7 @@ class OuterFoldManager:
 
             # ... and create optimal pipeline
             optimum_pipe = self.copy_pipe_fnc()
+            self.cache_updater(optimum_pipe, self.cache_folder, None)
             optimum_pipe.caching = False
             # set self to best config
             optimum_pipe.set_params(**best_config_outer_fold_mdb.config_dict)
@@ -411,11 +415,12 @@ class OuterFoldManager:
             self.dummy_results = inner_fold
 
             # performaceConstraints: DummyEstimator
-            dummy_constraint_objs = [opt for opt in self.constraint_objects if
-                                     type(opt).__name__ == 'DummyPerformance']
-            if dummy_constraint_objs:
-                for dummy_constraint_obj in dummy_constraint_objs:
-                    dummy_constraint_obj.set_dummy_performace(self.dummy_results)
+            if self.constraint_objects is not None:
+                dummy_constraint_objs = [opt for opt in self.constraint_objects if
+                                         type(opt).__name__ == 'DummyPerformance']
+                if dummy_constraint_objs:
+                    for dummy_constraint_obj in dummy_constraint_objs:
+                        dummy_constraint_obj.set_dummy_performace(self.dummy_results)
 
             return inner_fold
         except Exception as e:

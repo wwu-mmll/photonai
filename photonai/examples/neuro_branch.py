@@ -35,7 +35,7 @@ preprocessing = PreprocessingPipe()
 preprocessing += PipelineElement("LabelEncoder")
 my_pipe += preprocessing
 
-neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=1)
+neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=3)
 neuro_branch += PipelineElement('SmoothImages', {'fwhm': [3]})  # hyperparameters={'fwhm': IntegerRange(3, 15)})
 neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': IntegerRange(1, 3)})
 neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippocampus_L', 'Hippocampus_R']},
@@ -48,11 +48,10 @@ neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippoca
 my_pipe += neuro_branch
 
 
-def my_monitor(X, y=None, **kwargs):
-    debug = True
+# def my_monitor(X, y=None, **kwargs):
+#     debug = True
 
-
-my_pipe += CallbackElement("monitor_parallel_branch", my_monitor)
+# my_pipe += CallbackElement("monitor_parallel_branch", my_monitor)
 
 my_pipe.add(PipelineElement('StandardScaler'))
 # my_pipe += PipelineElement('PCA', hyperparameters={'n_components': None}, test_disabled=True)
