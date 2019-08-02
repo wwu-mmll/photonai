@@ -22,6 +22,9 @@ class PhotonPipeline(_BaseComposition):
 
         self.cache_man = CacheManager(self._fold_id, self.cache_folder)
 
+    def set_lock(self, lock):
+        self.cache_man.lock = lock
+
     @property
     def fold_id(self):
         return self._fold_id
@@ -298,6 +301,7 @@ class CacheManager:
         self.cache_index = None
         self.state = None
         self.cache_file_name = None
+        self.lock = None
 
     @property
     def hash(self):
@@ -309,6 +313,9 @@ class CacheManager:
             self._hash = str(value)
         else:
             self._hash = value
+
+    def set_lock(self, lock):
+        self.lock = lock
 
     class State:
         def __init__(self, config=None, nr_items=None,
@@ -323,11 +330,12 @@ class CacheManager:
         cache_name = 'photon_cache_index.p'
         self.cache_file_name = os.path.join(self.cache_folder, cache_name)
 
-        if os.path.isfile(self.cache_file_name):
-            with open(self.cache_file_name, 'rb') as f:
-                self.cache_index = pickle.load(f)
+        if self.lock is not None:
+            with self.lock.read_lock():
+                self._read_cache_index()
         else:
-            self.cache_index = {}
+            self._read_cache_index()
+
         self.pipe_order = pipe_elements
 
         first_item = X[0]
@@ -343,6 +351,13 @@ class CacheManager:
                 self.state.first_data_str = first_item
             else:
                 self.state.first_data_str = str(self.state.first_data_hash)
+
+    def _read_cache_index(self):
+        if os.path.isfile(self.cache_file_name):
+            with open(self.cache_file_name, 'rb') as f:
+                self.cache_index = pickle.load(f)
+        else:
+            self.cache_index = {}
 
     def _find_config_for_element(self, pipe_element_name):
         relevant_keys = list()
@@ -368,9 +383,9 @@ class CacheManager:
         return hash(frozenset(relevant_dict.items()))
 
     def load_cached_data(self, pipe_element_name):
-
-        if pipe_element_name in ["SmoothImages", "ResampleImages", "BrainAtlas"]:
-            debug = True
+        #
+        # if pipe_element_name in ["SmoothImages", "ResampleImages", "BrainAtlas"]:
+        #     debug = True
 
         config_hash = self._find_config_for_element(pipe_element_name)
         cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
@@ -398,11 +413,20 @@ class CacheManager:
                           self.state.first_data_hash)] = filename
         Logger().debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
                        + self.state.first_data_str + " - " + str(self.state.config))
+
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
     def save_cache_index(self):
+        if self.lock is not None:
+            with self.lock.write_lock():
+                self._write_cache_index()
+        else:
+            self._write_cache_index()
+
+    def _write_cache_index(self):
         with open(self.cache_file_name, 'wb') as f:
+            print("Writing cache index")
             pickle.dump(self.cache_index, f)
 
     def clear_cache(self):

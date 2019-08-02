@@ -4,7 +4,8 @@ from ..base.PhotonBatchElement import PhotonBatchElement
 from ..neuro.BrainAtlas import BrainAtlas
 from ..photonlogger.Logger import Logger
 from nibabel.nifti1 import Nifti1Image
-from multiprocessing import Process, Queue, current_process, Value
+from multiprocessing import Process, Queue
+from fasteners import ReaderWriterLock
 import numpy as np
 import queue
 import os
@@ -130,14 +131,15 @@ class NeuroModuleBranch(PipelineBranch):
 
     class ImageJob:
 
-        def __init__(self, data, delegate, job_key=0, sort_index=0):
+        def __init__(self, data, delegate, lock_setter=None, job_key=0, sort_index=0):
             self.data = data
             self.delegate = delegate
             self.sort_index = sort_index
             self.job_index = job_key
+            self.lock_setter = lock_setter
 
     @staticmethod
-    def parallel_application(folds_to_do):
+    def parallel_application(folds_to_do, lock):
         while True:
             try:
                 task = folds_to_do.get_nowait()
@@ -145,6 +147,7 @@ class NeuroModuleBranch(PipelineBranch):
                 break
             else:
                 # apply transform
+                task.lock_setter(lock)
                 task.delegate(task.data)
         return True
 
@@ -157,6 +160,7 @@ class NeuroModuleBranch(PipelineBranch):
         if self.nr_of_processes > 1:
 
             jobs_to_do = Queue()
+            lock = ReaderWriterLock()
 
             # ----------- faking parallelization -----------------------
             # jobs_unparallel = list()
@@ -177,7 +181,7 @@ class NeuroModuleBranch(PipelineBranch):
 
                 job_delegate = new_pipe_copy.transform
                 new_job = NeuroModuleBranch.ImageJob(data=x_in, delegate=job_delegate,
-                                                     job_key=unique_key,
+                                                     job_key=unique_key, lock_setter=new_pipe_copy.set_lock,
                                                      sort_index=idx)
 
                 jobs_to_do.put(new_job)
@@ -191,7 +195,7 @@ class NeuroModuleBranch(PipelineBranch):
             process_list = list()
             # Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
             for w in range(self.nr_of_processes):
-                p = Process(target=NeuroModuleBranch.parallel_application, args=(jobs_to_do,))
+                p = Process(target=NeuroModuleBranch.parallel_application, args=(jobs_to_do, lock))
                 process_list.append(p)
                 p.start()
 
