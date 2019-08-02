@@ -29,13 +29,13 @@ my_pipe = Hyperpipe('amygdala_pipe',  # the name of your pipeline
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
                     verbosity=1,  # get error, warn and info message
-                    cache_folder="/home/rleenings/Projects/TestNeuro/cache")
+                    cache_folder="/spm-data/Scratch/spielwiese_ramona/cache/")
 
 preprocessing = PreprocessingPipe()
 preprocessing += PipelineElement("LabelEncoder")
 my_pipe += preprocessing
 
-neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=3)
+neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=8)
 neuro_branch += PipelineElement('SmoothImages', {'fwhm': [3]})  # hyperparameters={'fwhm': IntegerRange(3, 15)})
 neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': IntegerRange(1, 3)})
 neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippocampus_L', 'Hippocampus_R']},
