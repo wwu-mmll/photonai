@@ -1,6 +1,8 @@
 import unittest
 import numpy as np
-from photonai.base.PhotonPipeline import PhotonPipeline
+import os
+import glob
+from photonai.base.PhotonPipeline import PhotonPipeline, CacheManager
 from photonai.base.PhotonBase import PipelineElement
 from sklearn.datasets import load_breast_cancer
 
@@ -10,6 +12,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.base import BaseEstimator
 
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
@@ -25,7 +28,7 @@ from sklearn.tree import DecisionTreeClassifier
 # assertNotIsInstance(a, b) 	not isinstance(a, b) 	3.2
 
 
-class DummyYAndCovariatesTransformer:
+class DummyYAndCovariatesTransformer(BaseEstimator):
 
     def __init__(self):
         self.needs_y = True
@@ -112,8 +115,6 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(np.array_equal(photon_no_estimator_transform, pca_data))
         self.assertTrue(np.array_equal(photon_no_estimator_predict, pca_data))
 
-
-
     def test_y_and_covariates_transformation(self):
 
         X = np.ones((200, 50))
@@ -186,5 +187,123 @@ class PipelineTests(unittest.TestCase):
         photon_proba = photon_pipe.predict_proba(self.X)
 
         self.assertTrue(np.array_equal(sk_proba, photon_proba))
+
+
+class CacheManagerTests(unittest.TestCase):
+
+    def setUp(self):
+        self.cache_man = CacheManager("123353423434", "/home/rleenings/Projects/TestNeuro/cache/")
+        self.X, self.y, self.kwargs = np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3, 4, 5]), {'covariates': [9, 8, 7, 6, 5]}
+
+        self.config1 = {'PCA__n_components': 5,
+                        'SVC__C': 3,
+                        'SVC__kernel': 'rbf'}
+        self.item_names = ["StandardScaler", "PCA", "SVC"]
+
+        self.config2 = {'PCA__n_components': 20,
+                        'SVC__C': 1,
+                        'SVC__kernel': 'linear'}
+
+    def test_find_relevant_configuration_items(self):
+        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        relevant_items = {'PCA__n_components': 5}
+        relevant_items_hash = hash(frozenset(relevant_items.items()))
+        new_hash = self.cache_man._find_config_for_element("PCA")
+        self.assertEqual(relevant_items_hash, new_hash)
+
+    def test_initial_transformation(self):
+        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        result = self.cache_man.load_cached_data("PCA")
+        self.assertEqual(result, None)
+
+    def test_saving_and_loading_transformation(self):
+        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        self.cache_man.save_data_to_cache("PCA", (self.X, self.y, self.kwargs))
+
+        self.assertTrue(len(self.cache_man.cache_index) == 1)
+        for hash_key, cache_file in self.cache_man.cache_index.items():
+            self.assertTrue(os.path.isfile(cache_file))
+
+        result = self.cache_man.load_cached_data("PCA")
+        self.assertTrue(result is not None)
+        X_loaded, y_loaded, kwargs_loaded = result[0], result[1], result[2]
+        self.assertTrue(np.array_equal(self.X, X_loaded))
+        self.assertTrue(np.array_equal(self.y, y_loaded))
+        self.assertTrue(np.array_equal(self.kwargs['covariates'], kwargs_loaded['covariates']))
+
+    def test_index_writing_and_clearing_folder(self):
+        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        self.cache_man.save_cache_index()
+        self.assertTrue(os.path.isfile(self.cache_man.cache_file_name))
+        self.cache_man.clear_cache()
+        self.assertTrue(not os.path.isfile(self.cache_man.cache_file_name))
+        self.assertTrue(len(glob.glob(os.path.join(self.cache_man.cache_folder, "*.p"))) == 0)
+
+
+class CachedPhotonPipelineTests(unittest.TestCase):
+
+    def setUp(self):
+        # Photon Version
+        ss = PipelineElement("StandardScaler", {})
+        pca = PipelineElement("PCA", {'n_components': [3, 10, 50]}, random_state=3)
+        svm = PipelineElement("SVC", {'kernel': ['rbf', 'linear']}, random_state=3)
+
+        self.pipe = PhotonPipeline([('StandardScaler', ss),
+                                    ('PCA', pca),
+                                    ('SVC', svm)])
+
+        self.pipe.caching = True
+        self.pipe.fold_id = "12345643463434"
+        self.pipe.cache_folder = "/home/rleenings/Projects/TestNeuro/cache/"
+
+        self.config1 = {'PCA__n_components': 4,
+                        'SVC__C': 3,
+                        'SVC__kernel': 'rbf'}
+
+        self.config2 = {'PCA__n_components': 7,
+                        'SVC__C': 1,
+                        'SVC__kernel': 'linear'}
+
+        self.X, self.y = load_breast_cancer(True)
+
+    def test_saving(self):
+
+        CacheManager.clear_cache_files(self.pipe.cache_folder)
+
+        # transform one config
+        self.pipe.set_params(**self.config1)
+        self.pipe.fit(self.X, self.y)
+        X_new, y_new, kwargs_new = self.pipe.transform(self.X, self.y)
+        # one result should be cached ( one standard scaler output + one pca output + one index pickle file = 5)
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 3)
+
+        # transform second config
+        self.pipe.set_params(**self.config2)
+        self.pipe.fit(self.X, self.y)
+        X_config2, y_config2, kwargs_config2 = self.pipe.transform(self.X, self.y)
+        # two results should be cached ( one standard scaler output (config hasn't changed)
+        # + two pca outputs  + one index pickle file)
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 4)
+
+        # now transform with config 1 again, results should be loaded
+        self.pipe.set_params(**self.config1)
+        self.pipe.fit(self.X, self.y)
+        X_2, y_2, kwargs_2 = self.pipe.transform(self.X, self.y)
+        self.assertTrue(np.array_equal(X_new, X_2))
+        self.assertTrue(np.array_equal(y_new, y_2))
+        self.assertTrue(np.array_equal(kwargs_new, kwargs_2))
+
+        # results should be the same as when caching is deactivated
+        self.pipe.caching = False
+        self.pipe.set_params(**self.config1)
+        self.pipe.fit(self.X, self.y)
+        X_uc, y_uc, kwargs_uc = self.pipe.transform(self.X, self.y)
+        self.assertTrue(np.array_equal(X_uc, X_2))
+        self.assertTrue(np.array_equal(y_uc, y_2))
+        self.assertTrue(np.array_equal(kwargs_uc, kwargs_2))
+
+
+
+
 
 

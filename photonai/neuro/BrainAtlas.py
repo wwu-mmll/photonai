@@ -183,6 +183,7 @@ class BrainAtlas(BaseEstimator):
         self.background_id = background_id
         self.rois = rois
         self.box_shape = []
+        self.is_transformer = True
 
     def fit(self, X, y):
         return self
