@@ -1,5 +1,6 @@
 from enum import Enum
 import numpy as np
+import inspect
 enum_strategy = Enum("strategy","first all mean")
 
 class PhotonBaseConstraint:
@@ -25,6 +26,13 @@ class PhotonBaseConstraint:
             Can be used to evaluate if the configuration has any potential to serve the model's learning task.
         """
         pass
+
+    def copy_me(self):
+        new_me = self()
+        signature = inspect.getfullargspec(self.__init__)[0]
+        for attr in signature:
+            if hasattr(self, attr):
+                setattr(new_me, attr, getattr(self, attr))
 
 
 class MinimumPerformance:

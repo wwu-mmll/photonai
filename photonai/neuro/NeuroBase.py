@@ -2,6 +2,7 @@ from ..base.PhotonBase import PipelineBranch
 from ..configuration.Register import PhotonRegister
 from ..base.PhotonBatchElement import PhotonBatchElement
 from ..neuro.BrainAtlas import BrainAtlas
+from ..photonlogger.Logger import Logger
 from nibabel.nifti1 import Nifti1Image
 from multiprocessing import Process, Queue, current_process, Value
 import numpy as np
@@ -97,10 +98,15 @@ class NeuroModuleBranch(PipelineBranch):
 
     def transform(self, X, y=None, **kwargs):
 
-        if self.nr_of_processes > 1 and self.base_element.cache_folder is not None:
-            # at first apply the transformation on several cores, everything gets written to the cache,
-            # so the next step only has to reload the data ...
-            self.apply_transform_parallelilzed(X)
+        if self.nr_of_processes > 1:
+
+            if self.base_element.cache_folder is not None:
+                # at first apply the transformation on several cores, everything gets written to the cache,
+                # so the next step only has to reload the data ...
+                self.apply_transform_parallelilzed(X)
+            else:
+                Logger().error("Cannot use parallelization without a cache folder specified in the hyperpipe."
+                               "Using single core instead")
 
         # do it item-wise for caching
         output = list()
@@ -116,6 +122,7 @@ class NeuroModuleBranch(PipelineBranch):
 
     def copy_me(self):
         new_copy = super().copy_me()
+        new_copy.base_element.current_config = self.base_element.current_config
         new_copy.base_element.cache_folder = self.base_element.cache_folder
         new_copy.nr_of_processes = self.nr_of_processes
 
@@ -137,11 +144,8 @@ class NeuroModuleBranch(PipelineBranch):
             except queue.Empty:
                 break
             else:
-
-                # load data
-                data = task.data
                 # apply transform
-                task.delegate(data, **task.delegate_kwargs)
+                task.delegate(task.data)
         return True
 
     def apply_transform_parallelilzed(self, X):
@@ -159,17 +163,13 @@ class NeuroModuleBranch(PipelineBranch):
             # ----------- faking parallelization -----------------------
 
             num_of_jobs_todo = 0
-            for start, stop in PhotonBatchElement.chunker(len(X), self.batch_size):
+            for idx, x_in in enumerate(X):
 
-                # split data in batches
-                # if dim > 1:
-                #     x_in = X[start:stop, :]
-                # else:
-                x_in = X[start:stop]
                 unique_key = uuid.uuid4()
 
                 # copy my pipeline
-                new_pipe_copy = self.base_element.copy_me()
+                new_pipe_mr = self.copy_me()
+                new_pipe_copy = new_pipe_mr.base_element
                 new_pipe_copy.fix_fold_id = self.fix_fold_id
                 new_pipe_copy.cache_folder = self.base_element.cache_folder
                 new_pipe_copy.do_not_delete_cache_folder = self.do_not_delete_cache_folder
@@ -178,7 +178,7 @@ class NeuroModuleBranch(PipelineBranch):
                 job_delegate = new_pipe_copy.transform
                 new_job = NeuroModuleBranch.ImageJob(data=x_in, delegate=job_delegate,
                                                      job_key=unique_key,
-                                                     sort_index=(start, stop))
+                                                     sort_index=idx)
 
                 jobs_to_do.put(new_job)
 
@@ -191,13 +191,13 @@ class NeuroModuleBranch(PipelineBranch):
             process_list = list()
             # Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
             for w in range(self.nr_of_processes):
-                p = Process(target=NeuroModuleBranch.parallel_application, args=(jobs_to_do))
+                p = Process(target=NeuroModuleBranch.parallel_application, args=(jobs_to_do,))
                 process_list.append(p)
                 p.start()
 
             # ----------- faking parallelization -----------------------
             # for job in jobs_unparallel:
-            #    job.delegate(job.data)
+            #     job.delegate(job.data)
             # ----------- faking parallelization -----------------------
 
             for p in process_list:

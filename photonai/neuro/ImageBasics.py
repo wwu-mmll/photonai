@@ -34,7 +34,8 @@ class SmoothImages(BaseEstimator):
                 self._fwhm = fwhm
 
     def transform(self, X, y=None, **kwargs):
-        return smooth_img(X, fhwm=self.fwhm)
+        smoothed_img = smooth_img(X, fwhm=self.fwhm)
+        return smoothed_img
 
 
 class ResampleImages(BaseEstimator):
@@ -64,7 +65,14 @@ class ResampleImages(BaseEstimator):
 
     def transform(self, X, y=None, **kwargs):
         target_affine = np.diag(self.voxel_size)
-        return resample_img(X, target_affine=target_affine)
+
+        if isinstance(X, list) and len(X) == 1:
+            resampled_img = resample_img(X[0], target_affine=target_affine, interpolation='nearest')
+        else:
+            resampled_img = resample_img(X, target_affine=target_affine, interpolation='nearest')
+        if not isinstance(resampled_img, list):
+            resampled_img = [resampled_img]
+        return resampled_img
 
 
 class PatchImages(BaseEstimator):

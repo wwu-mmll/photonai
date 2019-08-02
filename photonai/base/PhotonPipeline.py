@@ -27,11 +27,18 @@ class PhotonPipeline(_BaseComposition):
         return self._fold_id
 
     @fold_id.setter
-    def fold_id(self, value: uuid.UUID):
+    def fold_id(self, value):
         if self.fix_fold_id:
             self._fold_id = "fixed_fold_id"
+            self.caching = True
         else:
-            self._fold_id = str(value)
+            if value is None:
+                self._fold_id = ''
+                # we dont need group-wise caching if we have no inner fold id
+                self.caching = False
+            else:
+                self._fold_id = str(value)
+                self.caching = True
 
     @property
     def cache_folder(self):
@@ -39,13 +46,21 @@ class PhotonPipeline(_BaseComposition):
 
     @cache_folder.setter
     def cache_folder(self, value):
+
         if not self.do_not_delete_cache_folder:
             self._cache_folder = value
         else:
-            if isinstance(value, str):
+            if isinstance(value, str) and not value.endswith("DND"):
                 self._cache_folder = value + "DND"
             else:
                 self._cache_folder = value
+
+        if isinstance(self._cache_folder, str):
+            self.caching = True
+            if not os.path.isdir(self._cache_folder):
+                os.mkdir(self._cache_folder)
+        else:
+            self.caching = False
 
     def get_params(self, deep=True):
         """Get parameters for this estimator.
@@ -126,7 +141,7 @@ class PhotonPipeline(_BaseComposition):
 
         if self._final_estimator is not None:
             if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
-                if self.caching and len(self.current_config) > 0:
+                if self.caching and self.current_config is not None:
                     X, y, kwargs = self.load_or_save_cached_data(self._final_estimator.name, X, y, kwargs, self._final_estimator)
                 else:
                     X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
@@ -136,13 +151,13 @@ class PhotonPipeline(_BaseComposition):
 
         return X, y, kwargs
 
-    def load_or_save_cached_data(self, name, X, y, kwargs, transformer, fit=False):
+    def load_or_save_cached_data(self, name, X, y, kwargs, transformer, fit=False, needed_for_further_computation=False):
 
-        if self.skip_loading:
+        if self.skip_loading and not needed_for_further_computation:
             # check if data is already calculated
             if self.cache_man.check_cache(name):
                 # if so, do nothing
-                return
+                return X, y, kwargs
             else:
                 # otherwise, do the calculation and save it
                 cached_result = None
@@ -182,12 +197,13 @@ class PhotonPipeline(_BaseComposition):
                     # as long as we find something cached, we remember what it was
                     last_cached_item = name
                     # if it is the last step, we need to load the data now
-                    if num + 1 == num_steps:
+                    if num + 1 == num_steps and not self.skip_loading:
                         X, y, kwargs = self.load_or_save_cached_data(last_cached_item, X, y, kwargs, transformer, fit)
                 else:
                     if last_cached_item is not None:
                         # we load the cached data when the first transformation on this data is upcoming
-                        X, y, kwargs = self.load_or_save_cached_data(last_cached_item, X, y, kwargs, transformer, fit)
+                        X, y, kwargs = self.load_or_save_cached_data(last_cached_item, X, y, kwargs, transformer, fit,
+                                                                     needed_for_further_computation=True)
                     X, y, kwargs = self.load_or_save_cached_data(name, X, y, kwargs, transformer, fit)
 
             # always work with numpy arrays to avoid checking for shape attribute
@@ -266,6 +282,10 @@ class PhotonPipeline(_BaseComposition):
     @property
     def _final_estimator(self):
         return self.steps[-1][1]
+
+    def clear_cache(self):
+        if self.cache_man is not None:
+            self.cache_man.clear_cache()
 
 
 class CacheManager:
@@ -389,7 +409,7 @@ class CacheManager:
         CacheManager.clear_cache_files(self.cache_folder)
 
     @staticmethod
-    def clear_cache_files(cache_folder):
+    def clear_cache_files(cache_folder, force_all=False):
         if cache_folder is not None:
             if os.path.isdir(cache_folder):
                 for the_file in os.listdir(cache_folder):
@@ -398,7 +418,7 @@ class CacheManager:
                         if os.path.isfile(file_path):
                             os.unlink(file_path)
                         elif os.path.isdir(file_path):
-                            if not file_path.endswith("DND"):
+                            if not file_path.endswith("DND") or force_all:
                                 shutil.rmtree(file_path)
                     except Exception as e:
                         print(e)

@@ -252,7 +252,9 @@ class BrainMasker(BaseEstimator):
 
     @staticmethod
     def get_format_info_from_first_image(X):
-        if isinstance(X[0], str):
+        if isinstance(X, str):
+            img = image.load_img(X)
+        elif isinstance(X[0], str):
             img = image.load_img(X[0])
         elif isinstance(X[0], nib.Nifti1Image):
             img = X[0]
@@ -261,7 +263,11 @@ class BrainMasker(BaseEstimator):
             Logger().error(error_msg)
             raise ValueError(error_msg)
 
-        return img.affine, img.shape
+        if len(img.shape) > 3:
+            img_shape = img.shape[:3]
+        else:
+            img_shape = img.shape
+        return img.affine, img_shape
 
     @staticmethod
     def _get_box(in_imgs, roi):

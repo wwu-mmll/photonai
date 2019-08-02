@@ -660,6 +660,7 @@ class Hyperpipe(BaseEstimator):
         # set self to best config
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config.config_dict)
+        self.recursive_cash_folder_propagation(self.optimum_pipe, self.cache_folder, None)
         Logger().info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
@@ -820,7 +821,7 @@ class Hyperpipe(BaseEstimator):
 
                 if self.cache_folder is not None:
                     Logger().info("Removing Cache Files")
-                    CacheManager.clear_cache_files(self.cache_folder)
+                    CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
 
                 # loop over outer cross validation
@@ -853,6 +854,9 @@ class Hyperpipe(BaseEstimator):
                 # evaluate hyperparameter optimization results for best config
                 self._evaluate_dummy_estimator(dummy_results)
                 self._finalize_optimization()
+
+                # clear complete cache ?
+                CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
             ###############################################################################################
             else:
@@ -1447,6 +1451,8 @@ class PipelineBranch(PipelineElement):
             else:
                 copy_item = deepcopy(item)
             new_copy_of_me += copy_item
+        if self.current_config is not None:
+            new_copy_of_me.set_params(**self.current_config)
         return new_copy_of_me
 
     @property
