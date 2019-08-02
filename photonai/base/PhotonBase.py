@@ -844,13 +844,6 @@ class Hyperpipe(BaseEstimator):
                     outer_fold_computator.prepare_optimization(self.pipeline_elements, outer_fold)
                     dummy_results.append(outer_fold_computator.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
-                    # performaceConstraints: DummyEstimator
-                    dummy_constraint_objs = [opt for opt in self.optimization.inner_cv_callback_functions if
-                                             type(opt).__name__ == 'DummyPerformance']
-                    if dummy_constraint_objs:
-                        for dummy_constraint_obj in dummy_constraint_objs:
-                            dummy_constraint_obj.set_dummy_performace(dummy_results[i])
-
                     # 3. fit
                     outer_fold_computator.fit(self.data.X, self.data.y, self.data.kwargs)
 

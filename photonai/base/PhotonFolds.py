@@ -126,6 +126,8 @@ class OuterFoldManager:
         # Information about the optimization progress
         self.current_best_config = None
         self.optimizer = None
+        self.dummy_results = None
+        self.constraint_objects = None
 
         # data
         self.inner_folds = None
@@ -144,7 +146,11 @@ class OuterFoldManager:
         self.optimizer = self.optimization_info.get_optimizer()
         # Todo: copy performance constraints for each outer fold
         self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
+
         self.result_object = outer_fold_result_obj
+
+        # Todo: copy constraint objects.
+        self.constraint_objects = list(self.optimization.inner_cv_callback_functions)
 
     def _prepare_data(self, X, y=None, groups=None, **kwargs):
         # Prepare Train and validation set data
@@ -401,6 +407,15 @@ class OuterFoldManager:
                 test_scores = TestPipeline.score(dummy, test_X, test_y, metrics=self.optimization_info.metrics)
                 Logger().info("Dummy Results: " + str(test_scores))
                 inner_fold.validation = test_scores
+
+            self.dummy_results = inner_fold
+
+            # performaceConstraints: DummyEstimator
+            dummy_constraint_objs = [opt for opt in self.constraint_objects if
+                                     type(opt).__name__ == 'DummyPerformance']
+            if dummy_constraint_objs:
+                for dummy_constraint_obj in dummy_constraint_objs:
+                    dummy_constraint_obj.set_dummy_performace(self.dummy_results)
 
             return inner_fold
         except Exception as e:

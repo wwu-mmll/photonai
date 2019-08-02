@@ -17,6 +17,7 @@ class PhotonPipeline(_BaseComposition):
         self.fix_fold_id = False
         self._cache_folder = None
         self.do_not_delete_cache_folder = False
+        self.skip_loading = False
         self.caching = False
 
         self.cache_man = CacheManager(self._fold_id, self.cache_folder)
@@ -136,7 +137,18 @@ class PhotonPipeline(_BaseComposition):
         return X, y, kwargs
 
     def load_or_save_cached_data(self, name, X, y, kwargs, transformer, fit=False):
-        cached_result = self.cache_man.load_cached_data(name)
+
+        if self.skip_loading:
+            # check if data is already calculated
+            if self.cache_man.check_cache(name):
+                # if so, do nothing
+                return
+            else:
+                # otherwise, do the calculation and save it
+                cached_result = None
+        else:
+            cached_result = self.cache_man.load_cached_data(name)
+
         if cached_result is None:
             if fit:
                 transformer.fit(X, y, **kwargs)
