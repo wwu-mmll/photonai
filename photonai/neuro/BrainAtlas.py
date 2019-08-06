@@ -5,6 +5,7 @@ import glob
 from nilearn.input_data import NiftiMasker
 from nilearn import image
 import nibabel as nib
+import time
 from pathlib import Path
 from sklearn.base import BaseEstimator
 
@@ -57,6 +58,7 @@ class AtlasLibrary:
 
     def _load_atlas(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
 
+        print("Loading Atlas")
         # load atlas object and copy it
         atlas_obj_orig = self.available_atlasses[atlas_name]
         atlas_obj = AtlasObject(atlas_obj_orig.name, atlas_obj_orig.path,
@@ -133,6 +135,7 @@ class AtlasLibrary:
         if self.loaded_atlasses is None:
             self.loaded_atlasses = dict()
         self.loaded_atlasses[(atlas_name, str(target_affine), str(target_shape))] = atlas_obj
+        print("Loading Atlas done!")
 
     def get_atlas(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
 
@@ -140,6 +143,7 @@ class AtlasLibrary:
             self._inspect_atlas_dir()
 
         if self.loaded_atlasses is None or (atlas_name, str(target_affine), str(target_shape)) not in self.loaded_atlasses:
+            print("Loading Atlas from filesystem")
             self._load_atlas(atlas_name, target_affine, target_shape, mask_threshold)
 
         return self.loaded_atlasses[(atlas_name, str(target_affine), str(target_shape))]
@@ -158,7 +162,8 @@ class AtlasLibrary:
 
 
 class BrainAtlas(BaseEstimator):
-    def __init__(self, atlas_name: str, extract_mode: str='vec', mask_threshold=None, background_id=0, rois='all'):
+    def __init__(self, atlas_name: str, extract_mode: str='vec', collection_mode: str = 'concat',
+                 mask_threshold=None, background_id=0, rois='all'):
 
         # ToDo
         # + add-own-atlas capability
@@ -179,6 +184,7 @@ class BrainAtlas(BaseEstimator):
 
         self.atlas_name = atlas_name
         self.extract_mode = extract_mode
+        self.collection_mode = collection_mode
         self.mask_threshold = mask_threshold
         self.background_id = background_id
         self.rois = rois
@@ -208,11 +214,18 @@ class BrainAtlas(BaseEstimator):
         atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, affine, shape, self.mask_threshold)
         roi_objects = self._get_rois(atlas_obj, which_rois=self.rois, background_id=self.background_id)
 
-        roi_data = []
+        if self.collection_mode == 'dict':
+            roi_data = {}
+        else:
+            roi_data = []
 
         for roi in roi_objects:
             masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode=self.extract_mode)
-            roi_data.append(masker.transform(X))
+            extraction = masker.transform(X)
+            if self.collection_mode == 'dict':
+                roi_data[roi.label] = extraction
+            else:
+                roi_data.append(extraction)
 
         if len(roi_data) == 1:
             roi_data = roi_data[0]
@@ -288,6 +301,8 @@ class BrainMasker(BaseEstimator):
 
     def transform(self, X, y=None, **kwargs):
 
+        transform_time = time.time()
+
         if self.affine is None or self.shape is None:
             self.affine, self.shape = BrainMasker.get_format_info_from_first_image(X)
 
@@ -295,9 +310,16 @@ class BrainMasker(BaseEstimator):
             self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
                                       target_shape=self.shape, dtype='float32')
             try:
+
                 single_roi = self.masker.fit_transform(X)
+                # if isinstance(X, nib.Nifti1Image):
+                #     single_roi = X.dataobj[self.mask_image.dataobj]
+                # if isinstance(X[0], str):
+                #     loaded_img = image.load_img(X[0])
+                #     single_roi = np.reshape(np.multiply(loaded_img.dataobj, self.mask_image.mask.dataobj), (1, -1))
             except BaseException as e:
                 print(e)
+                single_roi = None
                 # Logger().info(e)
                 # Logger().error("Could not apply roi " + self.mask_image.label + " to the data ")
             if single_roi is not None:
@@ -330,3 +352,5 @@ class BrainMasker(BaseEstimator):
         else:
             print("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
             # Logger().warn("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
+
+

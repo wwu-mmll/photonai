@@ -10,7 +10,7 @@ import numpy as np
 import queue
 import os
 import uuid
-
+import time
 
 class NeuroModuleBranch(PipelineBranch):
     """
@@ -104,7 +104,7 @@ class NeuroModuleBranch(PipelineBranch):
             if self.base_element.cache_folder is not None:
                 # at first apply the transformation on several cores, everything gets written to the cache,
                 # so the next step only has to reload the data ...
-                self.apply_transform_parallelilzed(X)
+                self.apply_transform_parallelized(X)
             else:
                 Logger().error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
@@ -115,6 +115,7 @@ class NeuroModuleBranch(PipelineBranch):
             x_new, _, _ = self.base_element.transform([x_in])
             output.append(x_new[0])
         output = np.asarray(output)
+
         return output, y, kwargs
 
     def set_params(self, **kwargs):
@@ -149,9 +150,10 @@ class NeuroModuleBranch(PipelineBranch):
                 # apply transform
                 task.lock_setter(lock)
                 task.delegate(task.data)
+
         return True
 
-    def apply_transform_parallelilzed(self, X):
+    def apply_transform_parallelized(self, X):
         """
 
         :param X: the data to which the delegate should be applied paralelly

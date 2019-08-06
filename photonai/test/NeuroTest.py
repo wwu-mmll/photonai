@@ -1,10 +1,11 @@
 import unittest, os, inspect
-from ..neuro.BrainAtlas import AtlasLibrary, BrainAtlas
+from ..neuro.BrainAtlas import AtlasLibrary, BrainAtlas, BrainMasker
 from ..neuro.NeuroBase import NeuroModuleBranch
 from ..base.PhotonBatchElement import PhotonBatchElement
 from ..base.PhotonBase import PipelineElement
 from ..neuro.ImageBasics import ResampleImages, SmoothImages
 from nilearn import image
+from nilearn.input_data import NiftiMasker
 from nibabel.nifti1 import Nifti1Image
 import numpy as np
 
@@ -46,6 +47,27 @@ class NeuroTest(unittest.TestCase):
         brain_atlas_mean = BrainAtlas("AAL", "mean", rois='all')
         brain_atlas_mean.transform(self.X)
         debug = True
+
+
+    def test_multiply(self):
+
+        roi_list = ["Hippocampus_R"]
+        atlas_name ="AAL"
+        # ba = BrainAtlas(atlas_name, "vec", rois=roi_list)
+        # ba.transform(self.X[0])
+
+        affine, shape = BrainMasker.get_format_info_from_first_image(self.X)
+        # get ROI mask
+        atlas_obj = AtlasLibrary().get_atlas(atlas_name, affine, shape)
+        roi_objects = BrainAtlas._get_rois(atlas_obj, which_rois=roi_list, background_id=0)
+
+        for roi in roi_objects:
+            masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode="vec")
+            own_calculation = masker.transform([self.X[0]])
+            nilearn_func = NiftiMasker(mask_img=roi.mask, target_affine=affine, target_shape=shape, dtype='float32')
+            nilearn_calculation = nilearn_func.fit_transform(self.X[0])
+
+            self.assertTrue(np.array_equal(own_calculation, nilearn_calculation))
 
     def test_resampling_and_smoothing(self):
 

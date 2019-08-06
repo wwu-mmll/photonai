@@ -1,5 +1,6 @@
 from sklearn.utils.metaestimators import _BaseComposition
 import numpy as np
+import time
 import os
 import pickle
 import uuid
@@ -353,9 +354,18 @@ class CacheManager:
                 self.state.first_data_str = str(self.state.first_data_hash)
 
     def _read_cache_index(self):
+
         if os.path.isfile(self.cache_file_name):
             with open(self.cache_file_name, 'rb') as f:
-                self.cache_index = pickle.load(f)
+                # print("Reading cache index ")
+                try:
+                    self.cache_index = pickle.load(f)
+                    # print(len(self.cache_index))
+                except EOFError as e:
+                    print("EOF Error... retrying!")
+                    print("Cache index loaded: " + str(self.cache_index))
+                    # retry...
+                    self._read_cache_index()
         else:
             self.cache_index = {}
 
@@ -378,14 +388,13 @@ class CacheManager:
                     item_name = key_name
 
                 if item_name in relevant_keys:
+                    if isinstance(key_value, list):
+                        key_value = frozenset(key_value)
                     relevant_dict[key_name] = key_value
 
         return hash(frozenset(relevant_dict.items()))
 
     def load_cached_data(self, pipe_element_name):
-        #
-        # if pipe_element_name in ["SmoothImages", "ResampleImages", "BrainAtlas"]:
-        #     debug = True
 
         config_hash = self._find_config_for_element(pipe_element_name)
         cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
@@ -395,6 +404,7 @@ class CacheManager:
                            + " - " + str(self.state.config))
             with open(self.cache_index[cache_query], 'rb') as f:
                 (X, y, kwargs) = pickle.load(f)
+
             return X, y, kwargs
         return None
 
@@ -407,6 +417,8 @@ class CacheManager:
             return False
 
     def save_data_to_cache(self, pipe_element_name, data):
+
+
         config_hash = self._find_config_for_element(pipe_element_name)
         filename = os.path.join(self.cache_folder, str(uuid.uuid4()) + ".p")
         self.cache_index[(pipe_element_name, self.hash, config_hash, self.state.nr_items,
@@ -417,6 +429,7 @@ class CacheManager:
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
+
     def save_cache_index(self):
         if self.lock is not None:
             with self.lock.write_lock():
@@ -426,7 +439,8 @@ class CacheManager:
 
     def _write_cache_index(self):
         with open(self.cache_file_name, 'wb') as f:
-            print("Writing cache index")
+            # print("Writing cache index")
+            # print(self.cache_index)
             pickle.dump(self.cache_index, f)
 
     def clear_cache(self):
