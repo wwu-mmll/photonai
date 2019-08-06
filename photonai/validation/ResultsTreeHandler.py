@@ -11,7 +11,7 @@ from pymodm import connect
 
 from ..validation.ResultsDatabase import MDBHyperpipe
 from ..photonlogger.Logger import Logger
-from .Validate import OptimizerMetric
+#from ..base.PhotonBase.Hyp import OptimizerMetric
 
 
 class ResultsTreeHandler:
