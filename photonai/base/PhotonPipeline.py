@@ -1,11 +1,12 @@
 from sklearn.utils.metaestimators import _BaseComposition
 import numpy as np
-import time
+import datetime
 import os
 import pickle
 import uuid
 import shutil
 from ..photonlogger.Logger import Logger
+from collections.abc import Iterable
 
 
 class PhotonPipeline(_BaseComposition):
@@ -18,6 +19,7 @@ class PhotonPipeline(_BaseComposition):
         self.fix_fold_id = False
         self._cache_folder = None
         self.do_not_delete_cache_folder = False
+        self.time_monitor = {'fit': [], 'transform_computed': [], 'transform_cached': [], 'predict': []}
         self.skip_loading = False
         self.caching = False
 
@@ -166,15 +168,42 @@ class PhotonPipeline(_BaseComposition):
                 # otherwise, do the calculation and save it
                 cached_result = None
         else:
+            start_time_for_loading = datetime.datetime.now()
             cached_result = self.cache_man.load_cached_data(name)
 
         if cached_result is None:
-            if fit:
-                transformer.fit(X, y, **kwargs)
-            X, y, kwargs = transformer.transform(X, y, **kwargs)
+            X, y, kwargs = self._do_timed_fit_transform(name, transformer, fit, X, y, **kwargs)
             self.cache_man.save_data_to_cache(name, (X, y, kwargs))
         else:
             X, y, kwargs = cached_result[0], cached_result[1], cached_result[2]
+            loading_duration = (datetime.datetime.now() - start_time_for_loading).total_seconds()
+            n = self.__find_n(X)
+            self.time_monitor['transform_cached'].append((name, loading_duration, n))
+        return X, y, kwargs
+
+    def __find_n(self, X):
+        if hasattr(X, 'shape'):
+            n = X.shape[0]
+        elif isinstance(X, Iterable):
+            n = len(X)
+        else:
+            n = 1
+        return n
+
+    def _do_timed_fit_transform(self, name, transformer, fit, X, y, **kwargs):
+
+        n = self.__find_n(X)
+
+        if fit:
+            fit_start_time = datetime.datetime.now()
+            transformer.fit(X, y, **kwargs)
+            fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
+            self.time_monitor['fit'].append((name, fit_duration, n))
+
+        transform_start_time = datetime.datetime.now()
+        X, y, kwargs = transformer.transform(X, y, **kwargs)
+        transform_duration = (datetime.datetime.now() - transform_start_time).total_seconds()
+        self.time_monitor['transform_computed'].append((name, transform_duration, n))
         return X, y, kwargs
 
     def _caching_fit_transform(self, X, y, kwargs, fit=False):
@@ -192,9 +221,7 @@ class PhotonPipeline(_BaseComposition):
         for num, (name, transformer) in enumerate(self.steps[:-1]):
             if not self.caching or self.current_config is None or \
                     (hasattr(transformer, 'skip_caching') and transformer.skip_caching):
-                if fit:
-                    transformer.fit(X, y, **kwargs)
-                X, y, kwargs = transformer.transform(X, y, **kwargs)
+                X, y, kwargs = self._do_timed_fit_transform(name, transformer, fit, X, y, **kwargs)
             else:
                 # load data when the first item occurs that needs new calculation
                 if self.cache_man.check_cache(name):
@@ -235,7 +262,11 @@ class PhotonPipeline(_BaseComposition):
         # then call predict on final estimator
         if self._final_estimator is not None:
             if self._final_estimator.is_estimator:
+                predict_start_time = datetime.datetime.now()
                 y_pred = self._final_estimator.predict(X, **kwargs)
+                predict_duration = (datetime.datetime.now() - predict_start_time).total_seconds()
+                n = self.__find_n(X)
+                self.time_monitor['predict'].append((self.steps[-1][0], predict_duration, n))
                 return y_pred
             else:
                 return X

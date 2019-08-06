@@ -1,7 +1,8 @@
 from enum import Enum
 import numpy as np
 import inspect
-enum_strategy = Enum("strategy","first all mean")
+enum_strategy = Enum("strategy", "first all mean")
+
 
 class PhotonBaseConstraint:
     """
@@ -28,14 +29,15 @@ class PhotonBaseConstraint:
         pass
 
     def copy_me(self):
-        new_me = self()
+        new_me = type(self)()
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
-            if hasattr(self, attr):
+            if not attr == 'self' and hasattr(self, attr):
                 setattr(new_me, attr, getattr(self, attr))
+        return new_me
 
 
-class MinimumPerformance:
+class MinimumPerformance(PhotonBaseConstraint):
     """
     Tests if a configuration performs better than a given limit for a particular metric.
 
@@ -45,7 +47,7 @@ class MinimumPerformance:
     If not further testing of the configuration is skipped, as it is regarded as not promising enough.
     """
 
-    def __init__(self,  metric, smaller_than, strategy='first'):
+    def __init__(self,  metric: str='', smaller_than: float=1, strategy='first'):
         self.metric = metric
         self.smaller_than = smaller_than
         try:
@@ -66,7 +68,7 @@ class MinimumPerformance:
         return True
 
 
-class DummyPerformance:
+class DummyPerformance(PhotonBaseConstraint):
     """
     Tests if a configuration performs better than a given limit for a particular metric.
 
@@ -77,7 +79,7 @@ class DummyPerformance:
     If not further testing of the configuration is skipped, as it is regarded as not promising enough.
     """
 
-    def __init__(self,  metric, smaller_than, strategy='first'):
+    def __init__(self,  metric: str='', smaller_than: float =1., strategy='first'):
         self.metric = metric
         self.smaller_than = smaller_than
         self.dummy_performance = None
@@ -87,11 +89,8 @@ class DummyPerformance:
         except:
             raise AttributeError("Your strategy: "+str(strategy)+" is not supported yet. Please use one of "+str([x.name for x in enum_strategy]))
 
-
-    def set_dummy_performace(self,dummy_result):
-        self.dummy_result = dummy_result
-        self.comparative_value = self.dummy_result.validation.metrics[self.metric]+self.smaller_than
-
+    def set_dummy_performance(self, dummy_result):
+        self.comparative_value = dummy_result.validation.metrics[self.metric]+self.smaller_than
 
     def shall_continue(self, config_item):
         if self.strategy.name == 'first':
