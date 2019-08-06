@@ -948,7 +948,7 @@ class Hyperpipe(BaseEstimator):
             if hasattr(self, attr):
                 setattr(pipe_copy, attr, getattr(self, attr))
 
-        if hasattr(self, 'preprocessing_pipe'):
+        if hasattr(self, 'preprocessing_pipe') and self.preprocessing_pipe:
             preprocessing = PreprocessingPipe()
             for element in self.preprocessing_pipe.pipeline_elements:
                 preprocessing += element.copy_me()
