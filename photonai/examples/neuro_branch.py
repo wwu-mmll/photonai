@@ -17,8 +17,8 @@ X = [os.path.join(data_folder, f) + ".nii" for f in df["PAC_ID"]]
 y = df["Age"]
 
 
-X = X[:10]
-y = y[:10]
+X = X[:500]
+y = y[:500]
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('amygdala_pipe',  # the name of your pipeline
@@ -35,12 +35,12 @@ preprocessing = PreprocessingPipe()
 preprocessing += PipelineElement("LabelEncoder")
 my_pipe += preprocessing
 
-neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=8)
-neuro_branch += PipelineElement('SmoothImages', {'fwhm': [3]})  # hyperparameters={'fwhm': IntegerRange(3, 15)})
+neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=1)
+neuro_branch += PipelineElement('SmoothImages', {'fwhm': [3, 5, 10, 15]})  # hyperparameters={'fwhm': IntegerRange(3, 15)})
 neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': IntegerRange(1, 3)})
-neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippocampus_L', 'Hippocampus_R']},
-                                                                        # 'Amygdala_L', 'Amygdala_R']},
-                                atlas_name="AAL", extract_mode='vec')
+neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': [['Hippocampus_L', 'Hippocampus_R'],
+                                                                        ['Amygdala_L', 'Amygdala_R']]},
+                                atlas_name="AAL", extract_mode='vec', collection_mode='dict')
 
 # neuro_branch.test_transform(X, 3, '/home/rleenings/Projects/TestNeuro/', **{'BrainAtlas__rois': ['Amygdala_L'],
 #                                                                                           'SmoothImages__fwhm': [10, 10, 10],
@@ -48,10 +48,10 @@ neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': ['Hippoca
 my_pipe += neuro_branch
 
 
-# def my_monitor(X, y=None, **kwargs):
-#     debug = True
+def my_monitor(X, y=None, **kwargs):
+    debug = True
 
-# my_pipe += CallbackElement("monitor_parallel_branch", my_monitor)
+my_pipe += CallbackElement("monitor_parallel_branch", my_monitor)
 
 my_pipe.add(PipelineElement('StandardScaler'))
 # my_pipe += PipelineElement('PCA', hyperparameters={'n_components': None}, test_disabled=True)
@@ -60,6 +60,7 @@ my_pipe += PipelineElement('SVR', hyperparameters={'kernel': Categorical(['rbf',
 
 
 # NOW TRAIN YOUR PIPELINE
+
 start_time = time.time()
 my_pipe.fit(X, y)
 elapsed_time = time.time() - start_time
