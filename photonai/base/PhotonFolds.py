@@ -4,6 +4,7 @@ from ..base.PhotonPipeline import CacheManager
 from ..validation.cross_validation import StratifiedKFoldRegression
 from ..validation.Validate import TestPipeline
 from ..validation.ResultsDatabase import MDBHelper, FoldOperations, MDBInnerFold, MDBConfig, MDBScoreInformation
+from ..optimization.SpeedHacks import DummyPerformance
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedKFold, StratifiedShuffleSplit, ShuffleSplit
 
 import datetime
@@ -217,7 +218,7 @@ class OuterFoldManager:
 
             hp = TestPipeline(pipe_ctor, current_config,
                               self.optimization_info,
-                              self.cross_validaton_info, self.outer_fold_id,
+                              self.cross_validaton_info, self.outer_fold_id, self.constraint_objects,
                               save_predictions=self.save_predictions,
                               save_feature_importances=self.save_feature_importances,
                               cache_folder=self.cache_folder,
@@ -416,11 +417,10 @@ class OuterFoldManager:
 
             # performaceConstraints: DummyEstimator
             if self.constraint_objects is not None:
-                dummy_constraint_objs = [opt for opt in self.constraint_objects if
-                                         type(opt).__name__ == 'DummyPerformance']
+                dummy_constraint_objs = [opt for opt in self.constraint_objects if isinstance(opt, DummyPerformance)]
                 if dummy_constraint_objs:
                     for dummy_constraint_obj in dummy_constraint_objs:
-                        dummy_constraint_obj.set_dummy_performace(self.dummy_results)
+                        dummy_constraint_obj.set_dummy_performance(self.dummy_results)
 
             return inner_fold
         except Exception as e:
