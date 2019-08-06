@@ -45,9 +45,12 @@ my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(
 my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
                                                    'C': FloatRange(0.5, 2)}, gamma='scale')
 
+my_pipe += PipelineElement('Graph', hyperparameters={'centrality__nr_nodes': IntegerRange(1, 3),
+                                                     'centrality__huaihdsiud': Categorical(['linear', 'rbf']),
+                                                     'xy__dhsud': FloatRange(0.5, 2)},
+                           measures=["centrality", "xy", "a", "b", "c"])
+
 # my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
-
-
 
 start_time = time.time()
 # NOW TRAIN YOUR PIPELINE
