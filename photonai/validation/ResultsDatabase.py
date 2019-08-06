@@ -34,7 +34,6 @@ class MDBScoreInformation(EmbeddedMongoModel):
     probabilities = fields.ListField(blank=True)
     metrics_copied_from_inner = fields.BooleanField(default=False)
 
-
     def __str__(self):
         return str(self.metrics)
 
@@ -49,6 +48,7 @@ class MDBInnerFold(EmbeddedMongoModel):
     validation = fields.EmbeddedDocumentField(MDBScoreInformation, blank=True)
     number_samples_training = fields.IntegerField(blank=True)
     number_samples_validation = fields.IntegerField(blank=True)
+    time_monitor = fields.DictField(blank=True)
 
 
 class MDBConfig(EmbeddedMongoModel):
