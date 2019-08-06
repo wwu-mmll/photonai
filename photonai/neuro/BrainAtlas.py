@@ -205,6 +205,9 @@ class BrainAtlas(BaseEstimator):
 
         affine, shape = BrainMasker.get_format_info_from_first_image(X)
 
+        # load all niftis to memory
+        X = image.load_img(X)
+
         # for x_file in X:
         #     img_new = image.load_img(x_file)
         #     print(np.array_equal(img_new.affine, img.affine))
@@ -214,21 +217,19 @@ class BrainAtlas(BaseEstimator):
         atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, affine, shape, self.mask_threshold)
         roi_objects = self._get_rois(atlas_obj, which_rois=self.rois, background_id=self.background_id)
 
-        if self.collection_mode == 'dict':
-            roi_data = {}
-        else:
-            roi_data = []
+        roi_data = list()
 
         for roi in roi_objects:
+            Logger().debug("Extracting ROI {}".format(roi.label))
             masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode=self.extract_mode)
             extraction = masker.transform(X)
-            if self.collection_mode == 'dict':
-                roi_data[roi.label] = extraction
-            else:
+            if self.collection_mode == 'list':
                 roi_data.append(extraction)
-
-        if len(roi_data) == 1:
-            roi_data = roi_data[0]
+            elif self.collection_mode == 'concat':
+                roi_data.extend(extraction)
+            else:
+                Logger().error("Collection mode {} not supported. Use 'list' or 'concat' instead.".format(self.collection_mode))
+                roi_data.extend(extraction)
 
         return roi_data
 
@@ -297,7 +298,7 @@ class BrainMasker(BaseEstimator):
                 data = img.get_data()
             tmp = data[corner1[0]:corner2[0] + 1, corner1[1]:corner2[1] + 1, corner1[2]:corner2[2] + 1]
             box.append(tmp)
-        return np.asarray(box)
+        return box
 
     def transform(self, X, y=None, **kwargs):
 
@@ -325,16 +326,21 @@ class BrainMasker(BaseEstimator):
             if single_roi is not None:
                 if self.extract_mode == 'vec':
                     return single_roi
+
                 elif self.extract_mode == 'mean':
-                    tmp = []
-                    for sample_ind in range(len(single_roi)):
-                        tmp.append(np.mean(single_roi[sample_ind]))
-                    return np.array(tmp)
+                    output = list()
+                    # loop through subjects
+                    for sample in single_roi:
+                        output.append(np.mean(sample))
+                    return output
+
                 elif self.extract_mode == 'box':
                     return BrainMasker._get_box(X, self.mask_image)
+
                 elif self.extract_mode == 'img':
                     roi_img = self.masker.inverse_transform(single_roi)
                     return roi_img
+
                 else:
                     Logger().error("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
                 # # any function which can work on a vector passed as a string

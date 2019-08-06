@@ -1,4 +1,5 @@
 from ..base.PhotonBase import PipelineBranch
+from ..base.PhotonPipeline import PhotonPipeline
 from ..configuration.Register import PhotonRegister
 from ..base.PhotonBatchElement import PhotonBatchElement
 from ..neuro.BrainAtlas import BrainAtlas
@@ -6,11 +7,13 @@ from ..photonlogger.Logger import Logger
 from nibabel.nifti1 import Nifti1Image
 from multiprocessing import Process, Queue
 from fasteners import ReaderWriterLock
+from collections import defaultdict
 import numpy as np
 import queue
 import os
 import uuid
 import time
+
 
 class NeuroModuleBranch(PipelineBranch):
     """
@@ -26,7 +29,7 @@ class NeuroModuleBranch(PipelineBranch):
     """
     NEURO_ELEMENTS = PhotonRegister.get_package_info(['PhotonNeuro'])
 
-    def __init__(self, name, nr_of_processes=1, output_img: bool = False):
+    def __init__(self, name, nr_of_processes=1, output_img: bool = False, apply_groupwise: bool = False):
         PipelineBranch.__init__(self, name)
 
         self.nr_of_processes = nr_of_processes
@@ -41,6 +44,12 @@ class NeuroModuleBranch(PipelineBranch):
         self.skip_caching = True
         self.fix_fold_id = True
         self.do_not_delete_cache_folder = True
+
+        self.apply_groupwise = apply_groupwise
+
+        if self.nr_of_processes > 1 and self.apply_groupwise == True:
+            Logger().warn("Groupwise processing of NeuroElements not supported when working on multiple CPUs. "
+                          "Falling back to single subject processing.")
 
     def fit(self, X, y=None, **kwargs):
         # do nothing here!!
@@ -62,7 +71,7 @@ class NeuroModuleBranch(PipelineBranch):
             self.pipeline_elements.append(pipe_element)
             self._prepare_pipeline()
         else:
-            raise ValueError('PipelineElement {} is not part of the Neuro module:'.format(pipe_element.name))
+            Logger().error('PipelineElement {} is not part of the Neuro module:'.format(pipe_element.name))
 
         return self
 
@@ -109,14 +118,27 @@ class NeuroModuleBranch(PipelineBranch):
                 Logger().error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
 
-        # do it item-wise for caching
-        output = list()
-        for x_in in X:
-            x_new, _, _ = self.base_element.transform([x_in])
-            output.append(x_new[0])
-        output = np.asarray(output)
+        if self.apply_groupwise:
+            t1 = time.time()
+            X_new, _, _ = self.base_element.transform(X)
+            t2 = time.time()
+            elapsed_time = t2-t1
+            Logger().info('Time for groupwise processing: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+        else:
+            X_new = list()
+            t1 = time.time()
+            for i, x_in in enumerate(X):
+                new, _, _ = self.base_element.transform([x_in])
+                if i == 0:
+                    X_new = [list() for k in range(len(new))]
 
-        return output, y, kwargs
+                for k, roi in enumerate(new):
+                    X_new[k].append(roi[0])
+
+            t2 = time.time()
+            elapsed_time = t2-t1
+            Logger().info('Time for single subject processing: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
+        return X_new, y, kwargs
 
     def set_params(self, **kwargs):
         self.current_config = kwargs
