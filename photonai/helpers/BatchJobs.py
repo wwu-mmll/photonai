@@ -4,7 +4,7 @@ from pymodm import connect
 from pymodm.fields import CharField
 import glob
 import requests
-
+import os
 
 class CeleryBatchJob(MongoModel):
     project_id = CharField()
@@ -36,13 +36,13 @@ class BatchJobs:
             new_job = CeleryBatchJob()
             new_job.project_id = self.project_id
             new_job.celery_log_path = self.celery_log_path
-            new_job.analysis_name = python_file[::-3]
+            new_job.analysis_name = os.path.basename(python_file)[:-3]
             new_job.file_path = python_file
             new_job.user = self.username
             new_job.progress = 'Registered'
             new_job.save()
 
-            started_status = requests.get('http://trap-titania:8003/cancel/' + new_job._id)
+            started_status = requests.get('http://trap-titania:8003/cancel/' + str(new_job._id))
             print("Sent " + new_job.analysis_name + " to titania: " + str(started_status))
             new_job.progress = started_status
 
