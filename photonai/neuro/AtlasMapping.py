@@ -64,7 +64,8 @@ class AtlasMapper:
         if isinstance(roi_list, str):
             if roi_list == 'all':
                 roi_list = [roi.label for roi in atlas_obj.roi_list]
-                roi_list.remove('Background')
+                if 'Background' in roi_list:
+                    roi_list.remove('Background')
             else:
                 roi_list = [roi_list]
         elif isinstance(roi_list, list):

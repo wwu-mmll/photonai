@@ -131,9 +131,10 @@ class AtlasLibrary:
         for atlas_id, atlas_info in self.ATLAS_DICTIONARY.items():
             atlas_file = glob.glob(os.path.join(self.atlas_dir, '*/' + atlas_info))[0]
             atlas_basename = os.path.basename(atlas_file)[:-7]
+            atlas_dir = os.path.dirname(atlas_file)
             available_atlasses[atlas_id] = AtlasObject(name=atlas_id,
                                                        path=atlas_file,
-                                                       labels_file=atlas_basename + '_labels.txt')
+                                                       labels_file=os.path.join(atlas_dir, atlas_basename + '_labels.txt'))
         return available_atlasses
 
     def _load_atlas(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
