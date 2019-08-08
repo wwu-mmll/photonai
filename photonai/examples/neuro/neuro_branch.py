@@ -1,24 +1,21 @@
-
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe, CallbackElement
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from photonai.neuro.NeuroBase import NeuroModuleBranch
-
 from sklearn.model_selection import KFold
 import time
-import os
-import pandas as pd
+from nilearn.datasets import fetch_oasis_vbm
+import numpy as np
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
-file = '/spm-data/Scratch/spielwiese_ramona/PAC2018/test/PAC2018_age.csv'
-data_folder = '/spm-data/Scratch/spielwiese_ramona/PAC2018/data_all/'
+# GET DATA FROM OASIS
+n_subjects = 50
+dataset_files = fetch_oasis_vbm(n_subjects=n_subjects)
+age = dataset_files.ext_vars['age'].astype(float)
+y = np.array(age)
+X = np.array(dataset_files.gray_matter_maps)
 
-df = pd.read_csv(file)
-X = [os.path.join(data_folder, f) + ".nii" for f in df["PAC_ID"]]
-y = df["Age"]
-
-
-X = X[:500]
-y = y[:500]
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('amygdala_pipe',  # the name of your pipeline

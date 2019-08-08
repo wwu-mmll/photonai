@@ -2,24 +2,19 @@ from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.base.PhotonBatchElement import PhotonBatchElement
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from sklearn.model_selection import ShuffleSplit
-import pandas as pd
-import os
+from nilearn.datasets import fetch_oasis_vbm
+import numpy as np
 import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
-warnings.filterwarnings("ignore", category=FutureWarning)
-warnings.filterwarnings("ignore")
 
-file = '/spm-data/Scratch/spielwiese_ramona/PAC2018/PAC2018_age.csv'
-data_folder = '/spm-data/Scratch/spielwiese_ramona/PAC2018/data_all/'
 
-df = pd.read_csv(file)
-X = [os.path.join(data_folder, f) + ".nii" for f in df["PAC_ID"]]
-y = df["Age"]
+# GET DATA FROM OASIS
+n_subjects = 50
+dataset_files = fetch_oasis_vbm(n_subjects=n_subjects)
+age = dataset_files.ext_vars['age'].astype(float)
+y = np.array(age)
+X = np.array(dataset_files.gray_matter_maps)
 
-n_subjects = 100
-
-X = X[:n_subjects]
-y = y[:n_subjects]
 
 
 # DEFINE OUTPUT SETTINGS
