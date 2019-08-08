@@ -9,6 +9,7 @@ import zipfile
 import importlib
 import __main__
 import shutil
+import datetime
 from collections import OrderedDict
 from copy import deepcopy
 from bson.objectid import ObjectId
@@ -17,11 +18,10 @@ from sklearn.base import BaseEstimator
 from sklearn.externals import joblib
 from sklearn.metrics import accuracy_score
 from sklearn.dummy import DummyClassifier, DummyRegressor
-from sklearn.model_selection import *
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 
-from .PhotonFolds import  *
+from .PhotonFolds import OuterFoldManager, FoldInfo
 from .Helper import PHOTONPrintHelper
 from ..optimization.ConfigGrid import create_global_config_dict, create_global_config_grid
 from ..configuration.Register import PhotonRegister
@@ -30,8 +30,8 @@ from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGri
 from ..optimization.SkOpt import SkOptOptimizer
 from ..optimization.Smac3Opt import SMACOptimizer
 from ..validation.ResultsDatabase import *
-from ..validation.Validate import  Scorer
-from .PhotonPipeline import PhotonPipeline
+from ..validation.Validate import Scorer
+from .PhotonPipeline import PhotonPipeline, CacheManager
 
 
 class PhotonNative:
@@ -855,6 +855,9 @@ class Hyperpipe(BaseEstimator):
                     # 4. save outer fold results
                     self.mongodb_writer.save(self.result_tree)
 
+                    # 5. clear cache
+                    CacheManager.clear_cache_files(self.cache_folder)
+
                 # evaluate hyperparameter optimization results for best config
                 self._evaluate_dummy_estimator(dummy_results)
                 self._finalize_optimization()
@@ -1322,11 +1325,11 @@ class PipelineElement(BaseEstimator):
         if self.needs_y:
             # if we dont have any target vector we are in the application state,
             # so we skip all training_only steps
-            if y is not None:
-                if self.needs_covariates:
-                    X, y, kwargs = delegate(X, y, **kwargs)
-                else:
-                    X, y = delegate(X, y)
+            if self.needs_covariates:
+                X, y, kwargs = delegate(X, y, **kwargs)
+            else:
+                X, y = delegate(X, y)
+
         elif self.needs_covariates:
             # we need an extra arrangement here, because we reuse code
             if isinstance(self, (PipelineBranch, PipelineStacking)):
@@ -1443,8 +1446,8 @@ class PipelineBranch(PipelineElement):
         if self.has_hyperparameters:
             self.generate_sklearn_hyperparameters()
         new_pipe = PhotonPipeline(pipeline_steps)
-        new_pipe.fix_fold_id = self.fix_fold_id
-        new_pipe.do_not_delete_cache_folder = self.do_not_delete_cache_folder
+        new_pipe._fix_fold_id = self.fix_fold_id
+        new_pipe._do_not_delete_cache_folder = self.do_not_delete_cache_folder
         self.base_element = new_pipe
 
     def copy_me(self):

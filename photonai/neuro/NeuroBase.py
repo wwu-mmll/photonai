@@ -128,6 +128,7 @@ class NeuroModuleBranch(PipelineBranch):
     def copy_me(self):
         new_copy = super().copy_me()
         new_copy.base_element.current_config = self.base_element.current_config
+        new_copy.base_element.single_subject_caching = True
         new_copy.base_element.cache_folder = self.base_element.cache_folder
         new_copy.nr_of_processes = self.nr_of_processes
 
@@ -179,9 +180,7 @@ class NeuroModuleBranch(PipelineBranch):
                 # copy my pipeline
                 new_pipe_mr = self.copy_me()
                 new_pipe_copy = new_pipe_mr.base_element
-                new_pipe_copy.fix_fold_id = self.fix_fold_id
                 new_pipe_copy.cache_folder = self.base_element.cache_folder
-                new_pipe_copy.do_not_delete_cache_folder = self.do_not_delete_cache_folder
                 new_pipe_copy.skip_loading = True
 
                 job_delegate = new_pipe_copy.transform

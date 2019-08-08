@@ -19,10 +19,10 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=5),  # test each configuration ten times respectively,
                     verbosity=1,
-                    cache_folder='/home/rleenings/Projects/TestNeuro/cache/',  # get error, warn and info message
+                    cache_folder='/home/rleenings/Projects/TestNeuro/cache/')  # get error, warn and info message
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
-                    performance_constraints=[MinimumPerformance('accuracy', 0.96),
-                                             DummyPerformance('precision', 0.2)])
+                    # performance_constraints=[MinimumPerformance('accuracy', 0.96),
+                    #                          DummyPerformance('precision', 0.2)])
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
@@ -44,11 +44,11 @@ my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(
 # engage and optimize the good old SVM for Classification
 my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
                                                    'C': FloatRange(0.5, 2)}, gamma='scale')
-
-my_pipe += PipelineElement('Graph', hyperparameters={'centrality__nr_nodes': IntegerRange(1, 3),
-                                                     'centrality__huaihdsiud': Categorical(['linear', 'rbf']),
-                                                     'xy__dhsud': FloatRange(0.5, 2)},
-                           measures=["centrality", "xy", "a", "b", "c"])
+#
+# my_pipe += PipelineElement('Graph', hyperparameters={'centrality__nr_nodes': IntegerRange(1, 3),
+#                                                      'centrality__huaihdsiud': Categorical(['linear', 'rbf']),
+#                                                      'xy__dhsud': FloatRange(0.5, 2)},
+#                            measures=["centrality", "xy", "a", "b", "c"])
 
 # my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
 
