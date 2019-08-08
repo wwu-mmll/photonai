@@ -39,16 +39,13 @@ class HyperpipeTests(unittest.TestCase):
         self.assertIs(self.hyperpipe._pipe.steps[2][1], self.svc_pipe_element)
 
     def test_no_metrics(self):
+        # make sure that no metrics means raising an error
         with self.assertRaises(ValueError):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.cv_object)
 
+        # make sure that if no best config metric is given, PHOTON raises a warning
         with self.assertRaises(Warning):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.cv_object, metrics=["accuracy", "f1_score"])
-
-    def test_class_distribution_info(self):
-        unique, counts = np.unique(self.__y, return_counts=True)
-        nr_dict = self.hyperpipe._data_overview(self.__y)
-        self.assertEqual(counts[1], nr_dict[1])
 
     def test_easy_use_case(self):
 
@@ -167,7 +164,7 @@ class HyperpipeTests(unittest.TestCase):
         self.hyperpipe += prepro_pipe
         self.hyperpipe.fit(self.__X, self.__y)
 
-        self.assertTrue(np.array_equal(self.__y + 1, self.hyperpipe.y))
+        self.assertTrue(np.array_equal(self.__y + 1, self.hyperpipe.data.y))
 
 
 class PipelineElementTests(unittest.TestCase):

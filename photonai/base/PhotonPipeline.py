@@ -6,7 +6,7 @@ import pickle
 import uuid
 import shutil
 from ..photonlogger.Logger import Logger
-from collections.abc import Iterable
+from ..base.Helper import PHOTONDataHelper
 
 
 class PhotonPipeline(_BaseComposition):
@@ -15,18 +15,37 @@ class PhotonPipeline(_BaseComposition):
         self.steps = steps
 
         self.current_config = None
-        self._fold_id = None
-        self.fix_fold_id = False
-        self._cache_folder = None
-        self.do_not_delete_cache_folder = False
-        self.time_monitor = {'fit': [], 'transform_computed': [], 'transform_cached': [], 'predict': []}
-        self.skip_loading = False
+        # caching stuff
         self.caching = False
+        self._fold_id = None
+        self._cache_folder = None
+        self.time_monitor = {'fit': [], 'transform_computed': [], 'transform_cached': [], 'predict': []}
+        self.cache_man = None
 
-        self.cache_man = CacheManager(self._fold_id, self.cache_folder)
+        # helper for single subject caching
+        self._single_subject_caching = False
+        self._fix_fold_id = False
+        self._do_not_delete_cache_folder = False
+
+        # used in parallelization
+        self.skip_loading = False
 
     def set_lock(self, lock):
         self.cache_man.lock = lock
+
+    @property
+    def single_subject_caching(self):
+        return self._single_subject_caching
+
+    @single_subject_caching.setter
+    def single_subject_caching(self, value: bool):
+        if value:
+            self._fix_fold_id = True
+            self._do_not_delete_cache_folder = True
+        else:
+            self._fix_fold_id = False
+            self._do_not_delete_cache_folder = False
+        self._single_subject_caching = value
 
     @property
     def fold_id(self):
@@ -34,17 +53,18 @@ class PhotonPipeline(_BaseComposition):
 
     @fold_id.setter
     def fold_id(self, value):
-        if self.fix_fold_id:
-            self._fold_id = "fixed_fold_id"
-            self.caching = True
+        if value is None:
+            self._fold_id = ''
+            # we dont need group-wise caching if we have no inner fold id
+            self.caching = False
+            self.cache_man = None
         else:
-            if value is None:
-                self._fold_id = ''
-                # we dont need group-wise caching if we have no inner fold id
-                self.caching = False
+            if self._fix_fold_id:
+                self._fold_id = "fixed_fold_id"
             else:
                 self._fold_id = str(value)
-                self.caching = True
+            self.caching = True
+            self.cache_man = CacheManager(self._fold_id, self.cache_folder)
 
     @property
     def cache_folder(self):
@@ -53,7 +73,7 @@ class PhotonPipeline(_BaseComposition):
     @cache_folder.setter
     def cache_folder(self, value):
 
-        if not self.do_not_delete_cache_folder:
+        if not self._do_not_delete_cache_folder:
             self._cache_folder = value
         else:
             if isinstance(value, str) and not value.endswith("DND"):
@@ -65,6 +85,7 @@ class PhotonPipeline(_BaseComposition):
             self.caching = True
             if not os.path.isdir(self._cache_folder):
                 os.mkdir(self._cache_folder)
+            self.cache_man = CacheManager(self._fold_id, self.cache_folder)
         else:
             self.caching = False
 
@@ -158,41 +179,105 @@ class PhotonPipeline(_BaseComposition):
         return X, y, kwargs
 
     def load_or_save_cached_data(self, name, X, y, kwargs, transformer, fit=False, needed_for_further_computation=False):
-
-        if self.skip_loading and not needed_for_further_computation:
-            # check if data is already calculated
-            if self.cache_man.check_cache(name):
-                # if so, do nothing
-                return X, y, kwargs
+        if not self.single_subject_caching:
+            # if we do it group-wise then its easy
+            if self.skip_loading and not needed_for_further_computation:
+                # check if data is already calculated
+                if self.cache_man.check_cache(name):
+                    # if so, do nothing
+                    return X, y, kwargs
+                else:
+                    # otherwise, do the calculation and save it
+                    cached_result = None
             else:
-                # otherwise, do the calculation and save it
-                cached_result = None
-        else:
-            start_time_for_loading = datetime.datetime.now()
-            cached_result = self.cache_man.load_cached_data(name)
+                start_time_for_loading = datetime.datetime.now()
+                cached_result = self.cache_man.load_cached_data(name)
 
-        if cached_result is None:
-            X, y, kwargs = self._do_timed_fit_transform(name, transformer, fit, X, y, **kwargs)
-            self.cache_man.save_data_to_cache(name, (X, y, kwargs))
+            if cached_result is None:
+                X, y, kwargs = self._do_timed_fit_transform(name, transformer, fit, X, y, **kwargs)
+                self.cache_man.save_data_to_cache(name, (X, y, kwargs))
+            else:
+                X, y, kwargs = cached_result[0], cached_result[1], cached_result[2]
+                loading_duration = (datetime.datetime.now() - start_time_for_loading).total_seconds()
+                n = PHOTONDataHelper.find_n(X)
+                self.time_monitor['transform_cached'].append((name, loading_duration, n))
+            return X, y, kwargs
         else:
-            X, y, kwargs = cached_result[0], cached_result[1], cached_result[2]
-            loading_duration = (datetime.datetime.now() - start_time_for_loading).total_seconds()
-            n = self.__find_n(X)
-            self.time_monitor['transform_cached'].append((name, loading_duration, n))
-        return X, y, kwargs
+            # if we do it subject-wise we need to iterate and collect the results
+            processed_X, processed_y, processed_kwargs = list(), list(), dict()
+            X_uncached, y_uncached, kwargs_uncached = list(), list(), dict()
+            list_of_idx_cached, list_of_idx_non_cached = list(), list()
 
-    def __find_n(self, X):
-        if hasattr(X, 'shape'):
-            n = X.shape[0]
-        elif isinstance(X, Iterable):
-            n = len(X)
-        else:
-            n = 1
-        return n
+            nr = PHOTONDataHelper.find_n(X)
+            for start, stop in PHOTONDataHelper.chunker(nr, 1):
+                # split data in single entities
+                X_batched, y_batched, kwargs_dict_batched = PHOTONDataHelper.split_data(X, y, kwargs, start, stop)
+                self.cache_man.update_single_subject_state_info(X_batched)
+
+                # check if item has been processed
+                if self.cache_man.check_cache(name):
+                    list_of_idx_cached.append(start)
+                else:
+                    list_of_idx_non_cached.append(start)
+                    X_uncached.append(X_batched)
+                    y_uncached.append(y_batched)
+                    kwargs_uncached = PHOTONDataHelper.join_dictionaries(kwargs_uncached, kwargs_dict_batched)
+
+            # now we know which part can be loaded and which part should be transformed
+            # first apply the transformation to the group, then save it single-subject-wise
+            if len(list_of_idx_non_cached) > 0:
+                # apply transformation groupwise
+                new_group_X, new_group_y, new_group_kwargs = self._do_timed_fit_transform(name, transformer, fit,
+                                                                                          X_uncached,
+                                                                                          y_uncached,
+                                                                                          **kwargs_uncached)
+
+                # then save it single
+                for start, stop in PHOTONDataHelper.chunker(nr, 1):
+                    # split data in single entities
+                    X_batched, y_batched, kwargs_dict_batched = PHOTONDataHelper.split_data(new_group_X,
+                                                                                            new_group_y,
+                                                                                            new_group_kwargs,
+                                                                                            start, stop)
+                    self.cache_man.update_single_subject_state_info(X_batched)
+                    self.cache_man.save_data_to_cache(name, (X_batched, y_batched, kwargs_dict_batched))
+
+                # we need to collect the data only when we want to load them
+                # we can skip that process if we only want them to get into the cache (case: parallelisation)
+                if not self.skip_loading or needed_for_further_computation:
+                    # stack results
+                    processed_X, processed_y, processed_kwargs = new_group_X, new_group_y, new_group_kwargs
+
+            # afterwards load everything that has been cached
+            if len(list_of_idx_cached) > 0:
+                if not self.skip_loading or needed_for_further_computation:
+                    for cache_idx in list_of_idx_cached:
+                        X_batched, y_batched, kwargs_dict_batched = PHOTONDataHelper.split_data(X, y,
+                                                                                                kwargs, cache_idx,
+                                                                                                cache_idx)
+                        self.cache_man.update_single_subject_state_info(X_batched)
+
+                        # time the loading of the cached item
+                        start_time_for_loading = datetime.datetime.now()
+                        transformed_X, transformed_y, transformed_kwargs = self.cache_man.load_cached_data(name)
+                        loading_duration = (datetime.datetime.now() - start_time_for_loading).total_seconds()
+                        self.time_monitor['transform_cached'].append((name, loading_duration, PHOTONDataHelper.find_n(X)))
+
+                        processed_X, processed_y, processed_kwargs = PHOTONDataHelper.join_data(processed_X, transformed_X,
+                                                                                                processed_y, transformed_y,
+                                                                                                processed_kwargs, transformed_kwargs)
+            # now sort the data in the correct order again
+            processed_X, processed_y, processed_kwargs = PHOTONDataHelper.resort_splitted_data(processed_X,
+                                                                                               processed_y,
+                                                                                               processed_kwargs,
+                                                                                               PHOTONDataHelper.stack_results(list_of_idx_non_cached,
+                                                                                                                              list_of_idx_cached))
+
+            return processed_X, processed_y, processed_kwargs
 
     def _do_timed_fit_transform(self, name, transformer, fit, X, y, **kwargs):
 
-        n = self.__find_n(X)
+        n = PHOTONDataHelper.find_n(X)
 
         if fit:
             fit_start_time = datetime.datetime.now()
@@ -212,7 +297,10 @@ class PhotonPipeline(_BaseComposition):
             # update infos, just in case
             self.cache_man.hash = self._fold_id
             self.cache_man.cache_folder = self.cache_folder
-            self.cache_man.prepare([name for name, e in self.steps], X, self.current_config)
+            if not self.single_subject_caching:
+                self.cache_man.prepare([name for name, e in self.steps], self.current_config, X)
+            else:
+                self.cache_man.prepare([name for name, e in self.steps], self.current_config, single_subject_caching=True)
             last_cached_item = None
 
         # all steps except the last one
@@ -265,7 +353,7 @@ class PhotonPipeline(_BaseComposition):
                 predict_start_time = datetime.datetime.now()
                 y_pred = self._final_estimator.predict(X, **kwargs)
                 predict_duration = (datetime.datetime.now() - predict_start_time).total_seconds()
-                n = self.__find_n(X)
+                n = PHOTONDataHelper.find_n(X)
                 self.time_monitor['predict'].append((self.steps[-1][0], predict_duration, n))
                 return y_pred
             else:
@@ -304,7 +392,6 @@ class PhotonPipeline(_BaseComposition):
 
     def fit_predict(self, X, y=None, **kwargs):
         raise NotImplementedError('fit_predict not yet implemented in PHOTON Pipeline')
-
 
     @property
     def _estimator_type(self):
@@ -357,7 +444,14 @@ class CacheManager:
             self.first_data_hash = first_data_hash
             self.first_data_str = first_data_str
 
-    def prepare(self, pipe_elements, X, config):
+    def update_single_subject_state_info(self, X):
+        self.state.first_data_hash = hash(str(X[0]))
+        if isinstance(X[0], str):
+            self.state.first_data_str = X[0]
+        else:
+            self.state.first_data_str = str(self.state.first_data_hash)
+
+    def prepare(self, pipe_elements, config, X=None, single_subject_caching=False):
 
         cache_name = 'photon_cache_index.p'
         self.cache_file_name = os.path.join(self.cache_folder, cache_name)
@@ -370,19 +464,18 @@ class CacheManager:
 
         self.pipe_order = pipe_elements
 
-        first_item = X[0]
-        first_item_hash = hash(str(first_item))
-        self.state = CacheManager.State(config=config, first_data_hash=first_item_hash)
+        self.state = CacheManager.State(config=config)
 
-        if isinstance(X, np.ndarray):
-            self.state.nr_items = X.shape[0]
-            self.state.first_data_str = str(self.state.first_data_hash)
-        else:
-            self.state.nr_items = len(X)
-            if isinstance(first_item, str):
-                self.state.first_data_str = first_item
+        if X is not None:
+            self.state.first_data_hash = hash(str(X[0]))
+            if isinstance(X, np.ndarray):
+                self.state.nr_items = X.shape[0]
             else:
-                self.state.first_data_str = str(self.state.first_data_hash)
+                self.state.nr_items = len(X)
+            self.state.first_data_str = str(self.state.first_data_hash)
+
+        if single_subject_caching:
+            self.state.nr_items = 1
 
     def _read_cache_index(self):
 
