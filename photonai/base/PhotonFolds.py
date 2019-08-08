@@ -1,6 +1,5 @@
 from ..photonlogger.Logger import Logger
 from ..base.Helper import PHOTONPrintHelper
-from ..base.PhotonPipeline import CacheManager
 from ..validation.cross_validation import StratifiedKFoldRegression
 from ..validation.Validate import TestPipeline
 from ..validation.ResultsDatabase import MDBHelper, FoldOperations, MDBInnerFold, MDBConfig, MDBScoreInformation
@@ -385,9 +384,6 @@ class OuterFoldManager:
 
         Logger().info('This took {} minutes.'.format((datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
-        if self.cache_folder is not None:
-            Logger().info("Clearing Cache")
-            CacheManager.clear_cache_files(self.cache_folder)
 
     def fit_dummy(self, X, y, dummy):
 

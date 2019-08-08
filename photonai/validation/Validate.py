@@ -216,6 +216,9 @@ class TestPipeline(object):
         inner_fold.fold_nr = fold_cnt
         inner_fold.training = curr_train_fold
         inner_fold.validation = curr_test_fold
+
+        inner_fold.number_samples_validation = len(curr_test_fold.indices)
+        inner_fold.number_samples_training = len(curr_train_fold.indices)
         inner_fold.time_monitor = time_monitor
 
         # save all inner folds to the tree under the config item
