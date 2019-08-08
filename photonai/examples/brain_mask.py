@@ -16,17 +16,17 @@ df = pd.read_csv(file)
 X = [os.path.join(data_folder, f) + ".nii" for f in df["PAC_ID"]]
 y = df["Age"]
 
-n_subjects = 100
+n_subjects = 50
 
 X = X[:n_subjects]
 y = y[:n_subjects]
 
 
 # DEFINE OUTPUT SETTINGS
-settings = OutputSettings(project_folder='/spm-data/Scratch/spielwiese_nils_winter/brain_atlas_test/')
+settings = OutputSettings(project_folder='/spm-data/Scratch/spielwiese_nils_winter/brain_mask_test/')
 
 # DESIGN YOUR PIPELINE
-pipe = Hyperpipe('Limbic_System',
+pipe = Hyperpipe('Amygdala',
                     optimizer='grid_search',
                     metrics=['mean_absolute_error'],
                     best_config_metric='mean_absolute_error',
@@ -36,18 +36,17 @@ pipe = Hyperpipe('Limbic_System',
                     cache_folder="/spm-data/Scratch/spielwiese_nils_winter/brain_atlas_test/cache",
                     eval_final_performance=False)
 
-atlas = PhotonBatchElement('BrainAtlas',
-                        rois=['Hippocampus_L', 'Hippocampus_R', 'Amygdala_L', 'Amygdala_R'],
-                        atlas_name="AAL", extract_mode='vec', batch_size=20)
+mask = PhotonBatchElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter',
+                           extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
 neuro_branch = NeuroModuleBranch('NeuroBranch')
-neuro_branch += atlas
+neuro_branch += mask
 
-#pipe += neuro_branch
-pipe += atlas
+pipe += neuro_branch
+#pipe += mask
 
-pipe += PipelineElement('PCA', n_components=20)
+pipe += PipelineElement('PCA', n_components=10)
 
 pipe += PipelineElement('RandomForestRegressor')
 
