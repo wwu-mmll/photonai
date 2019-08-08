@@ -43,8 +43,8 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
 
 
 brain_atlas = PipelineElement('BrainAtlas', atlas_name="AAL", extract_mode='vec',
-                                rois=['Amygdala_L', 'Amygdala_R', 'Precentral_L', 'Precentral_R', 'Frontal_Mid_L', 'Frontal_Mid_R'],
-                                #rois = 'all',
+                                #rois=['Amygdala_L', 'Amygdala_R', 'Precentral_L', 'Precentral_R', 'Frontal_Mid_L', 'Frontal_Mid_R'],
+                                rois = 'all',
                                 collection_mode='dict')
 
 neuro_branch = NeuroModuleBranch('NeuroBranch')
@@ -66,7 +66,7 @@ atlas_mapper = AtlasMapper()
 atlas_mapper.generate_mappings(my_pipe, neuro_branch, my_folder)
 
 
-atlas_mapper.fit(X[:30], y[:30])
+atlas_mapper.fit(X, y)
 elapsed_time = time.time() - start_time
 print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 

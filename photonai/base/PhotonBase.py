@@ -708,8 +708,12 @@ class Hyperpipe(BaseEstimator):
         # be compatible to list of (image-) files
         if isinstance(self.data.X, list):
             self.data.X = np.asarray(self.data.X)
+        elif isinstance(self.data.X, pd.DataFrame):
+            self.data.X = self.data.X.to_numpy()
         if isinstance(self.data.y, list):
             self.data.y = np.asarray(self.data.y)
+        elif isinstance(self.data.y, pd.Series) or isinstance(self.data.y, pd.DataFrame):
+            self.data.y = self.data.y.to_numpy()
 
         # at first first, erase all rows where y is Nan if preprocessing has not done it already
         try:
