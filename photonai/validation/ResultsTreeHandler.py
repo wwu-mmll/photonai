@@ -11,7 +11,6 @@ from pymodm import connect
 
 from ..validation.ResultsDatabase import MDBHyperpipe
 from ..photonlogger.Logger import Logger
-#from ..base.PhotonBase.Hyp import OptimizerMetric
 
 
 class ResultsTreeHandler:
@@ -359,3 +358,135 @@ class ResultsTreeHandler:
         plt.legend(loc='best')
         plt.show()
 
+    def eval_mean_time_components(self,result_tree,result_path):
+        result_tree = result_tree
+        time_monitor_fit = []
+        time_monitor_trans_comp = []
+        time_monitor_trans_cach = []
+        time_monitor_predict = []
+        test_threshold = []
+        for i,outer_fold in enumerate(result_tree.outer_folds):
+            test_threshold.append(outer_fold.number_samples_test)
+            for j, tested_config in enumerate(outer_fold.tested_config_list):
+                for k, inner_fold in enumerate(tested_config.inner_folds):
+                    time_monitor_fit.append(inner_fold.time_monitor["fit"])
+                    time_monitor_trans_comp.append(inner_fold.time_monitor["transform_computed"])
+                    time_monitor_trans_cach.append(inner_fold.time_monitor["transform_cached"])
+                    time_monitor_predict.append(inner_fold.time_monitor["predict"])
+
+        df = pd.DataFrame()
+        df_fit = pd.DataFrame(time_monitor_fit)
+        df_transComp = pd.DataFrame(time_monitor_trans_comp)
+        df_transCach = pd.DataFrame(time_monitor_trans_cach)
+        df_predict = pd.DataFrame(time_monitor_predict)
+
+
+        def helper(df):
+            imp_col = df.columns
+            columns = []
+            for row in df.index:
+                for col in imp_col:
+                    if not df.at[row,col]:
+                        continue
+                    column = df.at[row,col][0]
+                    if column not in columns:
+                        df[column+"_time"] = pd.Series()
+                        df[column+"_n"] = pd.Series()
+                        columns.append(column)
+                    df.at[row,column+"_time"] =  df.at[row,col][1]
+                    df.at[row,column+"_n"] = df.at[row,col][2]
+                    df.at[row, column + "_test"] = df.at[row,column+"_n"] < np.mean(test_threshold)
+                    df.at[row, column + "_mean"] = df.at[row,col][1]/df.at[row, col][2]
+            return [df.drop(imp_col,1),columns]
+
+
+        df_fit,fit_pipeElements = helper(df_fit)
+        df_transComp, transComp_pipeElements = helper(df_transComp)
+        df_transCach, transCache_pipeElements = helper(df_transCach)
+        df_predict, predict_pipeElements = helper(df_predict)
+
+        header = [np.array(['fit']*3+['transform']*3+['transform compute']*3+['transform cache']*3+["predict"]*3+["comparisson"]),
+                  np.array(['train', 'test', 'normalized']*5+["cache - compute"])]
+
+
+        fullFrame = pd.DataFrame([],columns=header)
+
+        for fit_pipeElement in fit_pipeElements:
+            fullFrame.at[fit_pipeElement, ("fit","train")] = df_fit[(df_fit[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("fit","test")] = df_fit[(df_fit[fit_pipeElement + "_test"] == 1)][
+                fit_pipeElement + "_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("fit","normalized")] = (fullFrame.at[fit_pipeElement, ("fit","train")]+np.nan_to_num(fullFrame.at[fit_pipeElement, ("fit","test")]))/(np.nan_to_num(df_fit[(df_fit[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_fit[(df_fit[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
+
+        for fit_pipeElement in transComp_pipeElements:
+            fullFrame.at[fit_pipeElement,("transform compute","train")] = df_transComp[(df_transComp[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("transform compute","test")] = df_transComp[(df_transComp[fit_pipeElement + "_test"] == 1)][
+                fit_pipeElement + "_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("transform compute","normalized")] = (np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform compute","train")])+np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform compute","test")]))/(np.nan_to_num(df_transComp[(df_transComp[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_transComp[(df_transComp[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
+
+        for fit_pipeElement in transCache_pipeElements:
+            fullFrame.at[fit_pipeElement,("transform cache","train")] = df_transCach[(df_transCach[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("transform","train")] = np.nan_to_num(
+                fullFrame.at[fit_pipeElement, ("transform cache","train")]) + np.nan_to_num(
+                fullFrame.at[fit_pipeElement, ("transform compute","train")])
+
+            fullFrame.at[fit_pipeElement, ("transform cache","test")] = df_transCach[(df_transCach[fit_pipeElement + "_test"] == 1)][
+                fit_pipeElement + "_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("transform","test")] = np.nan_to_num(
+                fullFrame.at[fit_pipeElement, ("transform cache","test")]) + np.nan_to_num(
+                fullFrame.at[fit_pipeElement, ("transform compute","test")])
+
+            fullFrame.at[fit_pipeElement, ("transform cache","normalized")] = (np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform cache","train")])+np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform cache","test")]))/(np.nan_to_num(df_transCach[(df_transCach[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_transCach[(df_transCach[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
+            fullFrame.at[fit_pipeElement, ("transform","normalized")] = np.nan_to_num(
+                fullFrame.at[fit_pipeElement, ("transform cache","normalized")]) + np.nan_to_num(
+                fullFrame.at[fit_pipeElement, ("transform compute","normalized")])
+
+            fullFrame.at[fit_pipeElement, ("comparisson", "cache - compute")] = np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform cache","normalized")]/fullFrame.at[fit_pipeElement, ("transform compute","normalized")])
+
+        for fit_pipeElement in predict_pipeElements:
+            fullFrame.at[fit_pipeElement,("predict","train")] = df_predict[(df_predict[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("predict","test")] = df_predict[(df_predict[fit_pipeElement + "_test"] == 1)][
+                fit_pipeElement + "_time"].mean(skipna=True)
+            fullFrame.at[fit_pipeElement, ("predict","normalized")] = (np.nan_to_num(fullFrame.at[fit_pipeElement, ("predict","train")])+np.nan_to_num(fullFrame.at[fit_pipeElement, ("predict","test")]))/(np.nan_to_num(df_predict[(df_predict[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_predict[(df_predict[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
+
+
+
+        fullFrame = fullFrame.astype(float)
+
+        fullFrame.to_csv(result_path+"stat.csv",float_format = "%.6f")
+
+        labels = list(fullFrame.index)
+        sizes_fit = list(fullFrame[("fit","normalized")])
+        sizes_fit = [np.nan_to_num(float(i) / np.nanmax(sizes_fit))*100 for i in sizes_fit]
+
+        sizes_trans = list(fullFrame[("transform","normalized")])
+        sizes_trans = [np.nan_to_num(float(i) / np.nanmax(sizes_trans)) * 100 for i in sizes_trans]
+
+        sizes_transCache = list(fullFrame[("transform cache","normalized")])
+        sizes_transCache = [np.nan_to_num(float(i) / np.nanmax(sizes_transCache)) * 100 for i in sizes_transCache]
+
+        sizes_transComp = list(fullFrame[("transform compute", "normalized")])
+        sizes_transComp = [np.nan_to_num(float(np.nan_to_num(i)) / np.nanmax(sizes_transComp)) * 100 for i in sizes_transComp]
+
+        sizes_predict = list(fullFrame[("predict", "normalized")])
+        sizes_predict = [np.nan_to_num(i / np.nanmax(sizes_predict)) * 100 for i in sizes_predict]
+
+
+        dataList = [sizes_fit, sizes_transComp, sizes_transCache, sizes_trans, sizes_predict]
+        titleList = ["fit", "transform computed", "transform cached", "transform total", "predict"]
+
+        def myAutopct(value):
+            if value > 1:
+                return round(value,0)
+            return None
+
+        fig = plt.figure(figsize=(18, 10), dpi=160)
+        for k,data in enumerate(dataList):
+            ax1 = fig.add_subplot(231+k)
+            patches, _,_ = plt.pie(data, shadow=True, startangle=90, autopct=myAutopct, pctdistance=0.7)
+            plt.legend(patches, labels, loc="best")
+            plt.axis('equal')
+            plt.tight_layout()
+            plt.title(titleList[k])
+
+        plt.savefig(result_path+'pie.png')
+        plt.show()
