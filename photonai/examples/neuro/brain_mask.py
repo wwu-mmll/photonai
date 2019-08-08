@@ -26,7 +26,7 @@ y = y[:n_subjects]
 settings = OutputSettings(project_folder='/spm-data/Scratch/spielwiese_nils_winter/brain_mask_test/')
 
 # DESIGN YOUR PIPELINE
-pipe = Hyperpipe('Amygdala',
+pipe = Hyperpipe('GrayMatter',
                     optimizer='grid_search',
                     metrics=['mean_absolute_error'],
                     best_config_metric='mean_absolute_error',
