@@ -1,10 +1,7 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe
-from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.neuro.AtlasMapping import AtlasMapper
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from sklearn.model_selection import KFold
-import time
-import os
 import pandas as pd
 import glob
 import numpy as np
@@ -42,34 +39,21 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     cache_folder='/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test/cache')  # get error, warn and info message
 
 
-brain_atlas = PipelineElement('BrainAtlas', atlas_name="AAL", extract_mode='vec',
-                                #rois=['Amygdala_L', 'Amygdala_R', 'Precentral_L', 'Precentral_R', 'Frontal_Mid_L', 'Frontal_Mid_R'],
-                                rois = 'all',
-                                collection_mode='dict')
+brain_atlas = PipelineElement('BrainAtlas', atlas_name="Yeo_7", extract_mode='vec',
+                                rois='all')
 
 neuro_branch = NeuroModuleBranch('NeuroBranch')
 neuro_branch += brain_atlas
 
-#preprocessing += PipelineElement('BrainAtlas', atlas_name="AAL", extract_mode='vec', rois='all')
-#preprocessing += PipelineElement('BrainAtlas', atlas_name="AAL", extract_mode='vec', rois=['Amygdala_L', 'Amygdala_R',
-#                                                                                           'Precentral_L', 'Precentral_R',
-#                                                                                           'Frontal_Mid_L', 'Frontal_Mid_R'])
-
 my_pipe += PipelineElement('SVR', hyperparameters={}, kernel='linear')
 
-
 # NOW TRAIN YOUR PIPELINE
-start_time = time.time()
 my_folder = '/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test'
 atlas_mapper = AtlasMapper()
-#atlas_mapper.generate_mappings(my_pipe, brain_atlas, my_folder)
 atlas_mapper.generate_mappings(my_pipe, neuro_branch, my_folder)
-
-
 atlas_mapper.fit(X, y)
-elapsed_time = time.time() - start_time
-print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 
+# LOAD TRAINED ATLAS MAPPER AND PREDICT
 atlas_mapper = AtlasMapper()
 atlas_mapper.load_from_file('/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test/basic_svm_pipe_atlas_mapper_meta.json')
 
