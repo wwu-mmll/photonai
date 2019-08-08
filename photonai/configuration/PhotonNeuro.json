@@ -11,6 +11,10 @@
       "photonai.neuro.BrainAtlas.BrainAtlas",
       "Transformer"
    ],
+   "BrainMask":[
+      "photonai.neuro.BrainAtlas.BrainMasker",
+      "Transformer"
+   ],
    "PatchImages":[
       "photonai.neuro.ImageBasics.PatchImages",
       "Transformer"

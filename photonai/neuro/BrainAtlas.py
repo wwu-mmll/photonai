@@ -22,6 +22,15 @@ class RoiObject:
         self.is_empty = False
 
 
+class MaskObject:
+
+    def __init__(self, name: str = '', mask_file: str = '', mask = None):
+        self.name = name
+        self.mask_file = mask_file
+        self.mask = None
+        self.is_empty = False
+
+
 class AtlasObject:
 
     def __init__(self, name='', path='', labels_file='', mask_threshold=None):
@@ -35,26 +44,97 @@ class AtlasObject:
 
 
 @Singleton
-class AtlasLibrary:
+class MaskLibrary:
+    MASK_DICTIONARY = {'MNI_ICBM152_GrayMatter': 'mni_icbm152_gm_tal_nlin_sym_09a.nii.gz',
+                       'MNI_ICBM152_WhiteMatter': 'mni_icbm152_wm_tal_nlin_sym_09a.nii.gz',
+                       'MNI_ICBM152_WholeBrain': 'mni_icbm152_t1_tal_nlin_sym_09a_mask.nii.gz',
+                       'Cerebellum': 'P_08_Cere.nii.gz'}
 
     def __init__(self):
+        self.mask_dir = os.path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'Atlases/'
+        self.available_masks = dict()
+        self._inspect_mask_dir()
+        self.loaded_masks = dict()
 
-        # Get which atlases are available in Atlases subdir of this module
-        # all have to be in *.(nii/img).gz! (Could be nicer)
+    def _inspect_mask_dir(self):
+        for mask_id, mask_info in self.MASK_DICTIONARY.items():
+            mask_file = glob.glob(os.path.join(self.mask_dir, '*/' + mask_info))[0]
+            self.available_masks[mask_id] = MaskObject(name=mask_id,
+                                                  mask_file=mask_file)
+        return
+
+    def _add_custom_mask(self, mask_file):
+        if not os.path.isfile(mask_file):
+            raise FileNotFoundError("Cannot find custom mask {}".format(mask_file))
+        return MaskObject(name=os.path.basename(mask_file), mask_file=mask_file)
+
+    def _load_mask(self, mask_name: str='', target_affine=None, target_shape=None):
+        Logger().debug('Loading Mask')
+
+        if mask_name in self.available_masks.keys():
+            mask = self.available_masks[mask_name]
+        else:
+            Logger().debug("Checking custom mask")
+            mask = self._add_custom_mask(mask_name)
+
+        img = image.load_img(mask.mask_file)
+        mask.mask = image.new_img_like(mask.mask_file, img.get_data() > 0)
+
+        if target_affine is not None and target_shape is not None:
+            mask.mask = image.resample_img(mask.mask, target_affine=target_affine, target_shape=target_shape,
+                                           interpolation='nearest')
+
+            # check orientations
+            orient_data = ''.join(nib.aff2axcodes(target_affine))
+            orient_roi = ''.join(nib.aff2axcodes(mask.mask.affine))
+            if not orient_roi == orient_data:
+                Logger().info('Orientation of mask and data are not the same: '
+                              + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
+
+        # check if roi is empty
+        if np.sum(mask.mask.dataobj != 0) == 0:
+            Logger().error('No voxels in mask after resampling (' + mask.name + ').')
+            mask.is_empty = True
+
+        self.loaded_masks[(mask.name, str(target_affine), str(target_shape))] = mask
+        print("Loading mask done!")
+
+    def get_mask(self, mask_name, target_affine=None, target_shape=None):
+
+        if self.loaded_masks is None or (mask_name, str(target_affine), str(target_shape)) not in self.loaded_masks:
+            Logger().debug("Loading mask from filesystem")
+            self._load_mask(mask_name, target_affine, target_shape)
+
+        return self.loaded_masks[(mask_name, str(target_affine), str(target_shape))]
+
+
+@Singleton
+class AtlasLibrary:
+    ATLAS_DICTIONARY = {'AAL': 'AAL.nii.gz',
+                        'HarvardOxford_Cortical_Threshold_25': 'HarvardOxford-cort-maxprob-thr25.nii.gz',
+                        'HarvardOxford_Subcortical_Threshold_25': 'HarvardOxford-sub-maxprob-thr25.nii.gz',
+                        'HarvardOxford_Cortical_Threshold_50': 'HarvardOxford-cort-maxprob-thr50.nii.gz',
+                        'HarvardOxford_Subcortical_Threshold_50': 'HarvardOxford-sub-maxprob-thr50.nii.gz',
+                        'Yeo_7': 'Yeo2011_7Networks_MNI152_FreeSurferConformed1mm.nii.gz',
+                        'Yeo_7_Liberal': 'Yeo2011_7Networks_MNI152_FreeSurferConformed1mm_LiberalMask.nii.gz',
+                        'Yeo_17': 'Yeo2011_17Networks_MNI152_FreeSurferConformed1mm.nii.gz',
+                        'Yeo_17_Liberal': 'Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask.nii.gz',
+                        }
+
+    def __init__(self):
         self.atlas_dir = os.path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'Atlases/'
-        self.available_atlasses = None
+        self.available_atlasses = self._inspect_atlas_dir()
         self.loaded_atlasses = None
 
     def _inspect_atlas_dir(self):
-
-        atlas_files = glob.glob(self.atlas_dir + '*/*.nii.gz')
-        for atlas_file in atlas_files:
-            atlas_id = os.path.basename(atlas_file)[:-7]
-            if self.available_atlasses is None:
-                self.available_atlasses = dict()
-            self.available_atlasses[atlas_id] = AtlasObject(name=atlas_id,
-                                                            path=atlas_file,
-                                                            labels_file=atlas_file[:-7] + '_labels.txt')
+        available_atlasses = dict()
+        for atlas_id, atlas_info in self.ATLAS_DICTIONARY.items():
+            atlas_file = glob.glob(os.path.join(self.atlas_dir, '*/' + atlas_info))[0]
+            atlas_basename = os.path.basename(atlas_file)[:-7]
+            available_atlasses[atlas_id] = AtlasObject(name=atlas_id,
+                                                       path=atlas_file,
+                                                       labels_file=atlas_basename + '_labels.txt')
+        return available_atlasses
 
     def _load_atlas(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
 
@@ -315,10 +395,18 @@ class BrainMasker(BaseEstimator):
             box.append(tmp)
         return np.asarray(box)
 
+    def fit(self, X, y):
+        return self
+
     def transform(self, X, y=None, **kwargs):
 
         if self.affine is None or self.shape is None:
             self.affine, self.shape = BrainMasker.get_format_info_from_first_image(X)
+
+        if isinstance(self.mask_image, str):
+            self.mask_image = MaskLibrary().get_mask(self.mask_image, self.affine, self.shape)
+        elif isinstance(self.mask_image, RoiObject):
+            pass
 
         if not self.mask_image.is_empty:
             self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
@@ -327,7 +415,7 @@ class BrainMasker(BaseEstimator):
             try:
                 single_roi = self.masker.fit_transform(X)
             except BaseException as e:
-                print(e)
+                Logger().error(e)
                 single_roi = None
 
             if single_roi is not None:
