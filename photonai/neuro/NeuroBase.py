@@ -45,9 +45,7 @@ class NeuroModuleBranch(PipelineBranch):
         self.fix_fold_id = True
         self.do_not_delete_cache_folder = True
 
-        self.apply_groupwise = apply_groupwise
-
-        if self.nr_of_processes > 1 and self.apply_groupwise == True:
+        if self.nr_of_processes > 1:
             Logger().warn("Groupwise processing of NeuroElements not supported when working on multiple CPUs. "
                           "Falling back to single subject processing.")
 
@@ -118,26 +116,9 @@ class NeuroModuleBranch(PipelineBranch):
                 Logger().error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
 
-        if self.apply_groupwise:
-            t1 = time.time()
-            X_new, _, _ = self.base_element.transform(X)
-            t2 = time.time()
-            elapsed_time = t2-t1
-            Logger().info('Time for groupwise processing: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
-        else:
-            X_new = list()
-            t1 = time.time()
-            for i, x_in in enumerate(X):
-                new, _, _ = self.base_element.transform([x_in])
-                if i == 0:
-                    X_new = [list() for k in range(len(new))]
+        t1 = time.time()
+        X_new, _, _ = self.base_element.transform(X)
 
-                for k, roi in enumerate(new):
-                    X_new[k].append(roi[0])
-
-            t2 = time.time()
-            elapsed_time = t2-t1
-            Logger().info('Time for single subject processing: {}'.format(time.strftime("%H:%M:%S", time.gmtime(elapsed_time))))
         return X_new, y, kwargs
 
     def set_params(self, **kwargs):

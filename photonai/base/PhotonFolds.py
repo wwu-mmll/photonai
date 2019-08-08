@@ -75,7 +75,7 @@ class FoldInfo:
         #         #    into the test set --> thus we can evaluate more hp configs
         #         #    later without double dipping
         elif not eval_final_performance:
-            data_test_cases = FoldInfo._yield_all_data()
+            data_test_cases = FoldInfo._yield_all_data(X)
         # the default is dividing one time into a validation and test set
         else:
             train_test_cv_object = ShuffleSplit(n_splits=1, test_size=test_size)

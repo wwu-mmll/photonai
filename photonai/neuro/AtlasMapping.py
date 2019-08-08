@@ -47,7 +47,6 @@ class AtlasMapper:
     def _find_brain_atlas(self, neuro_element):
         roi_list = list()
         if isinstance(neuro_element, NeuroModuleBranch):
-            neuro_element.apply_groupwise = True
             for element in neuro_element.pipeline_elements:
                 if isinstance(element.base_element, BrainAtlas):
                     element.base_element.collection_mode = 'list'
@@ -97,6 +96,7 @@ class AtlasMapper:
 
         # extract regions
         X_extracted, _, _ = self.neuro_element.transform(X)
+        X_extracted = self._reshape_roi_data(X_extracted)
 
         hyperpipe_infos = dict()
         hyperpipe_results = dict()
@@ -114,11 +114,19 @@ class AtlasMapper:
         df = pd.DataFrame(hyperpipe_results)
         df.to_csv(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_results.csv'))
 
+    def _reshape_roi_data(self, X):
+        roi_data = [list() for n in range(len(X[0]))]
+        for roi_i in range(len(X[0])):
+            for sub_i in range(len(X)):
+                roi_data[roi_i].append(X[sub_i][roi_i])
+        return roi_data
+
     def predict(self, X, **kwargs):
         if len(self.hyperpipes_to_fit) == 0:
             raise Exception("No hyperpipes to predict. Did you remember to fit or load the Atlas Mapper?")
 
         X_extracted, _, _ = self.neuro_element.transform(X)
+        X_extracted = self._reshape_roi_data(X_extracted)
 
         predictions = dict()
         for roi, infos in self.hyperpipe_infos.items():

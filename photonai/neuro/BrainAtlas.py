@@ -162,7 +162,7 @@ class AtlasLibrary:
 
 
 class BrainAtlas(BaseEstimator):
-    def __init__(self, atlas_name: str, extract_mode: str='vec', collection_mode: str = 'concat',
+    def __init__(self, atlas_name: str, extract_mode: str='vec',
                  mask_threshold=None, background_id=0, rois='all'):
 
         # ToDo
@@ -184,7 +184,8 @@ class BrainAtlas(BaseEstimator):
 
         self.atlas_name = atlas_name
         self.extract_mode = extract_mode
-        self.collection_mode = collection_mode
+        # collection mode default to concat --> can only be overwritten by AtlasMapper
+        self.collection_mode = 'concat'
         self.mask_threshold = mask_threshold
         self.background_id = background_id
         self.rois = rois
@@ -199,6 +200,13 @@ class BrainAtlas(BaseEstimator):
         if len(X) < 1:
             raise Exception("Brain Atlas: Did not get any data in parameter X")
 
+        if self.collection_mode == 'list' or self.collection_mode == 'concat':
+            collection_mode = self.collection_mode
+        else:
+            collection_mode = 'concat'
+            Logger().error("Collection mode {} not supported. Use 'list' or 'concat' instead."
+                           "Falling back to concat mode.".format(self.collection_mode))
+
         # 1. validate if all X are in the same space and have the same voxelsize and have the same orientation
 
         # 2. load sample data to get target affine and target shape to adapt the brain atlas
@@ -206,31 +214,37 @@ class BrainAtlas(BaseEstimator):
         affine, shape = BrainMasker.get_format_info_from_first_image(X)
 
         # load all niftis to memory
-        X = image.load_img(X)
-
-        # for x_file in X:
-        #     img_new = image.load_img(x_file)
-        #     print(np.array_equal(img_new.affine, img.affine))
-        #     print(np.array_equal(img_new.shape, img.shape))
+        if isinstance(X, list):
+            n_subjects = len(X)
+            X = image.load_img(X)
+        elif isinstance(X, str):
+            n_subjects = 1
+            X = image.load_img(X)
+        else:
+            n_subjects = X.shape[-1]
 
         # get ROI mask
         atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, affine, shape, self.mask_threshold)
         roi_objects = self._get_rois(atlas_obj, which_rois=self.rois, background_id=self.background_id)
 
-        roi_data = list()
-
+        roi_data = [list() for i in range(n_subjects)]
+        roi_data_concat = list()
+        t1 = time.time()
         for roi in roi_objects:
-            Logger().debug("Extracting ROI {}".format(roi.label))
             masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode=self.extract_mode)
             extraction = masker.transform(X)
-            if self.collection_mode == 'list':
-                roi_data.append(extraction)
-            elif self.collection_mode == 'concat':
-                roi_data.extend(extraction)
-            else:
-                Logger().error("Collection mode {} not supported. Use 'list' or 'concat' instead.".format(self.collection_mode))
-                roi_data.extend(extraction)
 
+            if collection_mode == 'list':
+                for sub_i in range(extraction.shape[0]):
+                    roi_data[sub_i].append(extraction[sub_i])
+            else:
+                roi_data_concat.append(extraction)
+
+        if self.collection_mode == 'concat':
+            roi_data = np.concatenate(roi_data_concat, axis=1)
+
+        elapsed_time = time.time() - t1
+        Logger().debug("Time for extracting {} ROIs in {} subjects: {} seconds".format(len(roi_objects), n_subjects, elapsed_time))
         return roi_data
 
     @staticmethod
@@ -298,11 +312,9 @@ class BrainMasker(BaseEstimator):
                 data = img.get_data()
             tmp = data[corner1[0]:corner2[0] + 1, corner1[1]:corner2[1] + 1, corner1[2]:corner2[2] + 1]
             box.append(tmp)
-        return box
+        return np.asarray(box)
 
     def transform(self, X, y=None, **kwargs):
-
-        transform_time = time.time()
 
         if self.affine is None or self.shape is None:
             self.affine, self.shape = BrainMasker.get_format_info_from_first_image(X)
@@ -310,53 +322,31 @@ class BrainMasker(BaseEstimator):
         if not self.mask_image.is_empty:
             self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
                                       target_shape=self.shape, dtype='float32')
-            try:
 
+            try:
                 single_roi = self.masker.fit_transform(X)
-                # if isinstance(X, nib.Nifti1Image):
-                #     single_roi = X.dataobj[self.mask_image.dataobj]
-                # if isinstance(X[0], str):
-                #     loaded_img = image.load_img(X[0])
-                #     single_roi = np.reshape(np.multiply(loaded_img.dataobj, self.mask_image.mask.dataobj), (1, -1))
             except BaseException as e:
                 print(e)
                 single_roi = None
-                # Logger().info(e)
-                # Logger().error("Could not apply roi " + self.mask_image.label + " to the data ")
+
             if single_roi is not None:
                 if self.extract_mode == 'vec':
-                    return single_roi
+                    return np.asarray(single_roi)
 
                 elif self.extract_mode == 'mean':
-                    output = list()
-                    # loop through subjects
-                    for sample in single_roi:
-                        output.append(np.mean(sample))
-                    return output
+                    return np.mean(single_roi, axis=1)
 
                 elif self.extract_mode == 'box':
                     return BrainMasker._get_box(X, self.mask_image)
 
                 elif self.extract_mode == 'img':
-                    roi_img = self.masker.inverse_transform(single_roi)
-                    return roi_img
+                    return self.masker.inverse_transform(single_roi)
 
                 else:
                     Logger().error("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
-                # # any function which can work on a vector passed as a string
-                # tmp = []
-                # # ToDo
-                # # find something safer than eval!
-                # any_func = lambda ex, data, opt_args=None: eval(ex)(data, opt_args)
-                # expr = self.extract_mode
-                # for sample_ind in range(0, len(single_roi)):
-                #     t = any_func(expr, single_roi[sample_ind])
-                #     tmp.append(t)
-                # roi_data.append(tmp)
             else:
                 print("Extracting ROI failed.")
         else:
             print("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
-            # Logger().warn("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
 
 
