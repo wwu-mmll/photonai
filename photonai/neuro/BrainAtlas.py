@@ -231,6 +231,7 @@ class BrainAtlas(BaseEstimator):
         roi_data_concat = list()
         t1 = time.time()
         for roi in roi_objects:
+            Logger().debug("Extracting ROI {}".format(roi.label))
             masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode=self.extract_mode)
             extraction = masker.transform(X)
 
