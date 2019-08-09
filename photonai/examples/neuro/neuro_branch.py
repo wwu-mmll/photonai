@@ -55,9 +55,7 @@ my_pipe.add(PipelineElement('StandardScaler'))
 my_pipe += PipelineElement('SVR', hyperparameters={'kernel': Categorical(['rbf', 'linear'])}, gamma='scale')
                                                    # 'C': FloatRange(0.5, 2)}, gamma='scale')
 
-
 # NOW TRAIN YOUR PIPELINE
-
 start_time = time.time()
 my_pipe.fit(X, y)
 elapsed_time = time.time() - start_time
