@@ -1,13 +1,14 @@
 from ..photonlogger.Logger import Logger
+from .NeuroBase import NeuroTransformerMixin
 from sklearn.base import BaseEstimator
 from skimage.util.shape import view_as_windows
-from nilearn.image import resample_img, smooth_img
+from nilearn.image import resample_img, smooth_img, index_img
 from nibabel.nifti1 import Nifti1Image
 import numpy as np
 
 
 # Smoothing
-class SmoothImages(BaseEstimator):
+class SmoothImages(BaseEstimator, NeuroTransformerMixin):
     def __init__(self, fwhm=[2, 2, 2]):
 
         super(SmoothImages, self).__init__()
@@ -34,11 +35,18 @@ class SmoothImages(BaseEstimator):
                 self._fwhm = fwhm
 
     def transform(self, X, y=None, **kwargs):
-        smoothed_img = smooth_img(X, fwhm=self.fwhm)
+
+        if isinstance(X, list) and len(X) == 1:
+            smoothed_img = smooth_img(X[0], fwhm=self.fwhm)
+        else:
+            smoothed_img = smooth_img(X, fwhm=self.fwhm)
+
+        if not self.output_img:
+            smoothed_img = [img.dataobj for img in smoothed_img]
         return smoothed_img
 
 
-class ResampleImages(BaseEstimator):
+class ResampleImages(BaseEstimator, NeuroTransformerMixin):
     """
      Resampling voxel size
     """
@@ -70,9 +78,12 @@ class ResampleImages(BaseEstimator):
             resampled_img = resample_img(X[0], target_affine=target_affine, interpolation='nearest')
         else:
             resampled_img = resample_img(X, target_affine=target_affine, interpolation='nearest')
+
+        if self.output_img:
+            resampled_img = [index_img(resampled_img, i) for i in range(resampled_img.shape[-1])]
+        else:
             resampled_img = np.moveaxis(resampled_img.dataobj, -1, 0)
-        if not isinstance(resampled_img, list) and not isinstance(resampled_img, np.ndarray):
-            resampled_img = np.array([resampled_img])
+
         return resampled_img
 
 

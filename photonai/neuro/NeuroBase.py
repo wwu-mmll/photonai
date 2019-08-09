@@ -66,6 +66,7 @@ class NeuroModuleBranch(PipelineBranch):
         if pipe_element.name in NeuroModuleBranch.NEURO_ELEMENTS:
             # as the neuro branch is parallelized and processes several images subsequently on
             # different cores, we need to stop the children to process on several cores as well
+            pipe_element.base_element.output_img = True
             self.pipeline_elements.append(pipe_element)
             self._prepare_pipeline()
         else:
@@ -212,3 +213,9 @@ class NeuroModuleBranch(PipelineBranch):
             for p in process_list:
                 # print("joining process " + str(p))
                 p.join()
+
+
+class NeuroTransformerMixin:
+
+    def __init__(self):
+        self.output_img = False
