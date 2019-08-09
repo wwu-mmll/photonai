@@ -1,7 +1,7 @@
 from ..base.PhotonBase import PipelineBranch
 from ..base.PhotonPipeline import PhotonPipeline
 from ..configuration.Register import PhotonRegister
-from ..base.PhotonBatchElement import PhotonBatchElement
+from ..base.Helper import PHOTONDataHelper
 from ..neuro.BrainAtlas import BrainAtlas
 from ..photonlogger.Logger import Logger
 from nibabel.nifti1 import Nifti1Image
@@ -116,7 +116,6 @@ class NeuroModuleBranch(PipelineBranch):
                 Logger().error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
 
-        t1 = time.time()
         X_new, _, _ = self.base_element.transform(X)
 
         return X_new, y, kwargs
@@ -173,8 +172,10 @@ class NeuroModuleBranch(PipelineBranch):
             # ----------- faking parallelization -----------------------
 
             num_of_jobs_todo = 0
-            for idx, x_in in enumerate(X):
+            # distribute the data equally to all available cores
+            for start, stop in PHOTONDataHelper.chunker(PHOTONDataHelper.find_n(X), self.nr_of_processes):
 
+                X_batched, _, _ = PHOTONDataHelper.split_data(X, None, {}, start, stop)
                 unique_key = uuid.uuid4()
 
                 # copy my pipeline
@@ -184,9 +185,9 @@ class NeuroModuleBranch(PipelineBranch):
                 new_pipe_copy.skip_loading = True
 
                 job_delegate = new_pipe_copy.transform
-                new_job = NeuroModuleBranch.ImageJob(data=x_in, delegate=job_delegate,
+                new_job = NeuroModuleBranch.ImageJob(data=X_batched, delegate=job_delegate,
                                                      job_key=unique_key, lock_setter=new_pipe_copy.set_lock,
-                                                     sort_index=idx)
+                                                     sort_index=start)
 
                 jobs_to_do.put(new_job)
 

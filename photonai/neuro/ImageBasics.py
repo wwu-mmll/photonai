@@ -70,8 +70,9 @@ class ResampleImages(BaseEstimator):
             resampled_img = resample_img(X[0], target_affine=target_affine, interpolation='nearest')
         else:
             resampled_img = resample_img(X, target_affine=target_affine, interpolation='nearest')
-        if not isinstance(resampled_img, list):
-            resampled_img = [resampled_img]
+            resampled_img = np.moveaxis(resampled_img.dataobj, -1, 0)
+        if not isinstance(resampled_img, list) and not isinstance(resampled_img, np.ndarray):
+            resampled_img = np.array([resampled_img])
         return resampled_img
 
 
