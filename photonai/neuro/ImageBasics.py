@@ -38,11 +38,16 @@ class SmoothImages(BaseEstimator, NeuroTransformerMixin):
 
         if isinstance(X, list) and len(X) == 1:
             smoothed_img = smooth_img(X[0], fwhm=self.fwhm)
+        elif isinstance(X, str):
+            smoothed_img = smooth_img(X, fwhm=self.fwhm)
         else:
             smoothed_img = smooth_img(X, fwhm=self.fwhm)
 
         if not self.output_img:
-            smoothed_img = [img.dataobj for img in smoothed_img]
+            if isinstance(smoothed_img, list):
+                smoothed_img = np.asarray([img.dataobj for img in smoothed_img])
+            else:
+                return smoothed_img.dataobj
         return smoothed_img
 
 
@@ -51,6 +56,7 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
      Resampling voxel size
     """
     def __init__(self, voxel_size=[3, 3, 3]):
+        super(ResampleImages, self).__init__()
         self._voxel_size = None
         self.voxel_size = voxel_size
 
@@ -76,13 +82,21 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
 
         if isinstance(X, list) and len(X) == 1:
             resampled_img = resample_img(X[0], target_affine=target_affine, interpolation='nearest')
+        elif isinstance(X, str):
+            resampled_img = resample_img(X, target_affine=target_affine, interpolation='nearest')
         else:
             resampled_img = resample_img(X, target_affine=target_affine, interpolation='nearest')
 
         if self.output_img:
-            resampled_img = [index_img(resampled_img, i) for i in range(resampled_img.shape[-1])]
+            if len(resampled_img.shape) == 3:
+                return resampled_img
+            else:
+                resampled_img = [index_img(resampled_img, i) for i in range(resampled_img.shape[-1])]
         else:
-            resampled_img = np.moveaxis(resampled_img.dataobj, -1, 0)
+            if len(resampled_img.shape) == 3:
+                return resampled_img.dataobj
+            else:
+                resampled_img = np.moveaxis(resampled_img.dataobj, -1, 0)
 
         return resampled_img
 

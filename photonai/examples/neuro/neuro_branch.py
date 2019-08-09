@@ -37,8 +37,8 @@ preprocessing += PipelineElement("LabelEncoder")
 my_pipe += preprocessing
 
 neuro_branch = NeuroModuleBranch('amygdala', nr_of_processes=1)
-neuro_branch += PipelineElement('SmoothImages', {'fwhm': [3, 5, 10, 15]})
-neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': IntegerRange(1, 3)})
+neuro_branch += PipelineElement('SmoothImages', {'fwhm': [3, 5, 10, 15]}, batch_size=1)
+neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': IntegerRange(1, 3)}, batch_size=1)
 neuro_branch += PipelineElement('BrainAtlas', hyperparameters={'rois': [['Hippocampus_L', 'Hippocampus_R'],
                                                                         ['Amygdala_L', 'Amygdala_R']]},
                                 atlas_name="AAL", extract_mode='vec')
