@@ -43,7 +43,8 @@ class DummyYAndCovariatesTransformer(BaseEstimator):
         self.y = y
         self.kwargs =kwargs
 
-        y = y + 1
+        if y is not None:
+            y = y + 1
         if len(kwargs) > 0:
             X = X - 1
             kwargs["sample1_edit"] = kwargs["sample1"] + 5
@@ -205,19 +206,19 @@ class CacheManagerTests(unittest.TestCase):
                         'SVC__kernel': 'linear'}
 
     def test_find_relevant_configuration_items(self):
-        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        self.cache_man.prepare(pipe_elements=self.item_names, X=self.X, config=self.config1)
         relevant_items = {'PCA__n_components': 5}
         relevant_items_hash = hash(frozenset(relevant_items.items()))
         new_hash = self.cache_man._find_config_for_element("PCA")
         self.assertEqual(relevant_items_hash, new_hash)
 
     def test_initial_transformation(self):
-        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
         result = self.cache_man.load_cached_data("PCA")
         self.assertEqual(result, None)
 
     def test_saving_and_loading_transformation(self):
-        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
         self.cache_man.save_data_to_cache("PCA", (self.X, self.y, self.kwargs))
 
         self.assertTrue(len(self.cache_man.cache_index) == 1)
@@ -232,7 +233,7 @@ class CacheManagerTests(unittest.TestCase):
         self.assertTrue(np.array_equal(self.kwargs['covariates'], kwargs_loaded['covariates']))
 
     def test_index_writing_and_clearing_folder(self):
-        self.cache_man.prepare(self.item_names, self.X, self.config1)
+        self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
         self.cache_man.save_cache_index()
         self.assertTrue(os.path.isfile(self.cache_man.cache_file_name))
         self.cache_man.clear_cache()
@@ -254,7 +255,7 @@ class CachedPhotonPipelineTests(unittest.TestCase):
 
         self.pipe.caching = True
         self.pipe.fold_id = "12345643463434"
-        self.pipe.cache_folder = "/home/rleenings/Projects/TestNeuro/cache/"
+        self.pipe.cache_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data/cache')
 
         self.config1 = {'PCA__n_components': 4,
                         'SVC__C': 3,
@@ -301,9 +302,6 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         self.assertTrue(np.array_equal(X_uc, X_2))
         self.assertTrue(np.array_equal(y_uc, y_2))
         self.assertTrue(np.array_equal(kwargs_uc, kwargs_2))
-
-
-
 
 
 

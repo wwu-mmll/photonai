@@ -318,6 +318,8 @@ class Hyperpipe(BaseEstimator):
                                                    optimizer_params=optimizer_params,
                                                    performance_constraints=performance_constraints)
 
+        self.optimization.sanity_check_metrics()
+
         # ====================== Internals ===========================
         self.is_final_fit = False
 
@@ -1414,10 +1416,11 @@ class PipelineElement(BaseEstimator):
         if self.needs_y:
             # if we dont have any target vector we are in the application state,
             # so we skip all training_only steps
-            if self.needs_covariates:
-                X, y, kwargs = delegate(X, y, **kwargs)
-            else:
-                X, y = delegate(X, y)
+            if y is not None:
+                if self.needs_covariates:
+                    X, y, kwargs = delegate(X, y, **kwargs)
+                else:
+                    X, y = delegate(X, y)
 
         elif self.needs_covariates:
             # we need an extra arrangement here, because we reuse code
@@ -1484,8 +1487,8 @@ class PipelineBranch(PipelineElement):
     def transform(self, X, y=None, **kwargs):
         return super().transform(X, y, **kwargs)
 
-    def predict(self, data, y=None, **kwargs):
-        return super().predict(data, y, **kwargs)
+    def predict(self, data, **kwargs):
+        return super().predict(data, **kwargs)
 
     def __iadd__(self, pipe_element):
         """

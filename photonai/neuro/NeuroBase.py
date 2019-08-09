@@ -40,10 +40,7 @@ class NeuroModuleBranch(PipelineBranch):
         self.needs_covariates = True
 
         self.current_config = None
-
         self.skip_caching = True
-        self.fix_fold_id = True
-        self.do_not_delete_cache_folder = True
 
         if self.nr_of_processes > 1:
             Logger().warn("Groupwise processing of NeuroElements not supported when working on multiple CPUs. "
@@ -106,6 +103,10 @@ class NeuroModuleBranch(PipelineBranch):
             nr_of_tested += 1
 
     def transform(self, X, y=None, **kwargs):
+
+        if self.base_element.cache_folder is not None:
+            # make sure we cache individually
+            self.base_element.single_subject_caching = True
 
         if self.nr_of_processes > 1:
 

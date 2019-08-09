@@ -164,15 +164,16 @@ class PhotonPipeline(_BaseComposition):
 
         Returns transformed X, y and kwargs
         """
+        if self.single_subject_caching:
+            initial_X = np.array(X)
+        else:
+            initial_X = None
+
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs)
 
         if self._final_estimator is not None:
             if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
                 if self.caching and self.current_config is not None:
-                    if self.single_subject_caching:
-                        initial_X = np.array(X)
-                    else:
-                        initial_X = None
                     X, y, kwargs = self.load_or_save_cached_data(self._final_estimator.name, X, y, kwargs, self._final_estimator,
                                                                  initial_X=initial_X)
                 else:
@@ -230,9 +231,9 @@ class PhotonPipeline(_BaseComposition):
                     list_of_idx_cached.append(start)
                 else:
                     list_of_idx_non_cached.append(start)
-                    X_uncached.append(X_batched)
-                    y_uncached.append(y_batched)
-                    initial_X_uncached.append(X_key)
+                    X_uncached = PHOTONDataHelper.stack_results(X_batched, X_uncached)
+                    y_uncached = PHOTONDataHelper.stack_results(y_batched, y_uncached)
+                    initial_X_uncached = PHOTONDataHelper.stack_results(X_key, initial_X_uncached)
                     kwargs_uncached = PHOTONDataHelper.join_dictionaries(kwargs_uncached, kwargs_dict_batched)
 
             # now we know which part can be loaded and which part should be transformed
@@ -246,13 +247,14 @@ class PhotonPipeline(_BaseComposition):
                                                                                           **kwargs_uncached)
 
                 # then save it single
-                for start, stop in PHOTONDataHelper.chunker(nr, 1):
+                nr = PHOTONDataHelper.find_n(new_group_X)
+                for start in range(nr):
                     # split data in single entities
                     X_batched, y_batched, kwargs_dict_batched = PHOTONDataHelper.split_data(new_group_X,
                                                                                             new_group_y,
                                                                                             new_group_kwargs,
-                                                                                            start, stop)
-                    X_key, _, _ = PHOTONDataHelper.split_data(initial_X_uncached, None, {}, start, stop)
+                                                                                            start, start)
+                    X_key, _, _ = PHOTONDataHelper.split_data(initial_X_uncached, None, {}, start, start)
                     # we save the data in relation to the input path (X_key = hash(input X))
                     self.cache_man.update_single_subject_state_info(X_key)
 
@@ -272,7 +274,7 @@ class PhotonPipeline(_BaseComposition):
                 if not self.skip_loading or needed_for_further_computation:
                     for cache_idx in list_of_idx_cached:
                         # we identify the data according to the input path (X before any transformation)
-                        self.cache_man.update_single_subject_state_info(initial_X[cache_idx])
+                        self.cache_man.update_single_subject_state_info([initial_X[cache_idx]])
 
                         # time the loading of the cached item
                         start_time_for_loading = datetime.datetime.now()
@@ -464,7 +466,7 @@ class CacheManager:
 
     class State:
         def __init__(self, config=None, nr_items=None,
-                     first_data_hash=None, first_data_str: str = None):
+                     first_data_hash=None, first_data_str: str = ''):
             self.config = config
             self.nr_items = nr_items
             self.first_data_hash = first_data_hash
@@ -577,7 +579,6 @@ class CacheManager:
 
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
-
 
     def save_cache_index(self):
         if self.lock is not None:
