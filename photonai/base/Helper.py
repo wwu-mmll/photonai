@@ -126,6 +126,8 @@ class PHOTONDataHelper:
                 existing_a = np.hstack((existing_a, new_a))
             elif isinstance(new_a, list):
                     existing_a = existing_a + new_a
+            elif new_a is None and len(existing_a) == 0:
+                return None
             else:
                 existing_a = np.vstack((existing_a, new_a))
         else:
@@ -136,8 +138,10 @@ class PHOTONDataHelper:
     def resort_splitted_data(X, y, kwargs, idx_list):
         _sort_order = np.argsort(idx_list)
         X = np.asarray(X)[_sort_order]
-        y = np.asarray(y)[_sort_order]
-        for k, v in kwargs.items():
-            kwargs[k] = v[_sort_order]
+        if y is not None:
+            y = np.asarray(y)[_sort_order]
+        if kwargs is not None:
+            for k, v in kwargs.items():
+                kwargs[k] = v[_sort_order]
         return X, y, kwargs
 
