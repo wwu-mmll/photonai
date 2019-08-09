@@ -166,7 +166,6 @@ class PhotonPipeline(_BaseComposition):
         """
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs)
 
-
         if self._final_estimator is not None:
             if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
                 if self.caching and self.current_config is not None:

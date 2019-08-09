@@ -10,6 +10,7 @@ from sklearn.metrics import confusion_matrix, roc_curve
 from pymodm import connect
 
 from ..validation.ResultsDatabase import MDBHyperpipe
+from ..base.PhotonBase import Hyperpipe
 from ..photonlogger.Logger import Logger
 
 
@@ -112,7 +113,7 @@ class ResultsTreeHandler:
 
         for metric, evaluations in config_evaluations.items():
             minimum_config_evaluations[metric] = list()
-            greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
+            greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
 
             for fold in evaluations:
                 fold_evaluations = list()
