@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from ..base.PhotonBatchElement import PhotonBatchElement
+from ..base.PhotonBase import PipelineElement
 from sklearn.base import BaseEstimator
 
 
@@ -42,8 +42,8 @@ class NeuroBatchTests(unittest.TestCase):
         self.data = None
         self.targets = None
 
-        self.neuro_batch = PhotonBatchElement("dummy_batch", batch_size=self.batch_size,
-                                              base_element=DummyBatchTransformer())
+        self.neuro_batch = PipelineElement("dummy_batch", batch_size=self.batch_size,
+                                           base_element=DummyBatchTransformer())
 
         for element in origin_list:
             features = [element + str(i) for i in range(0, nr_features)]

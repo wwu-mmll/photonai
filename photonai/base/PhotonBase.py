@@ -22,7 +22,7 @@ from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
 
 from .PhotonFolds import OuterFoldManager, FoldInfo
-from .Helper import PHOTONPrintHelper
+from .Helper import PHOTONPrintHelper, PHOTONDataHelper
 from ..optimization.ConfigGrid import create_global_config_dict, create_global_config_grid
 from ..configuration.Register import PhotonRegister
 from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
@@ -1073,7 +1073,7 @@ class PipelineElement(BaseEstimator):
     ELEMENT_DICTIONARY = PhotonRegister.get_package_info()
 
     def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False,
-                 disabled: bool =False, base_element=None, **kwargs):
+                 disabled: bool =False, base_element=None, batch_size=0, **kwargs):
         """
         Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
 
@@ -1108,6 +1108,7 @@ class PipelineElement(BaseEstimator):
 
         self.kwargs = kwargs
         self.current_config = None
+        self.batch_size = batch_size
 
         # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
@@ -1260,12 +1261,33 @@ class PipelineElement(BaseEstimator):
             obj.fit(data, targets)
         return self
 
-    def predict(self, data, y=None, **kwargs):
-        """
-        Calls predict function on the base element.
-        """
+    def __batch_predict(self, delegate, X, **kwargs):
+        if not isinstance(X, list) and not isinstance(X, np.ndarray):
+            Logger().warn("Cannot do batching on a single entity.")
+            return delegate(X, y, **kwargs)
+
+            # initialize return values
+        processed_y = None
+        nr = PHOTONDataHelper.find_n(X)
+
+        batch_idx = 0
+        for start, stop in PHOTONDataHelper.chunker(nr, self.batch_size):
+            batch_idx += 1
+            Logger().debug(self.name + " is predicting batch nr " + str(batch_idx))
+
+            # split data in batches
+            X_batched, y_batched, kwargs_dict_batched = PHOTONDataHelper.split_data(X, None, kwargs, start, stop)
+
+            # predict
+            y_pred = delegate(X_batched, **kwargs_dict_batched)
+            processed_y = PHOTONDataHelper.stack_results(y_pred, processed_y)
+
+        return processed_y
+
+    def __predict(self, data, **kwargs):
         if not self.disabled:
             if hasattr(self.base_element, 'predict'):
+                # Todo: check if element has kwargs, and give it to them
                 return self.base_element.predict(data)
             else:
                 Logger().error('BaseException. base Element should have function ' +
@@ -1274,7 +1296,22 @@ class PipelineElement(BaseEstimator):
         else:
             return data
 
-    def predict_proba(self, data):
+    def predict(self, X, **kwargs):
+        """
+        Calls predict function on the base element.
+        """
+        if self.batch_size == 0:
+            return self.__predict(X, **kwargs)
+        else:
+            return self.__batch_predict(self.__predict, X, **kwargs)
+
+    def predict_proba(self, X, **kwargs):
+        if self.batch_size == 0:
+            return self.__predict_proba(X, **kwargs)
+        else:
+            return self.__batch_predict(self.__predict_proba(X, **kwargs))
+
+    def __predict_proba(self, data, **kwargs):
         """
         Predict probabilities
         base element needs predict_proba() function, otherwise throw
@@ -1294,13 +1331,7 @@ class PipelineElement(BaseEstimator):
     #     else:
     #         return data
 
-    def transform(self, X, y=None, **kwargs):
-        """
-        Calls transform on the base element.
-
-        IN CASE THERE IS NO TRANSFORM METHOD, CALLS PREDICT.
-        This is used if we are using an estimator as a preprocessing step.
-        """
+    def __transform(self, X, y=None, **kwargs):
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
                 return self.adjusted_delegate_call(self.base_element.transform, X, y, **kwargs)
@@ -1313,6 +1344,63 @@ class PipelineElement(BaseEstimator):
                 raise BaseException('transform-predict-mess')
         else:
             return X, y, kwargs
+
+    def transform(self, X, y=None, **kwargs):
+        """
+        Calls transform on the base element.
+
+        IN CASE THERE IS NO TRANSFORM METHOD, CALLS PREDICT.
+        This is used if we are using an estimator as a preprocessing step.
+        """
+        if self.batch_size == 0:
+            return self.__transform(X, y, **kwargs)
+        else:
+            return self.__batch_transform(X, y, **kwargs)
+
+    def inverse_transform(self, X, y=None, **kwargs):
+        """
+        Calls inverse_transform on the base element
+        """
+        if self.batch_size == 0:
+            return self.__inverse_transform(X, y, **kwargs)
+        else:
+            return self.__batch_transform(X, y, **kwargs)
+
+    def __inverse_transform(self, X, y=None, **kwargs):
+        if hasattr(self.base_element, 'inverse_transform'):
+            X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
+        return X, y, kwargs
+
+    def __batch_transform(self, X, y=None, **kwargs):
+        if not isinstance(X, list) and not isinstance(X, np.ndarray):
+            Logger().warn("Cannot do batching on a single entity.")
+            return self.__transform(X, y, **kwargs)
+
+            # initialize return values
+        processed_X = None
+        processed_y = None
+        processed_kwargs = dict()
+
+        nr = PHOTONDataHelper.find_n(X)
+
+        batch_idx = 0
+        for start, stop in PHOTONDataHelper.chunker(nr, self.batch_size):
+            batch_idx += 1
+            Logger().debug(self.name + " is transforming batch nr " + str(batch_idx))
+
+            # split data in batches
+            X_batched, y_batched, kwargs_dict_batched = PHOTONDataHelper.split_data(X, y, kwargs, start, stop)
+
+            # call transform
+            X_new, y_new, kwargs_new = self.adjusted_delegate_call(self.base_element.transform, X_batched, y_batched,
+                                                                   **kwargs_dict_batched)
+
+            # stack results
+            processed_X, processed_y, processed_kwargs = PHOTONDataHelper.join_data(processed_X, X_new, processed_y,
+                                                                                    y_new,
+                                                                                    processed_kwargs, kwargs_new)
+
+        return processed_X, processed_y, processed_kwargs
 
     def adjusted_delegate_call(self, delegate, X, y, **kwargs):
         # Case| transforms X | needs_y | needs_covariates
@@ -1342,13 +1430,7 @@ class PipelineElement(BaseEstimator):
 
         return X, y, kwargs
 
-    def inverse_transform(self, X, y, **kwargs):
-        """
-        Calls inverse_transform on the base element
-        """
-        if hasattr(self.base_element, 'inverse_transform'):
-            X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
-        return X, y, kwargs
+
 
     def score(self, X_test, y_test):
         """
