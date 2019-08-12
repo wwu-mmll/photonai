@@ -137,6 +137,16 @@ class AtlasLibrary:
                                                        labels_file=os.path.join(atlas_dir, atlas_basename + '_labels.txt'))
         return available_atlasses
 
+    def list_rois(self, atlas: str):
+        if atlas not in self.ATLAS_DICTIONARY.keys():
+            Logger().info('Atlas {} is not supported.'.format(atlas))
+            return
+
+        atlas = self.get_atlas(atlas)
+        roi_names = [roi.label for roi in atlas.roi_list]
+        Logger().info(roi_names)
+        return roi_names
+
     def _load_atlas(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
 
         print("Loading Atlas")

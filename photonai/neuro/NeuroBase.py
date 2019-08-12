@@ -1,5 +1,4 @@
 from ..base.PhotonBase import PipelineBranch
-from ..base.PhotonPipeline import PhotonPipeline
 from ..configuration.Register import PhotonRegister
 from ..base.Helper import PHOTONDataHelper
 from ..neuro.BrainAtlas import BrainAtlas
@@ -7,12 +6,9 @@ from ..photonlogger.Logger import Logger
 from nibabel.nifti1 import Nifti1Image
 from multiprocessing import Process, Queue
 from fasteners import ReaderWriterLock
-from collections import defaultdict
-import numpy as np
 import queue
 import os
 import uuid
-import time
 
 
 class NeuroModuleBranch(PipelineBranch):
@@ -107,7 +103,7 @@ class NeuroModuleBranch(PipelineBranch):
         if self.base_element.cache_folder is not None:
             # make sure we cache individually
             self.base_element.single_subject_caching = True
-
+            self.base_element.caching = False
         if self.nr_of_processes > 1:
 
             if self.base_element.cache_folder is not None:
