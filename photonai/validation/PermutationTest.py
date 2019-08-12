@@ -49,6 +49,10 @@ class PermutationTest:
         # at first we do a reference optimization
         y_true = y
 
+        # create permutation labels
+        np.random.seed(self.random_state)
+        self.permutations = [np.random.permutation(y_true) for i in range(self.n_perms)]
+
         # Run with true labels
 
         connect(self.pipe.output_settings.mongodb_connect_url, alias="photon_core")
@@ -76,39 +80,33 @@ class PermutationTest:
                     self.pipe.result_tree.save()
 
         # find how many permutations have been computed already:
-        existing_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
-                                                          'computation_completed': True}).count()
+        # existing_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
+        #                                                   'computation_completed': True}).count()
+        existing_permutations = list(MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
+                                                               'computation_completed': True}).only('name'))
+        existing_permutations = [int(perm_run.name.split('_')[-1]) for perm_run in existing_permutations]
 
-        # we do one more permutation is left in case the last permutation runs broke, one for each parallel
-        if existing_permutations > 0 and (self.n_perms - existing_permutations) > 0:
-            n_perms_todo = self.n_perms - existing_permutations # + self.n_processes
+        # we do one more permutation that is left in case the last permutation runs broke, one for each parallel
+        if len(existing_permutations) > 0:
+            perms_todo = set(np.arange(self.n_perms)) - set(existing_permutations)
         else:
-            n_perms_todo = self.n_perms
+            perms_todo = np.arange(self.n_perms)
 
-        if existing_permutations < self.n_perms:
-
-            # Compute permutations
-            # np.random.seed(self.random_state)
-            y_perms = list()
-            for perm in range(n_perms_todo):
-                y_perms.append(np.random.permutation(y_true))
-
-            Logger().info(str(n_perms_todo) + " permutation runs todo")
-            # Run parallel pool
-            self.run_parallelized_hyperpipes(y_perms, self.hyperpipe_constructor, X, self.permutation_id,
-                                             skip=existing_permutations)
+        Logger().info(str(len(perms_todo)) + " permutation runs to do")
+        # Run parallel pool
+        self.run_parallelized_hyperpipes(self.permutations, self.hyperpipe_constructor, X, self.permutation_id,
+                                         perms_todo)
 
         self._calculate_results(self.permutation_id, self.metrics)
 
         return self
 
-    def run_parallelized_hyperpipes(self, y_perms, hyperpipe_constructor, X, permutation_id, skip=0):
+    def run_parallelized_hyperpipes(self, y_perms, hyperpipe_constructor, X, permutation_id, perm_runs):
 
         job_list = Queue()
 
-        for perm_run, y_perm in enumerate(y_perms):
-            perm_run_skip = perm_run + skip
-            job_list.put([hyperpipe_constructor, X, perm_run_skip, y_perm, permutation_id])
+        for perm_run in perm_runs:
+            job_list.put([hyperpipe_constructor, X, perm_run, y_perms[perm_run], permutation_id])
 
         processes = []
 
