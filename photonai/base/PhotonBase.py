@@ -667,7 +667,7 @@ class Hyperpipe(BaseEstimator):
         Logger().info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
-        Logger().info("Persisting best model..")
+        Logger().info("Saving best model..")
         if self.output_settings.pretrained_model_filename != '':
             try:
                 PhotonModelPersistor.save_optimum_pipe(self, self.output_settings.pretrained_model_filename)
@@ -1783,7 +1783,7 @@ class PipelineStacking(PipelineElement):
 
     def copy_me(self):
         ps = PipelineStacking(self.name, voting=self.voting)
-        for element in self.pipe_elements:
+        for name, element in self.pipe_elements.items():
             new_element = element.copy_me()
             ps += new_element
         ps.base_element = self.base_element
