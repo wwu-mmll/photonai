@@ -224,7 +224,7 @@ class MongoDBWriter:
             try:
                 results_tree.save()
             except DocumentTooLarge as e:
-                Logger.error('Could not save document into MongoDB: Document too large')
+                Logger().error('Could not save document into MongoDB: Document too large')
                 # try to reduce the amount of configs saved
                 # if len(results_tree.outer_folds[0].tested_config_list) > 100:
                 #     for outer_fold in results_tree.outer_folds:

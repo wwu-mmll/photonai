@@ -8,6 +8,7 @@ import matplotlib.pyplot as plt
 from scipy.stats import sem
 from sklearn.metrics import confusion_matrix, roc_curve
 from pymodm import connect
+from pymongo import DESCENDING
 
 from ..validation.ResultsDatabase import MDBHyperpipe
 from ..base.PhotonBase import Hyperpipe
@@ -23,8 +24,14 @@ class ResultsTreeHandler:
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         connect(mongodb_connect_url)
-        self.results = list(MDBHyperpipe.objects.raw({'_id': pipe_name}))[0]
-
+        results = list(MDBHyperpipe.objects.raw({'name': pipe_name}))
+        if len(results) == 1:
+            self.results = results[0]
+        elif len(results) > 1:
+            self.results = MDBHyperpipe.objects.order_by([("time_of_results", DESCENDING)]).raw({'name': pipe_name}).first()
+            Logger().warn('Found multiple hyperpipes with that name. Returning most recent one.')
+        else:
+            raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
 
     @staticmethod
     def get_methods():
