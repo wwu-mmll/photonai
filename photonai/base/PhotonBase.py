@@ -834,7 +834,7 @@ class Hyperpipe(BaseEstimator):
                 # loop over outer cross validation
                 for i, outer_f in enumerate(outer_folds):
                     Logger().info('HYPERPARAMETER SEARCH OF {0}, Outer Cross validation Fold {1}'
-                                  .format(self.name, outer_f.fold_nr))
+                                  .format(self.name, outer_f.fold_nr + 1))
 
                     # 1. generate OuterFolds Object
 
@@ -1780,6 +1780,14 @@ class PipelineStacking(PipelineElement):
                 transformed_data = PipelineStacking.stack_data(transformed_data, element_transform)
 
         return transformed_data, targets, kwargs
+
+    def copy_me(self):
+        ps = PipelineStacking(self.name, voting=self.voting)
+        for element in self.pipe_elements:
+            new_element = element.copy_me()
+            ps += new_element
+        ps.base_element = self.base_element
+        return ps
 
     @classmethod
     def stack_data(cls, a, b):
