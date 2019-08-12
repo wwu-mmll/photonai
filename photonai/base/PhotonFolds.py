@@ -28,6 +28,8 @@ class FoldInfo:
             return {}
         else:
             unique, counts = np.unique(y, return_counts=True)
+            unique = [str(u) for u in unique]
+            counts = [int(c) for c in counts]
             return dict(zip(unique, counts))
 
     @staticmethod
