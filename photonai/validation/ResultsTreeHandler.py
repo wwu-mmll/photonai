@@ -91,13 +91,23 @@ class ResultsTreeHandler:
         :return:
         """
         config_performances = list()
+        maximum_fold = None
+        for outer_fold in self.results.outer_folds:
+            if maximum_fold is None or len(outer_fold.tested_config_list) > maximum_fold:
+                maximum_fold = len(outer_fold.tested_config_list)
+
         for outer_fold in self.results.outer_folds:
             performance = dict()
             for metric in self.results.metrics:
                 performance[metric] = list()
 
-            for config in outer_fold.tested_config_list:
+            for i in range(maximum_fold):
+                #for config in outer_fold.tested_config_list:
                 for metric in self.results.metrics:
+                    if i >= len(outer_fold.tested_config_list):
+                        performance[metric].append(np.nan)
+                        continue
+                    config = outer_fold.tested_config_list[i]
                     if config.config_failed:
                         performance[metric].append(np.nan)
                     else:
@@ -120,7 +130,7 @@ class ResultsTreeHandler:
 
         for metric, evaluations in config_evaluations.items():
             minimum_config_evaluations[metric] = list()
-            greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
+            greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
 
             for fold in evaluations:
                 fold_evaluations = list()
@@ -149,18 +159,15 @@ class ResultsTreeHandler:
     def plot_optimizer_history(self, metric,
                                title: str = 'Optimizer History',
                                type: str = 'plot',
-                               smoothing_kernel: int = 1,
+                               reduce_scatter_by: Union[int, str] = 'auto',
                                file: str = None):
         """
-
         :param metric: specify metric that has been stored within the PHOTON results tree
         :param type: 'plot' or 'scatter'
-        :param smoothing_kernel: integer, takes running average over array to smooth visualization
+        :param reduce_scatter_by: integer or string ('auto'), reduce the number of points plotted by scatter
         :param file: specify a filename if you want to save the plot
         :return:
         """
-        def smooth_array(x, N):
-            return np.convolve(x, np.ones((N,)) / N, mode='same')
 
         if metric not in self.results.metrics:
             raise ValueError('Metric "{}" not stored in results tree'.format(metric))
@@ -168,41 +175,61 @@ class ResultsTreeHandler:
         config_evaluations = self.get_config_evaluations()
         minimum_config_evaluations = self.get_minimum_config_evaluations()
 
-        mean = np.nanmean(np.asarray(config_evaluations[metric]), axis=0)
-        std = np.nanstd(np.asarray(config_evaluations[metric]), axis=0)
-        mean_min = np.nanmean(np.asarray(minimum_config_evaluations[metric]), axis=0)
-        std_min = np.nanstd(np.asarray(minimum_config_evaluations[metric]), axis=0)
+        # handle different lengths
+        min_corresponding = len(min(config_evaluations[metric], key=len))
+        config_evaluations_corres = [configs[:min_corresponding] for configs in config_evaluations[metric]]
+        minimum_config_evaluations_corres = [configs[:min_corresponding] for configs in minimum_config_evaluations[metric]]
 
-        # now do smoothing
-        if smoothing_kernel > 1:
-            mean = smooth_array(mean, smoothing_kernel)
-            std = smooth_array(std, smoothing_kernel)
-            mean_min = smooth_array(mean_min, smoothing_kernel)
-            std_min = smooth_array(std_min, smoothing_kernel)
+        mean = np.nanmean(np.asarray(config_evaluations_corres), axis=0)
+        mean_min = np.nanmean(np.asarray(minimum_config_evaluations_corres), axis=0)
 
-        xfit = np.arange(0, len(mean_min))
-        yfit = mean_min
-        dyfit = std_min
-
-        plt.plot(xfit, yfit, '-', color='gray', label='Minimum Performance of Configs (MEAN)')
-        plt.fill_between(xfit, yfit - dyfit, yfit + dyfit, color='gray', alpha=0.2, label='Minimum Performance of Configs (STD)')
+        greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
+        if greater_is_better:
+            caption = 'Maximum'
+        else:
+            caption = 'Minimum'
 
         if type == 'plot':
-            plt.plot(xfit, mean, '-', color='red', label='Performance of Configs (MEAN)')
-            plt.fill_between(xfit, mean - std, mean + std, color='red', alpha=0.2, label='Performance of Configs (STD)')
+            plt.plot(np.arange(0, len(mean)), mean, '-', color='gray', label='Mean Performance')
+
         elif type == 'scatter':
-            xfit = np.tile(xfit, len(config_evaluations[metric]))[0::smoothing_kernel]
-            folds = list()
-            for fold in config_evaluations[metric]:
-                folds.append(np.mean(np.asarray(fold).reshape(-1, smoothing_kernel), axis=1))
-            yfit = np.asarray(folds).flatten()
-            # calculate mean over n configuration --> this makes the plot less cluttered; n = smoothing_kernel
-            plt.scatter(xfit, yfit, color='gray', alpha=0.3, label='Performance of Configs', marker='.')
+            # now do smoothing
+            if isinstance(reduce_scatter_by, str):
+                if reduce_scatter_by != 'auto':
+                    Logger().warn('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
+                        reduce_scatter_by))
+
+                # if auto, then calculate size of reduce_scatter_by so that 75 points on x remain
+                # smallest reduce_scatter_by should be 1
+                reduce_scatter_by = max([np.floor(min_corresponding / 75).astype(int), 1])
+
+            if reduce_scatter_by > 1:
+                plt.plot([], [], ' ', label="scatter reduced by factor {}".format(reduce_scatter_by))
+
+            for i, fold in enumerate(config_evaluations[metric]):
+                # add a few None so that list can be divided by smoothing_kernel
+                remaining = len(fold) % reduce_scatter_by
+                if remaining:
+                    fold.extend([np.nan] * (reduce_scatter_by - remaining))
+                # calculate mean over every n elements so that plot is less cluttered
+                reduced_fold = np.nanmean(np.asarray(fold).reshape(-1, reduce_scatter_by), axis=1)
+                reduced_xfit = np.arange(reduce_scatter_by / 2, len(fold), step=reduce_scatter_by)
+                if i == len(config_evaluations[metric])-1:
+                    plt.scatter(reduced_xfit, np.asarray(reduced_fold), color='gray', alpha=0.5, label='Performance', marker='.')
+                else:
+                    plt.scatter(reduced_xfit, np.asarray(reduced_fold), color='gray', alpha=0.5, marker='.')
         else:
             raise ValueError('Please specify either "plot" or "scatter".')
 
+        plt.plot(np.arange(0, len(mean_min)), mean_min, '-', color='black', label='Mean {} Performance'.format(caption))
+
+        for i, fold in enumerate(minimum_config_evaluations[metric]):
+            xfit = np.arange(0, len(fold))
+            plt.plot(xfit, fold, '-', color='black', alpha=0.5)
+
         plt.ylabel(metric.replace('_', ' '))
         plt.xlabel('No of Evaluations')
+
         plt.legend()
         plt.title(title)
         if file:
@@ -226,7 +253,7 @@ class ResultsTreeHandler:
             y_pred_probabilities.extend(fold.best_config.inner_folds[0].validation.probabilities)
             fold_idx.extend(np.repeat(i, n_samples))
             if sort_CV:
-                sample_inds.extend(fold['validation']['indices'])
+                sample_inds.extend(fold.best_config.inner_folds[0].validation.indices)
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         y_pred_probabilities = np.asarray(y_pred_probabilities)
