@@ -1,69 +1,41 @@
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import BrainAtlas, AtlasLibrary
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement
-from photonai.base.PhotonBatchElement import PhotonBatchElement
+from photonai.base.PhotonBase import Hyperpipe, PhotonModelPersistor, PipelineElement
 from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from photonai.photonlogger.Logger import Logger
 import pandas as pd
 import os
 import json
+from typing import Union
+import joblib
 
 
 class AtlasMapper:
+
     def __init__(self):
-        self.hyperpipes_to_fit = None
         self.folder = None
-        self.hyperpipe_infos = None
+        self.neuro_element = None
         self.original_hyperpipe_name = None
+        self.roi_list = None
+        self.hyperpipe_infos = None
+        self.hyperpipes_to_fit = None
+        self.roi_indices = dict()
 
-    def generate_mappings(self, hyperpipe, folder):
-        roi_list = list()
-        target_element_name = ""
+    def generate_mappings(self, hyperpipe: Hyperpipe, neuro_element: Union[NeuroModuleBranch, PipelineElement], folder: str):
+        self.folder = folder
+        self.neuro_element = neuro_element
         self.original_hyperpipe_name = hyperpipe.name
-
-        def found_brain_atlas(element):
-            roi_list = element.base_element.rois
-            if isinstance(roi_list, str):
-                if roi_list == 'all':
-                    atlas_obj = AtlasLibrary().get_atlas(element.base_element.atlas_name)
-                    roi_list = atlas_obj.roi_list
-                else:
-                   roi_list = [roi_list]
-            return roi_list
-
-        # find brain atlas
-        # first check preprocessing pipe
-        if hyperpipe.preprocessing_pipe is not None:
-            elements = hyperpipe.preprocessing_pipe.pipeline_elements
-            preprocessing_flag = True
-        else:
-            elements = hyperpipe.pipeline_elements
-            preprocessing_flag = False
-
-        # then check usual pipeline_elements for a) NeuroModuleBranch -> check children and b) BrainAtlas directly
-        for element in elements:
-            if isinstance(element.base_element, NeuroModuleBranch):
-                for neuro_element in element.base_element.pipeline_elements:
-                    if isinstance(neuro_element.base_element, BrainAtlas):
-                        target_element_name = neuro_element.name
-                        roi_list = found_brain_atlas(neuro_element)
-
-            elif isinstance(element.base_element, BrainAtlas):
-                target_element_name = element.name
-                roi_list = found_brain_atlas(element)
+        self.roi_list = self._find_brain_atlas(self.neuro_element)
+        self.hyperpipe_infos = None
 
         hyperpipes_to_fit = dict()
 
-        if len(roi_list) > 0:
-            for roi_name in roi_list:
-                roi_name = roi_name.label
+        if len(self.roi_list) > 0:
+            for roi_index, roi_name in enumerate(self.roi_list):
+                self.roi_indices[roi_name] = roi_index
                 copy_of_hyperpipe = hyperpipe.copy_me()
                 new_pipe_name = copy_of_hyperpipe.name + '_Atlas_Mapper_' + roi_name
                 copy_of_hyperpipe.name = new_pipe_name
-                if preprocessing_flag:
-                    copy_of_hyperpipe.preprocessing_pipe.set_params(**{target_element_name + "__rois": roi_name})
-                else:
-                    copy_of_hyperpipe.set_params(**{target_element_name + "__rois": roi_name})
-                # mkdir could be needed?
                 copy_of_hyperpipe.output_settings.project_folder = folder
                 copy_of_hyperpipe.output_settings.overwrite_results = True
                 copy_of_hyperpipe.output_settings.save_output = True
@@ -71,18 +43,70 @@ class AtlasMapper:
         else:
             raise Exception("No Rois found...")
         self.hyperpipes_to_fit = hyperpipes_to_fit
-        self.folder = folder
+
+    def _find_brain_atlas(self, neuro_element):
+        roi_list = list()
+        if isinstance(neuro_element, NeuroModuleBranch):
+            for element in neuro_element.pipeline_elements:
+                if isinstance(element.base_element, BrainAtlas):
+                    element.base_element.collection_mode = 'list'
+                    roi_list = self._find_rois(element)
+
+        elif isinstance(neuro_element.base_element, BrainAtlas):
+            neuro_element.base_element.collection_mode = 'list'
+            roi_list = self._find_rois(neuro_element)
+        return roi_list
+
+    def _find_rois(self, element):
+        roi_list = element.base_element.rois
+        atlas_obj = AtlasLibrary().get_atlas(element.base_element.atlas_name)
+
+        if isinstance(roi_list, str):
+            if roi_list == 'all':
+                roi_list = [roi.label for roi in atlas_obj.roi_list]
+                if 'Background' in roi_list:
+                    roi_list.remove('Background')
+            else:
+                roi_list = [roi_list]
+        elif isinstance(roi_list, list):
+            valid_rois = list()
+
+            for roi in roi_list:
+                found_roi = False
+                for valid_roi in atlas_obj.roi_list:
+                    if roi == valid_roi.label:
+                        valid_rois.append(valid_roi.label)
+                        found_roi = True
+
+                if not found_roi:
+                    Logger().warn("{} is not a valid ROI for defined atlas. Skipping ROI.".format(roi))
+
+            roi_list = valid_rois
+        return roi_list
 
     def fit(self, X, y=None, **kwargs):
         if len(self.hyperpipes_to_fit) == 0:
             raise Exception("No hyperpipes to fit. Did you call 'generate_mappings'?")
 
+        # Get data from BrainAtlas first and save to .npz
+        # ToDo: currently not supported for hyperparameters inside neurobranch
+        self.neuro_element.fit(X)
+
+        # save neuro branch to file
+        joblib.dump(self.neuro_element, os.path.join(self.folder, 'neuro_element.pkl'), compress=1)
+
+        # extract regions
+        X_extracted, _, _ = self.neuro_element.transform(X)
+        X_extracted = self._reshape_roi_data(X_extracted)
+
         hyperpipe_infos = dict()
         hyperpipe_results = dict()
+
         for roi_name, hyperpipe in self.hyperpipes_to_fit.items():
-            hyperpipe.fit(X, y, **kwargs)
+            hyperpipe.fit(X_extracted[self.roi_indices[roi_name]], y, **kwargs)
             hyperpipe_infos[roi_name] = {'hyperpipe_name': hyperpipe.name,
-                                         'model_filename': hyperpipe.output_settings.pretrained_model_filename}
+                                         'model_filename': hyperpipe.output_settings.pretrained_model_filename,
+                                         'roi_index': self.roi_indices[roi_name]}
             hyperpipe_results[roi_name] = ResultsTreeHandler(hyperpipe.result_tree).get_performance_outer_folds()
 
         self.hyperpipe_infos = hyperpipe_infos
@@ -91,19 +115,33 @@ class AtlasMapper:
         df = pd.DataFrame(hyperpipe_results)
         df.to_csv(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_results.csv'))
 
+    def _reshape_roi_data(self, X):
+        roi_data = [list() for n in range(len(X[0]))]
+        for roi_i in range(len(X[0])):
+            for sub_i in range(len(X)):
+                roi_data[roi_i].append(X[sub_i][roi_i])
+        return roi_data
+
     def predict(self, X, **kwargs):
         if len(self.hyperpipes_to_fit) == 0:
             raise Exception("No hyperpipes to predict. Did you remember to fit or load the Atlas Mapper?")
 
+        X_extracted, _, _ = self.neuro_element.transform(X)
+        X_extracted = self._reshape_roi_data(X_extracted)
+
         predictions = dict()
         for roi, infos in self.hyperpipe_infos.items():
-            predictions[roi] = self.hyperpipes_to_fit[roi].predict(X, **kwargs)
-
+            roi_index = infos['roi_index']
+            predictions[roi] = self.hyperpipes_to_fit[roi].predict(X_extracted[roi_index], **kwargs)
         return predictions
 
     def load_from_file(self, file: str):
         if not os.path.exists(file):
             raise FileNotFoundError("Couldn't find atlas mapper meta file")
+
+        # load neuro branch
+        self.folder = os.path.split(file)[0]
+        self.neuro_element = joblib.load(os.path.join(self.folder, 'neuro_element.pkl'))
 
         with open(file, "r") as read_file:
             self.hyperpipe_infos = json.load(read_file)

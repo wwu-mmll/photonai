@@ -61,6 +61,8 @@ class NumberRange(PhotonHyperparam):
            the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.linspace).
         - if range_type == "logspace"
            the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.logspace).
+        - if range_type == "geomspace"
+           the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.logspace).
 
       * 'range_type' [str]:
          Which method to use for generating the number interval.
@@ -69,7 +71,7 @@ class NumberRange(PhotonHyperparam):
          - "range": numpy.arange is used to generate a list of values separated by the same step width.
          - "linspace": numpy.linspace is used to generate a certain number of values between start and stop.
          - "logspace": numpy.logspace is used to generate a logarithmically distributed range of a certain length.
-
+         - "geomspace": numpy.geomspace is used to generate numbers spaced evenly on a log scale (geometric progression)
 
       * 'num_type' [numpy.dtype]:
          The specific type specification for the interval's numbers.
@@ -81,7 +83,8 @@ class NumberRange(PhotonHyperparam):
         if range_type == 'range', the spacing between values.
 
       * 'num' [int, default=None, optional]:
-        if range_type == 'linspace' or range_type == 'logspace', the number of samples to generate.
+        if range_type == 'linspace' or range_type == 'logspace' or range_type == 'geomspace',
+        the number of samples to generate.
 
       * 'kwargs' [dict, optional]:
         Further parameters that should be passed to the numpy function chosen with range_type.
@@ -117,7 +120,11 @@ class NumberRange(PhotonHyperparam):
                 values = np.logspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
             else:
                 values = np.logspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
-
+        elif self.range_type == "geomspace":
+            if self.num:
+                values = np.geomspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+            else:
+                values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         # convert to python datatype because mongodb needs it
         if self.num_type == np.int32:
             self.values = [int(i) for i in values]

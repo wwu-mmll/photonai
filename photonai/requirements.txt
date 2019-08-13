@@ -20,10 +20,12 @@ statsmodels
 flask
 prettytable
 seaborn
+joblib
+fasteners
 # sk optimize
 scikit-optimize
 scikit-image
-bcolz
+# bcolz
 # fabolas
 # george
 # emcee

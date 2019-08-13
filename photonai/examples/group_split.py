@@ -23,7 +23,6 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=GroupKFold(n_splits=4),  # repeat hyperparameter search three times
                     inner_cv=GroupShuffleSplit(n_splits=10),  # test each configuration ten times respectively
-                    groups=groups,
                     # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
                     performance_constraints=[MinimumPerformance('accuracy', 0.96),
                                              MinimumPerformance('precision', 0.96)],
@@ -47,7 +46,7 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
                                                    'C': FloatRange(0.5, 2, "linspace", num=5)})
 
 # NOW TRAIN YOUR PIPELINE
-my_pipe.fit(X, y)
+my_pipe.fit(X, y, groups=groups)
 
 # AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
 Investigator.show(my_pipe)
