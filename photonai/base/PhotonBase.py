@@ -32,7 +32,7 @@ from ..optimization.Smac3Opt import SMACOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import Scorer
 from .PhotonPipeline import PhotonPipeline, CacheManager
-from ..validation.ResultsTreeHandler import ResultsTreeHandler
+
 
 class PhotonNative:
     """only for checking if code is meeting requirements"""
