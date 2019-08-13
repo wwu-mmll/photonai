@@ -868,6 +868,14 @@ class Hyperpipe(BaseEstimator):
                 # clear complete cache ?
                 CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
+                try:
+                    from ..validation.ResultsTreeHandler import ResultsTreeHandler
+                    ResultsTreeHandler().write_summary(self.result_tree,
+                                                       self.output_settings.results_folder+"/")
+                except OSError as e:
+                    Logger().error("Could not write time-monitor png/csv file")
+                    Logger().error(str(e))
+                
             ###############################################################################################
             else:
                 self.preprocess_data()
