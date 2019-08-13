@@ -767,6 +767,13 @@ class Hyperpipe(BaseEstimator):
             self.data.X, self.data.y, self.data.kwargs = self.preprocessing_pipe.transform(self.data.X, self.data.y,
                                                                                            **self.data.kwargs)
 
+    def _check_for_estimator(self):
+        estimator_type = self.pipeline_elements[-1].base_element._estimator_type
+        last_name = self.pipeline_elements[-1].name
+        if not estimator_type == 'classifier' or estimator_type == 'regressor':
+            raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
+                                                                                                         estimator_type))
+
     def fit(self, data, targets, **kwargs):
         """
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
@@ -799,6 +806,7 @@ class Hyperpipe(BaseEstimator):
         try:
 
             self._input_data_sanity_checks(data, targets, **kwargs)
+            self._check_for_estimator()
             self.preprocess_data()
 
             if not self.is_final_fit:
