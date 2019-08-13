@@ -677,14 +677,7 @@ class Hyperpipe(BaseEstimator):
             except FileNotFoundError as e:
                 Logger().info("Could not save optimum pipe model to file")
                 Logger().error(str(e))
-        # create plots
-        if self.output_settings.plots:
-            handler = ResultsTreeHandler(self.result_tree)
-            handler.plot_optimizer_history(metric=self.best_config_metric, title='Optimizer History',
-                                           type='scatter', reduce_scatter_by='auto',
-                                           file=os.path.join(self.output_settings.results_folder,
-                                                             'optimizer_history.png'))
-            #self.optimizer.plot(self.output_settings.results_folder)
+
 
     def _input_data_sanity_checks(self, data, targets, **kwargs):
         # ==================== SANITY CHECKS ===============================
@@ -780,7 +773,7 @@ class Hyperpipe(BaseEstimator):
     def _check_for_estimator(self):
         estimator_type = self.pipeline_elements[-1].base_element._estimator_type
         last_name = self.pipeline_elements[-1].name
-        if not estimator_type == 'classifier' or estimator_type == 'regressor':
+        if not (estimator_type == 'classifier' or estimator_type == 'regressor'):
             raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
                                                                                                          estimator_type))
 
