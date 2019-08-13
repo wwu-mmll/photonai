@@ -9,6 +9,7 @@ from scipy.stats import sem
 from sklearn.metrics import confusion_matrix, roc_curve
 from pymodm import connect
 from pymongo import DESCENDING
+from typing import Union
 
 from ..validation.ResultsDatabase import MDBHyperpipe
 from ..base.PhotonBase import Hyperpipe
@@ -130,7 +131,7 @@ class ResultsTreeHandler:
 
         for metric, evaluations in config_evaluations.items():
             minimum_config_evaluations[metric] = list()
-            greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
+            greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
 
             for fold in evaluations:
                 fold_evaluations = list()
@@ -183,7 +184,7 @@ class ResultsTreeHandler:
         mean = np.nanmean(np.asarray(config_evaluations_corres), axis=0)
         mean_min = np.nanmean(np.asarray(minimum_config_evaluations_corres), axis=0)
 
-        greater_is_better = OptimizerMetric.greater_is_better_distinction(metric)
+        greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
         if greater_is_better:
             caption = 'Maximum'
         else:

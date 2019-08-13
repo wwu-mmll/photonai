@@ -352,8 +352,8 @@ class OuterFoldManager:
                 train_score_mdb = TestPipeline.score(optimum_pipe, self._validation_X, self._validation_y,
                                                      indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices,
                                                      metrics=self.optimization_info.metrics,
-                                                     save_predictions=self.save_predictions,
-                                                     save_feature_importances=self.save_feature_importances,
+                                                     save_predictions=self.save_best_config_predictions,
+                                                     save_feature_importances=self.save_best_config_feature_importances,
                                                      training=True,
                                                      **self._validation_kwargs)
 
