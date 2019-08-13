@@ -855,7 +855,7 @@ class Hyperpipe(BaseEstimator):
                     dummy_results.append(outer_fold_computator.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
                     # 3. fit
-                    outer_fold_computator.fit(self.data.X, self.data.y, self.data.kwargs)
+                    outer_fold_computator.fit(self.data.X, self.data.y, **self.data.kwargs)
 
                     # 4. save outer fold results
                     self.mongodb_writer.save(self.result_tree)
