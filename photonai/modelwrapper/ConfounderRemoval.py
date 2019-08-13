@@ -42,7 +42,7 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
                     raise KeyError("Variable '{}' not found in kwargs dictionary".format(confound))
             if len(set(len_list)) != 1:
                 raise ValueError("Provided confounders do not match in length")
-            return np.asarray(sample_ols_confounder)
+            return np.stack(sample_ols_confounder, axis=1)
 
     def _validate_dimension(self, X, sample_ols_confounder):
         if X.shape[0] != sample_ols_confounder.shape[0]:

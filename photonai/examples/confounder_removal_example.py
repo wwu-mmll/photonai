@@ -14,7 +14,7 @@ mean_radius = data.data[:, 0]
 mean_texture = data.data[:, 1]
 
 # BUILD HYPERPIPE
-pipe = Hyperpipe('basic_svm_pipe_no_performance',
+pipe = Hyperpipe('confounder_removal_example',
                  optimizer='grid_search',
                  metrics=['accuracy', 'precision', 'recall'],
                  best_config_metric='accuracy',
@@ -22,6 +22,17 @@ pipe = Hyperpipe('basic_svm_pipe_no_performance',
                  inner_cv=KFold(n_splits=3),
                  verbosity=1)
 
-pipe += PipelineElement('ConfounderRemoval', {}, standardize_covariates=True, test_disabled=False)
+# # there are two ways of specifying multiple confounders
+# # first, you can simply pass a dictionary with "confounder" as key and a data matrix or list as value
+# pipe += PipelineElement('ConfounderRemoval', {}, standardize_covariates=True, test_disabled=False)
+# pipe.fit(X, y, **{'confounder': [mean_radius, mean_texture]})
+# pipe += PipelineElement('SVC')
+
+# second, you can also specify the names of the variables that should be used in the confounder removal step
+pipe += PipelineElement('ConfounderRemoval', {}, standardize_covariates=True, test_disabled=False,
+                        confounder_names=['mean_radius', 'mean_texture'])
+pipe += PipelineElement('SVC')
+# those names must be keys in the kwargs dictionary
+pipe.fit(X, y, **{'mean_radius': mean_radius, 'mean_texture': mean_texture})
 
 debug = True
