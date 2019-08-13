@@ -191,8 +191,7 @@ class OuterFoldManager:
         self.inner_folds = FoldInfo.generate_folds(self.cross_validaton_info.inner_cv,
                                                    self._validation_X,
                                                    self._validation_y,
-                                                   self._validation_group,
-                                                   **self._validation_kwargs)
+                                                   self._validation_group)
 
         self.cross_validaton_info.inner_folds[self.outer_fold_id] = {f.fold_id: f for f in self.inner_folds}
 
