@@ -499,7 +499,6 @@ class ResultsTreeHandler:
             plt.title(titleList[k])
 
         plt.savefig(result_path+'time_monitor_pie.png')
-        plt.show()
 
     @staticmethod
     def eval_mean_time_dfhelper(df,threshold):
