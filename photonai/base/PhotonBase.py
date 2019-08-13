@@ -844,6 +844,8 @@ class Hyperpipe(BaseEstimator):
                                                              self.cross_validation,
                                                              save_feature_importances=self.output_settings.save_feature_importances,
                                                              save_predictions=self.output_settings.save_predictions,
+                                                             save_best_config_feature_importances=self.output_settings.save_best_config_feature_importances,
+                                                             save_best_config_predictions=self.output_settings.save_best_config_predictions,
                                                              cache_folder=self.cache_folder,
                                                              cache_updater=self.recursive_cash_folder_propagation)
                     # 2. prepare

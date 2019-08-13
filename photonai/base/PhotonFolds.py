@@ -112,6 +112,8 @@ class OuterFoldManager:
                  cross_validation_info,
                  save_predictions: bool=False,
                  save_feature_importances: bool=False,
+                 save_best_config_predictions: bool=True,
+                 save_best_config_feature_importances: bool=True,
                  cache_folder=None,
                  cache_updater=None):
         # Information from the Hyperpipe about the design choices
@@ -122,6 +124,8 @@ class OuterFoldManager:
 
         self.save_predictions = save_predictions
         self.save_feature_importances = save_feature_importances
+        self.save_best_config_predictions = save_best_config_predictions
+        self.save_best_config_feature_importances = save_best_config_feature_importances
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
 
@@ -338,8 +342,8 @@ class OuterFoldManager:
                 test_score_mdb = TestPipeline.score(optimum_pipe, self._test_X, self._test_y,
                                                     indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices,
                                                     metrics=self.optimization_info.metrics,
-                                                    save_predictions=self.save_predictions,
-                                                    save_feature_importances=self.save_feature_importances,
+                                                    save_predictions=self.save_best_config_predictions,
+                                                    save_feature_importances=self.save_best_config_feature_importances,
                                                     **self._test_kwargs)
 
                 Logger().info('.. calculating metrics for test set')
