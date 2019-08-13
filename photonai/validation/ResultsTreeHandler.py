@@ -366,15 +366,24 @@ class ResultsTreeHandler:
         plt.legend(loc='best')
         plt.show()
 
+    def write_summary(self,result_tree,result_path):
+        self.eval_mean_time_components(result_tree,result_path)
+
     def eval_mean_time_components(self,result_tree,result_path):
+        """
+            This function create charts and tables out of the time-monitoring.
+            :param result_tree: Full result_tree in which the time-monitor is stored
+            :param result_path: path of saving .csv and pie.png in.
+            :return: None
+        """
         result_tree = result_tree
         time_monitor_fit = []
         time_monitor_trans_comp = []
         time_monitor_trans_cach = []
         time_monitor_predict = []
-        test_threshold = []
+        traintest_threshold = []
         for i,outer_fold in enumerate(result_tree.outer_folds):
-            test_threshold.append(outer_fold.number_samples_test)
+            traintest_threshold.append(outer_fold.number_samples_test)
             for j, tested_config in enumerate(outer_fold.tested_config_list):
                 for k, inner_fold in enumerate(tested_config.inner_folds):
                     time_monitor_fit.append(inner_fold.time_monitor["fit"])
@@ -382,42 +391,22 @@ class ResultsTreeHandler:
                     time_monitor_trans_cach.append(inner_fold.time_monitor["transform_cached"])
                     time_monitor_predict.append(inner_fold.time_monitor["predict"])
 
-        df = pd.DataFrame()
         df_fit = pd.DataFrame(time_monitor_fit)
         df_transComp = pd.DataFrame(time_monitor_trans_comp)
         df_transCach = pd.DataFrame(time_monitor_trans_cach)
         df_predict = pd.DataFrame(time_monitor_predict)
 
 
-        def helper(df):
-            imp_col = df.columns
-            columns = []
-            for row in df.index:
-                for col in imp_col:
-                    if not df.at[row,col]:
-                        continue
-                    column = df.at[row,col][0]
-                    if column not in columns:
-                        df[column+"_time"] = pd.Series()
-                        df[column+"_n"] = pd.Series()
-                        columns.append(column)
-                    df.at[row,column+"_time"] =  df.at[row,col][1]
-                    df.at[row,column+"_n"] = df.at[row,col][2]
-                    df.at[row, column + "_test"] = df.at[row,column+"_n"] < np.mean(test_threshold)
-                    df.at[row, column + "_mean"] = df.at[row,col][1]/df.at[row, col][2]
-            return [df.drop(imp_col,1),columns]
-
-
-        df_fit,fit_pipeElements = helper(df_fit)
-        df_transComp, transComp_pipeElements = helper(df_transComp)
-        df_transCach, transCache_pipeElements = helper(df_transCach)
-        df_predict, predict_pipeElements = helper(df_predict)
+        df_fit,fit_pipeElements = self.eval_mean_time_dfhelper(df_fit,traintest_threshold)
+        df_transComp, transComp_pipeElements = self.eval_mean_time_dfhelper(df_transComp,traintest_threshold)
+        df_transCach, transCache_pipeElements = self.eval_mean_time_dfhelper(df_transCach,traintest_threshold)
+        df_predict, predict_pipeElements = self.eval_mean_time_dfhelper(df_predict,traintest_threshold)
 
         header = [np.array(['fit']*3+['transform']*3+['transform compute']*3+['transform cache']*3+["predict"]*3+["comparisson"]),
                   np.array(['train', 'test', 'normalized']*5+["cache - compute"])]
 
 
-        fullFrame = pd.DataFrame([],columns=header)
+        fullFrame = pd.DataFrame([],columns=header).astype(float)
 
         for fit_pipeElement in fit_pipeElements:
             fullFrame.at[fit_pipeElement, ("fit","train")] = df_fit[(df_fit[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
@@ -460,41 +449,79 @@ class ResultsTreeHandler:
 
         fullFrame = fullFrame.astype(float)
 
-        fullFrame.to_csv(result_path+"stat.csv",float_format = "%.6f")
+        fullFrame.to_csv(result_path+"time_monitor.csv",float_format = "%.6f")
 
         labels = list(fullFrame.index)
         sizes_fit = list(fullFrame[("fit","normalized")])
-        sizes_fit = [np.nan_to_num(float(i) / np.nanmax(sizes_fit))*100 for i in sizes_fit]
+        if sum(np.nan_to_num(sizes_fit))==0:
+            sizes_fit = np.nan_to_num(sizes_fit)
+        else:
+            sizes_fit = [np.nan_to_num(float(i) / np.nanmax(sizes_fit))*100 for i in sizes_fit]
 
         sizes_trans = list(fullFrame[("transform","normalized")])
-        sizes_trans = [np.nan_to_num(float(i) / np.nanmax(sizes_trans)) * 100 for i in sizes_trans]
+        if sum(np.nan_to_num(sizes_trans))==0:
+            sizes_trans = np.nan_to_num(sizes_trans)
+        else:
+            sizes_trans = [np.nan_to_num(float(i) / np.nanmax(sizes_trans)) * 100 for i in sizes_trans]
 
         sizes_transCache = list(fullFrame[("transform cache","normalized")])
-        sizes_transCache = [np.nan_to_num(float(i) / np.nanmax(sizes_transCache)) * 100 for i in sizes_transCache]
+        if sum(np.nan_to_num(sizes_transCache))==0:
+            sizes_transCache = np.nan_to_num(sizes_transCache)
+        else:
+            sizes_transCache = [np.nan_to_num(float(i) / np.nanmax(sizes_transCache)) * 100 for i in sizes_transCache]
 
         sizes_transComp = list(fullFrame[("transform compute", "normalized")])
-        sizes_transComp = [np.nan_to_num(float(np.nan_to_num(i)) / np.nanmax(sizes_transComp)) * 100 for i in sizes_transComp]
+        if sum(np.nan_to_num(sizes_transComp))==0:
+            sizes_transComp = np.nan_to_num(sizes_transComp)
+        else:
+            sizes_transComp = [np.nan_to_num(float(np.nan_to_num(i)) / np.nanmax(sizes_transComp)) * 100 for i in sizes_transComp]
 
         sizes_predict = list(fullFrame[("predict", "normalized")])
-        sizes_predict = [np.nan_to_num(i / np.nanmax(sizes_predict)) * 100 for i in sizes_predict]
+        if sum(np.nan_to_num(sizes_predict))==0:
+            sizes_predict = np.nan_to_num(sizes_predict)
+        else:
+            sizes_predict = [np.nan_to_num(i / np.nanmax(sizes_predict)) * 100 for i in sizes_predict]
 
+        if not sum(sizes_trans) and not(sum(sizes_transCache)):
+            sizes_trans = sizes_transComp
 
         dataList = [sizes_fit, sizes_transComp, sizes_transCache, sizes_trans, sizes_predict]
         titleList = ["fit", "transform computed", "transform cached", "transform total", "predict"]
 
-        def myAutopct(value):
-            if value > 1:
-                return round(value,0)
-            return None
 
         fig = plt.figure(figsize=(18, 10), dpi=160)
         for k,data in enumerate(dataList):
             ax1 = fig.add_subplot(231+k)
-            patches, _,_ = plt.pie(data, shadow=True, startangle=90, autopct=myAutopct, pctdistance=0.7)
+            patches, _,_ = plt.pie(data, shadow=True, startangle=90, autopct=self.eval_mean_time_Autopct, pctdistance=0.7)
             plt.legend(patches, labels, loc="best")
             plt.axis('equal')
             plt.tight_layout()
             plt.title(titleList[k])
 
-        plt.savefig(result_path+'pie.png')
+        plt.savefig(result_path+'time_monitor_pie.png')
         plt.show()
+
+    @staticmethod
+    def eval_mean_time_dfhelper(df,threshold):
+        imp_col = df.columns
+        columns = []
+        for row in df.index:
+            for col in imp_col:
+                if not df.at[row, col]:
+                    continue
+                column = df.at[row, col][0]
+                if column not in columns:
+                    df[column + "_time"] = pd.Series()
+                    df[column + "_n"] = pd.Series()
+                    columns.append(column)
+                df.at[row, column + "_time"] = df.at[row, col][1]
+                df.at[row, column + "_n"] = df.at[row, col][2]
+                df.at[row, column + "_test"] = df.at[row, column + "_n"] < np.mean(threshold)
+                df.at[row, column + "_mean"] = df.at[row, col][1] / df.at[row, col][2]
+        return [df.drop(imp_col, 1), columns]
+
+    @staticmethod
+    def eval_mean_time_Autopct(value):
+        if value > 1:
+            return int(round(value, 0))
+        return None
