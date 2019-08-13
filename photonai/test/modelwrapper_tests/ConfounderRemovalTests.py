@@ -5,7 +5,6 @@ from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.preprocessing import StandardScaler
 import numpy as np
 import statsmodels.api as sm
-import os
 from scipy.stats import norm
 from scipy.linalg import cholesky
 
@@ -85,10 +84,10 @@ class ConfounderRemovalTests(unittest.TestCase):
 
     def test_confounder_removal_statistically(self):
         cr = PipelineElement("ConfounderRemoval", {}, standardize_covariates=False)
-        cr.fit(self.z[:,1:3], self.z[:, 0], **{'covariates': self.z[:, 3]})
+        cr.fit(self.z[:,1:3], self.z[:, 0], **{'confounder': self.z[:, 3]})
 
         # use transform to write data to cache
-        z_transformed = cr.transform(self.z[:,1:3], **{'covariates': self.z[:,3]})
+        z_transformed = cr.transform(self.z[:,1:3], **{'confounder': self.z[:,3]})
         corr = np.corrcoef(np.concatenate([self.z[:,0].reshape(-1,1), z_transformed[0],
                                            self.z[:,3].reshape(-1,1)], axis=1), rowvar=False)
         # correlation between target and feature should be lower than 0.25 in this case
@@ -99,46 +98,23 @@ class ConfounderRemovalTests(unittest.TestCase):
         self.assertAlmostEqual(corr[3, 2], 0)
 
     def test_multiple_confounders(self):
-        self.cr.fit(self.X, self.y, **{'covariates': self.multiple_confounders})
-        X_transformed = self.cr.transform(self.X, **{'covariates': self.multiple_confounders})
+        self.cr.fit(self.X, self.y, **{'confounder': self.multiple_confounders})
+        X_transformed = self.cr.transform(self.X, **{'confounder': self.multiple_confounders})
         np.testing.assert_array_almost_equal(X_transformed[0], self.X_transformed)
-
-    def test_multiple_confounders_with_caching(self):
-        cache_dir = os.path.dirname(os.path.realpath(__file__))
-        cr = PipelineElement("ConfounderRemoval", {}, cache_dir=cache_dir, standardize_covariates=False)
-        cr.fit(self.X, self.y, **{'covariates': self.multiple_confounders})
-
-        # use transform to write data to cache
-        cr.transform(self.X, **{'covariates': self.multiple_confounders})
-
-        # now the cached data should be loaded
-        X_transformed = cr.transform(self.X, **{'covariates': self.multiple_confounders})
-        np.testing.assert_array_almost_equal(X_transformed[0], self.X_transformed)
-
-        # fit again to imitate cross validation
-        cr.fit(self.X_train, self.y_train, **{'covariates': self.confounder_train})
-        X_train_transformed = cr.transform(self.X_train, **{'covariates': self.confounder_train})
-        np.testing.assert_array_almost_equal(X_train_transformed[0], self.X_train_transformed)
-
-        [os.remove(os.path.join(cache_dir, f)) for f in os.listdir(cache_dir) if f.endswith(".npz")]
 
     def test_standardize_covariates(self):
-        self.cr.fit(self.X, self.y, **{'covariates': self.multiple_confounders})
-        X_transformed = self.cr.transform(self.X, **{'covariates': self.multiple_confounders})
+        self.cr.fit(self.X, self.y, **{'confounder': self.multiple_confounders})
+        X_transformed = self.cr.transform(self.X, **{'confounder': self.multiple_confounders})
         np.testing.assert_array_almost_equal(X_transformed[0], self.X_transformed_standardized)
 
     def test_use(self):
-        self.pipe.fit(self.X, self.y, **{'covariates': self.random_confounders})
-        trans_data = self.pipe.transform(self.X, **{'covariates': self.random_confounders})
+        self.pipe.fit(self.X, self.y, **{'confounder': self.random_confounders})
+        trans_data = self.pipe.transform(self.X, **{'confounder': self.random_confounders})
 
     def test_dimensions(self):
         with self.assertRaises(ValueError):
-            self.cr.fit(self.X, self.y, covariates=np.random.randn(self.X.shape[0]-10, 2))
+            self.cr.fit(self.X, self.y, confounder=np.random.randn(self.X.shape[0]-10, 2))
 
     def test_key_error(self):
         with self.assertRaises(KeyError):
             self.cr.fit(self.X, self.y, covariate=np.random.randn(self.X.shape[0]-10, 2))
-
-    def test_cache_dir(self):
-        with self.assertRaises(NotADirectoryError):
-            self.cr = PipelineElement("ConfounderRemoval", {}, cache_dir='/not_a_directory')
