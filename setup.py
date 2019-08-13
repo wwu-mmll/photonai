@@ -42,7 +42,6 @@ setup(
         'flask',
         'prettytable',
         'scikit-optimize',
-        'scikit-image',
-        'bcolz'
+        'scikit-image'
   ]
 )
