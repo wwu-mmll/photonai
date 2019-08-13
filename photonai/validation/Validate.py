@@ -6,7 +6,7 @@ import os
 import numpy as np
 from sklearn.pipeline import Pipeline
 
-from multiprocessing import Pool, Process, Queue, current_process
+from multiprocessing import Process, Queue
 import queue
 
 from ..photonlogger.Logger import Logger
@@ -20,47 +20,45 @@ class TestPipeline(object):
         calculates metrics for each fold and averages metrics over all folds
     """
 
-    def __init__(self, pipe_ctor, specific_config: dict, metrics: list, mother_inner_fold_handle,
-                 raise_error: bool=False, mongo_db_settings=None, callback_function=None,
-                 training: bool = False, parallel_cv: bool = False, nr_of_parrallel_processes: int = 4):
+    def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
+                 cross_validation_infos, outer_fold_id, optimization_constraints: list=None,
+                 raise_error: bool=False, save_predictions: bool=False, save_feature_importances: bool=False,
+                 training: bool = False, cache_folder = None, cache_updater = None,
+                 parallel_cv: bool = False, nr_of_parrallel_processes: int = 4):
         """
         Creates a new TestPipeline object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
         :type pipe: Pipeline
         :param specific_config: The hyperparameter configuration to test
         :type specific_config: dict
-        :param metrics: List of metrics to calculate
-        :type metrics: list
-        :param mother_inner_fold_handle: Function handle in order to inform the hyperpipe about current inner_fold
-        :type mother_inner_fold_handle: function handle
         :param raise_error: if true, raises exception when training and testing the pipeline fails
         :type raise_error: bool
         """
 
         self.params = specific_config
         self.pipe = pipe_ctor
-        self.metrics = metrics
+        self.optimization_infos = optimization_infos
+        self.optimization_constraints = optimization_constraints
+        self.outer_fold_id = outer_fold_id
+        self.cross_validation_infos = cross_validation_infos
+
+        self.save_predictions = save_predictions
+        self.save_feature_importances = save_feature_importances
+        self.cache_folder = cache_folder
+        self.cache_updater = cache_updater
+
         self.raise_error = raise_error
-        self.mother_inner_fold_handle = mother_inner_fold_handle
-        self.mongo_db_settings = mongo_db_settings
-        self.callback_function = callback_function
         self.training = training
+
         self.parallel_cv = parallel_cv
         self.nr_of_parallel_processes = nr_of_parrallel_processes
 
-
-    def calculate_cv_score(self, X, y, cv_iter,
-                           calculate_metrics_per_fold: bool = True,
-                           calculate_metrics_across_folds: bool =False, **kwargs):
+    def fit(self, X, y, **kwargs):
         """
         Iterates over cross-validation folds and trains the pipeline, then uses it for predictions.
         Calculates metrics per fold and averages them over fold.
         :param X: Training and test data
         :param y: Training and test targets
-        :param cv_iter: function/array that yields train and test indices
-        :param save_predictions: if true, saves the predicted values into the result tree
-        :param calculate_metrics_per_fold: if True, calculates metrics on predictions particularly for each fold
-        :param calculate_metrics_across_folds: if True, collects predictions from all folds and calculate metrics on whole collective
         :returns: configuration class for result tree that monitors training and test performance
         """
 
@@ -74,10 +72,11 @@ class TestPipeline(object):
         fold_cnt = 0
 
         # if we want to collect the predictions, we need to save them into the tree
-        original_save_predictions = self.mongo_db_settings.save_predictions
-        save_predictions = bool(self.mongo_db_settings.save_predictions)
-        save_feature_importances = self.mongo_db_settings.save_feature_importances
-        if calculate_metrics_across_folds:
+        original_save_predictions = self.save_predictions
+        save_predictions = bool(self.save_predictions)
+        save_feature_importances = self.save_feature_importances
+
+        if self.cross_validation_infos.calculate_metrics_across_folds:
             save_predictions = True
 
         if self.parallel_cv:
@@ -85,42 +84,63 @@ class TestPipeline(object):
             folds_to_do = Queue()
             folds_done = Queue()
 
-        list_of_score_results = []
-
         try:
             # do inner cv
-            for train, test in cv_iter:
+            for idx, (inner_fold_id, inner_fold) in enumerate(self.cross_validation_infos.inner_folds[self.outer_fold_id].items()):
 
-                    # split kwargs according to cross validation
-                    kwargs_cv_train = {}
-                    kwargs_cv_test = {}
-                    if len(kwargs) > 0:
-                        for name, sublist in kwargs.items():
-                            if isinstance(sublist, (list, np.ndarray)):
-                                kwargs_cv_train[name] = sublist[train]
-                                kwargs_cv_test[name] = sublist[test]
+                train, test = inner_fold.train_indices, inner_fold.test_indices
 
-                    job_data = TestPipeline.InnerCVJob(pipe=self.pipe(),
-                                                       config=dict(self.params),
-                                                       metrics=list(self.metrics),
-                                                       callbacks=self.callback_function,
-                                                       train_data=TestPipeline.JobData(X[train], y[train], train, dict(kwargs_cv_train)),
-                                                       test_data=TestPipeline.JobData(X[test], y[test], test, dict(kwargs_cv_test)),
-                                                       save_feature_importances=save_feature_importances,
-                                                       save_predictions=save_predictions)
+                # split kwargs according to cross validation
+                kwargs_cv_train = {}
+                kwargs_cv_test = {}
+                if len(kwargs) > 0:
+                    for name, sublist in kwargs.items():
+                        if isinstance(sublist, (list, np.ndarray)):
+                            kwargs_cv_train[name] = sublist[train]
+                            kwargs_cv_test[name] = sublist[test]
 
-                    if not self.parallel_cv:
-                        # only for unparallel processing
-                        # inform children in which inner fold we are
-                        # self.pipe.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=fold_cnt)
-                        self.mother_inner_fold_handle(fold_cnt)
+                new_pipe = self.pipe()
+                if self.cache_folder is not None and self.cache_updater is not None:
+                    self.cache_updater(new_pipe, self.cache_folder, inner_fold_id)
 
-                        curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
-                        list_of_score_results.append((curr_test_fold, curr_train_fold))
+                job_data = TestPipeline.InnerCVJob(pipe=new_pipe,
+                                                   config=dict(self.params),
+                                                   metrics=list(self.optimization_infos.metrics),
+                                                   callbacks=self.optimization_constraints,
+                                                   train_data=TestPipeline.JobData(X[train], y[train], train, dict(kwargs_cv_train)),
+                                                   test_data=TestPipeline.JobData(X[test], y[test], test, dict(kwargs_cv_test)),
+                                                   save_feature_importances=save_feature_importances,
+                                                   save_predictions=save_predictions)
 
-                        fold_cnt += 1
-                    else:
-                        folds_to_do.put(job_data)
+                if not self.parallel_cv:
+                    # only for unparallel processing
+                    # inform children in which inner fold we are
+                    # self.pipe.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=fold_cnt)
+                    # self.mother_inner_fold_handle(fold_cnt)
+
+                    curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
+                    durations = job_data.pipe.time_monitor
+                    self.update_config_item_with_inner_fold(config_item, idx, curr_test_fold, curr_train_fold, durations)
+
+                    if isinstance(self.optimization_constraints, list):
+                        break_cv = 0
+                        for cf in self.optimization_constraints:
+                            if not cf.shall_continue(config_item):
+                                Logger().info(
+                                    'Skip further cross validation of config because of performance constraints')
+                                break_cv += 1
+                                break
+                        if break_cv > 0:
+                            break
+                    elif self.optimization_constraints is not None:
+                        if not self.optimization_constraints.shall_continue(config_item):
+                            Logger().info(
+                                'Skip further cross validation of config because of performance constraints')
+                            break
+
+                    fold_cnt += 1
+                else:
+                    folds_to_do.put(job_data)
 
             if self.parallel_cv:
                 process_list = list()
@@ -133,12 +153,13 @@ class TestPipeline(object):
                     p.join()
 
                 while not folds_done.empty():
-                    list_of_score_results.append(folds_done.get())
+                    curr_test_fold, curr_train_fold = folds_done.get()
+                    self.update_config_item_with_inner_fold(config_item, 0, curr_test_fold, curr_train_fold, {})
 
-            TestPipeline.process_fit_results(list_of_score_results, config_item,
-                                             calculate_metrics_across_folds,
-                                             calculate_metrics_per_fold,
-                                             original_save_predictions, self.metrics)
+            TestPipeline.process_fit_results(config_item,
+                                             self.cross_validation_infos.calculate_metrics_across_folds,
+                                             self.cross_validation_infos.calculate_metrics_per_fold,
+                                             original_save_predictions, self.optimization_infos.metrics)
 
         except Exception as e:
             if self.raise_error:
@@ -189,7 +210,22 @@ class TestPipeline(object):
             return True
 
     @staticmethod
-    def process_fit_results(fold_list, config_item,
+    def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor):
+        # fill result tree with fold information
+        inner_fold = MDBInnerFold()
+        inner_fold.fold_nr = fold_cnt
+        inner_fold.training = curr_train_fold
+        inner_fold.validation = curr_test_fold
+
+        inner_fold.number_samples_validation = len(curr_test_fold.indices)
+        inner_fold.number_samples_training = len(curr_train_fold.indices)
+        inner_fold.time_monitor = time_monitor
+
+        # save all inner folds to the tree under the config item
+        config_item.inner_folds.append(inner_fold)
+
+    @staticmethod
+    def process_fit_results(config_item,
                             calculate_metrics_across_folds,
                             calculate_metrics_per_fold,
                             original_save_predictions,
@@ -199,9 +235,11 @@ class TestPipeline(object):
         overall_y_true_test = []
         overall_y_pred_train = []
         overall_y_true_train = []
-        inner_fold_list = []
 
-        for fold_cnt, (curr_test_fold, curr_train_fold) in enumerate(fold_list):
+        for fold in config_item.inner_folds:
+            curr_test_fold = fold.validation
+            curr_train_fold = fold.training
+
             if calculate_metrics_across_folds:
                 # if we have one hot encoded values -> concat horizontally
                 if isinstance(curr_test_fold.y_pred, np.ndarray):
@@ -218,18 +256,6 @@ class TestPipeline(object):
                     # we assume y_pred from the training set comes in the same shape as y_pred from the test se
                     overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
                     overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
-
-            # fill result tree with fold information
-            inner_fold = MDBInnerFold()
-            inner_fold.fold_nr = fold_cnt
-            inner_fold.training = curr_train_fold
-            inner_fold.validation = curr_test_fold
-            # inner_fold.number_samples_training = int(len(train))
-            # inner_fold.number_samples_validation = int(len(test))
-            inner_fold_list.append(inner_fold)
-
-            # save all inner folds to the tree under the config item
-            config_item.inner_folds = inner_fold_list
 
             # if we want to have metrics across all predictions from all folds:
             if calculate_metrics_across_folds:
@@ -309,21 +335,6 @@ class TestPipeline(object):
                                              save_feature_importances=job.save_feature_importances,
                                              training=True, **job.train_data.cv_kwargs)
 
-        # if self.callback_function:
-        #     if isinstance(self.callback_function, list):
-        #         break_cv = 0
-        #         for cf in self.callback_function:
-        #             if not cf.shall_continue(inner_fold_list):
-        #                 Logger().info('Skip further cross validation of config because of performance constraints')
-        #                 break_cv += 1
-        #                 break
-        #         if break_cv > 0:
-        #             break
-        #     else:
-        #         if not self.callback_function.shall_continue(inner_fold_list):
-        #             Logger().info(
-        #                 'Skip further cross validation of config because of performance constraints')
-        #             break
 
         return curr_test_fold, curr_train_fold
 
@@ -364,7 +375,12 @@ class TestPipeline(object):
         if not training:
             y_pred = estimator.predict(X, **kwargs)
         else:
-            X, y_true, kwargs = estimator.transform(X, y_true, **kwargs)
+            # durchs Cachen kommt hier X mit zu wenig items zurück...
+            X, y_true_new, kwargs_new = estimator.transform(X, y_true, **kwargs)
+            if y_true_new is not None:
+                y_true = y_true_new
+            if kwargs_new is not None and len(kwargs_new) > 0:
+                kwargs = kwargs_new
             y_pred = estimator.predict(X, training=True, **kwargs)
 
         f_importances = []
@@ -524,124 +540,6 @@ class Scorer(object):
             return None
 
 
-class OptimizerMetric(object):
-    """
-    Manages the metric that is chosen to pick the best hyperparameter configuration.
-    Automatically detects if the metric is better when the value increases or decreases.
-    """
 
-    def __init__(self, metric, pipeline_elements, other_metrics):
-        self.metric = metric
-        self.greater_is_better = None
-        self.other_metrics = other_metrics
-        self.set_optimizer_metric(pipeline_elements)
 
-    def check_metrics(self):
-        """
-        Checks the metric settings for convenience.
-
-        Check if the best config metric is included int list of metrics to be calculated.
-        Check if the best config metric is set but list of metrics is empty.
-        :return: validated list of metrics
-        """
-        if self.other_metrics:
-            if self.metric not in self.other_metrics:
-                self.other_metrics.append(self.metric)
-        # maybe there's a better solution to this
-        else:
-            self.other_metrics = [self.metric]
-        return self.other_metrics
-
-    def get_optimum_config(self, tested_configs):
-        """
-        Looks for the best configuration according to the metric with which the configurations are compared -> best config metric
-        :param tested_configs: the list of tested configurations and their performances
-        :return: MDBConfiguration that has performed best
-        """
-
-        list_of_config_vals = []
-        list_of_non_failed_configs = [conf for conf in tested_configs if not conf.config_failed]
-
-        if len(list_of_non_failed_configs) == 0:
-            raise Warning("No Configs found which did not fail.")
-        try:
-            for config in list_of_non_failed_configs:
-                list_of_config_vals.append(MDBHelper.get_metric(config, FoldOperations.MEAN, self.metric, train=False))
-
-            if self.greater_is_better:
-                # max metric
-                best_config_metric_nr = np.argmax(list_of_config_vals)
-            else:
-                # min metric
-                best_config_metric_nr = np.argmin(list_of_config_vals)
-            return list_of_non_failed_configs[best_config_metric_nr]
-        except BaseException as e:
-            Logger().error(str(e))
-
-    def get_optimum_config_outer_folds(self, outer_folds):
-
-        list_of_scores = list()
-        for outer_fold in outer_folds:
-            metrics = outer_fold.best_config.inner_folds[0].validation.metrics
-            list_of_scores.append(metrics[self.metric])
-
-        if self.greater_is_better:
-            # max metric
-            best_config_metric_nr = np.argmax(list_of_scores)
-        else:
-            # min metric
-            best_config_metric_nr = np.argmin(list_of_scores)
-
-        best_config = outer_folds[best_config_metric_nr].best_config
-        best_config_mdb = MDBConfig()
-        best_config_mdb.config_dict = best_config.config_dict
-        best_config_mdb.children_config_ref = best_config.children_config_ref
-        best_config_mdb.children_config_dict = best_config.children_config_dict
-        best_config_mdb.human_readable_config = best_config.human_readable_config
-        return best_config_mdb
-
-    @staticmethod
-    def greater_is_better_distinction(metric):
-        if metric in Scorer.ELEMENT_DICTIONARY:
-            # for now do a simple hack and set greater_is_better
-            # by looking at error/score in metric name
-            metric_name = Scorer.ELEMENT_DICTIONARY[metric][1]
-            specifier = Scorer.ELEMENT_DICTIONARY[metric][2]
-            if specifier == 'score':
-                return True
-            elif specifier == 'error':
-                return False
-            else:
-                # Todo: better error checking?
-                error_msg = "Metric not suitable for optimizer."
-                Logger().error(error_msg)
-                raise NameError(error_msg)
-        else:
-            Logger().error('Specify valid metric to choose best config.')
-            raise NameError('Specify valid metric to choose best config.')
-
-    def set_optimizer_metric(self, pipeline_elements):
-        """
-        Analyse and prepare the best config metric.
-        Derive if it is better when the value increases or decreases.
-        :param pipeline_elements: the items of the pipeline
-        """
-        if isinstance(self.metric, str):
-            self.greater_is_better = self.greater_is_better_distinction(self.metric)
-        else:
-            # if no optimizer metric was chosen, use default scoring method
-            self.metric = 'score'
-
-            last_element = pipeline_elements[-1]
-            if hasattr(last_element.base_element, '_estimator_type'):
-                self.greater_is_better = True
-            else:
-                # Todo: better error checking?
-                Logger().error('NotImplementedError: ' +
-                               'Last pipeline element does not specify '+
-                               'whether it is a classifier, regressor, transformer or '+
-                               'clusterer.')
-                raise NotImplementedError('Last pipeline element does not specify '
-                                          'whether it is a classifier, regressor, transformer or '
-                                          'clusterer.')
 

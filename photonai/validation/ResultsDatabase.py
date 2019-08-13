@@ -34,6 +34,9 @@ class MDBScoreInformation(EmbeddedMongoModel):
     probabilities = fields.ListField(blank=True)
     metrics_copied_from_inner = fields.BooleanField(default=False)
 
+    def __str__(self):
+        return str(self.metrics)
+
 
 class MDBInnerFold(EmbeddedMongoModel):
     class Meta:
@@ -45,6 +48,7 @@ class MDBInnerFold(EmbeddedMongoModel):
     validation = fields.EmbeddedDocumentField(MDBScoreInformation, blank=True)
     number_samples_training = fields.IntegerField(blank=True)
     number_samples_validation = fields.IntegerField(blank=True)
+    time_monitor = fields.DictField(blank=True)
 
 
 class MDBConfig(EmbeddedMongoModel):
@@ -220,7 +224,7 @@ class MongoDBWriter:
             try:
                 results_tree.save()
             except DocumentTooLarge as e:
-                Logger.error('Could not save document into MongoDB: Document too large')
+                Logger().error('Could not save document into MongoDB: Document too large')
                 # try to reduce the amount of configs saved
                 # if len(results_tree.outer_folds[0].tested_config_list) > 100:
                 #     for outer_fold in results_tree.outer_folds:

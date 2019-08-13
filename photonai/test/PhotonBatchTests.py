@@ -1,12 +1,13 @@
 import unittest
 import numpy as np
-from ..base.PhotonBatchElement import PhotonBatchElement
+from ..base.PhotonBase import PipelineElement
+from sklearn.base import BaseEstimator
 
 
-class DummyBatchTransformer:
+class DummyBatchTransformer(BaseEstimator):
 
     def __init__(self):
-        self.needs_y = False
+        self.needs_y = True
         self.needs_covariates = True
         self.predict_count = 0
 
@@ -23,12 +24,12 @@ class DummyBatchTransformer:
 
         kwargs["animals"] = [i[::-1] for i in kwargs["animals"]]
 
-        return X_new, y, kwargs
+        return np.asarray(X_new), np.asarray(y), kwargs
 
     def predict(self, X, y=None, **kwargs):
 
         self.predict_count += 1
-        predictions = np.ones(X.shape) * self.predict_count
+        predictions = np.ones((X.shape[0],)) * self.predict_count
         return predictions
 
 
@@ -41,8 +42,8 @@ class NeuroBatchTests(unittest.TestCase):
         self.data = None
         self.targets = None
 
-        self.neuro_batch = PhotonBatchElement("dummy_batch", batch_size=self.batch_size,
-                                              base_element=DummyBatchTransformer())
+        self.neuro_batch = PipelineElement("dummy_batch", batch_size=self.batch_size,
+                                           base_element=DummyBatchTransformer())
 
         for element in origin_list:
             features = [element + str(i) for i in range(0, nr_features)]
@@ -67,7 +68,7 @@ class NeuroBatchTests(unittest.TestCase):
         self.assertEqual(kwargs_new["animals"][49], "ewöl")
 
     def test_predict(self):
-        X_predicted, _, _ = self.neuro_batch.predict(self.data, **self.kwargs)
+        y_predicted = self.neuro_batch.predict(self.data, **self.kwargs)
         # assure that predict is batch wisely called
-        self.assertTrue(X_predicted[0][0] == 1)
-        self.assertTrue(X_predicted[-1][0] == (self.data.shape[0]/self.batch_size))
+        self.assertEqual(y_predicted[0], 1)
+        self.assertEqual(y_predicted[-1], (self.data.shape[0]/self.batch_size))
