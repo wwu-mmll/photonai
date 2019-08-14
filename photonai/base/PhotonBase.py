@@ -1288,7 +1288,7 @@ class PipelineElement(BaseEstimator):
     def __batch_predict(self, delegate, X, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
             Logger().warn("Cannot do batching on a single entity.")
-            return delegate(X, y, **kwargs)
+            return delegate(X, **kwargs)
 
             # initialize return values
         processed_y = None
