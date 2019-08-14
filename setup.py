@@ -42,6 +42,9 @@ setup(
         'flask',
         'prettytable',
         'scikit-optimize',
-        'scikit-image'
+        'scikit-image',
+        'seaborn',
+        'joblib',
+        'fasteners'
   ]
 )
