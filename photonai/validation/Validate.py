@@ -120,7 +120,11 @@ class TestPipeline(object):
 
                     curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
                     durations = job_data.pipe.time_monitor
-                    self.update_config_item_with_inner_fold(config_item, idx, curr_test_fold, curr_train_fold, durations)
+                    self.update_config_item_with_inner_fold(config_item=config_item,
+                                                            fold_cnt=idx,
+                                                            curr_train_fold=curr_train_fold,
+                                                            curr_test_fold=curr_test_fold,
+                                                            time_monitor=durations)
 
                     if isinstance(self.optimization_constraints, list):
                         break_cv = 0
