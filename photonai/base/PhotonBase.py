@@ -1,4 +1,3 @@
-
 import glob
 import importlib.util
 import inspect
@@ -28,7 +27,6 @@ from ..configuration.Register import PhotonRegister
 from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
 from ..optimization.SkOpt import SkOptOptimizer
-from ..optimization.Smac3Opt import SMACOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import Scorer
 from .PhotonPipeline import PhotonPipeline, CacheManager
@@ -368,8 +366,7 @@ class Hyperpipe(BaseEstimator):
         OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                                 'random_grid_search': RandomGridSearchOptimizer,
                                 'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
-                                'sk_opt': SkOptOptimizer,
-                                'smac': SMACOptimizer}  # ,
+                                'sk_opt': SkOptOptimizer}  # ,
 
         # 'fabolas': FabolasOptimizer}
 
@@ -1055,16 +1052,20 @@ class SourceFilter(BaseEstimator):
     Helper Class to split the data e.g. for stacking.
     """
     def __init__(self, indices):
+        self.name = 'SourceFilter'
+        self.hyperparameters = {}
         self.indices = indices
+        self.needs_covariates = False
+        self.needs_y = False
 
-    def fit(self, X, y=None):
+    def fit(self, X, y=None, **kwargs):
         return self
 
-    def transform(self, X, y=None):
+    def transform(self, X, y=None, **kwargs):
         """
         Returns only part of the data, column-wise filtered by self.indices
         """
-        return X[:, self.indices]
+        return X[:, self.indices], y, kwargs
 
 
 class PipelineElement(BaseEstimator):
