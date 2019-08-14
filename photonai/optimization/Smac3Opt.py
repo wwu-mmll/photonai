@@ -1,6 +1,3 @@
-import sys
-sys.path.append('/home/agrover/Desktop/TRaP/photon_core')
-
 from .OptimizationStrategies import PhotonBaseOptimizer
 from .Hyperparameters import FloatRange, IntegerRange, BooleanSwitch
 from .Hyperparameters import Categorical as PhotonCategorical
