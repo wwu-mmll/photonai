@@ -69,7 +69,6 @@ class TestPipeline(object):
         config_item.inner_folds = []
         config_item.metrics_test = []
         config_item.metrics_train = []
-        fold_cnt = 0
 
         # if we want to collect the predictions, we need to save them into the tree
         original_save_predictions = self.save_predictions
@@ -121,7 +120,7 @@ class TestPipeline(object):
                     curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
                     durations = job_data.pipe.time_monitor
                     self.update_config_item_with_inner_fold(config_item=config_item,
-                                                            fold_cnt=idx,
+                                                            fold_cnt=idx+1,
                                                             curr_train_fold=curr_train_fold,
                                                             curr_test_fold=curr_test_fold,
                                                             time_monitor=durations)
@@ -142,7 +141,6 @@ class TestPipeline(object):
                                 'Skip further cross validation of config because of performance constraints')
                             break
 
-                    fold_cnt += 1
                 else:
                     folds_to_do.put(job_data)
 
