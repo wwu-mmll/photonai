@@ -1,33 +1,7 @@
-"""
-===========================================================
-Project: PHOTON EXAMPLES
-===========================================================
-Description
------------
-Sample Pairing example
-
-Version
--------
-Created:        DD-MM-YYYY
-Last updated:   DD-MM-YYYY
-
-
-Author
-------
-Nils R. Winter
-nils.r.winter@gmail.com
-Translationale Psychiatrie
-Universitaetsklinikum Muenster
-"""
-
-
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement
 from photonai.optimization.Hyperparameters import Categorical
 from sklearn.model_selection import KFold
-from sklearn.datasets import load_boston, load_breast_cancer
-import numpy as np
-
-
+from sklearn.datasets import load_breast_cancer
 
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
