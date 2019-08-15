@@ -8,6 +8,7 @@ from ..model.PlotlyPlot import PlotlyPlot
 from ..model.PlotlyTrace import PlotlyTrace
 from ..model.BestConfigTrace import BestConfigTrace
 from ..model.BestConfigPlot import BestConfigPlot
+from ..model.Figures import plotly_confusion_matrix
 from .helper import load_pipe, load_available_pipes
 
 
@@ -68,30 +69,40 @@ def show_outer_fold(storage, name, fold_nr):
         final_value_training_plot = PlotlyPlot('best_config_training_values', 'True/Predict for training set', list_final_value_training_traces)
         # END building final values for training set (best config)
 
-        # START building final values for validation set (best config)
-        count_item = int(0)
-        true_validation_trace = PlotlyTrace('y_true', 'markers', 'scatter')
-        pred_validation_trace = PlotlyTrace('y_pred', 'markers', 'scatter')
 
-        for true_item in outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_true:
-            true_validation_trace.add_x(count_item)
-            true_validation_trace.add_y(true_item)
-            count_item += 1
+        #---------------------
+        # Confusion Matrix
+        #---------------------
+        if pipe.estimation_type == 'classifier':
+            final_value_validation_plot = plotly_confusion_matrix('best_config_validation_values',
+                                        outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_true,
+                                        outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_pred)
+        else:
 
-        # reset count variable
-        count_item = int(0)
+            # START building final values for validation set (best config)
+            count_item = int(0)
+            true_validation_trace = PlotlyTrace('y_true', 'markers', 'scatter')
+            pred_validation_trace = PlotlyTrace('y_pred', 'markers', 'scatter')
 
-        for pred_item in outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_pred:
-            pred_validation_trace.add_x(count_item)
-            pred_validation_trace.add_y(pred_item)
-            count_item += 1
+            for true_item in outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_true:
+                true_validation_trace.add_x(count_item)
+                true_validation_trace.add_y(true_item)
+                count_item += 1
 
-        list_final_value_validation_traces = list()
-        list_final_value_validation_traces.append(true_validation_trace)
-        list_final_value_validation_traces.append(pred_validation_trace)
+            # reset count variable
+            count_item = int(0)
 
-        final_value_validation_plot = PlotlyPlot('best_config_validation_values', 'True/Predict for validation set', list_final_value_validation_traces)
-        # END building final values for validation set (best config)
+            for pred_item in outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_pred:
+                pred_validation_trace.add_x(count_item)
+                pred_validation_trace.add_y(pred_item)
+                count_item += 1
+
+            list_final_value_validation_traces = list()
+            list_final_value_validation_traces.append(true_validation_trace)
+            list_final_value_validation_traces.append(pred_validation_trace)
+
+            final_value_validation_plot = PlotlyPlot('best_config_validation_values', 'True/Predict for validation set', list_final_value_validation_traces).to_plot()
+            # END building final values for validation set (best config)
 
         # START building plot objects for each tested config
         for config in outer_fold.tested_config_list:
@@ -141,11 +152,11 @@ def show_outer_fold(storage, name, fold_nr):
             error_plot_list.append(error_plot_test)
         # END building plot objects for each tested config
 
-        return render_template('outer_folds/show.html', pipe=pipe, outer_fold=outer_fold
-                               , error_plot_list=error_plot_list, bestConfigPlot=best_config_plot
-                               , final_value_training_plot=final_value_training_plot
-                               , final_value_validation_plot=final_value_validation_plot
-                               , config_dict_list=config_dict_list,
+        return render_template('outer_folds/show.html', pipe=pipe, outer_fold=outer_fold,
+                               error_plot_list=error_plot_list, bestConfigPlot=best_config_plot,
+                               final_value_training_plot=final_value_training_plot,
+                               final_value_validation_plot=final_value_validation_plot,
+                               config_dict_list=config_dict_list,
                                s=storage,
                                available_pipes=available_pipes)
 

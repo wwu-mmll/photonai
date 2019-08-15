@@ -7,7 +7,8 @@ class PlotlyPlot:
     version: 1.0.0
     """
 
-    def __init__(self, plot_name: str, title: str, traces: list=None, show_legend: bool=True):
+    def __init__(self, plot_name: str, title: str, traces: list=None, show_legend: bool=True,
+                 xlabel: str='', ylabel: str=''):
         """ Constructor
         :param plot_name: Name of the div-Element which will show the plot
         :param title: title of the plot
@@ -20,6 +21,8 @@ class PlotlyPlot:
         else:
             self.traces = traces
         self.show_legend = show_legend
+        self.xlabel = xlabel
+        self.ylabel = ylabel
 
     def trace_names_to_string(self) -> str:
         """ Returns a comma separated string of containing trace names
@@ -53,7 +56,9 @@ class PlotlyPlot:
             if item.trace_color:
                 result += "color: '" + item.trace_color + "', "
             if item.trace_size != 0:
-                result += "size: " + str(item.trace_size)
+                result += "size: " + str(item.trace_size) + ", "
+            if item.colorscale:
+                result += "colorscale: {}".format(item.colorscale)
             result += "}};"
 
         result += str("var layout = { title: '" + str(self.title) + "'")
@@ -63,6 +68,11 @@ class PlotlyPlot:
             result += ", showlegend: true };"
         else:
             result += ", showlegend: false};"
+
+        if self.ylabel:
+            result += ", yaxis: {title: '{}'}".format(self.ylabel)
+        if self.xlabel:
+            result += ", xaxis: {title: '{}'}".format(self.xlabel)
 
         result += str("var data = [" + self.trace_names_to_string() + "];")
         result += str("Plotly.newPlot('" + str(self.plot_name) + "', data, layout);")

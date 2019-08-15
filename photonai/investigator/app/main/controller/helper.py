@@ -1,7 +1,8 @@
-from ..model.ResultsDatabase import MDBHyperpipe
+from photonai.validation.ResultsDatabase import MDBHyperpipe, MDBHelper
+#from ..model.ResultsDatabase import MDBHyperpipe
 from pymodm.errors import DoesNotExist, ConnectionError, ValidationError
 from ..main import application
-from ..model.ResultsDatabase import MDBHelper
+#from ..model.ResultsDatabase import MDBHelper
 from pymodm.connection import connect
 from bson.objectid import ObjectId
 from pymongo import DESCENDING

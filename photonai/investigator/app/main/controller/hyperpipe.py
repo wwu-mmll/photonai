@@ -1,6 +1,7 @@
 from flask import render_template
 from ..main import application
-from ..model.ResultsDatabase import MDBHyperpipe
+#from ..model.ResultsDatabase import MDBHyperpipe
+from photonai.validation.ResultsDatabase import MDBHyperpipe
 from pymodm.errors import ValidationError, ConnectionError
 from ..model.Metric import Metric
 from ..model.BestConfigTrace import BestConfigTrace
