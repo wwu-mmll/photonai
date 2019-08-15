@@ -2,6 +2,7 @@ from flask import render_template
 from ..main import application
 #from ..model.ResultsDatabase import MDBHyperpipe
 from photonai.validation.ResultsDatabase import MDBHyperpipe
+from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 from pymodm.errors import ValidationError, ConnectionError
 from ..model.Metric import Metric
 from ..model.BestConfigTrace import BestConfigTrace
@@ -9,6 +10,7 @@ from ..model.BestConfigPlot import BestConfigPlot
 from ..model.PlotlyTrace import PlotlyTrace
 from ..model.PlotlyPlot import PlotlyPlot
 from .helper import load_pipe, load_available_pipes
+from ..model.Figures import plotly_optimizer_history
 
 
 @application.route('/pipeline/<storage>')
@@ -41,6 +43,13 @@ def show_pipeline(storage, name):
         #     return render_template("default/error.html", error_msg=pipe)
 
         default_fold_best_config = 0
+
+        # plot optimizer history
+        handler = ResultsTreeHandler(pipe)
+        config_evaluations = handler.get_config_evaluations()
+        min_config_evaluations = handler.get_minimum_config_evaluations()
+        optimizer_history = plotly_optimizer_history('optimizer_history', config_evaluations, min_config_evaluations, pipe.metrics[0])
+
 
 
         best_config_plot_list = list()
@@ -134,6 +143,7 @@ def show_pipeline(storage, name):
         return render_template('outer_folds/index.html', pipe=pipe, best_config_plot_list=best_config_plot_list,
                                overview_plot_train=overview_plot_train,
                                overview_plot_test=overview_plot_test,
+                               optimizer_history=optimizer_history,
                                s=storage,
                                available_pipes=available_pipes)
     except ValidationError as exc:

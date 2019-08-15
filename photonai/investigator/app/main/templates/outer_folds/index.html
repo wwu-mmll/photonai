@@ -65,7 +65,7 @@
                 <h1 class="box-title">Overview of all Folds</h1>
             </div>
             <div class="box-body">
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div id="overview_plot_training">
                         <!-- graph best_config_overview will be shown here -->
 
@@ -75,12 +75,21 @@
                     </script>
 
                 </div>
-                <div class="col-md-6">
+                <div class="col-md-4">
                     <div id="overview_plot_test">
 
                     </div>
                     <script>
                     {{ overview_plot_test.to_plot() | safe }}
+                    </script>
+
+                </div>
+                <div class="col-md-4">
+                    <div id="optimizer_history">
+
+                    </div>
+                    <script>
+                    {{ optimizer_history | safe}}
                     </script>
 
                 </div>

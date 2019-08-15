@@ -65,15 +65,15 @@ class PlotlyPlot:
         # result += str("var layout = { title: '" + str(self.title) + "', yaxis: {range: [-0.25, 1.25]}")
 
         if self.show_legend:
-            result += ", showlegend: true };"
+            result += ", showlegend: true"
         else:
-            result += ", showlegend: false};"
+            result += ", showlegend: false"
 
         if self.ylabel:
-            result += ", yaxis: {title: '{}'}".format(self.ylabel)
+            result += """, yaxis: {{title: '{}'}}""".format(self.ylabel)
         if self.xlabel:
-            result += ", xaxis: {title: '{}'}".format(self.xlabel)
-
+            result += ", xaxis: {{title: '{}'}}""".format(self.xlabel)
+        result += "};"
         result += str("var data = [" + self.trace_names_to_string() + "];")
         result += str("Plotly.newPlot('" + str(self.plot_name) + "', data, layout);")
 
