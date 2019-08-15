@@ -81,16 +81,15 @@ class HyperpipeTests(unittest.TestCase):
                                 ("pca", PCA(n_components=pca_n_components, random_state=3)),
                                 ("svc", SVC(C=svc_c, kernel=svc_kernel, random_state=3))])
 
-        my_pipe._generate_outer_cv_indices()
         tmp_counter = 0
-        for train_idx_arr, test_idx_arr in my_pipe.data_test_cases:
+        for outer_fold in list(my_pipe.cross_validation.outer_folds.values()):
 
             sk_results = {'accuracy': [], 'precision': [], 'f1_score': []}
 
-            outer_train_X = self.__X[train_idx_arr]
-            outer_train_y = self.__y[train_idx_arr]
-            outer_test_X = self.__X[test_idx_arr]
-            outer_test_y = self.__y[test_idx_arr]
+            outer_train_X = self.__X[outer_fold.train_indices]
+            outer_train_y = self.__y[outer_fold.train_indices]
+            outer_test_X = self.__X[outer_fold.test_indices]
+            outer_test_y = self.__y[outer_fold.test_indices]
 
             sk_config_cv = KFold(n_splits=3)
             # # Todo: test other configs and select best!
@@ -334,10 +333,9 @@ class PipelineBranchTests(unittest.TestCase):
 
         stacking_element.fit(self.X, self.y)
         trans, _, _ = stacking_element.transform(self.X)
-        pred = stacking_element.predict(self.X)
+        pred, _, _ = stacking_element.predict(self.X)
 
         self.assertTrue(np.array_equal(trans, pred))
-
         ss = StandardScaler()
         pca = PCA(random_state=3)
         ss.fit(self.X, self.y)
