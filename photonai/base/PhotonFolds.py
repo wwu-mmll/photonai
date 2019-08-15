@@ -85,7 +85,7 @@ class FoldInfo:
         fold_objects = list()
         for i, (train_indices, test_indices) in enumerate(data_test_cases):
             fold_info_obj = FoldInfo(fold_id=uuid.uuid4(),
-                                     fold_nr=i,
+                                     fold_nr=i+1,
                                      train_indices=train_indices,
                                      test_indices=test_indices)
             fold_objects.append(fold_info_obj)
