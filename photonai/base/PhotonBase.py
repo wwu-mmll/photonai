@@ -281,8 +281,10 @@ class Hyperpipe(BaseEstimator):
 
         self.name = re.sub(r'\W+', '', name)
         self.permutation_id = permutation_id
-        self.cache_folder = cache_folder
-
+        if cache_folder:
+            self.cache_folder = os.path.join(cache_folder, self.name)
+        else:
+            self.cache_folder = cache_folder
         # ====================== Cross Validation ===========================
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
                                                           outer_cv=outer_cv,
@@ -303,6 +305,7 @@ class Hyperpipe(BaseEstimator):
         self.mongodb_writer = MongoDBWriter(self.output_settings)
         self.result_tree = None
         self.best_config = None
+        self.estimation_type = None
 
         # ====================== Pipeline ===========================
         self.pipeline_elements = []
@@ -575,16 +578,7 @@ class Hyperpipe(BaseEstimator):
 
     def _prepare_dummy_estimator(self):
         Logger().info("Running Dummy Estimator.")
-        last_pipeline_element = self.pipeline_elements[-1]
-        if isinstance(last_pipeline_element, PipelineSwitch):
-            est_type = last_pipeline_element._estimator_type
-        elif hasattr(last_pipeline_element, 'base_element'):
-            if hasattr(last_pipeline_element.base_element, '_estimator_type'):
-                est_type = last_pipeline_element.base_element._estimator_type
-            else:
-                est_type = None
-        else:
-            est_type = None
+        est_type = self.estimation_type
 
         # Run Dummy Estimator
         self.result_tree.dummy_estimator = DummyResults()
@@ -614,6 +608,7 @@ class Hyperpipe(BaseEstimator):
 
         self.result_tree.computation_start_time = start_time
         self.result_tree.metrics = self.optimization.metrics
+        self.result_tree.estimation_type = self.estimation_type
         if self.permutation_id is not None:
             self.result_tree.permutation_id = self.permutation_id
 
@@ -768,11 +763,27 @@ class Hyperpipe(BaseEstimator):
                                                                                            **self.data.kwargs)
 
     def _check_for_estimator(self):
-        estimator_type = self.pipeline_elements[-1].base_element._estimator_type
-        last_name = self.pipeline_elements[-1].name
+        last_element = self.pipeline_elements[-1]
+        if isinstance(last_element, PipelineSwitch):
+            # if PipelineSwitch, just take the first element within the switch; this should be a regressor or classifier
+            last_element = last_element.pipeline_element_list[0]
+        elif isinstance(last_element, PipelineStacking):
+            # if PipelineStacking, just take random element from stack
+            last_element = last_element.pipe_elements.popitem()
+        elif isinstance(last_element, PipelineBranch):
+            # if PipelineBranch, just take last element of branch
+            last_element = last_element.pipeline_elements[-1]
+
+        if not hasattr(last_element.base_element, '_estimator_type'):
+            raise NotImplementedError("Last pipeline element has to be an estimator. Your estimator does not specify"
+                                      " whether it is a regressor or classifier. Make sure to inherit from sklearn's "
+                                      "ClassifierMixin or RegressorMixin or set _estimator_type explicitly.")
+        estimator_type = last_element.base_element._estimator_type
+        last_name = last_element.name
+        self.estimation_type = estimator_type
         if not (estimator_type == 'classifier' or estimator_type == 'regressor'):
             raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
-                                                                                                         estimator_type))
+                                                                                                        estimator_type))
 
     def fit(self, data, targets, **kwargs):
         """
@@ -818,6 +829,7 @@ class Hyperpipe(BaseEstimator):
 
                 start = datetime.datetime.now()
                 self._prepare_result_logging(start)
+
                 # update output options to add pipe name and timestamp to results folder
                 self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
                 self.mongodb_writer = MongoDBWriter(self.output_settings)
@@ -842,7 +854,7 @@ class Hyperpipe(BaseEstimator):
                 # loop over outer cross validation
                 for i, outer_f in enumerate(outer_folds):
                     Logger().info('HYPERPARAMETER SEARCH OF {0}, Outer Cross validation Fold {1}'
-                                  .format(self.name, outer_f.fold_nr + 1))
+                                  .format(self.name, outer_f.fold_nr))
 
                     # 1. generate OuterFolds Object
 
@@ -1774,7 +1786,7 @@ class PipelineStacking(PipelineElement):
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data, targets, kwargs
 
-    def predict_proba(self, data):
+    def predict_proba(self, data, **kwargs):
         """
         Predict probabilities for every pipe element and
         stack them together. Alternatively, do voting instead.
@@ -1882,7 +1894,7 @@ class PipelineSwitch(PipelineElement):
 
     """
 
-    def __init__(self, name: str, pipeline_element_list: list = None, _estimator_type='regressor'):
+    def __init__(self, name: str, pipeline_element_list: list = None):
         """
         Creates a new PipelineSwitch object and generated the hyperparameter combination grid
 
@@ -1900,11 +1912,12 @@ class PipelineSwitch(PipelineElement):
         self.sklearn_name = self.name + "__current_element"
         self._hyperparameters = {}
         self._current_element = (1, 1)
+        self.pipeline_element_configurations = []
+        self._estimator_type = 'regressor'
+        self.base_element = None
         self.disabled = False
         self.test_disabled = False
-        self.pipeline_element_configurations = []
-        self._estimator_type = _estimator_type
-        self.base_element = None
+        self.batch_size = 0
 
         self.needs_y = False
         self.needs_covariates = False
