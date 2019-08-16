@@ -1,4 +1,4 @@
-from ..base.PhotonBase import PipelineBranch
+from ..base.PhotonBase import PipelineBranch, CallbackElement
 from ..configuration.Register import PhotonRegister
 from ..base.Helper import PHOTONDataHelper
 from ..neuro.BrainAtlas import BrainAtlas
@@ -60,6 +60,9 @@ class NeuroModuleBranch(PipelineBranch):
             # as the neuro branch is parallelized and processes several images subsequently on
             # different cores, we need to stop the children to process on several cores as well
             pipe_element.base_element.output_img = True
+            self.pipeline_elements.append(pipe_element)
+            self._prepare_pipeline()
+        elif isinstance(pipe_element, CallbackElement):
             self.pipeline_elements.append(pipe_element)
             self._prepare_pipeline()
         else:

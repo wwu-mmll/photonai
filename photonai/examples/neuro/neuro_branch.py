@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe, CallbackElement, PipelineBranch
 from photonai.optimization.Hyperparameters import Categorical
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 
@@ -11,6 +11,11 @@ import warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
+# DEFINE CALLBACK ELEMENT
+def my_monitor(X, y=None, **kwargs):
+   print(X.shape)
+   debug = True
+
 # GET DATA FROM OASIS
 n_subjects = 50
 dataset_files = fetch_oasis_vbm(n_subjects=n_subjects)
@@ -20,7 +25,7 @@ X = np.array(dataset_files.gray_matter_maps)
 
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='.', overwrite_results=True)
 
 my_pipe = Hyperpipe('Limbic_Pipeline',
                     optimizer='grid_search',
@@ -28,7 +33,7 @@ my_pipe = Hyperpipe('Limbic_Pipeline',
                     best_config_metric='mean_absolute_error',
                     outer_cv=ShuffleSplit(n_splits=2, test_size=0.2),
                     inner_cv=ShuffleSplit(n_splits=2, test_size=0.2),
-                    verbosity=1,
+                    verbosity=2,
                     cache_folder="./cache",
                     output_settings=settings)
 
@@ -50,11 +55,16 @@ neuro_branch += PipelineElement('BrainAtlas', hyperparameters={},
                                 atlas_name="AAL", extract_mode='vec', batch_size=20)
 
 # finally, add your neuro branch to your hyperpipe
+neuro_branch += CallbackElement('NeuroCallback', my_monitor)
 my_pipe += neuro_branch
+#my_pipe += CallbackElement('NeuroCallback', my_monitor)
 
 # now, add standard ML algorithms to your liking
-my_pipe += PipelineElement('StandardScaler')
+feature_engineering = PipelineBranch('FeatureEngineering')
+feature_engineering += PipelineElement('StandardScaler')
+feature_engineering += CallbackElement('FECallback', my_monitor)
 
+my_pipe += feature_engineering
 my_pipe += PipelineElement('SVR', hyperparameters={'kernel': Categorical(['rbf', 'linear'])}, gamma='scale')
 
 # NOW TRAIN YOUR PIPELINE

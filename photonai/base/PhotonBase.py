@@ -554,6 +554,9 @@ class Hyperpipe(BaseEstimator):
         """
         if isinstance(pipe_element, PreprocessingPipe):
             self.preprocessing_pipe = pipe_element
+        elif isinstance(pipe_element, CallbackElement):
+            pipe_element.needs_y = True
+            self.pipeline_elements.append(pipe_element)
         else:
             if isinstance(pipe_element, PipelineElement) or issubclass(type(pipe_element), PhotonNative):
                 self.pipeline_elements.append(pipe_element)
@@ -1561,7 +1564,8 @@ class PipelineBranch(PipelineElement):
         for item in self.pipeline_elements:
             # pipeline_steps.append((item.name, item.base_element))
             pipeline_steps.append((item.name, item))
-            self._hyperparameters[item.name] = item.hyperparameters
+            if hasattr(item, 'hyperparameters'):
+                self._hyperparameters[item.name] = item.hyperparameters
 
         if self.has_hyperparameters:
             self.generate_sklearn_hyperparameters()
@@ -2144,10 +2148,13 @@ class CallbackElement(PhotonNative):
     def __init__(self, name, delegate_function, method_to_monitor='transform'):
 
         self.needs_covariates = True
-        self.needs_y = True
+        self.needs_y = False
         self.name = name
         self.delegate_function = delegate_function
         self.method_to_monitor = method_to_monitor
+        self.hyperparameters = {}
+        self.is_transformer = True
+        self.is_estimator = False
 
     def fit(self, X, y=None, **kwargs):
         if self.method_to_monitor == 'fit':
