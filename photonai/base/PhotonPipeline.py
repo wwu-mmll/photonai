@@ -84,7 +84,7 @@ class PhotonPipeline(_BaseComposition):
         if isinstance(self._cache_folder, str):
             self.caching = True
             if not os.path.isdir(self._cache_folder):
-                os.mkdir(self._cache_folder)
+                os.makedirs(self._cache_folder)
             self.cache_man = CacheManager(self._fold_id, self.cache_folder)
         else:
             self.caching = False
