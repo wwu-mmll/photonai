@@ -33,7 +33,7 @@ my_pipe = Hyperpipe('Limbic_Pipeline',
                     best_config_metric='mean_absolute_error',
                     outer_cv=ShuffleSplit(n_splits=2, test_size=0.2),
                     inner_cv=ShuffleSplit(n_splits=2, test_size=0.2),
-                    verbosity=2,
+                    verbosity=1,
                     cache_folder="./cache",
                     output_settings=settings)
 

@@ -121,7 +121,7 @@ class PHOTONDataHelper:
 
     @staticmethod
     def stack_results(new_a, existing_a):
-        if existing_a is not None:
+        if existing_a is not None and len(existing_a) != 0:
             if isinstance(new_a, np.ndarray) and len(new_a.shape) < 2:
                 existing_a = np.hstack((existing_a, new_a))
             elif isinstance(new_a, list):

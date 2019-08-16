@@ -300,7 +300,7 @@ class OuterFoldManager:
 
             # ... and create optimal pipeline
             optimum_pipe = self.copy_pipe_fnc()
-            self.cache_updater(optimum_pipe, self.cache_folder, None)
+            self.cache_updater(optimum_pipe, self.cache_folder, "fixed_fold_id")
             optimum_pipe.caching = False
             # set self to best config
             optimum_pipe.set_params(**best_config_outer_fold_mdb.config_dict)

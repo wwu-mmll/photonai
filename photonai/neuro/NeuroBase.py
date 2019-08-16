@@ -106,7 +106,7 @@ class NeuroModuleBranch(PipelineBranch):
         if self.base_element.cache_folder is not None:
             # make sure we cache individually
             self.base_element.single_subject_caching = True
-            self.base_element.caching = False
+            self.base_element.caching = True
         if self.nr_of_processes > 1:
 
             if self.base_element.cache_folder is not None:
