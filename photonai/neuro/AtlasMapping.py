@@ -23,6 +23,8 @@ class AtlasMapper:
 
     def generate_mappings(self, hyperpipe: Hyperpipe, neuro_element: Union[NeuroModuleBranch, PipelineElement], folder: str):
         self.folder = folder
+        if not os.path.exists(self.folder):
+            os.makedirs(self.folder)
         self.neuro_element = neuro_element
         self.original_hyperpipe_name = hyperpipe.name
         self.roi_list = self._find_brain_atlas(self.neuro_element)
@@ -60,29 +62,8 @@ class AtlasMapper:
     def _find_rois(self, element):
         roi_list = element.base_element.rois
         atlas_obj = AtlasLibrary().get_atlas(element.base_element.atlas_name)
-
-        if isinstance(roi_list, str):
-            if roi_list == 'all':
-                roi_list = [roi.label for roi in atlas_obj.roi_list]
-                if 'Background' in roi_list:
-                    roi_list.remove('Background')
-            else:
-                roi_list = [roi_list]
-        elif isinstance(roi_list, list):
-            valid_rois = list()
-
-            for roi in roi_list:
-                found_roi = False
-                for valid_roi in atlas_obj.roi_list:
-                    if roi == valid_roi.label:
-                        valid_rois.append(valid_roi.label)
-                        found_roi = True
-
-                if not found_roi:
-                    Logger().warn("{} is not a valid ROI for defined atlas. Skipping ROI.".format(roi))
-
-            roi_list = valid_rois
-        return roi_list
+        roi_objects = BrainAtlas._get_rois(atlas_obj, roi_list)
+        return [roi.label for roi in roi_objects]
 
     def fit(self, X, y=None, **kwargs):
         if len(self.hyperpipes_to_fit) == 0:

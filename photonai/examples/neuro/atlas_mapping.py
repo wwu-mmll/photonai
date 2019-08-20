@@ -9,7 +9,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 # GET DATA FROM OASIS
-n_subjects = 50
+n_subjects = 200
 dataset_files = fetch_oasis_vbm(n_subjects=n_subjects)
 age = dataset_files.ext_vars['age'].astype(float)
 y = np.array(age)
@@ -21,33 +21,33 @@ mongo_settings = OutputSettings(save_predictions='best')
 
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
+my_pipe = Hyperpipe('atlas_mapping',  # the name of your pipeline
                     optimizer='grid_search',  # which optimizer PHOTON shall use
                     metrics=['mean_absolute_error', 'mean_squared_error'],  # the performance metrics of your interest
                     best_config_metric='mean_absolute_error',
                     inner_cv=KFold(n_splits=2),  # test each configuration ten times respectively,
                     verbosity=2,
                     output_settings=mongo_settings,
-                    cache_folder='/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_OASIS/cache')  # get error, warn and info message
+                    cache_folder='/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_oasis/cache')  # get error, warn and info message
 
 
 brain_atlas = PipelineElement('BrainAtlas', atlas_name="Yeo_7", extract_mode='vec',
-                                rois=['Network_1', 'Network_2'])
+                                rois=['all'], batch_size=20)
 
 neuro_branch = NeuroModuleBranch('NeuroBranch')
 neuro_branch += brain_atlas
 
-my_pipe += PipelineElement('SVR', hyperparameters={}, kernel='linear')
+my_pipe += PipelineElement('LinearSVR')
 
 # NOW TRAIN YOUR PIPELINE
-my_folder = '/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_OASIS'
+my_folder = '/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_oasis'
 atlas_mapper = AtlasMapper()
 atlas_mapper.generate_mappings(my_pipe, neuro_branch, my_folder)
 atlas_mapper.fit(X, y)
 
 # LOAD TRAINED ATLAS MAPPER AND PREDICT
 atlas_mapper = AtlasMapper()
-atlas_mapper.load_from_file('/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_oasis/basic_svm_pipe_atlas_mapper_meta.json')
+atlas_mapper.load_from_file('/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_oasis/atlas_mapping_atlas_mapper_meta.json')
 
 print(atlas_mapper.predict(X))
 debug = True

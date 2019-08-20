@@ -354,7 +354,7 @@ class BrainAtlas(BaseEstimator):
         elif isinstance(which_rois, list):
             if isinstance(which_rois[0], str):
                 if which_rois[0].lower() == 'all':
-                    return AtlasLibrary().find_rois_by_label(atlas_obj, which_rois[0])
+                    return [roi for roi in atlas_obj.roi_list if roi.index != background_id]
                 else:
                     return AtlasLibrary().find_rois_by_label(atlas_obj, which_rois)
             else:
