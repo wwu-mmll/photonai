@@ -730,7 +730,7 @@ class Hyperpipe(BaseEstimator):
             Logger().error("Removing Nans in target vector failed: " + str(e))
             pass
 
-        Logger().info("Hyperpipe is training with " + str(self.data.y.shape[0]) + " data items.")
+        Logger().info("Hyperpipe is training with " + str(self.data.y.shape[0]) + " samples.")
 
     @staticmethod
     def prepare_caching(cache_folder):
@@ -862,7 +862,7 @@ class Hyperpipe(BaseEstimator):
 
                     # 1. generate OuterFolds Object
 
-                    outer_fold_computator = OuterFoldManager(self._copy_pipeline,
+                    outer_fold_computer = OuterFoldManager(self._copy_pipeline,
                                                              self.optimization,
                                                              outer_f.fold_id,
                                                              self.cross_validation,
@@ -875,11 +875,11 @@ class Hyperpipe(BaseEstimator):
                     # 2. prepare
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
                     self.result_tree.outer_folds.append(outer_fold)
-                    outer_fold_computator.prepare_optimization(self.pipeline_elements, outer_fold)
-                    dummy_results.append(outer_fold_computator.fit_dummy(self.data.X, self.data.y, dummy_estimator))
+                    outer_fold_computer.prepare_optimization(self.pipeline_elements, outer_fold)
+                    dummy_results.append(outer_fold_computer.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
                     # 3. fit
-                    outer_fold_computator.fit(self.data.X, self.data.y, **self.data.kwargs)
+                    outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
 
                     # 4. save outer fold results
                     self.mongodb_writer.save(self.result_tree)

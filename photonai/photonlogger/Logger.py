@@ -68,8 +68,6 @@ class Logger:
         self._print_to_console = self.config['print_to_console']
         self._print_to_file = self.config['print_to_file']
         self._logfile_name = self.config['logfile_name']
-        with open(self._logfile_name, "w") as text_file:
-            text_file.write('PHOTON LOGFILE - ' + str(datetime.datetime.utcnow()))
 
     @staticmethod
     def set_print_to_console(self, status: bool):
