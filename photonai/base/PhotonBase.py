@@ -2318,6 +2318,6 @@ class PhotonModelPersistor:
             # delete unpacked folder to clean up
             # ToDo: Don't unpack at all, but use PHOTON file directly
             from shutil import rmtree
-            rmtree(folder)
+            rmtree(folder, ignore_errors=True)
 
         return PhotonPipeline(element_list)
