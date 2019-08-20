@@ -301,7 +301,7 @@ class Hyperpipe(BaseEstimator):
             self.output_settings = output_settings
         else:
             self.output_settings = OutputSettings()
-        Logger().set_verbosity(verbosity)
+        self.verbosity = verbosity
         self.mongodb_writer = MongoDBWriter(self.output_settings)
         self.result_tree = None
         self.best_config = None
@@ -822,6 +822,7 @@ class Hyperpipe(BaseEstimator):
             self._input_data_sanity_checks(data, targets, **kwargs)
             self._check_for_estimator()
             self.preprocess_data()
+            Logger().set_verbosity(self.verbosity)
 
             if not self.is_final_fit:
 
