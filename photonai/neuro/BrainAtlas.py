@@ -384,7 +384,6 @@ class BrainMasker(BaseEstimator):
         self.shape = shape
         self.masker = None
         self.extract_mode = extract_mode
-        self._already_checked = False
 
     @staticmethod
     def get_format_info_from_first_image(X):
@@ -440,12 +439,9 @@ class BrainMasker(BaseEstimator):
 
         if not self.mask_image.is_empty:
             try:
-                if self._already_checked:
-                    single_roi = masking.apply_mask(X, self.mask_image.mask, dtype='float32')
-                else:
-                    self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
-                                              target_shape=self.shape, dtype='float32', memory='/spm-data/Scratch/spielwiese_nils_winter/')
-                    single_roi = self.masker.fit_transform(X)
+                self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
+                                          target_shape=self.shape, dtype='float32')
+                single_roi = self.masker.fit_transform(X)
             except BaseException as e:
                 Logger().error(e)
                 single_roi = None
