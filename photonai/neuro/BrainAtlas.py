@@ -3,7 +3,8 @@ import os.path
 import inspect
 import glob
 from nilearn.input_data import NiftiMasker
-from nilearn import image
+from nilearn import image, masking, _utils
+from nilearn._utils.niimg import _safe_get_data
 import nibabel as nib
 import time
 from pathlib import Path
@@ -311,6 +312,9 @@ class BrainAtlas(BaseEstimator):
         elif isinstance(X, str):
             n_subjects = 1
             X = image.load_img(X)
+        elif isinstance(X, np.ndarray):
+            n_subjects = X.shape[0]
+            X = image.load_img(X)
         else:
             n_subjects = X.shape[-1]
 
@@ -321,11 +325,14 @@ class BrainAtlas(BaseEstimator):
         roi_data = [list() for i in range(n_subjects)]
         roi_data_concat = list()
         t1 = time.time()
+
+        # convert to series and C ordering since this will speed up the masking process
+        series = _utils.as_ndarray(_safe_get_data(X), dtype='float32', order="C", copy=True)
+
         for roi in roi_objects:
             Logger().debug("Extracting ROI {}".format(roi.label))
-            masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode=self.extract_mode)
-            extraction = masker.transform(X)
-
+            # simply call apply_mask to extract one roi
+            extraction = self.apply_mask(series, roi.mask)
             if collection_mode == 'list':
                 for sub_i in range(extraction.shape[0]):
                     roi_data[sub_i].append(extraction[sub_i])
@@ -338,6 +345,14 @@ class BrainAtlas(BaseEstimator):
         elapsed_time = time.time() - t1
         Logger().debug("Time for extracting {} ROIs in {} subjects: {} seconds".format(len(roi_objects), n_subjects, elapsed_time))
         return roi_data
+
+    def apply_mask(self, series, mask_img):
+        mask_img = _utils.check_niimg_3d(mask_img)
+        mask, mask_affine = masking._load_mask_img(mask_img)
+        mask_img = image.new_img_like(mask_img, mask, mask_affine)
+        mask_data = _utils.as_ndarray(mask_img.get_data(),
+                                      dtype=np.bool)
+        return series[mask_data].T
 
     @staticmethod
     def _get_rois(atlas_obj, which_rois='all', background_id=0):
@@ -369,15 +384,19 @@ class BrainMasker(BaseEstimator):
         self.shape = shape
         self.masker = None
         self.extract_mode = extract_mode
+        self._already_checked = False
 
     @staticmethod
     def get_format_info_from_first_image(X):
         if isinstance(X, str):
             img = image.load_img(X)
-        elif isinstance(X[0], str):
-            img = image.load_img(X[0])
-        elif isinstance(X[0], nib.Nifti1Image):
-            img = X[0]
+        elif isinstance(X, list) or isinstance(X, np.ndarray):
+            if isinstance(X[0], str):
+                img = image.load_img(X[0])
+            elif isinstance(X[0], nib.Nifti1Image):
+                img = X[0]
+        elif isinstance(X, nib.Nifti1Image):
+            img = X
         else:
             error_msg = "Can only process strings as file paths to nifti images or nifti image object"
             Logger().error(error_msg)
@@ -420,11 +439,13 @@ class BrainMasker(BaseEstimator):
             pass
 
         if not self.mask_image.is_empty:
-            self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
-                                      target_shape=self.shape, dtype='float32')
-
             try:
-                single_roi = self.masker.fit_transform(X)
+                if self._already_checked:
+                    single_roi = masking.apply_mask(X, self.mask_image.mask, dtype='float32')
+                else:
+                    self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
+                                              target_shape=self.shape, dtype='float32', memory='/spm-data/Scratch/spielwiese_nils_winter/')
+                    single_roi = self.masker.fit_transform(X)
             except BaseException as e:
                 Logger().error(e)
                 single_roi = None

@@ -1,12 +1,14 @@
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import BrainAtlas, AtlasLibrary
-from photonai.base.PhotonBase import Hyperpipe, PhotonModelPersistor, PipelineElement
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement
 from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 from photonai.photonlogger.Logger import Logger
+from typing import Union
+from glob import glob
+
 import pandas as pd
 import os
 import json
-from typing import Union
 import joblib
 
 
@@ -28,6 +30,7 @@ class AtlasMapper:
         self.neuro_element = neuro_element
         self.original_hyperpipe_name = hyperpipe.name
         self.roi_list = self._find_brain_atlas(self.neuro_element)
+        self.verbosity = hyperpipe.verbosity
         self.hyperpipe_infos = None
 
         hyperpipes_to_fit = dict()
@@ -71,6 +74,7 @@ class AtlasMapper:
 
         # Get data from BrainAtlas first and save to .npz
         # ToDo: currently not supported for hyperparameters inside neurobranch
+        Logger().set_verbosity(self.verbosity)
         self.neuro_element.fit(X)
 
         # save neuro branch to file
@@ -120,6 +124,25 @@ class AtlasMapper:
         if not os.path.exists(file):
             raise FileNotFoundError("Couldn't find atlas mapper meta file")
 
+        self._load(file)
+
+    def load_from_folder(self, folder: str, analysis_name: str = None):
+        if not os.path.exists(folder):
+            raise NotADirectoryError("{} is not a directory".format(folder))
+
+        if analysis_name:
+            meta_file = glob(os.path.join(folder, analysis_name + '_atlas_mapper_meta.json'))
+        else:
+            meta_file = glob(os.path.join(folder, '*_atlas_mapper_meta.json'))
+
+        if len(meta_file) == 0:
+            raise FileNotFoundError("Couldn't find atlas_mapper_meta.json file in {}. Did you specify the correct analysis name?".format(folder))
+        elif len(meta_file) > 1:
+            raise ValueError("Found multiple atlas_mapper_meta.json files in {}".format(folder))
+
+        self._load(meta_file[0])
+
+    def _load(self, file):
         # load neuro branch
         self.folder = os.path.split(file)[0]
         self.neuro_element = joblib.load(os.path.join(self.folder, 'neuro_element.pkl'))
