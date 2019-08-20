@@ -5,7 +5,10 @@ from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 from photonai.photonlogger.Logger import Logger
 from typing import Union
 from glob import glob
-#from nilearn
+from nilearn import _utils, image
+from nilearn._utils.niimg import _safe_get_data
+from nilearn import masking
+import numpy as np
 
 import pandas as pd
 import os
@@ -106,10 +109,15 @@ class AtlasMapper:
         df.to_csv(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_results.csv'))
 
         # # write performance to atlas niftis
-        # mask = _utils.as_ndarray(_safe_get_data(self.atlas.mask), dtype='float32', order="C", copy=True)
+        # atlas = _utils.as_ndarray(_safe_get_data(self.atlas.mask), dtype='float32', order="C", copy=True)
         #
         # for roi_name, roi_res in hyperpipe_results.items():
-
+        #     mask_img = _utils.check_niimg_3d(mask)
+        #     mask, mask_affine = masking._load_mask_img(mask_img)
+        #     mask_img = image.new_img_like(mask_img, mask, mask_affine)
+        #     mask_data = _utils.as_ndarray(mask_img.get_data(),
+        #                                   dtype=np.bool)
+        #     series[mask_data].T = np.mean(roi_res[''])
 
     def _reshape_roi_data(self, X):
         roi_data = [list() for n in range(len(X[0]))]
