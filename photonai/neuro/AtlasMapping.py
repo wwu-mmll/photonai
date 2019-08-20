@@ -5,6 +5,7 @@ from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 from photonai.photonlogger.Logger import Logger
 from typing import Union
 from glob import glob
+#from nilearn
 
 import pandas as pd
 import os
@@ -19,6 +20,7 @@ class AtlasMapper:
         self.neuro_element = None
         self.original_hyperpipe_name = None
         self.roi_list = None
+        self.atlas = None
         self.hyperpipe_infos = None
         self.hyperpipes_to_fit = None
         self.roi_indices = dict()
@@ -29,7 +31,7 @@ class AtlasMapper:
             os.makedirs(self.folder)
         self.neuro_element = neuro_element
         self.original_hyperpipe_name = hyperpipe.name
-        self.roi_list = self._find_brain_atlas(self.neuro_element)
+        self.roi_list, self.atlas = self._find_brain_atlas(self.neuro_element)
         self.verbosity = hyperpipe.verbosity
         self.hyperpipe_infos = None
 
@@ -51,22 +53,23 @@ class AtlasMapper:
 
     def _find_brain_atlas(self, neuro_element):
         roi_list = list()
+        atlas_obj = list()
         if isinstance(neuro_element, NeuroModuleBranch):
             for element in neuro_element.pipeline_elements:
                 if isinstance(element.base_element, BrainAtlas):
                     element.base_element.collection_mode = 'list'
-                    roi_list = self._find_rois(element)
+                    roi_list, atlas_obj = self._find_rois(element)
 
         elif isinstance(neuro_element.base_element, BrainAtlas):
             neuro_element.base_element.collection_mode = 'list'
-            roi_list = self._find_rois(neuro_element)
-        return roi_list
+            roi_list, atlas_obj = self._find_rois(neuro_element)
+        return roi_list, atlas_obj
 
     def _find_rois(self, element):
         roi_list = element.base_element.rois
         atlas_obj = AtlasLibrary().get_atlas(element.base_element.atlas_name)
         roi_objects = BrainAtlas._get_rois(atlas_obj, roi_list)
-        return [roi.label for roi in roi_objects]
+        return ([roi.label for roi in roi_objects], atlas_obj)
 
     def fit(self, X, y=None, **kwargs):
         if len(self.hyperpipes_to_fit) == 0:
@@ -95,10 +98,18 @@ class AtlasMapper:
             hyperpipe_results[roi_name] = ResultsTreeHandler(hyperpipe.result_tree).get_performance_outer_folds()
 
         self.hyperpipe_infos = hyperpipe_infos
+
+        # write results
         with open(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_meta.json'), 'w') as fp:
             json.dump(self.hyperpipe_infos, fp)
         df = pd.DataFrame(hyperpipe_results)
         df.to_csv(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_results.csv'))
+
+        # # write performance to atlas niftis
+        # mask = _utils.as_ndarray(_safe_get_data(self.atlas.mask), dtype='float32', order="C", copy=True)
+        #
+        # for roi_name, roi_res in hyperpipe_results.items():
+
 
     def _reshape_roi_data(self, X):
         roi_data = [list() for n in range(len(X[0]))]
