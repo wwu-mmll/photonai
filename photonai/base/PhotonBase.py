@@ -743,19 +743,20 @@ class Hyperpipe(BaseEstimator):
         new_pipe.fold_id = inner_fold_id
         new_pipe.caching = True
 
-        for step_name, step_obj in new_pipe.steps:
-            if isinstance(step_obj, PipelineBranch):
-                sub_cache = os.path.join(cache_folder, step_name)
-                # Hyperpipe.prepare_caching(sub_cache)
-                Hyperpipe.recursive_cash_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
-                Hyperpipe.prepare_caching(step_obj.base_element.cache_folder)
-            elif isinstance(step_obj, PipelineStacking):
-                for child in step_obj.pipe_elements:
-                    if isinstance(child, PipelineBranch):
-                        sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
-                        # Hyperpipe.prepare_caching(sub_cache)
-                        Hyperpipe.recursive_cash_folder_propagation(child.base_element, sub_cache, inner_fold_id)
-                        Hyperpipe.prepare_caching(child.base_element.cache_folder)
+        if cache_folder:
+            for step_name, step_obj in new_pipe.steps:
+                if isinstance(step_obj, PipelineBranch):
+                    sub_cache = os.path.join(cache_folder, step_name)
+                    # Hyperpipe.prepare_caching(sub_cache)
+                    Hyperpipe.recursive_cash_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
+                    Hyperpipe.prepare_caching(step_obj.base_element.cache_folder)
+                elif isinstance(step_obj, PipelineStacking):
+                    for child in step_obj.pipe_elements:
+                        if isinstance(child, PipelineBranch):
+                            sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
+                            # Hyperpipe.prepare_caching(sub_cache)
+                            Hyperpipe.recursive_cash_folder_propagation(child.base_element, sub_cache, inner_fold_id)
+                            Hyperpipe.prepare_caching(child.base_element.cache_folder)
 
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
