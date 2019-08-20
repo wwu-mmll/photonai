@@ -33,12 +33,7 @@ knn_sta_branch += PipelineElement('StandardScaler')
 knn_sta_branch += PipelineElement('KNeighborsClassifier')
 
 # voting = True to mean the result of every branch
-my_pipe_stack = PipelineStacking('final_stack', voting=True)
-my_pipe_stack += tree_qua_branch
-my_pipe_stack += svm_mima_branch
-my_pipe_stack += knn_sta_branch
-
-my_pipe += my_pipe_stack
+my_pipe += PipelineStacking('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch], voting=True)
 
 my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
 
