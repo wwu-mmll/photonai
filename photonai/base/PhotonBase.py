@@ -735,7 +735,7 @@ class Hyperpipe(BaseEstimator):
     @staticmethod
     def prepare_caching(cache_folder):
         if not os.path.isdir(cache_folder):
-            os.mkdir(cache_folder)
+            os.makedirs(cache_folder)
 
     @staticmethod
     def recursive_cash_folder_propagation(new_pipe, cache_folder, inner_fold_id):
