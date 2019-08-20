@@ -482,5 +482,9 @@
   "LassoFeatureSelection":[
     "photonai.modelwrapper.FeatureSelection.LassoFeatureSelection",
     "Transformer"
+  ],
+  "RangeRestrictor":[
+    "photonai.modelwrapper.RangeRestrictor.RangeRestrictor",
+    "Estimator"
   ]
 }
