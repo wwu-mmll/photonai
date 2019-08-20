@@ -438,9 +438,9 @@ class BrainMasker(BaseEstimator):
             pass
 
         if not self.mask_image.is_empty:
+            self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
+                                      target_shape=self.shape, dtype='float32')
             try:
-                self.masker = NiftiMasker(mask_img=self.mask_image.mask, target_affine=self.affine,
-                                          target_shape=self.shape, dtype='float32')
                 single_roi = self.masker.fit_transform(X)
             except BaseException as e:
                 Logger().error(e)
