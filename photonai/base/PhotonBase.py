@@ -31,6 +31,10 @@ from ..validation.ResultsDatabase import *
 from ..validation.Validate import Scorer
 from .PhotonPipeline import PhotonPipeline, CacheManager
 
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 
 class PhotonNative:
     """only for checking if code is meeting requirements"""
@@ -1481,16 +1485,16 @@ class PipelineElement(BaseEstimator):
         """
         return self.base_element.score(X_test, y_test)
 
-    def prettify_config_output(self, config_name: str, config_value, return_dict:bool=False):
+    def prettify_config_output(self, config_name: str, config_value, return_dict: bool = False):
         """Make hyperparameter combinations human readable """
         if config_name == "disabled" and config_value is False:
             if return_dict:
-                return {'enabled':True}
+                return {'disabled': False}
             else:
-                return "enabled = True"
+                return "disabled = False"
         else:
             if return_dict:
-                return {config_name:config_value}
+                return {config_name: config_value}
             else:
                 return config_name + '=' + str(config_value)
 
@@ -1550,12 +1554,12 @@ class PipelineBranch(PipelineElement):
         """
            Add an element to the sub pipeline
            Returns self
-    
+
            Parameters
            ----------
            * `pipe_element` [PipelineElement or Hyperpipe]:
                The object to add, being either a transformer or an estimator.
-    
+
            """
         self.__iadd__(pipe_element)
 
@@ -1925,8 +1929,8 @@ class PipelineSwitch(PipelineElement):
         self.test_disabled = False
         self.batch_size = 0
 
-        self.needs_y = False
-        self.needs_covariates = False
+        self.needs_y = True
+        self.needs_covariates = True
         # we assume we test models against each other, but only guessing
         self.is_estimator = True
         self.is_transformer = True
@@ -2278,7 +2282,7 @@ class PhotonModelPersistor:
             zf.extractall(folder, pwd=password)
         else:
             raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
-        
+
         with open(folder + '_optimum_pipe_blueprint.pkl', 'rb') as f:
             setup_info = pickle.load(f)
             element_list = list()
