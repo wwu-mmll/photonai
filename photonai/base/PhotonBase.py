@@ -754,7 +754,7 @@ class Hyperpipe(BaseEstimator):
                     # Hyperpipe.prepare_caching(sub_cache)
                     Hyperpipe.recursive_cash_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
                     Hyperpipe.prepare_caching(step_obj.base_element.cache_folder)
-                elif isinstance(step_obj, PipelineStacking):
+                elif isinstance(step_obj, PipelineStack):
                     for child in step_obj.pipe_elements:
                         if isinstance(child, PipelineBranch):
                             sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
@@ -775,8 +775,8 @@ class Hyperpipe(BaseEstimator):
         if isinstance(last_element, PipelineSwitch):
             # if PipelineSwitch, just take the first element within the switch; this should be a regressor or classifier
             last_element = last_element.pipeline_element_list[0]
-        elif isinstance(last_element, PipelineStacking):
-            # if PipelineStacking, just take random element from stack
+        elif isinstance(last_element, PipelineStack):
+            # if PipelineStack, just take random element from stack
             last_element = last_element.pipe_elements.popitem()
         elif isinstance(last_element, PipelineBranch):
             # if PipelineBranch, just take last element of branch
@@ -1467,7 +1467,7 @@ class PipelineElement(BaseEstimator):
 
         elif self.needs_covariates:
             # we need an extra arrangement here, because we reuse code
-            if isinstance(self, (PipelineBranch, PipelineStacking)):
+            if isinstance(self, (PipelineBranch, PipelineStack)):
                 X, _, _ = delegate(X, None, **kwargs)
             else:
                 X, kwargs = delegate(X, **kwargs)
@@ -1662,7 +1662,7 @@ class PreprocessingPipe(PipelineBranch):
         pass
 
 
-class PipelineStacking(PipelineElement):
+class PipelineStack(PipelineElement):
     """
     Creates a vertical stacking/parallelization of pipeline items.
 
@@ -1673,7 +1673,7 @@ class PipelineStacking(PipelineElement):
     """
     def __init__(self, name: str, stacking_elements=None, voting: bool=False):
         """
-        Creates a new PipelineStacking element.
+        Creates a new PipelineStack element.
         Collects all possible hyperparameter combinations of the children
 
         Parameters
@@ -1685,8 +1685,8 @@ class PipelineStacking(PipelineElement):
         * `voting` [bool]:
             If true, the predictions of the encapsulated pipeline elements are joined to a single prediction
         """
-        super(PipelineStacking, self).__init__(name, hyperparameters={}, test_disabled=False, disabled=False,
-                                               base_element=True)
+        super(PipelineStack, self).__init__(name, hyperparameters={}, test_disabled=False, disabled=False,
+                                            base_element=True)
 
         self._hyperparameters = {}
         self.pipe_elements = OrderedDict()
@@ -1789,7 +1789,7 @@ class PipelineStacking(PipelineElement):
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
             element_transform = element.predict(data, **kwargs)
-            predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
+            predicted_data = PipelineStack.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
                 if len(predicted_data.shape) > 1:
@@ -1804,7 +1804,7 @@ class PipelineStacking(PipelineElement):
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
             element_transform = element.predict_proba(data)
-            predicted_data = PipelineStacking.stack_data(predicted_data, element_transform)
+            predicted_data = PipelineStack.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
                 if len(predicted_data.shape) > 1:
@@ -1821,12 +1821,12 @@ class PipelineStacking(PipelineElement):
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
                 element_transform, _, _ = element.transform(data, targets, **kwargs)
-                transformed_data = PipelineStacking.stack_data(transformed_data, element_transform)
+                transformed_data = PipelineStack.stack_data(transformed_data, element_transform)
 
         return transformed_data, targets, kwargs
 
     def copy_me(self):
-        ps = PipelineStacking(self.name, voting=self.voting)
+        ps = PipelineStack(self.name, voting=self.voting)
         for name, element in self.pipe_elements.items():
             new_element = element.copy_me()
             ps += new_element
@@ -1870,7 +1870,7 @@ class PipelineStacking(PipelineElement):
 
         """
         # Todo: invent strategy for this ?
-        # raise BaseException('PipelineStacking.score should probably never be reached.')
+        # raise BaseException('PipelineStack.score should probably never be reached.')
         # return 16
         predicted = self.predict(X_test)
 

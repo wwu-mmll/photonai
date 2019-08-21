@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch, SourceFilter
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack, PipelineBranch, SourceFilter
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.configuration.Register import PhotonRegister
 from sklearn.model_selection import KFold
@@ -35,7 +35,7 @@ worst_branch += SourceFilter(indices=np.arange(20, 30))
 worst_branch += PipelineElement('SVC')
 
 # voting = True to mean the result of every branch
-my_pipe_stack = PipelineStacking('stack', voting=True)
+my_pipe_stack = PipelineStack('stack', voting=True)
 my_pipe_stack += mean_branch
 my_pipe_stack += error_branch
 my_pipe_stack += worst_branch
