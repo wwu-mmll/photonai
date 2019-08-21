@@ -1,42 +1,31 @@
-import sys
-sys.path.append('/home/agrover/Desktop/TRaP/photon_core')
-
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineSwitch, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
-from photonai.investigator.Investigator import Investigator
 from sklearn.model_selection import KFold
-from photonai.optimization.SpeedHacks import MinimumPerformance
-
 from sklearn.datasets import load_breast_cancer
+
+
+# GET DATA
 X, y = load_breast_cancer(True)
 
-
+# CREATE HYPERPIPE
 my_pipe = Hyperpipe('basic_switch_pipe',
-                    optimizer='smac',
-                    optimizer_params={"run_obj": 'quality', "wallclock_limit": 10},
+                    optimizer='grid_search',
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=10),
-                    verbosity=1,
-                    performance_constraints=MinimumPerformance('accuracy', 0.9))
+                    verbosity=1)
 
+# Transformer Switch
+my_pipe += PipelineSwitch('TransformerSwitch', [PipelineElement('StandardScaler'), PipelineElement('PCA', test_disabled=True)])
 
-svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
-                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
-
+# Estimator Switch
+svm = PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']), 'C': FloatRange(0.5, 2, "linspace", num=5)})
 tree = PipelineElement('DecisionTreeClassifier')
 
-switch = PipelineSwitch('estimator_switch')
-switch += svm
-switch += tree
+my_pipe += PipelineSwitch('EstimatorSwitch', [svm, tree])
 
-my_pipe += PipelineElement('StandardScaler')
-my_pipe += switch
-
+# FIT PIPELINE
 my_pipe.fit(X, y)
-
-
-Investigator.show(my_pipe)
 
 debug = True
