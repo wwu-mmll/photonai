@@ -47,8 +47,7 @@ class Logger:
         # load configuration
         self.config = {
             'print_to_console': True,
-            'print_to_file': True,
-            'logfile_name': 'photon.log'
+            'print_to_file': True
         }
 
         # handle multiple instances of hyperpipe
@@ -66,8 +65,6 @@ class Logger:
         # Should the log also be printed to the console?
         # Recommendation: Set to True during development, false in production-environment
         self._print_to_console = self.config['print_to_console']
-        self._print_to_file = self.config['print_to_file']
-        self._logfile_name = self.config['logfile_name']
 
     @staticmethod
     def set_print_to_console(self, status: bool):
@@ -128,21 +125,12 @@ class Logger:
 
         if self._print_to_console:
             self._print_entry(entry)
-        if self._print_to_file:
-            self._write_to_file(entry)
-
-
 
     @staticmethod
     def _print_entry(entry: dict):
         date_str = entry['logged_date'].strftime("%Y-%m-%d %H:%M:%S")
         #print("{0} UTC - {1}: {2}".format(date_str, entry['log_type'], entry['message']))
         print("{0}".format(entry['message']))
-
-    def _write_to_file(self, entry: dict):
-        with open(self._logfile_name, "a", newline='\n') as text_file:
-            text_file.write('\n')
-            text_file.write(str(entry['message']))
 
     @staticmethod
     def _generate_log_entry(message: str, log_type: str):
