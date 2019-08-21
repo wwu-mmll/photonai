@@ -6,6 +6,8 @@ function_name(y_true, y_pred)
 
 import numpy as np
 from ..photonlogger.Logger import Logger
+from scipy.stats import spearmanr
+
 
 def categorical_accuracy_score(y_true, y_pred):
     from sklearn.metrics import accuracy_score
@@ -20,6 +22,10 @@ def categorical_accuracy_score(y_true, y_pred):
 
 def pearson_correlation(y_true, y_pred):
     return np.corrcoef(y_true, y_pred)[0][1]
+
+
+def spearman_correlation(y_true, y_pred):
+    return spearmanr(y_true, y_pred)[0]
 
 
 def variance_explained_score(y_true, y_pred):
