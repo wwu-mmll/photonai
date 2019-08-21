@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStacking, PipelineBranch
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack, PipelineBranch
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.investigator.Investigator import Investigator
 from photonai.configuration.Register import PhotonRegister
@@ -33,7 +33,7 @@ knn_sta_branch += PipelineElement('StandardScaler')
 knn_sta_branch += PipelineElement('KNeighborsClassifier')
 
 # voting = True to mean the result of every branch
-my_pipe += PipelineStacking('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch], voting=True)
+my_pipe += PipelineStack('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch], voting=True)
 
 my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
 

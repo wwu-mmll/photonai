@@ -6,7 +6,7 @@ write tests for class ResultLogging
 write tests for class Scorer
 write tests for class Testpipeline
 write tests for class OptimizerMetric
-write tests for class PipelineStacking
+write tests for class PipelineStack
 write test for sample pairing wrapper
 extend exiting tests?
 

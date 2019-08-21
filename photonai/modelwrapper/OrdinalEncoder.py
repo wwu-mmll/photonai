@@ -1,6 +1,6 @@
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import OrdinalEncoder
-from ..base.PhotonBase import PipelineStacking
+from ..base.PhotonBase import PipelineStack
 import numpy as np
 
 
@@ -33,5 +33,5 @@ class FeatureEncoder(BaseEstimator):
                 trans_X = transformer.transform(feature)
             else:
                 trans_X = feature
-            new_X = PipelineStacking.stack_data(new_X, trans_X)
+            new_X = PipelineStack.stack_data(new_X, trans_X)
         return new_X

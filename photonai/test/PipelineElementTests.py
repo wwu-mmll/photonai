@@ -312,7 +312,7 @@ class PipelineBranchTests(unittest.TestCase):
 
     def test_no_y_transformers(self):
         branch = PipelineBranch("forbidden_branch")
-        stacking_element = PipelineStacking("forbidden_stack")
+        stacking_element = PipelineStack("forbidden_stack")
         my_dummy = PipelineElement.create("dummy", DummyYAndCovariatesTransformer(), {})
         with self.assertRaises(ValueError):
             branch += my_dummy
@@ -327,7 +327,7 @@ class PipelineBranchTests(unittest.TestCase):
         branch2 = PipelineBranch("B2")
         branch2.add(PipelineElement("PCA", random_state=3))
 
-        stacking_element = PipelineStacking("Stack")
+        stacking_element = PipelineStack("Stack")
         stacking_element += branch1
         stacking_element += branch2
 
@@ -352,7 +352,7 @@ class PipelineBranchTests(unittest.TestCase):
 
         svc1 = PipelineElement("SVC", random_state=1)
         svc2 = PipelineElement("SVC", random_state=1)
-        stack_obj = PipelineStacking("StackItem", voting=True)
+        stack_obj = PipelineStack("StackItem", voting=True)
         stack_obj += svc1
         stack_obj += svc2
 

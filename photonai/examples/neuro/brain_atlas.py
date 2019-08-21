@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PipelineStacking
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PipelineStack
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import AtlasLibrary
 from sklearn.model_selection import ShuffleSplit
@@ -57,7 +57,7 @@ neuro_branch = NeuroModuleBranch('NeuroBranch')
 neuro_branch += atlas
 
 # it's also possible to combine ROIs from different atlases
-neuro_stack = PipelineStacking('HarvardOxford')
+neuro_stack = PipelineStack('HarvardOxford')
 
 ho_sub = NeuroModuleBranch('HO_Subcortical')
 ho_sub += PipelineElement('BrainAtlas',
