@@ -132,6 +132,9 @@ class NeuroModuleBranch(PipelineBranch):
         new_copy.base_element.cache_folder = self.base_element.cache_folder
         new_copy.nr_of_processes = self.nr_of_processes
 
+        # todo: clarify this with Ramona
+        new_copy.do_not_delete_cache_folder = True
+
         return new_copy
 
     class ImageJob:

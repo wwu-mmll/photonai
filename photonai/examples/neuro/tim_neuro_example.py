@@ -18,6 +18,7 @@ y = np.array(age)
 X = np.array(dataset_files.gray_matter_maps)
 
 def my_monitor(X, y=None, **kwargs):
+   print(X.shape)
    debug = True
 
 
@@ -42,10 +43,12 @@ pipe = Hyperpipe('Limbic_System',
 batch_size = 100
 neuro_branch = NeuroModuleBranch('NeuroBranch') #, nr_of_processes=4)
 neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': Categorical([3, 5])}, batch_size=batch_size)
-#neuro_branch += CallbackElement('monitor_my_neuro_branch', my_monitor)
+neuro_branch += CallbackElement('resample_monitor', my_monitor)
 neuro_branch += PipelineElement('SmoothImages', {'fwhm': Categorical([6, 12])}, batch_size=batch_size)
+neuro_branch += CallbackElement('smooth_monitor', my_monitor)
 # neuro_branch += PipelineElement('BrainAtlas', rois=['Hippocampus_L', 'Hippocampus_R', 'Amygdala_L', 'Amygdala_R'], atlas_name="AAL", extract_mode='vec', batch_size=20)
 neuro_branch += PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter', extract_mode='vec', batch_size=batch_size)
+neuro_branch += CallbackElement('mask_monitor', my_monitor)
 #neuro_branch += PipelineElement('BrainMask', mask_image='MNI_ICBM152_WholeBrain', extract_mode='vec', batch_size=20)
 pipe += neuro_branch
 #pipe += CallbackElement('monitor_parallel_branch', my_monitor)
