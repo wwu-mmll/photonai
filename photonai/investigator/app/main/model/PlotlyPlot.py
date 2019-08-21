@@ -8,7 +8,7 @@ class PlotlyPlot:
     """
 
     def __init__(self, plot_name: str, title: str, traces: list=None, show_legend: bool=True,
-                 xlabel: str='', ylabel: str=''):
+                 xlabel: str='', ylabel: str='', regression_line: bool = False):
         """ Constructor
         :param plot_name: Name of the div-Element which will show the plot
         :param title: title of the plot
@@ -23,6 +23,7 @@ class PlotlyPlot:
         self.show_legend = show_legend
         self.xlabel = xlabel
         self.ylabel = ylabel
+        self.regression_line = regression_line
 
     def trace_names_to_string(self) -> str:
         """ Returns a comma separated string of containing trace names
@@ -30,7 +31,7 @@ class PlotlyPlot:
         """
         result = ""
         for item in self.traces:
-            result += str(item.variable_name) + ","
+            result += "'" + str(item.variable_name) + "',"
         return result.rstrip(',')
 
     def add_trace(self, trace: PlotlyTrace):
@@ -45,9 +46,10 @@ class PlotlyPlot:
         """
 
         result = ""
-
-        for item in self.traces:
-            result += "var " + item.variable_name + " = { x: [" + item.get_x_to_string() + "]"
+        trace_names = list()
+        for i, item in enumerate(self.traces):
+            trace_names.append("trace_{}, ".format(i))
+            result += "var trace_{}".format(i) + " = { x: [" + item.get_x_to_string() + "]"
             result += ", y: [" + item.get_y_to_string() + "]"
             result += ", name: '" + item.variable_name + "'"
             result += ", mode: '" + item.mode + "'"
@@ -74,7 +76,10 @@ class PlotlyPlot:
         if self.xlabel:
             result += ", xaxis: {{title: '{}'}}""".format(self.xlabel)
         result += "};"
-        result += str("var data = [" + self.trace_names_to_string() + "];")
+        result += str("var data = [")
+        for trace_name in trace_names:
+            result += trace_name
+        result += "];"
         result += str("Plotly.newPlot('" + str(self.plot_name) + "', data, layout);")
 
         return result

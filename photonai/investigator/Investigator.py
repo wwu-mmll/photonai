@@ -40,6 +40,7 @@ class Investigator:
         # make sure that Flask is running
         FlaskManager().set_pipe_object(pipe.name, pipe.result_tree)
         url = Investigator.__build_url("a", pipe.name)
+        Logger().info("Your url is: " + url)
         Investigator.__delayed_browser(url)
         FlaskManager().run_app()
 

@@ -8,7 +8,7 @@ from ..model.PlotlyPlot import PlotlyPlot
 from ..model.PlotlyTrace import PlotlyTrace
 from ..model.BestConfigTrace import BestConfigTrace
 from ..model.BestConfigPlot import BestConfigPlot
-from ..model.Figures import plotly_confusion_matrix
+from ..model.Figures import plotly_confusion_matrix, plot_scatter
 from .helper import load_pipe, load_available_pipes
 
 
@@ -44,64 +44,34 @@ def show_outer_fold(storage, name, fold_nr):
         # building plot out of traces
         best_config_plot = BestConfigPlot('best_config_overview', 'Best Configuration Overview', metric_training_trace, metric_validation_trace)
 
+        #---------------------
+        # Training
+        #---------------------
         # START building final values for training set (best config)
-        count_item = int(0)
-        true_training_trace = PlotlyTrace('y_true', 'markers', 'scatter')
-        pred_training_trace = PlotlyTrace('y_pred', 'markers', 'scatter')
-
-        for true_item in outer_fold.best_config.inner_folds[default_fold_best_config].training.y_true:
-            true_training_trace.add_x(count_item)
-            true_training_trace.add_y(true_item)
-            count_item += 1
-
-        # reset count variable
-        count_item = int(0)
-
-        for pred_item in outer_fold.best_config.inner_folds[default_fold_best_config].training.y_pred:
-            pred_training_trace.add_x(count_item)
-            pred_training_trace.add_y(pred_item)
-            count_item += 1
-
-        list_final_value_training_traces = list()
-        list_final_value_training_traces.append(true_training_trace)
-        list_final_value_training_traces.append(pred_training_trace)
-
-        final_value_training_plot = PlotlyPlot('best_config_training_values', 'True/Predict for training set', list_final_value_training_traces)
+        y_true = outer_fold.best_config.inner_folds[default_fold_best_config].training.y_true
+        y_pred = outer_fold.best_config.inner_folds[default_fold_best_config].training.y_pred
+        if pipe.estimation_type == 'classifier':
+            final_value_training_plot = plotly_confusion_matrix('best_config_training_values',
+                                        y_true, y_pred)
+        else:
+            final_value_training_plot = plot_scatter([[y_true, y_pred]],
+                                                     title='True/Predict for Training Set',
+                                                     name='best_config_training_values')
         # END building final values for training set (best config)
 
-
         #---------------------
-        # Confusion Matrix
+        # Validation
         #---------------------
+        y_true = outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_true
+        y_pred = outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_pred
         if pipe.estimation_type == 'classifier':
             final_value_validation_plot = plotly_confusion_matrix('best_config_validation_values',
-                                        outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_true,
-                                        outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_pred)
+                                        y_true, y_pred)
         else:
-
             # START building final values for validation set (best config)
-            count_item = int(0)
-            true_validation_trace = PlotlyTrace('y_true', 'markers', 'scatter')
-            pred_validation_trace = PlotlyTrace('y_pred', 'markers', 'scatter')
-
-            for true_item in outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_true:
-                true_validation_trace.add_x(count_item)
-                true_validation_trace.add_y(true_item)
-                count_item += 1
-
-            # reset count variable
-            count_item = int(0)
-
-            for pred_item in outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_pred:
-                pred_validation_trace.add_x(count_item)
-                pred_validation_trace.add_y(pred_item)
-                count_item += 1
-
-            list_final_value_validation_traces = list()
-            list_final_value_validation_traces.append(true_validation_trace)
-            list_final_value_validation_traces.append(pred_validation_trace)
-
-            final_value_validation_plot = PlotlyPlot('best_config_validation_values', 'True/Predict for validation set', list_final_value_validation_traces).to_plot()
+            final_value_validation_plot = plot_scatter([[y_true, y_pred]],
+                                                       title='True/Predict for Validation Set',
+                                                       name='best_config_validation_values')
             # END building final values for validation set (best config)
 
         # START building plot objects for each tested config

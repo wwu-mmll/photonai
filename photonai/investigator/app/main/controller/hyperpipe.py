@@ -10,7 +10,7 @@ from ..model.BestConfigPlot import BestConfigPlot
 from ..model.PlotlyTrace import PlotlyTrace
 from ..model.PlotlyPlot import PlotlyPlot
 from .helper import load_pipe, load_available_pipes
-from ..model.Figures import plotly_optimizer_history
+from ..model.Figures import plotly_optimizer_history, plot_scatter, plotly_confusion_matrix
 
 
 @application.route('/pipeline/<storage>')
@@ -57,6 +57,21 @@ def show_pipeline(storage, name):
         # overview plot on top of the page
         overview_plot_train = PlotlyPlot("overview_plot_training", "Training Performance", show_legend=False)
         overview_plot_test = PlotlyPlot("overview_plot_test", "Test Performance", show_legend=False)
+
+        # confusion matrix or scatter plot
+        true_and_pred_val = list()
+        true_and_pred_train = list()
+        for fold in pipe.outer_folds:
+            true_and_pred_val.append([fold.best_config.inner_folds[default_fold_best_config].validation.y_true,
+                                  fold.best_config.inner_folds[default_fold_best_config].validation.y_pred])
+            true_and_pred_train.append([fold.best_config.inner_folds[default_fold_best_config].training.y_true,
+                                  fold.best_config.inner_folds[default_fold_best_config].training.y_pred])
+        if pipe.estimation_type == 'regressor':
+            predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train', 'True/Pred Training')
+            predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
+        else:
+            predictions_plot_test = ''
+            predictions_plot_train = ''
 
         for fold in pipe.outer_folds:
 
@@ -143,6 +158,8 @@ def show_pipeline(storage, name):
         return render_template('outer_folds/index.html', pipe=pipe, best_config_plot_list=best_config_plot_list,
                                overview_plot_train=overview_plot_train,
                                overview_plot_test=overview_plot_test,
+                               predictions_plot_train=predictions_plot_train,
+                               predictions_plot_test=predictions_plot_test,
                                optimizer_history=optimizer_history,
                                s=storage,
                                available_pipes=available_pipes)

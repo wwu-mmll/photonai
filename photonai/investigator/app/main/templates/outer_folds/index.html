@@ -96,6 +96,34 @@
             </div>
         </div>
 
+       <div class="box box-solid">
+            <div class="box-header">
+                <h1 class="box-title">Training and Test Predictions</h1>
+            </div>
+            <div class="box-body">
+                <div class="col-md-6">
+                    <div id="predictions_plot_train">
+                        <!-- graph best_config_overview will be shown here -->
+
+                        </div>
+                    <script>
+                        {{ predictions_plot_train | safe }}
+                    </script>
+
+                </div>
+                <div class="col-md-6">
+                    <div id="predictions_plot_test">
+
+                    </div>
+                    <script>
+                    {{ predictions_plot_test | safe }}
+                    </script>
+
+                </div>
+
+            </div>
+        </div>
+
         <div class="row">
             {% if pipe.outer_folds %}
                 {% for outer_fold in pipe.outer_folds %}
