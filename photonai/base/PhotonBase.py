@@ -146,7 +146,7 @@ class OutputSettings:
             self.pretrained_model_filename = self._add_timestamp(self.pretrained_model_filename)
             self.predictions_filename = self._add_timestamp(self.predictions_filename)
             if not os.path.exists(self.results_folder):
-                os.mkdir(self.results_folder)
+                os.makedirs(self.results_folder)
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
             self.local_file = self._add_timestamp(self.local_file)
             self.log_file = self._add_timestamp(self.log_file)
@@ -284,7 +284,7 @@ class Hyperpipe(BaseEstimator):
         if cache_folder:
             self.cache_folder = os.path.join(cache_folder, self.name)
         else:
-            self.cache_folder = cache_folder
+            self.cache_folder = None
         # ====================== Cross Validation ===========================
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
                                                           outer_cv=outer_cv,
