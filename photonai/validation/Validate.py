@@ -509,6 +509,7 @@ class Scorer(object):
         'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
         'r2': ('sklearn.metrics', 'r2_score', 'score'),
         'pearson_correlation': ('photonai.validation.Metrics', 'pearson_correlation', 'score'),
+        'spearman_correlation': ('photonai.validation.Metrics', 'spearman_correlation', 'score'),
         'variance_explained':  ('photonai.validation.Metrics', 'variance_explained_score', 'score')
 
     }
