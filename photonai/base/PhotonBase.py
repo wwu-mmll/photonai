@@ -1484,14 +1484,16 @@ class PipelineElement(BaseEstimator):
             # in this case, we want to skip the transformation and pass X, None and kwargs onwards
             # so basically, we skip all training_only steps
             # todo: I think, there's no way around this if we want to pass y and kwargs down to children of Switch and Branch
-            if isinstance(self, (PipelineSwitch, PipelineBranch)):
+            if isinstance(self, (PipelineSwitch, PipelineBranch, PreprocessingPipe)):
                 X, y, kwargs = delegate(X, y, **kwargs)
             else:
                 if y is not None:
                     # todo: in case a method needs y, we should also always pass kwargs
                     # i.e. if we change the number of samples, we also need to apply that change to all kwargs
-                    X, y, kwargs = delegate(X, y, **kwargs)
-
+                    if self.needs_covariates:
+                        X, y, kwargs = delegate(X, y, **kwargs)
+                    else:
+                        X, y = delegate(X, y)
         elif self.needs_covariates:
             X, kwargs = delegate(X, **kwargs)
 
