@@ -1567,8 +1567,6 @@ class PipelineBranch(PipelineElement):
             The object to add, being either a transformer or an estimator.
 
         """
-        if pipe_element.needs_y:
-            raise ValueError("Child Element of PipelineBranch must not transform y")
         self.pipeline_elements.append(pipe_element)
         self._prepare_pipeline()
         return self
