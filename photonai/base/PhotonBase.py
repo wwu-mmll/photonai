@@ -1286,7 +1286,7 @@ class PipelineElement(BaseEstimator):
         self.base_element.set_params(**kwargs)
         return self
 
-    def fit(self, data, targets=None, **kwargs):
+    def fit(self, X, y=None, **kwargs):
         """
         Calls the fit function of the base element
 
@@ -1301,9 +1301,9 @@ class PipelineElement(BaseEstimator):
                 vals = arg_list.parameters.values()
                 kwargs_param = list(vals)[-1]
                 if kwargs_param.kind == kwargs_param.VAR_KEYWORD:
-                    obj.fit(data, targets, **kwargs)
+                    obj.fit(X, y, **kwargs)
                     return self
-            obj.fit(data, targets)
+            obj.fit(X, y)
         return self
 
     def __batch_predict(self, delegate, X, **kwargs):
@@ -1329,17 +1329,19 @@ class PipelineElement(BaseEstimator):
 
         return processed_y
 
-    def __predict(self, data, **kwargs):
+    def __predict(self, X, **kwargs):
         if not self.disabled:
             if hasattr(self.base_element, 'predict'):
                 # Todo: check if element has kwargs, and give it to them
-                return self.base_element.predict(data)
+                # todo: so this todo above was old, here are my changes:
+                #return self.base_element.predict(X)
+                return self.adjusted_predict_call(self.base_element.predict, X, **kwargs)
             else:
                 Logger().error('BaseException. base Element should have function ' +
                                'predict.')
                 raise BaseException('base Element should have function predict.')
         else:
-            return data
+            return X
 
     def predict(self, X, **kwargs):
         """
@@ -1356,7 +1358,7 @@ class PipelineElement(BaseEstimator):
         else:
             return self.__batch_predict(self.__predict_proba(X, **kwargs))
 
-    def __predict_proba(self, data, **kwargs):
+    def __predict_proba(self, X, **kwargs):
         """
         Predict probabilities
         base element needs predict_proba() function, otherwise throw
@@ -1364,11 +1366,13 @@ class PipelineElement(BaseEstimator):
         """
         if not self.disabled:
             if hasattr(self.base_element, 'predict_proba'):
-                return self.base_element.predict_proba(data)
+                # todo: here, I used delegate call (same as below in predict within the transform call)
+                #return self.base_element.predict_proba(X)
+                return self.adjusted_predict_call(self.base_element.predict_proba, X, **kwargs)
             else:
                 Logger().error('BaseException. base Element should have "predict_proba" function.')
                 raise BaseException('base Element should have predict_proba function.')
-        return data
+        return X
 
     # def fit_predict(self, data, targets):
     #     if not self.disabled:
@@ -1383,7 +1387,10 @@ class PipelineElement(BaseEstimator):
             elif hasattr(self.base_element, 'predict'):
                 # Logger().warn("used prediction instead of transform " + self.name)
                 # raise Warning()
-                return self.base_element.predict(X), y, kwargs
+                # todo: here, I used delegate call instead to differentiate between estimator that need kwargs and those which don't
+                self.adjusted_delegate_call(self.base_element.predict, X, y, **kwargs)
+                #return self.base_element.predict(X), y, kwargs
+
             else:
                 Logger().error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
@@ -1451,32 +1458,43 @@ class PipelineElement(BaseEstimator):
         # Case| transforms X | needs_y | needs_covariates
         # -------------------------------------------------------
         #   1         yes        no           no     = transform(X) -> returns Xt
+
+        # todo: case does not exist any longer
+
         #   2         yes        yes          no     = transform(X, y) -> returns Xt, yt
+
         #   3         yes        yes          yes    = transform(X, y, kwargs) -> returns Xt, yt, kwargst
         #   4         yes        no           yes    = transform(X, kwargs) -> returns Xt, kwargst
         #   5         no      yes or no      yes or no      = NOT ALLOWED
 
+        # todo: we don't need to check for PipelineSwitch, PipelineStack or PipelineBranch since those classes define
+        # needs_y and needs_covariates in their __init__()
         if self.needs_y:
-            # if we dont have any target vector, we should be in "predict"-mode,
-            # so we skip all training_only steps
-            if y is not None:
-                if self.needs_covariates:
+            # if we dont have any target vector, we are in "predict"-mode although we are currently transforming
+            # in this case, we want to skip the transformation and pass X, None and kwargs onwards
+            # so basically, we skip all training_only steps
+            # todo: I think, there's no way around this if we want to pass y and kwargs down to children of Switch and Branch
+            if isinstance(self, (PipelineSwitch, PipelineBranch)):
+                X, y, kwargs = delegate(X, y, **kwargs)
+            else:
+                if y is not None:
+                    # todo: in case a method needs y, we should also always pass kwargs
+                    # i.e. if we change the number of samples, we also need to apply that change to all kwargs
                     X, y, kwargs = delegate(X, y, **kwargs)
-                else:
-                    X, y = delegate(X, y)
 
         elif self.needs_covariates:
-            # we need an extra arrangement here, because we reuse code
-            if isinstance(self, (PipelineBranch, PipelineStack)):
-                X, _, _ = delegate(X, None, **kwargs)
-            else:
-                X, kwargs = delegate(X, **kwargs)
+            X, kwargs = delegate(X, **kwargs)
+
         else:
             X = delegate(X)
 
         return X, y, kwargs
 
-
+    def adjusted_predict_call(self, delegate, X, **kwargs):
+        if self.needs_covariates:
+            return delegate(X, **kwargs)
+        else:
+            return delegate(X)
 
     def score(self, X_test, y_test):
         """
@@ -1515,7 +1533,7 @@ class PipelineBranch(PipelineElement):
         super().__init__(name, {}, test_disabled=False, disabled=False, base_element=True)
 
         # in case any of the children needs y or covariates we need to request them
-        self.needs_y = False
+        self.needs_y = True
         self.needs_covariates = True
         self.pipeline_elements = []
         self.has_hyperparameters = True
@@ -1530,8 +1548,8 @@ class PipelineBranch(PipelineElement):
     def transform(self, X, y=None, **kwargs):
         return super().transform(X, y, **kwargs)
 
-    def predict(self, data, **kwargs):
-        return super().predict(data, **kwargs)
+    def predict(self, X, **kwargs):
+        return super().predict(X, **kwargs)
 
     def __iadd__(self, pipe_element):
         """
@@ -1695,7 +1713,7 @@ class PipelineStack(PipelineElement):
             for item_to_stack in stacking_elements:
                 self.__iadd__(item_to_stack)
 
-        # in case any of the children needs y or the covariates, we have to request them
+        # todo: PipelineStack should not be allowed to change y, only covariates
         self.needs_y = False
         self.needs_covariates = True
 
@@ -1708,7 +1726,7 @@ class PipelineStack(PipelineElement):
             The Element that should be stacked and will run in a vertical parallelization in the original pipe.
         """
 
-        if item.needs_y:
+        if item.needs_y and not isinstance(item, (PipelineBranch, PipelineSwitch)):
             raise ValueError("Elements in stacking must not transform y because you cannot seriously want to "
                              "concatenate target vectors after parallelization of items finished.")
 
@@ -1771,16 +1789,16 @@ class PipelineStack(PipelineElement):
                 raise NameError('Could not find element ', name)
         return self
 
-    def fit(self, data, targets=None, **kwargs):
+    def fit(self, X, y=None, **kwargs):
         """
         Calls fit iteratively on every child
         """
         for name, element in self.pipe_elements.items():
             # Todo: parallellize fitting
-            element.fit(data, targets, **kwargs)
+            element.fit(X, y, **kwargs)
         return self
 
-    def predict(self, data, targets=None, **kwargs):
+    def predict(self, X, y=None, **kwargs):
         """
         Iteratively calls predict on every child.
         """
@@ -1788,22 +1806,22 @@ class PipelineStack(PipelineElement):
         # todo: parallelize prediction
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
-            element_transform = element.predict(data, **kwargs)
+            element_transform = element.predict(X, **kwargs)
             predicted_data = PipelineStack.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
                 if len(predicted_data.shape) > 1:
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
-        return predicted_data, targets, kwargs
+        return predicted_data, y, kwargs
 
-    def predict_proba(self, data, **kwargs):
+    def predict_proba(self, X, **kwargs):
         """
         Predict probabilities for every pipe element and
         stack them together. Alternatively, do voting instead.
         """
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
-            element_transform = element.predict_proba(data)
+            element_transform = element.predict_proba(X)
             predicted_data = PipelineStack.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
@@ -1811,7 +1829,7 @@ class PipelineStack(PipelineElement):
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data
 
-    def transform(self, data, targets=None, **kwargs):
+    def transform(self, X, y=None, **kwargs):
         """
         Calls transform on every child.
 
@@ -1820,10 +1838,10 @@ class PipelineStack(PipelineElement):
         transformed_data = np.array([])
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
-                element_transform, _, _ = element.transform(data, targets, **kwargs)
+                element_transform, _, _ = element.transform(X, y, **kwargs)
                 transformed_data = PipelineStack.stack_data(transformed_data, element_transform)
 
-        return transformed_data, targets, kwargs
+        return transformed_data, y, kwargs
 
     def copy_me(self):
         ps = PipelineStack(self.name, voting=self.voting)
@@ -2106,7 +2124,6 @@ class PipelineSwitch(PipelineElement):
         ps.base_element = self.base_element
         return ps
 
-
     def prettify_config_output(self, config_name, config_value, return_dict=False):
 
         """
@@ -2132,7 +2149,7 @@ class PipelineSwitch(PipelineElement):
         else:
             return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
 
-    def predict_proba(self, data):
+    def predict_proba(self, X, **kwargs):
         """
         Predict probabilities
         base element needs predict_proba() function, otherwise throw
@@ -2140,10 +2157,10 @@ class PipelineSwitch(PipelineElement):
         """
         if not self.disabled:
             if hasattr(self.base_element.base_element, 'predict_proba'):
-                return self.base_element.predict_proba(data)
+                return self.base_element.predict_proba(X)
             else:
                 return None
-        return data
+        return X
 
     def _check_hyper(self,BaseEstimator):
         pass
@@ -2154,7 +2171,7 @@ class CallbackElement(PhotonNative):
     def __init__(self, name, delegate_function, method_to_monitor='transform'):
 
         self.needs_covariates = True
-        self.needs_y = False
+        self.needs_y = True
         self.name = name
         self.delegate_function = delegate_function
         self.method_to_monitor = method_to_monitor
