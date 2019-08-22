@@ -290,6 +290,11 @@ class Hyperpipe(BaseEstimator):
         else:
             self.cache_folder = None
         # ====================== Cross Validation ===========================
+        # check if both calculate_metrics_per_folds and calculate_metrics_across_folds is False
+        if not calculate_metrics_across_folds and not calculate_metrics_per_fold:
+            raise NotImplementedError("Apparently, you've set calculate_metrics_across_folds=False and "
+                                      "calculate_metrics_per_fold=False. In this case PHOTON does not calculate "
+                                      "any metrics which doesn't make any sense. Set at least one to True.")
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
                                                           outer_cv=outer_cv,
                                                           eval_final_performance=eval_final_performance,
