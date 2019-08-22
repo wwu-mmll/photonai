@@ -1728,10 +1728,7 @@ class PipelineStack(PipelineElement):
         * `item` [PipelineElement or PipelineBranch or Hyperpipe]:
             The Element that should be stacked and will run in a vertical parallelization in the original pipe.
         """
-
-        if item.needs_y and not isinstance(item, (PipelineBranch, PipelineSwitch)):
-            raise ValueError("Elements in stacking must not transform y because you cannot seriously want to "
-                             "concatenate target vectors after parallelization of items finished.")
+        self.check_if_needs_y(item)
 
         self.pipe_elements[item.name] = item
         # self._hyperparameters[item.name] = item.hyperparameters
@@ -1746,6 +1743,20 @@ class PipelineStack(PipelineElement):
                 self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
 
         return self
+
+    def check_if_needs_y(self, item):
+        if isinstance(item, PipelineBranch):
+            for branch_item in item.pipeline_elements:
+                self.check_if_needs_y(branch_item)
+        elif isinstance(item, PipelineStack):
+            for stack_item in item.pipe_elements:
+                self.check_if_needs_y(stack_item)
+        elif isinstance(item, PipelineElement):
+            if item.needs_y:
+                raise NotImplementedError("Elements in PipelineStack must not transform y because the number of samples in every "
+                                 "element of the stack might differ. Then, it will not be possible to concatenate those "
+                                 "data and target matrices. Please use the transformer that is using y before or after "
+                                 "the stack.")
 
     def add(self, item):
         self.__iadd__(item)
@@ -1817,7 +1828,7 @@ class PipelineStack(PipelineElement):
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data, y, kwargs
 
-    def predict_proba(self, X, **kwargs):
+    def predict_proba(self, X, y=None, **kwargs):
         """
         Predict probabilities for every pipe element and
         stack them together. Alternatively, do voting instead.
