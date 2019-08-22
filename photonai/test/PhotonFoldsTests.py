@@ -16,7 +16,7 @@ class FoldInfoTests(unittest.TestCase):
     def test_class_distribution_info(self):
         unique, counts = np.unique(self.__y, return_counts=True)
         nr_dict = FoldInfo._data_overview(self.__y)
-        self.assertEqual(counts[1], nr_dict[1])
+        self.assertEqual(counts[1], nr_dict['1'])
 
 
 class DataHelperTests(unittest.TestCase):
