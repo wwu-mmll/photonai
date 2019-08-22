@@ -770,28 +770,29 @@ class Hyperpipe(BaseEstimator):
             self.data.X, self.data.y, self.data.kwargs = self.preprocessing_pipe.transform(self.data.X, self.data.y,
                                                                                            **self.data.kwargs)
 
-    def _check_for_estimator(self):
-        last_element = self.pipeline_elements[-1]
+    def _check_for_estimator(self, last_element=None):
+        if not last_element:
+            last_element = self.pipeline_elements[-1]
         if isinstance(last_element, PipelineSwitch):
             # if PipelineSwitch, just take the first element within the switch; this should be a regressor or classifier
-            last_element = last_element.pipeline_element_list[0]
+            self._check_for_estimator(last_element.pipeline_element_list[0])
         elif isinstance(last_element, PipelineStack):
             # if PipelineStack, just take random element from stack
-            last_element = last_element.pipe_elements.popitem()
+            self._check_for_estimator(last_element.pipe_elements.popitem())
         elif isinstance(last_element, PipelineBranch):
             # if PipelineBranch, just take last element of branch
-            last_element = last_element.pipeline_elements[-1]
-
-        if not hasattr(last_element.base_element, '_estimator_type'):
-            raise NotImplementedError("Last pipeline element has to be an estimator. Your estimator does not specify"
-                                      " whether it is a regressor or classifier. Make sure to inherit from sklearn's "
-                                      "ClassifierMixin or RegressorMixin or set _estimator_type explicitly.")
-        estimator_type = last_element.base_element._estimator_type
-        last_name = last_element.name
-        self.estimation_type = estimator_type
-        if not (estimator_type == 'classifier' or estimator_type == 'regressor'):
-            raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
-                                                                                                        estimator_type))
+            self._check_for_estimator(last_element.pipeline_elements[-1])
+        else:
+            if not hasattr(last_element.base_element, '_estimator_type'):
+                raise NotImplementedError("Last pipeline element has to be an estimator. Your estimator does not specify"
+                                          " whether it is a regressor or classifier. Make sure to inherit from sklearn's "
+                                          "ClassifierMixin or RegressorMixin or set _estimator_type explicitly.")
+            estimator_type = last_element.base_element._estimator_type
+            last_name = last_element.name
+            self.estimation_type = estimator_type
+            if not (estimator_type == 'classifier' or estimator_type == 'regressor'):
+                raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
+                                                                                                            estimator_type))
 
     def fit(self, data, targets, **kwargs):
         """
@@ -1370,8 +1371,12 @@ class PipelineElement(BaseEstimator):
                 #return self.base_element.predict_proba(X)
                 return self.adjusted_predict_call(self.base_element.predict_proba, X, **kwargs)
             else:
-                Logger().error('BaseException. base Element should have "predict_proba" function.')
-                raise BaseException('base Element should have predict_proba function.')
+
+                # todo: in case _final_estimator is a PipelineBranch, we do not know beforehand it the base elements will
+                #  have a predict_proba -> if not, just return None (@Ramona, does this make sense?)
+                #Logger().error('BaseException. base Element should have "predict_proba" function.')
+                #raise BaseException('base Element should have predict_proba function.')
+                return None
         return X
 
     # def fit_predict(self, data, targets):
@@ -1957,11 +1962,26 @@ class PipelineSwitch(PipelineElement):
 
         if pipeline_element_list:
             self.pipeline_element_list = pipeline_element_list
+            self.is_transformer, self.is_estimator = self.check_if_estimator_or_transformer(pipeline_element_list[-1])
             self.generate_private_config_grid()
             for p_element in pipeline_element_list:
                 self.pipeline_element_dict[p_element.name] = p_element
         else:
             self.pipeline_element_list = []
+
+    def check_if_estimator_or_transformer(self, pipeline_element):
+        if isinstance(pipeline_element, PipelineBranch):
+            return self.check_if_estimator_or_transformer(pipeline_element.pipeline_elements[-1])
+        elif isinstance(pipeline_element, PipelineSwitch):
+            return self.check_if_estimator_or_transformer(pipeline_element.pipeline_element_list[0])
+        elif isinstance(pipeline_element, PipelineStack):
+            return self.check_if_estimator_or_transformer(pipeline_element.pipe_elements[0])
+        elif isinstance(pipeline_element, PipelineElement):
+            if hasattr(pipeline_element, "is_estimator"):
+                return (not pipeline_element.is_estimator, pipeline_element.is_estimator)
+            else:
+                # assuming Switch to be estimator
+                return False, True
 
     def __iadd__(self, pipeline_element):
         """
@@ -1972,16 +1992,8 @@ class PipelineSwitch(PipelineElement):
         * `pipeline_element` [PipelineElement]:
             Item that should be tested against other competing elements at that position in the pipeline.
         """
-        if hasattr(pipeline_element, "is_estimator"):
-            self.is_estimator = pipeline_element.is_estimator
-        else:
-            Logger().warn("Could not find out if pipeline switch is an estimator element, so assuming it is")
-            self.is_estimator = True
-        if hasattr(pipeline_element, "is_transformer"):
-            self.is_transformer = pipeline_element.is_transformer
-        else:
-            Logger().warn("Could not find out if pipeline switch is an transformer element, so assuming it is not.")
-            self.is_estimator = False
+        self.is_transformer, self.is_estimator = self.check_if_estimator_or_transformer(pipeline_element)
+
         self.pipeline_element_list.append(pipeline_element)
         if not pipeline_element.name in self.pipeline_element_dict:
             self.pipeline_element_dict[pipeline_element.name] = pipeline_element
