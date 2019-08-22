@@ -29,7 +29,7 @@ pipe = Hyperpipe('confounder_removal_example',
 # pipe += PipelineElement('SVC')
 
 # second, you can also specify the names of the variables that should be used in the confounder removal step
-pipe += PipelineElement('ConfounderRemoval', {}, standardize_covariates=True, test_disabled=False,
+pipe += PipelineElement('ConfounderRemoval', {}, standardize_covariates=True, test_disabled=True,
                         confounder_names=['mean_radius', 'mean_texture'])
 pipe += PipelineElement('SVC')
 # those names must be keys in the kwargs dictionary
