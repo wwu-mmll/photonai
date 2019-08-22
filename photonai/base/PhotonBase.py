@@ -1380,7 +1380,7 @@ class PipelineElement(BaseEstimator):
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
                 return self.adjusted_delegate_call(self.base_element.transform, X, y, **kwargs)
-            elif hasattr(self.base_element, 'predict', **kwargs):
+            elif hasattr(self.base_element, 'predict'):
                 # Logger().warn("used prediction instead of transform " + self.name)
                 # raise Warning()
                 return self.base_element.predict(X), y, kwargs
@@ -1457,7 +1457,7 @@ class PipelineElement(BaseEstimator):
         #   5         no      yes or no      yes or no      = NOT ALLOWED
 
         if self.needs_y:
-            # if we dont have any target vector we are in the application state,
+            # if we dont have any target vector, we should be in "predict"-mode,
             # so we skip all training_only steps
             if y is not None:
                 if self.needs_covariates:
