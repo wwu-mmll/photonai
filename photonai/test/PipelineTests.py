@@ -193,7 +193,9 @@ class PipelineTests(unittest.TestCase):
 class CacheManagerTests(unittest.TestCase):
 
     def setUp(self):
-        self.cache_man = CacheManager("123353423434", "/home/rleenings/Projects/TestNeuro/cache/")
+        cache_folder = "./cache/"
+        os.makedirs(cache_folder, exist_ok=True)
+        self.cache_man = CacheManager("123353423434", cache_folder)
         self.X, self.y, self.kwargs = np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3, 4, 5]), {'covariates': [9, 8, 7, 6, 5]}
 
         self.config1 = {'PCA__n_components': 5,
