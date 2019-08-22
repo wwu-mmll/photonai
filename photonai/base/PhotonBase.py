@@ -668,7 +668,7 @@ class Hyperpipe(BaseEstimator):
         # set self to best config
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config.config_dict)
-        self.recursive_cash_folder_propagation(self.optimum_pipe, self.cache_folder, "fixed_fold_id")
+        self.recursive_cash_folder_propagation(self.optimum_pipe, self.cache_folder, None)
         self.optimum_pipe.caching = False
         Logger().info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
@@ -1398,7 +1398,7 @@ class PipelineElement(BaseEstimator):
                 # Logger().warn("used prediction instead of transform " + self.name)
                 # raise Warning()
                 # todo: here, I used delegate call instead to differentiate between estimator that need kwargs and those which don't
-                self.adjusted_delegate_call(self.base_element.predict, X, y, **kwargs)
+                return self.adjusted_delegate_call(self.base_element.predict, X, y, **kwargs)
                 #return self.base_element.predict(X), y, kwargs
 
             else:
