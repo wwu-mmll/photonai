@@ -246,9 +246,13 @@ class OuterFoldManager:
             if not current_config_mdb.config_failed:
                 # get optimizer_metric and forward to optimizer
                 # todo: also pass greater_is_better=True/False to optimizer
-                metric_train = MDBHelper.get_metric(current_config_mdb, FoldOperations.MEAN,
+                if self.cross_validaton_info.calculate_metrics_per_fold:
+                    fold_operation = FoldOperations.MEAN
+                else:
+                    fold_operation = FoldOperations.RAW
+                metric_train = MDBHelper.get_metric(current_config_mdb, fold_operation,
                                                     self.optimization_info.best_config_metric)
-                metric_test = MDBHelper.get_metric(current_config_mdb, FoldOperations.MEAN,
+                metric_test = MDBHelper.get_metric(current_config_mdb, fold_operation,
                                                    self.optimization_info.best_config_metric, train=False)
 
                 if not metric_train or not metric_test:
