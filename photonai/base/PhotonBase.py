@@ -1,3 +1,7 @@
+import warnings
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 import glob
 import importlib.util
 import inspect
@@ -30,10 +34,6 @@ from ..optimization.SkOpt import SkOptOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import Scorer
 from .PhotonPipeline import PhotonPipeline, CacheManager
-
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 class PhotonNative:
@@ -668,13 +668,15 @@ class Hyperpipe(BaseEstimator):
         # set self to best config
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config.config_dict)
-        self.recursive_cash_folder_propagation(self.optimum_pipe, self.cache_folder, 'fixed_fold_id')
+
+        # set caching
+        # we want caching disabled in general but still want to do single subject caching
+        self.recursive_cache_folder_propagation(self.optimum_pipe, self.cache_folder, 'fixed_fold_id')
         self.optimum_pipe.caching = False
         Logger().info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
         # Now truely set to no caching (including single_subject_caching)
-        self.recursive_cash_folder_propagation(self.optimum_pipe, self.cache_folder, None)
-        self.optimum_pipe.caching = False
+        self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
         Logger().info("Saving best model..")
         if self.output_settings.pretrained_model_filename != '':
@@ -746,29 +748,58 @@ class Hyperpipe(BaseEstimator):
 
     @staticmethod
     def prepare_caching(cache_folder):
-        if not os.path.isdir(cache_folder):
-            os.makedirs(cache_folder)
+        if cache_folder and not os.path.isdir(cache_folder):
+            os.makedirs(cache_folder, exist_ok=True)
+
+    # @staticmethod
+    # def recursive_cache_folder_propagation(new_pipe, cache_folder, inner_fold_id):
+    #     new_pipe.cache_folder = cache_folder
+    #     new_pipe.fold_id = inner_fold_id
+    #     new_pipe.caching = True
+    #
+    #     if cache_folder:
+    #         for step_name, step_obj in new_pipe.steps:
+    #             if isinstance(step_obj, PipelineBranch):
+    #                 sub_cache = os.path.join(cache_folder, step_name)
+    #                 # Hyperpipe.prepare_caching(sub_cache)
+    #                 Hyperpipe.recursive_cache_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
+    #                 Hyperpipe.prepare_caching(step_obj.base_element.cache_folder)
+    #             elif isinstance(step_obj, PipelineStack):
+    #                 for child in step_obj.pipe_elements:
+    #                     if isinstance(child, PipelineBranch):
+    #                         sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
+    #                         # Hyperpipe.prepare_caching(sub_cache)
+    #                         Hyperpipe.recursive_cache_folder_propagation(child.base_element, sub_cache, inner_fold_id)
+    #                         Hyperpipe.prepare_caching(child.base_element.cache_folder)
 
     @staticmethod
-    def recursive_cash_folder_propagation(new_pipe, cache_folder, inner_fold_id):
-        new_pipe.cache_folder = cache_folder
-        new_pipe.fold_id = inner_fold_id
-        new_pipe.caching = True
+    def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
+        if isinstance(element, PipelineSwitch):
+            for child in element.pipeline_element_list:
+                Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
 
-        if cache_folder:
-            for step_name, step_obj in new_pipe.steps:
-                if isinstance(step_obj, PipelineBranch):
-                    sub_cache = os.path.join(cache_folder, step_name)
-                    # Hyperpipe.prepare_caching(sub_cache)
-                    Hyperpipe.recursive_cash_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
-                    Hyperpipe.prepare_caching(step_obj.base_element.cache_folder)
-                elif isinstance(step_obj, PipelineStack):
-                    for child in step_obj.pipe_elements:
-                        if isinstance(child, PipelineBranch):
-                            sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
-                            # Hyperpipe.prepare_caching(sub_cache)
-                            Hyperpipe.recursive_cash_folder_propagation(child.base_element, sub_cache, inner_fold_id)
-                            Hyperpipe.prepare_caching(child.base_element.cache_folder)
+        elif isinstance(element, PipelineStack):
+            for child in element.pipe_elements:
+                Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
+
+        elif isinstance(element, PipelineBranch):
+            # in case it's a PipelineBranch, we create a cache subfolder and propagate it to every child
+            if cache_folder:
+                cache_folder = os.path.join(cache_folder, element.name)
+            Hyperpipe.recursive_cache_folder_propagation(element.base_element, cache_folder, inner_fold_id)
+            Hyperpipe.prepare_caching(element.base_element.cache_folder)
+
+        elif isinstance(element, PhotonPipeline):
+            element.fold_id = inner_fold_id
+            element.cache_folder = cache_folder
+
+            # pipe.caching is automatically set to True or False by .cache_folder setter
+
+            for step_name, step_obj in element.steps:
+                # we need to check if any element is Branch, Stack or Swtich
+                Hyperpipe.recursive_cache_folder_propagation(step_obj, cache_folder, inner_fold_id)
+
+        # if it's a simple PipelineElement, then we just don't do anything
 
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
@@ -877,15 +908,15 @@ class Hyperpipe(BaseEstimator):
                     # 1. generate OuterFolds Object
 
                     outer_fold_computer = OuterFoldManager(self._copy_pipeline,
-                                                             self.optimization,
-                                                             outer_f.fold_id,
-                                                             self.cross_validation,
-                                                             save_feature_importances=self.output_settings.save_feature_importances,
-                                                             save_predictions=self.output_settings.save_predictions,
-                                                             save_best_config_feature_importances=self.output_settings.save_best_config_feature_importances,
-                                                             save_best_config_predictions=self.output_settings.save_best_config_predictions,
-                                                             cache_folder=self.cache_folder,
-                                                             cache_updater=self.recursive_cash_folder_propagation)
+                                                           self.optimization,
+                                                           outer_f.fold_id,
+                                                           self.cross_validation,
+                                                           save_feature_importances=self.output_settings.save_feature_importances,
+                                                           save_predictions=self.output_settings.save_predictions,
+                                                           save_best_config_feature_importances=self.output_settings.save_best_config_feature_importances,
+                                                           save_best_config_predictions=self.output_settings.save_best_config_predictions,
+                                                           cache_folder=self.cache_folder,
+                                                           cache_updater=self.recursive_cache_folder_propagation)
                     # 2. prepare
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
                     self.result_tree.outer_folds.append(outer_fold)
