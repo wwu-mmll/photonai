@@ -2289,7 +2289,7 @@ class PhotonModelPersistor:
 
             else:
                 try:
-                    joblib.dump(element, os.path.join(folder + filename) + '.pkl', compress=1)
+                    joblib.dump(element, os.path.join(folder, filename) + '.pkl', compress=1)
                     element_identifier[-1]['mode'] = 'pickle'
                 except:
                     raise NotImplementedError("Custom pipeline element must implement .save() method or "
