@@ -1457,13 +1457,12 @@ class PipelineElement(BaseEstimator):
         """
         Calls inverse_transform on the base element
         """
-        if self.batch_size == 0:
-            return self.__inverse_transform(X, y, **kwargs)
-        else:
-            return self.__batch_transform(X, y, **kwargs)
+        return self.__inverse_transform(X, y, **kwargs)
+
 
     def __inverse_transform(self, X, y=None, **kwargs):
         if hasattr(self.base_element, 'inverse_transform'):
+            # todo: check this
             X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
         return X, y, kwargs
 

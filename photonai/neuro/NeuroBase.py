@@ -137,6 +137,12 @@ class NeuroModuleBranch(PipelineBranch):
 
         return new_copy
 
+    def inverse_transform(self, X, y=None, **kwargs):
+        for transform in self.pipeline_elements[::-1]:
+            if hasattr(transform, 'inverse_transform'):
+                X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
+        return X, y, kwargs
+
     class ImageJob:
 
         def __init__(self, data, delegate, lock_setter=None, job_key=0, sort_index=0):

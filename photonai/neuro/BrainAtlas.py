@@ -4,6 +4,7 @@ import inspect
 import glob
 from nilearn.input_data import NiftiMasker
 from nilearn import image, masking, _utils
+from nilearn.masking import unmask
 from nilearn._utils.niimg import _safe_get_data
 import nibabel as nib
 import time
@@ -283,6 +284,11 @@ class BrainAtlas(BaseEstimator):
         self.rois = rois
         self.box_shape = []
         self.is_transformer = True
+        self.mask_indices = None
+        self.affine = None
+        self.shape = None
+        self.needs_y = False
+        self.needs_covariates = False
 
     def fit(self, X, y):
         return self
@@ -303,7 +309,7 @@ class BrainAtlas(BaseEstimator):
 
         # 2. load sample data to get target affine and target shape to adapt the brain atlas
 
-        affine, shape = BrainMasker.get_format_info_from_first_image(X)
+        self.affine, self.shape = BrainMasker.get_format_info_from_first_image(X)
 
         # load all niftis to memory
         if isinstance(X, list):
@@ -319,7 +325,7 @@ class BrainAtlas(BaseEstimator):
             n_subjects = X.shape[-1]
 
         # get ROI mask
-        atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, affine, shape, self.mask_threshold)
+        atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, self.affine, self.shape, self.mask_threshold)
         roi_objects = self._get_rois(atlas_obj, which_rois=self.rois, background_id=self.background_id)
 
         roi_data = [list() for i in range(n_subjects)]
@@ -328,8 +334,9 @@ class BrainAtlas(BaseEstimator):
 
         # convert to series and C ordering since this will speed up the masking process
         series = _utils.as_ndarray(_safe_get_data(X), dtype='float32', order="C", copy=True)
+        mask_indices = list()
 
-        for roi in roi_objects:
+        for i, roi in enumerate(roi_objects):
             Logger().debug("Extracting ROI {}".format(roi.label))
             # simply call apply_mask to extract one roi
             extraction = self.apply_mask(series, roi.mask)
@@ -338,9 +345,11 @@ class BrainAtlas(BaseEstimator):
                     roi_data[sub_i].append(extraction[sub_i])
             else:
                 roi_data_concat.append(extraction)
+                mask_indices.append(np.ones(extraction[0].size) * i)
 
         if self.collection_mode == 'concat':
             roi_data = np.concatenate(roi_data_concat, axis=1)
+            self.mask_indices = np.concatenate(mask_indices)
 
         elapsed_time = time.time() - t1
         Logger().debug("Time for extracting {} ROIs in {} subjects: {} seconds".format(len(roi_objects), n_subjects, elapsed_time))
@@ -353,6 +362,28 @@ class BrainAtlas(BaseEstimator):
         mask_data = _utils.as_ndarray(mask_img.get_data(),
                                       dtype=np.bool)
         return series[mask_data].T
+
+    def inverse_transform(self, X, y=None, **kwargs):
+        # if X.ndim == 2:
+        #  Shape: (mask.shape[0], mask.shape[1], mask.shape[2], X.shape[0])
+        # todo: we should check that
+        X = np.asarray(X)
+        # get ROI masks
+        atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, self.affine, self.shape, self.mask_threshold)
+        roi_objects = self._get_rois(atlas_obj, which_rois=self.rois, background_id=self.background_id)
+
+        first_mask = roi_objects[0].mask
+        unmasked = np.empty((first_mask.shape[0], first_mask.shape[1], first_mask.shape[2]), dtype=X.dtype)
+        unmasked[:] = np.nan
+
+        for i, roi in enumerate(roi_objects):
+            mask, mask_affine = masking._load_mask_img(roi.mask)
+            mask_img = image.new_img_like(roi.mask, mask, mask_affine)
+            mask_data = _utils.as_ndarray(mask_img.get_data(), dtype=np.bool)
+
+            unmasked[mask_data] = np.abs(X[self.mask_indices == i])
+
+        return image.new_img_like(first_mask, unmasked)
 
     @staticmethod
     def _get_rois(atlas_obj, which_rois='all', background_id=0):
