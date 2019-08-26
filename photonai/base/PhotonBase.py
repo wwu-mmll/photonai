@@ -779,7 +779,7 @@ class Hyperpipe(BaseEstimator):
                 Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
 
         elif isinstance(element, PipelineStack):
-            for child in element.pipe_elements:
+            for name, child in element.pipe_elements.items():
                 Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
 
         elif isinstance(element, PipelineBranch):
