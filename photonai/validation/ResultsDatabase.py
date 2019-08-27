@@ -136,6 +136,7 @@ class MDBHyperpipe(MongoModel):
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics = fields.ListField(blank=True)
     estimation_type = fields.CharField(blank=True)
+    flowchart = fields.CharField(blank=True)
 
     # dummy estimator
     dummy_estimator = fields.EmbeddedDocumentField(DummyResults, blank=True)

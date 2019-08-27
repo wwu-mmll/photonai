@@ -1,13 +1,14 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack, PipelineBranch, PipelineSwitch
 
 
 class Flowchart(object):
 
     def __init__(self,hyperpipe):
+
         self.hyperpipe = hyperpipe
         self.chart_str = ""
 
     def create_str(self):
+
         headerLayout = ""
         headerRelate = ""
         oldElement = ""
@@ -20,9 +21,11 @@ class Flowchart(object):
 
         for pipelineElement in self.hyperpipe.pipeline_elements:
             self.chart_str = self.chart_str+self.recursivElement(pipelineElement,"")
-
+        return self.chart_str
 
     def recursivElement(self,pipe_element,parent):
+        from ..base.PhotonBase import PipelineStack, PipelineBranch, PipelineSwitch
+
         string = ""
         if hasattr(pipe_element,"pipeline_elements"):
             pipe_element.pipe_elements = pipe_element.pipeline_elements
