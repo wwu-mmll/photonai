@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack, PipelineBranch, SourceFilter
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack, PipelineBranch, SourceFilter, PipelineSwitch
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.configuration.Register import PhotonRegister
 from sklearn.model_selection import KFold
@@ -18,6 +18,7 @@ my_pipe = Hyperpipe('data_integration',
                     outer_cv=KFold(n_splits=5),
                     inner_cv=KFold(n_splits=5),
                     verbosity=1)
+my_pipe += PipelineSwitch('PreprocessingSwitch', [PipelineElement('SimpleImputer'), PipelineElement('StandardScaler')])
 
 # Use only "mean" features: [mean_radius, mean_texture, mean_perimeter, mean_area, mean_smoothness, mean_compactness,
 # mean_concavity, mean_concave_points, mean_symmetry, mean_fractal_dimension
@@ -43,9 +44,10 @@ my_pipe_stack += worst_branch
 
 my_pipe += my_pipe_stack
 
-my_pipe += PipelineElement('RandomForestClassifier')
+my_pipe += PipelineSwitch('EstimatorSwitch', [PipelineElement('RandomForestClassifier'), PipelineElement('SVC')])
 
 my_pipe.fit(X, y)
 
 Investigator.show(my_pipe)
+debug = True
 
