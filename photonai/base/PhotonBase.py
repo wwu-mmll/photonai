@@ -942,7 +942,7 @@ class Hyperpipe(BaseEstimator):
                 try:
                     from ..validation.ResultsTreeHandler import ResultsTreeHandler
                     ResultsTreeHandler().write_summary(self.result_tree,
-                                                       self.output_settings.results_folder+"/")
+                                                       self.output_settings.results_folder)
                 except OSError as e:
                     Logger().error("Could not write time-monitor png/csv file")
                     Logger().error(str(e))
@@ -2279,7 +2279,7 @@ class PhotonModelPersistor:
             else:
                 base_element = element
             if hasattr(base_element, 'save'):
-                base_element.save(os.path.join(folder + filename))
+                base_element.save(os.path.join(folder, filename))
                 element_identifier[-1]['mode'] = 'custom'
                 element_identifier[-1]['wrapper_script'] = os.path.basename(inspect.getfile(base_element.__class__))
                 wrapper_files.append(inspect.getfile(base_element.__class__))
@@ -2305,7 +2305,6 @@ class PhotonModelPersistor:
             Logger().warn('The file you specified already exists as a folder.')
         else:
             os.mkdir(folder)
-            folder = folder + '/'
         wrapper_files = list()
 
         if isinstance(hyperpipe.preprocessing_pipe, PreprocessingPipe):
@@ -2323,7 +2322,7 @@ class PhotonModelPersistor:
             pickle.dump(element_identifier, f)
 
         # get all files
-        files = glob.glob(folder + '_optimum_pipe_*')
+        files = glob.glob(os.path.join(folder, '_optimum_pipe_*'))
 
         if password is not None:
             # ToDo: Do this without the need for pyminizip's C++ requirements
@@ -2356,19 +2355,19 @@ class PhotonModelPersistor:
         """
         if file.endswith('.photon'):
             archive_name = os.path.splitext(file)[0]
-            folder = archive_name + '/'
+            folder = archive_name
             zf = zipfile.ZipFile(file)
             zf.extractall(folder, pwd=password)
         else:
             raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
 
-        with open(folder + '_optimum_pipe_blueprint.pkl', 'rb') as f:
+        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'rb') as f:
             setup_info = pickle.load(f)
             element_list = list()
             for element_info in setup_info:
                 if element_info['mode'] == 'custom':
                     spec = importlib.util.spec_from_file_location(element_info['element_name'],
-                                                                  folder + element_info['wrapper_script'])
+                                                                  os.path.join(folder, element_info['wrapper_script']))
                     imported_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(imported_module)
                     base_element = getattr(imported_module, element_info['element_name'])
@@ -2376,11 +2375,11 @@ class PhotonModelPersistor:
                                                      hyperparameters=element_info['hyperparameters'],
                                                      test_disabled=element_info['test_disabled'],
                                                      disabled=element_info['disabled'])
-                    custom_element.base_element.load(folder + element_info['filename'])
+                    custom_element.base_element.load(os.path.join(folder, element_info['filename']))
                     element_list.append((element_info['element_name'], custom_element))
                 else:
 
-                    loaded_pipeline_element = joblib.load(folder + element_info['filename'] + '.pkl')
+                    loaded_pipeline_element = joblib.load(os.path.join(folder, element_info['filename'] + '.pkl'))
 
                     # This is only for compatibility with older versions
                     if not hasattr(loaded_pipeline_element, 'needs_y'):
