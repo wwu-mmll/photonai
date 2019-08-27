@@ -124,6 +124,39 @@
             </div>
         </div>
 
+        <div class="box box-solid">
+            <div class="box-header">
+                <h1 class="box-title">Hyperpipe Flowchart</h1>
+            </div>
+            <div class="box-body">
+                <div class="col-md-12">
+                    <div>
+                        <!-- graph best_config_overview will be shown here -->
+
+                    </div>
+                    <!--<script>-->
+                        <!--{{ pipe.flowchart | safe }}-->
+                    <!--</script>-->
+                    <pre id='Source01' style='display: none;'>
+                        {{ pipe.flowchart | safe }}
+                    </pre>
+                    <canvas id='Canvas01'></canvas>
+                    <script>
+                        var canvas = document.getElementById("Canvas01");
+                        var source = document.getElementById("Source01").innerHTML;
+                        var options = {
+                                  fontSize: 14,
+                                shadeColor: "#B0C4DE",
+                            favorUniformNodeSizes: true,
+                            useSmartArrows: true,
+                            fontFamily: "Source Sans Pro"
+                                };
+                        pinker.draw(canvas, source, options);
+                    </script>
+                </div>
+            </div>
+        </div>
+
         <div class="row">
             {% if pipe.outer_folds %}
                 {% for outer_fold in pipe.outer_folds %}

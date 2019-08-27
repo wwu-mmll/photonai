@@ -831,7 +831,16 @@ class Hyperpipe(BaseEstimator):
             self.estimation_type = estimator_type
             if not (estimator_type == 'classifier' or estimator_type == 'regressor'):
                 raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
-                                                                                                            estimator_type))
+                                                                                                         estimator_type))
+
+    def create_hyperpipe_flowchart(self):
+        from ..investigator.Investigator import Flowchart
+        try:
+            flowchart = Flowchart(self.pipeline_elements)
+            flow_string = flowchart.create_str()
+            return flow_string
+        except:
+            return ""
 
     def fit(self, data, targets, **kwargs):
         """
@@ -878,6 +887,9 @@ class Hyperpipe(BaseEstimator):
 
                 start = datetime.datetime.now()
                 self._prepare_result_logging(start)
+
+                # create hyperpipe flowchart
+                self.result_tree.flowchart = self.create_hyperpipe_flowchart()
 
                 # update output options to add pipe name and timestamp to results folder
                 self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
@@ -1457,13 +1469,12 @@ class PipelineElement(BaseEstimator):
         """
         Calls inverse_transform on the base element
         """
-        if self.batch_size == 0:
-            return self.__inverse_transform(X, y, **kwargs)
-        else:
-            return self.__batch_transform(X, y, **kwargs)
+        return self.__inverse_transform(X, y, **kwargs)
+
 
     def __inverse_transform(self, X, y=None, **kwargs):
         if hasattr(self.base_element, 'inverse_transform'):
+            # todo: check this
             X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
         return X, y, kwargs
 
