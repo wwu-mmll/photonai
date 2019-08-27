@@ -836,7 +836,7 @@ class Hyperpipe(BaseEstimator):
     def create_hyperpipe_flowchart(self):
         from ..investigator.Investigator import Flowchart
         try:
-            flowchart = Flowchart(self.pipeline_elements)
+            flowchart = Flowchart(self)
             flow_string = flowchart.create_str()
             return flow_string
         except:
