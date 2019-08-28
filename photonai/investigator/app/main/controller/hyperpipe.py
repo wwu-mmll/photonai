@@ -50,8 +50,12 @@ def show_pipeline(storage, name):
         min_config_evaluations = handler.get_minimum_config_evaluations()
         optimizer_history = plotly_optimizer_history('optimizer_history', config_evaluations, min_config_evaluations, pipe.metrics[0])
 
+        # get information on cv, optimizer and data
+        data_info = pipe.hyperpipe_info.data
+        optimizer_info = pipe.hyperpipe_info.optimization
+        cross_validation_info = pipe.hyperpipe_info.cross_validation
 
-
+        # Best config plot
         best_config_plot_list = list()
 
         # overview plot on top of the page
@@ -70,8 +74,8 @@ def show_pipeline(storage, name):
             predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train', 'True/Pred Training')
             predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
         else:
-            predictions_plot_test = ''
-            predictions_plot_train = ''
+            predictions_plot_train = plotly_confusion_matrix('predictions_plot_train', 'Confusion Matrix Training', true_and_pred_train)
+            predictions_plot_test = plotly_confusion_matrix('predictions_plot_test', 'Confusion Matrix Test', true_and_pred_val)
 
         for fold in pipe.outer_folds:
 
@@ -162,7 +166,10 @@ def show_pipeline(storage, name):
                                predictions_plot_test=predictions_plot_test,
                                optimizer_history=optimizer_history,
                                s=storage,
-                               available_pipes=available_pipes)
+                               available_pipes=available_pipes,
+                               cross_validation_info=cross_validation_info,
+                               data_info=data_info,
+                               optimizer_info=optimizer_info)
     except ValidationError as exc:
         return exc.message
     except ConnectionError as exc:

@@ -60,103 +60,228 @@
         {% if not pipe.eval_final_performance %}
             <h4 class="btn btn-warning"> Best Configuration selected on validation set performance </h4>
         {% endif %}
-        <div class="box box-solid">
-            <div class="box-header">
-                <h1 class="box-title">Overview of all Folds</h1>
-            </div>
-            <div class="box-body">
-                <div class="col-md-4">
-                    <div id="overview_plot_training">
-                        <!-- graph best_config_overview will be shown here -->
-
-                        </div>
-                    <script>
-                        {{ overview_plot_train.to_plot() | safe }}
-                    </script>
-
-                </div>
-                <div class="col-md-4">
-                    <div id="overview_plot_test">
-
-                    </div>
-                    <script>
-                    {{ overview_plot_test.to_plot() | safe }}
-                    </script>
-
-                </div>
-                <div class="col-md-4">
-                    <div id="optimizer_history">
-
-                    </div>
-                    <script>
-                    {{ optimizer_history | safe}}
-                    </script>
-
-                </div>
-            </div>
-        </div>
-
-       <div class="box box-solid">
-            <div class="box-header">
-                <h1 class="box-title">Training and Test Predictions</h1>
-            </div>
-            <div class="box-body">
-                <div class="col-md-6">
-                    <div id="predictions_plot_train">
-                        <!-- graph best_config_overview will be shown here -->
-
-                        </div>
-                    <script>
-                        {{ predictions_plot_train | safe }}
-                    </script>
-
-                </div>
-                <div class="col-md-6">
-                    <div id="predictions_plot_test">
-
-                    </div>
-                    <script>
-                    {{ predictions_plot_test | safe }}
-                    </script>
-
-                </div>
-
-            </div>
-        </div>
 
         <div class="box box-solid">
             <div class="box-header">
                 <h1 class="box-title">Hyperpipe Flowchart</h1>
             </div>
             <div class="box-body">
-                <div class="col-md-12">
-                    <div>
-                        <!-- graph best_config_overview will be shown here -->
-
+                <div class="row">
+                    <div class="col-md-4">
+                        <table class="table table-hover" style="margin-top: 2em;">
+                            <tr>
+                                <th>CrossValidation</th>
+                            </tr>
+                            {% for key, value in cross_validation_info.items() %}
+                                <tr>
+                                    <td>{{ key }} - {{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
                     </div>
-                    <!--<script>-->
-                        <!--{{ pipe.flowchart | safe }}-->
-                    <!--</script>-->
-                    <pre id='Source01' style='display: none;'>
-                        {{ pipe.flowchart | safe }}
-                    </pre>
-                    <canvas id='Canvas01'></canvas>
-                    <script>
-                        var canvas = document.getElementById("Canvas01");
-                        var source = document.getElementById("Source01").innerHTML;
-                        var options = {
-                                  fontSize: 14,
-                                shadeColor: "#B0C4DE",
-                            favorUniformNodeSizes: true,
-                            useSmartArrows: true,
-                            fontFamily: "Source Sans Pro",
-                            favorGoldenRatioLabelSize: true
-                                };
-                        pinker.draw(canvas, source, options);
-                    </script>
+                    <div class="col-md-4">
+                        <table class="table table-hover" style="margin-top: 2em;">
+                            <tr>
+                                <th>Optimization</th>
+                            </tr>
+                            {% for key, value in optimizer_info.items() %}
+                                <tr>
+                                    <td>{{ key }} - {{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                    <div class="col-md-4">
+                        <table class="table table-hover" style="margin-top: 2em;">
+                            <tr>
+                                <th>Data</th>
+                            </tr>
+                            {% for key, value in data_info.items() %}
+                                <tr>
+                                    <td>{{ key }} - {{ value }}</td>
+                                </tr>
+                            {% endfor %}
+                        </table>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-12">
+                        <div class="uk-align-center">
+                            <pre id='Source01' style='display: none; '>
+                                {{ pipe.flowchart | safe }}
+                            </pre>
+                            <canvas id='Canvas01'></canvas>
+                            <script>
+                                var canvas = document.getElementById("Canvas01");
+                                var source = document.getElementById("Source01").innerHTML;
+                                var options = {
+                                          fontSize: 14,
+                                        shadeColor: "#B0C4DE",
+                                    favorUniformNodeSizes: true,
+                                    useSmartArrows: true,
+                                    fontFamily: "Source Sans Pro",
+                                    favorGoldenRatioLabelSize: true
+                                        };
+                                pinker.draw(canvas, source, options);
+                            </script>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
+
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header">
+                        <h3 class="box-title">Performance and Predictions of all Folds</h3>
+                    </div>
+                    <div class="box-body">
+                        <!-- Custom Tabs -->
+                        <div class="nav-tabs-custom">
+                            <ul class="nav nav-tabs">
+                                <li class="active"><a href="#tab_1" data-toggle="tab">Performance</a></li>
+                                <li><a href="#tab_2" data-toggle="tab">Predictions</a></li>
+                            </ul>
+                            <div class="tab-content">
+
+                                <div class="tab-pane active" id="tab_1">
+                                    <div class="col-md-4">
+                                        <div id="overview_plot_training">
+                                            <!-- graph best_config_overview will be shown here -->
+
+                                        </div>
+                                        <script>
+                                            {{ overview_plot_train.to_plot() | safe }}
+                                        </script>
+
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div id="overview_plot_test">
+
+                                        </div>
+                                        <script>
+                                            {{ overview_plot_test.to_plot() | safe }}
+                                        </script>
+
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div id="optimizer_history">
+
+                                        </div>
+                                        <script>
+                                            {{ optimizer_history | safe}}
+                                        </script>
+
+                                    </div>
+                                </div>
+
+                                <div class="tab-pane" id="tab_2">
+                                    <div class="col-md-1">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div id="predictions_plot_train">
+                                            <!-- graph best_config_overview will be shown here -->
+
+                                        </div>
+                                        <script>
+                                            {{ predictions_plot_train | safe }}
+                                        </script>
+
+                                    </div>
+                                    <div class="col-md-2">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div id="predictions_plot_test">
+
+                                        </div>
+                                        <script>
+                                            {{ predictions_plot_test | safe }}
+                                        </script>
+
+                                    </div>
+                                    <div class="col-md-1">
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!--<div class="box box-solid">-->
+            <!--<div class="box-header">-->
+                <!--<h1 class="box-title">Training and Test Predictions</h1>-->
+            <!--</div>-->
+            <!--<div class="box-body">-->
+                <!--<div class="col-md-1">-->
+                <!--</div>-->
+                <!--<div class="col-md-4">-->
+                    <!--<div id="predictions_plot_train">-->
+                        <!--&lt;!&ndash; graph best_config_overview will be shown here &ndash;&gt;-->
+
+                        <!--</div>-->
+                    <!--<script>-->
+                        <!--{{ predictions_plot_train | safe }}-->
+                    <!--</script>-->
+
+                <!--</div>-->
+                <!--<div class="col-md-2">-->
+                <!--</div>-->
+                <!--<div class="col-md-4">-->
+                    <!--<div id="predictions_plot_test">-->
+
+                    <!--</div>-->
+                    <!--<script>-->
+                    <!--{{ predictions_plot_test | safe }}-->
+                    <!--</script>-->
+
+                <!--</div>-->
+                <!--<div class="col-md-1">-->
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+
+        <!--<div class="box box-solid">-->
+            <!--<div class="box-header">-->
+                <!--<h1 class="box-title">Performance of all Folds</h1>-->
+            <!--</div>-->
+            <!--<div class="box-body">-->
+                <!--<div class="col-md-4">-->
+                    <!--<div id="overview_plot_training">-->
+                        <!--&lt;!&ndash; graph best_config_overview will be shown here &ndash;&gt;-->
+
+                        <!--</div>-->
+                    <!--<script>-->
+                        <!--{{ overview_plot_train.to_plot() | safe }}-->
+                    <!--</script>-->
+
+                <!--</div>-->
+                <!--<div class="col-md-4">-->
+                    <!--<div id="overview_plot_test">-->
+
+                    <!--</div>-->
+                    <!--<script>-->
+                    <!--{{ overview_plot_test.to_plot() | safe }}-->
+                    <!--</script>-->
+
+                <!--</div>-->
+                <!--<div class="col-md-4">-->
+                    <!--<div id="optimizer_history">-->
+
+                    <!--</div>-->
+                    <!--<script>-->
+                    <!--{{ optimizer_history | safe}}-->
+                    <!--</script>-->
+
+                <!--</div>-->
+            <!--</div>-->
+        <!--</div>-->
+
 
         <div class="row">
             {% if pipe.outer_folds %}

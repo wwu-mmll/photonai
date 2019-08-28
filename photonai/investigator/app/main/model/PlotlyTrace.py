@@ -1,3 +1,4 @@
+import numpy as np
 
 
 class PlotlyTrace:
@@ -18,6 +19,7 @@ class PlotlyTrace:
         self.trace_type = trace_type
         self.x = []
         self.y = []
+        self.z = []
         self.error_y = []
         self.trace_size = trace_size
         self.with_error = with_error
@@ -36,6 +38,12 @@ class PlotlyTrace:
         """
         self.y.append(y)
 
+    def add_z(self, z):
+        """ function to add new value for z axis
+                :param z: value for z axis
+                """
+        self.z.append(z)
+
     def add_error_y(self, y):
         """ function to add new value for y axis
         :param y: add y error value
@@ -48,7 +56,14 @@ class PlotlyTrace:
         """
         result = ""
         for item in self.x:
-            result += "'" + str(item) + "',"
+            if isinstance(item, list):
+                result += "["
+                for iitem in item:
+                    result += "'" + str(iitem) + "',"
+                result.rstrip(",")
+                result += "],"
+            else:
+                result += "'" + str(item) + "',"
         return result.rstrip(",")
 
     def get_y_to_string(self) -> str:
@@ -57,7 +72,14 @@ class PlotlyTrace:
         """
         result = ""
         for item in self.y:
-            result += "'" + str(item) + "',"
+            if isinstance(item, list):
+                result += "["
+                for iitem in item:
+                    result += "'" + str(iitem) + "',"
+                result.rstrip(",")
+                result += "],"
+            else:
+                result += "'" + str(item) + "',"
         return result.rstrip(",")
 
     def get_err_y_to_string(self) -> str:
@@ -66,5 +88,31 @@ class PlotlyTrace:
         """
         result = ""
         for item in self.error_y:
-            result += "'" + str(item) + "',"
+            if isinstance(item, list):
+                result += "["
+                for iitem in item:
+                    result += "'" + str(iitem) + "',"
+                result.rstrip(",")
+                result += "],"
+            else:
+                result += "'" + str(item) + "',"
+        return result.rstrip(",")
+
+    def get_z_to_string(self, as_numbers: bool = False) -> str:
+        result = ""
+        for item in self.z:
+            if isinstance(item, (list, np.ndarray)):
+                result += "["
+                for iitem in item:
+                    if as_numbers:
+                        result += str(iitem) + ","
+                    else:
+                        result += "'" + str(iitem) + "',"
+                result = result.rstrip(",")
+                result += "],"
+            else:
+                if as_numbers:
+                    result += "'" + str(item) + "',"
+                else:
+                    result += str(item) + ","
         return result.rstrip(",")

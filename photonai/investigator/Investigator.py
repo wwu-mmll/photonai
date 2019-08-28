@@ -178,30 +178,33 @@ class Flowchart(object):
 
     def create_str(self):
 
-        headerLayout = "[CrossValidation][Optimizer]\n\n[Input]"
+        #headerLayout = "[CrossValidation][Optimizer]\n\n[Input]"
+        headerLayout = ""
         headerRelate = ""
-        oldElement = "Input"
+        #oldElement = "Input"
+        oldElement = ""
         for pipelineElement in self.pipeline_elements:
             headerLayout = headerLayout+"[" + pipelineElement.name +"]"
             if oldElement:
                 headerRelate = headerRelate+"["+oldElement+"]"+"->"+"["+pipelineElement.name+"]\n"
             oldElement = pipelineElement.name
 
-        headerLayout += "[Output]"
-        headerRelate += "[" + oldElement + "]->[Output]\n"
+        # headerLayout += "[Output]"
+        # headerRelate += "[" + oldElement + "]->[Output]\n"
         self.chart_str = "Layout:\n"+headerLayout+"\nRelate:\n"+headerRelate+"\n"
-        self.chart_str += "\n\n[Input]:\nDefine:\nX\n  shape: {}\n|\ny\n  shape: {}\n|\n**kwargs\n  shape: {}\n".format(self.hyperpipe.data.X.shape,
-                                                                                                                   self.hyperpipe.data.y.shape,
-                                                                                                                   'None')
-        self.chart_str += "[Output]:\nDefine:\n y_pred\n"
+        # self.chart_str += "\n\n[Input]:\nDefine:\nX\n  shape: {}\n|\ny\n  shape: {}\n|\n**kwargs\n  shape: {}\n".format(self.hyperpipe.data.X.shape,
+        #                                                                                                            self.hyperpipe.data.y.shape,
+        #                                                                                                            'None')
+        # self.chart_str += "[Output]:\nDefine:\n y_pred\n"
 
         for pipelineElement in self.pipeline_elements:
             self.chart_str = self.chart_str+self.recursivElement(pipelineElement,"")
-        # Add define for input and output
-        self.chart_str += "\n\n[CrossValidation]:\nDefine:\nOuterCV: {}\nInnerCV: {}\n".format(self.format_cross_validation(self.hyperpipe.cross_validation.outer_cv),
-                                                                                               self.format_cross_validation(self.hyperpipe.cross_validation.inner_cv))
-        opt = self.format_optimizer(self.hyperpipe.optimization)
-        self.chart_str += "\n\n[Optimizer]:\nDefine:\noptimizer: {}\nOptimizerParams: {}\nMetrics: {}\nBest Config Metric: {}\n".format(opt[0], opt[1], opt[2], opt[3])
+
+        # # Add define for input and output
+        # self.chart_str += "\n\n[CrossValidation]:\nDefine:\nOuterCV: {}\nInnerCV: {}\n".format(self.format_cross_validation(self.hyperpipe.cross_validation.outer_cv),
+        #                                                                                        self.format_cross_validation(self.hyperpipe.cross_validation.inner_cv))
+        # opt = self.format_optimizer(self.hyperpipe.optimization)
+        # self.chart_str += "\n\n[Optimizer]:\nDefine:\noptimizer: {}\nOptimizerParams: {}\nMetrics: {}\nBest Config Metric: {}\n".format(opt[0], opt[1], opt[2], opt[3])
 
         return self.chart_str
 

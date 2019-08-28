@@ -4,33 +4,67 @@ import numpy as np
 from .PlotlyTrace import PlotlyTrace
 from .PlotlyPlot import PlotlyPlot
 from sklearn import linear_model
-import numpy as np
 from scipy.stats import pearsonr
 from matplotlib import cm
+from sklearn.utils.multiclass import unique_labels
+import matplotlib.pylab as plt
 
 
-def plotly_confusion_matrix(name, y_true, y_pred):
+def plotly_confusion_matrix(plot_name, title, folds):
     try:
-        cm = confusion_matrix(y_true, y_pred)
+        cms = list()
+        y_true_all = list()
+        y_pred_all = list()
+        for y_true, y_pred in folds:
+            y_true_all.append(y_true)
+            y_pred_all.append(y_pred)
+
+            cm = confusion_matrix(y_true, y_pred)
+            # normalize
+            cms.append(cm.astype('float') / cm.sum(axis=1)[:, np.newaxis])
+
+        y_true_all = np.hstack(y_true_all)
+        y_pred_all = np.hstack(y_pred_all)
+
+        classes = list(unique_labels(y_true_all, y_pred_all))
+
+        cms = np.asarray(cms)
+        mean_cm = np.mean(cms, axis=0)
     except:
         return ''
 
-    trace = """var trace1 = {{
-    type: 'heatmap', 
-    x: ['Class 1', 'Class 2'], 
-    y: ['Class 2', 'Class 1'], 
-    zmin: '1', 
-    z: [['{}', '{}'], ['{}', '{}']], 
+    # build trace
+    trace = PlotlyTrace('trace1')
+    for single_class in classes:
+        name = 'Class {}'.format(single_class + 1)
+        trace.add_x(name)
+
+    classes.reverse()
+    for single_class in classes:
+        name = 'Class {}'.format(single_class + 1)
+        trace.add_y(name)
+        trace.add_z(mean_cm[single_class, :])
+
+    # create string from trace
+    string_trace = "var trace1 = {type: 'heatmap'"
+    string_trace += ", x: [" + trace.get_x_to_string() + "]"
+    string_trace += ", y: [" + trace.get_y_to_string() + "]"
+    string_trace += ", z: [" + trace.get_z_to_string(as_numbers=False) + "]"
+    # string_trace += ", x: [" + str(trace.x) + "]"
+    # string_trace += ", y: [" + str(trace.y) + "]"
+    # string_trace += ", z: [" + str(trace.z) + "]"
+    string_trace += """, zmin: '0',  zmax: '1',
     colorscale: [['0', 'rgb(255,245,240)'], ['0.2', 'rgb(254,224,210)'], ['0.4', 'rgb(252,187,161)'], ['0.5', 'rgb(252,146,114)'], ['0.6', 'rgb(251,106,74)'], ['0.7', 'rgb(239,59,44)'], ['0.8', 'rgb(203,24,29)'], ['0.9', 'rgb(165,15,21)'], ['1', 'rgb(103,0,13)']], 
-    autocolorscale: false}};""".format(cm[1, 0], cm[1, 1], cm[0, 0], cm[0, 1])
+    autocolorscale: false};"""
+
 
     plot = """
 var data = [trace1];
 var layout = {{
-  title: 'Confusion Matrix', 
+  title: '{}', 
   width: '400', 
   xaxis: {{
-    title: 'Predicted value', 
+    title: 'Predicted Value', 
     titlefont: {{
       size: '18', 
       color: '7f7f7f'
@@ -44,8 +78,8 @@ var layout = {{
     }}
   }}, 
 }};
-Plotly.newPlot('{}', data, layout);""".format(name)
-    final_plot = trace + plot
+Plotly.newPlot('{}', data, layout);""".format(title, plot_name)
+    final_plot = string_trace + plot
     return final_plot
 
 
