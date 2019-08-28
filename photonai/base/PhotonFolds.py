@@ -153,6 +153,11 @@ class OuterFoldManager:
         # Todo: copy performance constraints for each outer fold
         self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
 
+        # todo: we've got some super strange pymodm problems here
+        #  somehow some information from the previous outer fold lingers on and can be found within a completely new
+        #  instantiated OuterFoldMDB object
+        #  hence, clearing it
+        outer_fold_result_obj.tested_config_list = list()
         self.result_object = outer_fold_result_obj
 
         # copy constraint objects.
