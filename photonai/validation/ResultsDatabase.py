@@ -116,6 +116,16 @@ class DummyResults(EmbeddedMongoModel):
     test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
 
 
+class MDBHyperpipeInfo(EmbeddedMongoModel):
+    class Meta:
+        final = True
+        connection_alias = 'photon_core'
+
+    data = fields.DictField(blank=True)
+    cross_validation = fields.DictField(blank=True)
+    optimization = fields.DictField(blank=True)
+
+
 class MDBHyperpipe(MongoModel):
     class Meta:
         final = True
@@ -137,6 +147,7 @@ class MDBHyperpipe(MongoModel):
     metrics = fields.ListField(blank=True)
     estimation_type = fields.CharField(blank=True)
     flowchart = fields.CharField(blank=True)
+    hyperpipe_info = fields.EmbeddedDocumentField(MDBHyperpipeInfo)
 
     # dummy estimator
     dummy_estimator = fields.EmbeddedDocumentField(DummyResults, blank=True)

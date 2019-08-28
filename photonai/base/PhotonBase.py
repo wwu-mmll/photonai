@@ -842,6 +842,26 @@ class Hyperpipe(BaseEstimator):
         except:
             return ""
 
+    def add_hyperpipe_info_to_result_tree(self):
+        # optimization
+        self.result_tree.hyperpipe_info = MDBHyperpipeInfo()
+        self.result_tree.hyperpipe_info.cross_validation = {'OuterCV': self._format_cross_validation(self.cross_validation.outer_cv),
+                                         'InnerCV': self._format_cross_validation(self.cross_validation.inner_cv)}
+        self.result_tree.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
+        self.result_tree.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
+                                                             'OptimizerParams': str(self.optimization.optimizer_params),
+                                                            'BestConfigMetric': self.optimization.best_config_metric}
+
+    @staticmethod
+    def _format_cross_validation(cv):
+        if cv:
+            string = "{}(".format(cv.__class__.__name__)
+            for key, val in cv.__dict__.items():
+                string += "{}={}, ".format(key, val)
+            return string[:-2] + ")"
+        else:
+            return "None"
+
     def fit(self, data, targets, **kwargs):
         """
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
@@ -887,6 +907,9 @@ class Hyperpipe(BaseEstimator):
 
                 start = datetime.datetime.now()
                 self._prepare_result_logging(start)
+
+                # Add hyperpipe information to result tree
+                self.add_hyperpipe_info_to_result_tree()
 
                 # create hyperpipe flowchart
                 self.result_tree.flowchart = self.create_hyperpipe_flowchart()

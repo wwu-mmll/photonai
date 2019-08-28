@@ -48,6 +48,7 @@ my_pipe.fit(X, y)
 # YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
 # Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
 
+Hyperpipe.load_optimum_pipe('PFAD/ZUM/.photon/FILE')
 debug = True
 
 
