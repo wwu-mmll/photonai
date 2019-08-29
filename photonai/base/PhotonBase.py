@@ -2389,7 +2389,7 @@ class PhotonModelPersistor:
         if os.path.exists(folder):
             Logger().warn('The file you specified already exists as a folder.')
         else:
-            os.mkdir(folder)
+            os.makedirs(folder)
         wrapper_files = list()
 
         if isinstance(hyperpipe.preprocessing_pipe, PreprocessingPipe):
@@ -2403,7 +2403,7 @@ class PhotonModelPersistor:
             element_number += 1
 
         # save pipeline blueprint to make loading of pipeline easier
-        with open(folder + '_optimum_pipe_blueprint.pkl', 'wb') as f:
+        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'wb') as f:
             pickle.dump(element_identifier, f)
 
         # get all files
