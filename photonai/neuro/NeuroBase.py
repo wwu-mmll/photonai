@@ -141,6 +141,8 @@ class NeuroModuleBranch(PipelineBranch):
         for transform in self.pipeline_elements[::-1]:
             if hasattr(transform, 'inverse_transform'):
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
+            else:
+                return X, y, kwargs
         return X, y, kwargs
 
     class ImageJob:

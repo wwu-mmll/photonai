@@ -5,6 +5,7 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 from typing import Union
+import os
 
 from scipy.stats import sem
 from sklearn.metrics import confusion_matrix, roc_curve
@@ -478,7 +479,7 @@ class ResultsTreeHandler:
 
         fullFrame = fullFrame.astype(float)
 
-        fullFrame.to_csv(result_path+"time_monitor.csv",float_format = "%.6f")
+        fullFrame.to_csv(os.path.join(result_path, "time_monitor.csv"),float_format = "%.6f")
 
         labels = list(fullFrame.index)
         sizes_fit = list(fullFrame[("fit","normalized")])
@@ -527,7 +528,7 @@ class ResultsTreeHandler:
             plt.tight_layout()
             plt.title(titleList[k])
 
-        plt.savefig(result_path+'time_monitor_pie.png')
+        plt.savefig(os.path.join(result_path, 'time_monitor_pie.png'))
 
     @staticmethod
     def eval_mean_time_dfhelper(df,threshold):

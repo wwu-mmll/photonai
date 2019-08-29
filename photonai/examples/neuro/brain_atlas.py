@@ -53,7 +53,7 @@ atlas = PipelineElement('BrainAtlas',
                         atlas_name="AAL", extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
-neuro_branch = NeuroModuleBranch('NeuroBranch')
+neuro_branch = NeuroModuleBranch('NeuroBranch', nr_of_processes=2)
 neuro_branch += atlas
 
 # it's also possible to combine ROIs from different atlases
@@ -74,9 +74,9 @@ neuro_stack += ho_sub
 
 # ADD NEURO ELEMENTS TO HYPERPIPE
 
-#pipe += neuro_branch
+pipe += neuro_branch
 #pipe += atlas
-pipe += neuro_stack
+#pipe += neuro_stack
 
 pipe += PipelineElement('PCA', n_components=20)
 

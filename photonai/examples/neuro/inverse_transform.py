@@ -51,7 +51,7 @@ AtlasLibrary().list_rois('HarvardOxford_Subcortical_Threshold_25')
 
 # PICK AN ATLAS
 atlas = PipelineElement('BrainAtlas',
-                        rois=['Hippocampus_L', 'Hippocampus_R', 'Amygdala_L', 'Amygdala_R'],
+                        rois=['Hippocampus_L', 'Amygdala_L'],
                         atlas_name="AAL", extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
@@ -72,9 +72,10 @@ handler = ResultsTreeHandler(pipe.result_tree)
 
 # get feature importances (training set) for your best configuration (for all outer folds)
 # this function returns the importance scores for the best configuration of each outer fold in a list
-importance_scores = handler.get_importance_scores()
+importance_scores_outer_folds = handler.get_importance_scores()
+importance_scores_optimum_pipe = handler.results.optimum_pipe_feature_importances
 
-img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores[0], None)
+img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
 img.to_filename('optimum_pipe_feature_importances.nii.gz')
 debug = True
 

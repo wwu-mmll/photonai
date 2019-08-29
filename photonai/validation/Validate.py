@@ -387,15 +387,7 @@ class TestPipeline(object):
 
         f_importances = []
         if save_feature_importances:
-            try:
-                if hasattr(estimator._final_estimator.base_element, 'coef_'):
-                    f_importances = estimator._final_estimator.base_element.coef_
-                    f_importances = f_importances.tolist()
-                elif hasattr(estimator._final_estimator.base_element, 'feature_importances_'):
-                    f_importances = estimator._final_estimator.base_element.feature_importances_
-                    f_importances = f_importances.tolist()
-            except:
-                f_importances = None
+            f_importances = TestPipeline.extract_feature_importances(estimator)
 
         # Nice to have
         # TestPipeline.plot_some_data(y_true, y_pred)
@@ -444,6 +436,29 @@ class TestPipeline(object):
             score_result_object = MDBScoreInformation(metrics=output_metrics,
                                                       score_duration=final_scoring_time)
         return score_result_object
+
+    @staticmethod
+    def extract_feature_importances(estimator):
+        from ..base.PhotonBase import PipelineStack, PipelineBranch, PipelineSwitch
+        final_estimator = estimator._final_estimator
+        if isinstance(final_estimator, PipelineSwitch):
+            base_element = final_estimator.base_element.base_element
+        elif isinstance(final_estimator, (PipelineBranch, PipelineStack)):
+            return None
+        else:
+            base_element = final_estimator.base_element
+
+        if hasattr(base_element, 'coef_'):
+            f_importances = base_element.coef_
+            if f_importances is not None:
+                f_importances = f_importances.tolist()
+        elif hasattr(base_element, 'feature_importances_'):
+            f_importances = base_element.feature_importances_
+            if f_importances is not None:
+                f_importances = f_importances.tolist()
+        else:
+            f_importances = None
+        return f_importances
 
     @staticmethod
     def calculate_metrics(y_true, y_pred, metrics):

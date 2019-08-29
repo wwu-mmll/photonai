@@ -19,7 +19,7 @@ X = np.array(dataset_files.gray_matter_maps)
 settings = OutputSettings(project_folder='.', save_feature_importances='best')
 
 # DESIGN YOUR PIPELINE
-pipe = Hyperpipe('GrayMatter',
+pipe = Hyperpipe('CustomMask',
                  optimizer='grid_search',
                  metrics=['mean_absolute_error'],
                  best_config_metric='mean_absolute_error',
@@ -29,15 +29,9 @@ pipe = Hyperpipe('GrayMatter',
                  cache_folder="./cache",
                  eval_final_performance=False)
 
-# CHOOSE BETWEEN MASKS
-# available masks
-# 'MNI_ICBM152_GrayMatter'
-# 'MNI_ICBM152_WhiteMatter'
-# 'MNI_ICBM152_WholeBrain'
-# 'Cerebellum'
-
-mask = PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter',
-                          extract_mode='vec', batch_size=20)
+#custom_mask = '/spm-data/it-share/software_metis/SPMLauncher/ManagedSoftware/spm/spm12/toolbox/Anatomy/AnatMask.nii'
+custom_mask = '/spm-data/it-share/software_metis/SPMLauncher/ManagedSoftware/spm/spm12/toolbox/Anatomy/PMaps/Insula_Ig1.nii'
+mask = PipelineElement('BrainMask', mask_image=custom_mask, extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
 # we recommend to always use neuro elements within a branch

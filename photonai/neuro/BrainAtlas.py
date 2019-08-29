@@ -10,6 +10,8 @@ import nibabel as nib
 import time
 from pathlib import Path
 from sklearn.base import BaseEstimator
+import pickle
+
 
 from ..photonlogger.Logger import Logger, Singleton
 
@@ -60,7 +62,7 @@ class MaskLibrary:
 
     def _inspect_mask_dir(self):
         for mask_id, mask_info in self.MASK_DICTIONARY.items():
-            mask_file = glob.glob(os.path.join(self.mask_dir, '*/' + mask_info))[0]
+            mask_file = glob.glob(os.path.join(self.mask_dir, os.path.join('*', mask_info)))[0]
             self.available_masks[mask_id] = MaskObject(name=mask_id,
                                                   mask_file=mask_file)
         return
@@ -68,7 +70,7 @@ class MaskLibrary:
     def _add_custom_mask(self, mask_file):
         if not os.path.isfile(mask_file):
             raise FileNotFoundError("Cannot find custom mask {}".format(mask_file))
-        return MaskObject(name=os.path.basename(mask_file), mask_file=mask_file)
+        return MaskObject(name=mask_file, mask_file=mask_file)
 
     def _load_mask(self, mask_name: str='', target_affine=None, target_shape=None):
         Logger().debug('Loading Mask')
@@ -79,8 +81,9 @@ class MaskLibrary:
             Logger().debug("Checking custom mask")
             mask = self._add_custom_mask(mask_name)
 
-        img = image.load_img(mask.mask_file)
-        mask.mask = image.new_img_like(mask.mask_file, img.get_data() > 0)
+        mask.mask = masking.compute_background_mask(mask.mask_file)
+        # img = image.load_img(mask.mask_file)
+        # mask.mask = image.new_img_like(mask.mask_file, img.get_data() > 0)
 
         if target_affine is not None and target_shape is not None:
             mask.mask = image.resample_img(mask.mask, target_affine=target_affine, target_shape=target_shape,
@@ -381,7 +384,7 @@ class BrainAtlas(BaseEstimator):
             mask_img = image.new_img_like(roi.mask, mask, mask_affine)
             mask_data = _utils.as_ndarray(mask_img.get_data(), dtype=np.bool)
 
-            unmasked[mask_data] = np.abs(X[self.mask_indices == i])
+            unmasked[mask_data] = X[self.mask_indices == i]
 
         return image.new_img_like(first_mask, unmasked)
 
@@ -474,7 +477,7 @@ class BrainMasker(BaseEstimator):
             try:
                 single_roi = self.masker.fit_transform(X)
             except BaseException as e:
-                Logger().error(e)
+                Logger().error(str(e))
                 single_roi = None
 
             if single_roi is not None:
@@ -497,4 +500,8 @@ class BrainMasker(BaseEstimator):
         else:
             print("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
 
+    def inverse_transform(self, X, y=None, **kwargs):
+        if not self.extract_mode == 'vec':
+            raise NotImplementedError("BrainMask extract_mode={} is not supported with inverse_transform".format(self.extract_mode))
 
+        return self.masker.inverse_transform(X)

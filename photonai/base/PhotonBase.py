@@ -23,6 +23,7 @@ from sklearn.metrics import accuracy_score
 from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
+from nibabel.nifti1 import Nifti1Image
 
 from .PhotonFolds import OuterFoldManager, FoldInfo
 from .Helper import PHOTONPrintHelper, PHOTONDataHelper
@@ -34,6 +35,7 @@ from ..optimization.SkOpt import SkOptOptimizer
 from ..validation.ResultsDatabase import *
 from ..validation.Validate import Scorer
 from .PhotonPipeline import PhotonPipeline, CacheManager
+from ..validation.Validate import TestPipeline
 
 
 class PhotonNative:
@@ -489,7 +491,6 @@ class Hyperpipe(BaseEstimator):
             best_config_mdb.human_readable_config = best_config.human_readable_config
             return best_config_mdb
 
-
         def define_optimizer_metric(self, pipeline_elements):
             """
             Analyse and prepare the best config metric.
@@ -673,6 +674,12 @@ class Hyperpipe(BaseEstimator):
         # we want caching disabled in general but still want to do single subject caching
         self.recursive_cache_folder_propagation(self.optimum_pipe, self.cache_folder, 'fixed_fold_id')
         self.optimum_pipe.caching = False
+
+        # disable multiprocessing when fitting optimum pipe and save_feature_importances is true
+        # (otherwise inverse_transform won't work for BrainAtlas/Mask)
+        if self.output_settings.save_best_config_feature_importances:
+            self.disable_multiprocessing_recursively(self.optimum_pipe)
+
         Logger().info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
         # Now truely set to no caching (including single_subject_caching)
@@ -687,6 +694,47 @@ class Hyperpipe(BaseEstimator):
                 Logger().info("Could not save optimum pipe model to file")
                 Logger().error(str(e))
 
+        if self.output_settings.save_best_config_feature_importances:
+            # get feature importances of optimum pipe
+            Logger().info("Mapping back feature importances...")
+            feature_importances = TestPipeline.extract_feature_importances(self.optimum_pipe)
+            if not feature_importances:
+                Logger().info("No feature importances available for {}!".format(self.optimum_pipe.steps[-1][0]))
+                return
+
+            self.result_tree.optimum_pipe_feature_importances = feature_importances
+
+            # get backmapping
+            backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
+
+            # save backmapping
+            filename = 'optimum_pipe_feature_importances_backmapped'
+
+            if isinstance(backmapping, np.ndarray):
+                np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+            elif isinstance(backmapping, Nifti1Image):
+                backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+            else:
+                with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
+                    pickle.dump(backmapping, f)
+
+    @staticmethod
+    def disable_multiprocessing_recursively(pipe):
+        from ..neuro.NeuroBase import NeuroModuleBranch
+
+        if isinstance(pipe, PipelineStack):
+            for name, child in pipe.pipe_elements.items():
+                Hyperpipe.disable_multiprocessing_recursively(child.base_element)
+
+        elif isinstance(pipe, NeuroModuleBranch):
+            # in case it's a NeuroModuleBranch, disable multiprocessing
+            Logger().debug("Disabling multiprocessing of NeuroModuleBranch for training of optimum pipe...")
+            pipe.nr_of_processes = 1
+
+        elif isinstance(pipe, PhotonPipeline):
+            for step_name, step_obj in pipe.steps:
+                # we need to check if any element is Branch, Stack or Swtich
+                Hyperpipe.disable_multiprocessing_recursively(step_obj)
 
     def _input_data_sanity_checks(self, data, targets, **kwargs):
         # ==================== SANITY CHECKS ===============================
@@ -1489,13 +1537,6 @@ class PipelineElement(BaseEstimator):
             return self.__batch_transform(X, y, **kwargs)
 
     def inverse_transform(self, X, y=None, **kwargs):
-        """
-        Calls inverse_transform on the base element
-        """
-        return self.__inverse_transform(X, y, **kwargs)
-
-
-    def __inverse_transform(self, X, y=None, **kwargs):
         if hasattr(self.base_element, 'inverse_transform'):
             # todo: check this
             X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
@@ -1989,6 +2030,7 @@ class PipelineStack(PipelineElement):
     def _check_hyper(self,BaseEstimator):
         pass
 
+
 class PipelineSwitch(PipelineElement):
     """
     This class encapsulates several pipeline elements that belong at the same step of the pipeline,
@@ -2261,6 +2303,12 @@ class PipelineSwitch(PipelineElement):
     def _check_hyper(self,BaseEstimator):
         pass
 
+    def inverse_transform(self, X, y=None, **kwargs):
+        if hasattr(self.base_element, 'inverse_transform'):
+            # todo: check this
+            X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
+        return X, y, kwargs
+
 
 class CallbackElement(PhotonNative):
 
@@ -2287,6 +2335,9 @@ class CallbackElement(PhotonNative):
 
     def copy_me(self):
         return self.__class__(self.name, self.delegate_function, self.method_to_monitor)
+
+    def inverse_transform(self, X, y=None, **kwargs):
+        return X, y, kwargs
 
 
 class PhotonModelPersistor:
