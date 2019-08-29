@@ -354,6 +354,8 @@ class BrainAtlas(BaseEstimator):
         if self.collection_mode == 'concat':
             roi_data = np.concatenate(roi_data_concat, axis=1)
             self.mask_indices = np.concatenate(mask_indices)
+        else:
+            self.mask_indices = mask_indices
 
         elapsed_time = time.time() - t1
         Logger().debug("Time for extracting {} ROIs in {} subjects: {} seconds".format(len(roi_objects), n_subjects, elapsed_time))
@@ -385,7 +387,10 @@ class BrainAtlas(BaseEstimator):
             mask_img = image.new_img_like(roi.mask, mask, mask_affine)
             mask_data = _utils.as_ndarray(mask_img.get_data(), dtype=np.bool)
 
-            unmasked[mask_data] = X[self.mask_indices == i]
+            if self.collection_mode == 'list':
+                unmasked[mask_data] = X[i]
+            else:
+                unmasked[mask_data] = X[self.mask_indices == i]
 
         return image.new_img_like(first_mask, unmasked)
 

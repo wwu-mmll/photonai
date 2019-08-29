@@ -117,7 +117,7 @@ class AtlasMapper:
             n_voxels = len(X_extracted[self.roi_indices[roi_name]][0])
             performances.append(np.repeat(roi_res[self.best_config_metric], n_voxels))
 
-        backmapped_img = self.neuro_element.inverse_transform(performances)
+        backmapped_img, _, _ = self.neuro_element.inverse_transform(performances)
         backmapped_img.to_filename(os.path.join(self.folder, 'atlas_mapper_performances.nii.gz'))
 
     def _reshape_roi_data(self, X):
