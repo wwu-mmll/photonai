@@ -346,6 +346,7 @@ class BrainAtlas(BaseEstimator):
             if collection_mode == 'list':
                 for sub_i in range(extraction.shape[0]):
                     roi_data[sub_i].append(extraction[sub_i])
+                mask_indices.append(i)
             else:
                 roi_data_concat.append(extraction)
                 mask_indices.append(np.ones(extraction[0].size) * i)

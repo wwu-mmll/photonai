@@ -27,6 +27,7 @@ class AtlasMapper:
         self.hyperpipe_infos = None
         self.hyperpipes_to_fit = None
         self.roi_indices = dict()
+        self.best_config_metric = None
 
     def generate_mappings(self, hyperpipe: Hyperpipe, neuro_element: Union[NeuroModuleBranch, PipelineElement], folder: str):
         self.folder = folder
@@ -37,6 +38,7 @@ class AtlasMapper:
         self.roi_list, self.atlas = self._find_brain_atlas(self.neuro_element)
         self.verbosity = hyperpipe.verbosity
         self.hyperpipe_infos = None
+        self.best_config_metric = hyperpipe.optimization.best_config_metric
 
         hyperpipes_to_fit = dict()
 
@@ -83,12 +85,12 @@ class AtlasMapper:
         Logger().set_verbosity(self.verbosity)
         self.neuro_element.fit(X)
 
-        # save neuro branch to file
-        joblib.dump(self.neuro_element, os.path.join(self.folder, 'neuro_element.pkl'), compress=1)
-
         # extract regions
         X_extracted, _, _ = self.neuro_element.transform(X)
         X_extracted = self._reshape_roi_data(X_extracted)
+
+        # save neuro branch to file
+        joblib.dump(self.neuro_element, os.path.join(self.folder, 'neuro_element.pkl'), compress=1)
 
         hyperpipe_infos = dict()
         hyperpipe_results = dict()
@@ -108,16 +110,15 @@ class AtlasMapper:
         df = pd.DataFrame(hyperpipe_results)
         df.to_csv(os.path.join(self.folder, self.original_hyperpipe_name + '_atlas_mapper_results.csv'))
 
-        # # write performance to atlas niftis
-        # atlas = _utils.as_ndarray(_safe_get_data(self.atlas.mask), dtype='float32', order="C", copy=True)
-        #
-        # for roi_name, roi_res in hyperpipe_results.items():
-        #     mask_img = _utils.check_niimg_3d(mask)
-        #     mask, mask_affine = masking._load_mask_img(mask_img)
-        #     mask_img = image.new_img_like(mask_img, mask, mask_affine)
-        #     mask_data = _utils.as_ndarray(mask_img.get_data(),
-        #                                   dtype=np.bool)
-        #     series[mask_data].T = np.mean(roi_res[''])
+        # write performance to atlas niftis
+        performances = list()
+
+        for roi_name, roi_res in hyperpipe_results.items():
+            n_voxels = len(X_extracted[self.roi_indices[roi_name]][0])
+            performances.append(np.repeat(roi_res[self.best_config_metric], n_voxels))
+
+        backmapped_img = self.neuro_element.inverse_transform(performances)
+        backmapped_img.to_filename(os.path.join(self.folder, 'atlas_mapper_performances.nii.gz'))
 
     def _reshape_roi_data(self, X):
         roi_data = [list() for n in range(len(X[0]))]

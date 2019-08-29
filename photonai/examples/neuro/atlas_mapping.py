@@ -38,7 +38,7 @@ my_pipe = Hyperpipe(analysis_name,
 
 
 brain_atlas = PipelineElement('BrainAtlas', atlas_name="Yeo_7", extract_mode='vec',
-                                rois='all', batch_size=200)
+                                rois='Network_1', batch_size=200)
 #brain_atlas = PipelineElement('BrainAtlas', atlas_name="AAL", rois='all', batch_size=200)
 
 neuro_branch = NeuroModuleBranch('NeuroBranch')
