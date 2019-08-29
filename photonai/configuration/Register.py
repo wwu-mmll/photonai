@@ -37,7 +37,7 @@ class PhotonRegister:
 
     """
 
-    PHOTON_REGISTERS = ['PhotonCore', 'PhotonNeuro', 'CustomElements']
+    PHOTON_REGISTERS = ['PhotonCore', 'PhotonNeuro']
 
     def __init__(self):
         pass

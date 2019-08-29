@@ -142,6 +142,7 @@ class MDBHyperpipe(MongoModel):
     time_of_results = fields.DateTimeField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
+    optimum_pipe_feature_importances = fields.ListField(blank=True)
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics = fields.ListField(blank=True)

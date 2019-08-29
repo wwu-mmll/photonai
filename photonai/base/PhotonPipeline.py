@@ -410,8 +410,12 @@ class PhotonPipeline(_BaseComposition):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
         for name, transform in self.steps[::-1]:
-            if hasattr(transform, 'inverse_transform'):
+            try:
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
+            except Exception as e:
+                if isinstance(e, NotImplementedError):
+                    return X, y, kwargs
+
         return X, y, kwargs
 
     def fit_transform(self, X, y=None, **kwargs):
