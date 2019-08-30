@@ -245,7 +245,7 @@ class AtlasLibrary:
     def _check_custom_atlas(atlas_file):
         if not path.isfile(atlas_file):
             raise FileNotFoundError("Cannot find custom atlas {}".format(atlas_file))
-        labels_file = path.split(atlas_file)[0] + '.txt'
+        labels_file = path.split(atlas_file)[0] + '_labels.txt'
         if not path.isfile(labels_file):
             print("Didn't find .txt file with ROI labels. Using indices as labels.")
         return AtlasObject(name=atlas_file, path=atlas_file, labels_file=labels_file)

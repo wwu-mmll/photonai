@@ -9,6 +9,9 @@ from nilearn.input_data import NiftiMasker
 from nibabel.nifti1 import Nifti1Image
 import numpy as np
 import glob
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
+from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from sklearn.model_selection import ShuffleSplit
 
 
 class NeuroTest(unittest.TestCase):
@@ -18,6 +21,7 @@ class NeuroTest(unittest.TestCase):
         self.atlas_name = "AAL"
         self.roi_list = ["Hippocampus_R", "Hippocampus_L", "Amygdala_L", "Amygdala_R"]
         self.X = AtlasLibrary().get_nii_files_from_folder(self.test_folder, extension=".nii")
+        self.y = np.random.randn(len(self.X))
 
     def tearDown(self):
         pass
@@ -233,5 +237,77 @@ class NeuroTest(unittest.TestCase):
         nr_files_in_folder = len(glob.glob(os.path.join(nmb.base_element.cache_folder, "*.p")))
         self.assertTrue(nr_files_in_folder == (3 * len(self.X)) + 1)
         self.assertTrue(len(nmb.base_element.cache_man.cache_index.items()) == (3 * len(self.X)))
+
+    def test_custom_mask(self):
+        custom_mask = 'photonai/neuro/Atlases/Cerebellum/P_08_Cere.nii.gz'
+        mask = PipelineElement('BrainMask', mask_image=custom_mask, extract_mode='vec', batch_size=20)
+        X_masked = mask.transform(self.X)
+
+        with self.assertRaises(FileNotFoundError):
+            mask = PipelineElement('BrainMask', mask_image='XXXXX', extract_mode='vec', batch_size=20)
+            mask.transform(self.X)
+
+    def test_custom_atlas(self):
+        custom_atlas = 'photonai/neuro/Atlases/AAL_SPM12/AAL.nii.gz'
+
+        atlas = PipelineElement('BrainAtlas', atlas_name=custom_atlas, extract_mode='vec', batch_size=20)
+        X_masked = atlas.transform(self.X)
+
+        with self.assertRaises(FileNotFoundError):
+            atlas = PipelineElement('BrainAtlas', atlas_name='XXXXX', extract_mode='vec', batch_size=20)
+            atlas.transform(self.X)
+
+    def test_atlas_mapper(self):
+        pass
+
+    def test_inverse_transform(self):
+        settings = OutputSettings(project_folder='test_results',
+                                  save_feature_importances='best',
+                                  overwrite_results=True)
+
+        # DESIGN YOUR PIPELINE
+        pipe = Hyperpipe('Limbic_System',
+                         optimizer='grid_search',
+                         metrics=['mean_absolute_error'],
+                         best_config_metric='mean_absolute_error',
+                         outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
+                         inner_cv=ShuffleSplit(n_splits=1, test_size=0.2),
+                         verbosity=2,
+                         cache_folder="./cache",
+                         eval_final_performance=True,
+                         output_settings=settings)
+
+        # PICK AN ATLAS
+        atlas = PipelineElement('BrainAtlas',
+                                rois=['Hippocampus_L', 'Amygdala_L'],
+                                atlas_name="AAL", extract_mode='vec', batch_size=20)
+
+        # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
+        neuro_branch = NeuroModuleBranch('NeuroBranch')
+        neuro_branch += atlas
+        pipe += neuro_branch
+
+        pipe += PipelineElement('LinearSVR')
+
+        pipe.fit(self.X, self.y)
+
+        # GET IMPORTANCE SCORES
+        handler = ResultsTreeHandler(pipe.result_tree)
+        importance_scores_optimum_pipe = handler.results.optimum_pipe_feature_importances
+
+        manual_img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
+        img = image.load_img('test_results/Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz')
+        self.assertTrue(np.array_equal(manual_img.get_data(), img.get_data()))
+
+    def test_all_atlases(self):
+        for atlas in AtlasLibrary().ATLAS_DICTIONARY.keys():
+            brain_atlas = PipelineElement('BrainAtlas', atlas_name=atlas, extract_mode='vec')
+            brain_atlas.transform(self.X)
+
+    def test_all_masks(self):
+        for mask in AtlasLibrary().MASK_DICTIONARY.keys():
+            brain_mask = PipelineElement('BrainMask', mask_image=mask, extract_mode='vec')
+            brain_mask.transform(self.X)
+
 
 
