@@ -13,6 +13,7 @@ import importlib
 import __main__
 import shutil
 import datetime
+import pandas as pd
 from collections import OrderedDict
 from copy import deepcopy
 from bson.objectid import ObjectId
@@ -104,26 +105,9 @@ class OutputSettings:
             self.project_folder = project_folder
 
         self.results_folder = None
+        self.log_file = os.path.join(self.project_folder, 'photon_output.log')
         self.save_output = save_output
-
-        if self.save_output:
-            local_file = 'photon_result_file.p'
-            log_filename = 'photon_output.log'
-            summary_filename = 'photon_summary.txt'
-            pretrained_model_filename = 'photon_best_model.photon'
-            predictions_filename = 'outer_fold_predictions.csv'
-            self.local_file = os.path.join(project_folder, local_file)
-            self.log_file = os.path.join(project_folder, log_filename)
-            self.summary_filename = os.path.join(project_folder, summary_filename)
-            self.pretrained_model_filename = os.path.join(project_folder, pretrained_model_filename)
-            self.predictions_filename = os.path.join(project_folder, predictions_filename)
-            self.plots = plots
-        else:
-            self.local_file = ''
-            self.log_file = ''
-            self.summary_filename = ''
-            self.pretrained_model_filename = ''
-            self.predictions_filename = ''
+        self.plots = plots
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
@@ -150,13 +134,11 @@ class OutputSettings:
                 self.results_folder = os.path.join(self.project_folder, name + '_results')
             else:
                 self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
-            self.summary_filename = self._add_timestamp(self.summary_filename)
-            self.pretrained_model_filename = self._add_timestamp(self.pretrained_model_filename)
-            self.predictions_filename = self._add_timestamp(self.predictions_filename)
+
             if not os.path.exists(self.results_folder):
                 os.makedirs(self.results_folder)
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
-            self.local_file = self._add_timestamp(self.local_file)
+
             self.log_file = self._add_timestamp(self.log_file)
             Logger().set_custom_log_file(self.log_file)
 
@@ -500,27 +482,7 @@ class Hyperpipe(BaseEstimator):
             :param pipeline_elements: the items of the pipeline
             """
             if isinstance(self.best_config_metric, str):
-                self.maximize_metric = self.greater_is_better_distinction(self.best_config_metric)
-
-        @staticmethod
-        def greater_is_better_distinction(metric):
-            if metric in Scorer.ELEMENT_DICTIONARY:
-                # for now do a simple hack and set greater_is_better
-                # by looking at error/score in metric name
-                metric_name = Scorer.ELEMENT_DICTIONARY[metric][1]
-                specifier = Scorer.ELEMENT_DICTIONARY[metric][2]
-                if specifier == 'score':
-                    return True
-                elif specifier == 'error':
-                    return False
-                else:
-                    # Todo: better error checking?
-                    error_msg = "Metric not suitable for optimizer."
-                    Logger().error(error_msg)
-                    raise NameError(error_msg)
-            else:
-                Logger().error('Specify valid metric to choose best config.')
-                raise NameError('Specify valid metric to choose best config.')
+                self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
 
     # Setters
     #
@@ -689,9 +651,10 @@ class Hyperpipe(BaseEstimator):
         self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
         Logger().info("Saving best model..")
-        if self.output_settings.pretrained_model_filename != '':
+        if self.output_settings.save_output:
             try:
-                PhotonModelPersistor.save_optimum_pipe(self, self.output_settings.pretrained_model_filename)
+                pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
+                PhotonModelPersistor.save_optimum_pipe(self, pretrained_model_filename)
                 Logger().info("Saved optimum pipe model to file")
             except FileNotFoundError as e:
                 Logger().info("Could not save optimum pipe model to file")
