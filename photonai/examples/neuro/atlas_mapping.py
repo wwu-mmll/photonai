@@ -46,9 +46,8 @@ my_pipe += PipelineElement('LinearSVC')
 #brain_atlas = PipelineElement('BrainAtlas', atlas_name="Yeo_7", extract_mode='vec',
 #                                rois='all', batch_size=200)
 brain_atlas = PipelineElement('BrainAtlas', atlas_name="AAL",
-                              rois=['Hippocampus_L', 'Hippocampus_R',
-                                    "Frontal_Sup_Orb_L",
-                                    "Cingulum_Mid_R", "Cerebelum_7b_L"], batch_size=200)
+                              rois=['Hippocampus_L', 'Hippocampus_R', "Frontal_Sup_Orb_L", "Cingulum_Mid_R",
+                                    "Cerebelum_7b_L", "Temporal_Pole_Sup_R", "Paracentral_Lobule_L"], batch_size=200)
 
 neuro_branch = NeuroModuleBranch('NeuroBranch')
 neuro_branch += brain_atlas

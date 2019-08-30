@@ -136,7 +136,7 @@ class AtlasMapper:
                                         ('right', big_fsaverage.infl_right, big_fsaverage.sulc_right, big_fsaverage.pial_right)]:
             print('Hemi {}'.format(hemi))
 
-            big_texture = surface.vol_to_surf(perf_img, pial)
+            big_texture = surface.vol_to_surf(perf_img, pial, interpolation='nearest')
 
             for view in ['lateral', 'medial']:
                 print('   View {}'.format(view))
@@ -145,10 +145,10 @@ class AtlasMapper:
                 else:
                     output_file = None
                 plotting.plot_surf_stat_map(infl, big_texture, hemi=hemi, colorbar=True,
-                                          title='{} hemisphere {} view'.format(hemi, view),
-                                          threshold=0.0001, bg_map=sulc, view=view,
-                                          output_file=output_file,
-                                          axes=axes[cnt])
+                                            title='{} hemisphere {} view'.format(hemi, view),
+                                            threshold=0.0001, bg_map=sulc, view=view,
+                                            output_file=output_file,
+                                            axes=axes[cnt])
                 cnt += 1
 
     def _reshape_roi_data(self, X):
