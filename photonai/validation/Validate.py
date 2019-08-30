@@ -557,7 +557,21 @@ class Scorer(object):
             # raise Warning('Metric not supported right now:', metric)
             return None
 
-
-
-
-
+    @staticmethod
+    def greater_is_better_distinction(metric):
+        if metric in Scorer.ELEMENT_DICTIONARY:
+            # for now do a simple hack and set greater_is_better
+            # by looking at error/score in metric name
+            specifier = Scorer.ELEMENT_DICTIONARY[metric][2]
+            if specifier == 'score':
+                return True
+            elif specifier == 'error':
+                return False
+            else:
+                # Todo: better error checking?
+                error_msg = "Metric not suitable for optimizer."
+                Logger().error(error_msg)
+                raise NameError(error_msg)
+        else:
+            Logger().error('Specify valid metric to choose best config.')
+        raise NameError('Specify valid metric to choose best config.')
