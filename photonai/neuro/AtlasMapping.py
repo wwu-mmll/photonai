@@ -5,10 +5,9 @@ from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
 from photonai.photonlogger.Logger import Logger
 from typing import Union
 from glob import glob
-from nilearn import _utils, image
-from nilearn._utils.niimg import _safe_get_data
-from nilearn import masking
 import numpy as np
+from nilearn import datasets, surface, plotting
+import matplotlib.pylab as plt
 
 import pandas as pd
 import os
@@ -18,7 +17,7 @@ import joblib
 
 class AtlasMapper:
 
-    def __init__(self):
+    def __init__(self, create_surface_plots: bool = False):
         self.folder = None
         self.neuro_element = None
         self.original_hyperpipe_name = None
@@ -28,6 +27,7 @@ class AtlasMapper:
         self.hyperpipes_to_fit = None
         self.roi_indices = dict()
         self.best_config_metric = None
+        self.create_surface_plots = create_surface_plots
 
     def generate_mappings(self, hyperpipe: Hyperpipe, neuro_element: Union[NeuroModuleBranch, PipelineElement], folder: str):
         self.folder = folder
@@ -70,11 +70,12 @@ class AtlasMapper:
             roi_list, atlas_obj = self._find_rois(neuro_element)
         return roi_list, atlas_obj
 
-    def _find_rois(self, element):
+    @staticmethod
+    def _find_rois(element):
         roi_list = element.base_element.rois
         atlas_obj = AtlasLibrary().get_atlas(element.base_element.atlas_name)
         roi_objects = BrainAtlas._get_rois(atlas_obj, roi_list)
-        return ([roi.label for roi in roi_objects], atlas_obj)
+        return [roi.label for roi in roi_objects], atlas_obj
 
     def fit(self, X, y=None, **kwargs):
         if len(self.hyperpipes_to_fit) == 0:
@@ -119,6 +120,36 @@ class AtlasMapper:
 
         backmapped_img, _, _ = self.neuro_element.inverse_transform(performances)
         backmapped_img.to_filename(os.path.join(self.folder, 'atlas_mapper_performances.nii.gz'))
+
+        if self.create_surface_plots:
+            self.surface_plots(backmapped_img)
+
+    def surface_plots(self, perf_img):
+        print('Creating surface plots')
+
+        figure, axes = plt.subplots(2, 2, subplot_kw={'projection': '3d'}, figsize=(12, 12))
+        axes = axes.ravel()
+        big_fsaverage = datasets.fetch_surf_fsaverage('fsaverage')
+
+        cnt = 0
+        for hemi, infl, sulc, pial in [('left', big_fsaverage.infl_left, big_fsaverage.sulc_left, big_fsaverage.pial_left),
+                                        ('right', big_fsaverage.infl_right, big_fsaverage.sulc_right, big_fsaverage.pial_right)]:
+            print('Hemi {}'.format(hemi))
+
+            big_texture = surface.vol_to_surf(perf_img, pial)
+
+            for view in ['lateral', 'medial']:
+                print('   View {}'.format(view))
+                if cnt == 3:
+                    output_file = os.path.join(self.folder, 'importance_scores_surface.png')
+                else:
+                    output_file = None
+                plotting.plot_surf_stat_map(infl, big_texture, hemi=hemi, colorbar=True,
+                                          title='{} hemisphere {} view'.format(hemi, view),
+                                          threshold=0.0001, bg_map=sulc, view=view,
+                                          output_file=output_file,
+                                          axes=axes[cnt])
+                cnt += 1
 
     def _reshape_roi_data(self, X):
         roi_data = [list() for n in range(len(X[0]))]
