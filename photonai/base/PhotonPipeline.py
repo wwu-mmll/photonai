@@ -145,8 +145,11 @@ class PhotonPipeline(_BaseComposition):
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs, fit=True)
 
         if self._final_estimator is not None:
+            fit_start_time = datetime.datetime.now()
             self._final_estimator.fit(X, y, **kwargs)
-
+            n = PHOTONDataHelper.find_n(X)
+            fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
+            self.time_monitor['fit'].append((self.steps[-1][0], fit_duration, n))
         return self
 
     def check_for_numpy_array(self, list_object):
