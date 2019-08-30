@@ -10,6 +10,7 @@ from nibabel.nifti1 import Nifti1Image
 import numpy as np
 import glob
 
+
 class NeuroTest(unittest.TestCase):
 
     def setUp(self):
@@ -129,7 +130,7 @@ class NeuroTest(unittest.TestCase):
 
         for roi in roi_objects:
             masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode="vec")
-            own_calculation = masker.transform(self.X)
+            own_calculation = masker.transform(self.X[0])
             nilearn_func = NiftiMasker(mask_img=roi.mask, target_affine=affine, target_shape=shape, dtype='float32')
             nilearn_calculation = nilearn_func.fit_transform(self.X[0])
 
