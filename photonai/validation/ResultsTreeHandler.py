@@ -3,24 +3,29 @@ import pickle
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import matplotlib.pyplot as plt
-from typing import Union
+import csv
 import os
+import matplotlib.pyplot as plt
 
 from scipy.stats import sem
 from sklearn.metrics import confusion_matrix, roc_curve
 from pymodm import connect
 from pymongo import DESCENDING
+from pymongo.errors import DocumentTooLarge
 from typing import Union
+from prettytable import PrettyTable
+import pprint
 
 from ..validation.ResultsDatabase import MDBHyperpipe
-from ..base.PhotonBase import Hyperpipe
+from ..validation.Validate import Scorer
+from ..base.Helper import PHOTONDataHelper
 from ..photonlogger.Logger import Logger
 
 
 class ResultsTreeHandler:
-    def __init__(self, result_tree: MDBHyperpipe = None):
+    def __init__(self, result_tree: MDBHyperpipe = None, output_settings = None):
         self.results = result_tree
+        self.save_settings = output_settings
 
     def load_from_file(self, results_file: str):
         self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
@@ -133,7 +138,7 @@ class ResultsTreeHandler:
 
         for metric, evaluations in config_evaluations.items():
             minimum_config_evaluations[metric] = list()
-            greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
+            greater_is_better = Scorer.greater_is_better_distinction(metric)
 
             for fold in evaluations:
                 fold_evaluations = list()
@@ -186,12 +191,13 @@ class ResultsTreeHandler:
         mean = np.nanmean(np.asarray(config_evaluations_corres), axis=0)
         mean_min = np.nanmean(np.asarray(minimum_config_evaluations_corres), axis=0)
 
-        greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
+        greater_is_better = Scorer.greater_is_better_distinction(metric)
         if greater_is_better:
             caption = 'Maximum'
         else:
             caption = 'Minimum'
 
+        plt.figure()
         if type == 'plot':
             plt.plot(np.arange(0, len(mean)), mean, '-', color='gray', label='Mean Performance')
 
@@ -237,6 +243,11 @@ class ResultsTreeHandler:
         plt.title(title)
         if file:
             plt.savefig(file)
+        else:
+            if self.save_settings:
+                file = os.path.join(self.save_settings.results_folder, "optimizer_history.png")
+                plt.savefig(file)
+
         plt.show()
 
     def get_val_preds(self, sort_CV=True):
@@ -396,161 +407,321 @@ class ResultsTreeHandler:
         plt.legend(loc='best')
         plt.show()
 
-    def write_summary(self,result_tree,result_path):
-        self.eval_mean_time_components(result_tree,result_path)
-
-    def eval_mean_time_components(self,result_tree,result_path):
+    def eval_mean_time_components(self):
         """
             This function create charts and tables out of the time-monitoring.
-            :param result_tree: Full result_tree in which the time-monitor is stored
             :param result_path: path of saving .csv and pie.png in.
             :return: None
         """
-        result_tree = result_tree
-        time_monitor_fit = []
-        time_monitor_trans_comp = []
-        time_monitor_trans_cach = []
-        time_monitor_predict = []
-        traintest_threshold = []
-        for i,outer_fold in enumerate(result_tree.outer_folds):
-            traintest_threshold.append(outer_fold.number_samples_test)
-            for j, tested_config in enumerate(outer_fold.tested_config_list):
-                for k, inner_fold in enumerate(tested_config.inner_folds):
-                    time_monitor_fit.append(inner_fold.time_monitor["fit"])
-                    time_monitor_trans_comp.append(inner_fold.time_monitor["transform_computed"])
-                    time_monitor_trans_cach.append(inner_fold.time_monitor["transform_cached"])
-                    time_monitor_predict.append(inner_fold.time_monitor["predict"])
 
-        df_fit = pd.DataFrame(time_monitor_fit)
-        df_transComp = pd.DataFrame(time_monitor_trans_comp)
-        df_transCach = pd.DataFrame(time_monitor_trans_cach)
-        df_predict = pd.DataFrame(time_monitor_predict)
+        # save how long the element took per config and in total
+        result_dict = {}
+        caching = False
+        default_dict = {'total_seconds': 0,
+                        'total_items_processed': 0,
+                        'mean_seconds_per_config': 0,
+                        'mean_seconds_per_item': 0}
+        for outer_fold in self.results.outer_folds:
+            for config_nr, config in enumerate(outer_fold.tested_config_list):
+                tmp_config_dict = {}
+                # resort time entries for each element so that is has the following structure
+                # element_name -> fit/transform/predict -> (seconds, nr_items)
+                for inner_fold in config.inner_folds:
+                    for time_key, time_values in inner_fold.time_monitor.items():
+                        for value_item in time_values:
+                            name, time, nr_items = value_item[0], value_item[1], value_item[2]
+                            if name not in tmp_config_dict:
+                                tmp_config_dict[name] = {}
+                            if time_key not in tmp_config_dict[name]:
+                                tmp_config_dict[name][time_key] = []
+                            tmp_config_dict[name][time_key].append((time, nr_items))
 
+                # calculate mean time per config and absolute time
+                for element_name, element_time_dict in tmp_config_dict.items():
+                    for element_time_key, element_time_list in element_time_dict.items():
+                        if element_time_key == "transform_cached":
+                            caching = True
+                        mean_time = np.mean([i[0] for i in element_time_list])
+                        total_time = np.sum([i[0] for i in element_time_list])
+                        total_items_processed = np.sum([i[1] for i in element_time_list])
 
-        df_fit,fit_pipeElements = self.eval_mean_time_dfhelper(df_fit,traintest_threshold)
-        df_transComp, transComp_pipeElements = self.eval_mean_time_dfhelper(df_transComp,traintest_threshold)
-        df_transCach, transCache_pipeElements = self.eval_mean_time_dfhelper(df_transCach,traintest_threshold)
-        df_predict, predict_pipeElements = self.eval_mean_time_dfhelper(df_predict,traintest_threshold)
+                        if element_name not in result_dict:
+                            result_dict[element_name] = {}
+                        if element_time_key not in result_dict[element_name]:
+                            result_dict[element_name][element_time_key] = dict(default_dict)
 
-        header = [np.array(['fit']*3+['transform']*3+['transform compute']*3+['transform cache']*3+["predict"]*3+["comparisson"]),
-                  np.array(['train', 'test', 'normalized']*5+["cache - compute"])]
+                        result_dict[element_name][element_time_key]['total_seconds'] += total_time
+                        result_dict[element_name][element_time_key]['total_items_processed'] += total_items_processed
+                        mean_time_per_config = result_dict[element_name][element_time_key]['mean_seconds_per_config']
+                        tmp_total_mean = ((mean_time_per_config * config_nr) + mean_time) / (config_nr + 1)
+                        result_dict[element_name][element_time_key]['mean_seconds_per_config'] = tmp_total_mean
+                        tmp_mean_per_item = result_dict[element_name][element_time_key]['total_seconds'] / \
+                                            result_dict[element_name][element_time_key]['total_items_processed']
+                        result_dict[element_name][element_time_key]['mean_seconds_per_item'] = tmp_mean_per_item
 
+        format_str = '{:06.6f}'
+        if caching:
+            # add transform_cached and transform_computed values to transform_total
+            for name, sub_result_dict in result_dict.items():
+                if "transform_cached" in sub_result_dict:
+                    result_dict[name]["transform"] = dict(default_dict)
+                    for value_dict in sub_result_dict.values():
+                        for info in value_dict.keys():
+                            result_dict[name]["transform"][info] = result_dict[name]["transform_cached"][info]
+                            # in case everything's been in the cache we have no computation
+                            if "transform_computed" in sub_result_dict:
+                                result_dict[name]["transform"][info] += result_dict[name]["transform_computed"][info]
+                    if "transform_computed" in sub_result_dict:
+                        # calculate a ratio, if caching was helpful and how much of the time it saved
+                        result_dict[name]["cache_ratio"] = result_dict[name]["transform_cached"]["total_seconds"]/result_dict[name]["transform_computed"]["total_seconds"]
 
-        fullFrame = pd.DataFrame([],columns=header).astype(float)
-
-        for fit_pipeElement in fit_pipeElements:
-            fullFrame.at[fit_pipeElement, ("fit","train")] = df_fit[(df_fit[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("fit","test")] = df_fit[(df_fit[fit_pipeElement + "_test"] == 1)][
-                fit_pipeElement + "_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("fit","normalized")] = (fullFrame.at[fit_pipeElement, ("fit","train")]+np.nan_to_num(fullFrame.at[fit_pipeElement, ("fit","test")]))/(np.nan_to_num(df_fit[(df_fit[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_fit[(df_fit[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
-
-        for fit_pipeElement in transComp_pipeElements:
-            fullFrame.at[fit_pipeElement,("transform compute","train")] = df_transComp[(df_transComp[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("transform compute","test")] = df_transComp[(df_transComp[fit_pipeElement + "_test"] == 1)][
-                fit_pipeElement + "_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("transform compute","normalized")] = (np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform compute","train")])+np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform compute","test")]))/(np.nan_to_num(df_transComp[(df_transComp[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_transComp[(df_transComp[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
-
-        for fit_pipeElement in transCache_pipeElements:
-            fullFrame.at[fit_pipeElement,("transform cache","train")] = df_transCach[(df_transCach[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("transform","train")] = np.nan_to_num(
-                fullFrame.at[fit_pipeElement, ("transform cache","train")]) + np.nan_to_num(
-                fullFrame.at[fit_pipeElement, ("transform compute","train")])
-
-            fullFrame.at[fit_pipeElement, ("transform cache","test")] = df_transCach[(df_transCach[fit_pipeElement + "_test"] == 1)][
-                fit_pipeElement + "_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("transform","test")] = np.nan_to_num(
-                fullFrame.at[fit_pipeElement, ("transform cache","test")]) + np.nan_to_num(
-                fullFrame.at[fit_pipeElement, ("transform compute","test")])
-
-            fullFrame.at[fit_pipeElement, ("transform cache","normalized")] = (np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform cache","train")])+np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform cache","test")]))/(np.nan_to_num(df_transCach[(df_transCach[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_transCach[(df_transCach[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
-            fullFrame.at[fit_pipeElement, ("transform","normalized")] = np.nan_to_num(
-                fullFrame.at[fit_pipeElement, ("transform cache","normalized")]) + np.nan_to_num(
-                fullFrame.at[fit_pipeElement, ("transform compute","normalized")])
-
-            fullFrame.at[fit_pipeElement, ("comparisson", "cache - compute")] = np.nan_to_num(fullFrame.at[fit_pipeElement, ("transform cache","normalized")]/fullFrame.at[fit_pipeElement, ("transform compute","normalized")])
-
-        for fit_pipeElement in predict_pipeElements:
-            fullFrame.at[fit_pipeElement,("predict","train")] = df_predict[(df_predict[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("predict","test")] = df_predict[(df_predict[fit_pipeElement + "_test"] == 1)][
-                fit_pipeElement + "_time"].mean(skipna=True)
-            fullFrame.at[fit_pipeElement, ("predict","normalized")] = (np.nan_to_num(fullFrame.at[fit_pipeElement, ("predict","train")])+np.nan_to_num(fullFrame.at[fit_pipeElement, ("predict","test")]))/(np.nan_to_num(df_predict[(df_predict[fit_pipeElement+"_test"]==0)][fit_pipeElement+"_n"].mean(skipna=True))+np.nan_to_num(df_predict[(df_predict[fit_pipeElement+"_test"]==1)][fit_pipeElement+"_n"].mean(skipna=True)))
-
-
-
-        fullFrame = fullFrame.astype(float)
-
-        fullFrame.to_csv(os.path.join(result_path, "time_monitor.csv"),float_format = "%.6f")
-
-        labels = list(fullFrame.index)
-        sizes_fit = list(fullFrame[("fit","normalized")])
-        if sum(np.nan_to_num(sizes_fit))==0:
-            sizes_fit = np.nan_to_num(sizes_fit)
+            csv_keys = ["fit", "transform", "transform_computed", "transform_cached", "predict"]
+            csv_titles = csv_keys
+            plot_list = ["fit", "transform"]
+            method_list = ["fit", "transform_computed", "transform_cached", "predict"]
         else:
-            sizes_fit = [np.nan_to_num(float(i) / np.nanmax(sizes_fit))*100 for i in sizes_fit]
+            csv_keys = ["fit", "transform_computed", "predict"]
+            csv_titles = ["fit", "transform", "predict"]
+            plot_list = ["fit", "transform_computed"]
+            method_list = ["fit", "transform_computed", "predict"]
+        sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
+        csv_filename = os.path.join(self.save_settings.results_folder, 'time_monitor.csv')
+        with open(csv_filename, 'w') as csvfile:
+            writer = csv.writer(csvfile)
+            header1 = [""]
+            for k_name in csv_titles:
+                header1.extend([k_name, "", ""])
+            header2 = ["Element"] + (sub_keys * len(csv_titles))
+            if caching:
+                header1.append("")
+                header2.append("cache_ratio")
+            writer.writerow(header1)
+            writer.writerow(header2)
+            for item, item_dict in result_dict.items():
+                row = [item]
+                for time_key in csv_keys:
+                    for sub_key in sub_keys:
+                        if time_key in item_dict:
+                            row.append(format_str.format(item_dict[time_key][sub_key]))
+                        else:
+                            row.append('')
+                if caching:
+                    if "cache_ratio" in item_dict:
+                        row.append(item_dict["cache_ratio"])
+                writer.writerow(row)
 
-        sizes_trans = list(fullFrame[("transform","normalized")])
-        if sum(np.nan_to_num(sizes_trans))==0:
-            sizes_trans = np.nan_to_num(sizes_trans)
-        else:
-            sizes_trans = [np.nan_to_num(float(i) / np.nanmax(sizes_trans)) * 100 for i in sizes_trans]
+        debug = True
 
-        sizes_transCache = list(fullFrame[("transform cache","normalized")])
-        if sum(np.nan_to_num(sizes_transCache))==0:
-            sizes_transCache = np.nan_to_num(sizes_transCache)
-        else:
-            sizes_transCache = [np.nan_to_num(float(i) / np.nanmax(sizes_transCache)) * 100 for i in sizes_transCache]
-
-        sizes_transComp = list(fullFrame[("transform compute", "normalized")])
-        if sum(np.nan_to_num(sizes_transComp))==0:
-            sizes_transComp = np.nan_to_num(sizes_transComp)
-        else:
-            sizes_transComp = [np.nan_to_num(float(np.nan_to_num(i)) / np.nanmax(sizes_transComp)) * 100 for i in sizes_transComp]
-
-        sizes_predict = list(fullFrame[("predict", "normalized")])
-        if sum(np.nan_to_num(sizes_predict))==0:
-            sizes_predict = np.nan_to_num(sizes_predict)
-        else:
-            sizes_predict = [np.nan_to_num(i / np.nanmax(sizes_predict)) * 100 for i in sizes_predict]
-
-        if not sum(sizes_trans) and not(sum(sizes_transCache)):
-            sizes_trans = sizes_transComp
-
-        dataList = [sizes_fit, sizes_transComp, sizes_transCache, sizes_trans, sizes_predict]
-        titleList = ["fit", "transform computed", "transform cached", "transform total", "predict"]
-
-
+        # dataList = [sizes_fit, sizes_transComp, sizes_transCache, sizes_trans, sizes_predict]
+        # titleList = ["fit", "transform computed", "transform cached", "transform total", "predict"]
+        #
+        #
         fig = plt.figure(figsize=(18, 10), dpi=160)
-        for k,data in enumerate(dataList):
-            ax1 = fig.add_subplot(231+k)
-            patches, _,_ = plt.pie(data, shadow=True, startangle=90, autopct=self.eval_mean_time_Autopct, pctdistance=0.7)
-            plt.legend(patches, labels, loc="best")
+        for i, k in enumerate(plot_list):
+            ax1 = fig.add_subplot(231+i)
+            data = [element[k]["total_seconds"] for name, element in result_dict.items() if k in element]
+            patches, _ = plt.pie(data, shadow=True, startangle=90, pctdistance=0.7) #utopct=self.eval_mean_time_Autopct,
+            plt.legend(patches, [name for name, element in result_dict.items() if k in element], loc="best")
             plt.axis('equal')
             plt.tight_layout()
-            plt.title(titleList[k])
+            plt.title(csv_titles[i])
 
-        plt.savefig(os.path.join(result_path, 'time_monitor_pie.png'))
+        # add another plot for all methods
+        ax1 = fig.add_subplot(231 + len(plot_list))
+        data = []
+        for k in method_list:
+            data.append(np.sum([element[k]["total_seconds"] for name, element in result_dict.items() if k in element]))
+        patches, _ = plt.pie(data, shadow=True, startangle=90, pctdistance=0.7)  # utopct=self.eval_mean_time_Autopct,
+        plt.legend(patches, method_list, loc="best")
+        plt.axis('equal')
+        plt.tight_layout()
+        plt.title("methods")
 
-    @staticmethod
-    def eval_mean_time_dfhelper(df,threshold):
-        imp_col = df.columns
-        columns = []
-        for row in df.index:
-            for col in imp_col:
-                if not df.at[row, col]:
-                    continue
-                column = df.at[row, col][0]
-                if column not in columns:
-                    df[column + "_time"] = pd.Series()
-                    df[column + "_n"] = pd.Series()
-                    columns.append(column)
-                df.at[row, column + "_time"] = df.at[row, col][1]
-                df.at[row, column + "_n"] = df.at[row, col][2]
-                df.at[row, column + "_test"] = df.at[row, column + "_n"] < np.mean(threshold)
-                df.at[row, column + "_mean"] = df.at[row, col][1] / df.at[row, col][2]
-        return [df.drop(imp_col, 1), columns]
+        plt.savefig(os.path.join(self.save_settings.results_folder, 'time_monitor_pie.png'))
 
-    @staticmethod
-    def eval_mean_time_Autopct(value):
-        if value > 1:
-            return int(round(value, 0))
-        return None
+    def save(self):
+
+        if self.save_settings.mongodb_connect_url:
+            connect(self.save_settings.mongodb_connect_url, alias='photon_core')
+            Logger().debug('Write results to mongodb...')
+            try:
+                self.results.save()
+            except DocumentTooLarge as e:
+                Logger().error('Could not save document into MongoDB: Document too large')
+                # try to reduce the amount of configs saved
+                # if len(results_tree.outer_folds[0].tested_config_list) > 100:
+                #     for outer_fold in results_tree.outer_folds:
+                #         metrics_configs = [outer_fold.tested_configlist
+
+        if self.save_settings.save_output:
+            self.write_result_tree_to_file()
+            self.write_summary()
+            self.eval_mean_time_components()
+            self.write_predictions_file()
+
+            if self.save_settings.plots:
+                self.plot_optimizer_history(self.results.best_config_metric)
+
+    def write_result_tree_to_file(self):
+        try:
+            local_file = os.path.join(self.save_settings.results_folder, 'photon_result_file.p')
+            file_opened = open(local_file, 'wb')
+            pickle.dump(self.results.to_son(), file_opened)
+            file_opened.close()
+        except OSError as e:
+            Logger().error("Could not write results to local file")
+            Logger().error(str(e))
+
+    def write_predictions_file(self):
+        if self.save_settings.save_predictions or self.save_settings.save_best_config_predictions:
+
+            fold_nr_array = []
+            y_pred_array = []
+            y_true_array = []
+            indices_array = []
+
+            for outer_fold in self.results.outer_folds:
+                score_info = outer_fold.best_config.inner_folds[0].validation
+                y_pred_array = PHOTONDataHelper.stack_results(score_info.y_pred, y_pred_array)
+                y_true_array = PHOTONDataHelper.stack_results(score_info.y_true, y_true_array)
+                indices_array = PHOTONDataHelper.stack_results(score_info.indices, indices_array)
+                fold_nr_array = PHOTONDataHelper.stack_results(np.ones((len(score_info.y_true),)) * outer_fold.fold_nr,
+                                                               fold_nr_array)
+
+            save_df = pd.DataFrame(data={'indices': indices_array, 'fold': fold_nr_array,
+                                         'y_pred': y_pred_array, 'y_true': y_true_array})
+            predictions_filename = os.path.join(self.save_settings.results_folder, 'outer_fold_predictions.csv')
+            save_df.to_csv(predictions_filename)
+
+    def write_summary(self):
+
+        result_tree = self.results
+        pp = pprint.PrettyPrinter(indent=4)
+
+        text_list = []
+        intro_text = """
+PHOTON RESULT SUMMARY
+-------------------------------------------------------------------
+
+ANALYSIS NAME: {}
+BEST CONFIG METRIC: {}
+TIME OF RESULT: {}
+
+        """.format(result_tree.name, result_tree.best_config_metric, result_tree.time_of_results)
+        text_list.append(intro_text)
+
+        if result_tree.dummy_estimator:
+            dummy_text = """
+-------------------------------------------------------------------
+BASELINE - DUMMY ESTIMATOR
+(always predict mean or most frequent target)
+
+strategy: {}     
+
+            """.format(result_tree.dummy_estimator.strategy)
+            text_list.append(dummy_text)
+            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.test)
+            text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
+            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.train)
+            text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+
+        if result_tree.best_config:
+            text_list.append("""
+
+-------------------------------------------------------------------
+OVERALL BEST CONFIG: 
+{}            
+            """.format(pp.pformat(result_tree.best_config.human_readable_config)))
+
+        text_list.append("""
+MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
+        """)
+
+        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_test)
+        text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
+        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_train)
+        text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+
+        for outer_fold in result_tree.outer_folds:
+            text_list.append(self.print_outer_fold(outer_fold))
+
+        final_text = ''.join(text_list)
+
+        try:
+            summary_filename = os.path.join(self.save_settings.results_folder, 'photon_summary.txt')
+            text_file = open(summary_filename, "w")
+            text_file.write(final_text)
+            text_file.close()
+            Logger().info("Saved results to summary file.")
+        except OSError as e:
+            Logger().error("Could not write summary file")
+            Logger().error(str(e))
+
+    def get_dict_from_metric_list(self, metric_list):
+        best_config_metrics = {}
+        for train_metric in metric_list:
+            if not train_metric.metric_name in best_config_metrics:
+                best_config_metrics[train_metric.metric_name] = {}
+            operation_strip = train_metric.operation.split(".")[1]
+            best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
+        return best_config_metrics
+
+    def print_table_for_performance_overview(self, metric_dict, header):
+        x = PrettyTable()
+        x.field_names = ["Metric Name", "MEAN", "STD"]
+        for element_key, element_dict in metric_dict.items():
+            x.add_row([element_key, element_dict["MEAN"], element_dict["STD"]])
+
+        text = """
+{}:
+{}
+                """.format(header, str(x))
+
+        return text
+
+    def print_outer_fold(self, outer_fold):
+
+        pp = pprint.PrettyPrinter(indent=4)
+        outer_fold_text = []
+
+        if outer_fold.best_config is not None:
+            outer_fold_text.append("""
+-------------------------------------------------------------------
+OUTER FOLD {}
+-------------------------------------------------------------------
+Best Config:
+{}
+
+Number of samples training {}
+Class distribution training {}
+Number of samples test {}
+Class distribution test {}
+
+            """.format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config),
+                       outer_fold.best_config.inner_folds[0].number_samples_training,
+                       outer_fold.class_distribution_validation,
+                       outer_fold.best_config.inner_folds[0].number_samples_validation,
+                       outer_fold.class_distribution_test))
+
+            if outer_fold.best_config.config_failed:
+                outer_fold_text.append("""
+Config Failed: {}            
+    """.format(outer_fold.best_config.config_error))
+
+            else:
+                x = PrettyTable()
+                x.field_names = ["Metric Name", "Train Value", "Test Value"]
+                metrics_train = outer_fold.best_config.inner_folds[0].training.metrics
+                metrics_test = outer_fold.best_config.inner_folds[0].validation.metrics
+
+                for element_key, element_value in metrics_train.items():
+                    x.add_row([element_key, np.round(element_value, 6), np.round(metrics_test[element_key], 6)])
+                outer_fold_text.append("""
+PERFORMANCE:
+{}
+
+
+
+                """.format(str(x)))
+
+        return ''.join(outer_fold_text)
