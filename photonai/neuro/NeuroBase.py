@@ -34,9 +34,7 @@ class NeuroModuleBranch(PipelineBranch):
         self.has_hyperparameters = True
         self.needs_y = False
         self.needs_covariates = True
-
         self.current_config = None
-        self.skip_caching = True
 
         if self.nr_of_processes > 1:
             Logger().warn("Groupwise processing of NeuroElements not supported when working on multiple CPUs. "
