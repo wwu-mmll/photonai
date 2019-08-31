@@ -3,6 +3,7 @@ from pymodm import connect, MongoModel, EmbeddedMongoModel, fields
 from enum import Enum
 import numpy as np
 import pickle
+import uuid
 
 
 class MDBFoldMetric(EmbeddedMongoModel):
@@ -51,7 +52,9 @@ class MDBConfig(EmbeddedMongoModel):
         final = True
         connection_alias = 'photon_core'
 
+    photon_config_id = fields.CharField(blank=True)
     inner_folds = fields.EmbeddedDocumentListField(MDBInnerFold, default=[], blank=True)
+    best_config_score = fields.EmbeddedDocumentField(MDBInnerFold, blank=True)
     fit_duration_minutes = fields.IntegerField(blank=True)
     pipe_name = fields.CharField(blank=True)
     config_dict = fields.DictField(blank=True)
@@ -65,6 +68,9 @@ class MDBConfig(EmbeddedMongoModel):
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     human_readable_config = fields.DictField(blank=True)
+
+    def set_photon_id(self):
+        self.photon_config_id = str(uuid.uuid4())
 
 
 class MDBOuterFold(EmbeddedMongoModel):
@@ -80,6 +86,7 @@ class MDBOuterFold(EmbeddedMongoModel):
     class_distribution_validation = fields.DictField(blank=True, default={})
     number_samples_validation = fields.IntegerField(blank=True)
 
+
 class MDBPermutationMetrics(EmbeddedMongoModel):
     class Meta:
         final = True
@@ -89,6 +96,7 @@ class MDBPermutationMetrics(EmbeddedMongoModel):
     metric_value = fields.FloatField(blank=True)
     p_value = fields.FloatField(blank=True)
     values_permutations = fields.ListField(blank=True)
+
 
 class MDBPermutationResults(EmbeddedMongoModel):
     class Meta:

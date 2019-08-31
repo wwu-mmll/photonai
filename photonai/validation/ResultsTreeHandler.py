@@ -297,14 +297,14 @@ class ResultsTreeHandler:
             sample_inds = []
         y_pred_probabilities = []
         fold_idx = []
-        for i, fold in enumerate(self.results._data['outer_folds'][0]['tested_config_list'][config_no]['inner_folds']):
-            n_samples = len(fold['validation']['y_true'])
-            y_true.extend(fold['validation']['y_true'])
-            y_pred.extend(fold['validation']['y_pred'])
-            y_pred_probabilities.extend(fold['validation']['probabilities'])
+        for i, fold in enumerate(self.results.outer_folds[0].tested_config_list[config_no].inner_folds):
+            n_samples = len(fold.validation.y_true)
+            y_true.extend(fold.validation.y_true)
+            y_pred.extend(fold.validation.y_pred)
+            y_pred_probabilities.extend(fold.validation.probabilities)
             fold_idx.extend(np.repeat(i, n_samples))
             if sort_CV:
-                sample_inds.extend(fold['validation']['indices'])
+                sample_inds.extend(fold.validation.indices)
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         y_pred_probabilities = np.asarray(y_pred_probabilities)
@@ -410,17 +410,15 @@ class ResultsTreeHandler:
     def eval_mean_time_components(self):
         """
             This function create charts and tables out of the time-monitoring.
-            :param result_path: path of saving .csv and pie.png in.
-            :return: None
         """
-
-        # save how long the element took per config and in total
         result_dict = {}
         caching = False
         default_dict = {'total_seconds': 0,
                         'total_items_processed': 0,
                         'mean_seconds_per_config': 0,
                         'mean_seconds_per_item': 0}
+
+        # sum up times per element, 1. per config, and 2. in total
         for outer_fold in self.results.outer_folds:
             for config_nr, config in enumerate(outer_fold.tested_config_list):
                 tmp_config_dict = {}
@@ -461,7 +459,7 @@ class ResultsTreeHandler:
 
         format_str = '{:06.6f}'
         if caching:
-            # add transform_cached and transform_computed values to transform_total
+            # in case we used caching add transform_cached and transform_computed values to transform_total
             for name, sub_result_dict in result_dict.items():
                 if "transform_cached" in sub_result_dict:
                     result_dict[name]["transform"] = dict(default_dict)
@@ -475,6 +473,7 @@ class ResultsTreeHandler:
                         # calculate a ratio, if caching was helpful and how much of the time it saved
                         result_dict[name]["cache_ratio"] = result_dict[name]["transform_cached"]["total_seconds"]/result_dict[name]["transform_computed"]["total_seconds"]
 
+            # in case of caching we have different plot plus a different csv file
             csv_keys = ["fit", "transform", "transform_computed", "transform_cached", "predict"]
             csv_titles = csv_keys
             plot_list = ["fit", "transform"]
@@ -484,6 +483,8 @@ class ResultsTreeHandler:
             csv_titles = ["fit", "transform", "predict"]
             plot_list = ["fit", "transform_computed"]
             method_list = ["fit", "transform_computed", "predict"]
+
+        # write csv file with time analysis
         sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
         csv_filename = os.path.join(self.save_settings.results_folder, 'time_monitor.csv')
         with open(csv_filename, 'w') as csvfile:
@@ -510,23 +511,23 @@ class ResultsTreeHandler:
                         row.append(item_dict["cache_ratio"])
                 writer.writerow(row)
 
-        debug = True
+        def eval_mean_time_autopct(value):
+            if value > 1:
+                return int(round(value, 0))
+            return None
 
-        # dataList = [sizes_fit, sizes_transComp, sizes_transCache, sizes_trans, sizes_predict]
-        # titleList = ["fit", "transform computed", "transform cached", "transform total", "predict"]
-        #
-        #
+        # plot figure
         fig = plt.figure(figsize=(18, 10), dpi=160)
         for i, k in enumerate(plot_list):
             ax1 = fig.add_subplot(231+i)
             data = [element[k]["total_seconds"] for name, element in result_dict.items() if k in element]
-            patches, _ = plt.pie(data, shadow=True, startangle=90, pctdistance=0.7) #utopct=self.eval_mean_time_Autopct,
+            patches, _, _ = plt.pie(data, shadow=True, startangle=90, autopct=eval_mean_time_autopct, pctdistance=0.7)
             plt.legend(patches, [name for name, element in result_dict.items() if k in element], loc="best")
             plt.axis('equal')
             plt.tight_layout()
             plt.title(csv_titles[i])
 
-        # add another plot for all methods
+        # add another plot for the comparison of the fit/transform/predict methods
         ax1 = fig.add_subplot(231 + len(plot_list))
         data = []
         for k in method_list:
@@ -555,12 +556,14 @@ class ResultsTreeHandler:
 
         if self.save_settings.save_output:
             self.write_result_tree_to_file()
-            self.write_summary()
-            self.eval_mean_time_components()
-            self.write_predictions_file()
 
-            if self.save_settings.plots:
-                self.plot_optimizer_history(self.results.best_config_metric)
+    def write_convenience_files(self):
+        self.write_summary()
+        self.eval_mean_time_components()
+        self.write_predictions_file()
+
+        if self.save_settings.plots:
+            self.plot_optimizer_history(self.results.best_config_metric)
 
     def write_result_tree_to_file(self):
         try:
@@ -574,24 +577,36 @@ class ResultsTreeHandler:
 
     def write_predictions_file(self):
         if self.save_settings.save_predictions or self.save_settings.save_best_config_predictions:
+            score_info_list = []
+            fold_nr = []
+            # usually we write the predictions for the outer fold
+            if not self.save_settings.save_predictions_from_best_config_inner_folds:
+                for outer_fold in self.results.outer_folds:
+                    score_info_list.append(outer_fold.best_config.best_config_score.validation)
+                    fold_nr.append(outer_fold.fold_nr)
+            # in case no outer folds exist, we write the inner_fold predictions
+            else:
+                for inner_fold in self.results.best_config.inner_folds:
+                    score_info_list.append(inner_fold.validation)
+                    fold_nr.append(inner_fold.fold_nr)
 
-            fold_nr_array = []
-            y_pred_array = []
-            y_true_array = []
-            indices_array = []
+            if len(score_info_list) > 0:
+                for i, score_info in enumerate(score_info_list):
+                    fold_nr_array = []
+                    y_pred_array = []
+                    y_true_array = []
+                    indices_array = []
 
-            for outer_fold in self.results.outer_folds:
-                score_info = outer_fold.best_config.inner_folds[0].validation
-                y_pred_array = PHOTONDataHelper.stack_results(score_info.y_pred, y_pred_array)
-                y_true_array = PHOTONDataHelper.stack_results(score_info.y_true, y_true_array)
-                indices_array = PHOTONDataHelper.stack_results(score_info.indices, indices_array)
-                fold_nr_array = PHOTONDataHelper.stack_results(np.ones((len(score_info.y_true),)) * outer_fold.fold_nr,
-                                                               fold_nr_array)
+                    y_pred_array = PHOTONDataHelper.stack_results(score_info.y_pred, y_pred_array)
+                    y_true_array = PHOTONDataHelper.stack_results(score_info.y_true, y_true_array)
+                    indices_array = PHOTONDataHelper.stack_results(score_info.indices, indices_array)
+                    fold_nr_array = PHOTONDataHelper.stack_results(np.ones((len(score_info.y_true),)) * fold_nr[i],
+                                                                   fold_nr_array)
 
-            save_df = pd.DataFrame(data={'indices': indices_array, 'fold': fold_nr_array,
-                                         'y_pred': y_pred_array, 'y_true': y_true_array})
-            predictions_filename = os.path.join(self.save_settings.results_folder, 'outer_fold_predictions.csv')
-            save_df.to_csv(predictions_filename)
+                save_df = pd.DataFrame(data={'indices': indices_array, 'fold': fold_nr_array,
+                                             'y_pred': y_pred_array, 'y_true': y_true_array})
+                predictions_filename = os.path.join(self.save_settings.results_folder, 'best_config_predictions.csv')
+                save_df.to_csv(predictions_filename)
 
     def write_summary(self):
 
