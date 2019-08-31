@@ -1,8 +1,7 @@
 from ..photonlogger.Logger import Logger
-from ..base.Helper import PHOTONPrintHelper
 from ..validation.cross_validation import StratifiedKFoldRegression
 from ..validation.Validate import TestPipeline
-from ..validation.ResultsDatabase import MDBHelper, FoldOperations, MDBInnerFold, MDBConfig, MDBScoreInformation
+from ..validation.ResultsDatabase import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
 from ..optimization.SpeedHacks import DummyPerformance
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedKFold, StratifiedShuffleSplit, ShuffleSplit
 
@@ -233,20 +232,9 @@ class OuterFoldManager:
                               cache_folder=self.cache_folder,
                               cache_updater=self.cache_updater)
 
-            # Todo: each and everytime the pipe is instantiated just for printing.. that's bad!! WORKAROUND PIPE!!
-            example_pipe = pipe_ctor()
-
-            Logger().debug(PHOTONPrintHelper._optimize_printing(example_pipe, current_config))
-            Logger().debug('calculating...')
-
             # Test the configuration cross validated by inner_cv object
             current_config_mdb = hp.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
-
             current_config_mdb.config_nr = tested_config_counter
-            current_config_mdb.config_dict = current_config
-            current_config_mdb.human_readable_config = PHOTONPrintHelper.config_to_human_readable_dict(example_pipe, current_config)
-
-            Logger().verbose(PHOTONPrintHelper._optimize_printing(example_pipe, current_config))
 
             if not current_config_mdb.config_failed:
                 # get optimizer_metric and forward to optimizer
@@ -296,23 +284,13 @@ class OuterFoldManager:
 
             if not best_config_outer_fold:
                 raise Exception("No best config was found!")
-            best_config_outer_fold_mdb = MDBConfig()
-            best_config_outer_fold_mdb.config_dict = best_config_outer_fold.config_dict
-            best_config_outer_fold_mdb.human_readable_config = best_config_outer_fold.human_readable_config
-
-            # inform user
-            Logger().info('Finished hyperparameter optimization!')
-            Logger().verbose('Number of tested configurations:' + str(tested_config_counter))
-            Logger().verbose('Optimizer metric: ' + self.optimization_info.best_config_metric + '\n' +
-                             '   --> Greater is better: ' + str(self.optimization_info.maximize_metric))
-            Logger().info('Best config: ' + PHOTONPrintHelper._optimize_printing(example_pipe, best_config_outer_fold_mdb.config_dict))
 
             # ... and create optimal pipeline
             optimum_pipe = self.copy_pipe_fnc()
             self.cache_updater(optimum_pipe, self.cache_folder, "fixed_fold_id")
             optimum_pipe.caching = False
             # set self to best config
-            optimum_pipe.set_params(**best_config_outer_fold_mdb.config_dict)
+            optimum_pipe.set_params(**best_config_outer_fold.config_dict)
 
             # Todo: set all children to best config and inform to NOT optimize again, ONLY fit
             # for child_name, child_config in best_config_outer_fold_mdb.children_config_dict.items():
@@ -330,16 +308,13 @@ class OuterFoldManager:
             # self.__distribute_cv_info_to_hyperpipe_children(reset=True)
 
             Logger().verbose('...now fitting with optimum configuration')
-            fit_time_start = datetime.datetime.now()
             optimum_pipe.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
 
-            best_config_outer_fold_mdb.fit_duration_minutes = (datetime.datetime.now() - fit_time_start).total_seconds() / 60
-            self.result_object.best_config = best_config_outer_fold_mdb
-            self.result_object.best_config.inner_folds = []
+            self.result_object.best_config = best_config_outer_fold
 
             # save test performance
             best_config_performance_mdb = MDBInnerFold()
-            best_config_performance_mdb.fold_nr = 1
+            best_config_performance_mdb.fold_nr = -99
             best_config_performance_mdb.number_samples_training = self._validation_y.shape[0]
             best_config_performance_mdb.number_samples_validation = self._test_y.shape[0]
 
@@ -394,7 +369,8 @@ class OuterFoldManager:
                 # validation
                 best_config_performance_mdb.validation = _copy_inner_fold_means(best_config_outer_fold.metrics_test)
 
-            self.result_object.best_config.inner_folds = [best_config_performance_mdb]
+            # write best config performance to best config item
+            self.result_object.best_config.best_config_score = best_config_performance_mdb
 
         Logger().info('This took {} minutes.'.format((datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 

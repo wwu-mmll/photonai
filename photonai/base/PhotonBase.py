@@ -1,7 +1,4 @@
 import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-warnings.filterwarnings("ignore", category=FutureWarning)
-
 import glob
 import importlib.util
 import inspect
@@ -39,6 +36,9 @@ from ..validation.ResultsTreeHandler import ResultsTreeHandler
 from ..validation.Validate import Scorer
 from .PhotonPipeline import PhotonPipeline, CacheManager
 from ..validation.Validate import TestPipeline
+
+warnings.filterwarnings("ignore", category=DeprecationWarning)
+warnings.filterwarnings("ignore", category=FutureWarning)
 
 
 class PhotonNative:
@@ -109,6 +109,9 @@ class OutputSettings:
         self.save_output = save_output
         self.plots = plots
 
+        # in case eval final performance is false, we have no outer fold predictions
+        self.save_predictions_from_best_config_inner_folds = False
+
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
@@ -141,7 +144,6 @@ class OutputSettings:
 
             self.log_file = self._add_timestamp(self.log_file)
             Logger().set_custom_log_file(self.log_file)
-
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
@@ -297,7 +299,7 @@ class Hyperpipe(BaseEstimator):
         else:
             self.output_settings = OutputSettings()
         self.verbosity = verbosity
-        self.mongodb_writer = None
+        self.result_tree_manager = None
         self.result_tree = None
         self.best_config = None
         self.estimation_type = None
@@ -439,25 +441,37 @@ class Hyperpipe(BaseEstimator):
             if len(list_of_non_failed_configs) == 0:
                 raise Warning("No Configs found which did not fail.")
             try:
-                for config in list_of_non_failed_configs:
-                    list_of_config_vals.append(
-                        MDBHelper.get_metric(config, FoldOperations.MEAN, self.best_config_metric, train=False))
 
-                if self.maximize_metric:
-                    # max metric
-                    best_config_metric_nr = np.argmax(list_of_config_vals)
+                if len(list_of_non_failed_configs) == 1:
+                    best_config_outer_fold = list_of_non_failed_configs[0]
                 else:
-                    # min metric
-                    best_config_metric_nr = np.argmin(list_of_config_vals)
-                return list_of_non_failed_configs[best_config_metric_nr]
+                    for config in list_of_non_failed_configs:
+                        list_of_config_vals.append(
+                            MDBHelper.get_metric(config, FoldOperations.MEAN, self.best_config_metric, train=False))
+
+                    if self.maximize_metric:
+                        # max metric
+                        best_config_metric_nr = np.argmax(list_of_config_vals)
+                    else:
+                        # min metric
+                        best_config_metric_nr = np.argmin(list_of_config_vals)
+
+                    best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
+
+                # inform user
+                Logger().verbose('Number of tested configurations:' + str(len(tested_configs)))
+                Logger().verbose('Optimizer metric: ' + self.best_config_metric + '\n' +
+                                 '   --> Greater is better: ' + str(self.maximize_metric))
+                Logger().info('Best config: ' + str(best_config_outer_fold.human_readable_config))
+
+                return best_config_outer_fold
             except BaseException as e:
                 Logger().error(str(e))
 
         def get_optimum_config_outer_folds(self, outer_folds):
-
             list_of_scores = list()
             for outer_fold in outer_folds:
-                metrics = outer_fold.best_config.inner_folds[0].validation.metrics
+                metrics = outer_fold.best_config.best_config_score.validation.metrics
                 list_of_scores.append(metrics[self.best_config_metric])
 
             if self.maximize_metric:
@@ -468,18 +482,12 @@ class Hyperpipe(BaseEstimator):
                 best_config_metric_nr = np.argmin(list_of_scores)
 
             best_config = outer_folds[best_config_metric_nr].best_config
-            best_config_mdb = MDBConfig()
-            best_config_mdb.config_dict = best_config.config_dict
-            best_config_mdb.children_config_ref = best_config.children_config_ref
-            best_config_mdb.children_config_dict = best_config.children_config_dict
-            best_config_mdb.human_readable_config = best_config.human_readable_config
-            return best_config_mdb
+            return best_config
 
-        def define_optimizer_metric(self, pipeline_elements):
+        def define_optimizer_metric(self):
             """
             Analyse and prepare the best config metric.
             Derive if it is better when the value increases or decreases.
-            :param pipeline_elements: the items of the pipeline
             """
             if isinstance(self.best_config_metric, str):
                 self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
@@ -582,7 +590,10 @@ class Hyperpipe(BaseEstimator):
         result_tree_name = self.name
 
         self.result_tree = MDBHyperpipe(name=result_tree_name)
-        self.mongodb_writer = ResultsTreeHandler(self.result_tree, self.output_settings)
+        # in case eval final performance is false, we have no outer fold predictions
+        if not self.cross_validation.eval_final_performance:
+            self.output_settings.save_predictions_from_best_config_inner_folds = True
+        self.result_tree_manager = ResultsTreeHandler(self.result_tree, self.output_settings)
 
         self.result_tree.computation_start_time = start_time
         self.result_tree.metrics = self.optimization.metrics
@@ -615,7 +626,8 @@ class Hyperpipe(BaseEstimator):
             self.optimization.metrics)
 
         # save result tree to db or file or both
-        self.mongodb_writer.save()
+        Logger().info('Finished hyperparameter optimization!')
+        self.result_tree_manager.save()
         Logger().info("Saved result tree.")
 
         # Find best config across outer folds
@@ -623,13 +635,17 @@ class Hyperpipe(BaseEstimator):
         self.result_tree.best_config = self.best_config
         Logger().info('OVERALL BEST CONFIGURATION')
         Logger().info('--------------------------')
-        Logger().info(PHOTONPrintHelper._optimize_printing(self.optimum_pipe, self.best_config.config_dict))
+        Logger().info(self.best_config.human_readable_config)
 
         # save results again
         self.result_tree.time_of_results = datetime.datetime.now()
         self.result_tree.computation_completed = True
-        self.mongodb_writer.save()
+        self.result_tree_manager.save()
         Logger().info("Saved overall best config to database ")
+
+        # write all convenience files (summary, predictions_file and plots)
+        Logger().info("Writing convenience files (summary, predictions, plots..)")
+        self.result_tree_manager.write_convenience_files()
 
         # set self to best config
         self.optimum_pipe = self._pipe
@@ -860,11 +876,11 @@ class Hyperpipe(BaseEstimator):
         # optimization
         self.result_tree.hyperpipe_info = MDBHyperpipeInfo()
         self.result_tree.hyperpipe_info.cross_validation = {'OuterCV': self._format_cross_validation(self.cross_validation.outer_cv),
-                                         'InnerCV': self._format_cross_validation(self.cross_validation.inner_cv)}
+                                                            'InnerCV': self._format_cross_validation(self.cross_validation.inner_cv)}
         self.result_tree.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
         self.result_tree.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
-                                                             'OptimizerParams': str(self.optimization.optimizer_params),
-                                                            'BestConfigMetric': self.optimization.best_config_metric}
+                                                        'OptimizerParams': str(self.optimization.optimizer_params),
+                                                        'BestConfigMetric': self.optimization.best_config_metric}
 
     @staticmethod
     def _format_cross_validation(cv):
@@ -917,7 +933,7 @@ class Hyperpipe(BaseEstimator):
                 # first check if correct optimizer metric has been chosen
                 # pass pipeline_elements so that OptimizerMetric can look for last
                 # element and use the corresponding score method
-                self.optimization.define_optimizer_metric(self.pipeline_elements)
+                self.optimization.define_optimizer_metric()
 
                 start = datetime.datetime.now()
                 self._prepare_result_logging(start)
@@ -975,7 +991,7 @@ class Hyperpipe(BaseEstimator):
                         # 3. fit
                         outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
                         # 4. save outer fold results
-                        self.mongodb_writer.save()
+                        self.result_tree_manager.save()
                     finally:
                         # 5. clear cache
                         CacheManager.clear_cache_files(self.cache_folder)

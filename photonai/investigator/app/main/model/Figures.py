@@ -1,5 +1,5 @@
 from sklearn.metrics import confusion_matrix
-from photonai.base.PhotonBase import Hyperpipe
+from photonai.validation.Validate import Scorer
 import numpy as np
 from .PlotlyTrace import PlotlyTrace
 from .PlotlyPlot import PlotlyPlot
@@ -93,7 +93,7 @@ def plotly_optimizer_history(name, config_evaluations, minimum_config_evaluation
     mean = np.nanmean(np.asarray(config_evaluations_corres), axis=0)
     mean_min = np.nanmean(np.asarray(minimum_config_evaluations_corres), axis=0)
 
-    greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
+    greater_is_better = Scorer.greater_is_better_distinction(metric)
     if greater_is_better:
         caption = "Maximum"
     else:

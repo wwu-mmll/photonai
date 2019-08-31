@@ -276,7 +276,6 @@ class Flowchart(object):
             else:
                 string = "["+parent[1:]+"."+pipe_element.name+"]:\n"+"Layout:\n"
 
-
             # Layout
             for pelement in list(pipe_element.pipe_elements.values()):
                 string = string+"["+pelement.name+"]|\n"

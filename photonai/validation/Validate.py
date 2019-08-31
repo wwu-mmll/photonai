@@ -1,14 +1,13 @@
 import time
 import traceback
 import warnings
-import os
-
-import numpy as np
-from sklearn.pipeline import Pipeline
-
-from multiprocessing import Process, Queue
 import queue
+import numpy as np
+import json
+from sklearn.pipeline import Pipeline
+from multiprocessing import Process, Queue
 
+from ..base.Helper import PHOTONPrintHelper
 from ..photonlogger.Logger import Logger
 from ..validation.ResultsDatabase import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
     FoldOperations, MDBConfig
@@ -66,6 +65,7 @@ class TestPipeline(object):
         # time.sleep(35)
 
         config_item = MDBConfig()
+        config_item.config_dict = self.params
         config_item.inner_folds = []
         config_item.metrics_test = []
         config_item.metrics_train = []
@@ -102,6 +102,9 @@ class TestPipeline(object):
                 if self.cache_folder is not None and self.cache_updater is not None:
                     self.cache_updater(new_pipe, self.cache_folder, inner_fold_id)
 
+                if not config_item.human_readable_config:
+                    config_item.human_readable_config = PHOTONPrintHelper.config_to_human_readable_dict(new_pipe, self.params)
+
                 job_data = TestPipeline.InnerCVJob(pipe=new_pipe,
                                                    config=dict(self.params),
                                                    metrics=list(self.optimization_infos.metrics),
@@ -116,6 +119,10 @@ class TestPipeline(object):
                     # inform children in which inner fold we are
                     # self.pipe.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=fold_cnt)
                     # self.mother_inner_fold_handle(fold_cnt)
+
+                    # --> write that output in TestPipeline!
+                    Logger().debug(config_item.human_readable_config)
+                    Logger().debug('calculating...')
 
                     curr_test_fold, curr_train_fold = TestPipeline.fit_and_score(job_data)
                     durations = job_data.pipe.time_monitor
@@ -173,6 +180,9 @@ class TestPipeline(object):
                 config_item.config_failed = True
             config_item.config_error = str(e)
             warnings.warn('One test iteration of pipeline failed with error')
+
+        Logger().debug('...done with')
+        Logger().verbose(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
         return config_item
 
@@ -259,8 +269,6 @@ class TestPipeline(object):
                     overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
                     overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
 
-            # if we want to have metrics across all predictions from all folds:
-            if calculate_metrics_across_folds:
                 # metrics across folds
                 metrics_to_calculate = list(metrics)
                 if 'score' in metrics_to_calculate:
