@@ -591,22 +591,25 @@ class ResultsTreeHandler:
                     fold_nr.append(inner_fold.fold_nr)
 
             if len(score_info_list) > 0:
-                for i, score_info in enumerate(score_info_list):
-                    fold_nr_array = []
-                    y_pred_array = []
-                    y_true_array = []
-                    indices_array = []
+                fold_nr_array = []
+                collectables = {'y_pred': [], 'y_true': [], 'indices': []}
 
-                    y_pred_array = PHOTONDataHelper.stack_results(score_info.y_pred, y_pred_array)
-                    y_true_array = PHOTONDataHelper.stack_results(score_info.y_true, y_true_array)
-                    indices_array = PHOTONDataHelper.stack_results(score_info.indices, indices_array)
+                if hasattr(score_info_list[0], 'probability') and len(score_info_list[0].probability) > 0:
+                    collectables['probability'] = []
+
+                for i, score_info in enumerate(score_info_list):
+                    for collectable_key, collectbale_list in collectables.items():
+                        if hasattr(score_info, collectable_key):
+                            value = getattr(score_info, collectable_key)
+                            collectables[collectable_key] = PHOTONDataHelper.stack_results(value, collectables[collectable_key])
                     fold_nr_array = PHOTONDataHelper.stack_results(np.ones((len(score_info.y_true),)) * fold_nr[i],
                                                                    fold_nr_array)
 
-                save_df = pd.DataFrame(data={'indices': indices_array, 'fold': fold_nr_array,
-                                             'y_pred': y_pred_array, 'y_true': y_true_array})
+                collectables["fold"] = fold_nr_array
+                save_df = pd.DataFrame(collectables)
+                sorted_df = save_df.sort_values(by='indices')
                 predictions_filename = os.path.join(self.save_settings.results_folder, 'best_config_predictions.csv')
-                save_df.to_csv(predictions_filename)
+                sorted_df.to_csv(predictions_filename, index=None)
 
     def write_summary(self):
 
