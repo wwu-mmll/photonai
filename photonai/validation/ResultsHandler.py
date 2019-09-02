@@ -247,8 +247,7 @@ class ResultsHandler:
             if self.save_settings:
                 file = os.path.join(self.save_settings.results_folder, "optimizer_history.png")
                 plt.savefig(file)
-
-        plt.show()
+        plt.close()
 
     def get_val_preds(self, sort_CV=True):
         """
@@ -539,6 +538,7 @@ class ResultsHandler:
         plt.title("methods")
 
         plt.savefig(os.path.join(self.save_settings.results_folder, 'time_monitor_pie.png'))
+        plt.close()
 
     def save(self):
 
