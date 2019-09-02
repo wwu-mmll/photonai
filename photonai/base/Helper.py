@@ -33,7 +33,9 @@ class PHOTONPrintHelper:
             name = items[0]
             rest = '__'.join(items[1::])
             if name in pipe.named_steps:
-                prettified_config[name] = pipe.named_steps[name].prettify_config_output(rest, el_value)
+                if not name in prettified_config:
+                    prettified_config[name] = list()
+                prettified_config[name].append(pipe.named_steps[name].prettify_config_output(rest, el_value))
             else:
                 raise ValueError('Item is not contained in pipeline:' + name)
         return prettified_config

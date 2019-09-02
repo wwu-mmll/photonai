@@ -486,5 +486,9 @@
   "RangeRestrictor":[
     "photonai.modelwrapper.RangeRestrictor.RangeRestrictor",
     "Estimator"
+  ],
+  "Voting":[
+    "photonai.modelwrapper.Voting.Voting",
+    "Estimator"
   ]
 }
