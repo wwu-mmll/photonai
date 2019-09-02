@@ -10,7 +10,7 @@ from nibabel.nifti1 import Nifti1Image
 import numpy as np
 import glob
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.validation.ResultsTreeHandler import ResultsHandler
+from photonai.validation.ResultsHandler import ResultsHandler
 from sklearn.model_selection import ShuffleSplit
 
 
