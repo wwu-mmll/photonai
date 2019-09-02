@@ -329,7 +329,7 @@ class PipelineBranchTests(unittest.TestCase):
 
         stacking_element.fit(self.X, self.y)
         trans, _, _ = stacking_element.transform(self.X)
-        pred, _, _ = stacking_element.predict(self.X)
+        pred, _ = stacking_element.predict(self.X)
 
         self.assertTrue(np.array_equal(trans, pred))
         ss = StandardScaler()

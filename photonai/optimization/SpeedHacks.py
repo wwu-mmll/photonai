@@ -107,7 +107,7 @@ class DummyPerformance(PhotonBaseConstraint):
     """
 
     def __init__(self, metric: str='', margin: float =1., strategy='first'):
-        super(MinimumPerformance, self).__init__(strategy=strategy, metric=metric, margin=margin)
+        super(DummyPerformance, self).__init__(strategy=strategy, metric=metric, margin=margin)
 
     def set_dummy_performance(self, dummy_result):
         self.threshold = dummy_result.validation.metrics[self.metric]+self.margin
