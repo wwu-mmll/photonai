@@ -246,7 +246,7 @@ class Hyperpipe(BaseEstimator):
         Holds the training and test metrics for all outer folds, inner folds and configurations, as well as
         additional information.
 
-    * `pipeline_elements` [list]:
+    * `elements` [list]:
         Contains all PipelineElement or Hyperpipe objects that are added to the pipeline.
 
     Example
@@ -305,10 +305,10 @@ class Hyperpipe(BaseEstimator):
         self.estimation_type = None
 
         # ====================== Pipeline ===========================
-        self.pipeline_elements = []
+        self.elements = []
         self._pipe = None
         self.optimum_pipe = None
-        self.preprocessing_pipe = None
+        self.preprocessing = None
 
         # ====================== Perfomance Optimization ===========================
 
@@ -535,13 +535,13 @@ class Hyperpipe(BaseEstimator):
 
         """
         if isinstance(pipe_element, Preprocessing):
-            self.preprocessing_pipe = pipe_element
+            self.preprocessing = pipe_element
         elif isinstance(pipe_element, CallbackElement):
             pipe_element.needs_y = True
-            self.pipeline_elements.append(pipe_element)
+            self.elements.append(pipe_element)
         else:
             if isinstance(pipe_element, PipelineElement) or issubclass(type(pipe_element), PhotonNative):
-                self.pipeline_elements.append(pipe_element)
+                self.elements.append(pipe_element)
                 # Todo: is repeated each time element is added....
                 self._prepare_pipeline()
             else:
@@ -663,7 +663,11 @@ class Hyperpipe(BaseEstimator):
 
         Logger().info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
-        # Now truely set to no caching (including single_subject_caching)
+
+        # Before saving the optimum pipe, add preprocessing
+        self.optimum_pipe._add_preprocessing(self.preprocessing)
+
+        # Now truly set to no caching (including single_subject_caching)
         self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
         Logger().info("Saving best model..")
@@ -681,7 +685,7 @@ class Hyperpipe(BaseEstimator):
             Logger().info("Mapping back feature importances...")
             feature_importances = TestPipeline.extract_feature_importances(self.optimum_pipe)
             if not feature_importances:
-                Logger().info("No feature importances available for {}!".format(self.optimum_pipe.steps[-1][0]))
+                Logger().info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1].name))
                 return
 
             self.results.optimum_pipe_feature_importances = feature_importances
@@ -702,21 +706,14 @@ class Hyperpipe(BaseEstimator):
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):
-        from ..neuro.NeuroBase import NeuroModuleBranch
-
-        if isinstance(pipe, Stack):
-            for name, child in pipe.pipe_elements.items():
+        if isinstance(pipe, (Stack, Branch, Switch, Preprocessing, PhotonPipeline)):
+            if hasattr(pipe, 'nr_of_processes'):
+                pipe.nr_of_processes = 1
+            for child in pipe.elements:
                 Hyperpipe.disable_multiprocessing_recursively(child.base_element)
-
-        elif isinstance(pipe, NeuroModuleBranch):
-            # in case it's a NeuroModuleBranch, disable multiprocessing
-            Logger().debug("Disabling multiprocessing of NeuroModuleBranch for training of optimum pipe...")
-            pipe.nr_of_processes = 1
-
-        elif isinstance(pipe, PhotonPipeline):
-            for step_name, step_obj in pipe.steps:
-                # we need to check if any element is Branch, Stack or Swtich
-                Hyperpipe.disable_multiprocessing_recursively(step_obj)
+        else:
+            if hasattr(pipe, 'nr_of_processes'):
+                pipe.nr_of_processes = 1
 
     def _input_data_sanity_checks(self, data, targets, **kwargs):
         # ==================== SANITY CHECKS ===============================
@@ -783,12 +780,8 @@ class Hyperpipe(BaseEstimator):
 
     @staticmethod
     def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
-        if isinstance(element, Switch):
-            for child in element.pipeline_element_list:
-                Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
-
-        elif isinstance(element, Stack):
-            for name, child in element.pipe_elements.items():
+        if isinstance(element, (Switch, Stack, Preprocessing)):
+            for child in element.elements:
                 Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
 
         elif isinstance(element, Branch):
@@ -804,32 +797,26 @@ class Hyperpipe(BaseEstimator):
 
             # pipe.caching is automatically set to True or False by .cache_folder setter
 
-            for step_name, step_obj in element.steps:
+            for child in element.elements:
                 # we need to check if any element is Branch, Stack or Swtich
-                Hyperpipe.recursive_cache_folder_propagation(step_obj, cache_folder, inner_fold_id)
+                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
 
         # if it's a simple PipelineElement, then we just don't do anything
 
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
-        if self.preprocessing_pipe is not None:
+        if self.preprocessing is not None:
             Logger().info("Applying preprocessing.")
-            self.preprocessing_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
-            self.data.X, self.data.y, self.data.kwargs = self.preprocessing_pipe.transform(self.data.X, self.data.y,
-                                                                                           **self.data.kwargs)
+            self.preprocessing.fit(self.data.X, self.data.y, **self.data.kwargs)
+            self.data.X, self.data.y, self.data.kwargs = self.preprocessing.transform(self.data.X, self.data.y,
+                                                                                      **self.data.kwargs)
 
     def _check_for_estimator(self, last_element=None):
         if not last_element:
-            last_element = self.pipeline_elements[-1]
-        if isinstance(last_element, Switch):
+            last_element = self.elements[-1]
+        if isinstance(last_element, (Switch, Stack, Branch)):
             # if Switch, just take the first element within the switch; this should be a regressor or classifier
-            self._check_for_estimator(last_element.pipeline_element_list[0])
-        elif isinstance(last_element, Stack):
-            # if Stack, just take random element from stack
-            self._check_for_estimator(last_element.pipe_elements.popitem())
-        elif isinstance(last_element, Branch):
-            # if Branch, just take last element of branch
-            self._check_for_estimator(last_element.pipeline_elements[-1])
+            self._check_for_estimator(last_element.elements[-1])
         else:
             if not hasattr(last_element.base_element, '_estimator_type'):
                 raise NotImplementedError("Last pipeline element has to be an estimator. Your estimator does not specify"
@@ -910,7 +897,7 @@ class Hyperpipe(BaseEstimator):
             if not self.is_final_fit:
 
                 # first check if correct optimizer metric has been chosen
-                # pass pipeline_elements so that OptimizerMetric can look for last
+                # pass elements so that OptimizerMetric can look for last
                 # element and use the corresponding score method
                 self.optimization.define_optimizer_metric()
 
@@ -963,7 +950,7 @@ class Hyperpipe(BaseEstimator):
                     # 2. prepare
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
                     self.results.outer_folds.append(outer_fold)
-                    outer_fold_computer.prepare_optimization(self.pipeline_elements, outer_fold)
+                    outer_fold_computer.prepare_optimization(self.elements, outer_fold)
                     dummy_results.append(outer_fold_computer.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
                     try:
@@ -1051,7 +1038,7 @@ class Hyperpipe(BaseEstimator):
         """
         # prepare pipeline
         pipeline_steps = []
-        for item in self.pipeline_elements:
+        for item in self.elements:
             # pipeline_steps.append((item.name, item.base_element))
             pipeline_steps.append((item.name, item))
 
@@ -1072,13 +1059,13 @@ class Hyperpipe(BaseEstimator):
             if hasattr(self, attr):
                 setattr(pipe_copy, attr, getattr(self, attr))
 
-        if hasattr(self, 'preprocessing_pipe') and self.preprocessing_pipe:
+        if hasattr(self, 'preprocessing') and self.preprocessing:
             preprocessing = Preprocessing()
-            for element in self.preprocessing_pipe.pipeline_elements:
+            for element in self.preprocessing.pipeline_elements:
                 preprocessing += element.copy_me()
             pipe_copy += preprocessing
-        if hasattr(self, 'pipeline_elements'):
-            for element in self.pipeline_elements:
+        if hasattr(self, 'elements'):
+            for element in self.elements:
                 pipe_copy += element.copy_me()
         return pipe_copy
 
@@ -1091,7 +1078,7 @@ class Hyperpipe(BaseEstimator):
         new sklearn Pipeline object
         """
         pipeline_steps = []
-        for item in self.pipeline_elements:
+        for item in self.elements:
             cpy = item.copy_me()
             if isinstance(cpy, list):
                 for new_step in cpy:
@@ -1543,7 +1530,7 @@ class PipelineElement(BaseEstimator):
         if self.needs_y:
             # if we dont have any target vector, we are in "predict"-mode although we are currently transforming
             # in this case, we want to skip the transformation and pass X, None and kwargs onwards
-            # so basically, we skip all training_only steps
+            # so basically, we skip all training_only elements
             # todo: I think, there's no way around this if we want to pass y and kwargs down to children of Switch and Branch
             if isinstance(self, (Switch, Branch, Preprocessing)):
                 X, y, kwargs = delegate(X, y, **kwargs)
@@ -1608,7 +1595,7 @@ class Branch(PipelineElement):
         # in case any of the children needs y or covariates we need to request them
         self.needs_y = True
         self.needs_covariates = True
-        self.pipeline_elements = []
+        self.elements = []
         self.has_hyperparameters = True
         self.skip_caching = True
 
@@ -1636,7 +1623,7 @@ class Branch(PipelineElement):
             The object to add, being either a transformer or an estimator.
 
         """
-        self.pipeline_elements.append(pipe_element)
+        self.elements.append(pipe_element)
         self._prepare_pipeline()
         return self
 
@@ -1654,10 +1641,10 @@ class Branch(PipelineElement):
         self.__iadd__(pipe_element)
 
     def _prepare_pipeline(self):
-        """ Generates sklearn pipeline with all underlying steps """
+        """ Generates sklearn pipeline with all underlying elements """
         pipeline_steps = []
 
-        for item in self.pipeline_elements:
+        for item in self.elements:
             # pipeline_steps.append((item.name, item.base_element))
             pipeline_steps.append((item.name, item))
             if hasattr(item, 'hyperparameters'):
@@ -1672,7 +1659,7 @@ class Branch(PipelineElement):
 
     def copy_me(self):
         new_copy_of_me = self.__class__(self.name)
-        for item in self.pipeline_elements:
+        for item in self.elements:
             if hasattr(item, 'copy_me'):
                 copy_item = item.copy_me()
             else:
@@ -1695,7 +1682,7 @@ class Branch(PipelineElement):
 
     def generate_config_grid(self):
         if self.has_hyperparameters:
-            tmp_grid = create_global_config_grid(self.pipeline_elements, self.name)
+            tmp_grid = create_global_config_grid(self.elements, self.name)
             return tmp_grid
         else:
             return []
@@ -1705,7 +1692,7 @@ class Branch(PipelineElement):
         Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
         """
         self._hyperparameters = {}
-        for element in self.pipeline_elements:
+        for element in self.elements:
             for attribute, value_list in element.hyperparameters.items():
                 self._hyperparameters[self.name + '__' + attribute] = value_list
 
@@ -1741,7 +1728,7 @@ class Preprocessing(Branch):
             if len(pipe_element.hyperparameters) > 0:
                 raise ValueError("A preprocessing transformer must not have any hyperparameter "
                                  "because it is not part of the optimization and cross validation procedure")
-            self.pipeline_elements.append(pipe_element)
+            self.elements.append(pipe_element)
             self._prepare_pipeline()
         else:
             raise ValueError("Pipeline Element must have transform function")
@@ -1761,7 +1748,7 @@ class Stack(PipelineElement):
     and horizontally concatenated.
 
     """
-    def __init__(self, name: str, stacking_elements=None, voting: bool=False):
+    def __init__(self, name: str, elements=None, voting: bool=False):
         """
         Creates a new Stack element.
         Collects all possible hyperparameter combinations of the children
@@ -1770,7 +1757,7 @@ class Stack(PipelineElement):
         ----------
         * `name` [str]:
             Give the pipeline element a name
-        * `stacking_elements` [list, optional]:
+        * `elements` [list, optional]:
             List of pipeline elements that should run in parallel
         * `voting` [bool]:
             If true, the predictions of the encapsulated pipeline elements are joined to a single prediction
@@ -1779,10 +1766,10 @@ class Stack(PipelineElement):
                                     base_element=True)
 
         self._hyperparameters = {}
-        self.pipe_elements = OrderedDict()
+        self.elements = list()
         self.voting = voting
-        if stacking_elements is not None:
-            for item_to_stack in stacking_elements:
+        if elements is not None:
+            for item_to_stack in elements:
                 self.__iadd__(item_to_stack)
 
         # todo: Stack should not be allowed to change y, only covariates
@@ -1799,27 +1786,20 @@ class Stack(PipelineElement):
         """
         self.check_if_needs_y(item)
 
-        self.pipe_elements[item.name] = item
-        # self._hyperparameters[item.name] = item.hyperparameters
+        self.elements.append(item)
 
         # for each configuration
         if not isinstance(item, Hyperpipe):
             tmp_dict = dict(item.hyperparameters)
             for key, element in tmp_dict.items():
-                # if isinstance(item, Branch):
-                #     self._hyperparameters[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
-                # elif isinstance(item, PipelineElement):
                 self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
 
         return self
 
     def check_if_needs_y(self, item):
-        if isinstance(item, Branch):
-            for branch_item in item.pipeline_elements:
-                self.check_if_needs_y(branch_item)
-        elif isinstance(item, Stack):
-            for stack_item in item.pipe_elements:
-                self.check_if_needs_y(stack_item)
+        if isinstance(item, (Branch, Stack, Switch)):
+            for child_item in item.elements:
+                self.check_if_needs_y(child_item)
         elif isinstance(item, PipelineElement):
             if item.needs_y:
                 raise NotImplementedError("Elements in Stack must not transform y because the number of samples in every "
@@ -1842,13 +1822,13 @@ class Stack(PipelineElement):
         pass
 
     def generate_config_grid(self):
-        tmp_grid = create_global_config_grid(self.pipe_elements.values(), self.name)
+        tmp_grid = create_global_config_grid(self.elements, self.name)
         return tmp_grid
 
     def get_params(self, deep=True):
         all_params = {}
-        for name, element in self.pipe_elements.items():
-            all_params[name] = element.get_params(deep)
+        for element in self.elements:
+            all_params[element.name] = element.get_params(deep)
         return all_params
 
     def set_params(self, **kwargs):
@@ -1865,18 +1845,17 @@ class Stack(PipelineElement):
             spread_params_dict[item_name].update(dict_entry)
 
         for name, params in spread_params_dict.items():
-            if name in self.pipe_elements:
-                self.pipe_elements[name].set_params(**params)
-            else:
-                Logger().error('NameError: Could not find element ' + name)
-                raise NameError('Could not find element ', name)
+            for element in self.elements:
+                if element.name == name:
+                    element.set_params(**params)
+
         return self
 
     def fit(self, X, y=None, **kwargs):
         """
         Calls fit iteratively on every child
         """
-        for name, element in self.pipe_elements.items():
+        for element in self.elements:
             # Todo: parallellize fitting
             element.fit(X, y, **kwargs)
         return self
@@ -1888,7 +1867,7 @@ class Stack(PipelineElement):
         # Todo: strategy for concatenating data from different pipes
         # todo: parallelize prediction
         predicted_data = np.array([])
-        for name, element in self.pipe_elements.items():
+        for element in self.elements:
             element_transform = element.predict(X, **kwargs)
             predicted_data = Stack.stack_data(predicted_data, element_transform)
         if self.voting:
@@ -1903,7 +1882,7 @@ class Stack(PipelineElement):
         stack them together. Alternatively, do voting instead.
         """
         predicted_data = np.array([])
-        for name, element in self.pipe_elements.items():
+        for element in self.elements:
             element_transform = element.predict_proba(X)
             predicted_data = Stack.stack_data(predicted_data, element_transform)
         if self.voting:
@@ -1919,7 +1898,7 @@ class Stack(PipelineElement):
         If the encapsulated child is a hyperpipe, also calls predict on the last element in the pipeline.
         """
         transformed_data = np.array([])
-        for name, element in self.pipe_elements.items():
+        for element in self.elements:
             # if it is a hyperpipe with a final estimator, we want to use predict:
                 element_transform, _, _ = element.transform(X, y, **kwargs)
                 transformed_data = Stack.stack_data(transformed_data, element_transform)
@@ -1928,7 +1907,7 @@ class Stack(PipelineElement):
 
     def copy_me(self):
         ps = Stack(self.name, voting=self.voting)
-        for name, element in self.pipe_elements.items():
+        for element in self.elements:
             new_element = element.copy_me()
             ps += new_element
         ps.base_element = self.base_element
@@ -2006,7 +1985,7 @@ class Switch(PipelineElement):
 
     """
 
-    def __init__(self, name: str, pipeline_element_list: list = None):
+    def __init__(self, name: str, elements: list = None):
         """
         Creates a new Switch object and generated the hyperparameter combination grid
 
@@ -2014,7 +1993,7 @@ class Switch(PipelineElement):
         ----------
         * `name` [str]:
             How the element is called in the pipeline
-        * `pipeline_element_list` [list, optional]:
+        * `elements` [list, optional]:
             The competing pipeline elements
         * `_estimator_type:
             Used for validation purposes, either classifier or regressor
@@ -2037,24 +2016,24 @@ class Switch(PipelineElement):
         self.is_estimator = True
         self.is_transformer = True
 
-        self.pipeline_element_dict = {}
+        self.elements_dict = {}
 
-        if pipeline_element_list:
-            self.pipeline_element_list = pipeline_element_list
-            self.is_transformer, self.is_estimator = self.check_if_estimator_or_transformer(pipeline_element_list[-1])
+        if elements:
+            self.elements = elements
+            self.is_transformer, self.is_estimator = self.check_if_estimator_or_transformer(elements[-1])
             self.generate_private_config_grid()
-            for p_element in pipeline_element_list:
-                self.pipeline_element_dict[p_element.name] = p_element
+            for p_element in elements:
+                self.elements_dict[p_element.name] = p_element
         else:
-            self.pipeline_element_list = []
+            self.elements = []
 
     def check_if_estimator_or_transformer(self, pipeline_element):
         if isinstance(pipeline_element, Branch):
-            return self.check_if_estimator_or_transformer(pipeline_element.pipeline_elements[-1])
+            return self.check_if_estimator_or_transformer(pipeline_element.elements[-1])
         elif isinstance(pipeline_element, Switch):
-            return self.check_if_estimator_or_transformer(pipeline_element.pipeline_element_list[0])
+            return self.check_if_estimator_or_transformer(pipeline_element.elements[0])
         elif isinstance(pipeline_element, Stack):
-            return self.check_if_estimator_or_transformer(pipeline_element.pipe_elements[0])
+            return self.check_if_estimator_or_transformer(pipeline_element.elements[0])
         elif isinstance(pipeline_element, PipelineElement):
             if hasattr(pipeline_element, "is_estimator"):
                 return (not pipeline_element.is_estimator, pipeline_element.is_estimator)
@@ -2073,9 +2052,9 @@ class Switch(PipelineElement):
         """
         self.is_transformer, self.is_estimator = self.check_if_estimator_or_transformer(pipeline_element)
 
-        self.pipeline_element_list.append(pipeline_element)
-        if not pipeline_element.name in self.pipeline_element_dict:
-            self.pipeline_element_dict[pipeline_element.name] = pipeline_element
+        self.elements.append(pipeline_element)
+        if not pipeline_element.name in self.elements_dict:
+            self.elements_dict[pipeline_element.name] = pipeline_element
         else:
             error_msg = "Already added a pipeline element with that name to the pipeline switch " + self.name
             Logger().error(error_msg)
@@ -2110,7 +2089,7 @@ class Switch(PipelineElement):
         # calculate anew
         hyperparameters = []
         # generate possible combinations for each item respectively - do not mix hyperparameters across items
-        for i, pipe_element in enumerate(self.pipeline_element_list):
+        for i, pipe_element in enumerate(self.elements):
             # distinct_values_config = create_global_config([pipe_element])
             # add pipeline switch name in the config so that the hyperparameters can be set from other classes
             # pipeline switch will give the hyperparameters to the respective child
@@ -2141,7 +2120,7 @@ class Switch(PipelineElement):
     @current_element.setter
     def current_element(self, value):
         self._current_element = value
-        self.base_element = self.pipeline_element_list[self.current_element[0]]
+        self.base_element = self.elements[self.current_element[0]]
         # pass the right config to the element
         # config = self.pipeline_element_configurations[value[0]][value[1]]
         # self.base_element.set_params(config)
@@ -2151,7 +2130,7 @@ class Switch(PipelineElement):
     #     """
     #     Returns the currently active element
     #     """
-    #     obj = self.pipeline_element_list[self.current_element[0]]
+    #     obj = self.elements[self.current_element[0]]
     #     return obj
 
     def get_params(self, deep: bool=True):
@@ -2186,7 +2165,7 @@ class Switch(PipelineElement):
                 # ugly hack because subscription is somehow not possible, we use the for loop but break
                 for kwargs_key, kwargs_value in kwargs.items():
                     first_element_name = kwargs_key.split("__")[0]
-                    self.base_element = self.pipeline_element_dict[first_element_name]
+                    self.base_element = self.elements_dict[first_element_name]
                     break
         else:
             if not isinstance(config_nr, (tuple, list)):
@@ -2209,7 +2188,7 @@ class Switch(PipelineElement):
     def copy_me(self):
 
         ps = Switch(self.name)
-        for element in self.pipeline_element_list:
+        for element in self.elements:
             new_element = element.copy_me()
             ps += new_element
         ps.base_element = self.base_element
@@ -2230,9 +2209,9 @@ class Switch(PipelineElement):
             output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
             if not output:
                 if return_dict:
-                    return {self.pipeline_element_list[config_value[0]].name:None}
+                    return {self.elements[config_value[0]].name:None}
                 else:
-                    return self.pipeline_element_list[config_value[0]].name
+                    return self.elements[config_value[0]].name
             else:
                 if return_dict:
                     return output
@@ -2345,14 +2324,8 @@ class PhotonModelPersistor:
             os.makedirs(folder)
         wrapper_files = list()
 
-        if isinstance(hyperpipe.preprocessing_pipe, Preprocessing):
-            for element in hyperpipe.preprocessing_pipe.pipeline_elements:
-                element_name = element.name
-                wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
-                element_number += 1
-
-        for element_name, element in hyperpipe.optimum_pipe.named_steps.items():
-            wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
+        for element in hyperpipe.optimum_pipe.elements:
+            wrapper_files = save_element(element, element_number, element.name, folder, wrapper_files)
             element_number += 1
 
         # save pipeline blueprint to make loading of pipeline easier

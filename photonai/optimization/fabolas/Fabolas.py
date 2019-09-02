@@ -71,7 +71,7 @@ class Fabolas:
         :type num_iterations: int
         :param subsets: Subset-fragmentations to use in the init-phase
         :type subsets: iterable of int
-        :param burnin: burning-steps of the MCMC-models
+        :param burnin: burning-elements of the MCMC-models
         :type burnin: int
         :param chain_length: chain-length of the MCMC-models
         :type chain_length: int
@@ -135,7 +135,7 @@ class Fabolas:
         # Todo: Edit to list, FloatRange, Categorial and IntegerRange
         for pelem in pipeline_elements:
             for key, val in pelem.hyperparameters.items():
-                # key = pipeline_elements[0].name + '__' + key
+                # key = elements[0].name + '__' + key
                 if val:
                     self._number_param_keys.append(key)
 

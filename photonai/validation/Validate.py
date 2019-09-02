@@ -362,7 +362,7 @@ class TestPipeline(object):
         :param indices: the indices of the given data and targets that are logged into the result tree
         :param save_predictions: if True, the predicted value array is stored in to the result tree
         :param save_feature_importances: if True, the feature importances of the estimator, if any, are stored to the result tree
-        :param training: if True, all training_only pipeline steps are executed, if False they are skipped
+        :param training: if True, all training_only pipeline elements are executed, if False they are skipped
         :param calculate_metrics: if True, calculates metrics for given data
         :return: ScoreInformation object
         """

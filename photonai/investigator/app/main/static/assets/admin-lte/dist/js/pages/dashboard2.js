@@ -141,7 +141,7 @@ $(function () {
     segmentStrokeWidth   : 1,
     // Number - The percentage of the chart that we cut out of the middle
     percentageInnerCutout: 50, // This is 0 for Pie charts
-    // Number - Amount of animation steps
+    // Number - Amount of animation elements
     animationSteps       : 100,
     // String - Animation easing effect
     animationEasing      : 'easeOutBounce',

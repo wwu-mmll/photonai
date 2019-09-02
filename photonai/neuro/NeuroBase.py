@@ -58,10 +58,10 @@ class NeuroModuleBranch(Branch):
             # as the neuro branch is parallelized and processes several images subsequently on
             # different cores, we need to stop the children to process on several cores as well
             pipe_element.base_element.output_img = True
-            self.pipeline_elements.append(pipe_element)
+            self.elements.append(pipe_element)
             self._prepare_pipeline()
         elif isinstance(pipe_element, CallbackElement):
-            self.pipeline_elements.append(pipe_element)
+            self.elements.append(pipe_element)
             self._prepare_pipeline()
         else:
             Logger().error('PipelineElement {} is not part of the Neuro module:'.format(pipe_element.name))
@@ -136,7 +136,7 @@ class NeuroModuleBranch(Branch):
         return new_copy
 
     def inverse_transform(self, X, y=None, **kwargs):
-        for transform in self.pipeline_elements[::-1]:
+        for transform in self.elements[::-1]:
             if hasattr(transform, 'inverse_transform'):
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
             else:

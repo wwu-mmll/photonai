@@ -38,6 +38,6 @@ source2_branch += PipelineElement('PCA', hyperparameters={'n_components': Catego
 source2_branch += PipelineElement('RandomForestRegressor')    # final estimator with branch output as features
 
 # pick the better branch
-pipe += Switch('my_branch_switch', pipeline_element_list=[source1_branch, source2_branch])
+pipe += Switch('my_branch_switch', elements=[source1_branch, source2_branch])
 
 pipe.fit(X, y)

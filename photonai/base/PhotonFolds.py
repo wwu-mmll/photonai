@@ -299,7 +299,7 @@ class OuterFoldManager:
             #         splitted_name = child_name.split('__')
             #         if len(splitted_name) > 1:
             #             stacking_element = self.optimum_pipe.named_steps[splitted_name[0]]
-            #             pipe_element = stacking_element.pipe_elements[splitted_name[1]]
+            #             pipe_element = stacking_element.elements[splitted_name[1]]
             #         else:
             #             pipe_element = self.optimum_pipe.named_steps[child_name]
             #         pipe_element.set_params(**child_config)

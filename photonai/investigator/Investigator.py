@@ -246,12 +246,12 @@ class Flowchart(object):
     def recursivElement(self,pipe_element,parent):
 
         string = ""
-        if hasattr(pipe_element,"pipeline_elements"):
+        if hasattr(pipe_element,"elements"):
             pipe_element.pipe_elements = pipe_element.pipeline_elements
-        elif hasattr(pipe_element,"pipeline_element_list"):
+        elif hasattr(pipe_element,"elements"):
             pipe_element.pipe_elements = pipe_element.pipeline_element_list
 
-        if not hasattr(pipe_element,"pipe_elements"):
+        if not hasattr(pipe_element,"elements"):
             if parent == "":
                 string = "["+pipe_element.name+"]:\n"+"Define:\n"
             else:
@@ -277,10 +277,10 @@ class Flowchart(object):
                 string = "["+parent[1:]+"."+pipe_element.name+"]:\n"+"Layout:\n"
 
             # Layout
-            for pelement in list(pipe_element.pipe_elements.values()):
+            for pelement in list(pipe_element.elements.values()):
                 string = string+"["+pelement.name+"]|\n"
             string = string+"\n"
-            for pelement in list(pipe_element.pipe_elements.values()):
+            for pelement in list(pipe_element.elements.values()):
                 string = string+"\n"+self.recursivElement(pelement,parent=parent+"."+pipe_element.name)
 
 

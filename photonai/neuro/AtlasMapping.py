@@ -60,7 +60,7 @@ class AtlasMapper:
         roi_list = list()
         atlas_obj = list()
         if isinstance(neuro_element, NeuroModuleBranch):
-            for element in neuro_element.pipeline_elements:
+            for element in neuro_element.elements:
                 if isinstance(element.base_element, BrainAtlas):
                     element.base_element.collection_mode = 'list'
                     roi_list, atlas_obj = self._find_rois(element)
