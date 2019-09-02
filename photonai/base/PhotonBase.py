@@ -1264,7 +1264,11 @@ class PipelineElement(BaseEstimator):
 
     def copy_me(self):
         # TODO !!!!!!!
-        copy = PipelineElement(self.name, self.hyperparameters, **self.kwargs)
+        if self.name in self.ELEMENT_DICTIONARY:
+            copy = PipelineElement(self.name, self.hyperparameters, **self.kwargs)
+        else:
+            # handle custom elements
+            copy = PipelineElement.create(self.name, self.base_element, hyperparameters=self.hyperparameters, **self.kwargs)
         if self.current_config is not None:
             copy.set_params(**self.current_config)
         return copy
