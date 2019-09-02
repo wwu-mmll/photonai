@@ -41,10 +41,10 @@ class SMACOptimizer(PhotonBaseOptimizer):
 
 
         for element in pipeline_elements:
-            #check if PipelineSwitch object
-            from ..base.PhotonBase import PipelineSwitch
+            #check if Switch object
+            from ..base.PhotonBase import Switch
 
-            if isinstance(element, PipelineSwitch):
+            if isinstance(element, Switch):
                 algorithm_options = {}              #mapping algorithm name with their child hyper params
                 
                 for algo in element.pipeline_element_list:

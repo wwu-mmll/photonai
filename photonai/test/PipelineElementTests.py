@@ -157,7 +157,7 @@ class HyperpipeTests(unittest.TestCase):
 
     def test_preprocessing(self):
 
-        prepro_pipe = PreprocessingPipe()
+        prepro_pipe = Preprocessing()
         prepro_pipe += PipelineElement.create("dummy", DummyYAndCovariatesTransformer(), {})
 
         self.hyperpipe += prepro_pipe
@@ -230,7 +230,7 @@ class PipelineSwitchTests(unittest.TestCase):
     def setUp(self):
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.lr_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
-        self.pipe_switch = PipelineSwitch('switch', [self.svc_pipe_element, self.lr_pipe_element])
+        self.pipe_switch = Switch('switch', [self.svc_pipe_element, self.lr_pipe_element])
 
     def test_init(self):
         self.assertEqual(self.pipe_switch.name, 'switch')
@@ -301,7 +301,7 @@ class PipelineBranchTests(unittest.TestCase):
         sk_pipe.fit(self.X, self.y)
         sk_pred = sk_pipe.predict(self.X)
 
-        branch = PipelineBranch("my_amazing_branch")
+        branch = Branch("my_amazing_branch")
         branch += self.ss_pipe_element
         branch += self.pca_pipe_element
         branch += self.svc_pipe_element
@@ -311,8 +311,8 @@ class PipelineBranchTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sk_pred, branch_pred))
 
     def test_no_y_transformers(self):
-        branch = PipelineBranch("forbidden_branch")
-        stacking_element = PipelineStack("forbidden_stack")
+        branch = Branch("forbidden_branch")
+        stacking_element = Stack("forbidden_stack")
         my_dummy = PipelineElement.create("dummy", DummyYAndCovariatesTransformer(), {})
         with self.assertRaises(ValueError):
             branch += my_dummy
@@ -321,13 +321,13 @@ class PipelineBranchTests(unittest.TestCase):
             stacking_element += my_dummy
 
     def test_stacking_of_branches(self):
-        branch1 = PipelineBranch("B1")
+        branch1 = Branch("B1")
         branch1.add(PipelineElement("StandardScaler"))
 
-        branch2 = PipelineBranch("B2")
+        branch2 = Branch("B2")
         branch2.add(PipelineElement("PCA", random_state=3))
 
-        stacking_element = PipelineStack("Stack")
+        stacking_element = Stack("Stack")
         stacking_element += branch1
         stacking_element += branch2
 
@@ -352,7 +352,7 @@ class PipelineBranchTests(unittest.TestCase):
 
         svc1 = PipelineElement("SVC", random_state=1)
         svc2 = PipelineElement("SVC", random_state=1)
-        stack_obj = PipelineStack("StackItem", voting=True)
+        stack_obj = Stack("StackItem", voting=True)
         stack_obj += svc1
         stack_obj += svc2
 

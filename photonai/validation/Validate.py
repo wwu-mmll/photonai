@@ -447,11 +447,11 @@ class TestPipeline(object):
 
     @staticmethod
     def extract_feature_importances(estimator):
-        from ..base.PhotonBase import PipelineStack, PipelineBranch, PipelineSwitch
+        from ..base.PhotonBase import Stack, Branch, Switch
         final_estimator = estimator._final_estimator
-        if isinstance(final_estimator, PipelineSwitch):
+        if isinstance(final_estimator, Switch):
             base_element = final_estimator.base_element.base_element
-        elif isinstance(final_estimator, (PipelineBranch, PipelineStack)):
+        elif isinstance(final_estimator, (Branch, Stack)):
             return None
         else:
             base_element = final_estimator.base_element

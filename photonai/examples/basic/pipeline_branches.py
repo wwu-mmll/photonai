@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack, PipelineBranch
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Stack, Branch
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from photonai.investigator.Investigator import Investigator
 from photonai.configuration.Register import PhotonRegister
@@ -17,23 +17,23 @@ my_pipe = Hyperpipe('basic_stacking',
                     verbosity=1)
 
 # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
-tree_qua_branch = PipelineBranch('tree_branch')
+tree_qua_branch = Branch('tree_branch')
 tree_qua_branch += PipelineElement('QuantileTransformer')
 tree_qua_branch += PipelineElement('DecisionTreeClassifier',{'min_samples_split': IntegerRange(2, 4)},criterion='gini')
 
 # BRANCH WITH MinMaxScaler AND DecisionTreeClassifier
-svm_mima_branch = PipelineBranch('svm_branch')
+svm_mima_branch = Branch('svm_branch')
 svm_mima_branch += PipelineElement('MinMaxScaler')
 svm_mima_branch += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']),
                                       'C':2.0},gamma='auto')
 
 # BRANCH WITH StandardScaler AND KNeighborsClassifier
-knn_sta_branch = PipelineBranch('neighbour_branch')
+knn_sta_branch = Branch('neighbour_branch')
 knn_sta_branch += PipelineElement('StandardScaler')
 knn_sta_branch += PipelineElement('KNeighborsClassifier')
 
 # voting = True to mean the result of every branch
-my_pipe += PipelineStack('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch], voting=True)
+my_pipe += Stack('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch], voting=True)
 
 my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
 

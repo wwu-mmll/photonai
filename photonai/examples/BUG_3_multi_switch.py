@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PipelineStack, PipelineSwitch
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack, Switch
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from sklearn.model_selection import ShuffleSplit, KFold
 from sklearn.datasets import load_boston
@@ -23,13 +23,13 @@ pipe = Hyperpipe(name='my_regression_example_pipe_multi_switch',
 pipe += PipelineElement('StandardScaler')
 
 # setup switch to choose between PCA or simple feature selection and add it to the pipe
-pre_switch = PipelineSwitch('preproc_switch')
+pre_switch = Switch('preproc_switch')
 pre_switch += PipelineElement('PCA', hyperparameters={'n_components': Categorical([None, 5])}, test_disabled=True)
 pre_switch += PipelineElement('FRegressionSelectPercentile', hyperparameters={'percentile': IntegerRange(start=5, step=20, stop=66, range_type='range')}, test_disabled=True)
 pipe += pre_switch
 
 # setup estimator switch and add it to the pipe
-estimator_switch = PipelineSwitch('estimator_switch')
+estimator_switch = Switch('estimator_switch')
 estimator_switch += PipelineElement('SVR', hyperparameters={'kernel': Categorical(['linear', 'rbf']), 'C': Categorical([.01, 1, 5])})
 estimator_switch += PipelineElement('RandomForestRegressor', hyperparameters={'min_samples_split': FloatRange(start=.05, step=.1, stop=.26, range_type='range')})
 pipe += estimator_switch

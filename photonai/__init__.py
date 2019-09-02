@@ -15,7 +15,7 @@ from . import base
 from . import optimization
 from . import validation
 
-from .base import Hyperpipe, PipelineStack, PipelineBranch, PipelineElement
+from .base import Hyperpipe, Stack, Branch, PipelineElement
 from .optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer
 
 from . import investigator
@@ -36,8 +36,8 @@ __all__ = ("base",
            "Investigator",
            "Hyperpipe",
            "PipelineElement",
-           "PipelineBranch",
-           "PipelineStack",
+           "Branch",
+           "Stack",
            "GridSearchOptimizer",
            "RandomGridSearchOptimizer",
            "TimeBoxedRandomGridSearchOptimizer",

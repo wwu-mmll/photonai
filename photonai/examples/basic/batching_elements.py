@@ -3,7 +3,7 @@ Example script for batched elements
 """
 
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PreprocessingPipe
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Preprocessing
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
@@ -21,7 +21,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     verbosity=1)  # get error, warn and info message
 
 
-preprocessing = PreprocessingPipe()
+preprocessing = Preprocessing()
 preprocessing += PipelineElement("LabelEncoder", batch_size=10)
 
 my_pipe += preprocessing

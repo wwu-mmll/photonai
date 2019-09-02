@@ -534,7 +534,7 @@ class Hyperpipe(BaseEstimator):
             The object to add to the machine learning pipeline, being either a transformer or an estimator.
 
         """
-        if isinstance(pipe_element, PreprocessingPipe):
+        if isinstance(pipe_element, Preprocessing):
             self.preprocessing_pipe = pipe_element
         elif isinstance(pipe_element, CallbackElement):
             pipe_element.needs_y = True
@@ -704,7 +704,7 @@ class Hyperpipe(BaseEstimator):
     def disable_multiprocessing_recursively(pipe):
         from ..neuro.NeuroBase import NeuroModuleBranch
 
-        if isinstance(pipe, PipelineStack):
+        if isinstance(pipe, Stack):
             for name, child in pipe.pipe_elements.items():
                 Hyperpipe.disable_multiprocessing_recursively(child.base_element)
 
@@ -781,39 +781,18 @@ class Hyperpipe(BaseEstimator):
         if cache_folder and not os.path.isdir(cache_folder):
             os.makedirs(cache_folder, exist_ok=True)
 
-    # @staticmethod
-    # def recursive_cache_folder_propagation(new_pipe, cache_folder, inner_fold_id):
-    #     new_pipe.cache_folder = cache_folder
-    #     new_pipe.fold_id = inner_fold_id
-    #     new_pipe.caching = True
-    #
-    #     if cache_folder:
-    #         for step_name, step_obj in new_pipe.steps:
-    #             if isinstance(step_obj, PipelineBranch):
-    #                 sub_cache = os.path.join(cache_folder, step_name)
-    #                 # Hyperpipe.prepare_caching(sub_cache)
-    #                 Hyperpipe.recursive_cache_folder_propagation(step_obj.base_element, sub_cache, inner_fold_id)
-    #                 Hyperpipe.prepare_caching(step_obj.base_element.cache_folder)
-    #             elif isinstance(step_obj, PipelineStack):
-    #                 for child in step_obj.pipe_elements:
-    #                     if isinstance(child, PipelineBranch):
-    #                         sub_cache = os.path.join(os.path.join(cache_folder, step_obj.name), child.name)
-    #                         # Hyperpipe.prepare_caching(sub_cache)
-    #                         Hyperpipe.recursive_cache_folder_propagation(child.base_element, sub_cache, inner_fold_id)
-    #                         Hyperpipe.prepare_caching(child.base_element.cache_folder)
-
     @staticmethod
     def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
-        if isinstance(element, PipelineSwitch):
+        if isinstance(element, Switch):
             for child in element.pipeline_element_list:
                 Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
 
-        elif isinstance(element, PipelineStack):
+        elif isinstance(element, Stack):
             for name, child in element.pipe_elements.items():
                 Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
 
-        elif isinstance(element, PipelineBranch):
-            # in case it's a PipelineBranch, we create a cache subfolder and propagate it to every child
+        elif isinstance(element, Branch):
+            # in case it's a Branch, we create a cache subfolder and propagate it to every child
             if cache_folder:
                 cache_folder = os.path.join(cache_folder, element.name)
             Hyperpipe.recursive_cache_folder_propagation(element.base_element, cache_folder, inner_fold_id)
@@ -842,14 +821,14 @@ class Hyperpipe(BaseEstimator):
     def _check_for_estimator(self, last_element=None):
         if not last_element:
             last_element = self.pipeline_elements[-1]
-        if isinstance(last_element, PipelineSwitch):
-            # if PipelineSwitch, just take the first element within the switch; this should be a regressor or classifier
+        if isinstance(last_element, Switch):
+            # if Switch, just take the first element within the switch; this should be a regressor or classifier
             self._check_for_estimator(last_element.pipeline_element_list[0])
-        elif isinstance(last_element, PipelineStack):
-            # if PipelineStack, just take random element from stack
+        elif isinstance(last_element, Stack):
+            # if Stack, just take random element from stack
             self._check_for_estimator(last_element.pipe_elements.popitem())
-        elif isinstance(last_element, PipelineBranch):
-            # if PipelineBranch, just take last element of branch
+        elif isinstance(last_element, Branch):
+            # if Branch, just take last element of branch
             self._check_for_estimator(last_element.pipeline_elements[-1])
         else:
             if not hasattr(last_element.base_element, '_estimator_type'):
@@ -1094,7 +1073,7 @@ class Hyperpipe(BaseEstimator):
                 setattr(pipe_copy, attr, getattr(self, attr))
 
         if hasattr(self, 'preprocessing_pipe') and self.preprocessing_pipe:
-            preprocessing = PreprocessingPipe()
+            preprocessing = Preprocessing()
             for element in self.preprocessing_pipe.pipeline_elements:
                 preprocessing += element.copy_me()
             pipe_copy += preprocessing
@@ -1164,12 +1143,12 @@ class Hyperpipe(BaseEstimator):
         return copied_pipe.inverse_transform(data_to_inverse)
 
 
-class SourceFilter(BaseEstimator):
+class DataFilter(BaseEstimator):
     """
     Helper Class to split the data e.g. for stacking.
     """
     def __init__(self, indices):
-        self.name = 'SourceFilter'
+        self.name = 'DataFilter'
         self.hyperparameters = {}
         self.indices = indices
         self.needs_covariates = False
@@ -1467,7 +1446,7 @@ class PipelineElement(BaseEstimator):
                 return self.adjusted_predict_call(self.base_element.predict_proba, X, **kwargs)
             else:
 
-                # todo: in case _final_estimator is a PipelineBranch, we do not know beforehand it the base elements will
+                # todo: in case _final_estimator is a Branch, we do not know beforehand it the base elements will
                 #  have a predict_proba -> if not, just return None (@Ramona, does this make sense?)
                 #Logger().error('BaseException. base Element should have "predict_proba" function.')
                 #raise BaseException('base Element should have predict_proba function.')
@@ -1559,14 +1538,14 @@ class PipelineElement(BaseEstimator):
         #   4         yes        no           yes    = transform(X, kwargs) -> returns Xt, kwargst
         #   5         no      yes or no      yes or no      = NOT ALLOWED
 
-        # todo: we don't need to check for PipelineSwitch, PipelineStack or PipelineBranch since those classes define
+        # todo: we don't need to check for Switch, Stack or Branch since those classes define
         # needs_y and needs_covariates in their __init__()
         if self.needs_y:
             # if we dont have any target vector, we are in "predict"-mode although we are currently transforming
             # in this case, we want to skip the transformation and pass X, None and kwargs onwards
             # so basically, we skip all training_only steps
             # todo: I think, there's no way around this if we want to pass y and kwargs down to children of Switch and Branch
-            if isinstance(self, (PipelineSwitch, PipelineBranch, PreprocessingPipe)):
+            if isinstance(self, (Switch, Branch, Preprocessing)):
                 X, y, kwargs = delegate(X, y, **kwargs)
             else:
                 if y is not None:
@@ -1611,7 +1590,7 @@ class PipelineElement(BaseEstimator):
                 return config_name + '=' + str(config_value)
 
 
-class PipelineBranch(PipelineElement):
+class Branch(PipelineElement):
     """
      A substream of pipeline elements that is encapsulated e.g. for parallelization
 
@@ -1734,7 +1713,7 @@ class PipelineBranch(PipelineElement):
         pass
 
 
-class PreprocessingPipe(PipelineBranch):
+class Preprocessing(Branch):
     """
         If a preprocessing pipe is added to a PHOTON Hyperpipe, all transformers are applied to the data ONCE
         BEFORE cross validation starts in order to prepare the data.
@@ -1742,7 +1721,7 @@ class PreprocessingPipe(PipelineBranch):
     """
 
     def __init__(self):
-        super().__init__('PreprocessingPipe')
+        super().__init__('Preprocessing')
         self.has_hyperparameters = False
         self.needs_y = True
         self.needs_covariates = True
@@ -1773,7 +1752,7 @@ class PreprocessingPipe(PipelineBranch):
         pass
 
 
-class PipelineStack(PipelineElement):
+class Stack(PipelineElement):
     """
     Creates a vertical stacking/parallelization of pipeline items.
 
@@ -1784,7 +1763,7 @@ class PipelineStack(PipelineElement):
     """
     def __init__(self, name: str, stacking_elements=None, voting: bool=False):
         """
-        Creates a new PipelineStack element.
+        Creates a new Stack element.
         Collects all possible hyperparameter combinations of the children
 
         Parameters
@@ -1796,8 +1775,8 @@ class PipelineStack(PipelineElement):
         * `voting` [bool]:
             If true, the predictions of the encapsulated pipeline elements are joined to a single prediction
         """
-        super(PipelineStack, self).__init__(name, hyperparameters={}, test_disabled=False, disabled=False,
-                                            base_element=True)
+        super(Stack, self).__init__(name, hyperparameters={}, test_disabled=False, disabled=False,
+                                    base_element=True)
 
         self._hyperparameters = {}
         self.pipe_elements = OrderedDict()
@@ -1806,7 +1785,7 @@ class PipelineStack(PipelineElement):
             for item_to_stack in stacking_elements:
                 self.__iadd__(item_to_stack)
 
-        # todo: PipelineStack should not be allowed to change y, only covariates
+        # todo: Stack should not be allowed to change y, only covariates
         self.needs_y = False
         self.needs_covariates = True
 
@@ -1815,7 +1794,7 @@ class PipelineStack(PipelineElement):
         Adds a new element to the stack.
         Generates sklearn hyperparameter names in order to set the item's hyperparameters in the optimization process.
 
-        * `item` [PipelineElement or PipelineBranch or Hyperpipe]:
+        * `item` [PipelineElement or Branch or Hyperpipe]:
             The Element that should be stacked and will run in a vertical parallelization in the original pipe.
         """
         self.check_if_needs_y(item)
@@ -1827,7 +1806,7 @@ class PipelineStack(PipelineElement):
         if not isinstance(item, Hyperpipe):
             tmp_dict = dict(item.hyperparameters)
             for key, element in tmp_dict.items():
-                # if isinstance(item, PipelineBranch):
+                # if isinstance(item, Branch):
                 #     self._hyperparameters[self.name + '__' + item.name + '__' + key] = tmp_dict[key]
                 # elif isinstance(item, PipelineElement):
                 self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
@@ -1835,15 +1814,15 @@ class PipelineStack(PipelineElement):
         return self
 
     def check_if_needs_y(self, item):
-        if isinstance(item, PipelineBranch):
+        if isinstance(item, Branch):
             for branch_item in item.pipeline_elements:
                 self.check_if_needs_y(branch_item)
-        elif isinstance(item, PipelineStack):
+        elif isinstance(item, Stack):
             for stack_item in item.pipe_elements:
                 self.check_if_needs_y(stack_item)
         elif isinstance(item, PipelineElement):
             if item.needs_y:
-                raise NotImplementedError("Elements in PipelineStack must not transform y because the number of samples in every "
+                raise NotImplementedError("Elements in Stack must not transform y because the number of samples in every "
                                  "element of the stack might differ. Then, it will not be possible to concatenate those "
                                  "data and target matrices. Please use the transformer that is using y before or after "
                                  "the stack.")
@@ -1911,7 +1890,7 @@ class PipelineStack(PipelineElement):
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
             element_transform = element.predict(X, **kwargs)
-            predicted_data = PipelineStack.stack_data(predicted_data, element_transform)
+            predicted_data = Stack.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
                 if len(predicted_data.shape) > 1:
@@ -1926,7 +1905,7 @@ class PipelineStack(PipelineElement):
         predicted_data = np.array([])
         for name, element in self.pipe_elements.items():
             element_transform = element.predict_proba(X)
-            predicted_data = PipelineStack.stack_data(predicted_data, element_transform)
+            predicted_data = Stack.stack_data(predicted_data, element_transform)
         if self.voting:
             if hasattr(predicted_data, 'shape'):
                 if len(predicted_data.shape) > 1:
@@ -1943,12 +1922,12 @@ class PipelineStack(PipelineElement):
         for name, element in self.pipe_elements.items():
             # if it is a hyperpipe with a final estimator, we want to use predict:
                 element_transform, _, _ = element.transform(X, y, **kwargs)
-                transformed_data = PipelineStack.stack_data(transformed_data, element_transform)
+                transformed_data = Stack.stack_data(transformed_data, element_transform)
 
         return transformed_data, y, kwargs
 
     def copy_me(self):
-        ps = PipelineStack(self.name, voting=self.voting)
+        ps = Stack(self.name, voting=self.voting)
         for name, element in self.pipe_elements.items():
             new_element = element.copy_me()
             ps += new_element
@@ -1992,7 +1971,7 @@ class PipelineStack(PipelineElement):
 
         """
         # Todo: invent strategy for this ?
-        # raise BaseException('PipelineStack.score should probably never be reached.')
+        # raise BaseException('Stack.score should probably never be reached.')
         # return 16
         predicted = self.predict(X_test)
 
@@ -2005,7 +1984,7 @@ class PipelineStack(PipelineElement):
         pass
 
 
-class PipelineSwitch(PipelineElement):
+class Switch(PipelineElement):
     """
     This class encapsulates several pipeline elements that belong at the same step of the pipeline,
     competing for being the best choice.
@@ -2018,18 +1997,18 @@ class PipelineSwitch(PipelineElement):
     USE THIS ONLY FOR RAPID PROTOTYPING AND PRELIMINARY RESULTS
 
     The class acts as if it is a single entity. Tt joins the hyperparamater combinations of each encapsulated element to
-    a single, big combination grid. Each hyperparameter combination from that grid gets a number. Then the PipelineSwitch
+    a single, big combination grid. Each hyperparameter combination from that grid gets a number. Then the Switch
     object publishes the numbers to be chosen as the object's hyperparameter. When a new number is chosen from the
     optimizer, it internally activates the belonging element and sets the element's parameter to the hyperparameter
     combination. In that way, each of the elements is tested in all its configurations at the same position in the
-    pipeline. From the outside, the process and the optimizer only sees one parameter of the PipelineSwitch, that is
+    pipeline. From the outside, the process and the optimizer only sees one parameter of the Switch, that is
     the an integer indicating which item of the hyperparameter combination grid is currently active.
 
     """
 
     def __init__(self, name: str, pipeline_element_list: list = None):
         """
-        Creates a new PipelineSwitch object and generated the hyperparameter combination grid
+        Creates a new Switch object and generated the hyperparameter combination grid
 
         Parameters
         ----------
@@ -2070,11 +2049,11 @@ class PipelineSwitch(PipelineElement):
             self.pipeline_element_list = []
 
     def check_if_estimator_or_transformer(self, pipeline_element):
-        if isinstance(pipeline_element, PipelineBranch):
+        if isinstance(pipeline_element, Branch):
             return self.check_if_estimator_or_transformer(pipeline_element.pipeline_elements[-1])
-        elif isinstance(pipeline_element, PipelineSwitch):
+        elif isinstance(pipeline_element, Switch):
             return self.check_if_estimator_or_transformer(pipeline_element.pipeline_element_list[0])
-        elif isinstance(pipeline_element, PipelineStack):
+        elif isinstance(pipeline_element, Stack):
             return self.check_if_estimator_or_transformer(pipeline_element.pipe_elements[0])
         elif isinstance(pipeline_element, PipelineElement):
             if hasattr(pipeline_element, "is_estimator"):
@@ -2229,7 +2208,7 @@ class PipelineSwitch(PipelineElement):
 
     def copy_me(self):
 
-        ps = PipelineSwitch(self.name)
+        ps = Switch(self.name)
         for element in self.pipeline_element_list:
             new_element = element.copy_me()
             ps += new_element
@@ -2259,7 +2238,7 @@ class PipelineSwitch(PipelineElement):
                     return output
                 return str(output)
         else:
-            return super(PipelineSwitch, self).prettify_config_output(config_name, config_value)
+            return super(Switch, self).prettify_config_output(config_name, config_value)
 
     def predict_proba(self, X, **kwargs):
         """
@@ -2366,7 +2345,7 @@ class PhotonModelPersistor:
             os.makedirs(folder)
         wrapper_files = list()
 
-        if isinstance(hyperpipe.preprocessing_pipe, PreprocessingPipe):
+        if isinstance(hyperpipe.preprocessing_pipe, Preprocessing):
             for element in hyperpipe.preprocessing_pipe.pipeline_elements:
                 element_name = element.name
                 wrapper_files = save_element(element, element_number, element_name, folder, wrapper_files)
