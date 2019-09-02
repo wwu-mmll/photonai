@@ -81,7 +81,10 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
             imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
             desired_class = getattr(imported_module, desired_class_name)
         except Exception as e:
-            raise Exception("Imbalance Type not found. Can be oversampling, undersampling or combine")
+            if isinstance(e, ModuleNotFoundError):
+                raise e
+            else:
+                raise Exception("Imbalance Type not found. Can be oversampling, undersampling or combine")
 
         self.method = desired_class(**kwargs)
 

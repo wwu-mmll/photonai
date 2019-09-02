@@ -12,9 +12,9 @@ my_pipe = Hyperpipe(name='Estimator_pipe',  # the name of your pipeline
                     metrics=['balanced_accuracy'],  # the performance metrics of your interest
                     best_config_metric='balanced_accuracy',  # after hyperparameter search, the metric declares the winner config
                     outer_cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),  # repeat hyperparameter search three times
-                    inner_cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),  # test each configuration ten times respectively,
+                    inner_cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42))  # test each configuration ten times respectively,
                     # skips next folds of inner cv if balanced_accuracy is not at least .2 better than dummy
-                    performance_constraints=[DummyPerformance('balanced_accuracy', .2)])
+                    #performance_constraints=[DummyPerformance('balanced_accuracy', .2)])
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
