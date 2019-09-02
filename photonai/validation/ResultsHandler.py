@@ -67,11 +67,11 @@ class ResultsHandler:
             res_tab.loc[i, 'fold'] = folds.fold_nr
 
             # add sample size infos
-            res_tab.loc[i, 'n_train'] = folds.best_config.inner_folds[0].number_samples_training
-            res_tab.loc[i, 'n_validation'] = folds.best_config.inner_folds[0].number_samples_validation
+            res_tab.loc[i, 'n_train'] = folds.best_config.best_config_score.number_samples_training
+            res_tab.loc[i, 'n_validation'] = folds.best_config.best_config_score.number_samples_validation
 
             # add performance metrics
-            d = folds.best_config.inner_folds[0].validation.metrics
+            d = folds.best_config.best_config_score.validation.metrics
             for key, value in d.items():
                 res_tab.loc[i, key] = value
 
@@ -86,10 +86,10 @@ class ResultsHandler:
 
     def get_performance_outer_folds(self):
         performances = dict()
-        for metric in self.results.outer_folds[0].best_config.inner_folds[0].validation.metrics.keys():
+        for metric in self.results.outer_folds[0].best_config.best_config_score.validation.metrics.keys():
             performances[metric] = list()
         for i, fold in enumerate(self.results.outer_folds):
-            for metric, value in fold.best_config.inner_folds[0].validation.metrics.items():
+            for metric, value in fold.best_config.best_config_score.validation.metrics.items():
                 performances[metric].append(value)
         return performances
 
@@ -220,7 +220,7 @@ class ResultsHandler:
                 remaining = len(fold) % reduce_scatter_by
                 if remaining:
                     fold.extend([np.nan] * (reduce_scatter_by - remaining))
-                # calculate mean over every n elements so that plot is less cluttered
+                # calculate mean over every n named_steps so that plot is less cluttered
                 reduced_fold = np.nanmean(np.asarray(fold).reshape(-1, reduce_scatter_by), axis=1)
                 reduced_xfit = np.arange(reduce_scatter_by / 2, len(fold), step=reduce_scatter_by)
                 if i == len(config_evaluations[metric])-1:
@@ -261,13 +261,13 @@ class ResultsHandler:
         y_pred_probabilities = []
         fold_idx = []
         for i, fold in enumerate(self.results.outer_folds):
-            n_samples = len(fold.best_config.inner_folds[0].validation.y_true)
-            y_true.extend(fold.best_config.inner_folds[0].validation.y_true)
-            y_pred.extend(fold.best_config.inner_folds[0].validation.y_pred)
-            y_pred_probabilities.extend(fold.best_config.inner_folds[0].validation.probabilities)
+            n_samples = len(fold.best_config.best_config_score.validation.y_true)
+            y_true.extend(fold.best_config.best_config_score.validation.y_true)
+            y_pred.extend(fold.best_config.best_config_score.validation.y_pred)
+            y_pred_probabilities.extend(fold.best_config.best_config_score.validation.probabilities)
             fold_idx.extend(np.repeat(i, n_samples))
             if sort_CV:
-                sample_inds.extend(fold.best_config.inner_folds[0].validation.indices)
+                sample_inds.extend(fold.best_config.best_config_score.validation.indices)
         y_true = np.asarray(y_true)
         y_pred = np.asarray(y_pred)
         y_pred_probabilities = np.asarray(y_pred_probabilities)
@@ -326,7 +326,7 @@ class ResultsHandler:
         """
         imps = []
         for i, fold in enumerate(self.results.outer_folds):
-            imps.append(fold.best_config.inner_folds[0].training.feature_importances)
+            imps.append(fold.best_config.best_config_score.training.feature_importances)
         return imps
 
     def plot_true_pred(self, confidence_interval=95):
@@ -716,9 +716,9 @@ Number of samples test {}
 Class distribution test {}
 
             """.format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config),
-                       outer_fold.best_config.inner_folds[0].number_samples_training,
+                       outer_fold.best_config.best_config_score.number_samples_training,
                        outer_fold.class_distribution_validation,
-                       outer_fold.best_config.inner_folds[0].number_samples_validation,
+                       outer_fold.best_config.best_config_score.number_samples_validation,
                        outer_fold.class_distribution_test))
 
             if outer_fold.best_config.config_failed:
@@ -729,8 +729,8 @@ Config Failed: {}
             else:
                 x = PrettyTable()
                 x.field_names = ["Metric Name", "Train Value", "Test Value"]
-                metrics_train = outer_fold.best_config.inner_folds[0].training.metrics
-                metrics_test = outer_fold.best_config.inner_folds[0].validation.metrics
+                metrics_train = outer_fold.best_config.best_config_score.training.metrics
+                metrics_test = outer_fold.best_config.best_config_score.validation.metrics
 
                 for element_key, element_value in metrics_train.items():
                     x.add_row([element_key, np.round(element_value, 6), np.round(metrics_test[element_key], 6)])
