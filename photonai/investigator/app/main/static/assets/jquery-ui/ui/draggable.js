@@ -220,7 +220,7 @@ $.widget("ui.draggable", $.ui.mouse, {
 		}
 
 		// Reset helper's right/bottom css if they're set and set explicit width/height instead
-		// as this prevents resizing of elements with right/bottom set (see #7772)
+		// as this prevents resizing of named_steps with right/bottom set (see #7772)
 		this._normalizeRightBottom();
 
 		this._mouseDrag(event, true); //Execute the drag once - this causes the helper not to be visible before getting its correct position
@@ -617,7 +617,7 @@ $.widget("ui.draggable", $.ui.mouse, {
 			}
 
 			if (o.grid) {
-				//Check for grid elements set to 0 to prevent divide by 0 error causing invalid argument errors in IE (see ticket #6950)
+				//Check for grid named_steps set to 0 to prevent divide by 0 error causing invalid argument errors in IE (see ticket #6950)
 				top = o.grid[1] ? this.originalPageY + Math.round((pageY - this.originalPageY) / o.grid[1]) * o.grid[1] : this.originalPageY;
 				pageY = containment ? ((top - this.offset.click.top >= containment[1] || top - this.offset.click.top > containment[3]) ? top : ((top - this.offset.click.top >= containment[1]) ? top - o.grid[1] : top + o.grid[1])) : top;
 

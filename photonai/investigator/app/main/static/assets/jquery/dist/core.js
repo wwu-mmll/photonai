@@ -59,7 +59,7 @@ jQuery.fn = jQuery.prototype = {
 	// Get the whole matched element set as a clean array
 	get: function( num ) {
 
-		// Return all the elements in a clean array
+		// Return all the named_steps in a clean array
 		if ( num == null ) {
 			return slice.call( this );
 		}
@@ -68,7 +68,7 @@ jQuery.fn = jQuery.prototype = {
 		return num < 0 ? this[ num + this.length ] : this[ num ];
 	},
 
-	// Take an array of elements and push it onto the stack
+	// Take an array of named_steps and push it onto the stack
 	// (returning the new matched element set)
 	pushStack: function( elems ) {
 

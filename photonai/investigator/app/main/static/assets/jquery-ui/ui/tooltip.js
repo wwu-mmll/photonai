@@ -36,7 +36,7 @@ return $.widget( "ui.tooltip", {
 			return $( "<a>" ).text( title ).html();
 		},
 		hide: true,
-		// Disabled elements have inconsistent behavior across browsers (#8661)
+		// Disabled named_steps have inconsistent behavior across browsers (#8661)
 		items: "[title]:not([disabled])",
 		position: {
 			my: "left top+15",

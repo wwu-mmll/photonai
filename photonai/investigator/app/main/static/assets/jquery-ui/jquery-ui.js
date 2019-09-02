@@ -262,7 +262,7 @@ $.fn.extend({
 				if ( position === "absolute" || position === "relative" || position === "fixed" ) {
 					// IE returns 0 when zIndex is not specified
 					// other browsers return a string
-					// we ignore the case of nested elements with an explicit value of 0
+					// we ignore the case of nested named_steps with an explicit value of 0
 					// <div style="z-index: -10;"><div style="z-index: 0;"></div></div>
 					value = parseInt( elem.css( "zIndex" ), 10 );
 					if ( !isNaN( value ) && value !== 0 ) {
@@ -1707,7 +1707,7 @@ var accordion = $.widget( "ui.accordion", {
 			}
 		}
 
-		// #5332 - opacity doesn't cascade to positioned elements in IE
+		// #5332 - opacity doesn't cascade to positioned named_steps in IE
 		// so we need to add the disabled class to the headers and panels
 		if ( key === "disabled" ) {
 			this.element
@@ -2221,7 +2221,7 @@ var menu = $.widget( "ui.menu", {
 				}
 				var target = $( event.currentTarget );
 				// Remove ui-state-active class from siblings of the newly focused menu item
-				// to avoid a jump caused by adjacent elements both having a class with a border
+				// to avoid a jump caused by adjacent named_steps both having a class with a border
 				target.siblings( ".ui-state-active" ).removeClass( "ui-state-active" );
 				this.focus( event, target );
 			},
@@ -3791,7 +3791,7 @@ function datepicker_getZindex( elem ) {
 		if ( position === "absolute" || position === "relative" || position === "fixed" ) {
 			// IE returns 0 when zIndex is not specified
 			// other browsers return a string
-			// we ignore the case of nested elements with an explicit value of 0
+			// we ignore the case of nested named_steps with an explicit value of 0
 			// <div style="z-index: -10;"><div style="z-index: 0;"></div></div>
 			value = parseInt( elem.css( "zIndex" ), 10 );
 			if ( !isNaN( value ) && value !== 0 ) {
@@ -3899,7 +3899,7 @@ function Datepicker() {
 }
 
 $.extend(Datepicker.prototype, {
-	/* Class name added to elements to indicate already configured with a date picker. */
+	/* Class name added to named_steps to indicate already configured with a date picker. */
 	markerClassName: "hasDatepicker",
 
 	//Keep track of the maximum number of rows displayed (see #7043)
@@ -4061,7 +4061,7 @@ $.extend(Datepicker.prototype, {
 		if( inst.settings.disabled ) {
 			this._disableDatepicker( target );
 		}
-		// Set display:block in place of inst.dpDiv.show() which won't work on disconnected elements
+		// Set display:block in place of inst.dpDiv.show() which won't work on disconnected named_steps
 		// http://bugs.jqueryui.com/ticket/7552 - A Datepicker created on a detached div has zero height
 		inst.dpDiv.css( "display", "block" );
 	},
@@ -5747,7 +5747,7 @@ $.extend(Datepicker.prototype, {
 });
 
 /*
- * Bind hover events for datepicker elements.
+ * Bind hover events for datepicker named_steps.
  * Done via delegate so the binding only occurs once in the lifetime of the parent div.
  * Global datepicker_instActive, set by _updateDatepicker allows the handlers to find their way back to the active picker.
  */
@@ -6043,7 +6043,7 @@ $.widget("ui.draggable", $.ui.mouse, {
 		}
 
 		// Reset helper's right/bottom css if they're set and set explicit width/height instead
-		// as this prevents resizing of elements with right/bottom set (see #7772)
+		// as this prevents resizing of named_steps with right/bottom set (see #7772)
 		this._normalizeRightBottom();
 
 		this._mouseDrag(event, true); //Execute the drag once - this causes the helper not to be visible before getting its correct position
@@ -6440,7 +6440,7 @@ $.widget("ui.draggable", $.ui.mouse, {
 			}
 
 			if (o.grid) {
-				//Check for grid elements set to 0 to prevent divide by 0 error causing invalid argument errors in IE (see ticket #6950)
+				//Check for grid named_steps set to 0 to prevent divide by 0 error causing invalid argument errors in IE (see ticket #6950)
 				top = o.grid[1] ? this.originalPageY + Math.round((pageY - this.originalPageY) / o.grid[1]) * o.grid[1] : this.originalPageY;
 				pageY = containment ? ((top - this.offset.click.top >= containment[1] || top - this.offset.click.top > containment[3]) ? top : ((top - this.offset.click.top >= containment[1]) ? top - o.grid[1] : top + o.grid[1])) : top;
 
@@ -8825,7 +8825,7 @@ var dialog = $.widget( "ui.dialog", {
 		}
 
 		// reset wrapper sizing
-		// determine the height of all the non-content elements
+		// determine the height of all the non-content named_steps
 		nonContentHeight = this.uiDialog.css({
 				height: "auto",
 				width: options.width
@@ -9223,7 +9223,7 @@ $.ui.ddmanager = {
 				continue;
 			}
 
-			// Filter out elements in the current dragged item
+			// Filter out named_steps in the current dragged item
 			for ( j = 0; j < list.length; j++ ) {
 				if ( list[ j ] === m[ i ].element[ 0 ] ) {
 					m[ i ].proportions().height = 0;
@@ -14583,7 +14583,7 @@ var sortable = $.widget("ui.sortable", $.ui.mouse, {
 			pageY = event.pageY,
 			scroll = this.cssPosition === "absolute" && !(this.scrollParent[0] !== this.document[0] && $.contains(this.scrollParent[0], this.offsetParent[0])) ? this.offsetParent : this.scrollParent, scrollIsRootNode = (/(html|body)/i).test(scroll[0].tagName);
 
-		// This is another very weird special case that only happens for relative elements:
+		// This is another very weird special case that only happens for relative named_steps:
 		// 1. If the css position is relative
 		// 2. and the scroll parent is the document or similar to the offset parent
 		// we have to refresh the relative offset during the scroll so there are no jumps
@@ -16178,7 +16178,7 @@ var tooltip = $.widget( "ui.tooltip", {
 			return $( "<a>" ).text( title ).html();
 		},
 		hide: true,
-		// Disabled elements have inconsistent behavior across browsers (#8661)
+		// Disabled named_steps have inconsistent behavior across browsers (#8661)
 		items: "[title]:not([disabled])",
 		position: {
 			my: "left top+15",

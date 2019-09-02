@@ -752,7 +752,7 @@ return $.widget( "ui.dialog", {
 		}
 
 		// reset wrapper sizing
-		// determine the height of all the non-content elements
+		// determine the height of all the non-content named_steps
 		nonContentHeight = this.uiDialog.css({
 				height: "auto",
 				width: options.width

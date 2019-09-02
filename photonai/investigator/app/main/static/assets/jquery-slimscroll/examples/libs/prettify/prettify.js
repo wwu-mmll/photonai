@@ -481,8 +481,8 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
    * </p>
    *
    * <p>
-   * The {@code} spans array is an array of pairs.  Even elements are the start
-   * indices of substrings, and odd elements are the text nodes (or BR elements)
+   * The {@code} spans array is an array of pairs.  Even named_steps are the start
+   * indices of substrings, and odd named_steps are the text nodes (or BR named_steps)
    * that contain the text for those substrings.
    * Substrings continue until the next index or the end of the source.
    * </p>
@@ -573,7 +573,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
    * <p>
    * This is meant to return the CODE element in {@code <pre><code ...>} when
    * there is a single child element that contains all the non-space textual
-   * content, but not to return anything where there are multiple child elements
+   * content, but not to return anything where there are multiple child named_steps
    * as in {@code <pre><code>...</code><code>...</code></pre>} or when there
    * is textual content.
    */
@@ -598,7 +598,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
     * constant like PR_PLAIN.  index_n-1 <= index_n, and style_n-1 applies to
     * all characters in sourceCode[index_n-1:index_n].
     *
-    * The stylePatterns is a list whose elements have the form
+    * The stylePatterns is a list whose named_steps have the form
     * [style : string, pattern : RegExp, DEPRECATED, shortcut : string].
     *
     * Style is a style constant like PR_PLAIN, or can be a string of the
@@ -609,7 +609,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
     * registered lisp handler for formatting.
     * The text before and after group 1 will be restyled using this decorator
     * so decorators should take care that this doesn't result in infinite
-    * recursion.  For example, the HTML lexer rule for SCRIPT elements looks
+    * recursion.  For example, the HTML lexer rule for SCRIPT named_steps looks
     * something like ['lang-js', /<[s]cript>(.+?)<\/script>/].  This may match
     * '<script>foo()<\/script>', which would cause the current decorator to
     * be called with '<script>' which would not match the same rule since
@@ -904,7 +904,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
    *
    * @param {Node} node modified in place.  Its content is pulled into an
    *     HTMLOListElement, and each line is moved into a separate list item.
-   *     This requires cloning elements, so the input might not have unique
+   *     This requires cloning named_steps, so the input might not have unique
    *     IDs after numbering.
    */
   function numberLines(node, opt_startLineNum) {
@@ -988,7 +988,7 @@ var REGEXP_PRECEDER_PATTERN = '(?:^^\\.?|[+-]|\\!|\\!=|\\!==|\\#|\\%|\\%=|&|&&|&
         var parent = limit.parentNode;
         if (parent) {
           // We clone the parent chain.
-          // This helps us resurrect important styling elements that cross lines.
+          // This helps us resurrect important styling named_steps that cross lines.
           // E.g. in <i>Foo<br>Bar</i>
           // should be rewritten to <li><i>Foo</i></li><li><i>Bar</i></li>.
           var parentClone = breakLeftOf(parent, 1);

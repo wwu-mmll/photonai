@@ -170,7 +170,7 @@ return $.widget( "ui.accordion", {
 			}
 		}
 
-		// #5332 - opacity doesn't cascade to positioned elements in IE
+		// #5332 - opacity doesn't cascade to positioned named_steps in IE
 		// so we need to add the disabled class to the headers and panels
 		if ( key === "disabled" ) {
 			this.element

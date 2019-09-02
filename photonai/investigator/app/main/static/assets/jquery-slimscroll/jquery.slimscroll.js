@@ -133,7 +133,7 @@
               }
               else if ('destroy' in options)
               {
-                // remove slimscroll elements
+                // remove slimscroll named_steps
                 bar.remove();
                 rail.remove();
                 me.unwrap();

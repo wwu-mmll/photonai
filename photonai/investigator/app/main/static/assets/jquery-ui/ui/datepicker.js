@@ -37,7 +37,7 @@ function datepicker_getZindex( elem ) {
 		if ( position === "absolute" || position === "relative" || position === "fixed" ) {
 			// IE returns 0 when zIndex is not specified
 			// other browsers return a string
-			// we ignore the case of nested elements with an explicit value of 0
+			// we ignore the case of nested named_steps with an explicit value of 0
 			// <div style="z-index: -10;"><div style="z-index: 0;"></div></div>
 			value = parseInt( elem.css( "zIndex" ), 10 );
 			if ( !isNaN( value ) && value !== 0 ) {
@@ -145,7 +145,7 @@ function Datepicker() {
 }
 
 $.extend(Datepicker.prototype, {
-	/* Class name added to elements to indicate already configured with a date picker. */
+	/* Class name added to named_steps to indicate already configured with a date picker. */
 	markerClassName: "hasDatepicker",
 
 	//Keep track of the maximum number of rows displayed (see #7043)
@@ -307,7 +307,7 @@ $.extend(Datepicker.prototype, {
 		if( inst.settings.disabled ) {
 			this._disableDatepicker( target );
 		}
-		// Set display:block in place of inst.dpDiv.show() which won't work on disconnected elements
+		// Set display:block in place of inst.dpDiv.show() which won't work on disconnected named_steps
 		// http://bugs.jqueryui.com/ticket/7552 - A Datepicker created on a detached div has zero height
 		inst.dpDiv.css( "display", "block" );
 	},
@@ -1993,7 +1993,7 @@ $.extend(Datepicker.prototype, {
 });
 
 /*
- * Bind hover events for datepicker elements.
+ * Bind hover events for datepicker named_steps.
  * Done via delegate so the binding only occurs once in the lifetime of the parent div.
  * Global datepicker_instActive, set by _updateDatepicker allows the handlers to find their way back to the active picker.
  */

@@ -1,5 +1,5 @@
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Preprocessing
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Preprocessing, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from photonai.optimization.SpeedHacks import MinimumPerformance, DummyPerformance
 from photonai.investigator.Investigator import Investigator
@@ -11,6 +11,8 @@ import time
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
 
+settings = OutputSettings(project_folder='/spm-data/Scratch/spielwiese_nils_winter/photon_test')
+
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     optimizer='random_grid_search',  # which optimizer PHOTON shall use
@@ -20,10 +22,9 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=3),  # test each configuration ten times respectively,
                     verbosity=1,
-                    cache_folder='/home/rleenings/Projects/TestNeuro/cache/')  # get error, warn and info message
-                    # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
-                    # performance_constraints=[MinimumPerformance('accuracy', 0.96),
-                    #                          DummyPerformance('precision', 0.2)])
+                    cache_folder='/spm-data/Scratch/spielwiese_nils_winter/photon_test/cache',
+                    output_settings=settings)
+
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
@@ -54,7 +55,7 @@ my_pipe.fit(X, y)
 elapsed_time = time.time() - start_time
 print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 
-Investigator.show(my_pipe)
+#Investigator.show(my_pipe)
 debug = True
 
 

@@ -30,7 +30,7 @@
 .ui-button-icon-only {
 	width: 2.2em;
 }
-/* button elements seem to need a little more width */
+/* button named_steps seem to need a little more width */
 button.ui-button-icon-only {
 	width: 2.4em;
 }
@@ -66,7 +66,7 @@ button.ui-button-icons-only {
 	padding-left: 2.1em;
 	padding-right: 2.1em;
 }
-/* no icon support for input elements, provide padding by default */
+/* no icon support for input named_steps, provide padding by default */
 input.ui-button {
 	padding: .4em 1em;
 }

@@ -1,6 +1,6 @@
 /* Pretty printing styles. Used with prettify.js. */
 
-/* SPAN elements with the classes below are added by prettyprint. */
+/* SPAN named_steps with the classes below are added by prettyprint. */
 .pln { color: #000 }  /* plain text */
 
 @media screen {

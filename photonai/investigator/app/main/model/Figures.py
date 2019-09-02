@@ -110,7 +110,7 @@ def plotly_optimizer_history(name, config_evaluations, minimum_config_evaluation
         remaining = len(fold) % reduce_scatter_by
         if remaining:
             fold.extend([np.nan] * (reduce_scatter_by - remaining))
-        # calculate mean over every n elements so that plot is less cluttered
+        # calculate mean over every n named_steps so that plot is less cluttered
         reduced_fold = np.nanmean(np.asarray(fold).reshape(-1, reduce_scatter_by), axis=1)
         reduced_xfit = np.arange(reduce_scatter_by / 2, len(fold), step=reduce_scatter_by)
 

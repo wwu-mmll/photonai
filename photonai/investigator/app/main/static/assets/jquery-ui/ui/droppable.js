@@ -290,7 +290,7 @@ $.ui.ddmanager = {
 				continue;
 			}
 
-			// Filter out elements in the current dragged item
+			// Filter out named_steps in the current dragged item
 			for ( j = 0; j < list.length; j++ ) {
 				if ( list[ j ] === m[ i ].element[ 0 ] ) {
 					m[ i ].proportions().height = 0;

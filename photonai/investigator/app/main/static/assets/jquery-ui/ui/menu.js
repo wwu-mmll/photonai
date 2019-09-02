@@ -109,7 +109,7 @@ return $.widget( "ui.menu", {
 				}
 				var target = $( event.currentTarget );
 				// Remove ui-state-active class from siblings of the newly focused menu item
-				// to avoid a jump caused by adjacent elements both having a class with a border
+				// to avoid a jump caused by adjacent named_steps both having a class with a border
 				target.siblings( ".ui-state-active" ).removeClass( "ui-state-active" );
 				this.focus( event, target );
 			},

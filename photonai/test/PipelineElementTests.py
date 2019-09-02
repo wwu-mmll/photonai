@@ -33,10 +33,10 @@ class HyperpipeTests(unittest.TestCase):
     def test_init(self):
         self.assertEqual(self.hyperpipe.name, 'god')
         # assure pipeline has two elements, first the pca and second the svc
-        self.assertEqual(len(self.hyperpipe._pipe.steps), 3)
-        self.assertIs(self.hyperpipe._pipe.steps[0][1], self.ss_pipe_element)
-        self.assertIs(self.hyperpipe._pipe.steps[1][1], self.pca_pipe_element)
-        self.assertIs(self.hyperpipe._pipe.steps[2][1], self.svc_pipe_element)
+        self.assertEqual(len(self.hyperpipe._pipe.elements), 3)
+        self.assertIs(self.hyperpipe._pipe.elements[0][1], self.ss_pipe_element)
+        self.assertIs(self.hyperpipe._pipe.elements[1][1], self.pca_pipe_element)
+        self.assertIs(self.hyperpipe._pipe.elements[2][1], self.svc_pipe_element)
 
     def test_no_metrics(self):
         # make sure that no metrics means raising an error

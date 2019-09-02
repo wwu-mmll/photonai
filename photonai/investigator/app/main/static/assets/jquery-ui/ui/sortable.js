@@ -1112,7 +1112,7 @@ return $.widget("ui.sortable", $.ui.mouse, {
 			pageY = event.pageY,
 			scroll = this.cssPosition === "absolute" && !(this.scrollParent[0] !== this.document[0] && $.contains(this.scrollParent[0], this.offsetParent[0])) ? this.offsetParent : this.scrollParent, scrollIsRootNode = (/(html|body)/i).test(scroll[0].tagName);
 
-		// This is another very weird special case that only happens for relative elements:
+		// This is another very weird special case that only happens for relative named_steps:
 		// 1. If the css position is relative
 		// 2. and the scroll parent is the document or similar to the offset parent
 		// we have to refresh the relative offset during the scroll so there are no jumps
