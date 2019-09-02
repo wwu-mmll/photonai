@@ -14,7 +14,7 @@ class FabolasOptimizer(PhotonBaseOptimizer):
 
     def prepare(self, pipeline_elements, maximize_metric):
         self.maximize_metric = maximize_metric
-        self._fabolas_params.update({'pipeline_elements': pipeline_elements})
+        self._fabolas_params.update({'elements': pipeline_elements})
         self._fabolas = Fabolas(**self._fabolas_params)
         self.ask = self.next_config_generator()
 

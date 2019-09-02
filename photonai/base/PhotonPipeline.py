@@ -11,8 +11,8 @@ from ..base.Helper import PHOTONDataHelper
 
 class PhotonPipeline(_BaseComposition):
 
-    def __init__(self, steps):
-        self.steps = steps
+    def __init__(self, elements):
+        self.elements = elements
 
         self.current_config = None
         # caching stuff
@@ -101,7 +101,7 @@ class PhotonPipeline(_BaseComposition):
         params : mapping of string to any
             Parameter names mapped to their values.
         """
-        return self._get_params('steps', deep=deep)
+        return self._get_params('elements', deep=deep)
 
     def set_params(self, **kwargs):
         """Set the parameters of this estimator.
@@ -111,12 +111,12 @@ class PhotonPipeline(_BaseComposition):
         self
         """
         self.current_config = kwargs
-        self._set_params('steps', **kwargs)
+        self._set_params('elements', **kwargs)
 
         return self
 
-    def _validate_steps(self):
-        names, estimators = zip(*self.steps)
+    def _validate_elements(self):
+        names, estimators = zip(*self.elements)
 
         # validate names
         self._validate_names(names)
@@ -129,7 +129,7 @@ class PhotonPipeline(_BaseComposition):
             if t is None:
                 continue
             if not (hasattr(t, "fit") or not hasattr(t, "transform")):
-                raise TypeError("All intermediate steps should be "
+                raise TypeError("All intermediate elements should be "
                                 "transformers and implement fit and transform."
                                 " '%s' (type %s) doesn't" % (t, type(t)))
 
@@ -141,7 +141,7 @@ class PhotonPipeline(_BaseComposition):
 
     def fit(self, X, y=None, **kwargs):
 
-        self._validate_steps()
+        self._validate_elements()
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs, fit=True)
 
         if self._final_estimator is not None:
@@ -149,7 +149,7 @@ class PhotonPipeline(_BaseComposition):
             self._final_estimator.fit(X, y, **kwargs)
             n = PHOTONDataHelper.find_n(X)
             fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
-            self.time_monitor['fit'].append((self.steps[-1][0], fit_duration, n))
+            self.time_monitor['fit'].append((self.elements[-1][0], fit_duration, n))
         return self
 
     def check_for_numpy_array(self, list_object):
@@ -326,15 +326,15 @@ class PhotonPipeline(_BaseComposition):
             self.cache_man.hash = self._fold_id
             self.cache_man.cache_folder = self.cache_folder
             if not self.single_subject_caching:
-                self.cache_man.prepare([name for name, e in self.steps], self.current_config, X)
+                self.cache_man.prepare([name for name, e in self.elements], self.current_config, X)
             else:
-                self.cache_man.prepare([name for name, e in self.steps], self.current_config, single_subject_caching=True)
+                self.cache_man.prepare([name for name, e in self.elements], self.current_config, single_subject_caching=True)
             last_cached_item = None
 
-        # all steps except the last one
-        num_steps = len(self.steps) - 1
+        # all elements except the last one
+        num_steps = len(self.elements) - 1
 
-        for num, (name, transformer) in enumerate(self.steps[:-1]):
+        for num, (name, transformer) in enumerate(self.elements[:-1]):
             if not self.caching or self.current_config is None or \
                     (hasattr(transformer, 'skip_caching') and transformer.skip_caching):
                 X, y, kwargs = self._do_timed_fit_transform(name, transformer, fit, X, y, **kwargs)
@@ -385,7 +385,7 @@ class PhotonPipeline(_BaseComposition):
                 y_pred = self._final_estimator.predict(X, **kwargs)
                 predict_duration = (datetime.datetime.now() - predict_start_time).total_seconds()
                 n = PHOTONDataHelper.find_n(X)
-                self.time_monitor['predict'].append((self.steps[-1][0], predict_duration, n))
+                self.time_monitor['predict'].append((self.elements[-1][0], predict_duration, n))
                 return y_pred
             else:
                 return X
@@ -412,7 +412,7 @@ class PhotonPipeline(_BaseComposition):
     def inverse_transform(self, X, y=None, **kwargs):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
-        for name, transform in self.steps[::-1]:
+        for name, transform in self.elements[::-1]:
             try:
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
             except Exception as e:
@@ -430,19 +430,18 @@ class PhotonPipeline(_BaseComposition):
 
     @property
     def _estimator_type(self):
-        return self.steps[-1][1]._estimator_type
-
-    @property
-    def named_steps(self):
-        return dict(self.steps)
+        return self.elements[-1][1]._estimator_type
 
     @property
     def _final_estimator(self):
-        return self.steps[-1][1]
+        return self.elements[-1][1]
 
     def clear_cache(self):
         if self.cache_man is not None:
             self.cache_man.clear_cache()
+
+    def _add_preprocessing(self, preprocessing):
+        self.elements.insert(0, preprocessing)
 
 
 class CacheManager:

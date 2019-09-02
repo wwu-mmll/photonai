@@ -7,7 +7,7 @@ PHOTON is an object-oriented python framework for optimizing machine learning pi
 
 PHOTON gives you an easy way of setting up a full stack machine learning pipeline including nested cross-validation and hyperparameter search.
 After PHOTON has found the best configuration for your model, it offers a convenient possibility to explore the analyzed hyperparameter space.
-It also enables you to persist and load your optimal model, including all preprocessing steps, with only one line of code.
+It also enables you to persist and load your optimal model, including all preprocessing elements, with only one line of code.
 
 """
 

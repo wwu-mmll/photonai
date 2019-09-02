@@ -47,7 +47,7 @@ class SMACOptimizer(PhotonBaseOptimizer):
             if isinstance(element, Switch):
                 algorithm_options = {}              #mapping algorithm name with their child hyper params
                 
-                for algo in element.pipeline_element_list:
+                for algo in element.elements:
                     algo_params = []                #hyper params corresponding to "algo"
                     for name, value in algo.hyperparameters.items():
                         smac_param = self._convert_PHOTON_to_smac_space(value, (element.name +"__"+ name)) #or element.name__algo.name__name ??? 

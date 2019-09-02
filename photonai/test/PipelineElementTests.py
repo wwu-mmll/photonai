@@ -32,7 +32,7 @@ class HyperpipeTests(unittest.TestCase):
 
     def test_init(self):
         self.assertEqual(self.hyperpipe.name, 'god')
-        # assure pipeline has two steps, first the pca and second the svc
+        # assure pipeline has two elements, first the pca and second the svc
         self.assertEqual(len(self.hyperpipe._pipe.steps), 3)
         self.assertIs(self.hyperpipe._pipe.steps[0][1], self.ss_pipe_element)
         self.assertIs(self.hyperpipe._pipe.steps[1][1], self.pca_pipe_element)

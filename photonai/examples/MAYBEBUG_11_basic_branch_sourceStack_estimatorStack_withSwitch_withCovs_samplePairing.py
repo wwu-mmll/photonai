@@ -46,7 +46,7 @@ source2_branch += PipelineElement('ConfounderRemoval', {}, standardize_covariate
 source2_branch += PipelineElement('PCA', hyperparameters={'n_components': Categorical([None, 5])}, test_disabled=True)
 
 # setup source branches and stack their output (i.e. horizontal concatenation)
-pipe += Stack('source_stack', stacking_elements=[source1_branch, source2_branch])
+pipe += Stack('source_stack', elements=[source1_branch, source2_branch])
 
 # final estimator with stack output as features
 # setup estimator switch and add it to the pipe

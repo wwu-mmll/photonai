@@ -135,14 +135,14 @@ class GaussianProcessMCMC(BaseModel):
             return one hyperparameter sample.
         :type n_hypers: int
         :param chain_length: The length of the MCMC chain. We start n_hypers walker for
-            chain_length steps and we use the last sample
+            chain_length elements and we use the last sample
             in the chain as a hyperparameter sample.
         :type chain_length: int
         :param lower: Lower bound of the input space which is used for the input space normalization
         :type lower: np.array(D,)
         :param upper: Upper bound of the input space which is used for the input space normalization
         :type upper: np.array(D,)
-        :param burnin_steps: The number of burnin steps before the actual MCMC sampling starts.
+        :param burnin_steps: The number of burnin elements before the actual MCMC sampling starts.
         :type burnin_steps: int
         :param pool_size: Thread count to use for calculations of all MarginalizationGPMCMC-instances. Automatic calculation for <0 or None
         :type pool_size: int
