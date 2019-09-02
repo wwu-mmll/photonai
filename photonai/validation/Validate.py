@@ -136,7 +136,7 @@ class TestPipeline(object):
                         break_cv = 0
                         for cf in self.optimization_constraints:
                             if not cf.shall_continue(config_item):
-                                Logger().info(
+                                Logger().debug(
                                     'Skip further cross validation of config because of performance constraints')
                                 break_cv += 1
                                 break
@@ -144,7 +144,7 @@ class TestPipeline(object):
                             break
                     elif self.optimization_constraints is not None:
                         if not self.optimization_constraints.shall_continue(config_item):
-                            Logger().info(
+                            Logger().debug(
                                 'Skip further cross validation of config because of performance constraints')
                             break
 
@@ -182,7 +182,7 @@ class TestPipeline(object):
             warnings.warn('One test iteration of pipeline failed with error')
 
         Logger().debug('...done with')
-        Logger().verbose(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
+        Logger().info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
         return config_item
 

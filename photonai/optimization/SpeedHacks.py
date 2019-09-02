@@ -1,7 +1,7 @@
 from enum import Enum
 import numpy as np
 import inspect
-enum_strategy = Enum("strategy", "first all mean")
+from ..validation.Validate import Scorer
 
 
 class PhotonBaseConstraint:
@@ -11,8 +11,31 @@ class PhotonBaseConstraint:
     evaluate if the configuration is promising. If not, further testing in other folds is skipped to increase speed.
     """
 
-    def __init__(self, *kwargs):
-        pass
+    ENUM_STRATEGY = Enum("strategy", "first all mean")
+
+    def __init__(self, strategy='first', metric='', threshold: float=None, margin: float=0, **kwargs):
+        self._metric = None
+        self._greater_is_better = None
+
+        # with setting property we automatically find greater_is_better
+        self.metric = metric
+        self.threshold = threshold
+        self.margin = margin
+
+        try:
+            self.strategy = PhotonBaseConstraint.ENUM_STRATEGY[strategy]
+        except KeyError:
+            raise ValueError("Your strategy: " + str(strategy) + " is not supported yet. Please use one of " +
+                             str([x.name for x in PhotonBaseConstraint.ENUM_STRATEGY]))
+
+    @property
+    def metric(self):
+        return self._metric
+
+    @metric.setter
+    def metric(self, value):
+        self._metric = value
+        self._greater_is_better = Scorer.greater_is_better_distinction(self._metric)
 
     def shall_continue(self, config_item):
         """
@@ -26,7 +49,28 @@ class PhotonBaseConstraint:
             All performance metrics and other scoring information for all configuration's performance.
             Can be used to evaluate if the configuration has any potential to serve the model's learning task.
         """
-        pass
+        if self._greater_is_better:
+            if self.strategy.name == 'first':
+                if config_item.inner_folds[0].validation.metrics[self.metric] < self.threshold:
+                    return False
+            elif self.strategy.name == 'all':
+                if all(item > self.threshold for item in [x.validation.metrics[self.metric] for x in config_item.inner_folds]):
+                    return False
+            elif self.strategy.name == 'mean':
+                if np.mean([x.validation.metrics[self.metric] for x in config_item.inner_folds]) < self.threshold:
+                    return False
+            return True
+        else:
+            if self.strategy.name == 'first':
+                if config_item.inner_folds[0].validation.metrics[self.metric] > self.threshold:
+                    return False
+            elif self.strategy.name == 'all':
+                if all(item > self.threshold for item in [x.validation.metrics[self.metric] for x in config_item.inner_folds]):
+                    return False
+            elif self.strategy.name == 'mean':
+                if np.mean([x.validation.metrics[self.metric] for x in config_item.inner_folds]) > self.threshold:
+                    return False
+            return True
 
     def copy_me(self):
         new_me = type(self)()
@@ -47,25 +91,8 @@ class MinimumPerformance(PhotonBaseConstraint):
     If not further testing of the configuration is skipped, as it is regarded as not promising enough.
     """
 
-    def __init__(self,  metric: str='', smaller_than: float=1, strategy='first'):
-        self.metric = metric
-        self.smaller_than = smaller_than
-        try:
-            self.strategy = enum_strategy[strategy]
-        except:
-            raise AttributeError("Your strategy: "+str(strategy)+" is not supported yet. Please use one of "+str([x.name for x in enum_strategy]))
-
-    def shall_continue(self, config_item):
-        if self.strategy.name == 'first':
-            if config_item.inner_folds[0].validation.metrics[self.metric] < self.smaller_than:
-                return False
-        elif self.strategy.name == 'all':
-            if all(item > self.smaller_than for item in [x.validation.metrics[self.metric] for x in config_item.inner_folds]):
-                return False
-        elif self.strategy.name == 'mean':
-            if np.mean([x.validation.metrics[self.metric] for x in config_item.inner_folds])  < self.smaller_than:
-                return False
-        return True
+    def __init__(self, metric: str='', threshold: float=1, strategy='first'):
+        super(MinimumPerformance, self).__init__(strategy=strategy, metric=metric, threshold=threshold)
 
 
 class DummyPerformance(PhotonBaseConstraint):
@@ -79,29 +106,9 @@ class DummyPerformance(PhotonBaseConstraint):
     If not further testing of the configuration is skipped, as it is regarded as not promising enough.
     """
 
-    def __init__(self,  metric: str='', smaller_than: float =1., strategy='first'):
-        self.metric = metric
-        self.smaller_than = smaller_than
-        self.dummy_performance = None
-        self.comparative_value = None
-        try:
-            self.strategy = enum_strategy[strategy]
-        except:
-            raise AttributeError("Your strategy: "+str(strategy)+" is not supported yet. Please use one of "+str([x.name for x in enum_strategy]))
+    def __init__(self, metric: str='', margin: float =1., strategy='first'):
+        super(MinimumPerformance, self).__init__(strategy=strategy, metric=metric, margin=margin)
 
     def set_dummy_performance(self, dummy_result):
-        self.comparative_value = dummy_result.validation.metrics[self.metric]+self.smaller_than
-
-    def shall_continue(self, config_item):
-        if self.strategy.name == 'first':
-            if config_item.inner_folds[0].validation.metrics[self.metric] < self.comparative_value:
-                return False
-        elif self.strategy.name == 'all':
-            if all(item > self.comparative_value for item in
-                   [x.validation.metrics[self.metric] for x in config_item.inner_folds]):
-                return False
-        elif self.strategy.name == 'mean':
-            if np.mean([x.validation.metrics[self.metric] for x in config_item.inner_folds]) < self.comparative_value:
-                return False
-        return True
+        self.threshold = dummy_result.validation.metrics[self.metric]+self.margin
 

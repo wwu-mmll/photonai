@@ -1457,7 +1457,7 @@ class PipelineElement(BaseEstimator):
                 # Logger().warn("used prediction instead of transform " + self.name)
                 # raise Warning()
                 # todo: here, I used delegate call instead to differentiate between estimator that need kwargs and those which don't
-                return self.predict(X, **kwargs)
+                return self.predict(X, **kwargs), y, kwargs
                 #return self.base_element.predict(X), y, kwargs
 
             else:
@@ -1864,7 +1864,7 @@ class Stack(PipelineElement):
             element.fit(X, y, **kwargs)
         return self
 
-    def predict(self, X, y=None, **kwargs):
+    def predict(self, X, **kwargs):
         """
         Iteratively calls predict on every child.
         """
@@ -1878,7 +1878,7 @@ class Stack(PipelineElement):
             if hasattr(predicted_data, 'shape'):
                 if len(predicted_data.shape) > 1:
                     predicted_data = np.mean(predicted_data, axis=1).astype(int)
-        return predicted_data, y, kwargs
+        return predicted_data, kwargs
 
     def predict_proba(self, X, y=None, **kwargs):
         """
