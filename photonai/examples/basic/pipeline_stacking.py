@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Stack
 from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
 from sklearn.model_selection import KFold
 
@@ -16,7 +16,7 @@ my_pipe = Hyperpipe('basic_stacking',
                     verbosity=1)
 
 my_pipe += PipelineElement('StandardScaler')
-my_pipe_stack = PipelineStack('final_stack', voting=False)
+my_pipe_stack = Stack('final_stack', voting=False)
 my_pipe_stack += PipelineElement('DecisionTreeClassifier', hyperparameters={'criterion': ['gini'],
                                                                             'min_samples_split': IntegerRange(2, 4)})
 

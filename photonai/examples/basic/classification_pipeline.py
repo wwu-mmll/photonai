@@ -1,5 +1,5 @@
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PreprocessingPipe
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Preprocessing
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from photonai.optimization.SpeedHacks import MinimumPerformance, DummyPerformance
 from photonai.investigator.Investigator import Investigator
@@ -32,7 +32,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
 # NOW FIND OUT MORE ABOUT A SPECIFIC ELEMENT
 # PhotonRegister.info('SVC')
 
-preprocessing = PreprocessingPipe()
+preprocessing = Preprocessing()
 preprocessing += PipelineElement("LabelEncoder")
 
 my_pipe += preprocessing

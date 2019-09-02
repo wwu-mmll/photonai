@@ -1,5 +1,5 @@
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe, CallbackElement
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Preprocessing, CallbackElement
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import AtlasLibrary

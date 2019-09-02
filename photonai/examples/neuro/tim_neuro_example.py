@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PipelineStack, PipelineSwitch
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack, Switch
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import AtlasLibrary

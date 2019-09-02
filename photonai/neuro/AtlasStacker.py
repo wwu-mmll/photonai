@@ -1,5 +1,5 @@
 import pickle
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PipelineStack
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Stack
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import ShuffleSplit
 import numpy as np
@@ -76,7 +76,7 @@ class AtlasStacker(BaseEstimator):
 
                 inner_pipe_list[self.rois[i]] = tmp_inner_pipe
 
-            self.pipeline_fusion = PipelineStack('multiple_source_pipes', inner_pipe_list.values(), voting=False)
+            self.pipeline_fusion = Stack('multiple_source_pipes', inner_pipe_list.values(), voting=False)
         # Todo: else raise Error
 
     def fit(self, X, y=None):
@@ -95,7 +95,7 @@ class AtlasStacker(BaseEstimator):
 
 # if __name__ == '__main__':
 #     from sklearn.model_selection import ShuffleSplit
-#     from framework.PhotonBase import Hyperpipe, PipelineElement, PipelineStack
+#     from framework.PhotonBase import Hyperpipe, PipelineElement, Stack
 #
 #
 #     pca_n_components = [5, 10]
@@ -130,7 +130,7 @@ class AtlasStacker(BaseEstimator):
 #     pipe_source_2.add(PipelineElement.create('svc', {'C': svc_c, 'kernel': svc_kernel}))
 #
 #     # stack sources
-#     pipeline_fusion = PipelineStack('multiple_source_pipes', [pipe_source_1, pipe_source_2], voting=False)
+#     pipeline_fusion = Stack('multiple_source_pipes', [pipe_source_1, pipe_source_2], voting=False)
 #     outer_pipe.add(pipeline_fusion)
 #     outer_pipe.add(PipelineElement.create('svc'))
 #     outer_pipe.fit(X, y)
@@ -167,8 +167,8 @@ class AtlasStacker(BaseEstimator):
     # pipe_source_3.add(PipelineElement.create('svc', {'C': svc_c,
     #                                                  'kernel': svc_kernel}))
     #
-    # # pipeline_fusion = PipelineStack('multiple_source_pipes',[pipe_source_1, pipe_source_2, pipe_source_3], voting=False)
-    # pipeline_fusion = PipelineStack('multiple_source_pipes',
+    # # pipeline_fusion = Stack('multiple_source_pipes',[pipe_source_1, pipe_source_2, pipe_source_3], voting=False)
+    # pipeline_fusion = Stack('multiple_source_pipes',
     #                                    [pipe_source_1, pipe_source_2, pipe_source_3])
     #
     # outer_pipe.add(pipeline_fusion)

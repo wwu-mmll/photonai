@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe, CallbackElement, PipelineBranch
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Preprocessing, CallbackElement, Branch
 from photonai.optimization.Hyperparameters import Categorical
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 
@@ -60,7 +60,7 @@ my_pipe += neuro_branch
 #my_pipe += CallbackElement('NeuroCallback', my_monitor)
 
 # now, add standard ML algorithms to your liking
-feature_engineering = PipelineBranch('FeatureEngineering')
+feature_engineering = Branch('FeatureEngineering')
 feature_engineering += PipelineElement('StandardScaler')
 feature_engineering += CallbackElement('FECallback', my_monitor)
 

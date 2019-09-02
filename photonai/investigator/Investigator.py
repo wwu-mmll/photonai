@@ -1,4 +1,4 @@
-from ..base.PhotonBase import Hyperpipe, PipelineStack, PipelineBranch, PipelineSwitch
+from ..base.PhotonBase import Hyperpipe, Stack, Branch, Switch
 from ..photonlogger.Logger import Singleton, Logger
 from ..investigator.app.main import application
 from ..optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
@@ -270,7 +270,7 @@ class Flowchart(object):
                 string += "default\n"
 
         # Pipeline Stack
-        elif isinstance(pipe_element, PipelineStack):
+        elif isinstance(pipe_element, Stack):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
             else:
@@ -285,7 +285,7 @@ class Flowchart(object):
 
 
         # Pipeline Switch
-        elif isinstance(pipe_element, PipelineSwitch):
+        elif isinstance(pipe_element, Switch):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
             else:
@@ -310,7 +310,7 @@ class Flowchart(object):
 
 
         # Pipeline Branch
-        elif isinstance(pipe_element, PipelineBranch):
+        elif isinstance(pipe_element, Branch):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
             else:

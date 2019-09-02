@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PipelineBranch, PipelineStack, PipelineSwitch, SourceFilter
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Branch, Stack, Switch, DataFilter
 from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
 from sklearn.model_selection import ShuffleSplit, KFold
 import numpy as np
@@ -25,19 +25,19 @@ pipe += PipelineElement('StandardScaler')
 
 # setup pipeline branches with half of the features each fed into a PCA and an estimator
 # if both PCAs are disabled, features are simply concatenated and passed to the final estimator
-source1_branch = PipelineBranch('source1_features')
+source1_branch = Branch('source1_features')
 # first half of features (for Boston Housing, same as indices=[0, 1, 2, 3, 4, 5]
-source1_branch += SourceFilter(indices=np.arange(start=0, stop=int(np.floor(X.shape[1]/2))))
+source1_branch += DataFilter(indices=np.arange(start=0, stop=int(np.floor(X.shape[1] / 2))))
 source1_branch += PipelineElement('PCA', hyperparameters={'n_components': Categorical([None, 5])}, test_disabled=True)
 source1_branch += PipelineElement('RandomForestRegressor')    # final estimator with branch output as features
 
-source2_branch = PipelineBranch('source2_features')
+source2_branch = Branch('source2_features')
 # second half of features (for Boston Housing, same is indices=[6, 7, 8, 9, 10, 11, 12]
-source2_branch += SourceFilter(indices=np.arange(start=int(np.floor(X.shape[1]/2)), stop=X.shape[1]))
+source2_branch += DataFilter(indices=np.arange(start=int(np.floor(X.shape[1] / 2)), stop=X.shape[1]))
 source2_branch += PipelineElement('PCA', hyperparameters={'n_components': Categorical([None, 5])}, test_disabled=True)
 source2_branch += PipelineElement('RandomForestRegressor')    # final estimator with branch output as features
 
 # pick the better branch
-pipe += PipelineSwitch('my_branch_switch', pipeline_element_list=[source1_branch, source2_branch])
+pipe += Switch('my_branch_switch', pipeline_element_list=[source1_branch, source2_branch])
 
 pipe.fit(X, y)

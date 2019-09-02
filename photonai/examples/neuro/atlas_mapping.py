@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PreprocessingPipe
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Preprocessing
 from photonai.neuro.AtlasMapping import AtlasMapper
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from sklearn.model_selection import KFold
@@ -36,7 +36,7 @@ my_pipe = Hyperpipe(analysis_name,
                     output_settings=mongo_settings,
                     cache_folder=cache_folder)
 
-preprocessing = PreprocessingPipe()
+preprocessing = Preprocessing()
 preprocessing += PipelineElement("LabelEncoder")
 my_pipe += preprocessing
 my_pipe += PipelineElement('LinearSVC')

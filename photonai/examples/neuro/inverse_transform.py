@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, PipelineStack
+from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import AtlasLibrary
 from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
