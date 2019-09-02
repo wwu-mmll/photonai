@@ -120,12 +120,11 @@ class HyperpipeTests(unittest.TestCase):
             # print([str(k)+':'+str(i[bestItem]) for k, i in sk_results.items()])
 
             # Check prediction arrays
-            photon_pred = my_pipe.result_tree.outer_folds[tmp_counter].best_config.inner_folds[0].validation.y_pred
+            photon_pred = my_pipe.results.outer_folds[tmp_counter].best_config.best_config_score.validation.y_pred
             self.assertTrue(np.array_equal(sk_prediction, photon_pred))
 
             # Check metrics
-            for metric_name, metric_value in my_pipe.result_tree.outer_folds[tmp_counter].best_config.inner_folds[
-                0].validation.metrics.items():
+            for metric_name, metric_value in my_pipe.results.outer_folds[tmp_counter].best_config.best_config_score.validation.metrics.items():
                 self.assertEqual(sk_results[metric_name], metric_value)
 
             tmp_counter += 1
@@ -311,13 +310,10 @@ class PipelineBranchTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sk_pred, branch_pred))
 
     def test_no_y_transformers(self):
-        branch = Branch("forbidden_branch")
         stacking_element = Stack("forbidden_stack")
         my_dummy = PipelineElement.create("dummy", DummyYAndCovariatesTransformer(), {})
-        with self.assertRaises(ValueError):
-            branch += my_dummy
 
-        with self.assertRaises(ValueError):
+        with self.assertRaises(NotImplementedError):
             stacking_element += my_dummy
 
     def test_stacking_of_branches(self):

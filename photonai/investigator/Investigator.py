@@ -37,9 +37,9 @@ class Investigator:
 
         assert isinstance(pipe, Hyperpipe), "Investigator.show needs an object of type Hyperpipe"
         assert pipe is not None, "Investigator.show needs an object of Hyperpipe, is None"
-        assert pipe.result_tree is not None, "Investigator.show needs an Hyperpipe that is already optimized, so it can show the result tree"
+        assert pipe.results is not None, "Investigator.show needs an Hyperpipe that is already optimized, so it can show the result tree"
         # make sure that Flask is running
-        FlaskManager().set_pipe_object(pipe.name, pipe.result_tree)
+        FlaskManager().set_pipe_object(pipe.name, pipe.results)
         url = Investigator.__build_url("a", pipe.name)
         Logger().info("Your url is: " + url)
         Investigator.__delayed_browser(url)

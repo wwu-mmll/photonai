@@ -1,7 +1,7 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import AtlasLibrary
-from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from photonai.validation.ResultsTreeHandler import ResultsHandler
 from sklearn.model_selection import ShuffleSplit
 from nilearn.datasets import fetch_oasis_vbm
 import numpy as np
@@ -68,7 +68,7 @@ pipe += PipelineElement('LinearSVR')
 pipe.fit(X, y)
 
 # GET IMPORTANCE SCORES
-handler = ResultsTreeHandler(pipe.result_tree)
+handler = ResultsHandler(pipe.results)
 
 # get feature importances (training set) for your best configuration (for all outer folds)
 # this function returns the importance scores for the best configuration of each outer fold in a list

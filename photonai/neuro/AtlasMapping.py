@@ -1,7 +1,7 @@
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import BrainAtlas, AtlasLibrary
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement
-from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from photonai.validation.ResultsTreeHandler import ResultsHandler
 from photonai.photonlogger.Logger import Logger
 from typing import Union
 from glob import glob
@@ -101,7 +101,7 @@ class AtlasMapper:
             hyperpipe_infos[roi_name] = {'hyperpipe_name': hyperpipe.name,
                                          'model_filename': hyperpipe.output_settings.pretrained_model_filename,
                                          'roi_index': self.roi_indices[roi_name]}
-            hyperpipe_results[roi_name] = ResultsTreeHandler(hyperpipe.result_tree).get_performance_outer_folds()
+            hyperpipe_results[roi_name] = ResultsHandler(hyperpipe.result_tree).get_performance_outer_folds()
 
         self.hyperpipe_infos = hyperpipe_infos
 

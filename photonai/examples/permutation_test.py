@@ -1,7 +1,7 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from photonai.validation.PermutationTest import PermutationTest
-from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from photonai.validation.ResultsTreeHandler import ResultsHandler
 
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
@@ -33,7 +33,7 @@ perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, rando
 perm_tester.fit(X, y)
 
 # Load results
-handler = ResultsTreeHandler()
+handler = ResultsHandler()
 handler.load_from_mongodb(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results', pipe_name='basic_svm_pipe_permutation_test_3')
 
 perm_results = handler.results.permutation_test

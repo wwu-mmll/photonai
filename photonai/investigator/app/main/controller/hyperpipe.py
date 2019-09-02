@@ -2,7 +2,7 @@ from flask import render_template
 from ..main import application
 #from ..model.ResultsDatabase import MDBHyperpipe
 from photonai.validation.ResultsDatabase import MDBHyperpipe
-from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from photonai.validation.ResultsHandler import ResultsHandler
 from pymodm.errors import ValidationError, ConnectionError
 from ..model.Metric import Metric
 from ..model.BestConfigTrace import BestConfigTrace
@@ -45,7 +45,7 @@ def show_pipeline(storage, name):
         default_fold_best_config = 0
 
         # plot optimizer history
-        handler = ResultsTreeHandler(pipe)
+        handler = ResultsHandler(pipe)
         config_evaluations = handler.get_config_evaluations()
         min_config_evaluations = handler.get_minimum_config_evaluations()
         optimizer_history = plotly_optimizer_history('optimizer_history', config_evaluations, min_config_evaluations, pipe.metrics[0])

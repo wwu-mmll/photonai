@@ -2,7 +2,7 @@ from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
-from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from photonai.validation.ResultsTreeHandler import ResultsHandler
 import matplotlib.pylab as plt
 
 
@@ -38,7 +38,7 @@ my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, ra
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
-handler = ResultsTreeHandler(my_pipe.result_tree)
+handler = ResultsHandler(my_pipe.results)
 
 # get predictions for your best configuration (for all outer folds)
 best_config_preds = handler.get_val_preds()

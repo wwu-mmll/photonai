@@ -32,5 +32,5 @@ my_pipe += PipelineElement('GaussianProcessRegressor')
 my_pipe.fit(X, y)
 
 # find mean and std of all metrics here
-test_metrics = my_pipe.result_tree.best_config.metrics_test
-train_metrics = my_pipe.result_tree.best_config.metrics_train
+test_metrics = my_pipe.results.best_config.metrics_test
+train_metrics = my_pipe.results.best_config.metrics_train
