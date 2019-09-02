@@ -22,9 +22,9 @@ from ..base.Helper import PHOTONDataHelper
 from ..photonlogger.Logger import Logger
 
 
-class ResultsTreeHandler:
-    def __init__(self, result_tree: MDBHyperpipe = None, output_settings = None):
-        self.results = result_tree
+class ResultsHandler:
+    def __init__(self, results_object: MDBHyperpipe = None, output_settings = None):
+        self.results = results_object
         self.save_settings = output_settings
 
     def load_from_file(self, results_file: str):
@@ -44,9 +44,9 @@ class ResultsTreeHandler:
     @staticmethod
     def get_methods():
         """
-        This function returns a list of all methods available for ResultsTreeHandler.
+        This function returns a list of all methods available for ResultsHandler.
         """
-        methods_list = [s for s in dir(ResultsTreeHandler) if not '__' in s]
+        methods_list = [s for s in dir(ResultsHandler) if not '__' in s]
         return methods_list
 
     def get_performance_table(self):
@@ -334,7 +334,7 @@ class ResultsTreeHandler:
         This function plots predictions vs. (true) targets and plots a regression line
         with confidence interval.
         """
-        preds = ResultsTreeHandler.get_val_preds(self)
+        preds = ResultsHandler.get_val_preds(self)
         ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=confidence_interval)
         ax.set(xlabel='Predicted Values', ylabel='True Values')
         plt.show()
@@ -345,7 +345,7 @@ class ResultsTreeHandler:
         Normalization can be applied by setting `normalize=True`.
         """
 
-        preds = ResultsTreeHandler.get_val_preds(self)
+        preds = ResultsHandler.get_val_preds(self)
         cm = confusion_matrix(preds['y_true'], preds['y_pred'])
         np.set_printoptions(precision=2)
         if normalize:
@@ -377,7 +377,7 @@ class ResultsTreeHandler:
         plt.tight_layout()
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
-        #plotlyFig = ResultsTreeHandler.__plotlyfy(plt)
+        #plotlyFig = ResultsHandler.__plotlyfy(plt)
         plt.show()
 
     def plot_roc_curve(self, pos_label=1, y_score_col=1):
@@ -390,7 +390,7 @@ class ResultsTreeHandler:
 
 
         # get predictive probabilities
-        preds = ResultsTreeHandler.get_val_preds(self)
+        preds = ResultsHandler.get_val_preds(self)
 
         # get ROC infos
         fpr, tpr, _ = roc_curve(y_true=preds['y_true'],

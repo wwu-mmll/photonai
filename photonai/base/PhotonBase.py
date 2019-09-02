@@ -32,7 +32,7 @@ from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGri
     TimeBoxedRandomGridSearchOptimizer
 from ..optimization.SkOpt import SkOptOptimizer
 from ..validation.ResultsDatabase import *
-from ..validation.ResultsTreeHandler import ResultsTreeHandler
+from ..validation.ResultsHandler import ResultsHandler
 from ..validation.Validate import Scorer
 from .PhotonPipeline import PhotonPipeline, CacheManager
 from ..validation.Validate import TestPipeline
@@ -241,7 +241,7 @@ class Hyperpipe(BaseEstimator):
         Dictionary containing the hyperparameters of the best configuration.
         Contains the parameters in the sklearn interface of model_name__parameter_name: parameter value
 
-    * `result_tree` [MDBHyperpipe]:
+    * `results` [MDBHyperpipe]:
         Object containing all information about the for the performed hyperparameter search.
         Holds the training and test metrics for all outer folds, inner folds and configurations, as well as
         additional information.
@@ -299,8 +299,8 @@ class Hyperpipe(BaseEstimator):
         else:
             self.output_settings = OutputSettings()
         self.verbosity = verbosity
-        self.result_tree_manager = None
-        self.result_tree = None
+        self.results_handler = None
+        self.results = None
         self.best_config = None
         self.estimation_type = None
 
@@ -566,14 +566,14 @@ class Hyperpipe(BaseEstimator):
         est_type = self.estimation_type
 
         # Run Dummy Estimator
-        self.result_tree.dummy_estimator = DummyResults()
+        self.results.dummy_estimator = DummyResults()
 
         if est_type == 'regressor':
-            self.result_tree.dummy_estimator.strategy = 'mean'
-            return DummyRegressor(strategy=self.result_tree.dummy_estimator.strategy)
+            self.results.dummy_estimator.strategy = 'mean'
+            return DummyRegressor(strategy=self.results.dummy_estimator.strategy)
         elif est_type == 'classifier':
-            self.result_tree.dummy_estimator.strategy = 'most_frequent'
-            return DummyClassifier(strategy=self.result_tree.dummy_estimator.strategy)
+            self.results.dummy_estimator.strategy = 'most_frequent'
+            return DummyClassifier(strategy=self.results.dummy_estimator.strategy)
         else:
             Logger().info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
                           'step skipped.')
@@ -583,35 +583,35 @@ class Hyperpipe(BaseEstimator):
         config_item = MDBConfig()
         config_item.inner_folds = [f for f in fold_list if f is not None]
         if len(config_item.inner_folds) > 0:
-            self.result_tree.dummy_estimator.train, self.result_tree.dummy_estimator.test = MDBHelper.aggregate_metrics(config_item,
-                                                                                            self.optimization.metrics)
+            self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics(config_item,
+                                                                                                                self.optimization.metrics)
 
     def _prepare_result_logging(self, start_time):
-        result_tree_name = self.name
+        results_object_name = self.name
 
-        self.result_tree = MDBHyperpipe(name=result_tree_name)
+        self.results = MDBHyperpipe(name=results_object_name)
         # in case eval final performance is false, we have no outer fold predictions
         if not self.cross_validation.eval_final_performance:
             self.output_settings.save_predictions_from_best_config_inner_folds = True
-        self.result_tree_manager = ResultsTreeHandler(self.result_tree, self.output_settings)
+        self.results_handler = ResultsHandler(self.results, self.output_settings)
 
-        self.result_tree.computation_start_time = start_time
-        self.result_tree.metrics = self.optimization.metrics
-        self.result_tree.estimation_type = self.estimation_type
+        self.results.computation_start_time = start_time
+        self.results.metrics = self.optimization.metrics
+        self.results.estimation_type = self.estimation_type
         if self.permutation_id is not None:
-            self.result_tree.permutation_id = self.permutation_id
+            self.results.permutation_id = self.permutation_id
 
         # save wizard information to photon db in order to map results to the wizard design object
         if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
             if self.output_settings.wizard_object_id:
                 self.name = self.output_settings.wizard_object_id
-                self.result_tree.name = self.output_settings.wizard_object_id
-                self.result_tree.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
-                self.result_tree.wizard_system_name = self.output_settings.wizard_project_name
-                self.result_tree.user_id = self.output_settings.user_id
-        self.result_tree.outer_folds = []
-        self.result_tree.eval_final_performance = self.cross_validation.eval_final_performance
-        self.result_tree.best_config_metric = self.optimization.best_config_metric
+                self.results.name = self.output_settings.wizard_object_id
+                self.results.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
+                self.results.wizard_system_name = self.output_settings.wizard_project_name
+                self.results.user_id = self.output_settings.user_id
+        self.results.outer_folds = []
+        self.results.eval_final_performance = self.cross_validation.eval_final_performance
+        self.results.best_config_metric = self.optimization.best_config_metric
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
@@ -621,31 +621,31 @@ class Hyperpipe(BaseEstimator):
         # 4. persisting best model
 
         # Compute all final metrics
-        self.result_tree.metrics_train, self.result_tree.metrics_test = MDBHelper.aggregate_metrics(
-            self.result_tree.outer_folds,
+        self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics(
+            self.results.outer_folds,
             self.optimization.metrics)
 
         # save result tree to db or file or both
         Logger().info('Finished hyperparameter optimization!')
-        self.result_tree_manager.save()
+        self.results_handler.save()
         Logger().info("Saved result tree.")
 
         # Find best config across outer folds
-        self.best_config = self.optimization.get_optimum_config_outer_folds(self.result_tree.outer_folds)
-        self.result_tree.best_config = self.best_config
+        self.best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
+        self.results.best_config = self.best_config
         Logger().info('OVERALL BEST CONFIGURATION')
         Logger().info('--------------------------')
         Logger().info(self.best_config.human_readable_config)
 
         # save results again
-        self.result_tree.time_of_results = datetime.datetime.now()
-        self.result_tree.computation_completed = True
-        self.result_tree_manager.save()
+        self.results.time_of_results = datetime.datetime.now()
+        self.results.computation_completed = True
+        self.results_handler.save()
         Logger().info("Saved overall best config to database ")
 
         # write all convenience files (summary, predictions_file and plots)
         Logger().info("Writing convenience files (summary, predictions, plots..)")
-        self.result_tree_manager.write_convenience_files()
+        self.results_handler.write_convenience_files()
 
         # set self to best config
         self.optimum_pipe = self._pipe
@@ -684,7 +684,7 @@ class Hyperpipe(BaseEstimator):
                 Logger().info("No feature importances available for {}!".format(self.optimum_pipe.steps[-1][0]))
                 return
 
-            self.result_tree.optimum_pipe_feature_importances = feature_importances
+            self.results.optimum_pipe_feature_importances = feature_importances
 
             # get backmapping
             backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
@@ -853,11 +853,11 @@ class Hyperpipe(BaseEstimator):
 
     def add_hyperpipe_info_to_result_tree(self):
         # optimization
-        self.result_tree.hyperpipe_info = MDBHyperpipeInfo()
-        self.result_tree.hyperpipe_info.cross_validation = {'OuterCV': self._format_cross_validation(self.cross_validation.outer_cv),
+        self.results.hyperpipe_info = MDBHyperpipeInfo()
+        self.results.hyperpipe_info.cross_validation = {'OuterCV': self._format_cross_validation(self.cross_validation.outer_cv),
                                                             'InnerCV': self._format_cross_validation(self.cross_validation.inner_cv)}
-        self.result_tree.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
-        self.result_tree.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
+        self.results.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
+        self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
                                                         'OptimizerParams': str(self.optimization.optimizer_params),
                                                         'BestConfigMetric': self.optimization.best_config_metric}
 
@@ -921,7 +921,7 @@ class Hyperpipe(BaseEstimator):
                 self.add_hyperpipe_info_to_result_tree()
 
                 # create hyperpipe flowchart
-                self.result_tree.flowchart = self.create_hyperpipe_flowchart()
+                self.results.flowchart = self.create_hyperpipe_flowchart()
 
                 # update output options to add pipe name and timestamp to results folder
                 self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
@@ -962,7 +962,7 @@ class Hyperpipe(BaseEstimator):
                                                            cache_updater=self.recursive_cache_folder_propagation)
                     # 2. prepare
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
-                    self.result_tree.outer_folds.append(outer_fold)
+                    self.results.outer_folds.append(outer_fold)
                     outer_fold_computer.prepare_optimization(self.pipeline_elements, outer_fold)
                     dummy_results.append(outer_fold_computer.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
@@ -970,7 +970,7 @@ class Hyperpipe(BaseEstimator):
                         # 3. fit
                         outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
                         # 4. save outer fold results
-                        self.result_tree_manager.save()
+                        self.results_handler.save()
                     finally:
                         # 5. clear cache
                         CacheManager.clear_cache_files(self.cache_folder)

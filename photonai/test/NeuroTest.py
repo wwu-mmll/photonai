@@ -10,7 +10,7 @@ from nibabel.nifti1 import Nifti1Image
 import numpy as np
 import glob
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.validation.ResultsTreeHandler import ResultsTreeHandler
+from photonai.validation.ResultsTreeHandler import ResultsHandler
 from sklearn.model_selection import ShuffleSplit
 
 
@@ -292,7 +292,7 @@ class NeuroTest(unittest.TestCase):
         pipe.fit(self.X, self.y)
 
         # GET IMPORTANCE SCORES
-        handler = ResultsTreeHandler(pipe.result_tree)
+        handler = ResultsHandler(pipe.results)
         importance_scores_optimum_pipe = handler.results.optimum_pipe_feature_importances
 
         manual_img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
