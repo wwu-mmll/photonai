@@ -685,7 +685,7 @@ class Hyperpipe(BaseEstimator):
             Logger().info("Mapping back feature importances...")
             feature_importances = TestPipeline.extract_feature_importances(self.optimum_pipe)
             if not feature_importances:
-                Logger().info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1].name))
+                Logger().info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
                 return
 
             self.results.optimum_pipe_feature_importances = feature_importances
@@ -706,11 +706,14 @@ class Hyperpipe(BaseEstimator):
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):
-        if isinstance(pipe, (Stack, Branch, Switch, Preprocessing, PhotonPipeline)):
+        if isinstance(pipe, (Stack, Branch, Switch, Preprocessing)):
             if hasattr(pipe, 'nr_of_processes'):
                 pipe.nr_of_processes = 1
             for child in pipe.elements:
                 Hyperpipe.disable_multiprocessing_recursively(child.base_element)
+        elif isinstance(pipe, PhotonPipeline):
+            for name, child in pipe.named_steps.items():
+                Hyperpipe.disable_multiprocessing_recursively(child)
         else:
             if hasattr(pipe, 'nr_of_processes'):
                 pipe.nr_of_processes = 1
@@ -797,7 +800,7 @@ class Hyperpipe(BaseEstimator):
 
             # pipe.caching is automatically set to True or False by .cache_folder setter
 
-            for child in element.elements:
+            for name, child in element.named_steps.items():
                 # we need to check if any element is Branch, Stack or Swtich
                 Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
 
@@ -1712,6 +1715,7 @@ class Preprocessing(Branch):
         self.has_hyperparameters = False
         self.needs_y = True
         self.needs_covariates = True
+        self.name = 'Preprocessing'
 
     def __iadd__(self, pipe_element):
         """
@@ -2324,8 +2328,8 @@ class PhotonModelPersistor:
             os.makedirs(folder)
         wrapper_files = list()
 
-        for element in hyperpipe.optimum_pipe.elements:
-            wrapper_files = save_element(element, element_number, element.name, folder, wrapper_files)
+        for name, element in hyperpipe.optimum_pipe.elements:
+            wrapper_files = save_element(element, element_number, name, folder, wrapper_files)
             element_number += 1
 
         # save pipeline blueprint to make loading of pipeline easier

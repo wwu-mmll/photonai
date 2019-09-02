@@ -433,6 +433,10 @@ class PhotonPipeline(_BaseComposition):
         return self.elements[-1][1]._estimator_type
 
     @property
+    def named_steps(self):
+        return dict(self.elements)
+
+    @property
     def _final_estimator(self):
         return self.elements[-1][1]
 
@@ -441,8 +445,8 @@ class PhotonPipeline(_BaseComposition):
             self.cache_man.clear_cache()
 
     def _add_preprocessing(self, preprocessing):
-        self.elements.insert(0, preprocessing)
-
+        if preprocessing:
+            self.elements.insert(0, (preprocessing.name, preprocessing))
 
 class CacheManager:
 
