@@ -391,10 +391,6 @@
     "sklearn.ensemble.RandomForestClassifier",
     "Estimator"
   ],
-  "VotingClassifier":[
-    "sklearn.ensemble.VotingClassifier",
-    "Estimator"
-  ],
   "DummyClassifier":[
     "sklearn.dummy.DummyClassifier",
     "Estimator"
@@ -487,8 +483,12 @@
     "photonai.modelwrapper.RangeRestrictor.RangeRestrictor",
     "Estimator"
   ],
-  "Voting":[
-    "photonai.modelwrapper.Voting.Voting",
+  "PhotonVotingClassifier":[
+    "photonai.modelwrapper.Voting.PhotonVotingClassifier",
+    "Estimator"
+  ],
+  "PhotonVotingRegressor":[
+    "photonai.modelwrapper.Voting.PhotonVotingRegressor",
     "Estimator"
   ]
 }

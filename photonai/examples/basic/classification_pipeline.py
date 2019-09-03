@@ -11,7 +11,7 @@ import time
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
 
-settings = OutputSettings(project_folder='/spm-data/Scratch/spielwiese_nils_winter/photon_test')
+settings = OutputSettings(project_folder='.')
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
@@ -22,7 +22,6 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=3),  # test each configuration ten times respectively,
                     verbosity=1,
-                    cache_folder='/spm-data/Scratch/spielwiese_nils_winter/photon_test/cache',
                     output_settings=settings)
 
 

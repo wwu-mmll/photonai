@@ -40,6 +40,6 @@ for clf in clf_list:
     est_stack += PipelineElement(clf)
 my_pipe += est_stack
 
-my_pipe += PipelineElement('Voting', hyperparameters={'strategy': ['mean', 'median', 'most_frequent']})
+my_pipe += PipelineElement('PhotonVotingClassifier')
 # my_pipe += PipelineElement("RandomForestClassifier")
 my_pipe.fit(X, y)
