@@ -139,14 +139,20 @@ def plotly_optimizer_history(name, config_evaluations, minimum_config_evaluation
     return plot.to_plot()
 
 
-def plot_scatter(folds, name, title, colormap='plasma'):
+def plot_scatter(folds, name, title, colormap='nipy_spectral'):
+    import seaborn as sns
+    color = sns.hls_palette(len(folds), l=.3, s=.8)
+
+    # cmap = getattr(plt.cm, colormap)
+    # color = cmap(np.linspace(0, 1, len(folds)))
+
     list_final_value_validation_traces = list()
-    color = cm.get_cmap(colormap, len(folds)).colors
     fold_nr = 1
     for y_true, y_pred in folds:
         c = color[fold_nr-1]
-        validation_trace = PlotlyTrace('Fold {}'.format(fold_nr), 'markers', 'scatter', trace_color='rgba({}, {}, {}, 0.8)'.format(c[0], c[1], c[2]))
+        validation_trace = PlotlyTrace('Fold {}'.format(fold_nr), 'markers', 'scatter', trace_size=7,
 
+                                       trace_color='rgba({}, {}, {}, 0.5)'.format(c[0], c[1], c[2]))
         for true_item in y_true:
             validation_trace.add_x(true_item)
         for pred_item in y_pred:

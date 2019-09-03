@@ -8,7 +8,8 @@ class PlotlyTrace:
     """
 
     def __init__(self, variable_name: str, mode: str="markers", trace_type: str="scatter", trace_size: int=0,
-                 trace_color: str="", with_error: bool=False, colorscale: list=None):
+                 trace_color: str="", with_error: bool=False, colorscale: list=None, marker_line_width: int=None,
+                 marker_line_color: str = None):
         """ Constructor
         :param variable_name: Variable name in javascript
         :param mode: Trace's mode (default: 'markers')
@@ -25,6 +26,8 @@ class PlotlyTrace:
         self.with_error = with_error
         self.trace_color = trace_color
         self.colorscale = colorscale
+        self.marker_line_width = marker_line_width
+        self.marker_line_color = marker_line_color
 
     def add_x(self, x):
         """ function to add new value for x axis

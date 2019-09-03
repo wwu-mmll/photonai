@@ -15,9 +15,6 @@ from .helper import load_pipe, load_available_pipes
 @application.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>')
 def show_outer_fold(storage, name, fold_nr):
     try:
-        # best config object always has just one fold
-        default_fold_best_config = 0
-
         available_pipes = load_available_pipes()
         pipe = load_pipe(storage, name)
 
@@ -28,12 +25,12 @@ def show_outer_fold(storage, name, fold_nr):
         metric_validation_list = list()
 
         # save metrics for training dynamically in list
-        for key, value in outer_fold.best_config.inner_folds[default_fold_best_config].training.metrics.items():
+        for key, value in outer_fold.best_config.best_config_score.training.metrics.items():
             metric = Metric(key, value)
             metric_training_list.append(metric)
 
         # save metrics for validation dynamically in list
-        for key, value in outer_fold.best_config.inner_folds[default_fold_best_config].validation.metrics.items():
+        for key, value in outer_fold.best_config.best_config_score.validation.metrics.items():
             metric = Metric(key, value)
             metric_validation_list.append(metric)
 
@@ -48,8 +45,8 @@ def show_outer_fold(storage, name, fold_nr):
         # Training
         #---------------------
         # START building final values for training set (best config)
-        y_true = outer_fold.best_config.inner_folds[default_fold_best_config].training.y_true
-        y_pred = outer_fold.best_config.inner_folds[default_fold_best_config].training.y_pred
+        y_true = outer_fold.best_config.best_config_score.training.y_true
+        y_pred = outer_fold.best_config.best_config_score.training.y_pred
         if pipe.estimation_type == 'classifier':
             final_value_training_plot = plotly_confusion_matrix('best_config_training_values', 'Confusion Matrix Train',
                                         [[y_true, y_pred]])
@@ -62,8 +59,8 @@ def show_outer_fold(storage, name, fold_nr):
         #---------------------
         # Validation
         #---------------------
-        y_true = outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_true
-        y_pred = outer_fold.best_config.inner_folds[default_fold_best_config].validation.y_pred
+        y_true = outer_fold.best_config.best_config_score.validation.y_true
+        y_pred = outer_fold.best_config.best_config_score.validation.y_pred
         if pipe.estimation_type == 'classifier':
             final_value_validation_plot = plotly_confusion_matrix('best_config_validation_values', 'Confusion Matrix Test',
                                         [[y_true, y_pred]])

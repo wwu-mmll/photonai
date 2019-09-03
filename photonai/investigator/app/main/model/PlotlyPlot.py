@@ -59,6 +59,12 @@ class PlotlyPlot:
                 result += "color: '" + item.trace_color + "', "
             if item.trace_size != 0:
                 result += "size: " + str(item.trace_size) + ", "
+            if item.marker_line_width:
+
+                result += "line: {width: " + str(item.marker_line_width)
+                if item.marker_line_color:
+                    result += ", color: '{}'".format(item.marker_line_color)
+                result += "}, "
             if item.colorscale:
                 result += "colorscale: {}".format(item.colorscale)
             result += "}};"

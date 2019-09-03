@@ -42,8 +42,6 @@ def show_pipeline(storage, name):
         # if not isinstance(pipe, MDBHyperpipe):
         #     return render_template("default/error.html", error_msg=pipe)
 
-        default_fold_best_config = 0
-
         # plot optimizer history
         handler = ResultsHandler(pipe)
         config_evaluations = handler.get_config_evaluations()
@@ -66,10 +64,10 @@ def show_pipeline(storage, name):
         true_and_pred_val = list()
         true_and_pred_train = list()
         for fold in pipe.outer_folds:
-            true_and_pred_val.append([fold.best_config.inner_folds[default_fold_best_config].validation.y_true,
-                                  fold.best_config.inner_folds[default_fold_best_config].validation.y_pred])
-            true_and_pred_train.append([fold.best_config.inner_folds[default_fold_best_config].training.y_true,
-                                  fold.best_config.inner_folds[default_fold_best_config].training.y_pred])
+            true_and_pred_val.append([fold.best_config.best_config_score.validation.y_true,
+                                  fold.best_config.best_config_score.validation.y_pred])
+            true_and_pred_train.append([fold.best_config.best_config_score.training.y_true,
+                                  fold.best_config.best_config_score.training.y_pred])
         if pipe.estimation_type == 'regressor':
             predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train', 'True/Pred Training')
             predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
@@ -88,14 +86,14 @@ def show_pipeline(storage, name):
                 metric_validation_list = list()
 
                 # save metrics for training dynamically in list
-                for key, value in fold.best_config.inner_folds[default_fold_best_config].training.metrics.items():
+                for key, value in fold.best_config.best_config_score.training.metrics.items():
                     overview_plot_training_trace.add_x(key)
                     overview_plot_training_trace.add_y(value)
                     metric = Metric(key, value)
                     metric_training_list.append(metric)
 
                 # save metrics for validation dynamically in list
-                for key, value in fold.best_config.inner_folds[default_fold_best_config].validation.metrics.items():
+                for key, value in fold.best_config.best_config_score.validation.metrics.items():
                     overview_plot_test_trace.add_x(key)
                     overview_plot_test_trace.add_y(value)
                     metric = Metric(key, value)
