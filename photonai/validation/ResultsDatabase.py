@@ -180,7 +180,7 @@ class MDBHelper:
         # Check if we want to aggregate metrics over best configs of outer folds or over metrics of inner folds
         if isinstance(folds, list):
             if isinstance(folds[0], MDBOuterFold):
-                folds = [fold.best_config.inner_folds[0] for fold in folds]
+                folds = [fold.best_config.best_config_score for fold in folds]
         else:
             # don't try to calculate anything if the config failed
             if folds.config_failed:
