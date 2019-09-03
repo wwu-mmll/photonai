@@ -21,7 +21,6 @@ from sklearn.metrics import accuracy_score
 from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.model_selection._split import BaseCrossValidator
-from nibabel.nifti1 import Nifti1Image
 
 from .PhotonFolds import OuterFoldManager, FoldInfo
 from ..photonlogger.Logger import Logger
@@ -654,7 +653,6 @@ class Hyperpipe(BaseEstimator):
         # save result tree to db or file or both
         Logger().info('Finished hyperparameter optimization!')
         self.results_handler.save()
-        Logger().info("Saved result tree.")
 
         # Find best config across outer folds
         self.best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
@@ -670,7 +668,6 @@ class Hyperpipe(BaseEstimator):
         Logger().info("Saved overall best config to database ")
 
         # write all convenience files (summary, predictions_file and plots)
-        Logger().info("Writing convenience files (summary, predictions, plots...)")
         self.results_handler.write_convenience_files()
 
         # set self to best config
@@ -696,8 +693,8 @@ class Hyperpipe(BaseEstimator):
         # Now truly set to no caching (including single_subject_caching)
         self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
-        Logger().info("Saving best model...")
         if self.output_settings.save_output:
+            Logger().info("Saving best model...")
             try:
                 pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
                 PhotonModelPersistor.save_optimum_pipe(self, pretrained_model_filename)
@@ -706,7 +703,7 @@ class Hyperpipe(BaseEstimator):
                 Logger().info("Could not save optimum pipe model to file")
                 Logger().error(str(e))
 
-        if self.output_settings.save_best_config_feature_importances:
+        if self.output_settings.save_best_config_feature_importances and self.output_settings.save_output:
             # get feature importances of optimum pipe
             Logger().info("Mapping back feature importances...")
             feature_importances = TestPipeline.extract_feature_importances(self.optimum_pipe)
@@ -720,15 +717,8 @@ class Hyperpipe(BaseEstimator):
             backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
 
             # save backmapping
-            filename = 'optimum_pipe_feature_importances_backmapped'
-
-            if isinstance(backmapping, np.ndarray):
-                np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
-            elif isinstance(backmapping, Nifti1Image):
-                backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
-            else:
-                with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
-                    pickle.dump(backmapping, f)
+            self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
+                                 backmapping=backmapping)
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):

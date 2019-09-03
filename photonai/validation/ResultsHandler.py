@@ -15,6 +15,7 @@ from pymongo.errors import DocumentTooLarge
 from typing import Union
 from prettytable import PrettyTable
 import pprint
+from nibabel.nifti1 import Nifti1Image
 
 from ..validation.ResultsDatabase import MDBHyperpipe
 from ..validation.Validate import Scorer
@@ -23,9 +24,9 @@ from ..photonlogger.Logger import Logger
 
 
 class ResultsHandler:
-    def __init__(self, results_object: MDBHyperpipe = None, output_settings = None):
+    def __init__(self, results_object: MDBHyperpipe = None, output_settings=None):
         self.results = results_object
-        self.save_settings = output_settings
+        self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
         self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
@@ -244,8 +245,8 @@ class ResultsHandler:
         if file:
             plt.savefig(file)
         else:
-            if self.save_settings:
-                file = os.path.join(self.save_settings.results_folder, "optimizer_history.png")
+            if self.output_settings:
+                file = os.path.join(self.output_settings.results_folder, "optimizer_history.png")
                 plt.savefig(file)
         plt.close()
 
@@ -485,7 +486,7 @@ class ResultsHandler:
 
         # write csv file with time analysis
         sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
-        csv_filename = os.path.join(self.save_settings.results_folder, 'time_monitor.csv')
+        csv_filename = os.path.join(self.output_settings.results_folder, 'time_monitor.csv')
         with open(csv_filename, 'w') as csvfile:
             writer = csv.writer(csvfile)
             header1 = [""]
@@ -537,13 +538,13 @@ class ResultsHandler:
         plt.tight_layout()
         plt.title("methods")
 
-        plt.savefig(os.path.join(self.save_settings.results_folder, 'time_monitor_pie.png'))
+        plt.savefig(os.path.join(self.output_settings.results_folder, 'time_monitor_pie.png'))
         plt.close()
 
     def save(self):
 
-        if self.save_settings.mongodb_connect_url:
-            connect(self.save_settings.mongodb_connect_url, alias='photon_core')
+        if self.output_settings.mongodb_connect_url:
+            connect(self.output_settings.mongodb_connect_url, alias='photon_core')
             Logger().debug('Write results to mongodb...')
             try:
                 self.results.save()
@@ -554,20 +555,33 @@ class ResultsHandler:
                 #     for outer_fold in results_tree.outer_folds:
                 #         metrics_configs = [outer_fold.tested_configlist
 
-        if self.save_settings.save_output:
+        if self.output_settings.save_output:
+            Logger().info("Writing results to project folder...")
             self.write_result_tree_to_file()
 
-    def write_convenience_files(self):
-        self.write_summary()
-        self.eval_mean_time_components()
-        self.write_predictions_file()
+    def save_backmapping(self, filename: str, backmapping):
+        if isinstance(backmapping, np.ndarray):
+            np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+        elif isinstance(backmapping, Nifti1Image):
+            backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+        else:
+            with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
+                pickle.dump(backmapping, f)
 
-        if self.save_settings.plots:
-            self.plot_optimizer_history(self.results.best_config_metric)
+
+    def write_convenience_files(self):
+        if self.output_settings.save_output:
+            Logger().info("Writing convenience files (summary, predictions, plots...)")
+            self.write_summary()
+            self.eval_mean_time_components()
+            self.write_predictions_file()
+
+            if self.output_settings.plots:
+                self.plot_optimizer_history(self.results.best_config_metric)
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.save_settings.results_folder, 'photon_result_file.p')
+            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.p')
             file_opened = open(local_file, 'wb')
             pickle.dump(self.results.to_son(), file_opened)
             file_opened.close()
@@ -576,11 +590,11 @@ class ResultsHandler:
             Logger().error(str(e))
 
     def write_predictions_file(self):
-        if self.save_settings.save_predictions or self.save_settings.save_best_config_predictions:
+        if self.output_settings.save_predictions or self.output_settings.save_best_config_predictions:
             score_info_list = []
             fold_nr = []
             # usually we write the predictions for the outer fold
-            if not self.save_settings.save_predictions_from_best_config_inner_folds:
+            if not self.output_settings.save_predictions_from_best_config_inner_folds:
                 for outer_fold in self.results.outer_folds:
                     score_info_list.append(outer_fold.best_config.best_config_score.validation)
                     fold_nr.append(outer_fold.fold_nr)
@@ -608,7 +622,7 @@ class ResultsHandler:
                 collectables["fold"] = fold_nr_array
                 save_df = pd.DataFrame(collectables)
                 sorted_df = save_df.sort_values(by='indices')
-                predictions_filename = os.path.join(self.save_settings.results_folder, 'best_config_predictions.csv')
+                predictions_filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
                 sorted_df.to_csv(predictions_filename, index=None)
 
     def write_summary(self):
@@ -666,7 +680,7 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
         final_text = ''.join(text_list)
 
         try:
-            summary_filename = os.path.join(self.save_settings.results_folder, 'photon_summary.txt')
+            summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
             text_file = open(summary_filename, "w")
             text_file.write(final_text)
             text_file.close()
