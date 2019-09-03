@@ -633,7 +633,7 @@ class Hyperpipe(BaseEstimator):
 
         # add flowchart to results
         try:
-            flowchart = FlowchartCreator(self)
+            flowchart = FlowchartCreator(self.elements)
             self.results.flowchart = flowchart.create_str()
         except:
             self.results.flowchart = ""
@@ -2471,32 +2471,9 @@ class FlowchartCreator(object):
 
         # PHOTON pipeline
         string = ""
-        if hasattr(pipe_element, "named_steps"):
-            elements = list()
-            for name, element in pipe_element.elements:
-                elements.append(element)
-            pipe_element.pipe_elements = elements
-
-        if not hasattr(pipe_element, "named_steps"):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Define:\n"
-            else:
-                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Define:\n"
-            hyperparameters = None
-            kwargs = None
-            if hasattr(pipe_element, "hyperparameters"):
-                hyperparameters = pipe_element.hyperparameters
-                for name, parameter in pipe_element.hyperparameters.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
-            if hasattr(pipe_element, "kwargs"):
-                kwargs = pipe_element.kwargs
-                for name, parameter in pipe_element.kwargs.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
-            if not kwargs and not hyperparameters:
-                string += "default\n"
 
         # Pipeline Stack
-        elif isinstance(pipe_element, Stack):
+        if isinstance(pipe_element, Stack):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
             else:
@@ -2556,5 +2533,23 @@ class FlowchartCreator(object):
 
             for pelement in pipe_element.elements:
                 string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
+
+        elif isinstance(pipe_element, PipelineElement):
+            if parent == "":
+                string = "[" + pipe_element.name + "]:\n" + "Define:\n"
+            else:
+                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Define:\n"
+            hyperparameters = None
+            kwargs = None
+            if hasattr(pipe_element, "hyperparameters"):
+                hyperparameters = pipe_element.hyperparameters
+                for name, parameter in pipe_element.hyperparameters.items():
+                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
+            if hasattr(pipe_element, "kwargs"):
+                kwargs = pipe_element.kwargs
+                for name, parameter in pipe_element.kwargs.items():
+                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
+            if not kwargs and not hyperparameters:
+                string += "default\n"
 
         return string
