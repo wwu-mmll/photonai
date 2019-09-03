@@ -23,7 +23,7 @@ class NeuroModuleBranch(Branch):
         Name of the NeuroModule pipeline branch
 
     """
-    NEURO_ELEMENTS = PhotonRegister.get_package_info(['PhotonNeuro'])
+    NEURO_ELEMENTS = PhotonRegister().get_package_info(['PhotonNeuro'])
 
     def __init__(self, name, nr_of_processes=1, output_img: bool = False, apply_groupwise: bool = False):
         Branch.__init__(self, name)
