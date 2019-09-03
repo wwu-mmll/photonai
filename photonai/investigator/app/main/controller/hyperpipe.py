@@ -46,7 +46,7 @@ def show_pipeline(storage, name):
         handler = ResultsHandler(pipe)
         config_evaluations = handler.get_config_evaluations()
         min_config_evaluations = handler.get_minimum_config_evaluations()
-        optimizer_history = plotly_optimizer_history('optimizer_history', config_evaluations, min_config_evaluations, pipe.metrics[0])
+        optimizer_history = plotly_optimizer_history('optimizer_history', config_evaluations, min_config_evaluations, pipe.hyperpipe_info.best_config_metric)
 
         # get information on cv, optimizer and data
         data_info = pipe.hyperpipe_info.data
@@ -68,7 +68,7 @@ def show_pipeline(storage, name):
                                   fold.best_config.best_config_score.validation.y_pred])
             true_and_pred_train.append([fold.best_config.best_config_score.training.y_true,
                                   fold.best_config.best_config_score.training.y_pred])
-        if pipe.estimation_type == 'regressor':
+        if pipe.hyperpipe_info.estimation_type == 'regressor':
             predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train', 'True/Pred Training')
             predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
         else:

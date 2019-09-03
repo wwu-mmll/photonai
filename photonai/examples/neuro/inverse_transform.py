@@ -76,7 +76,7 @@ importance_scores_outer_folds = handler.get_importance_scores()
 importance_scores_optimum_pipe = handler.results.optimum_pipe_feature_importances
 
 img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
-img.to_filename('optimum_pipe_feature_importances.nii.gz')
+img.to_filename('best_config_feature_importances.nii.gz')
 debug = True
 
 

@@ -127,6 +127,11 @@ class MDBHyperpipeInfo(EmbeddedMongoModel):
     data = fields.DictField(blank=True)
     cross_validation = fields.DictField(blank=True)
     optimization = fields.DictField(blank=True)
+    flowchart = fields.CharField(blank=True)
+    metrics = fields.ListField(blank=True)
+    best_config_metric = fields.CharField(blank=True)
+    estimation_type = fields.CharField(blank=True)
+    eval_final_performance = fields.BooleanField(blank=True)
 
 
 class MDBHyperpipe(MongoModel):
@@ -135,22 +140,21 @@ class MDBHyperpipe(MongoModel):
         connection_alias = 'photon_core'
 
     name = fields.CharField()
+
     permutation_id = fields.CharField()
     permutation_failed = fields.CharField(blank=True)
+    permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
+
     computation_completed = fields.BooleanField(default=False)
     computation_start_time = fields.DateTimeField(blank=True)
-    best_config_metric = fields.CharField()
-    eval_final_performance = fields.BooleanField(default=True)
-    outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     time_of_results = fields.DateTimeField(blank=True)
-    permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
+
+    outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)
-    optimum_pipe_feature_importances = fields.ListField(blank=True)
+    best_config_feature_importances = fields.ListField(blank=True)
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
-    metrics = fields.ListField(blank=True)
-    estimation_type = fields.CharField(blank=True)
-    flowchart = fields.CharField(blank=True)
+
     hyperpipe_info = fields.EmbeddedDocumentField(MDBHyperpipeInfo)
 
     # dummy estimator

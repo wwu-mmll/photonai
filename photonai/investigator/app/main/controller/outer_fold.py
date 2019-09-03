@@ -47,7 +47,7 @@ def show_outer_fold(storage, name, fold_nr):
         # START building final values for training set (best config)
         y_true = outer_fold.best_config.best_config_score.training.y_true
         y_pred = outer_fold.best_config.best_config_score.training.y_pred
-        if pipe.estimation_type == 'classifier':
+        if pipe.hyperpipe_info.estimation_type == 'classifier':
             final_value_training_plot = plotly_confusion_matrix('best_config_training_values', 'Confusion Matrix Train',
                                         [[y_true, y_pred]])
         else:
@@ -61,7 +61,7 @@ def show_outer_fold(storage, name, fold_nr):
         #---------------------
         y_true = outer_fold.best_config.best_config_score.validation.y_true
         y_pred = outer_fold.best_config.best_config_score.validation.y_pred
-        if pipe.estimation_type == 'classifier':
+        if pipe.hyperpipe_info.estimation_type == 'classifier':
             final_value_validation_plot = plotly_confusion_matrix('best_config_validation_values', 'Confusion Matrix Test',
                                         [[y_true, y_pred]])
         else:
