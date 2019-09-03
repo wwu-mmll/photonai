@@ -1,7 +1,8 @@
-from sklearn.base import BaseEstimator
+from sklearn.base import BaseEstimator, ClassifierMixin
+import numpy as np
 
 
-class CustomEstimator(BaseEstimator):
+class CustomEstimator(BaseEstimator, ClassifierMixin):
 
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
@@ -9,7 +10,7 @@ class CustomEstimator(BaseEstimator):
         self.param1 = param1
         self.param2 = param2
 
-    def fit(self, data, targets=None, **kwargs):
+    def fit(self, X, y=None, **kwargs):
         """
         Adjust the underlying model or method to the data.
 
@@ -19,11 +20,10 @@ class CustomEstimator(BaseEstimator):
         """
         return self
 
-    def predict(self, data):
+    def predict(self, X):
         """
         Use the learned model to make predictions.
         """
-        my_predictions = []
-        return my_predictions
+        return np.random.randint(0, 2, X.shape[0])
 
 

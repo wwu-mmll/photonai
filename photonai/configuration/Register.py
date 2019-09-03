@@ -1,10 +1,13 @@
-# register Elements, Optimizers, ...?
 import inspect
 import json
-import os.path
-from ..photonlogger.Logger import Logger
+import os
+import sys
+from os import path
+from ..photonlogger.Logger import Logger, Singleton
+import shutil
 
 
+@Singleton
 class PhotonRegister:
     """
     Helper class to manage the PHOTON Element Register.
@@ -40,10 +43,27 @@ class PhotonRegister:
     PHOTON_REGISTERS = ['PhotonCore', 'PhotonNeuro']
 
     def __init__(self):
-        pass
+        self.custom_elements = None
+        self.custom_elements_folder = None
+        self.custom_elements_file = None
 
-    @staticmethod
-    def save(photon_name: str, class_str: str, element_type: str, photon_package: str = "CustomElements"):
+    def load_custom_folder(self, custom_elements_folder):
+        if not path.exists(custom_elements_folder):
+            Logger().info('Creating folder {}'.format(custom_elements_folder))
+            os.makedirs(custom_elements_folder)
+
+        self.custom_elements_folder = custom_elements_folder
+
+        # add folder to python path
+        sys.path.append(custom_elements_folder)
+
+        content, custom_file = self.get_json('CustomElements')
+
+        self.custom_elements = content
+        self.custom_elements_file = custom_file
+        self.PHOTON_REGISTERS.append('CustomElements')
+
+    def save(self, photon_name: str, class_str: str, element_type: str, python_file: str):
         """
         Save Element information to the JSON file
 
@@ -55,33 +75,32 @@ class PhotonRegister:
           The namespace of the class, like in the import statement
         * 'element_type' [str]:
           Can be 'Estimator' or 'Transformer'
-        * 'photon_package' [str]:
-          The photonai module name e.g. photon_core, photon_neuro
-
+        * 'folder' [str]:
+          All registrations are saved to this folder
+        * 'python_file' [str]:
+          The python file that includes the element class
         """
         # register_element and jsonify
 
-        if element_type != "Estimator" or element_type != "Transformer":
+        if not element_type == "Estimator" and not element_type == "Transformer":
             Logger().error("Variable element_type must be 'Estimator' or 'Transformer'")
 
-        duplicate = PhotonRegister.check_duplicate(photon_name, class_str)
+        duplicate = self.check_duplicate(photon_name=photon_name,
+                                         class_str=class_str,
+                                         content=self.custom_elements)
+
         if not duplicate:
-            content, _ = PhotonRegister.get_json(photon_package)  # load existing json
             # add new element
-            content[photon_name] = class_str, element_type
+            self.custom_elements[photon_name] = class_str, element_type
 
             # write back to file
-            PhotonRegister.write2json(content, photon_package)
-
-            Logger().info('Adding PipelineElement ' + class_str + ' to ' +
-                          photon_package + ' as "' + photon_name + '".')
-
-
+            self.write2json(self.custom_elements)
+            Logger().info('Adding PipelineElement ' + class_str + ' to CustomElements.json as "' + photon_name + '".')
+            shutil.copy(python_file, self.custom_elements_folder)
         else:
-            Logger().error('Could not register pipeline element due to duplicates.')
+            Logger().error('Could not register element!')
 
-    @staticmethod
-    def info(photon_name):
+    def info(self, photon_name):
         """
         Show information for object that is encoded by this name.
 
@@ -90,7 +109,7 @@ class PhotonRegister:
         * 'photon_name' [str]:
           The string literal which accesses the class
         """
-        content = PhotonRegister.get_package_info(PhotonRegister.PHOTON_REGISTERS)  # load existing json
+        content = self.get_package_info()  # load existing json
 
         if photon_name in content:
             element_namespace, element_name = content[photon_name]
@@ -115,10 +134,7 @@ class PhotonRegister:
         else:
             Logger().error("Could not find element " + photon_name)
 
-
-
-    @staticmethod
-    def delete(photon_name, photon_package="CustomElements"):
+    def delete(self, photon_name):
         """
         Delete Element from JSON file
 
@@ -127,51 +143,44 @@ class PhotonRegister:
         * 'photon_name' [str]:
           The string literal encoding the class
         """
-        content, _ = PhotonRegister.get_json(photon_package)  # load existing json
 
-        if photon_name in content:
-            del content[photon_name]
+        if photon_name in self.custom_elements:
+            del self.custom_elements[photon_name]
 
-        PhotonRegister.write2json(content, photon_package)
-        Logger().info('Removing the PipelineElement named "{0}" from {1}.'
-                      .format(photon_name, photon_package))
+        self.write2json(self.custom_elements)
+        Logger().info('Removing the PipelineElement named "{0}" from CustomElements.json.'.format(photon_name))
 
     @staticmethod
-    def check_duplicate(photon_name, class_str):
+    def check_duplicate(photon_name, class_str, content):
         """
         Helper function to check if the entry is either registered by a different name or if the name is already given
         to another class
 
          Parameters:
         -----------
-        * 'photon_name' [str]:
-          The name with which the class should be accessed
+        * 'content':
+          The content of the CustomElements.json
         * 'class_str' [str]:
           The namespace.Classname, where the class lives, from where it should be imported.
-
+        * 'photon_name':
+          The name of the element with which it is called within PHOTON
         Returns:
         --------
         Bool, False if there is no key with this name and the class is not already registered with another key
         """
 
-        content = PhotonRegister.get_package_info(PhotonRegister.PHOTON_REGISTERS)  # load existing json
-
         # check for duplicate name (dict key)
-        flag = 0
         if photon_name in content:
-           flag += 1
-           Logger().info('A PipelineElement named ' + photon_name + ' has already been registered.')
+            Logger().info('A PipelineElement named ' + photon_name + ' has already been registered.')
+            return True
 
         # check for duplicate class_str
         if any(class_str in '.'.join([s[0], s[1]]) for s in content.values()):
-            flag += 1
             Logger().info('The Class named ' + class_str + ' has already been registered.')
+            return True
+        return False
 
-        return flag > 0
-
-    # one json file per Photon Package (Core, Neuro, Genetics, Designer (if necessary)
-    @staticmethod
-    def get_json(photon_package: str):
+    def get_json(self, photon_package: str):
         """
         Load JSON file in which the elements for the PHOTON submodule are stored.
 
@@ -186,9 +195,15 @@ class PhotonRegister:
         --------
         JSON file as dict, file path as str
         """
-        file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
+
+        if photon_package == 'CustomElements':
+            folder = self.custom_elements_folder
+        else:
+            folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+
+        file_name = path.join(folder, photon_package + '.json')
         file_content = {}
-        if os.path.isfile(file_name):
+        if path.isfile(file_name):
             # Reading json
             with open(file_name, 'r') as f:
                 try:
@@ -199,16 +214,15 @@ class PhotonRegister:
                         Logger().error("Package File " + file_name + " was empty.")
                     else:
                         raise jde
-            file_path = file_name
         else:
             file_content = dict()
-            file_path = None
-            print(file_name + ' not found. Creating file.')
+            Logger().info(file_name + ' not found. Creating new file.')
+            with open(file_name, 'w') as f:
+                json.dump(file_content, f)
 
-        return file_content, file_path
+        return file_content, file_name
 
-    @staticmethod
-    def write2json(content2write: dict, photon_package: str):
+    def write2json(self, content2write: dict):
         """
         Write json content to file
 
@@ -219,13 +233,11 @@ class PhotonRegister:
         * 'photon_package' [str]:
           The PHOTON submodule name to which the new class belongs, so it is written to the correct json file
         """
-        file_name = os.path.dirname(inspect.getfile(PhotonRegister)) + '/' + photon_package + '.json'
         # Writing JSON data
-        with open(file_name, 'w') as f:
+        with open(self.custom_elements_file, 'w') as f:
             json.dump(content2write, f)
 
-    @staticmethod
-    def get_package_info(photon_package: list = PHOTON_REGISTERS) -> dict:
+    def get_package_info(self, photon_package: list = PHOTON_REGISTERS) -> dict:
         """
         Collect all registered elements from JSON file
 
@@ -241,15 +253,14 @@ class PhotonRegister:
         class_info = dict()
         for package in photon_package:
 
-            content, _ = PhotonRegister.get_json(package)
+            content, _ = self.get_json(package)
 
             for key in content:
                 class_path, class_name = os.path.splitext(content[key][0])
                 class_info[key] = class_path, class_name[1:]
         return class_info
 
-    @staticmethod
-    def list(photon_package: list = PHOTON_REGISTERS):
+    def list(self, photon_package: list = PHOTON_REGISTERS):
         """
         Print info about all items that are registered for the PHOTON submodule to the console.
 
@@ -259,29 +270,9 @@ class PhotonRegister:
           The names of the PHOTON submodules for which the elements should be retrieved
         """
         for package in photon_package:
-            content, file_name = PhotonRegister.get_json(package)
+            content, file_name = self.get_json(package)
             if len(content) > 0 and file_name is not None:
                 print('\n' + package + ' (' + file_name + ')')
                 for k, v in sorted(content.items()):
                     class_info, package_type = v
                     print("{:<35} {:<75} {:<5}".format(k, class_info, package_type))
-
-
-if __name__ == "__main__":
-
-
-    # get info about object
-    PhotonRegister.info("SVC")
-
-    # show all items
-    PhotonRegister.list()
-
-    # register object again -> should fail
-    PhotonRegister.save("SVC", "sklearn.svm.SVC", "Estimator")
-    PhotonRegister.save("SVC2", "sklearn.svm.SVC", "Estimator")
-
-    # register new object
-    PhotonRegister.save("ABC1", "namespace.filename.ABC1", "Transformer")
-
-    # delete it again.
-    PhotonRegister.delete("ABC1")
