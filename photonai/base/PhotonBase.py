@@ -31,6 +31,7 @@ from ..configuration.Register import PhotonRegister
 from ..optimization.OptimizationStrategies import GridSearchOptimizer, RandomGridSearchOptimizer, \
     TimeBoxedRandomGridSearchOptimizer
 from ..optimization.SkOpt import SkOptOptimizer
+from ..optimization.Hyperparameters import FloatRange, IntegerRange, Categorical, BooleanSwitch
 from ..validation.ResultsDatabase import *
 from ..validation.ResultsHandler import ResultsHandler
 from ..validation.Validate import Scorer
@@ -613,6 +614,31 @@ class Hyperpipe(BaseEstimator):
         self.results.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.best_config_metric = self.optimization.best_config_metric
 
+        # optimization
+        def _format_cross_validation(cv):
+            if cv:
+                string = "{}(".format(cv.__class__.__name__)
+                for key, val in cv.__dict__.items():
+                    string += "{}={}, ".format(key, val)
+                return string[:-2] + ")"
+            else:
+                return "None"
+
+        self.results.hyperpipe_info = MDBHyperpipeInfo()
+        self.results.hyperpipe_info.cross_validation = {'OuterCV': _format_cross_validation(self.cross_validation.outer_cv),
+                                                        'InnerCV': _format_cross_validation(self.cross_validation.inner_cv)}
+        self.results.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
+        self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
+                                                        'OptimizerParams': str(self.optimization.optimizer_params),
+                                                        'BestConfigMetric': self.optimization.best_config_metric}
+
+        # add flowchart to results
+        try:
+            flowchart = FlowchartCreator(self)
+            self.results.flowchart = flowchart.create_str()
+        except:
+            self.results.flowchart = ""
+
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
         # 1. computing average metrics
@@ -644,7 +670,7 @@ class Hyperpipe(BaseEstimator):
         Logger().info("Saved overall best config to database ")
 
         # write all convenience files (summary, predictions_file and plots)
-        Logger().info("Writing convenience files (summary, predictions, plots..)")
+        Logger().info("Writing convenience files (summary, predictions, plots...)")
         self.results_handler.write_convenience_files()
 
         # set self to best config
@@ -670,7 +696,7 @@ class Hyperpipe(BaseEstimator):
         # Now truly set to no caching (including single_subject_caching)
         self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
-        Logger().info("Saving best model..")
+        Logger().info("Saving best model...")
         if self.output_settings.save_output:
             try:
                 pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
@@ -832,35 +858,6 @@ class Hyperpipe(BaseEstimator):
                 raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
                                                                                                          estimator_type))
 
-    def create_hyperpipe_flowchart(self):
-        from ..investigator.Investigator import Flowchart
-        try:
-            flowchart = Flowchart(self)
-            flow_string = flowchart.create_str()
-            return flow_string
-        except:
-            return ""
-
-    def add_hyperpipe_info_to_result_tree(self):
-        # optimization
-        self.results.hyperpipe_info = MDBHyperpipeInfo()
-        self.results.hyperpipe_info.cross_validation = {'OuterCV': self._format_cross_validation(self.cross_validation.outer_cv),
-                                                            'InnerCV': self._format_cross_validation(self.cross_validation.inner_cv)}
-        self.results.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
-        self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
-                                                        'OptimizerParams': str(self.optimization.optimizer_params),
-                                                        'BestConfigMetric': self.optimization.best_config_metric}
-
-    @staticmethod
-    def _format_cross_validation(cv):
-        if cv:
-            string = "{}(".format(cv.__class__.__name__)
-            for key, val in cv.__dict__.items():
-                string += "{}={}, ".format(key, val)
-            return string[:-2] + ")"
-        else:
-            return "None"
-
     def fit(self, data, targets, **kwargs):
         """
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
@@ -906,12 +903,6 @@ class Hyperpipe(BaseEstimator):
 
                 start = datetime.datetime.now()
                 self._prepare_result_logging(start)
-
-                # Add hyperpipe information to result tree
-                self.add_hyperpipe_info_to_result_tree()
-
-                # create hyperpipe flowchart
-                self.results.flowchart = self.create_hyperpipe_flowchart()
 
                 # update output options to add pipe name and timestamp to results folder
                 self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
@@ -2423,3 +2414,157 @@ class PhotonModelPersistor:
             rmtree(folder, ignore_errors=True)
 
         return PhotonPipeline(element_list)
+
+
+class FlowchartCreator(object):
+
+    def __init__(self, pipeline_elements):
+        self.pipeline_elements = pipeline_elements
+        self.chart_str = ""
+
+    def create_str(self):
+        header_layout = ""
+        header_relate = ""
+        old_element = ""
+        for pipeline_element in self.pipeline_elements:
+            header_layout = header_layout + "[" + pipeline_element.name + "]"
+            if old_element:
+                header_relate = header_relate + "[" + old_element + "]" + "->" + "[" + pipeline_element.name + "]\n"
+            old_element = pipeline_element.name
+
+        self.chart_str = "Layout:\n" + header_layout + "\nRelate:\n" + header_relate + "\n"
+
+        for pipeline_element in self.pipeline_elements:
+            self.chart_str = self.chart_str + self.recursive_element(pipeline_element, "")
+
+        return self.chart_str
+
+    @staticmethod
+    def format_cross_validation(cv):
+        if cv:
+            string = "{}(".format(cv.__class__.__name__)
+            for key, val in cv.__dict__.items():
+                string += "{}={}, ".format(key, val)
+            return string[:-2] + ")"
+        else:
+            return "None"
+
+    @staticmethod
+    def format_optimizer(optimizer):
+        return optimizer.optimizer_input, optimizer.optimizer_params, optimizer.metrics, optimizer.best_config_metric
+
+    def format_kwargs(self, kwargs):
+        pass
+
+    @staticmethod
+    def format_hyperparameter(hyperparameter):
+        if isinstance(hyperparameter, IntegerRange):
+            return """IntegerRange(start: {},
+                                   stop: {}, 
+                                   step: {}, 
+                                   range_type: {})""".format(hyperparameter.start, hyperparameter.stop,
+                                                                           hyperparameter.step, hyperparameter.range_type)
+        elif isinstance(hyperparameter, FloatRange):
+            return """FloatRange(start: {},
+                                   stop: {}, 
+                                   step: {}, 
+                                   range_type: {})""".format(hyperparameter.start,
+                                                               hyperparameter.stop,
+                                                               hyperparameter.step,
+                                                               hyperparameter.range_type)
+        elif isinstance(hyperparameter, Categorical):
+            return str(hyperparameter.values)
+        else:
+            return str(hyperparameter)
+
+    def recursive_element(self, pipe_element, parent):
+
+        # PHOTON pipeline
+        string = ""
+        if hasattr(pipe_element, "named_steps"):
+            elements = list()
+            for name, element in pipe_element.elements:
+                elements.append(element)
+            pipe_element.pipe_elements = elements
+
+        if not hasattr(pipe_element, "named_steps"):
+            if parent == "":
+                string = "[" + pipe_element.name + "]:\n" + "Define:\n"
+            else:
+                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Define:\n"
+            hyperparameters = None
+            kwargs = None
+            if hasattr(pipe_element, "hyperparameters"):
+                hyperparameters = pipe_element.hyperparameters
+                for name, parameter in pipe_element.hyperparameters.items():
+                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
+            if hasattr(pipe_element, "kwargs"):
+                kwargs = pipe_element.kwargs
+                for name, parameter in pipe_element.kwargs.items():
+                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
+            if not kwargs and not hyperparameters:
+                string += "default\n"
+
+        # Pipeline Stack
+        elif isinstance(pipe_element, Stack):
+            if parent == "":
+                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
+            else:
+                string = "["+parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
+
+            # Layout
+            for pelement in list(pipe_element.elements):
+                string = string + "[" + pelement.name + "]|\n"
+            string = string +"\n"
+            for pelement in list(pipe_element.elements):
+                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
+
+
+        # Pipeline Switch
+        elif isinstance(pipe_element, Switch):
+            if parent == "":
+                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
+            else:
+                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
+
+            # Layout
+            for pelement in pipe_element.elements:
+                string = string + "[" + pelement.name + "]\n"
+            string = string + "\n"
+
+            # relate
+            string = string + "\n" + "Relate:\n"
+            old_element = ""
+            for pelement in pipe_element.elements:
+                if old_element:
+                    string = string + "[" + old_element + "]" + "<:-:>" + "[" + pelement.name + ']\n'
+                old_element = pelement.name
+                string = string + "\n"
+
+            for pelement in pipe_element.elements:
+                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
+
+
+        # Pipeline Branch
+        elif isinstance(pipe_element, Branch):
+            if parent == "":
+                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
+            else:
+                string = "[" + parent[1:]+"."+pipe_element.name + "]:\n" + "Layout:\n"
+
+            # Layout
+            for pelement in pipe_element.elements:
+                string = string + "[" + pelement.name + "]"
+            string = string + "\n" + "Relate:\n"
+            # Relate
+            old_element = ""
+            for pelement in pipe_element.elements:
+                if old_element:
+                    string = string + "[" + old_element + "]" + "->" + "[" + pelement.name + ']\n'
+                old_element = pelement.name
+                string = string + "\n"
+
+            for pelement in pipe_element.elements:
+                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
+
+        return string
