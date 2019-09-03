@@ -107,12 +107,12 @@ class ResultsHandler:
 
         for outer_fold in self.results.outer_folds:
             performance = dict()
-            for metric in self.results.metrics:
+            for metric in self.results.hyperpipe_info.metrics:
                 performance[metric] = list()
 
             for i in range(maximum_fold):
                 #for config in outer_fold.tested_config_list:
-                for metric in self.results.metrics:
+                for metric in self.results.hyperpipe_info.metrics:
                     if i >= len(outer_fold.tested_config_list):
                         performance[metric].append(np.nan)
                         continue
@@ -126,7 +126,7 @@ class ResultsHandler:
             config_performances.append(performance)
 
         config_performances_dict = dict()
-        for metric in self.results.metrics:
+        for metric in self.results.hyperpipe_info.metrics:
             config_performances_dict[metric] = list()
             for fold in config_performances:
                 config_performances_dict[metric].append(fold[metric])
@@ -178,7 +178,7 @@ class ResultsHandler:
         :return:
         """
 
-        if metric not in self.results.metrics:
+        if metric not in self.results.hyperpipe_info.metrics:
             raise ValueError('Metric "{}" not stored in results tree'.format(metric))
 
         config_evaluations = self.get_config_evaluations()
@@ -568,7 +568,6 @@ class ResultsHandler:
             with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
                 pickle.dump(backmapping, f)
 
-
     def write_convenience_files(self):
         if self.output_settings.save_output:
             Logger().info("Writing convenience files (summary, predictions, plots...)")
@@ -577,7 +576,7 @@ class ResultsHandler:
             self.write_predictions_file()
 
             if self.output_settings.plots:
-                self.plot_optimizer_history(self.results.best_config_metric)
+                self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
 
     def write_result_tree_to_file(self):
         try:
@@ -639,7 +638,7 @@ ANALYSIS NAME: {}
 BEST CONFIG METRIC: {}
 TIME OF RESULT: {}
 
-        """.format(result_tree.name, result_tree.best_config_metric, result_tree.time_of_results)
+        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.time_of_results)
         text_list.append(intro_text)
 
         if result_tree.dummy_estimator:

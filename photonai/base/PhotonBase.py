@@ -590,14 +590,15 @@ class Hyperpipe(BaseEstimator):
         results_object_name = self.name
 
         self.results = MDBHyperpipe(name=results_object_name)
+        self.results.hyperpipe_info = MDBHyperpipeInfo()
         # in case eval final performance is false, we have no outer fold predictions
         if not self.cross_validation.eval_final_performance:
             self.output_settings.save_predictions_from_best_config_inner_folds = True
         self.results_handler = ResultsHandler(self.results, self.output_settings)
 
         self.results.computation_start_time = start_time
-        self.results.metrics = self.optimization.metrics
-        self.results.estimation_type = self.estimation_type
+        self.results.hyperpipe_info.estimation_type = self.estimation_type
+
         if self.permutation_id is not None:
             self.results.permutation_id = self.permutation_id
 
@@ -610,8 +611,9 @@ class Hyperpipe(BaseEstimator):
                 self.results.wizard_system_name = self.output_settings.wizard_project_name
                 self.results.user_id = self.output_settings.user_id
         self.results.outer_folds = []
-        self.results.eval_final_performance = self.cross_validation.eval_final_performance
-        self.results.best_config_metric = self.optimization.best_config_metric
+        self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
+        self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
+        self.results.hyperpipe_info.metrics = self.optimization.metrics
 
         # optimization
         def _format_cross_validation(cv):
@@ -623,7 +625,6 @@ class Hyperpipe(BaseEstimator):
             else:
                 return "None"
 
-        self.results.hyperpipe_info = MDBHyperpipeInfo()
         self.results.hyperpipe_info.cross_validation = {'OuterCV': _format_cross_validation(self.cross_validation.outer_cv),
                                                         'InnerCV': _format_cross_validation(self.cross_validation.inner_cv)}
         self.results.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
@@ -711,7 +712,7 @@ class Hyperpipe(BaseEstimator):
                 Logger().info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
                 return
 
-            self.results.optimum_pipe_feature_importances = feature_importances
+            self.results.best_config_feature_importances = feature_importances
 
             # get backmapping
             backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
