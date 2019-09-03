@@ -572,11 +572,11 @@ class ResultsHandler:
         if self.output_settings.save_output:
             Logger().info("Writing convenience files (summary, predictions, plots...)")
             self.write_summary()
-            self.eval_mean_time_components()
             self.write_predictions_file()
 
             if self.output_settings.plots:
                 self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
+                self.eval_mean_time_components()
 
     def write_result_tree_to_file(self):
         try:
