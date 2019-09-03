@@ -269,7 +269,8 @@ class Hyperpipe(BaseEstimator):
                  output_settings=None,
                  performance_constraints=None,
                  permutation_id: str=None,
-                 cache_folder: str=None):
+                 cache_folder: str=None,
+                 custom_elements_folder: str=None):
 
         self.name = re.sub(r'\W+', '', name)
         self.permutation_id = permutation_id
@@ -321,6 +322,12 @@ class Hyperpipe(BaseEstimator):
         self.optimization.sanity_check_metrics()
 
         # ====================== Internals ===========================
+        # register custom elements if they have been provided
+        register = PhotonRegister()
+        if custom_elements_folder:
+            register.load_custom_folder(custom_elements_folder=custom_elements_folder)
+            PipelineElement.ELEMENT_DICTIONARY = PhotonRegister().get_package_info()
+
         self.is_final_fit = False
 
         if set_random_seed:
@@ -1162,7 +1169,7 @@ class PipelineElement(BaseEstimator):
 
     """
     # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = PhotonRegister.get_package_info()
+    ELEMENT_DICTIONARY = PhotonRegister().get_package_info()
 
     def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False,
                  disabled: bool =False, base_element=None, batch_size=0, **kwargs):
