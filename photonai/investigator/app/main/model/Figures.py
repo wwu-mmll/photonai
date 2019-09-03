@@ -110,23 +110,23 @@ def plotly_optimizer_history(name, config_evaluations, minimum_config_evaluation
         remaining = len(fold) % reduce_scatter_by
         if remaining:
             fold.extend([np.nan] * (reduce_scatter_by - remaining))
-        # calculate mean over every n named_steps so that plot is less cluttered
+        # calculate mean over every n elements so that plot is less cluttered
         reduced_fold = np.nanmean(np.asarray(fold).reshape(-1, reduce_scatter_by), axis=1)
-        reduced_xfit = np.arange(reduce_scatter_by / 2, len(fold), step=reduce_scatter_by)
+        reduced_xfit = np.arange(max(1, reduce_scatter_by / 2), len(fold) + 1, step=reduce_scatter_by)
 
         trace.x = reduced_xfit
         trace.y = np.asarray(reduced_fold)
         traces.append(trace)
 
     trace = PlotlyTrace("Mean_{}_Performance".format(caption), trace_type='scatter', mode='lines', trace_size=8, trace_color="rgb(214, 123, 25)")
-    trace.x = np.arange(0, len(mean_min))
+    trace.x = np.arange(1, len(mean_min) + 1)
     trace.y = mean_min
     traces.append(trace)
 
     for i, fold in enumerate(minimum_config_evaluations[metric]):
         trace = PlotlyTrace('Fold_{}_{}_Performance'.format(i+1, caption), trace_type='scatter', mode='lines',
                             trace_size=8, trace_color="rgba(214, 123, 25, 0.5)")
-        xfit = np.arange(0, len(fold))
+        xfit = np.arange(1, len(fold) + 1)
         trace.x = xfit
         trace.y = fold
         traces.append(trace)
@@ -134,7 +134,6 @@ def plotly_optimizer_history(name, config_evaluations, minimum_config_evaluation
     plot = PlotlyPlot(plot_name=name, title="Optimizer History", traces=traces, xlabel='No of Evaluations',
                       ylabel=metric.replace('_', ' '), show_legend=False)
 
-    #plot = PlotlyPlot(plot_name=name, title="Optimizer History", traces=traces)
 
     return plot.to_plot()
 

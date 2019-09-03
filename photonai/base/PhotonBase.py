@@ -635,9 +635,9 @@ class Hyperpipe(BaseEstimator):
         # add flowchart to results
         try:
             flowchart = FlowchartCreator(self.elements)
-            self.results.flowchart = flowchart.create_str()
+            self.results.hyperpipe_info.flowchart = flowchart.create_str()
         except:
-            self.results.flowchart = ""
+            self.results.hyperpipe_info.flowchart = ""
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================

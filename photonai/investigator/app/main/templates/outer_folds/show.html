@@ -119,7 +119,7 @@
         </small>
     </section>
     <section class="content">
-        {% if not pipe.eval_final_performance %}
+        {% if not pipe.hyperpipe_info.eval_final_performance %}
             <h4 class="btn btn-warning"> Best Configuration selected on validation set performance </h4>
         {% endif %}
         <!----------------------------- START BEST CONFIG ----------------------------->

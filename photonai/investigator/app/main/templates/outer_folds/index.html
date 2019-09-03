@@ -57,7 +57,7 @@
         <small>Click for details</small>
     </section>
     <section class="content">
-        {% if not pipe.eval_final_performance %}
+        {% if not pipe.hyperpipe_info.eval_final_performance %}
             <h4 class="btn btn-warning"> Best Configuration selected on validation set performance </h4>
         {% endif %}
 
@@ -109,7 +109,7 @@
                     <div class="col-md-12">
                         <div class="uk-align-center">
                             <pre id='Source01' style='display: none; '>
-                                {{ pipe.flowchart | safe }}
+                                {{ pipe.hyperpipe_info.flowchart | safe }}
                             </pre>
                             <canvas id='Canvas01'></canvas>
                             <script>
