@@ -1,16 +1,15 @@
 import unittest, os, inspect
-from ..neuro.BrainAtlas import AtlasLibrary, BrainAtlas, BrainMasker
-from ..neuro.NeuroBase import NeuroModuleBranch
-from ..base.PhotonPipeline import CacheManager
-from ..base.PhotonBase import PipelineElement
-from ..neuro.ImageBasics import ResampleImages, SmoothImages
+
 from nilearn import image
 from nilearn.input_data import NiftiMasker
 from nibabel.nifti1 import Nifti1Image
 import numpy as np
 import glob
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.validation.ResultsHandler import ResultsHandler
+
+
+from photonai.neuro import AtlasLibrary, BrainAtlas, NeuroBranch, BrainMasker
+from photonai.base import CacheManager, OutputSettings, Hyperpipe, PipelineElement
+from photonai.processing import ResultsHandler
 from sklearn.model_selection import ShuffleSplit
 
 
@@ -38,7 +37,7 @@ class NeuroTest(unittest.TestCase):
         resampler = PipelineElement('ResampleImages', hyperparameters={}, voxel_size=voxel_size, batch_size=1)
         single_resampled_img, _, _ = resampler.transform(self.X[0])
 
-        branch = NeuroModuleBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch')
         branch += resampler
         branch_resampled_img, _, _ = branch.transform(self.X[0])
 
@@ -62,7 +61,7 @@ class NeuroTest(unittest.TestCase):
         resampler = PipelineElement('ResampleImages', hyperparameters={}, voxel_size=voxel_size)
         resampled_img, _, _ = resampler.transform(self.X[:3])
 
-        branch = NeuroModuleBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch')
         branch += resampler
         branch_resampled_img, _, _ = branch.transform(self.X[:3])
 
@@ -85,7 +84,7 @@ class NeuroTest(unittest.TestCase):
         smoother = PipelineElement('SmoothImages', hyperparameters={}, fwhm=3, batch_size=1)
         photon_smoothed_array, _, _ = smoother.transform(self.X[0])
 
-        branch = NeuroModuleBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch')
         branch += smoother
         photon_smoothed_img, _, _ = branch.transform(self.X[0])
 
@@ -106,8 +105,7 @@ class NeuroTest(unittest.TestCase):
         smoother = PipelineElement('SmoothImages', hyperparameters={}, fwhm=3)
         photon_smoothed_array, _, _ = smoother.transform(self.X[0:3])
 
-
-        branch = NeuroModuleBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch')
         branch += smoother
         photon_smoothed_img, _, _ = branch.transform(self.X[0:3])
 
@@ -161,20 +159,20 @@ class NeuroTest(unittest.TestCase):
         def create_instances_and_transform(neuro_class_str, param_dict, transformed_X):
             instance_list = []
 
-            nmb1 = NeuroModuleBranch(name="single core application", nr_of_processes=1)
+            nmb1 = NeuroBranch(name="single core application", nr_of_processes=1)
 
             nmb1.add(PipelineElement(neuro_class_str, **param_dict))
             instance_list.append(nmb1)
 
-            nmb2 = NeuroModuleBranch(name="multi core application", nr_of_processes=3)
+            nmb2 = NeuroBranch(name="multi core application", nr_of_processes=3)
             nmb2.add(PipelineElement(neuro_class_str, **param_dict))
             instance_list.append(nmb2)
 
-            nmb3 = NeuroModuleBranch(name="batched single core application", nr_of_processes=1)
+            nmb3 = NeuroBranch(name="batched single core application", nr_of_processes=1)
             nmb3.add(PipelineElement(neuro_class_str, batch_size=5, **param_dict))
             instance_list.append(nmb3)
 
-            nmb4 = NeuroModuleBranch(name="batched multi core application", nr_of_processes=3)
+            nmb4 = NeuroBranch(name="batched multi core application", nr_of_processes=3)
             nmb4.add(PipelineElement(neuro_class_str, batch_size=5, **param_dict))
             instance_list.append(nmb4)
 
@@ -213,7 +211,7 @@ class NeuroTest(unittest.TestCase):
         create_instances_and_transform('ResampleImages', {'voxel_size': [5, 5, 5]}, nilearn_resampled_X)
 
     def test_neuro_module_branch(self):
-        nmb = NeuroModuleBranch('best_branch_ever')
+        nmb = NeuroBranch('best_branch_ever')
         nmb += PipelineElement('SmoothImages', fwhm=10)
         nmb += PipelineElement('ResampleImages', voxel_size=5)
         nmb += PipelineElement('BrainAtlas', rois=['Hippocampus_L', 'Hippocampus_R'],
@@ -283,7 +281,7 @@ class NeuroTest(unittest.TestCase):
                                 atlas_name="AAL", extract_mode='vec', batch_size=20)
 
         # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
-        neuro_branch = NeuroModuleBranch('NeuroBranch')
+        neuro_branch = NeuroBranch('NeuroBranch')
         neuro_branch += atlas
         pipe += neuro_branch
 

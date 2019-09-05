@@ -1,5 +1,4 @@
 import unittest
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.preprocessing import StandardScaler
@@ -7,6 +6,8 @@ import numpy as np
 import statsmodels.api as sm
 from scipy.stats import norm
 from scipy.linalg import cholesky
+
+from photonai.base import Hyperpipe, PipelineElement
 
 
 class ConfounderRemovalTests(unittest.TestCase):
