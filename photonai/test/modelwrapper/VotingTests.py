@@ -1,6 +1,6 @@
 import unittest
 import numpy as np
-from photonai.modelwrapper.Voting import Voting
+from photonai.modelwrapper import Voting
 
 
 class VotingTests(unittest.TestCase):

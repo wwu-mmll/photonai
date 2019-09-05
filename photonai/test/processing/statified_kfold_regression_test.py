@@ -1,9 +1,10 @@
 import unittest
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from sklearn.datasets import load_breast_cancer
-from photonai.validation.cross_validation import StratifiedKFoldRegression
 import numpy as np
+from sklearn.datasets import load_breast_cancer
 
+from photonai.processing.cross_validation import StratifiedKFoldRegression
+from photonai.base.photon_elements import PipelineElement
+from photonai.base.hyperpipe import Hyperpipe, OutputSettings
 
 
 class StratifiedRegressionTest(unittest.TestCase):

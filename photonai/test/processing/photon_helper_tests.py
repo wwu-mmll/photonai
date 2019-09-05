@@ -1,9 +1,11 @@
 import unittest
-from photonai.base.PhotonFolds import FoldInfo
-from ..base.Helper import PHOTONDataHelper
-from sklearn.datasets import load_breast_cancer
 import random
 import numpy as np
+
+from sklearn.datasets import load_breast_cancer
+
+from photonai.processing import FoldInfo
+from photonai.base import PhotonDataHelper
 
 
 class FoldInfoTests(unittest.TestCase):
@@ -39,7 +41,7 @@ class DataHelperTests(unittest.TestCase):
         for ilist in [idx_list_two, idx_list_one]:
             for idx in ilist:
 
-                X_batched, y_batched, kwargs_batched = PHOTONDataHelper.split_data(X, y, kwargs, idx, idx)
+                X_batched, y_batched, kwargs_batched = PhotonDataHelper.split_data(X, y, kwargs, idx, idx)
 
                 # test if batching works
                 self.assertEqual(X_batched, X[idx])
@@ -47,16 +49,16 @@ class DataHelperTests(unittest.TestCase):
                 self.assertDictEqual(kwargs_batched, {'test': [kwargs['test'][idx]]})
 
                 # then join again
-                X_new, y_new, kwargs_new = PHOTONDataHelper.join_data(X_new, X_batched, y_new, y_batched, kwargs_new, kwargs_batched)
+                X_new, y_new, kwargs_new = PhotonDataHelper.join_data(X_new, X_batched, y_new, y_batched, kwargs_new, kwargs_batched)
 
         # test if joining works
-        joined_idx = PHOTONDataHelper.stack_results(idx_list_one, idx_list_two)
+        joined_idx = PhotonDataHelper.stack_results(idx_list_one, idx_list_two)
         self.assertTrue(np.array_equal(X_new, X[joined_idx]))
         self.assertTrue(np.array_equal(y_new, y[joined_idx]))
         self.assertTrue(np.array_equal(kwargs_new['test'], kwargs['test'][joined_idx]))
 
         # now resort and see if that works too
-        X_resorted, y_resorted, kwargs_resorted = PHOTONDataHelper.resort_splitted_data(X_new, y_new, kwargs_new, joined_idx)
+        X_resorted, y_resorted, kwargs_resorted = PhotonDataHelper.resort_splitted_data(X_new, y_new, kwargs_new, joined_idx)
         self.assertTrue(np.array_equal(X_resorted, X))
         self.assertTrue(np.array_equal(y_resorted, y))
         self.assertListEqual(list(kwargs_resorted.keys()), list(kwargs.keys()))
