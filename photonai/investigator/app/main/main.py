@@ -3,7 +3,6 @@ import os
 from flask import Flask
 
 
-
 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(os.path.dirname(__file__))))
 # base_dir = os.path.join(base_dir, 'investigator')
 base_dir = os.path.join(base_dir, 'app')

@@ -1,7 +1,7 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack
 from photonai.neuro.NeuroBase import NeuroModuleBranch
 from photonai.neuro.BrainAtlas import AtlasLibrary
-from photonai.validation.ResultsTreeHandler import ResultsHandler
+from photonai.processing.ResultsTreeHandler import ResultsHandler
 from sklearn.model_selection import ShuffleSplit
 from nilearn.datasets import fetch_oasis_vbm
 import numpy as np

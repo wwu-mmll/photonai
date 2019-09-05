@@ -1,7 +1,7 @@
 from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
-from photonai.validation.PermutationTest import PermutationTest
-from photonai.validation.ResultsTreeHandler import ResultsHandler
+from photonai.processing.PermutationTest import PermutationTest
+from photonai.processing.ResultsTreeHandler import ResultsHandler
 
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer

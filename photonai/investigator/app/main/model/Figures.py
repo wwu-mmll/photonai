@@ -1,5 +1,5 @@
 from sklearn.metrics import confusion_matrix
-from photonai.validation.Validate import Scorer
+from photonai.processing.metrics import Scorer
 import numpy as np
 from .PlotlyTrace import PlotlyTrace
 from .PlotlyPlot import PlotlyPlot

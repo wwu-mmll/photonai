@@ -10,7 +10,7 @@ from functools import partial
 from copy import deepcopy
 from . import normalization
 
-from photonai.photonlogger.Logger import Logger
+from photonai.photonlogger import Logger
 
 
 class BaseModel(object):
