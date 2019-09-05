@@ -1,12 +1,10 @@
-
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Preprocessing, OutputSettings
-from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
-from photonai.optimization.SpeedHacks import MinimumPerformance, DummyPerformance
+from photonai.base import Hyperpipe, PipelineElement, Preprocessing, OutputSettings, PhotonRegister
+from photonai.optimization import FloatRange, Categorical, IntegerRange
 from photonai.investigator.Investigator import Investigator
-from photonai.configuration.Register import PhotonRegister
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 import time
+
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)

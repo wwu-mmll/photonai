@@ -9,7 +9,7 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import ShuffleSplit
-from photonai.photonlogger.Logger import Logger
+from photonai.photonlogger import Logger
 from photonai.modelwrapper.KerasBaseEstimator import KerasBaseEstimator
 
 

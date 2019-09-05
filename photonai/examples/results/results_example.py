@@ -2,7 +2,7 @@ from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
-from photonai.validation.ResultsTreeHandler import ResultsHandler
+from photonai.processing.ResultsTreeHandler import ResultsHandler
 import matplotlib.pylab as plt
 
 

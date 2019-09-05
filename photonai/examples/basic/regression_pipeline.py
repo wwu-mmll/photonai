@@ -1,8 +1,7 @@
-
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization.Hyperparameters import FloatRange, Categorical
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import FloatRange, Categorical
 from photonai.investigator.Investigator import Investigator
-from photonai.configuration.Register import PhotonRegister
+from photonai.base import PhotonRegister
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_boston
 
@@ -19,13 +18,6 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipelin
                     outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
                     inner_cv=KFold(n_splits=3),  # test each configuration ten times respectively
                     verbosity=1) # get error, warn and info message                    )
-
-
-# SHOW WHAT IS POSSIBLE IN THE CONSOLE
-PhotonRegister.list()
-
-# NOW FIND OUT MORE ABOUT A SPECIFIC ELEMENT
-PhotonRegister.info('RandomForestRegressor')
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
