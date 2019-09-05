@@ -576,8 +576,8 @@ class Hyperpipe(BaseEstimator):
         config_item = MDBConfig()
         config_item.inner_folds = [f for f in fold_list if f is not None]
         if len(config_item.inner_folds) > 0:
-            self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics(config_item,
-                                                                                                                self.optimization.metrics)
+            self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
+                                                                                                                 self.optimization.metrics)
 
     def _prepare_result_logging(self, start_time):
         results_object_name = self.name
@@ -640,9 +640,8 @@ class Hyperpipe(BaseEstimator):
         # 4. persisting best model
 
         # Compute all final metrics
-        self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics(
-            self.results.outer_folds,
-            self.optimization.metrics)
+        self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
+                                                                                                            self.optimization.metrics)
 
         # save result tree to db or file or both
         Logger().info('Finished hyperparameter optimization!')
