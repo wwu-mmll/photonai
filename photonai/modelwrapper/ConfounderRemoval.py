@@ -1,11 +1,8 @@
-import os
 import numpy as np
 import statsmodels.api as sm
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import StandardScaler
-from photonai.photonlogger.Logger import Logger
-from hashlib import sha1
-from pathlib import Path
+from photonai.photonlogger import Logger
 from typing import Union
 
 

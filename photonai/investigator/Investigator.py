@@ -1,5 +1,6 @@
-from ..base.PhotonBase import Hyperpipe
-from ..photonlogger.Logger import Singleton, Logger
+from photonai.base.hyperpipe import Hyperpipe
+from photonai.photonlogger import Logger
+from photonai.base.helper import Singleton
 from ..investigator.app.main import application
 
 import webbrowser

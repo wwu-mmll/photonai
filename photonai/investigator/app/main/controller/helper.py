@@ -1,12 +1,12 @@
-from photonai.validation.ResultsDatabase import MDBHyperpipe, MDBHelper
-#from ..model.ResultsDatabase import MDBHyperpipe
-from pymodm.errors import DoesNotExist, ConnectionError, ValidationError
-from ..main import application
-#from ..model.ResultsDatabase import MDBHelper
 from pymodm.connection import connect
 from bson.objectid import ObjectId
 from pymongo import DESCENDING
 from flask import request
+from pymodm.errors import DoesNotExist, ConnectionError, ValidationError
+
+from photonai.processing.results_structure import MDBHyperpipe, MDBHelper
+
+from ..main import application
 
 
 def load_pipe_from_db(name):

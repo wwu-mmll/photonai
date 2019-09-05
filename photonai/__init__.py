@@ -11,36 +11,6 @@ It also enables you to persist and load your optimal model, including all prepro
 
 """
 
-from . import base
-from . import optimization
-from . import validation
-
-from .base import Hyperpipe, Stack, Branch, PipelineElement
-from .optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer
-
-from . import investigator
-from .investigator import Investigator
-
-from . import configuration
-from .configuration.Register import PhotonRegister
-
-
 __version__ = '0.4.0'
 
-
-
-__all__ = ("base",
-           "optimization",
-           "validation",
-           "investigator",
-           "Investigator",
-           "Hyperpipe",
-           "PipelineElement",
-           "Branch",
-           "Stack",
-           "GridSearchOptimizer",
-           "RandomGridSearchOptimizer",
-           "TimeBoxedRandomGridSearchOptimizer",
-           "configuration",
-           "PhotonRegister"
-           )
+# __all__ = ( )

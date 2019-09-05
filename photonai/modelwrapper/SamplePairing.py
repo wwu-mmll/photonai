@@ -19,7 +19,7 @@ Translationale Psychiatrie
 Universitaetsklinikum Muenster
 """
 
-from ..photonlogger.Logger import Logger
+from photonai.photonlogger import Logger
 import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 import random

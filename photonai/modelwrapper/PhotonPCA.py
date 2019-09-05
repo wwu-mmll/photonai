@@ -1,12 +1,11 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.decomposition import PCA
-from sklearn.metrics import mean_absolute_error as mae
 from hashlib import sha1
 from pathlib import Path
 import numpy as np
 from sklearn.externals import joblib
 import os
-from ..photonlogger.Logger import Logger
+from photonai.photonlogger import Logger
 
 class PhotonPCA(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
