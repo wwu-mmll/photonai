@@ -1,6 +1,5 @@
 import numpy as np
 import george
-import numbers
 
 import os
 import json
@@ -10,7 +9,7 @@ from time import time
 from .GPMCMC import FabolasGPMCMC
 from .Priors import EnvPrior
 from .Maximizer import InformationGainPerUnitCost, Direct, MarginalizationGPMCMC
-from photonai.photonlogger.Logger import Logger
+from photonai.photonlogger import Logger
 from ..Hyperparameters import FloatRange, IntegerRange, Categorical
 
 def _quadratic_bf(x):

@@ -1,6 +1,6 @@
 from photonai.base.PhotonBase import PipelineElement
 import importlib
-from photonai.photonlogger.Logger import Logger
+from photonai.photonlogger import Logger
 
 
 class AnomalyDetectorWrapper:
