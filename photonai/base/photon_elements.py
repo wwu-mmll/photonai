@@ -9,7 +9,7 @@ from copy import deepcopy
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
 
-from photonai.base.register.register import PhotonRegister
+from photonai.base.registry.element_dictionary import ElementDictionary
 from photonai.base.helper import PhotonDataHelper
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.photonlogger import Logger
@@ -47,7 +47,7 @@ class PipelineElement(BaseEstimator):
 
     """
     # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = PhotonRegister().get_package_info()
+    ELEMENT_DICTIONARY = ElementDictionary.get_package_info()
 
     def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False,
                  disabled: bool =False, base_element=None, batch_size=0, **kwargs):

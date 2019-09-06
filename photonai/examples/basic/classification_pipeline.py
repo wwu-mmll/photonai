@@ -1,4 +1,4 @@
-from photonai.base import Hyperpipe, PipelineElement, Preprocessing, OutputSettings, PhotonRegister
+from photonai.base import Hyperpipe, PipelineElement, Preprocessing, OutputSettings
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 from photonai.investigator.Investigator import Investigator
 from sklearn.model_selection import KFold
@@ -22,13 +22,6 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     verbosity=1,
                     output_settings=settings)
 
-
-
-# SHOW WHAT IS POSSIBLE IN THE CONSOLE
-# PhotonRegister.list()
-
-# NOW FIND OUT MORE ABOUT A SPECIFIC ELEMENT
-# PhotonRegister.info('SVC')
 
 preprocessing = Preprocessing()
 preprocessing += PipelineElement("LabelEncoder")
