@@ -429,9 +429,9 @@ class InnerFoldManager(object):
                 except:
                     warnings.warn('No probabilities available.')
 
-            if isinstance(y_pred, list):
-                y_pred = np.array(y_pred)
-                y_true = np.array(y_true)
+            # if isinstance(y_pred, list):
+            #     y_pred = np.array(y_pred)
+            #     y_true = np.array(y_true)
 
             score_result_object = MDBScoreInformation(metrics=output_metrics,
                                                       score_duration=final_scoring_time,
