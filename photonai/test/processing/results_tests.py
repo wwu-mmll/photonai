@@ -84,6 +84,32 @@ class ResultHandlerAndHelperTests(unittest.TestCase):
         y_true = X
         self.hyperpipe.fit(X, y_true)
 
+        self.metric_assertions()
+
+    def test_metrics_and_aggreation_eval_performance_false(self):
+        self.hyperpipe = Hyperpipe('test_prediction_collection',
+                                   inner_cv=KFold(n_splits=self.inner_fold_nr),
+                                   metrics=['mean_absolute_error', 'mean_squared_error'],
+                                   eval_final_performance=False,
+                                   best_config_metric='mean_absolute_error',
+                                   output_settings=OutputSettings(save_predictions='all',
+                                                                  project_folder='./tmp'))
+
+        self.test_metrics_and_aggregations()
+
+    def test_metrics_and_aggregations_no_outer_cv_but_eval_performance_true(self):
+        self.hyperpipe = Hyperpipe('test_prediction_collection',
+                                   outer_cv=KFold(n_splits=self.outer_fold_nr),
+                                   inner_cv=KFold(n_splits=self.inner_fold_nr),
+                                   metrics=['mean_absolute_error', 'mean_squared_error'],
+                                   eval_final_performance=False,
+                                   best_config_metric='mean_absolute_error',
+                                   output_settings=OutputSettings(save_predictions='all',
+                                                                  project_folder='./tmp'))
+
+        self.test_metrics_and_aggregations()
+
+    def metric_assertions(self):
         def check_metrics(metric_name, expected_metric_list, mean_metrics):
             for metric in mean_metrics:
                 if metric.metric_name == metric_name:
@@ -106,12 +132,14 @@ class ResultHandlerAndHelperTests(unittest.TestCase):
                 tree_result = inner_fold_results[inner_fold.fold_nr - 1]
 
                 test_indices_to_check = outer_fold.train_indices[inner_fold.test_indices]
-                expected_test_mae = mean_absolute_error(XPredictor.adapt_X(test_indices_to_check), test_indices_to_check)
+                expected_test_mae = mean_absolute_error(XPredictor.adapt_X(test_indices_to_check),
+                                                        test_indices_to_check)
                 inner_fold_metrics['test'].append(expected_test_mae)
                 self.assertEqual(expected_test_mae, tree_result.validation.metrics['mean_absolute_error'])
 
                 train_indices_to_check = outer_fold.train_indices[inner_fold.train_indices]
-                expected_train_mae = mean_absolute_error(XPredictor.adapt_X(train_indices_to_check), train_indices_to_check)
+                expected_train_mae = mean_absolute_error(XPredictor.adapt_X(train_indices_to_check),
+                                                         train_indices_to_check)
                 inner_fold_metrics['train'].append(expected_train_mae)
                 self.assertEqual(expected_train_mae, tree_result.training.metrics['mean_absolute_error'])
 
@@ -120,17 +148,31 @@ class ResultHandlerAndHelperTests(unittest.TestCase):
             check_metrics('mean_absolute_error', inner_fold_metrics['train'], config.metrics_train)
             check_metrics('mean_absolute_error', inner_fold_metrics['test'], config.metrics_test)
 
-            expected_outer_test_mae = mean_absolute_error(XPredictor.adapt_X(outer_fold.test_indices), outer_fold.test_indices)
-            outer_collection['test'].append(expected_outer_test_mae)
-            self.assertEqual(outer_fold_results.best_config.best_config_score.validation.metrics['mean_absolute_error'], expected_outer_test_mae)
+            if self.hyperpipe.cross_validation.eval_final_performance:
+                expected_outer_test_mae = mean_absolute_error(XPredictor.adapt_X(outer_fold.test_indices),
+                                                              outer_fold.test_indices)
+            else:
+                # if we dont use the test set, we want the values from the inner_cv to be copied
+                expected_outer_test_mae = [m.value for m in outer_fold_results.best_config.metrics_test
+                                           if m.metric_name == 'mean_absolute_error'
+                                           and m.operation == 'FoldOperations.MEAN']
+                if len(expected_outer_test_mae)>0:
+                    expected_outer_test_mae = expected_outer_test_mae[0]
 
-            expected_outer_train_mae = mean_absolute_error(XPredictor.adapt_X(outer_fold.train_indices), outer_fold.train_indices)
+            outer_collection['test'].append(expected_outer_test_mae)
+            self.assertEqual(outer_fold_results.best_config.best_config_score.validation.metrics['mean_absolute_error'],
+                             expected_outer_test_mae)
+
+            expected_outer_train_mae = mean_absolute_error(XPredictor.adapt_X(outer_fold.train_indices),
+                                                           outer_fold.train_indices)
             outer_collection['train'].append(expected_outer_train_mae)
-            self.assertEqual(outer_fold_results.best_config.best_config_score.training.metrics['mean_absolute_error'], expected_outer_train_mae)
+            self.assertAlmostEqual(outer_fold_results.best_config.best_config_score.training.metrics['mean_absolute_error'],
+                             expected_outer_train_mae)
 
         # check again in overall best config attribute
         check_metrics('mean_absolute_error', outer_collection['train'],
                       self.hyperpipe.results.metrics_train)
+
         check_metrics('mean_absolute_error', outer_collection['test'],
                       self.hyperpipe.results.metrics_test)
 
