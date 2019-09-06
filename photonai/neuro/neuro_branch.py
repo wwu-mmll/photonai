@@ -8,7 +8,7 @@ import uuid
 from photonai.base import Branch, CallbackElement
 from photonai.base.helper import PhotonDataHelper
 from photonai.photonlogger import Logger
-from photonai.base.register.register import PhotonRegister
+from photonai.base.registry.element_dictionary import ElementDictionary
 from photonai.neuro.brain_atlas import BrainAtlas
 
 
@@ -24,7 +24,7 @@ class NeuroBranch(Branch):
         Name of the NeuroModule pipeline branch
 
     """
-    NEURO_ELEMENTS = PhotonRegister().get_package_info(['PhotonNeuro'])
+    NEURO_ELEMENTS = ElementDictionary.get_package_info(['PhotonNeuro'])
 
     def __init__(self, name, nr_of_processes=1, output_img: bool = False, apply_groupwise: bool = False):
         Branch.__init__(self, name)

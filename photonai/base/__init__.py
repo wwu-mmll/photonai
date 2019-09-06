@@ -2,7 +2,7 @@
 
 from .hyperpipe import Hyperpipe, OutputSettings
 from .photon_elements import Stack, Switch, Branch, DataFilter, CallbackElement, PhotonNative, Preprocessing, PipelineElement
-from .register.register import PhotonRegister
+from .registry.registry import PhotonRegistry
 
 # __all__ = ("Hyperpipe",
 #            "PipelineElement",

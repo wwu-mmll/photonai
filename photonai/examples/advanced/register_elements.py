@@ -1,23 +1,24 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization.Hyperparameters import IntegerRange
-from photonai.configuration.Register import PhotonRegister
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import IntegerRange
+from photonai.base import PhotonRegistry
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 
 
 # REGISTER ELEMENT
-custom_elements_folder = './registered_custom_elements'
-register = PhotonRegister()
-register.load_custom_folder(custom_elements_folder)
-register.save(photon_name='MyCustomEstimator',
-              class_str='custom_estimator.CustomEstimator',
-              element_type='Estimator',
-              python_file='./custom_elements/custom_estimator.py')
+custom_elements_folder = './custom_elements'
+registry = PhotonRegistry()
+registry.register(photon_name='MyCustomEstimator',
+                  class_str='custom_estimator.CustomEstimator',
+                  element_type='Estimator',
+                  custom_folder=custom_elements_folder)
 
-register.save(photon_name='MyCustomTransformer',
-              class_str='custom_transformer.CustomTransformer',
-              element_type='Transformer',
-              python_file='./custom_elements/custom_transformer.py')
+registry.register(photon_name='MyCustomTransformer',
+                  class_str='custom_transformer.CustomTransformer',
+                  element_type='Transformer',
+                  custom_folder=custom_elements_folder)
+
+registry.activate(custom_elements_folder=custom_elements_folder)
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
@@ -33,17 +34,15 @@ my_pipe = Hyperpipe('custom_estimator_pipe',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=settings,
-                    custom_elements_folder=custom_elements_folder)
-
+                    output_settings=settings)
 
 
 # SHOW WHAT IS POSSIBLE IN THE CONSOLE
-PhotonRegister().list()
+registry.list_available_elements()
 
 # NOW FIND OUT MORE ABOUT A SPECIFIC ELEMENT
-PhotonRegister().info('MyCustomEstimator')
-PhotonRegister().info('MyCustomTransformer')
+registry.info('MyCustomEstimator')
+registry.info('MyCustomTransformer')
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
