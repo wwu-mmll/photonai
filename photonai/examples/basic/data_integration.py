@@ -1,4 +1,4 @@
-from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, Switch, DataFilter
+from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, Switch, DataFilter, PhotonRegistry
 from photonai.optimization import FloatRange, IntegerRange, Categorical
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer

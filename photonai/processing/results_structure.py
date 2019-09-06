@@ -170,25 +170,27 @@ class FoldOperations(Enum):
     STD = 1
     RAW = 2
 
+
 class ParallelData(MongoModel):
 
     unprocessed_data = fields.ObjectIdField()
     processed_data = fields.ObjectIdField()
 
+
 class MDBHelper:
     OPERATION_DICT = {FoldOperations.MEAN: np.mean, FoldOperations.STD: np.std}
 
     @staticmethod
-    def aggregate_metrics(folds, metrics):
-        # Check if we want to aggregate metrics over best configs of outer folds or over metrics of inner folds
-        if isinstance(folds, list):
-            if isinstance(folds[0], MDBOuterFold):
-                folds = [fold.best_config.best_config_score for fold in folds]
-        else:
-            # don't try to calculate anything if the config failed
-            if folds.config_failed:
-                return folds
-            folds = folds.inner_folds
+    def aggregate_metrics_for_outer_folds(outer_folds, metrics):
+        folds = [fold.best_config.best_config_score for fold in outer_folds]
+        return MDBHelper._aggregate_metrics(folds, metrics)
+
+    @staticmethod
+    def aggregate_metrics_for_inner_folds(inner_folds, metrics):
+        return MDBHelper._aggregate_metrics(inner_folds, metrics)
+
+    @staticmethod
+    def _aggregate_metrics(folds, metrics):
 
         def calculate_single_metric(operation_name, value_list: list, **kwargs):
             if operation_name in MDBHelper.OPERATION_DICT:

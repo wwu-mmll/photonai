@@ -28,9 +28,6 @@ class RegistryTest(unittest.TestCase):
         self.registry.info('PCA')
         self.registry.info('NotExistingEstimator')
 
-    def test_activation(self):
-        self.registry.activate(self.custom_folder)
-
     def test_register_element(self):
         with self.assertRaises(ValueError):
             self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'WrongType', './custom_elements')

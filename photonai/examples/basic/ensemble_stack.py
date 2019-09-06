@@ -1,6 +1,5 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack
-from photonai.optimization.Hyperparameters import IntegerRange
-from photonai.optimization.SpeedHacks import DummyPerformance
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Stack
+from photonai.optimization import IntegerRange, DummyPerformance
 from sklearn.model_selection import StratifiedKFold
 from sklearn.datasets import load_breast_cancer
 

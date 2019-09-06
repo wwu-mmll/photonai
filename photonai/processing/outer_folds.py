@@ -157,7 +157,7 @@ class OuterFoldManager:
                 metric_test = MDBHelper.get_metric(current_config_mdb, fold_operation,
                                                    self.optimization_info.best_config_metric, train=False)
 
-                if not metric_train or not metric_test:
+                if metric_train is None or metric_test is None:
                     raise Exception("Config did not fail, but did not get any metrics either....!!?")
                 config_performance = (metric_train, metric_test)
                 if best_metric_yet is None:

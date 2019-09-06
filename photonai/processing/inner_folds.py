@@ -295,8 +295,8 @@ class InnerFoldManager(object):
 
                 # if we want to have metrics for each fold as well, calculate mean and std.
                 if calculate_metrics_per_fold:
-                    db_metrics_fold_train, db_metrics_fold_test = MDBHelper.aggregate_metrics(config_item,
-                                                                                              metrics)
+                    db_metrics_fold_train, db_metrics_fold_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
+                                                                                                              metrics)
                     config_item.metrics_train = db_metrics_train + db_metrics_fold_train
                     config_item.metrics_test = db_metrics_test + db_metrics_fold_test
                 else:
@@ -317,8 +317,8 @@ class InnerFoldManager(object):
 
             elif calculate_metrics_per_fold:
                 # calculate mean and std over all fold metrics
-                config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics(config_item,
-                                                                                                  metrics)
+                config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
+                                                                                                                  metrics)
 
     @staticmethod
     def fit_and_score(job: InnerCVJob):
@@ -429,9 +429,9 @@ class InnerFoldManager(object):
                 except:
                     warnings.warn('No probabilities available.')
 
-            if isinstance(y_pred, list):
-                y_pred = np.array(y_pred)
-                y_true = np.array(y_true)
+            # if isinstance(y_pred, list):
+            #     y_pred = np.array(y_pred)
+            #     y_true = np.array(y_true)
 
             score_result_object = MDBScoreInformation(metrics=output_metrics,
                                                       score_duration=final_scoring_time,

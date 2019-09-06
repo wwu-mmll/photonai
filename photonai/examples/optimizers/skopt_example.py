@@ -1,5 +1,5 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization.Hyperparameters import FloatRange, Categorical
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import FloatRange, Categorical
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.datasets import load_boston
