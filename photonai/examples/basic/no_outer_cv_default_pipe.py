@@ -1,4 +1,4 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from sklearn.model_selection import KFold
 import numpy as np
 from sklearn.datasets import load_boston

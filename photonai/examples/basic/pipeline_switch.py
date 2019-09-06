@@ -1,5 +1,5 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Switch, OutputSettings
-from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
+from photonai.base import Hyperpipe, PipelineElement, Switch
+from photonai.optimization import FloatRange, Categorical
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 
