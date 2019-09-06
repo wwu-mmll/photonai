@@ -1,6 +1,6 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Preprocessing, CallbackElement, Branch
-from photonai.optimization.Hyperparameters import Categorical
-from photonai.neuro.NeuroBase import NeuroModuleBranch
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Preprocessing, CallbackElement, Branch
+from photonai.optimization import Categorical
+from photonai.neuro import NeuroBranch
 
 from sklearn.model_selection import ShuffleSplit
 from nilearn.datasets import fetch_oasis_vbm
@@ -13,8 +13,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 # DEFINE CALLBACK ELEMENT
 def my_monitor(X, y=None, **kwargs):
-   print(X.shape)
-   debug = True
+    print(X.shape)
+    debug = True
 
 # GET DATA FROM OASIS
 n_subjects = 50
@@ -39,7 +39,7 @@ my_pipe = Hyperpipe('Limbic_Pipeline',
 
 # CREATE NEURO BRANCH
 # specify the number of processes that should be used
-neuro_branch = NeuroModuleBranch('NeuroBranch', nr_of_processes=1)
+neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=1)
 
 # resample images to a desired voxel size - this also works with voxel_size as hyperparameter
 # it's also very reasonable to define a batch size for a large number of subjects

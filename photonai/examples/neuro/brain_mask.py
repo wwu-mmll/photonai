@@ -1,5 +1,5 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.neuro.NeuroBase import NeuroModuleBranch
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.neuro import NeuroBranch
 from sklearn.model_selection import ShuffleSplit
 from nilearn.datasets import fetch_oasis_vbm
 import numpy as np
@@ -41,7 +41,7 @@ mask = PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter',
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
 # we recommend to always use neuro elements within a branch
-neuro_branch = NeuroModuleBranch('NeuroBranch')
+neuro_branch = NeuroBranch('NeuroBranch')
 neuro_branch += mask
 
 pipe += neuro_branch

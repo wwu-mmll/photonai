@@ -3,8 +3,8 @@ Example script for batched elements
 """
 
 
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Preprocessing
-from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
+from photonai.base import Hyperpipe, PipelineElement, Preprocessing
+from photonai.optimization import FloatRange, Categorical, IntegerRange
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 

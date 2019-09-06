@@ -1,7 +1,6 @@
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, PhotonRegister
 from photonai.optimization import FloatRange, Categorical
-from photonai.investigator.Investigator import Investigator
-from photonai.base import PhotonRegister
+from photonai.investigator import Investigator
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_boston
 

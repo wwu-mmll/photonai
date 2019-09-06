@@ -1,6 +1,6 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack
-from photonai.neuro.NeuroBase import NeuroModuleBranch
-from photonai.neuro.BrainAtlas import AtlasLibrary
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Stack
+from photonai.neuro import NeuroBranch
+from photonai.neuro.brain_atlas import AtlasLibrary
 from sklearn.model_selection import ShuffleSplit
 from nilearn.datasets import fetch_oasis_vbm
 import numpy as np
@@ -53,18 +53,18 @@ atlas = PipelineElement('BrainAtlas',
                         atlas_name="AAL", extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
-neuro_branch = NeuroModuleBranch('NeuroBranch', nr_of_processes=2)
+neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=2)
 neuro_branch += atlas
 
 # it's also possible to combine ROIs from different atlases
 neuro_stack = Stack('HarvardOxford')
 
-ho_sub = NeuroModuleBranch('HO_Subcortical')
+ho_sub = NeuroBranch('HO_Subcortical')
 ho_sub += PipelineElement('BrainAtlas',
                           rois=['Left Thalamus', 'Left Caudate', 'Left Putamen', 'Left Pallidum'],
                           atlas_name="HarvardOxford_Subcortical_Threshold_25", extract_mode='vec', batch_size=20)
 
-ho_cort = NeuroModuleBranch('HO_Cortical')
+ho_cort = NeuroBranch('HO_Cortical')
 ho_cort += PipelineElement('BrainAtlas',
                            rois=['Insular Cortex', 'Superior Frontal Gyrus', 'Middle Frontal Gyrus'],
                            atlas_name="HarvardOxford_Cortical_Threshold_25", extract_mode='vec', batch_size=20)

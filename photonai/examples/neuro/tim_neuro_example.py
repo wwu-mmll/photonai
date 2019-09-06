@@ -1,8 +1,7 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack, Switch
-from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
-from photonai.neuro.NeuroBase import NeuroModuleBranch
-from photonai.neuro.BrainAtlas import AtlasLibrary
-from photonai.base.PhotonBase import CallbackElement
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Stack, Switch, CallbackElement
+from photonai.optimization import FloatRange, Categorical, IntegerRange
+from photonai.neuro import NeuroBranch
+from photonai.neuro.brain_atlas import AtlasLibrary
 from sklearn.model_selection import ShuffleSplit, KFold
 from nilearn.datasets import fetch_oasis_vbm
 import numpy as np
@@ -41,7 +40,7 @@ pipe = Hyperpipe('Limbic_System',
                  eval_final_performance=True)
 
 batch_size = 100
-neuro_branch = NeuroModuleBranch('NeuroBranch') #, nr_of_processes=4)
+neuro_branch = NeuroBranch('NeuroBranch') #, nr_of_processes=4)
 neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': Categorical([3, 5])}, batch_size=batch_size)
 neuro_branch += CallbackElement('resample_monitor', my_monitor)
 neuro_branch += PipelineElement('SmoothImages', {'fwhm': Categorical([6, 12])}, batch_size=batch_size)
