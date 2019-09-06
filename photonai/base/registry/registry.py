@@ -103,7 +103,7 @@ class PhotonRegistry:
         self._load_custom_folder(custom_folder)
 
         if not element_type == "Estimator" and not element_type == "Transformer":
-            Logger().error("Variable element_type must be 'Estimator' or 'Transformer'")
+            raise ValueError("Variable element_type must be 'Estimator' or 'Transformer'")
 
         duplicate = self._check_duplicate(photon_name=photon_name, class_str=class_str, content=self.custom_elements)
 
@@ -168,8 +168,10 @@ class PhotonRegistry:
         if photon_name in self.custom_elements:
             del self.custom_elements[photon_name]
 
-        self._write2json(self.custom_elements)
-        Logger().info('Removing the PipelineElement named "{0}" from CustomElements.json.'.format(photon_name))
+            self._write2json(self.custom_elements)
+            Logger().info('Removing the PipelineElement named "{0}" from CustomElements.json.'.format(photon_name))
+        else:
+            Logger().info('Cannot remove "{0}" from CustomElements.json. Element has not been registered before.'.format(photon_name))
 
     @staticmethod
     def _check_duplicate(photon_name, class_str, content):
@@ -277,7 +279,7 @@ class PhotonRegistry:
                 class_info[key] = class_path, class_name[1:]
         return class_info
 
-    def list_available_elements(self, photon_package: list = PHOTON_REGISTRIES):
+    def list_available_elements(self, photon_package=PHOTON_REGISTRIES):
         """
         Print info about all items that are registered for the PHOTON submodule to the console.
 
@@ -286,6 +288,8 @@ class PhotonRegistry:
         * 'photon_package' [list]:
           The names of the PHOTON submodules for which the elements should be retrieved
         """
+        if isinstance(photon_package, str):
+            photon_package = [photon_package]
         for package in photon_package:
             content = self._load_json(package)
             if len(content) > 0:
