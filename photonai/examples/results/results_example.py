@@ -41,7 +41,7 @@ my_pipe.fit(X, y)
 handler = ResultsHandler(my_pipe.results)
 
 # get predictions for your best configuration (for all outer folds)
-best_config_preds = handler.get_val_preds()
+best_config_preds = handler.get_test_predictions()
 y_pred = best_config_preds['y_pred']
 y_pred_probabilities = best_config_preds['y_pred_probabilities']
 y_true = best_config_preds['y_true']

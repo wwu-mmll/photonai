@@ -1,6 +1,5 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Preprocessing
-from photonai.neuro.AtlasMapping import AtlasMapper
-from photonai.neuro.NeuroBase import NeuroModuleBranch
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Preprocessing
+from photonai.neuro import AtlasMapper, NeuroBranch
 from sklearn.model_selection import KFold
 from nilearn.datasets import fetch_oasis_vbm
 import numpy as np
@@ -49,7 +48,7 @@ brain_atlas = PipelineElement('BrainAtlas', atlas_name="AAL",
                               rois=['Hippocampus_L', 'Hippocampus_R', "Frontal_Sup_Orb_L", "Cingulum_Mid_R",
                                     "Cerebelum_7b_L", "Temporal_Pole_Sup_R", "Paracentral_Lobule_L"], batch_size=200)
 
-neuro_branch = NeuroModuleBranch('NeuroBranch')
+neuro_branch = NeuroBranch('NeuroBranch')
 neuro_branch += brain_atlas
 
 # NOW TRAIN ATLAS MAPPER

@@ -342,7 +342,6 @@ class PipelineBranchTests(unittest.TestCase):
 
         self.assertTrue(np.array_equal(trans, matrix))
 
-
     def test_voting(self):
 
         svc1 = PipelineElement("SVC", random_state=1)
@@ -354,10 +353,4 @@ class PipelineBranchTests(unittest.TestCase):
         sk_svc1 = SVC()
         sk_svc2 = SVC()
         pass
-
-
-
-if __name__ == '__main__':
-    unittest.main()
-
 

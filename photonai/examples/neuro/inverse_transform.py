@@ -1,7 +1,7 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Stack
-from photonai.neuro.NeuroBase import NeuroModuleBranch
-from photonai.neuro.BrainAtlas import AtlasLibrary
-from photonai.processing.ResultsTreeHandler import ResultsHandler
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Stack
+from photonai.neuro import NeuroBranch
+from photonai.neuro.brain_atlas import AtlasLibrary
+from photonai.processing import ResultsHandler
 from sklearn.model_selection import ShuffleSplit
 from nilearn.datasets import fetch_oasis_vbm
 import numpy as np
@@ -55,7 +55,7 @@ atlas = PipelineElement('BrainAtlas',
                         atlas_name="AAL", extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
-neuro_branch = NeuroModuleBranch('NeuroBranch')
+neuro_branch = NeuroBranch('NeuroBranch')
 neuro_branch += atlas
 
 

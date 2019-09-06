@@ -1,5 +1,5 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings, Branch, Stack, Switch, DataFilter
-from photonai.optimization.Hyperparameters import FloatRange, Categorical, IntegerRange
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Branch, Stack, Switch, DataFilter
+from photonai.optimization import FloatRange, Categorical, IntegerRange
 from sklearn.model_selection import ShuffleSplit, KFold
 import numpy as np
 from sklearn.datasets import load_boston

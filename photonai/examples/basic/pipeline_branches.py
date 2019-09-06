@@ -1,7 +1,6 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, Stack, Branch
-from photonai.optimization.Hyperparameters import FloatRange, IntegerRange, Categorical
-from photonai.investigator.Investigator import Investigator
-from photonai.configuration.Register import PhotonRegister
+from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, PhotonRegistry
+from photonai.optimization import FloatRange, IntegerRange, Categorical
+from photonai.investigator import Investigator
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 

@@ -16,16 +16,24 @@ class PhotonBaseConstraint:
     def __init__(self, strategy='first', metric='', threshold: float=None, margin: float=0, **kwargs):
         self._metric = None
         self._greater_is_better = None
+        self._strategy = ''
 
         # with setting property we automatically find greater_is_better
+        self.strategy = strategy
         self.metric = metric
         self.threshold = threshold
         self.margin = margin
 
+    @property
+    def strategy(self):
+        return self._strategy
+
+    @strategy.setter
+    def strategy(self, value):
         try:
-            self.strategy = PhotonBaseConstraint.ENUM_STRATEGY[strategy]
+            self._strategy = PhotonBaseConstraint.ENUM_STRATEGY[value]
         except KeyError:
-            raise ValueError("Your strategy: " + str(strategy) + " is not supported yet. Please use one of " +
+            raise ValueError("Your strategy: " + str(value) + " is not supported yet. Please use one of " +
                              str([x.name for x in PhotonBaseConstraint.ENUM_STRATEGY]))
 
     @property

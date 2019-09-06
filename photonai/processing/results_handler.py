@@ -250,76 +250,6 @@ class ResultsHandler:
                 plt.savefig(file)
         plt.close()
 
-    def get_val_preds(self, sort_CV=True):
-        """
-        This function returns the predictions, true targets, and fold index
-        for the best configuration of each outer fold.
-        """
-        y_true = []
-        y_pred = []
-        sample_inds = []
-        y_pred_probabilities = []
-        fold_idx = []
-        for i, fold in enumerate(self.results.outer_folds):
-            n_samples = len(fold.best_config.best_config_score.validation.y_true)
-            y_true.extend(fold.best_config.best_config_score.validation.y_true)
-            y_pred.extend(fold.best_config.best_config_score.validation.y_pred)
-            y_pred_probabilities.extend(fold.best_config.best_config_score.validation.probabilities)
-            fold_idx.extend(np.repeat(i, n_samples))
-            if sort_CV:
-                sample_inds.extend(fold.best_config.best_config_score.validation.indices)
-        y_true = np.asarray(y_true)
-        y_pred = np.asarray(y_pred)
-        y_pred_probabilities = np.asarray(y_pred_probabilities)
-        fold_idx = np.asarray(fold_idx)
-        if sort_CV:
-            sample_inds = np.asarray(sample_inds)
-            sort_index = np.argsort(sample_inds)
-            y_true = y_true[sort_index]
-            y_pred = y_pred[sort_index]
-            if len(y_pred_probabilities) != 0:
-                y_pred_probabilities = y_pred_probabilities[sort_index]
-
-        return {'y_true': y_true, 'y_pred': y_pred, 'sample_inds_CV': sample_inds,
-                'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
-
-    def get_inner_val_preds(self, sort_CV=True, config_no=0):
-        """
-        This function returns the predictions, true targets, and fold index
-        for the best configuration of each inner fold if outer fold is not set and eval_final_performance is False
-        AND there is only 1 config tested!
-        :param sort_CV: sort predictions to match input sequence (i.e. undo CV shuffle = True)?
-        :param config_no: which tested config to use?
-        """
-        y_true = []
-        y_pred = []
-        if sort_CV:
-            sample_inds = []
-        y_pred_probabilities = []
-        fold_idx = []
-        for i, fold in enumerate(self.results.outer_folds[0].tested_config_list[config_no].inner_folds):
-            n_samples = len(fold.validation.y_true)
-            y_true.extend(fold.validation.y_true)
-            y_pred.extend(fold.validation.y_pred)
-            y_pred_probabilities.extend(fold.validation.probabilities)
-            fold_idx.extend(np.repeat(i, n_samples))
-            if sort_CV:
-                sample_inds.extend(fold.validation.indices)
-        y_true = np.asarray(y_true)
-        y_pred = np.asarray(y_pred)
-        y_pred_probabilities = np.asarray(y_pred_probabilities)
-        fold_idx = np.asarray(fold_idx)
-        if sort_CV:
-            sample_inds = np.asarray(sample_inds)
-            sort_index = np.argsort(sample_inds)
-            y_true = y_true[sort_index]
-            y_pred = y_pred[sort_index]
-            if len(y_pred_probabilities) != 0:
-                y_pred_probabilities = y_pred_probabilities[sort_index]
-
-        return {'y_true': y_true, 'y_pred': y_pred,
-                'y_pred_probabilities': y_pred_probabilities, 'fold_indices': fold_idx}
-
     def get_importance_scores(self):
         """
         This function returns the importance scores for the best configuration of each outer fold.
@@ -334,7 +264,7 @@ class ResultsHandler:
         This function plots predictions vs. (true) targets and plots a regression line
         with confidence interval.
         """
-        preds = ResultsHandler.get_val_preds(self)
+        preds = ResultsHandler.get_test_predictions(self)
         ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=confidence_interval)
         ax.set(xlabel='Predicted Values', ylabel='True Values')
         plt.show()
@@ -345,7 +275,7 @@ class ResultsHandler:
         Normalization can be applied by setting `normalize=True`.
         """
 
-        preds = ResultsHandler.get_val_preds(self)
+        preds = ResultsHandler.get_test_predictions(self)
         cm = confusion_matrix(preds['y_true'], preds['y_pred'])
         np.set_printoptions(precision=2)
         if normalize:
@@ -390,7 +320,7 @@ class ResultsHandler:
 
 
         # get predictive probabilities
-        preds = ResultsHandler.get_val_preds(self)
+        preds = ResultsHandler.get_test_predictions(self)
 
         # get ROC infos
         fpr, tpr, _ = roc_curve(y_true=preds['y_true'],
@@ -406,6 +336,66 @@ class ResultsHandler:
         plt.title('Receiver Operating Characteristic (ROC) Curve')
         plt.legend(loc='best')
         plt.show()
+
+    def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=''):
+        if len(score_info_list) > 0:
+            fold_nr_array = []
+            collectables = {'y_pred': [], 'y_true': [], 'indices': []}
+
+            if hasattr(score_info_list[0], 'probabilities') and len(score_info_list[0].probabilities) > 0:
+                collectables['probabilities'] = []
+
+            for i, score_info in enumerate(score_info_list):
+                for collectable_key, collectable_list in collectables.items():
+                    if hasattr(score_info, collectable_key):
+                        value = getattr(score_info, collectable_key)
+                        collectables[collectable_key] = PhotonDataHelper.stack_results(value,
+                                                                                       collectables[collectable_key])
+                fold_nr_array = PhotonDataHelper.stack_results(np.ones((len(score_info.y_true),)) * fold_nr[i],
+                                                               fold_nr_array)
+
+            collectables["fold"] = fold_nr_array
+            # convert to pandas dataframe to use their sorting algorithm
+            save_df = pd.DataFrame(collectables)
+            sorted_df = save_df.sort_values(by='indices')
+
+            if predictions_filename != '':
+                sorted_df.to_csv(predictions_filename, index=None)
+
+            return sorted_df.to_dict('list')
+
+    def get_test_predictions(self, filename=''):
+        """
+        This function returns the predictions, true targets, and fold index
+        for the best configuration of each outer fold.
+        """
+        if self.results is None:
+            raise ValueError("Result tree information is needed but results attribute of object is None.")
+
+        score_info_list = list()
+        fold_nr_list = list()
+        for outer_fold in self.results.outer_folds:
+            score_info_list.append(outer_fold.best_config.best_config_score.validation)
+            fold_nr_list.append(outer_fold.fold_nr)
+        return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
+
+    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, config_id=None, filename=''):
+        """
+        This function returns the predictions, probabilities, true targets, fold and index
+        for the config_nr of the given outer_fold
+        """
+        score_info_list = list()
+        fold_nr_list = list()
+
+        if self.results is None:
+            raise ValueError("Result tree information is needed but results attribute of object is None.")
+
+        # Todo: find config by config_id
+        for inner_fold in self.results.outer_folds[outer_fold_nr].tested_config_list[config_no].inner_folds:
+            score_info_list.append(inner_fold.validation)
+            fold_nr_list.append(inner_fold.fold_nr)
+
+        return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
 
     def eval_mean_time_components(self):
         """
@@ -590,39 +580,19 @@ class ResultsHandler:
 
     def write_predictions_file(self):
         if self.output_settings.save_predictions or self.output_settings.save_best_config_predictions:
-            score_info_list = []
-            fold_nr = []
+            filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+
             # usually we write the predictions for the outer fold
             if not self.output_settings.save_predictions_from_best_config_inner_folds:
-                for outer_fold in self.results.outer_folds:
-                    score_info_list.append(outer_fold.best_config.best_config_score.validation)
-                    fold_nr.append(outer_fold.fold_nr)
+                return self.get_test_predictions(filename)
             # in case no outer folds exist, we write the inner_fold predictions
             else:
+                score_info_list = []
+                fold_nr = []
                 for inner_fold in self.results.best_config.inner_folds:
                     score_info_list.append(inner_fold.validation)
                     fold_nr.append(inner_fold.fold_nr)
-
-            if len(score_info_list) > 0:
-                fold_nr_array = []
-                collectables = {'y_pred': [], 'y_true': [], 'indices': []}
-
-                if hasattr(score_info_list[0], 'probability') and len(score_info_list[0].probability) > 0:
-                    collectables['probability'] = []
-
-                for i, score_info in enumerate(score_info_list):
-                    for collectable_key, collectbale_list in collectables.items():
-                        if hasattr(score_info, collectable_key):
-                            value = getattr(score_info, collectable_key)
-                            collectables[collectable_key] = PhotonDataHelper.stack_results(value, collectables[collectable_key])
-                    fold_nr_array = PhotonDataHelper.stack_results(np.ones((len(score_info.y_true),)) * fold_nr[i],
-                                                                   fold_nr_array)
-
-                collectables["fold"] = fold_nr_array
-                save_df = pd.DataFrame(collectables)
-                sorted_df = save_df.sort_values(by='indices')
-                predictions_filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
-                sorted_df.to_csv(predictions_filename, index=None)
+                self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_summary(self):
 
