@@ -342,8 +342,8 @@ class ResultsHandler:
             fold_nr_array = []
             collectables = {'y_pred': [], 'y_true': [], 'indices': []}
 
-            if hasattr(score_info_list[0], 'probability') and len(score_info_list[0].probability) > 0:
-                collectables['probability'] = []
+            if hasattr(score_info_list[0], 'probabilities') and len(score_info_list[0].probabilities) > 0:
+                collectables['probabilities'] = []
 
             for i, score_info in enumerate(score_info_list):
                 for collectable_key, collectable_list in collectables.items():
@@ -362,7 +362,7 @@ class ResultsHandler:
             if predictions_filename != '':
                 sorted_df.to_csv(predictions_filename, index=None)
 
-            return sorted_df.to_dict()
+            return sorted_df.to_dict('list')
 
     def get_test_predictions(self, filename=''):
         """
@@ -376,7 +376,7 @@ class ResultsHandler:
         fold_nr_list = list()
         for outer_fold in self.results.outer_folds:
             score_info_list.append(outer_fold.best_config.best_config_score.validation)
-            fold_nr_list.append(outer_fold.config_nr)
+            fold_nr_list.append(outer_fold.fold_nr)
         return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
 
     def get_validation_predictions(self, outer_fold_nr=0, config_no=0, config_id=None, filename=''):

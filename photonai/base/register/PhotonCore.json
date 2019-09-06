@@ -490,5 +490,9 @@
   "PhotonVotingRegressor":[
     "photonai.modelwrapper.Voting.PhotonVotingRegressor",
     "Estimator"
+  ],
+  "PhotonTestXPredictor":[
+    "photonai.test.processing.results_tests.XPredictor",
+    "Estimator"
   ]
 }
