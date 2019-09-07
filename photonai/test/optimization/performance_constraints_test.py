@@ -69,6 +69,11 @@ class PerformanceConstraintsTest(unittest.TestCase):
         self.minimum_performance.metric = "mean_squared_error"
         self.assertEqual(self.minimum_performance._greater_is_better, False)
 
+        self.assertEqual(self.dummy_performance._greater_is_better, False)
+
+        self.dummy_performance.metric = "f1_score"
+        self.assertEqual(self.dummy_performance._greater_is_better, True)
+
     def test_shall_continue(self):
         """
         Test for shall_continue function.
