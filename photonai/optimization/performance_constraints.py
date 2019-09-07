@@ -113,7 +113,7 @@ class PhotonBaseConstraint:
         Copy self object.
         :return:
         """
-        new_me = type(self)()
+        new_me = type(self)(metric=self.metric)
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
             if not attr == 'self' and hasattr(self, attr) and attr != 'strategy':
