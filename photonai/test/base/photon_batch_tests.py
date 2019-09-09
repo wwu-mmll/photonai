@@ -34,7 +34,7 @@ class DummyBatchTransformer(BaseEstimator):
         return predictions
 
 
-class NeuroBatchTests(unittest.TestCase):
+class BatchingTests(unittest.TestCase):
 
     def setUp(self):
         self.batch_size = 10
