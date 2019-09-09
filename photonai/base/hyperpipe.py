@@ -785,10 +785,10 @@ class Hyperpipe(BaseEstimator):
 
         Logger().info("Hyperpipe is training with " + str(self.data.y.shape[0]) + " samples.")
 
-    @staticmethod
-    def prepare_caching(cache_folder):
-        if cache_folder and not os.path.isdir(cache_folder):
-            os.makedirs(cache_folder, exist_ok=True)
+    # @staticmethod
+    # def prepare_caching(cache_folder):
+    #     if cache_folder and not os.path.isdir(cache_folder):
+    #         os.makedirs(cache_folder, exist_ok=True)
 
     @staticmethod
     def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
@@ -801,7 +801,7 @@ class Hyperpipe(BaseEstimator):
             if cache_folder:
                 cache_folder = os.path.join(cache_folder, element.name)
             Hyperpipe.recursive_cache_folder_propagation(element.base_element, cache_folder, inner_fold_id)
-            Hyperpipe.prepare_caching(element.base_element.cache_folder)
+            # Hyperpipe.prepare_caching(element.base_element.cache_folder)
 
         elif isinstance(element, PhotonPipeline):
             element.fold_id = inner_fold_id

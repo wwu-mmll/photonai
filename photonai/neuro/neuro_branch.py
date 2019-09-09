@@ -1,9 +1,10 @@
-from nibabel.nifti1 import Nifti1Image
-from multiprocessing import Process, Queue
-from fasteners import ReaderWriterLock
 import queue
 import os
 import uuid
+import numpy as np
+from nibabel.nifti1 import Nifti1Image
+from multiprocessing import Process, Queue
+from fasteners import ReaderWriterLock
 
 from photonai.base import Branch, CallbackElement
 from photonai.base.helper import PhotonDataHelper
@@ -26,7 +27,7 @@ class NeuroBranch(Branch):
     """
     NEURO_ELEMENTS = ElementDictionary.get_package_info(['PhotonNeuro'])
 
-    def __init__(self, name, nr_of_processes=1, output_img: bool = False, apply_groupwise: bool = False):
+    def __init__(self, name, nr_of_processes=1, output_img: bool = False):
         Branch.__init__(self, name)
 
         self.nr_of_processes = nr_of_processes
@@ -36,10 +37,6 @@ class NeuroBranch(Branch):
         self.needs_y = False
         self.needs_covariates = True
         self.current_config = None
-
-        if self.nr_of_processes > 1:
-            Logger().warn("Groupwise processing of NeuroElements not supported when working on multiple CPUs. "
-                          "Falling back to single subject processing.")
 
     def fit(self, X, y=None, **kwargs):
         # do nothing here!!
@@ -118,6 +115,10 @@ class NeuroBranch(Branch):
 
         X_new, _, _ = self.base_element.transform(X)
 
+        # check if we have a list of niftis, should avoid this, except when output_image = True
+        if not self.output_img:
+            if ((isinstance(X_new, list) and len(X_new) > 0) or (isinstance(X_new, np.ndarray) and len(X_new.shape) == 1)) and isinstance(X_new[0], Nifti1Image):
+                X_new = np.asarray([i.dataobj for i in X_new])
         return X_new, y, kwargs
 
     def set_params(self, **kwargs):

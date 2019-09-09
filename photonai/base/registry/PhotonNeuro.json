@@ -1,22 +1,22 @@
 {
    "ResampleImages":[
-      "photonai.neuro.ImageBasics.ResampleImages",
+      "photonai.neuro.nifti_transformations.ResampleImages",
       "Transformer"
    ],
    "SmoothImages":[
-      "photonai.neuro.ImageBasics.SmoothImages",
+      "photonai.neuro.nifti_transformations.SmoothImages",
       "Transformer"
    ],
    "BrainAtlas":[
-      "photonai.neuro.BrainAtlas.BrainAtlas",
+      "photonai.neuro.brain_atlas.BrainAtlas",
       "Transformer"
    ],
    "BrainMask":[
-      "photonai.neuro.BrainAtlas.BrainMasker",
+      "photonai.neuro.brain_atlas.BrainMask",
       "Transformer"
    ],
    "PatchImages":[
-      "photonai.neuro.ImageBasics.PatchImages",
+      "photonai.neuro.nifti_transformations.PatchImages",
       "Transformer"
    ]
 }
