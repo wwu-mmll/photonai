@@ -411,7 +411,8 @@ class PipelineElement(BaseEstimator):
             else:
                 if y is not None:
                     # todo: in case a method needs y, we should also always pass kwargs
-                    # i.e. if we change the number of samples, we also need to apply that change to all kwargs
+                    #  i.e. if we change the number of samples, we also need to apply that change to all kwargs
+                    # todo: talk to Ramona! Maybe we actually DO need this case
                     if self.needs_covariates:
                         X, y, kwargs = delegate(X, y, **kwargs)
                     else:
