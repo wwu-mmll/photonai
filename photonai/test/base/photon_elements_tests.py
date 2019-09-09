@@ -13,7 +13,7 @@ from photonai.test.base.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesAndYTransformer
 
 
-class PipelineElementTests(unittest.TestCase):
+class PhotonElementsTests(unittest.TestCase):
 
     def setUp(self):
         self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True)
@@ -147,6 +147,16 @@ class PipelineSwitchTests(unittest.TestCase):
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.lr_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
         self.pipe_switch = Switch('switch', [self.svc_pipe_element, self.lr_pipe_element])
+        self.branch = Branch('branch')
+        self.branch += self.svc_pipe_element
+        self.transformer_branch = Branch('transformer_branch')
+        self.transformer_branch += PipelineElement('PCA')
+        self.transformer = PipelineElement('PCA')
+        self.pipe_switch_with_branch = Switch('switch_with_branch', [self.lr_pipe_element, self.branch])
+        self.pipe_transformer_switch_with_branch = Switch('transformer_switch_with_branch',
+                                                          [self.transformer, self.transformer_branch])
+        self.switch_in_switch = Switch('Switch_in_switch', [self.transformer_branch,
+                                                            self.pipe_transformer_switch_with_branch])
 
     def test_init(self):
         self.assertEqual(self.pipe_switch.name, 'switch')
@@ -172,7 +182,6 @@ class PipelineSwitchTests(unittest.TestCase):
                                                                        {'switch__current_element': (1, 0)},
                                                                        {'switch__current_element': (1, 1)},
                                                                        {'switch__current_element': (1, 2)}])
-
 
     def test_set_params(self):
 
@@ -202,6 +211,43 @@ class PipelineSwitchTests(unittest.TestCase):
         self.pipe_switch.set_params(**{'DecisionTreeClassifier__min_samples_split': 2})
         self.assertIs(self.pipe_switch.base_element, self.lr_pipe_element)
         self.assertIs(self.pipe_switch.base_element.base_element, self.lr_pipe_element.base_element)
+
+    def test_estimator_transformer_check(self):
+        self.assertEqual(self.pipe_switch.is_estimator, True)
+        self.assertEqual(self.pipe_switch_with_branch.is_estimator, True)
+        self.assertEqual(self.pipe_transformer_switch_with_branch.is_estimator, False)
+        self.assertEqual(self.switch_in_switch.is_estimator, False)
+
+    def test_copy_me(self):
+        # todo
+        copy = self.pipe_switch.copy_me()
+        self.maxDiff = None
+        info_original = self.pipe_switch.__dict__
+        info_copy = copy.__dict__
+
+        updated_element_dict = dict()
+        for name, element in info_original['elements_dict'].items():
+            updated_element_dict[name] = element.__dict__
+
+        updated_elements = list()
+        for element in info_original['elements']:
+            updated_elements.append(element.__dict__)
+
+        info_original['elements_dict'] = updated_element_dict
+        info_original['elements'] = updated_elements
+
+        updated_element_dict = dict()
+        for name, element in info_copy['elements_dict'].items():
+            updated_element_dict[name] = element.__dict__
+
+        updated_elements = list()
+        for element in info_copy['elements']:
+            updated_elements.append(element.__dict__)
+
+        info_copy['elements_dict'] = updated_element_dict
+        info_copy['elements'] = updated_elements
+
+        self.assertDictEqual(info_copy, info_original)
 
 
 class PipelineBranchTests(unittest.TestCase):
