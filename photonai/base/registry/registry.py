@@ -3,6 +3,9 @@ import json
 import os
 import sys
 from os import path
+import numpy as np
+
+from sklearn.datasets import load_breast_cancer, load_boston
 
 from photonai.photonlogger import Logger
 from photonai.base.photon_elements import PipelineElement
@@ -118,8 +121,109 @@ class PhotonRegistry:
             # write back to file
             self._write2json(self.custom_elements)
             Logger().info('Adding PipelineElement ' + class_str + ' to CustomElements.json as "' + photon_name + '".')
+
+            # activate custom elements
+            self.activate(custom_folder)
+
+            # check custom element
+            Logger().info("Running tests on custom element...")
+            return self._run_tests(photon_name, element_type)
         else:
             Logger().error('Could not register element!')
+
+    def _run_tests(self, photon_name, element_type):
+        # check import
+        custom_element = PipelineElement(photon_name)
+
+        # check if has fit, transform, predict
+        if not hasattr(custom_element.base_element, 'fit'):
+            raise NotImplementedError("Custom element does not implement fit() method.")
+
+        if element_type == 'Transformer' and not hasattr(custom_element.base_element, 'transform'):
+            raise NotImplementedError("Custom element does not implement transform() method.")
+
+        if element_type == 'Estimator' and not hasattr(custom_element.base_element, 'predict'):
+            raise NotImplementedError("Custom element does not implement predict() method.")
+
+        # check if estimator is regressor or classifier
+        if element_type == 'Estimator':
+            if hasattr(custom_element.base_element, '_estimator_type'):
+                est_type = getattr(custom_element.base_element, '_estimator_type')
+                if est_type == "regressor":
+                    X, y = load_boston(True)
+                elif est_type == "classifier":
+                    X, y = load_breast_cancer(True)
+                else:
+                    raise ValueError("Custom element does not specify whether it is a regressor or classifier. "
+                                     "Is {}".format(est_type))
+            else:
+                raise NotImplementedError("Custom element does not specify whether it is a regressor or classifier. "
+                                          "Consider inheritance from ClassifierMixin or RegressorMixin or set "
+                                          "_estimator_type manually.")
+        else:
+            X, y = load_boston(True)
+
+        # try and test functionality
+        kwargs = {'covariates': np.random.randn(len(y))}
+
+        try:
+            # test fit
+            returned_element = custom_element.base_element.fit(X, y, **kwargs)
+        except Exception as e:
+            Logger().info("Not able to run tests on fit() method. Test data not compatible.")
+            return e
+
+        if not isinstance(returned_element, custom_element.base_element.__class__):
+            raise NotImplementedError("fit() method does not return self.")
+
+        try:
+            # test transform or predict (if base element does not implement transform method, predict should be called
+            # by PipelineElement -> so we only need to test transform()
+            if custom_element.needs_y:
+                if element_type == 'Estimator':
+                    raise NotImplementedError("Estimator should not need y.")
+                Xt, yt, kwargst = custom_element.base_element.transform(X, y, **kwargs)
+                if 'covariates' not in kwargst.keys():
+                    raise ValueError("Custom element does not correctly transform kwargs although needs_y is True. "
+                                     "If you change the number of samples in transform(), make sure to transform kwargs "
+                                     "respectively.")
+                if not len(kwargst['covariates']) == len(X):
+                    raise ValueError("Custom element is not returning the correct number of samples!")
+
+            elif custom_element.needs_covariates:
+                if element_type == 'Estimator':
+                    yt, kwargst = custom_element.base_element.predict(X, **kwargs)
+                    if not len(yt) == len(y):
+                        raise ValueError("Custom element is not returning the correct number of samples!")
+                else:
+                    Xt, kwargst = custom_element.base_element.transform(X, **kwargs)
+
+                    if not len(Xt) == len(X) or not len(kwargst['covariates']) == len(X):
+                        raise ValueError("Custom element is not returning the correct number of samples!")
+
+            else:
+                if element_type == 'Estimator':
+                    yt = custom_element.base_element.predict(X)
+                    if not len(yt) == len(y):
+                        raise ValueError("Custom element is not returning the correct number of samples!")
+                else:
+                    Xt = custom_element.base_element.transform(X)
+                    if not len(Xt) == len(X):
+                        raise ValueError("Custom element is not returning the correct number of samples!")
+
+        except ValueError as ve:
+            if "too many values to unpack" in ve.args[0]:
+                raise ValueError("Custom element does not return X, y and kwargs the way it should "
+                                          "according to needs_y and needs_covariates.")
+            else:
+                Logger().info(ve.args[0])
+                return ve
+        except Exception as e:
+            Logger().info(e.args[0])
+            Logger().info("Not able to run tests on transform() or predict() method. Test data probably not compatible.")
+            return e
+
+        Logger().info('All tests on custom element passed.')
 
     def info(self, photon_name):
         """
@@ -221,6 +325,8 @@ class PhotonRegistry:
 
         if photon_package == 'CustomElements':
             folder = self.custom_elements_folder
+            if not folder:
+                return {}
         else:
             folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
 

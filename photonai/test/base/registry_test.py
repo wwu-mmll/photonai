@@ -55,3 +55,57 @@ class RegistryTest(unittest.TestCase):
         self.registry.delete('MyCustomEstimator')
 
         os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
+
+    def test_estimator_check_during_register(self):
+        with self.assertRaises(NotImplementedError):
+            self.registry.register('MyCustomEstimatorNoFit', 'custom_estimator.CustomEstimatorNoFit', 'Estimator',
+                                   './custom_elements')
+
+        with self.assertRaises(NotImplementedError):
+            self.registry.register('MyCustomEstimatorNoPredict', 'custom_estimator.CustomEstimatorNoPredict',
+                                   'Estimator', './custom_elements')
+
+        with self.assertRaises(NotImplementedError):
+            self.registry.register('MyCustomEstimatorNoEstimatorType', 'custom_estimator.CustomEstimatorNoEstimatorType',
+                                   'Estimator', './custom_elements')
+
+        with self.assertRaises(NotImplementedError):
+            self.registry.register('MyCustomEstimatorNotReturningSelf',
+                                       'custom_estimator.CustomEstimatorNotReturningSelf',
+                                       'Estimator', './custom_elements')
+
+        e = self.registry.register('MyCustomEstimatorReturningFalsePredictions',
+                                   'custom_estimator.CustomEstimatorReturningFalsePredictions',
+                                   'Estimator', './custom_elements')
+        self.assertIsInstance(e, ValueError)
+
+        e = self.registry.register('MyCustomEstimatorNotWorking', 'custom_estimator.CustomEstimatorNotWorking',
+                                   'Estimator', './custom_elements')
+        self.assertIsInstance(e, ValueError)
+
+        os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
+
+    def test_transformer_needs_covariates(self):
+        self.registry.register('MyCustomTransformerNeedsCovariates', 'custom_transformer.CustomTransformerNeedsCovariates',
+                               'Transformer', './custom_elements')
+
+        with self.assertRaises(ValueError):
+            self.registry.register('MyCustomTransformerNeedsCovariatesWrongInterface',
+                                   'custom_transformer.CustomTransformerNeedsCovariatesWrongInterface',
+                                   'Transformer', './custom_elements')
+
+    def test_transformer_needs_y(self):
+        self.registry.register('MyCustomTransformerNeedsY',
+                               'custom_transformer.CustomTransformerNeedsY',
+                               'Transformer', './custom_elements')
+
+        with self.assertRaises(ValueError):
+            self.registry.register('MyCustomTransformerNeedsYWrongInterface',
+                                   'custom_transformer.CustomTransformerNeedsYWrongInterface',
+                                   'Transformer', './custom_elements')
+
+    def tearDown(self):
+        if os.path.isfile(os.path.join(self.custom_folder, 'CustomElements.json')):
+            os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
+
+
