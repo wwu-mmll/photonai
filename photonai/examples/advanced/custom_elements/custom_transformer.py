@@ -23,6 +23,5 @@ class CustomTransformer(BaseEstimator):
         """
         Apply the method's logic to the data.
         """
-        transformed_data = []
-        return transformed_data
+        return data
 
