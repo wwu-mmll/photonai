@@ -1,3 +1,0 @@
-,fit,,,transform,,,predict,,
-Element,total_seconds,mean_seconds_per_config,mean_seconds_per_item,total_seconds,mean_seconds_per_config,mean_seconds_per_item,total_seconds,mean_seconds_per_config,mean_seconds_per_item
-PhotonTestXPredictor,0.005704,0.000570,0.000006,,,,0.002871,0.000144,0.000003
