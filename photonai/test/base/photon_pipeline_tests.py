@@ -16,7 +16,7 @@ from photonai.base.cache_manager import CacheManager
 from photonai.base import PipelineElement
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
-
+from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
 # assertTrue(x) 	bool(x) is True
@@ -30,28 +30,6 @@ from photonai.neuro.brain_atlas import AtlasLibrary
 # assertIsInstance(a, b) 	isinstance(a, b) 	3.2
 # assertNotIsInstance(a, b) 	not isinstance(a, b) 	3.2
 
-
-class DummyYAndCovariatesTransformer(BaseEstimator):
-
-    def __init__(self):
-        self.needs_y = True
-        self.needs_covariates = True
-
-    def fit(self, X, y, **kwargs):
-        pass
-
-    def transform(self, X, y, **kwargs):
-
-        self.X = X
-        self.y = y
-        self.kwargs =kwargs
-
-        if y is not None:
-            y = y + 1
-        if len(kwargs) > 0:
-            X = X - 1
-            kwargs["sample1_edit"] = kwargs["sample1"] + 5
-        return X, y, kwargs
 
 
 class PipelineTests(unittest.TestCase):
