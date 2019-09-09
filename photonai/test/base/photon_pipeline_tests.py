@@ -14,6 +14,8 @@ from sklearn.base import BaseEstimator
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.cache_manager import CacheManager
 from photonai.base import PipelineElement
+from photonai.neuro import NeuroBranch
+from photonai.neuro.brain_atlas import AtlasLibrary
 
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
@@ -215,6 +217,9 @@ class CacheManagerTests(unittest.TestCase):
         new_hash = self.cache_man._find_config_for_element("PCA")
         self.assertEqual(relevant_items_hash, new_hash)
 
+    def test_empty_config(self):
+        pass
+
     def test_initial_transformation(self):
         self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
         result = self.cache_man.load_cached_data("PCA")
@@ -306,5 +311,108 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         self.assertTrue(np.array_equal(y_uc, y_2))
         self.assertTrue(np.array_equal(kwargs_uc, kwargs_2))
 
+    def test_single_subject_caching(self):
+
+        nb = NeuroBranch("subject_caching_test")
+        # increase complexity by adding batching
+        nb += PipelineElement("ResampleImages", batch_size=4)
+
+        test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_data/')
+        X = AtlasLibrary().get_nii_files_from_folder(test_folder, extension=".nii")
+        y = np.random.randn(len(X))
+
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        cache_folder = os.path.join(curr_dir, 'cache')
+        cache_folder = os.path.join(cache_folder, 'subject_caching_test')
+        nb.base_element.cache_folder = cache_folder
+        CacheManager.clear_cache_files(cache_folder)
+
+        nr_of_expected_pickles_per_config = len(X)
+
+        def transform_and_check_folder(config, expected_nr_of_files):
+            nb.set_params(**config)
+            nb.transform(X, y)
+            nr_of_generated_cache_files = len(glob.glob(os.path.join(cache_folder, "*.p")))
+            self.assertTrue(nr_of_generated_cache_files == expected_nr_of_files)
+
+        # fit with first config
+        # expect one cache file per input file plus one item for the library
+        transform_and_check_folder({'ResampleImages__voxel_size': 5}, nr_of_expected_pickles_per_config + 1)
+
+        # after fitting with second config, we expect two times the number of input files to be in cache
+        transform_and_check_folder({'ResampleImages__voxel_size': 10}, (2 * nr_of_expected_pickles_per_config) + 1)
+
+        # fit with first config again, we expect to not have generate other cache files, because they exist
+        transform_and_check_folder({'ResampleImages__voxel_size': 5}, (2 * nr_of_expected_pickles_per_config) +1)
+
+        # clean up afterwards
+        CacheManager.clear_cache_files(self.pipe.cache_folder)
 
 
+    def test_combi_from_single_and_group_caching(self):
+
+        # 1. load data
+        test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_data/')
+        X = AtlasLibrary().get_nii_files_from_folder(test_folder, extension=".nii")
+        nr_of_expected_pickles_per_config = len(X)
+        y = np.random.randn(len(X))
+
+        # 2. specify cache directories
+        curr_dir = os.path.dirname(os.path.abspath(__file__))
+        cache_folder_base = os.path.join(curr_dir, 'cache')
+        cache_folder_neuro = os.path.join(cache_folder_base, 'subject_caching_test')
+
+        CacheManager.clear_cache_files(cache_folder_base)
+
+        # 3. set up Neuro Branch
+        nb = NeuroBranch("SubjectCaching")
+        # increase complexity by adding batching
+        nb += PipelineElement("ResampleImages", batch_size=4)
+        nb += PipelineElement("BrainMask", batch_size=4)
+        nb.base_element.cache_folder = cache_folder_neuro
+
+        # 4. setup usual pipeline
+        ss = PipelineElement("StandardScaler", {})
+        pca = PipelineElement("PCA", {'n_components': [3, 10, 50]})
+        svm = PipelineElement("SVR", {'kernel': ['rbf', 'linear']})
+
+        pipe = PhotonPipeline([('NeuroBranch', nb),
+                               ('StandardScaler', ss),
+                               ('PCA', pca),
+                               ('SVR', svm)])
+
+        pipe.caching = True
+        pipe.fold_id = "12345643463434"
+        pipe.cache_folder = cache_folder_base
+
+        def transform_and_check_folder(config, expected_nr_of_files_group, expected_nr_subject):
+            pipe.set_params(**config)
+            pipe.fit(X, y)
+            nr_of_generated_cache_files = len(glob.glob(os.path.join(cache_folder_base, "*.p")))
+            self.assertTrue(nr_of_generated_cache_files == expected_nr_of_files_group)
+
+            nr_of_generated_cache_files_subject = len(glob.glob(os.path.join(cache_folder_neuro, "*.p")))
+            self.assertTrue(nr_of_generated_cache_files_subject == expected_nr_subject)
+
+        config1 = {'NeuroBranch__ResampleImages__voxel_size': 5, 'PCA__n_components': 7, 'SVR__C': 2}
+        config2 = {'NeuroBranch__ResampleImages__voxel_size': 3, 'PCA__n_components': 4, 'SVR__C': 5}
+
+        # first config we expect to have a cached_file for the standard, scaler, the pca and the library
+        # and we expect to have two files (one resampler, one brain mask) for each input data +
+        # one library for the neuro branch in the neuro-specific
+        # cache sub folder
+        transform_and_check_folder(config1, 3, (2 * nr_of_expected_pickles_per_config) + 1)
+
+        # second config we expect to have a cached_file for the standard scaler, two for the first and second config
+        # pcas and the library, and we expect to have 2 * nr of input data for resampler plus one time masker + library for neuro
+        transform_and_check_folder(config2, 4, (3 * nr_of_expected_pickles_per_config) + 1)
+
+        # when we transform with the first config again, nothing should happen
+        transform_and_check_folder(config1, 4, (3 * nr_of_expected_pickles_per_config) + 1)
+
+        # when we transform with an empty config, a new entry for pca should be generated, as well as a new cache item
+        # for each input data from the neuro branch
+        transform_and_check_folder({}, 5, (4 * nr_of_expected_pickles_per_config) + 1)
+
+        # if we transform with an empty config again, the number of cached items should stay the same
+        transform_and_check_folder({}, 5, (4 * nr_of_expected_pickles_per_config) + 1)

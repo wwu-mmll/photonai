@@ -95,6 +95,6 @@ class FoldInfo:
         Returns an iterable version of self.X
         """
         if hasattr(X, 'shape'):
-            yield list(range(X.shape[0])), []
+            yield np.asarray(list(range(X.shape[0]))), []
         else:
-            yield list(range(len(X))), []
+            yield np.asarray(list(range(len(X)))), []
