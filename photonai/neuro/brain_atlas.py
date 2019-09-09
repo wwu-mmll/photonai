@@ -75,7 +75,7 @@ class AtlasLibrary:
         self.library = dict()
 
     def _load_photon_atlases(self):
-        dir_atlases = path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'Atlases/'
+        dir_atlases = path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'atlases/'
         photon_atlases = dict()
         for atlas_id, atlas_info in self.ATLAS_DICTIONARY.items():
             atlas_file = glob.glob(path.join(dir_atlases, path.join('*', atlas_info)))[0]
@@ -86,7 +86,7 @@ class AtlasLibrary:
         return photon_atlases
 
     def _load_photon_masks(self):
-        dir_atlases = path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'Atlases/'
+        dir_atlases = path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'atlases/'
         photon_masks = dict()
         for mask_id, mask_info in self.MASK_DICTIONARY.items():
             mask_file = glob.glob(path.join(dir_atlases, path.join('*', mask_info)))[0]
@@ -309,7 +309,7 @@ class BrainAtlas(BaseEstimator):
 
         # 2. load sample data to get target affine and target shape to adapt the brain atlas
 
-        self.affine, self.shape = BrainMasker.get_format_info_from_first_image(X)
+        self.affine, self.shape = BrainMask.get_format_info_from_first_image(X)
 
         # load all niftis to memory
         if isinstance(X, list):
@@ -410,9 +410,9 @@ class BrainAtlas(BaseEstimator):
                 return AtlasLibrary().find_rois_by_index(atlas_obj, which_rois)
 
 
-class BrainMasker(BaseEstimator):
+class BrainMask(BaseEstimator):
 
-    def __init__(self, mask_image=None, affine=None, shape=None, mask_threshold=None, extract_mode='vec'):
+    def __init__(self, mask_image='MNI_ICBM152_WholeBrain', affine=None, shape=None, mask_threshold=None, extract_mode='vec'):
         self.mask_image = mask_image
         self.affine = affine
         self.shape = shape
@@ -465,7 +465,7 @@ class BrainMasker(BaseEstimator):
     def transform(self, X, y=None, **kwargs):
 
         if self.affine is None or self.shape is None:
-            self.affine, self.shape = BrainMasker.get_format_info_from_first_image(X)
+            self.affine, self.shape = BrainMask.get_format_info_from_first_image(X)
 
         if isinstance(self.mask_image, str):
             self.mask_image = AtlasLibrary().get_mask(self.mask_image, self.affine, self.shape, self.mask_threshold)
@@ -489,7 +489,7 @@ class BrainMasker(BaseEstimator):
                     return np.mean(single_roi, axis=1)
 
                 elif self.extract_mode == 'box':
-                    return BrainMasker._get_box(X, self.mask_image)
+                    return BrainMask._get_box(X, self.mask_image)
 
                 elif self.extract_mode == 'img':
                     return self.masker.inverse_transform(single_roi)

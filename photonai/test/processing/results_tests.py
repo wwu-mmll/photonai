@@ -167,7 +167,7 @@ class ResultHandlerAndHelperTests(unittest.TestCase):
                                                            outer_fold.train_indices)
             outer_collection['train'].append(expected_outer_train_mae)
             self.assertAlmostEqual(outer_fold_results.best_config.best_config_score.training.metrics['mean_absolute_error'],
-                             expected_outer_train_mae)
+                                   expected_outer_train_mae)
 
         # check again in overall best config attribute
         check_metrics('mean_absolute_error', outer_collection['train'],

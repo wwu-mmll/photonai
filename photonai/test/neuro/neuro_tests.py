@@ -7,8 +7,10 @@ import numpy as np
 import glob
 
 
-from photonai.neuro import AtlasLibrary, BrainAtlas, NeuroBranch, BrainMasker
-from photonai.base import CacheManager, OutputSettings, Hyperpipe, PipelineElement
+from photonai.neuro import NeuroBranch
+from photonai.neuro.brain_atlas import BrainMask, AtlasLibrary, BrainAtlas
+from photonai.base import OutputSettings, Hyperpipe, PipelineElement
+from photonai.base.photon_pipeline import CacheManager
 from photonai.processing import ResultsHandler
 from sklearn.model_selection import ShuffleSplit
 
@@ -126,12 +128,12 @@ class NeuroTest(unittest.TestCase):
 
     def test_brain_masker(self):
 
-        affine, shape = BrainMasker.get_format_info_from_first_image(self.X)
+        affine, shape = BrainMask.get_format_info_from_first_image(self.X)
         atlas_obj = AtlasLibrary().get_atlas(self.atlas_name, affine, shape)
         roi_objects = BrainAtlas._get_rois(atlas_obj, which_rois=self.roi_list, background_id=0)
 
         for roi in roi_objects:
-            masker = BrainMasker(mask_image=roi, affine=affine, shape=shape, extract_mode="vec")
+            masker = BrainMask(mask_image=roi, affine=affine, shape=shape, extract_mode="vec")
             own_calculation = masker.transform(self.X[0])
             nilearn_func = NiftiMasker(mask_img=roi.mask, target_affine=affine, target_shape=shape, dtype='float32')
             nilearn_calculation = nilearn_func.fit_transform(self.X[0])
@@ -235,6 +237,11 @@ class NeuroTest(unittest.TestCase):
         nr_files_in_folder = len(glob.glob(os.path.join(nmb.base_element.cache_folder, "*.p")))
         self.assertTrue(nr_files_in_folder == (3 * len(self.X)) + 1)
         self.assertTrue(len(nmb.base_element.cache_man.cache_index.items()) == (3 * len(self.X)))
+
+    def neuro_branch_output_img(self):
+        # todo: check if we are always getting a 4d numpy array if no brain atlas or brain mask has been applied
+        # todo: check if we get a list of nifti images if we set output_image to True
+        pass
 
     def test_custom_mask(self):
         custom_mask = 'photonai/neuro/Atlases/Cerebellum/P_08_Cere.nii.gz'

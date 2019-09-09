@@ -1,0 +1,168 @@
+
+PHOTON RESULT SUMMARY
+-------------------------------------------------------------------
+
+ANALYSIS NAME: test_prediction_collection
+BEST CONFIG METRIC: mean_absolute_error
+TIME OF RESULT: 2019-09-06 20:08:11.998332
+
+        
+-------------------------------------------------------------------
+BASELINE - DUMMY ESTIMATOR
+(always predict mean or most frequent target)
+
+strategy: most_frequent     
+
+            
+TEST:
++-------------+------+-----+
+| Metric Name | MEAN | STD |
++-------------+------+-----+
++-------------+------+-----+
+                
+TRAINING:
++---------------------+--------+------------+
+|     Metric Name     |  MEAN  |    STD     |
++---------------------+--------+------------+
+| mean_absolute_error |  45.5  |  5.830952  |
+|  mean_squared_error | 2887.5 | 720.856435 |
++---------------------+--------+------------+
+                
+
+-------------------------------------------------------------------
+OVERALL BEST CONFIG: 
+{}            
+            
+MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
+        
+TEST:
++---------------------+--------+----------+
+|     Metric Name     |  MEAN  |   STD    |
++---------------------+--------+----------+
+| mean_absolute_error |  4.95  | 0.707107 |
+|  mean_squared_error | 32.835 | 7.197569 |
++---------------------+--------+----------+
+                
+TRAINING:
++---------------------+--------+----------+
+|     Metric Name     |  MEAN  |   STD    |
++---------------------+--------+----------+
+| mean_absolute_error |  4.95  | 0.707107 |
+|  mean_squared_error | 32.835 | 7.197569 |
++---------------------+--------+----------+
+                
+-------------------------------------------------------------------
+OUTER FOLD 1
+-------------------------------------------------------------------
+Best Config:
+{}
+
+Number of samples training 80
+Class distribution training {}
+Number of samples test 20
+Class distribution test {}
+
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+| mean_absolute_error |     5.95    |    5.95    |
+|  mean_squared_error |    40.735   |   40.735   |
++---------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 2
+-------------------------------------------------------------------
+Best Config:
+{}
+
+Number of samples training 80
+Class distribution training {}
+Number of samples test 20
+Class distribution test {}
+
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+| mean_absolute_error |     5.45    |    5.45    |
+|  mean_squared_error |    38.785   |   38.785   |
++---------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 3
+-------------------------------------------------------------------
+Best Config:
+{}
+
+Number of samples training 80
+Class distribution training {}
+Number of samples test 20
+Class distribution test {}
+
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+| mean_absolute_error |     4.95    |    4.95    |
+|  mean_squared_error |    34.835   |   34.835   |
++---------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 4
+-------------------------------------------------------------------
+Best Config:
+{}
+
+Number of samples training 80
+Class distribution training {}
+Number of samples test 20
+Class distribution test {}
+
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+| mean_absolute_error |     4.45    |    4.45    |
+|  mean_squared_error |    28.885   |   28.885   |
++---------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 5
+-------------------------------------------------------------------
+Best Config:
+{}
+
+Number of samples training 80
+Class distribution training {}
+Number of samples test 20
+Class distribution test {}
+
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+| mean_absolute_error |     3.95    |    3.95    |
+|  mean_squared_error |    20.935   |   20.935   |
++---------------------+-------------+------------+
+
+
+
+                

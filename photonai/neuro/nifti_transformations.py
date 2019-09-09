@@ -1,7 +1,6 @@
 import numpy as np
 
 from sklearn.base import BaseEstimator
-from skimage.util.shape import view_as_windows
 from nilearn.image import resample_img, smooth_img, index_img
 from nibabel.nifti1 import Nifti1Image
 
@@ -12,6 +11,7 @@ class NeuroTransformerMixin:
 
     def __init__(self):
         self.output_img = False
+
 
 # Smoothing
 class SmoothImages(BaseEstimator, NeuroTransformerMixin):
@@ -95,7 +95,10 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
 
         if self.output_img:
             if len(resampled_img.shape) == 3:
-                return resampled_img
+                if isinstance(resampled_img, (list, np.ndarray)):
+                    return resampled_img
+                else:
+                    return [resampled_img]
             else:
                 resampled_img = [index_img(resampled_img, i) for i in range(resampled_img.shape[-1])]
         else:
@@ -146,6 +149,8 @@ class PatchImages(BaseEstimator):
         if isinstance(patch_x, Nifti1Image):
             patch_x = np.ascontiguousarray(patch_x.dataobj)
 
+        # Todo: import is failing; why?
+        from skimage.util.shape import view_as_windows
         patches_drawn = view_as_windows(patch_x, (patch_size, patch_size, 1), step=1)
 
         patch_list_length = patches_drawn.shape[0]

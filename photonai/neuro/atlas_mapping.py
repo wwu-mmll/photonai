@@ -9,7 +9,7 @@ import os
 import json
 import joblib
 
-from photonai.neuro import NeuroBranch
+from photonai.neuro.neuro_branch import NeuroBranch
 from photonai.neuro.brain_atlas import BrainAtlas, AtlasLibrary
 from photonai.base.hyperpipe import Hyperpipe
 from photonai.base import PipelineElement
