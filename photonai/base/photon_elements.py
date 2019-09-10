@@ -308,23 +308,12 @@ class PipelineElement(BaseEstimator):
                 return None
         return X
 
-    # def fit_predict(self, data, targets):
-    #     if not self.disabled:
-    #         return self.base_element.fit_predict(data, targets)
-    #     else:
-    #         return data
-
     def __transform(self, X, y=None, **kwargs):
         if not self.disabled:
             if hasattr(self.base_element, 'transform'):
                 return self.adjusted_delegate_call(self.base_element.transform, X, y, **kwargs)
             elif hasattr(self.base_element, 'predict'):
-                # Logger().warn("used prediction instead of transform " + self.name)
-                # raise Warning()
-                # todo: here, I used delegate call instead to differentiate between estimator that need kwargs and those which don't
                 return self.predict(X, **kwargs), y, kwargs
-                #return self.base_element.predict(X), y, kwargs
-
             else:
                 Logger().error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
@@ -718,10 +707,14 @@ class Stack(PipelineElement):
             spread_params_dict[item_name].update(dict_entry)
 
         for name, params in spread_params_dict.items():
+            missing_element = (name, params)
             for element in self.elements:
                 if element.name == name:
                     element.set_params(**params)
-
+                    missing_element = None
+            if missing_element:
+                raise ValueError("Couldn't set hyperparameter for element {} -> {}".format(missing_element[0],
+                                                                                           missing_element[1]))
         return self
 
     def fit(self, X, y=None, **kwargs):
