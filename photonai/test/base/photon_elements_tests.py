@@ -415,3 +415,41 @@ class DataFilterTests(unittest.TestCase):
         self.assertTrue(np.array_equal(self.y, y_2))
         self.assertTrue(np.array_equal(Xt_1, self.X[:, :5]))
         self.assertTrue(np.array_equal(Xt_2, self.X[:, 5:10]))
+
+
+class CallbackElementTests(unittest.TestCase):
+
+    def setUp(self):
+        def callback(X, y=None, **kwargs):
+            print(X.shape)
+
+        self.X, self.y = load_breast_cancer(True)
+
+        self.clean_pipeline = PhotonPipeline(elements=[('PCA', PipelineElement('PCA')),
+                                                       ('LogisticRegression', PipelineElement('LogisticRegression'))])
+        self.callback_pipeline = PhotonPipeline(elements=[('First', CallbackElement('First', callback)),
+                                                          ('PCA', PipelineElement('PCA')),
+                                                          ('Second', CallbackElement('Second', callback)),
+                                                          ('LogisticRegression', PipelineElement('LogisticRegression')),
+                                                          ('Third', CallbackElement('Third', callback))])
+        self.clean_branch_pipeline = PhotonPipeline(elements=[('MyBranch',
+                                                               Branch('MyBranch', [PipelineElement('PCA')])),
+                                                              ('LogisticRegression',
+                                                               PipelineElement('LogisticRegression'))])
+        self.callback_branch_pipeline = PhotonPipeline(elements=[('First', CallbackElement('First', callback)),
+                                                                 ('MyBranch', Branch('MyBranch', [CallbackElement('Second',
+                                                                                                     callback),
+                                                                                     PipelineElement('PCA'),
+                                                                                     CallbackElement('Third',
+                                                                                                     callback)])),
+                                                                 ('Fourth', CallbackElement('Fourth', callback)),
+                                                                 ('LogisticRegression',
+                                                                  PipelineElement('LogisticRegression')),
+                                                                 ('Fifth', CallbackElement('Fifth', callback))])
+
+    def test_callback(self):
+        pipelines = [self.clean_pipeline, self.callback_pipeline, self.clean_branch_pipeline,
+                     self.callback_branch_pipeline]
+
+        for pipeline in pipelines:
+            pipeline.fit(self.X, self.y).predict(self.X)
