@@ -7,7 +7,7 @@ from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.datasets import load_breast_cancer
 
-from photonai.base import PipelineElement, Switch, Stack, Branch, Preprocessing
+from photonai.base import PipelineElement, Switch, Stack, Branch, Preprocessing, DataFilter, CallbackElement
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.test.base.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesEstimator, DummyNeedsCovariatesTransformer, DummyNeedsYTransformer, DummyTransformer, \
@@ -398,3 +398,20 @@ class StackTests(unittest.TestCase):
                 Xt_2 = np.reshape(Xt_2, (-1, 1))
 
             self.assertEqual(Xt.shape[1], Xt_1.shape[-1] + Xt_2.shape[-1])
+
+
+class DataFilterTests(unittest.TestCase):
+
+    def setUp(self):
+        self.X, self.y = load_breast_cancer(True)
+        self.filter_1 = DataFilter(indices=[0, 1, 2, 3, 4])
+        self.filter_2 = DataFilter(indices=[5, 6, 7, 8, 9])
+
+    def test_filter(self):
+        Xt_1, y_1, _ = self.filter_1.transform(self.X, self.y)
+        Xt_2, y_2, _ = self.filter_2.transform(self.X, self.y)
+
+        self.assertTrue(np.array_equal(self.y, y_1))
+        self.assertTrue(np.array_equal(self.y, y_2))
+        self.assertTrue(np.array_equal(Xt_1, self.X[:, :5]))
+        self.assertTrue(np.array_equal(Xt_2, self.X[:, 5:10]))
