@@ -77,16 +77,17 @@ class CacheManager:
     def _read_cache_index(self):
 
         if os.path.isfile(self.cache_file_name):
-            with open(self.cache_file_name, 'rb') as f:
-                # print("Reading cache index ")
-                try:
+            # print("Reading cache index ")
+            try:
+                with open(self.cache_file_name, 'rb') as f:
                     self.cache_index = pickle.load(f)
-                    # print(len(self.cache_index))
-                except EOFError as e:
-                    print("EOF Error... retrying!")
-                    print("Cache index loaded: " + str(self.cache_index))
-                    # retry...
-                    self._read_cache_index()
+                # print(len(self.cache_index))
+            except EOFError as e:
+                print(e)
+                print("EOF Error... retrying!")
+                print("Cache index loaded: " + str(self.cache_index))
+                # retry...
+                self._read_cache_index()
         else:
             self.cache_index = {}
 

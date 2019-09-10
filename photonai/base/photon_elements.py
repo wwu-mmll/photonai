@@ -146,6 +146,8 @@ class PipelineElement(BaseEstimator):
         Takes an instantiated object and encapsulates it into the PHOTON structure,
         add the disabled function and attaches information about the hyperparameters that should be tested
         """
+        if isinstance(base_element, type):
+            raise ValueError("Base element should be an instance but is a class.")
         return PipelineElement(name, hyperparameters, test_disabled, disabled, base_element=base_element, **kwargs)
 
     @property
