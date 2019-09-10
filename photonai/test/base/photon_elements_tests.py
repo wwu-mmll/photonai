@@ -341,16 +341,28 @@ class BranchTests(unittest.TestCase):
                        'MyBranch__StandardScaler__with_mean': True}
         self.assertDictEqual(config_grid, self.branch._hyperparameters)
 
+    def test_set_params(self):
+        config = {'PCA__n_components': 2,
+                  'PCA__disabled': True,
+                  'StandardScaler__with_mean': True}
+        self.branch.set_params(**config)
+        self.assertTrue(self.branch.base_element.elements[1][1].disabled)
+        self.assertEqual(self.branch.base_element.elements[1][1].base_element.n_components, 2)
+        self.assertEqual(self.branch.base_element.elements[0][1].base_element.with_mean, True)
+
+        with self.assertRaises(ValueError):
+            self.branch.set_params(**{'any_weird_param': 1})
+
 
 class StackTests(unittest.TestCase):
 
     def setUp(self):
         self.X, self.y = load_breast_cancer(True)
 
-        self.trans_1 = PipelineElement('PCA')
-        self.trans_2 = PipelineElement('StandardScaler')
-        self.est_1 = PipelineElement('SVC')
-        self.est_2 = PipelineElement('DecisionTreeClassifier')
+        self.trans_1 = PipelineElement('PCA', {'n_components': [5, 10]})
+        self.trans_2 = PipelineElement('StandardScaler', {'with_mean': [True]})
+        self.est_1 = PipelineElement('SVC', {'C': [1, 2]})
+        self.est_2 = PipelineElement('DecisionTreeClassifier', {'min_samples_leaf': [3, 5]})
 
         self.transformer_branch_1 = Branch('TransBranch1')
         self.transformer_branch_1 += self.trans_1
@@ -404,6 +416,30 @@ class StackTests(unittest.TestCase):
                 Xt_2 = np.reshape(Xt_2, (-1, 1))
 
             self.assertEqual(Xt.shape[1], Xt_1.shape[-1] + Xt_2.shape[-1])
+
+    def test_set_params(self):
+        trans_config = {'PCA__n_components': 2,
+                        'PCA__disabled': True,
+                        'StandardScaler__with_mean': True}
+        est_config = {'SVC__C': 3,
+                      'DecisionTreeClassifier__min_samples_leaf': 1}
+
+        # transformer stack
+        self.transformer_stack.set_params(**trans_config)
+        self.assertEqual(self.transformer_stack.elements[0].base_element.n_components, 2)
+        self.assertEqual(self.transformer_stack.elements[0].disabled, True)
+        self.assertEqual(self.transformer_stack.elements[1].base_element.with_mean, True)
+
+        # estimator stack
+        self.estimator_stack.set_params(**est_config)
+        self.assertEqual(self.estimator_stack.elements[0].base_element.C, 3)
+        self.assertEqual(self.estimator_stack.elements[1].base_element.min_samples_leaf, 1)
+
+        with self.assertRaises(ValueError):
+            self.estimator_stack.set_params(**{'any_weird_param': 1})
+
+        with self.assertRaises(ValueError):
+            self.transformer_stack.set_params(**{'any_weird_param': 1})
 
 
 class DataFilterTests(unittest.TestCase):
