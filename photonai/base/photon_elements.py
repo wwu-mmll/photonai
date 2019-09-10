@@ -49,8 +49,8 @@ class PipelineElement(BaseEstimator):
     # Registering Pipeline Elements
     ELEMENT_DICTIONARY = ElementDictionary.get_package_info()
 
-    def __init__(self, name, hyperparameters: dict=None, test_disabled: bool=False,
-                 disabled: bool =False, base_element=None, batch_size=0, **kwargs):
+    def __init__(self, name, hyperparameters: dict = None, test_disabled: bool = False,
+                 disabled: bool = False, base_element=None, batch_size=0, **kwargs):
         """
         Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
 
@@ -87,7 +87,6 @@ class PipelineElement(BaseEstimator):
         self.current_config = None
         self.batch_size = batch_size
 
-        # Todo: check if hyperparameters are members of the class
         # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
         # Todo: map any hyperparameter to a possible default list of values to try
         self.name = name
@@ -96,7 +95,8 @@ class PipelineElement(BaseEstimator):
         self._hyperparameters = hyperparameters
 
         # check if hyperparameters are members of the class
-        self._check_hyper(BaseEstimator)
+        if self.is_transformer or self.is_estimator:
+            self._check_hyperparameters(BaseEstimator)
 
         # self.initalize_hyperparameters = hyperparameters
         # check if hyperparameters are already in sklearn style
@@ -119,15 +119,16 @@ class PipelineElement(BaseEstimator):
         else:
             self.needs_covariates = False
 
-    def _check_hyper(self,BaseEstimator):
+    def _check_hyperparameters(self, BaseEstimator):
         # check if hyperparameters are members of the class
-        not_supp_hyper = list(
-            set([key.split("__")[-1] for key in self._hyperparameters.keys() if key.split("__")[-1]!="disabled"]) - set(BaseEstimator.get_params(self.base_element).keys()))
-        if not_supp_hyper:
-            Logger().error(
-                'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + str(not_supp_hyper))
-            raise ValueError(
-                'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + str(not_supp_hyper))
+        not_supported_hyperparameters = list(
+            set([key.split("__")[-1] for key in self._hyperparameters.keys() if key.split("__")[-1] != "disabled"]) -
+            set(BaseEstimator.get_params(self.base_element).keys()))
+        if not_supported_hyperparameters:
+            error_message = 'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + \
+                            str(not_supported_hyperparameters)
+            Logger().error(error_message)
+            raise ValueError(error_message)
 
     def copy_me(self):
         # TODO !!!!!!!
