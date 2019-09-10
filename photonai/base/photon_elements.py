@@ -463,7 +463,7 @@ class Branch(PipelineElement):
 
         """
 
-    def __init__(self, name):
+    def __init__(self, name, elements=None):
 
         super().__init__(name, {}, test_disabled=False, disabled=False, base_element=True)
 
@@ -477,6 +477,11 @@ class Branch(PipelineElement):
         # needed for caching on individual level
         self.fix_fold_id = False
         self.do_not_delete_cache_folder = False
+        
+        # add elements
+        if elements:
+            for element in elements:
+                self.add(element)
 
     def fit(self, X, y=None, **kwargs):
         return super().fit(X, y, **kwargs)
