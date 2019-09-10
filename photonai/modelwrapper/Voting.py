@@ -26,7 +26,6 @@ class PhotonVotingClassifier(BaseEstimator, ClassifierMixin):
         return [i[0] for i in mode_obj.mode]
 
 
-
 class PhotonVotingRegressor(BaseEstimator, RegressorMixin):
 
     def __init__(self, strategy='mean'):
