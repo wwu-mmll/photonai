@@ -553,7 +553,7 @@ class Branch(PipelineElement):
         """
         Setting hyperparameters does not make sense, only the items that added can be optimized, not the container (self)
         """
-        return None
+        return
 
     def generate_config_grid(self):
         if self.has_hyperparameters:
@@ -1103,8 +1103,6 @@ class Switch(PipelineElement):
         return X, y, kwargs
 
 
-
-
 class DataFilter(BaseEstimator):
     """
     Helper Class to split the data e.g. for stacking.
@@ -1124,6 +1122,10 @@ class DataFilter(BaseEstimator):
         Returns only part of the data, column-wise filtered by self.indices
         """
         return X[:, self.indices], y, kwargs
+
+    def copy_me(self):
+        return self.__class__(indices=self.indices)
+
 
 class CallbackElement(PhotonNative):
 

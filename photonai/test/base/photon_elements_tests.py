@@ -7,13 +7,45 @@ from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.datasets import load_breast_cancer
 
-from photonai.base import PipelineElement, Switch, Stack, Branch
+from photonai.base import PipelineElement, Switch, Stack, Branch, Preprocessing
+from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.test.base.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesEstimator, DummyNeedsCovariatesTransformer, DummyNeedsYTransformer, DummyTransformer, \
     DummyNeedsCovariatesAndYTransformer
 
 
-class PhotonElementsTests(unittest.TestCase):
+def elements_to_dict(elements):
+    if isinstance(elements, dict):
+        new_dict = dict()
+        for name, element in elements.items():
+            new_dict[name] = elements_to_dict(element)
+        elements = new_dict
+    elif isinstance(elements, list):
+        new_list = list()
+        for element in elements:
+            new_list.append(elements_to_dict(element))
+        elements = new_list
+    elif isinstance(elements, tuple):
+        new_list = list()
+        for element in elements:
+            new_list.append(elements_to_dict(element))
+        elements = tuple(new_list)
+    elif isinstance(elements, (Switch, Branch, Preprocessing, Stack, PhotonPipeline)):
+        new_dict = dict()
+        elements = elements.__dict__
+        for name, element in elements.items():
+            new_dict[name] = elements_to_dict(element)
+        elements = new_dict
+    elif isinstance(elements, PipelineElement):
+        new_dict = dict()
+        elements = elements.__dict__
+        if not isinstance(elements["base_element"], dict):
+            new_dict["base_element"] = elements["base_element"].__dict__
+        elements = new_dict
+    return elements
+
+
+class PipelineElementTests(unittest.TestCase):
 
     def setUp(self):
         self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True)
@@ -140,8 +172,22 @@ class PhotonElementsTests(unittest.TestCase):
         self.assertTrue(np.array_equal(kwargs['covariates'], self.kwargs['covariates']))
         self.assertEqual(y, None)
 
+    def test_copy_me(self):
+        svc = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        svc.set_params(**{'C': 0.1, 'kernel': 'sigmoid'})
+        copy = svc.copy_me()
+        self.assertNotEqual(copy.base_element, svc.base_element)
+        self.assertDictEqual(elements_to_dict(copy), elements_to_dict(svc))
+        self.assertEqual(copy.base_element.C, svc.base_element.C)
 
-class PipelineSwitchTests(unittest.TestCase):
+        svc = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        copy = svc.copy_me()
+        self.assertDictEqual(copy.hyperparameters, {'SVC__C': [0.1, 1], 'SVC__kernel': ['rbf', 'sigmoid']})
+        copy.base_element.C = 3
+        self.assertNotEqual(svc.base_element.C, copy.base_element.C)
+
+
+class SwitchTests(unittest.TestCase):
 
     def setUp(self):
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
@@ -219,44 +265,31 @@ class PipelineSwitchTests(unittest.TestCase):
         self.assertEqual(self.switch_in_switch.is_estimator, False)
 
     def test_copy_me(self):
-        # todo
-        copy = self.pipe_switch.copy_me()
-        self.maxDiff = None
-        info_original = self.pipe_switch.__dict__
-        info_copy = copy.__dict__
+        switches = [self.pipe_switch, self.pipe_switch_with_branch, self.pipe_transformer_switch_with_branch,
+                    self.switch_in_switch]
 
-        updated_element_dict = dict()
-        for name, element in info_original['elements_dict'].items():
-            updated_element_dict[name] = element.__dict__
+        for switch in switches:
+            copy = switch.copy_me()
 
-        updated_elements = list()
-        for element in info_original['elements']:
-            updated_elements.append(element.__dict__)
+            for i, element in enumerate(copy.elements):
+                self.assertNotEqual(copy.elements[i], switch.elements[i])
 
-        info_original['elements_dict'] = updated_element_dict
-        info_original['elements'] = updated_elements
+            switch = elements_to_dict(switch)
+            copy = elements_to_dict(copy)
 
-        updated_element_dict = dict()
-        for name, element in info_copy['elements_dict'].items():
-            updated_element_dict[name] = element.__dict__
-
-        updated_elements = list()
-        for element in info_copy['elements']:
-            updated_elements.append(element.__dict__)
-
-        info_copy['elements_dict'] = updated_element_dict
-        info_copy['elements'] = updated_elements
-
-        self.assertDictEqual(info_copy, info_original)
+            self.assertDictEqual(copy, switch)
 
 
-class PipelineBranchTests(unittest.TestCase):
+class BranchTests(unittest.TestCase):
 
     def setUp(self):
         self.X, self.y = load_breast_cancer(True)
-        self.ss_pipe_element = PipelineElement("StandardScaler")
+        self.ss_pipe_element = PipelineElement("StandardScaler", {'with_mean': True})
         self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True, random_state=3)
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']}, random_state=3)
+        self.branch = Branch('MyBranch')
+        self.branch += self.ss_pipe_element
+        self.branch += self.pca_pipe_element
 
     def test_easy_use_case(self):
         sk_pipe = SKPipeline([("SS", StandardScaler()), ("PCA", PCA(random_state=3)), ("SVC", SVC(random_state=3))])
@@ -279,42 +312,89 @@ class PipelineBranchTests(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             stacking_element += my_dummy
 
-    def test_stacking_of_branches(self):
-        branch1 = Branch("B1")
-        branch1.add(PipelineElement("StandardScaler"))
+    def test_copy_me(self):
+        branch = Branch('MyBranch')
+        branch += self.ss_pipe_element
+        branch += self.pca_pipe_element
 
-        branch2 = Branch("B2")
-        branch2.add(PipelineElement("PCA", random_state=3))
+        copy = branch.copy_me()
+        self.assertDictEqual(elements_to_dict(copy), elements_to_dict(branch))
 
-        stacking_element = Stack("Stack")
-        stacking_element += branch1
-        stacking_element += branch2
+        copy = branch.copy_me()
+        copy.elements[1].base_element.n_components = 3
+        self.assertNotEqual(copy.elements[1].base_element.n_components, branch.elements[1].base_element.n_components)
 
-        stacking_element.fit(self.X, self.y)
-        trans, _, _ = stacking_element.transform(self.X)
-        pred, _ = stacking_element.predict(self.X)
+        fake_copy = branch
+        fake_copy.elements[1].base_element.n_components = 3
+        self.assertEqual(fake_copy.elements[1].base_element.n_components, branch.elements[1].base_element.n_components)
 
-        self.assertTrue(np.array_equal(trans, pred))
-        ss = StandardScaler()
-        pca = PCA(random_state=3)
-        ss.fit(self.X, self.y)
-        X_ss = ss.transform(self.X)
-        pca.fit(self.X, self.y)
-        X_pca = pca.transform(self.X)
+    def test_prepare_pipeline(self):
+        self.assertEqual(len(self.branch.elements), 2)
+        config_grid = {'MyBranch__PCA__n_components': [1, 2],
+                       'MyBranch__PCA__disabled': [False, True],
+                       'MyBranch__StandardScaler__with_mean': True}
+        self.assertDictEqual(config_grid, self.branch._hyperparameters)
 
-        matrix = np.concatenate((X_ss, X_pca), axis=1)
 
-        self.assertTrue(np.array_equal(trans, matrix))
+class StackTests(unittest.TestCase):
 
-    def test_voting(self):
+    def setUp(self):
+        self.X, self.y = load_breast_cancer(True)
 
-        svc1 = PipelineElement("SVC", random_state=1)
-        svc2 = PipelineElement("SVC", random_state=1)
-        stack_obj = Stack("StackItem", voting=True)
-        stack_obj += svc1
-        stack_obj += svc2
+        self.trans_1 = PipelineElement('PCA')
+        self.trans_2 = PipelineElement('StandardScaler')
+        self.est_1 = PipelineElement('SVC')
+        self.est_2 = PipelineElement('DecisionTreeClassifier')
 
-        sk_svc1 = SVC()
-        sk_svc2 = SVC()
-        pass
+        self.transformer_branch_1 = Branch('TransBranch1')
+        self.transformer_branch_1 += self.trans_1
+        self.transformer_branch_2 = Branch('TransBranch2')
+        self.transformer_branch_2 += self.trans_2
 
+        self.estimator_branch_1 = Branch('EstBranch1')
+        self.estimator_branch_1 += self.est_1
+        self.estimator_branch_2 = Branch('EstBranch2')
+        self.estimator_branch_2 += self.est_2
+
+        self.transformer_stack = Stack('TransformerStack', [self.trans_1.copy_me(), self.trans_2.copy_me()])
+        self.estimator_stack = Stack('EstimatorStack', [self.est_1.copy_me(), self.est_2.copy_me()])
+        self.transformer_branch_stack = Stack('TransBranchStack', [self.transformer_branch_1.copy_me(),
+                                                                   self.transformer_branch_2.copy_me()])
+        self.estimator_branch_stack = Stack('EstBranchStack', [self.estimator_branch_1.copy_me(),
+                                                               self.estimator_branch_2.copy_me()])
+
+        self.stacks = [([self.trans_1, self.trans_2], self.transformer_stack),
+                       ([self.est_1, self.est_2], self.estimator_stack),
+                       ([self.transformer_branch_1, self.transformer_branch_2], self.transformer_branch_stack),
+                       ([self.estimator_branch_1, self.estimator_branch_2], self.estimator_branch_stack)]
+
+    def test_copy_me(self):
+        for stack in self.stacks:
+            stack = stack[1]
+            copy = stack.copy_me()
+            self.assertFalse(stack.elements[0].__dict__ == copy.elements[0].__dict__)
+            self.assertDictEqual(elements_to_dict(stack), elements_to_dict(copy))
+
+    def test_horizontal_stacking(self):
+        for stack in self.stacks:
+            element_1 = stack[0][0]
+            element_2 = stack[0][1]
+            stack = stack[1]
+
+            # fit elements
+            Xt_1 = element_1.fit(self.X, self.y).transform(self.X, self.y)
+            Xt_2 = element_2.fit(self.X, self.y).transform(self.X, self.y)
+
+            Xt = stack.fit(self.X, self.y).transform(self.X, self.y)
+
+            # output of transform() changes depending on whether it is an estimator stack or a transformer stack
+            if isinstance(Xt, tuple):
+                Xt = Xt[0]
+                Xt_1 = Xt_1[0]
+                Xt_2 = Xt_2[0]
+
+            if len(Xt_1.shape) == 1:
+                Xt_1 = np.reshape(Xt_1, (-1, 1))
+                Xt_2 = np.reshape(Xt_2, (-1, 1))
+
+            self.assertEqual(Xt.shape[1], Xt_1.shape[-1] + Xt_2.shape[-1])
