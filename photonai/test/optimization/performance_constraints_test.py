@@ -80,7 +80,7 @@ class PerformanceConstraintsTest(unittest.TestCase):
         """
         # reutnrs every times False if the metric does not exists
         self.minimum_performance.metric = "own_metric"
-        self.assertEqual(self.minimum_performance.shall_continue(self.dummy_config_item), False)
+        self.assertEqual(self.minimum_performance.shall_continue(self.dummy_config_item), True)
 
         # dummy_item with random values
         # score
@@ -128,12 +128,7 @@ class PerformanceConstraintsTest(unittest.TestCase):
         """
         self.dummy_performance.set_dummy_performance(self.dummy_config_item.inner_folds[0])
         new_dummy_performance = self.dummy_performance.copy_me()
-        self.assertEqual(new_dummy_performance.threshold, self.dummy_performance.threshold)
-        self.assertEqual(new_dummy_performance.metric, self.dummy_performance.metric)
-        self.assertEqual(new_dummy_performance.strategy, self.dummy_performance.strategy)
-        self.assertEqual(new_dummy_performance.margin, self.dummy_performance.margin)
+        self.assertDictEqual(new_dummy_performance.__dict__,self.dummy_performance.__dict__)
 
         new_minimum_performance = self.minimum_performance.copy_me()
-        self.assertEqual(new_minimum_performance.threshold, self.minimum_performance.threshold)
-        self.assertEqual(new_minimum_performance.metric, self.minimum_performance.metric)
-        self.assertEqual(new_minimum_performance.strategy, self.minimum_performance.strategy)
+        self.assertDictEqual(new_minimum_performance.__dict__,self.minimum_performance.__dict__)
