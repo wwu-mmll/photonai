@@ -1,4 +1,5 @@
 import numpy as np
+from photonai.photonlogger import Logger
 
 
 class PhotonHyperparam:
@@ -58,11 +59,14 @@ class NumberRange(PhotonHyperparam):
          - if range_type == "range":
            the end value is not included in the interval (see documentation of numpy.arange).
          - if range_type == "linspace"
-           the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.linspace).
+           the end value is included in the interval,
+           unless endpoint is set to False (see documentation of numpy.linspace).
         - if range_type == "logspace"
-           the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.logspace).
+           the end value is included in the interval,
+           unless endpoint is set to False (see documentation of numpy.logspace).
         - if range_type == "geomspace"
-           the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.logspace).
+           the end value is included in the interval,
+           unless endpoint is set to False (see documentation of numpy.logspace).
 
       * 'range_type' [str]:
          Which method to use for generating the number interval.
@@ -94,6 +98,7 @@ class NumberRange(PhotonHyperparam):
 
         self.start = start
         self.stop = stop
+        self._range_type = None
         self.range_type = range_type
         self.range_params = kwargs
         self.num_type = num_type
@@ -102,6 +107,12 @@ class NumberRange(PhotonHyperparam):
         self.num = num
 
     def transform(self):
+
+        if self.range_type == "geomspace" and self.start == 0:
+            raise ValueError("Geometric sequence cannot include zero")
+        if self.range_type == "range" and self.start > self.stop:
+            Logger().warn("NumberRange or one of its subclasses is empty cause np.arange "
+                          "does not deal with start greater than stop.")
 
         values = []
 
@@ -127,9 +138,22 @@ class NumberRange(PhotonHyperparam):
                 values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         # convert to python datatype because mongodb needs it
         if self.num_type == np.int32:
-            self.values = [int(i) for i in values]
+            self.values = list(set([int(i) for i in values]))
         elif self.num_type == np.float32:
-            self.values = [float(i) for i in values]
+            self.values = list(set([float(i) for i in values]))
+
+    @property
+    def range_type(self):
+        return self._range_type
+
+    @range_type.setter
+    def range_type(self, value):
+        range_types = ["range", "linspace", "logspace", "geomspace"]
+        if value in range_types:
+            self._range_type = value
+        else:
+            raise ValueError("Subclass of NumberRange supports only "+str(range_types)+" as range_type, not " +
+                             repr(value))
 
 
 class IntegerRange(NumberRange):
@@ -148,9 +172,11 @@ class IntegerRange(NumberRange):
             - if range_type == "range":
               the end value is not included in the interval (see documentation of numpy.arange).
             - if range_type == "linspace"
-              the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.linspace).
+              the end value is included in the interval,
+              unless endpoint is set to False (see documentation of numpy.linspace).
            - if range_type == "logspace"
-              the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.logspace).
+              the end value is included in the interval,
+              unless endpoint is set to False (see documentation of numpy.logspace).
 
          * 'range_type' [str]:
             Which method to use for generating the number interval.
@@ -171,7 +197,7 @@ class IntegerRange(NumberRange):
        """
 
     def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
-            super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
+        super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
 
 
 class FloatRange(NumberRange):
@@ -190,9 +216,11 @@ class FloatRange(NumberRange):
              - if range_type == "range":
                the end value is not included in the interval (see documentation of numpy.arange).
              - if range_type == "linspace"
-               the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.linspace).
+               the end value is included in the interval,
+               unless endpoint is set to False (see documentation of numpy.linspace).
             - if range_type == "logspace"
-               the end value is included in the interval, unless endpoint is set to False (see documentation of numpy.logspace).
+               the end value is included in the interval,
+               unless endpoint is set to False (see documentation of numpy.logspace).
 
           * 'range_type' [str]:
              Which method to use for generating the number interval.
