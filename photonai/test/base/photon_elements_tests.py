@@ -421,7 +421,12 @@ class CallbackElementTests(unittest.TestCase):
 
     def setUp(self):
         def callback(X, y=None, **kwargs):
-            print(X.shape)
+            self.assertEqual(X.shape, (569, 30))
+            print("Shape of transformed data: {}".format(X.shape))
+
+        def predict_callback(X, y=None, **kwargs):
+            self.assertEqual(X.shape, (569, ))
+            print('Shape of predictions: {}'.format(X.shape))
 
         self.X, self.y = load_breast_cancer(True)
 
@@ -431,7 +436,7 @@ class CallbackElementTests(unittest.TestCase):
                                                           ('PCA', PipelineElement('PCA')),
                                                           ('Second', CallbackElement('Second', callback)),
                                                           ('LogisticRegression', PipelineElement('LogisticRegression')),
-                                                          ('Third', CallbackElement('Third', callback))])
+                                                          ('Third', CallbackElement('Third', predict_callback))])
         self.clean_branch_pipeline = PhotonPipeline(elements=[('MyBranch',
                                                                Branch('MyBranch', [PipelineElement('PCA')])),
                                                               ('LogisticRegression',
@@ -445,7 +450,7 @@ class CallbackElementTests(unittest.TestCase):
                                                                  ('Fourth', CallbackElement('Fourth', callback)),
                                                                  ('LogisticRegression',
                                                                   PipelineElement('LogisticRegression')),
-                                                                 ('Fifth', CallbackElement('Fifth', callback))])
+                                                                 ('Fifth', CallbackElement('Fifth', predict_callback))])
 
     def test_callback(self):
         pipelines = [self.clean_pipeline, self.callback_pipeline, self.clean_branch_pipeline,
