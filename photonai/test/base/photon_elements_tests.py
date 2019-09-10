@@ -186,6 +186,12 @@ class PipelineElementTests(unittest.TestCase):
         copy.base_element.C = 3
         self.assertNotEqual(svc.base_element.C, copy.base_element.C)
 
+        # test custom element
+        custom_element = PipelineElement.create('CustomElement', base_element=DummyNeedsCovariatesEstimator(),
+                                                hyperparameters={})
+        copy = custom_element.copy_me()
+        self.assertDictEqual(elements_to_dict(custom_element), elements_to_dict(copy))
+
 
 class SwitchTests(unittest.TestCase):
 
