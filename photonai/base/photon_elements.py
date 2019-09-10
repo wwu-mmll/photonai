@@ -131,7 +131,6 @@ class PipelineElement(BaseEstimator):
             raise ValueError(error_message)
 
     def copy_me(self):
-        # TODO !!!!!!!
         if self.name in self.ELEMENT_DICTIONARY:
             copy = PipelineElement(self.name, self.hyperparameters, **self.kwargs)
         else:
@@ -140,12 +139,6 @@ class PipelineElement(BaseEstimator):
         if self.current_config is not None:
             copy.set_params(**self.current_config)
         return copy
-        # if hasattr(self.base_element, 'copy_me'):
-        #     # new_base_element = self.base_element.copy_me()
-
-        #     return PipelineElement(self.name, self.hyperparameters, **self.kwargs)
-        # else:
-        #     return deepcopy(self)
 
     @classmethod
     def create(cls, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False, **kwargs):
