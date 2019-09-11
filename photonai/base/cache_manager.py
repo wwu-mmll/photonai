@@ -3,11 +3,25 @@ import shutil
 import pickle
 import uuid
 import numpy as np
+import fcntl
+
+from contextlib import contextmanager
 
 from photonai.photonlogger import Logger
 
 
 class CacheManager:
+
+    M_READ, M_WRITE, M_READWRITE = range(3)
+    MODES = (
+        # open for reading
+        (os.O_RDONLY, fcntl.LOCK_SH, 'rb'),
+        # create for writing
+        (os.O_WRONLY | os.O_CREAT | os.O_TRUNC, fcntl.LOCK_EX, 'wb'),
+        # open for reading and writing
+        (os.O_RDWR | os.O_CREAT, fcntl.LOCK_EX, 'r+b')
+    )
+    BLOCKING_FLAGS = (fcntl.LOCK_NB, 0)
 
     def __init__(self, _hash=None, cache_folder=None):
         self._hash = _hash
@@ -53,11 +67,11 @@ class CacheManager:
         cache_name = 'photon_cache_index.p'
         self.cache_file_name = os.path.join(self.cache_folder, cache_name)
 
-        if self.lock is not None:
-            with self.lock.read_lock():
-                self._read_cache_index()
-        else:
-            self._read_cache_index()
+        # if self.lock is not None:
+        #     with self.lock.read_lock():
+        #         self._read_cache_index()
+        # else:
+        self._read_cache_index()
 
         self.pipe_order = pipe_elements
 
@@ -75,11 +89,11 @@ class CacheManager:
             self.state.nr_items = 1
 
     def _read_cache_index(self):
-
         if os.path.isfile(self.cache_file_name):
             # print("Reading cache index ")
             try:
-                with open(self.cache_file_name, 'rb') as f:
+                # with open(self.cache_file_name, 'rb') as f:
+                with CacheManager.locked_open(self.cache_file_name, CacheManager.M_READ) as f:
                     self.cache_index = pickle.load(f)
                 # print(len(self.cache_index))
             except EOFError as e:
@@ -147,21 +161,59 @@ class CacheManager:
         Logger().debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
                        + self.state.first_data_str + " - " + str(self.state.config))
 
+        # write cached data to filesystem
         with open(filename, 'wb') as f:
             pickle.dump(data, f)
 
     def save_cache_index(self):
-        if self.lock is not None:
-            with self.lock.write_lock():
-                self._write_cache_index()
-        else:
-            self._write_cache_index()
+        # if self.lock is not None:
+        #     with self.lock.write_lock():
+        #         self._write_cache_index()
+        # else:
+        self._write_cache_index()
 
     def _write_cache_index(self):
-        with open(self.cache_file_name, 'wb') as f:
+        # with open(self.cache_file_name, 'wb') as f:
+        with CacheManager.locked_open(self.cache_file_name, CacheManager.M_WRITE) as f:
             # print("Writing cache index")
             # print(self.cache_index)
             pickle.dump(self.cache_index, f)
+
+    def _read_cache_index(self):
+
+        if os.path.isfile(self.cache_file_name):
+            # with open(self.cache_file_name, 'rb') as f:
+            with CacheManager.locked_open(self.cache_file_name, CacheManager.M_READ) as f:
+                # print("Reading cache index ")
+                try:
+                    self.cache_index = pickle.load(f)
+                    # print(len(self.cache_index))
+                except EOFError as e:
+                    print("EOF Error... retrying!")
+                    print("Cache index loaded: " + str(self.cache_index))
+                    # retry...
+                    f.close()
+                    # self._read_cache_index()
+        else:
+            self.cache_index = {}
+
+    @contextmanager
+    def locked_open(filename, mode=M_READ, blocking=True):
+        open_mode, flock_flags, mode_str = CacheManager.MODES[mode]
+        flock_flags = flock_flags | CacheManager.BLOCKING_FLAGS[blocking]
+
+        fd = os.open(filename, open_mode)
+        try:
+            fcntl.flock(fd, flock_flags)
+            fileobj = os.fdopen(fd, mode_str)
+
+            try:
+                yield fileobj
+            finally:
+                fileobj.flush()
+                os.fdatasync(fd)
+        finally:
+            os.close(fd)
 
     def clear_cache(self):
         CacheManager.clear_cache_files(self.cache_folder)

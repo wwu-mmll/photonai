@@ -104,10 +104,11 @@ class AtlasLibrary:
         return roi_names
 
     def _add_atlas_to_library(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
-        print('Adding atlas to library: {} - Shape {} - Affine {} - Threshold {}'.format(atlas_name,
-                                                                                               target_shape,
-                                                                                               target_affine,
-                                                                                               mask_threshold))
+        # Todo: find solution for multiprocessing spaming
+        # print('Adding atlas to library: {} - Shape {} - Affine {} - Threshold {}'.format(atlas_name,
+        #                                                                                        target_shape,
+        #                                                                                        target_affine,
+        #                                                                                        mask_threshold))
 
         # load atlas object from photon_atlasses
         if atlas_name in self.photon_atlases.keys():
@@ -187,10 +188,11 @@ class AtlasLibrary:
         print("Done adding atlas to library!")
 
     def _add_mask_to_library(self, mask_name: str = '', target_affine=None, target_shape=None, mask_threshold=None):
-        print('Adding mask to library: {} - Shape {} - Affine {} - Threshold {}'.format(mask_name,
-                                                                                             target_shape,
-                                                                                             target_affine,
-                                                                                             mask_threshold))
+        # Todo: find solution for multiprocessing spaming
+        # print('Adding mask to library: {} - Shape {} - Affine {} - Threshold {}'.format(mask_name,
+        #                                                                                      target_shape,
+        #                                                                                      target_affine,
+        #                                                                                      mask_threshold))
 
         if mask_name in self.photon_masks.keys():
             original_mask_object = self.photon_masks[mask_name]

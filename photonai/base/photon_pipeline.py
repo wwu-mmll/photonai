@@ -109,6 +109,9 @@ class PhotonPipeline(_BaseComposition):
         -------
         self
         """
+        if self.current_config is not None and len(self.current_config) > 0:
+            if kwargs is not None and len(kwargs) == 0:
+                raise ValueError("Pipeline cannot set parameters to elements with an emtpy dictionary. Old values persist")
         self.current_config = kwargs
         self._set_params('elements', **kwargs)
 
@@ -429,7 +432,10 @@ class PhotonPipeline(_BaseComposition):
 
     @property
     def _estimator_type(self):
-        return self.elements[-1][1]._estimator_type
+        if hasattr(self.elements[-1][1], '_estimator_type'):
+            return self.elements[-1][1]._estimator_type
+        else:
+            return None
 
     @property
     def named_steps(self):

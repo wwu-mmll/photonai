@@ -9,11 +9,12 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.tree import DecisionTreeClassifier
+from sklearn.model_selection import KFold
 from sklearn.base import BaseEstimator
 
+from photonai.base import PipelineElement, Hyperpipe, Preprocessing
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.cache_manager import CacheManager
-from photonai.base import PipelineElement
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
 from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
@@ -79,6 +80,17 @@ class PipelineTests(unittest.TestCase):
         # sklearn pipeline does not offer a transform function
         # sk_transformed_X = sk_pipe.transform(X)
         # self.assertTrue(np.array_equal(photon_transformed_X, sk_transformed_X))
+
+    def test_add_preprocessing(self):
+        my_preprocessing = Preprocessing()
+        my_preprocessing += PipelineElement('LabelEncoder')
+        photon_pipe = PhotonPipeline([("PCA", self.p_pca), ("SVC", self.p_svm)])
+        photon_pipe._add_preprocessing(my_preprocessing)
+
+        self.assertEqual(len(photon_pipe.named_steps), 3)
+        first_element = photon_pipe.elements[0][1]
+        self.assertTrue(first_element == my_preprocessing)
+        self.assertTrue(photon_pipe.named_steps['Preprocessing'] == my_preprocessing)
 
     def test_no_estimator(self):
 
@@ -196,7 +208,10 @@ class CacheManagerTests(unittest.TestCase):
         self.assertEqual(relevant_items_hash, new_hash)
 
     def test_empty_config(self):
-        pass
+        self.cache_man.prepare(pipe_elements=self.item_names, X=self.X, config={})
+        relevant_items_hash = hash(frozenset({}.items()))
+        new_hash = self.cache_man._find_config_for_element("PCA")
+        self.assertEqual(relevant_items_hash, new_hash)
 
     def test_initial_transformation(self):
         self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
@@ -253,7 +268,7 @@ class CachedPhotonPipelineTests(unittest.TestCase):
 
         self.X, self.y = load_breast_cancer(True)
 
-    def test_saving(self):
+    def test_group_caching(self):
 
         CacheManager.clear_cache_files(self.pipe.cache_folder)
 
@@ -288,6 +303,30 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         self.assertTrue(np.array_equal(X_uc, X_2))
         self.assertTrue(np.array_equal(y_uc, y_2))
         self.assertTrue(np.array_equal(kwargs_uc, kwargs_2))
+
+        CacheManager.clear_cache_files(self.pipe.cache_folder)
+
+    def test_empty_hyperparameters(self):
+
+        CacheManager.clear_cache_files(self.pipe.cache_folder)
+
+        # test if one can use it when only default parameters are given and hyperparameter space is empty
+        self.pipe.set_params(**{})
+        self.pipe.fit(self.X, self.y)
+        X_new, y_new, kwargs_new = self.pipe.transform(self.X, self.y)
+        # one result should be cached ( one standard scaler output + one pca output + one index pickle file = 3)
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 3)
+
+        self.pipe.set_params(**{})
+        self.pipe.fit(self.X, self.y)
+        X_new2, y_new2, kwargs_new2 = self.pipe.transform(self.X, self.y)
+        # assert nothing happened in the cache folder
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 3)
+        self.assertTrue(np.array_equal(X_new, X_new2))
+        self.assertTrue(np.array_equal(y_new, y_new2))
+        self.assertTrue(np.array_equal(kwargs_new, kwargs_new2))
+
+        CacheManager.clear_cache_files(self.pipe.cache_folder)
 
     def test_single_subject_caching(self):
 
@@ -324,8 +363,7 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         transform_and_check_folder({'ResampleImages__voxel_size': 5}, (2 * nr_of_expected_pickles_per_config) +1)
 
         # clean up afterwards
-        CacheManager.clear_cache_files(self.pipe.cache_folder)
-
+        CacheManager.clear_cache_files(cache_folder)
 
     def test_combi_from_single_and_group_caching(self):
 
@@ -341,9 +379,10 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         cache_folder_neuro = os.path.join(cache_folder_base, 'subject_caching_test')
 
         CacheManager.clear_cache_files(cache_folder_base)
+        CacheManager.clear_cache_files(cache_folder_neuro)
 
         # 3. set up Neuro Branch
-        nb = NeuroBranch("SubjectCaching")
+        nb = NeuroBranch("SubjectCaching", nr_of_processes=3)
         # increase complexity by adding batching
         nb += PipelineElement("ResampleImages", batch_size=4)
         nb += PipelineElement("BrainMask", batch_size=4)
@@ -381,16 +420,58 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         # cache sub folder
         transform_and_check_folder(config1, 3, (2 * nr_of_expected_pickles_per_config) + 1)
 
-        # second config we expect to have a cached_file for the standard scaler, two for the first and second config
-        # pcas and the library, and we expect to have 2 * nr of input data for resampler plus one time masker + library for neuro
-        transform_and_check_folder(config2, 4, (3 * nr_of_expected_pickles_per_config) + 1)
+        # second config we expect to have two cached_file for the standard scaler (one time for 5 voxel input and one
+        # time for 3 vocel input, and two files two for the first and second config pcas and one for the cache index,
+        # and we expect to have 2 * nr of input data for resampler plus one time masker + library for neuro
+        transform_and_check_folder(config2, 5, (4 * nr_of_expected_pickles_per_config) + 1)
 
         # when we transform with the first config again, nothing should happen
-        transform_and_check_folder(config1, 4, (3 * nr_of_expected_pickles_per_config) + 1)
+        transform_and_check_folder(config1, 5, (4 * nr_of_expected_pickles_per_config) + 1)
 
-        # when we transform with an empty config, a new entry for pca should be generated, as well as a new cache item
-        # for each input data from the neuro branch
-        transform_and_check_folder({}, 5, (4 * nr_of_expected_pickles_per_config) + 1)
+        # when we transform with an empty config, a new entry for pca and standard scaler should be generated, as well
+        # as a new cache item for each input data from the neuro branch for each itemin the neuro branch
+        with self.assertRaises(ValueError):
+            transform_and_check_folder({}, 7, (6 * nr_of_expected_pickles_per_config) + 1)
 
-        # if we transform with an empty config again, the number of cached items should stay the same
-        transform_and_check_folder({}, 5, (4 * nr_of_expected_pickles_per_config) + 1)
+        CacheManager.clear_cache_files(cache_folder_base)
+        CacheManager.clear_cache_files(cache_folder_neuro)
+
+
+class CachedHyperpipeTests(unittest.TestCase):
+    import warnings
+    warnings.filterwarnings('ignore', category=DeprecationWarning)
+    warnings.filterwarnings('ignore', category=FutureWarning)
+
+    def test_neuro_hyperpipe_parallelized_batched_caching(self):
+
+        test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_data/')
+        X = AtlasLibrary().get_nii_files_from_folder(test_folder, extension=".nii")
+        y = np.random.randn(len(X))
+
+        cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data/cache')
+
+        self.hyperpipe = Hyperpipe('complex_case',
+                                   inner_cv=KFold(n_splits=5),
+                                   outer_cv=KFold(n_splits=3),
+                                   optimizer='grid_search',
+                                   cache_folder=cache_path,
+                                   metrics=['mean_squared_error'],
+                                   best_config_metric='mean_squared_error')
+
+        nb = NeuroBranch("SubjectCaching", nr_of_processes=3)
+        # increase complexity by adding batching
+        nb += PipelineElement("ResampleImages", {'voxel_size': [3, 5, 10]}, batch_size=4)
+        nb += PipelineElement("BrainMask", batch_size=4)
+
+        self.hyperpipe += nb
+
+        self.hyperpipe += PipelineElement("StandardScaler", {})
+        self.hyperpipe += PipelineElement("PCA", {'n_components': [3, 4]})
+        self.hyperpipe += PipelineElement("SVR", {'kernel': ['rbf', 'linear']})
+
+        self.hyperpipe.fit(X, y)
+
+        # assert cache is empty again
+        nr_of_p_files = len(glob.glob(os.path.join(self.hyperpipe.cache_folder, "*.p")))
+        print(nr_of_p_files)
+        self.assertTrue(nr_of_p_files == 0)

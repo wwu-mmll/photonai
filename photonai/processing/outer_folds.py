@@ -173,8 +173,8 @@ class OuterFoldManager:
 
                 # Print Result for config
                 Logger().debug('...done:')
-                Logger().verbose(self.optimization_info.best_config_metric + str(config_performance))
-                Logger().verbose('best config performance so far: ' + str(best_metric_yet))
+                Logger().info(self.optimization_info.best_config_metric + str(config_performance))
+                Logger().info('best config performance so far: ' + str(best_metric_yet))
             else:
                 config_performance = (-1, -1)
                 # Print Result for config
