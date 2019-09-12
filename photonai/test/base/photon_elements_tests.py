@@ -253,15 +253,16 @@ class PipelineElementTests(unittest.TestCase):
 class SwitchTests(unittest.TestCase):
 
     def setUp(self):
+        self.X, self.y = load_breast_cancer(True)
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
-        self.lr_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
-        self.pipe_switch = Switch('switch', [self.svc_pipe_element, self.lr_pipe_element])
+        self.tree_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
+        self.pipe_switch = Switch('switch', [self.svc_pipe_element.copy_me(), self.tree_pipe_element.copy_me()])
         self.branch = Branch('branch')
         self.branch += self.svc_pipe_element
         self.transformer_branch = Branch('transformer_branch')
         self.transformer_branch += PipelineElement('PCA')
         self.transformer = PipelineElement('PCA')
-        self.pipe_switch_with_branch = Switch('switch_with_branch', [self.lr_pipe_element, self.branch])
+        self.pipe_switch_with_branch = Switch('switch_with_branch', [self.tree_pipe_element, self.branch])
         self.pipe_transformer_switch_with_branch = Switch('transformer_switch_with_branch',
                                                           [self.transformer, self.transformer_branch])
         self.switch_in_switch = Switch('Switch_in_switch', [self.transformer_branch,
@@ -311,10 +312,16 @@ class SwitchTests(unittest.TestCase):
         self.assertEqual(self.pipe_switch.base_element.base_element.kernel, 'rbf')
 
     def test_fit(self):
-        pass
+        self.pipe_switch.set_params(**{'current_element': (1, 1)})
+        self.pipe_switch.fit(self.X, self.y)
+        self.tree_pipe_element.fit(self.X, self.y)
+        np.testing.assert_array_equal(self.tree_pipe_element.base_element.feature_importances_,
+                                      self.pipe_switch.base_element.feature_importances_)
 
     def test_transform(self):
-        pass
+        self.pipe_switch.set_params(**{'current_element': (1, 1)})
+        self.pipe_switch.fit(self.X, self.y)
+        self.tree_pipe_element.fit(self.X, self.y)
 
     def test_predict(self):
         pass
@@ -328,13 +335,13 @@ class SwitchTests(unittest.TestCase):
     def test_base_element(self):
         # grid search
         self.pipe_switch.set_params(**{'current_element': (1, 1)})
-        self.assertIs(self.pipe_switch.base_element, self.lr_pipe_element)
-        self.assertIs(self.pipe_switch.base_element.base_element, self.lr_pipe_element.base_element)
+        self.assertIs(self.pipe_switch.base_element, self.tree_pipe_element)
+        self.assertIs(self.pipe_switch.base_element.base_element, self.tree_pipe_element.base_element)
 
         # other optimizer
         self.pipe_switch.set_params(**{'DecisionTreeClassifier__min_samples_split': 2})
-        self.assertIs(self.pipe_switch.base_element, self.lr_pipe_element)
-        self.assertIs(self.pipe_switch.base_element.base_element, self.lr_pipe_element.base_element)
+        self.assertIs(self.pipe_switch.base_element, self.tree_pipe_element)
+        self.assertIs(self.pipe_switch.base_element.base_element, self.tree_pipe_element.base_element)
 
     def test_copy_me(self):
         switches = [self.pipe_switch, self.pipe_switch_with_branch, self.pipe_transformer_switch_with_branch,
