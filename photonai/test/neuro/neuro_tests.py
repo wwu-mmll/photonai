@@ -18,7 +18,8 @@ from sklearn.model_selection import ShuffleSplit
 class NeuroTest(unittest.TestCase):
 
     def setUp(self):
-        self.test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data/')
+        self.test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_data/')
+        self.atlas_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../neuro/atlases/')
         self.atlas_name = "AAL"
         self.roi_list = ["Hippocampus_R", "Hippocampus_L", "Amygdala_L", "Amygdala_R"]
         self.X = AtlasLibrary().get_nii_files_from_folder(self.test_folder, extension=".nii")
@@ -39,16 +40,16 @@ class NeuroTest(unittest.TestCase):
         resampler = PipelineElement('ResampleImages', hyperparameters={}, voxel_size=voxel_size, batch_size=1)
         single_resampled_img, _, _ = resampler.transform(self.X[0])
 
-        branch = NeuroBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch', output_img=True)
         branch += resampler
         branch_resampled_img, _, _ = branch.transform(self.X[0])
 
         # assert
         self.assertIsInstance(single_resampled_img, np.ndarray)
-        self.assertIsInstance(branch_resampled_img, Nifti1Image)
+        self.assertIsInstance(branch_resampled_img[0], Nifti1Image)
 
         self.assertTrue(np.array_equal(nilearn_resampled_array, single_resampled_img))
-        self.assertTrue(np.array_equal(single_resampled_img, branch_resampled_img.dataobj))
+        self.assertTrue(np.array_equal(single_resampled_img, branch_resampled_img[0].dataobj))
 
     def test_multi_subject_resampling(self):
         voxel_size = [3, 3, 3]
@@ -63,7 +64,7 @@ class NeuroTest(unittest.TestCase):
         resampler = PipelineElement('ResampleImages', hyperparameters={}, voxel_size=voxel_size)
         resampled_img, _, _ = resampler.transform(self.X[:3])
 
-        branch = NeuroBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch', output_img=True)
         branch += resampler
         branch_resampled_img, _, _ = branch.transform(self.X[:3])
 
@@ -86,7 +87,7 @@ class NeuroTest(unittest.TestCase):
         smoother = PipelineElement('SmoothImages', hyperparameters={}, fwhm=3, batch_size=1)
         photon_smoothed_array, _, _ = smoother.transform(self.X[0])
 
-        branch = NeuroBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch', output_img=True)
         branch += smoother
         photon_smoothed_img, _, _ = branch.transform(self.X[0])
 
@@ -107,7 +108,7 @@ class NeuroTest(unittest.TestCase):
         smoother = PipelineElement('SmoothImages', hyperparameters={}, fwhm=3)
         photon_smoothed_array, _, _ = smoother.transform(self.X[0:3])
 
-        branch = NeuroBranch('NeuroBranch')
+        branch = NeuroBranch('NeuroBranch', output_img=True)
         branch += smoother
         photon_smoothed_img, _, _ = branch.transform(self.X[0:3])
 
@@ -123,7 +124,7 @@ class NeuroTest(unittest.TestCase):
         brain_atlas = AtlasLibrary().get_atlas(self.atlas_name)
 
         # manually load brain atlas
-        man_map = image.load_img(os.path.dirname(inspect.getfile(BrainAtlas)) + '/Atlases/AAL_SPM12/AAL.nii.gz').get_data()
+        man_map = image.load_img(os.path.join(self.atlas_folder, 'AAL_SPM12/AAL.nii.gz')).get_data()
         self.assertTrue(np.array_equal(man_map, brain_atlas.map))
 
     def test_brain_masker(self):
@@ -244,7 +245,7 @@ class NeuroTest(unittest.TestCase):
         pass
 
     def test_custom_mask(self):
-        custom_mask = 'photonai/neuro/Atlases/Cerebellum/P_08_Cere.nii.gz'
+        custom_mask = os.path.join(self.atlas_folder, 'Cerebellum/P_08_Cere.nii.gz')
         mask = PipelineElement('BrainMask', mask_image=custom_mask, extract_mode='vec', batch_size=20)
         X_masked = mask.transform(self.X)
 
@@ -253,7 +254,7 @@ class NeuroTest(unittest.TestCase):
             mask.transform(self.X)
 
     def test_custom_atlas(self):
-        custom_atlas = 'photonai/neuro/Atlases/AAL_SPM12/AAL.nii.gz'
+        custom_atlas = os.path.join(self.atlas_folder, 'AAL_SPM12/AAL.nii.gz')
 
         atlas = PipelineElement('BrainAtlas', atlas_name=custom_atlas, extract_mode='vec', batch_size=20)
         X_masked = atlas.transform(self.X)
@@ -298,7 +299,7 @@ class NeuroTest(unittest.TestCase):
 
         # GET IMPORTANCE SCORES
         handler = ResultsHandler(pipe.results)
-        importance_scores_optimum_pipe = handler.results.optimum_pipe_feature_importances
+        importance_scores_optimum_pipe = handler.results.best_config_feature_importances
 
         manual_img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
         img = image.load_img('test_results/Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz')
