@@ -11,7 +11,7 @@ from photonai.base import PipelineElement, Switch, Stack, Branch, Preprocessing,
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.test.base.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesEstimator, DummyNeedsCovariatesTransformer, DummyNeedsYTransformer, DummyTransformer, \
-    DummyNeedsCovariatesAndYTransformer
+    DummyNeedsCovariatesAndYTransformer, DummyEstimatorNoPredict, DummyEstimatorWrongType, DummyTransformerWithPredict
 
 
 def elements_to_dict(elements):
@@ -192,6 +192,28 @@ class PipelineElementTests(unittest.TestCase):
         copy = custom_element.copy_me()
         self.assertDictEqual(elements_to_dict(custom_element), elements_to_dict(copy))
 
+    def test_estimator_type(self):
+        estimator = PipelineElement('SVC')
+        self.assertEqual(estimator._estimator_type, 'classifier')
+
+        estimator = PipelineElement('SVR')
+        self.assertEqual(estimator._estimator_type, 'regressor')
+
+        estimator = PipelineElement('PCA')
+        self.assertEqual(estimator._estimator_type, None)
+
+        estimator = PipelineElement.create('Dummy', DummyEstimatorWrongType(), {})
+        with self.assertRaises(NotImplementedError):
+            est_type = estimator._estimator_type
+
+        estimator = PipelineElement.create('Dummy', DummyTransformerWithPredict(), {})
+        with self.assertRaises(NotImplementedError):
+            est_type = estimator._estimator_type
+
+        estimator = PipelineElement.create('Dummy', DummyEstimatorNoPredict(), {})
+        with self.assertRaises(NotImplementedError):
+            est_type = estimator._estimator_type
+
 
 class SwitchTests(unittest.TestCase):
 
@@ -264,12 +286,6 @@ class SwitchTests(unittest.TestCase):
         self.assertIs(self.pipe_switch.base_element, self.lr_pipe_element)
         self.assertIs(self.pipe_switch.base_element.base_element, self.lr_pipe_element.base_element)
 
-    def test_estimator_transformer_check(self):
-        self.assertEqual(self.pipe_switch.is_estimator, True)
-        self.assertEqual(self.pipe_switch_with_branch.is_estimator, True)
-        self.assertEqual(self.pipe_transformer_switch_with_branch.is_estimator, False)
-        self.assertEqual(self.switch_in_switch.is_estimator, False)
-
     def test_copy_me(self):
         switches = [self.pipe_switch, self.pipe_switch_with_branch, self.pipe_transformer_switch_with_branch,
                     self.switch_in_switch]
@@ -284,6 +300,36 @@ class SwitchTests(unittest.TestCase):
             copy = elements_to_dict(copy)
 
             self.assertDictEqual(copy, switch)
+
+    def test_estimator_type(self):
+        pca = PipelineElement('PCA')
+        ica = PipelineElement('FastICA')
+        svc = PipelineElement('SVC')
+        svr = PipelineElement('SVR')
+        tree_class = PipelineElement('DecisionTreeClassifier')
+        tree_reg = PipelineElement('DecisionTreeRegressor')
+
+        switch = Switch('MySwitch', [pca, svr])
+        with self.assertRaises(NotImplementedError):
+            est_type = switch._estimator_type
+
+        switch = Switch('MySwitch', [svc, svr])
+        with self.assertRaises(NotImplementedError):
+            est_type = switch._estimator_type
+
+        switch = Switch('MySwitch', [pca, ica])
+        self.assertEqual(switch._estimator_type, None)
+
+        switch = Switch('MySwitch', [tree_class, svc])
+        self.assertEqual(switch._estimator_type, 'classifier')
+
+        switch = Switch('MySwitch', [tree_reg, svr])
+        self.assertEqual(switch._estimator_type, 'regressor')
+
+        self.assertEqual(self.pipe_switch._estimator_type, 'classifier')
+        self.assertEqual(self.pipe_switch_with_branch._estimator_type, 'classifier')
+        self.assertEqual(self.pipe_transformer_switch_with_branch._estimator_type, None)
+        self.assertEqual(self.switch_in_switch._estimator_type, None)
 
 
 class BranchTests(unittest.TestCase):
@@ -352,6 +398,20 @@ class BranchTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.branch.set_params(**{'any_weird_param': 1})
+
+    def test_estimator_type(self):
+        def callback(X, y=None):
+            pass
+
+        transformer_branch = Branch('TransBranch', [PipelineElement('PCA'), PipelineElement('FastICA')])
+        classifier_branch = Branch('ClassBranch', [PipelineElement('SVC')])
+        regressor_branch = Branch('RegBranch', [PipelineElement('SVR')])
+        callback_branch = Branch('CallBranch', [PipelineElement('SVR'), CallbackElement('callback', callback)])
+
+        self.assertEqual(transformer_branch._estimator_type, None)
+        self.assertEqual(classifier_branch._estimator_type, 'classifier')
+        self.assertEqual(regressor_branch._estimator_type, 'regressor')
+        self.assertEqual(callback_branch._estimator_type, None)
 
 
 class StackTests(unittest.TestCase):
