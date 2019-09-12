@@ -244,7 +244,7 @@ class NeuroTest(unittest.TestCase):
         pass
 
     def test_custom_mask(self):
-        custom_mask = 'photonai/neuro/Atlases/Cerebellum/P_08_Cere.nii.gz'
+        custom_mask = 'photonai/neuro/atlases/Cerebellum/P_08_Cere.nii.gz'
         mask = PipelineElement('BrainMask', mask_image=custom_mask, extract_mode='vec', batch_size=20)
         X_masked = mask.transform(self.X)
 
@@ -253,7 +253,7 @@ class NeuroTest(unittest.TestCase):
             mask.transform(self.X)
 
     def test_custom_atlas(self):
-        custom_atlas = 'photonai/neuro/Atlases/AAL_SPM12/AAL.nii.gz'
+        custom_atlas = 'photonai/neuro/atlases/AAL_SPM12/AAL.nii.gz'
 
         atlas = PipelineElement('BrainAtlas', atlas_name=custom_atlas, extract_mode='vec', batch_size=20)
         X_masked = atlas.transform(self.X)
