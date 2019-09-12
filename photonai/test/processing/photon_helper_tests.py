@@ -4,8 +4,8 @@ import numpy as np
 
 from sklearn.datasets import load_breast_cancer
 
-from photonai.processing import FoldInfo
-from photonai.base import PhotonDataHelper
+from photonai.processing.photon_folds import FoldInfo
+from photonai.base.helper import PhotonDataHelper
 
 
 class FoldInfoTests(unittest.TestCase):
