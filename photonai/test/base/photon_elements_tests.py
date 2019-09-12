@@ -73,6 +73,41 @@ class PipelineElementTests(unittest.TestCase):
         # correct name
         self.assertEqual(self.pca_pipe_element.name, 'PCA')
 
+    def test_fit(self):
+        self.pca_pipe_element.fit(self.X, self.y)
+        self.assertEqual(self.pca_pipe_element.base_element.components_.shape, (30, 30))
+        self.assertEqual(self.pca_pipe_element.base_element.components_[0, 0], 0.005086232018734175)
+
+        self.svc_pipe_element.fit(self.X, self.y)
+        self.assertEqual(self.svc_pipe_element.base_element._intercept_, -0.3753900173819406)
+
+    def test_transform(self):
+        self.pca_pipe_element.fit(self.X, self.y)
+
+        Xt, _, _ = self.pca_pipe_element.transform(self.X)
+        self.assertEqual(Xt.shape, (569, 30))
+        self.assertEqual(Xt[0, 0], 1160.1425737041347)
+
+    def test_predict(self):
+        self.svc_pipe_element.fit(self.X, self.y)
+
+        yt = self.svc_pipe_element.predict(self.X)
+        self.assertEqual(yt.shape, (569,))
+        self.assertEqual(yt[21], 1)
+
+    def test_predict_proba(self):
+        self.svc_pipe_element.fit(self.X, self.y)
+        self.assertEqual(self.svc_pipe_element.predict_proba(self.X), None)
+
+        gpc = PipelineElement('GaussianProcessClassifier')
+        gpc.fit(self.X, self.y)
+        self.assertTrue(np.array_equal(gpc.predict_proba(self.X)[0], np.asarray([0.5847072926551391, 0.4152927073448609])))
+
+    def test_inverse_transform(self):
+        Xt, _, _ = self.pca_pipe_element.fit(self.X, self.y).transform(self.X)
+        X, _, _ = self.pca_pipe_element.inverse_transform(Xt)
+        np.testing.assert_array_almost_equal(X, self.X)
+
     def test_one_hyperparameter_setup(self):
         # sklearn attributes are generated
         self.assertDictEqual(self.pca_pipe_element.hyperparameters, {'PCA__n_components': [1, 2],
@@ -275,6 +310,21 @@ class SwitchTests(unittest.TestCase):
         self.assertEqual(self.pipe_switch.base_element.base_element.C, 2)
         self.assertEqual(self.pipe_switch.base_element.base_element.kernel, 'rbf')
 
+    def test_fit(self):
+        pass
+
+    def test_transform(self):
+        pass
+
+    def test_predict(self):
+        pass
+
+    def test_predict_proba(self):
+        pass
+
+    def test_inverse_transform(self):
+        pass
+
     def test_base_element(self):
         # grid search
         self.pipe_switch.set_params(**{'current_element': (1, 1)})
@@ -331,6 +381,23 @@ class SwitchTests(unittest.TestCase):
         self.assertEqual(self.pipe_transformer_switch_with_branch._estimator_type, None)
         self.assertEqual(self.switch_in_switch._estimator_type, None)
 
+    def test_add(self):
+        self.assertEqual(len(self.pipe_switch.elements), 2)
+        self.assertEqual(len(self.switch_in_switch.elements), 2)
+        self.assertEqual(len(self.pipe_transformer_switch_with_branch.elements), 2)
+
+        self.assertEqual(list(self.pipe_switch.elements_dict.keys()), ['SVC', 'DecisionTreeClassifier'])
+        self.assertEqual(list(self.switch_in_switch.elements_dict.keys()), ['transformer_branch',
+                                                                      'transformer_switch_with_branch'])
+
+        switch = Switch('MySwitch', [PipelineElement('PCA'), PipelineElement('FastICA')])
+        switch = Switch('MySwitch')
+        switch += PipelineElement('PCA')
+        switch += PipelineElement('FastICA')
+
+        with self.assertRaises(Exception):
+            self.pipe_switch += self.pipe_switch.elements[0]
+
 
 class BranchTests(unittest.TestCase):
 
@@ -356,6 +423,21 @@ class BranchTests(unittest.TestCase):
         branch_pred = branch.predict(self.X)
 
         self.assertTrue(np.array_equal(sk_pred, branch_pred))
+
+    def test_fit(self):
+        pass
+
+    def test_transform(self):
+        pass
+
+    def test_predict(self):
+        pass
+
+    def test_predict_proba(self):
+        pass
+
+    def test_inverse_transform(self):
+        pass
 
     def test_no_y_transformers(self):
         stacking_element = Stack("forbidden_stack")
@@ -412,6 +494,16 @@ class BranchTests(unittest.TestCase):
         self.assertEqual(classifier_branch._estimator_type, 'classifier')
         self.assertEqual(regressor_branch._estimator_type, 'regressor')
         self.assertEqual(callback_branch._estimator_type, None)
+
+    def test_add(self):
+        branch = Branch('MyBranch', [PipelineElement('PCA', {'n_components': [5]}), PipelineElement('FastICA')])
+        self.assertEqual(len(branch.elements), 2)
+        self.assertDictEqual(branch._hyperparameters, {'MyBranch__PCA__n_components': [5]})
+        branch = Branch('MyBranch')
+        branch += PipelineElement('PCA', {'n_components': [5]})
+        branch += PipelineElement('FastICA')
+        self.assertEqual(len(branch.elements), 2)
+        self.assertDictEqual(branch._hyperparameters, {'MyBranch__PCA__n_components': [5]})
 
 
 class StackTests(unittest.TestCase):
@@ -477,6 +569,21 @@ class StackTests(unittest.TestCase):
 
             self.assertEqual(Xt.shape[1], Xt_1.shape[-1] + Xt_2.shape[-1])
 
+    def test_fit(self):
+        pass
+
+    def test_transform(self):
+        pass
+
+    def test_predict(self):
+        pass
+
+    def test_predict_proba(self):
+        pass
+
+    def test_inverse_transform(self):
+        pass
+
     def test_set_params(self):
         trans_config = {'PCA__n_components': 2,
                         'PCA__disabled': True,
@@ -500,6 +607,25 @@ class StackTests(unittest.TestCase):
 
         with self.assertRaises(ValueError):
             self.transformer_stack.set_params(**{'any_weird_param': 1})
+
+    def test_add(self):
+        stack = Stack('MyStack', [PipelineElement('PCA', {'n_components': [5]}), PipelineElement('FastICA')])
+        self.assertEqual(len(stack.elements), 2)
+        self.assertDictEqual(stack._hyperparameters, {'MyStack__PCA__n_components': [5]})
+        stack = Stack('MyStack')
+        stack += PipelineElement('PCA', {'n_components': [5]})
+        stack += PipelineElement('FastICA')
+        self.assertEqual(len(stack.elements), 2)
+        self.assertDictEqual(stack._hyperparameters, {'MyStack__PCA__n_components': [5]})
+
+        def callback(X, y=None):
+            pass
+
+        stack = Stack('MyStack', [PipelineElement('PCA'),
+                                  CallbackElement('MyCallback', callback),
+                                  Switch('MySwitch', [PipelineElement('PCA'), PipelineElement('FastICA')]),
+                                  Branch('MyBranch', [PipelineElement('PCA')])])
+        self.assertEqual(len(stack.elements), 4)
 
 
 class DataFilterTests(unittest.TestCase):
