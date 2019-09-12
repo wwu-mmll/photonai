@@ -3,7 +3,6 @@ import numpy as np
 import datetime
 import os
 
-
 from photonai.base.cache_manager import CacheManager
 from photonai.base.helper import PhotonDataHelper
 
@@ -177,9 +176,10 @@ class PhotonPipeline(_BaseComposition):
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs)
 
         if self._final_estimator is not None:
-            if self._final_estimator.is_transformer and not self._final_estimator.is_estimator:
+            if self._estimator_type is None:
                 if self.caching and self.current_config is not None:
-                    X, y, kwargs = self.load_or_save_cached_data(self._final_estimator.name, X, y, kwargs, self._final_estimator,
+                    X, y, kwargs = self.load_or_save_cached_data(self._final_estimator.name, X, y, kwargs,
+                                                                 self._final_estimator,
                                                                  initial_X=initial_X)
                 else:
                     X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
@@ -431,19 +431,16 @@ class PhotonPipeline(_BaseComposition):
         raise NotImplementedError('fit_predict not yet implemented in PHOTON Pipeline')
 
     @property
-    def _estimator_type(self):
-        if hasattr(self.elements[-1][1], '_estimator_type'):
-            return self.elements[-1][1]._estimator_type
-        else:
-            return None
-
-    @property
     def named_steps(self):
         return dict(self.elements)
 
     @property
     def _final_estimator(self):
         return self.elements[-1][1]
+
+    @property
+    def _estimator_type(self):
+        return getattr(self._final_estimator, '_estimator_type')
 
     def clear_cache(self):
         if self.cache_man is not None:
