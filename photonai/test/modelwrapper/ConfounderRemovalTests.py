@@ -7,7 +7,7 @@ import statsmodels.api as sm
 from scipy.stats import norm
 from scipy.linalg import cholesky
 
-from photonai.base import Hyperpipe, PipelineElement
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 
 
 class ConfounderRemovalTests(unittest.TestCase):
@@ -18,8 +18,9 @@ class ConfounderRemovalTests(unittest.TestCase):
         self.X_train = self.X[:100]
         self.y_train = self.y[:100]
         self.shuffle_split = ShuffleSplit(test_size=0.2, n_splits=1, random_state=15)
+        settings = OutputSettings(project_folder= './test_results/')
         self.pipe = Hyperpipe("confounder_pipe", outer_cv=self.shuffle_split, inner_cv= KFold(n_splits=3, random_state=15),
-                              metrics=["accuracy"], best_config_metric="accuracy")
+                              metrics=["accuracy"], best_config_metric="accuracy", output_settings=settings)
         self.pipe += PipelineElement("StandardScaler")
         self.cr = PipelineElement("ConfounderRemoval")
         self.pipe += self.cr
