@@ -119,6 +119,22 @@ class PipelineElement(BaseEstimator):
         else:
             self.needs_covariates = False
 
+    @property
+    def _estimator_type(self):
+        if hasattr(self.base_element, '_estimator_type'):
+            est_type = getattr(self.base_element, '_estimator_type')
+            if est_type is not 'classifier' and est_type is not 'regressor':
+                raise NotImplementedError("Currently, we only support type classifier or regressor. Is {}.".format(est_type))
+            if not hasattr(self.base_element, 'predict'):
+                raise NotImplementedError("Estimator does not implement predict() method.")
+            return est_type
+        else:
+            if hasattr(self.base_element, 'predict'):
+                raise NotImplementedError("Element has predict() method but does not specify whether it is a regressor "
+                                          "or classifier. Remember to inherit from ClassifierMixin or RegressorMixin.")
+            else:
+                return None
+
     def _check_hyperparameters(self, BaseEstimator):
         # check if hyperparameters are members of the class
         not_supported_hyperparameters = list(
@@ -545,6 +561,10 @@ class Branch(PipelineElement):
         """
         return
 
+    @property
+    def _estimator_type(self):
+        return getattr(self.elements[-1], '_estimator_type')
+
     def generate_config_grid(self):
         if self.has_hyperparameters:
             tmp_grid = create_global_config_grid(self.elements, self.name)
@@ -614,7 +634,7 @@ class Stack(PipelineElement):
     and horizontally concatenated.
 
     """
-    def __init__(self, name: str, elements=None, voting: bool=False):
+    def __init__(self, name: str, elements=None):
         """
         Creates a new Stack element.
         Collects all possible hyperparameter combinations of the children
@@ -633,7 +653,6 @@ class Stack(PipelineElement):
 
         self._hyperparameters = {}
         self.elements = list()
-        self.voting = voting
         if elements is not None:
             for item_to_stack in elements:
                 self.__iadd__(item_to_stack)
@@ -774,7 +793,7 @@ class Stack(PipelineElement):
         return transformed_data, y, kwargs
 
     def copy_me(self):
-        ps = Stack(self.name, voting=self.voting)
+        ps = Stack(self.name)
         for element in self.elements:
             new_element = element.copy_me()
             ps += new_element
@@ -813,6 +832,10 @@ class Stack(PipelineElement):
 
     def inverse_transform(self, X, y, **kwargs):
         raise NotImplementedError("Inverse Transform is not yet implemented for a Stacking Element in PHOTON")
+
+    @property
+    def _estimator_type(self):
+        return None
 
     def _check_hyper(self,BaseEstimator):
         pass
@@ -859,7 +882,6 @@ class Switch(PipelineElement):
         self._hyperparameters = {}
         self._current_element = (1, 1)
         self.pipeline_element_configurations = []
-        self._estimator_type = 'regressor'
         self.base_element = None
         self.disabled = False
         self.test_disabled = False
@@ -875,26 +897,11 @@ class Switch(PipelineElement):
 
         if elements:
             self.elements = elements
-            self.is_transformer, self.is_estimator = self.check_if_estimator_or_transformer(elements[-1])
             self.generate_private_config_grid()
             for p_element in elements:
                 self.elements_dict[p_element.name] = p_element
         else:
             self.elements = []
-
-    def check_if_estimator_or_transformer(self, pipeline_element):
-        if isinstance(pipeline_element, Branch):
-            return self.check_if_estimator_or_transformer(pipeline_element.elements[-1])
-        elif isinstance(pipeline_element, Switch):
-            return self.check_if_estimator_or_transformer(pipeline_element.elements[0])
-        elif isinstance(pipeline_element, Stack):
-            return self.check_if_estimator_or_transformer(pipeline_element.elements[0])
-        elif isinstance(pipeline_element, PipelineElement):
-            if hasattr(pipeline_element, "is_estimator"):
-                return (not pipeline_element.is_estimator, pipeline_element.is_estimator)
-            else:
-                # assuming Switch to be estimator
-                return False, True
 
     def __iadd__(self, pipeline_element):
         """
@@ -905,8 +912,6 @@ class Switch(PipelineElement):
         * `pipeline_element` [PipelineElement]:
             Item that should be tested against other competing elements at that position in the pipeline.
         """
-        self.is_transformer, self.is_estimator = self.check_if_estimator_or_transformer(pipeline_element)
-
         self.elements.append(pipeline_element)
         if not pipeline_element.name in self.elements_dict:
             self.elements_dict[pipeline_element.name] = pipeline_element
@@ -976,17 +981,6 @@ class Switch(PipelineElement):
     def current_element(self, value):
         self._current_element = value
         self.base_element = self.elements[self.current_element[0]]
-        # pass the right config to the element
-        # config = self.pipeline_element_configurations[value[0]][value[1]]
-        # self.base_element.set_params(config)
-    #
-    # @property
-    # def base_element(self):
-    #     """
-    #     Returns the currently active element
-    #     """
-    #     obj = self.elements[self.current_element[0]]
-    #     return obj
 
     def get_params(self, deep: bool=True):
         if self.base_element:
@@ -1096,6 +1090,21 @@ class Switch(PipelineElement):
             X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
         return X, y, kwargs
 
+    @property
+    def _estimator_type(self):
+        estimator_types = list()
+        for element in self.elements:
+            estimator_types.append(getattr(element, '_estimator_type'))
+
+        unique_types = set(estimator_types)
+        if len(unique_types) > 1:
+            raise NotImplementedError("Switch should only contain elements of a single type (transformer, classifier, "
+                                      "regressor). Found multiple types: {}".format(unique_types))
+        elif len(unique_types) == 1:
+            return list(unique_types)[0]
+        else:
+            return None
+
 
 class DataFilter(BaseEstimator):
     """
@@ -1119,6 +1128,10 @@ class DataFilter(BaseEstimator):
 
     def copy_me(self):
         return self.__class__(indices=self.indices)
+
+    @property
+    def _estimator_type(self):
+        return None
 
 
 class CallbackElement(PhotonNative):
@@ -1150,5 +1163,7 @@ class CallbackElement(PhotonNative):
     def inverse_transform(self, X, y=None, **kwargs):
         return X, y, kwargs
 
-
+    @property
+    def _estimator_type(self):
+        return None
 
