@@ -294,7 +294,6 @@ class Hyperpipe(BaseEstimator):
         self.results_handler = None
         self.results = None
         self.best_config = None
-        self.estimation_type = None
 
         # ====================== Pipeline ===========================
         self.elements = []
@@ -556,15 +555,14 @@ class Hyperpipe(BaseEstimator):
 
     def _prepare_dummy_estimator(self):
         Logger().info("Running Dummy Estimator.")
-        est_type = self.estimation_type
 
         # Run Dummy Estimator
         self.results.dummy_estimator = MDBDummyResults()
 
-        if est_type == 'regressor':
+        if self.estimation_type == 'regressor':
             self.results.dummy_estimator.strategy = 'mean'
             return DummyRegressor(strategy=self.results.dummy_estimator.strategy)
-        elif est_type == 'classifier':
+        elif self.estimation_type == 'classifier':
             self.results.dummy_estimator.strategy = 'most_frequent'
             return DummyClassifier(strategy=self.results.dummy_estimator.strategy)
         else:
@@ -823,23 +821,13 @@ class Hyperpipe(BaseEstimator):
             self.data.X, self.data.y, self.data.kwargs = self.preprocessing.transform(self.data.X, self.data.y,
                                                                                       **self.data.kwargs)
 
-    def _check_for_estimator(self, last_element=None):
-        if not last_element:
-            last_element = self.elements[-1]
-        if isinstance(last_element, (Switch, Stack, Branch)):
-            # if Switch, just take the first element within the switch; this should be a regressor or classifier
-            self._check_for_estimator(last_element.elements[-1])
+    @property
+    def estimation_type(self):
+        estimation_type = getattr(self.elements[-1], '_estimator_type')
+        if estimation_type is None:
+            raise NotImplementedError("Last element in Hyperpipe should be an estimator.")
         else:
-            if not hasattr(last_element.base_element, '_estimator_type'):
-                raise NotImplementedError("Last pipeline element has to be an estimator. Your estimator does not specify"
-                                          " whether it is a regressor or classifier. Make sure to inherit from sklearn's "
-                                          "ClassifierMixin or RegressorMixin or set _estimator_type explicitly.")
-            estimator_type = last_element.base_element._estimator_type
-            last_name = last_element.name
-            self.estimation_type = estimator_type
-            if not (estimator_type == 'classifier' or estimator_type == 'regressor'):
-                raise NotImplementedError("Last pipeline element has to be an estimator. {} is a {}.".format(last_name,
-                                                                                                         estimator_type))
+            return estimation_type
 
     def fit(self, data, targets, **kwargs):
         """
@@ -873,7 +861,6 @@ class Hyperpipe(BaseEstimator):
         try:
 
             self._input_data_sanity_checks(data, targets, **kwargs)
-            self._check_for_estimator()
             self.preprocess_data()
             Logger().set_verbosity(self.verbosity)
 

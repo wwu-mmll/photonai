@@ -89,3 +89,37 @@ class DummyNeedsCovariatesAndYTransformer(BaseEstimator, TransformerMixin):
 
     def transform(self, X, y, **kwargs):
         return X + 1, y + 1, {'covariates': kwargs['covariates'] + 1}
+
+
+class DummyEstimatorWrongType(BaseEstimator):
+    _estimator_type = 'clusterer'
+
+    def __init__(self):
+        pass
+
+    def fit(self, X, y, **kwargs):
+        return self
+
+    def predict(self, X, **kwargs):
+        return X
+
+
+class DummyTransformerWithPredict(BaseEstimator, TransformerMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y, **kwargs):
+        return self
+
+    def predict(self, X, **kwargs):
+        return X
+
+
+class DummyEstimatorNoPredict(BaseEstimator, RegressorMixin):
+    def __init__(self):
+        pass
+
+    def fit(self, X, y, **kwargs):
+        return self
+
+

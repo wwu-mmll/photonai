@@ -40,7 +40,7 @@ pipe = Hyperpipe('Limbic_System',
                  eval_final_performance=True)
 
 batch_size = 100
-neuro_branch = NeuroBranch('NeuroBranch')#, nr_of_processes=4)
+neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=4)
 neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': Categorical([3, 5])}, batch_size=batch_size)
 #neuro_branch += CallbackElement('resample_monitor', my_monitor)
 neuro_branch += PipelineElement('SmoothImages', {'fwhm': Categorical([6, 12])}, batch_size=batch_size)
