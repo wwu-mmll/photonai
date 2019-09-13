@@ -2,7 +2,7 @@ import os
 from glob import glob
 
 
-def create_unit_tests():
+def create_tests_example_scripts():
     examples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../examples/')
     files = [f for f in glob(examples_folder + "**/*.py", recursive=True)]
     string = """
@@ -31,4 +31,4 @@ class TestRunExamples(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    create_unit_tests()
+    create_tests_example_scripts()
