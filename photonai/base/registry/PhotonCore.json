@@ -494,5 +494,9 @@
   "PhotonTestXPredictor":[
     "photonai.test.processing.results_tests.XPredictor",
     "Estimator"
+  ],
+  "PhotonMLPClassifier":[
+    "photonai.modelwrapper.PhotonMLPClassifier.PhotonMLPClassifier",
+    "Estimator"
   ]
 }
