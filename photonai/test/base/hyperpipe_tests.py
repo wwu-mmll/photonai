@@ -16,7 +16,8 @@ class HyperpipeTests(unittest.TestCase):
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.cv_object = KFold(n_splits=3)
         self.hyperpipe = Hyperpipe('god', inner_cv=self.cv_object, metrics=["accuracy"],
-                                   best_config_metric="accuracy")
+                                   best_config_metric="accuracy",
+                                   output_settings=OutputSettings(project_folder='./tmp'))
         self.hyperpipe += self.ss_pipe_element
         self.hyperpipe += self.pca_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
@@ -55,7 +56,7 @@ class HyperpipeTests(unittest.TestCase):
                             inner_cv=KFold(n_splits=3),
                             outer_cv=KFold(n_splits=3),
                             eval_final_performance=True,
-                            output_settings=OutputSettings(save_predictions='all'))
+                            output_settings=OutputSettings(save_predictions='all', project_folder='./tmp'))
 
         my_pipe += PipelineElement('StandardScaler')
         my_pipe += PipelineElement('PCA', {'n_components': [pca_n_components]}, random_state=3)
@@ -137,7 +138,7 @@ class HyperpipeTests(unittest.TestCase):
                             inner_cv=KFold(n_splits=3),
                             # outer_cv=KFold(n_splits=3),
                             eval_final_performance=True,
-                            output_settings=OutputSettings(save_predictions='all'))
+                            output_settings=OutputSettings(save_predictions='all', project_folder='./tmp'))
 
         my_pipe += PipelineElement('StandardScaler')
         my_pipe += PipelineElement('PCA', {'n_components': [pca_n_components]}, random_state=3)
