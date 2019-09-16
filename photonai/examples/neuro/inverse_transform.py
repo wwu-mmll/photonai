@@ -1,11 +1,14 @@
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Stack
+import warnings
+
+import numpy as np
+from nilearn.datasets import fetch_oasis_vbm
+from sklearn.model_selection import ShuffleSplit
+
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
 from photonai.processing import ResultsHandler
-from sklearn.model_selection import ShuffleSplit
-from nilearn.datasets import fetch_oasis_vbm
-import numpy as np
-import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
@@ -73,7 +76,7 @@ handler = ResultsHandler(pipe.results)
 # get feature importances (training set) for your best configuration (for all outer folds)
 # this function returns the importance scores for the best configuration of each outer fold in a list
 importance_scores_outer_folds = handler.get_importance_scores()
-importance_scores_optimum_pipe = handler.results.optimum_pipe_feature_importances
+importance_scores_optimum_pipe = handler.results.best_config_feature_importances
 
 img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
 img.to_filename('best_config_feature_importances.nii.gz')

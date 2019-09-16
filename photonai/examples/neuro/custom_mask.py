@@ -1,9 +1,12 @@
+import warnings
+
+import numpy as np
+from nilearn.datasets import fetch_oasis_vbm
+from sklearn.model_selection import ShuffleSplit
+
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.neuro import NeuroBranch
-from sklearn.model_selection import ShuffleSplit
-from nilearn.datasets import fetch_oasis_vbm
-import numpy as np
-import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
@@ -29,8 +32,8 @@ pipe = Hyperpipe('CustomMask',
                  cache_folder="./cache",
                  eval_final_performance=False)
 
-#custom_mask = '/spm-data/it-share/software_metis/SPMLauncher/ManagedSoftware/spm/spm12/toolbox/Anatomy/AnatMask.nii'
-custom_mask = '/spm-data/it-share/software_metis/SPMLauncher/ManagedSoftware/spm/spm12/toolbox/Anatomy/PMaps/Insula_Ig1.nii'
+local_spm_installation = '/spm-data/it-share/software_metis/SPMLauncher/ManagedSoftware/spm/'
+custom_mask = local_spm_installation + 'spm12/toolbox/Anatomy/PMaps/Insula_Ig1.nii'
 mask = PipelineElement('BrainMask', mask_image=custom_mask, extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF

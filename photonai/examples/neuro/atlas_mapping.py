@@ -1,16 +1,18 @@
+import warnings
+
+import numpy as np
+from nilearn.datasets import fetch_oasis_vbm
+from sklearn.model_selection import KFold
+
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Preprocessing
 from photonai.neuro import AtlasMapper, NeuroBranch
-from sklearn.model_selection import KFold
-from nilearn.datasets import fetch_oasis_vbm
-import numpy as np
-import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 # Specify where the results should be written to and the name of your analysis
-results_folder = '/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_oasis'
-cache_folder = '/spm-data/Scratch/spielwiese_nils_winter/atlas_mapper_test_oasis/cache'
-analysis_name = 'atlas_mapping'
+results_folder = './atlas_mapping/'
+cache_folder = './atlas_mapping/cache'
 
 # GET DATA FROM OASIS
 n_subjects = 200
@@ -22,17 +24,17 @@ X = np.array(dataset_files.gray_matter_maps)
 
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(save_predictions='best')
+settings = OutputSettings(save_predictions='best', project_folder=results_folder)
 
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe(analysis_name,
+my_pipe = Hyperpipe('atlas_mapper_example',
                     optimizer='grid_search',
                     metrics=['accuracy'],
                     best_config_metric='accuracy',
                     inner_cv=KFold(n_splits=2),
                     verbosity=2,
-                    output_settings=mongo_settings,
+                    output_settings=settings,
                     cache_folder=cache_folder)
 
 preprocessing = Preprocessing()
@@ -63,7 +65,7 @@ atlas_mapper = AtlasMapper()
 # there are multiple atlas mapper within one folder)
 
 #atlas_mapper.load_from_file(os.path.join(results_folder) + 'atlas_mapper_meta.json')
-atlas_mapper.load_from_folder(folder=results_folder, analysis_name=analysis_name)
+atlas_mapper.load_from_folder(folder=results_folder, analysis_name='atlas_mapper_example')
 print(atlas_mapper.predict(X))
 debug = True
 

@@ -1,13 +1,14 @@
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Preprocessing, CallbackElement, Branch
-from photonai.optimization import Categorical
-from photonai.neuro import NeuroBranch
-
-from sklearn.model_selection import ShuffleSplit
-from nilearn.datasets import fetch_oasis_vbm
-
 import time
-import numpy as np
 import warnings
+
+import numpy as np
+from nilearn.datasets import fetch_oasis_vbm
+from sklearn.model_selection import ShuffleSplit
+
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, CallbackElement, Branch
+from photonai.neuro import NeuroBranch
+from photonai.optimization import Categorical
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
@@ -15,6 +16,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 def my_monitor(X, y=None, **kwargs):
     print(X.shape)
     debug = True
+
 
 # GET DATA FROM OASIS
 n_subjects = 50

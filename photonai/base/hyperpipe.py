@@ -716,7 +716,8 @@ class Hyperpipe(BaseEstimator):
             if hasattr(pipe, 'nr_of_processes'):
                 pipe.nr_of_processes = 1
             for child in pipe.elements:
-                Hyperpipe.disable_multiprocessing_recursively(child.base_element)
+                if hasattr(child, 'base_elements'):
+                    Hyperpipe.disable_multiprocessing_recursively(child.base_element)
         elif isinstance(pipe, PhotonPipeline):
             for name, child in pipe.named_steps.items():
                 Hyperpipe.disable_multiprocessing_recursively(child)
