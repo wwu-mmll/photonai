@@ -1,15 +1,17 @@
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-from sklearn.model_selection import KFold
 import numpy as np
 from sklearn.datasets import load_boston
+from sklearn.model_selection import KFold
+
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+
 X, y = load_boston(True)
 
-
-os = OutputSettings(save_predictions='all', plots=False)
+os = OutputSettings(save_predictions='all', plots=False, project_folder='.')
 
 my_pipe = Hyperpipe(name='default_pipe',  # the name of your pipeline
                     metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],  # the performance metrics of interest
-                    best_config_metric='mean_absolute_error',  # after hyperparameter search, this metric determined the winner config
+                    best_config_metric='mean_absolute_error',
+                    # after hyperparameter search, this metric determines the winner config
                     eval_final_performance=False,
                     inner_cv=KFold(n_splits=10, shuffle=True, random_state=42),  # test each configuration k times respectively
                     verbosity=1,

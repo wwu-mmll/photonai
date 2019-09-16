@@ -1,10 +1,10 @@
-from photonai.base import Hyperpipe, PipelineElement, Preprocessing, OutputSettings
-from photonai.optimization import FloatRange, Categorical, IntegerRange
-from photonai.investigator.Investigator import Investigator
-from sklearn.model_selection import KFold
-from sklearn.datasets import load_breast_cancer
 import time
 
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
+
+from photonai.base import Hyperpipe, PipelineElement, Preprocessing, OutputSettings
+from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
