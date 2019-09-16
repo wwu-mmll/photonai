@@ -340,16 +340,17 @@ class ResultsHandler:
     def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=''):
         if len(score_info_list) > 0:
             fold_nr_array = []
-            collectables = {'y_pred': [], 'y_true': [], 'indices': []}
-
-            if hasattr(score_info_list[0], 'probabilities') and len(score_info_list[0].probabilities) > 0:
-                collectables['probabilities'] = []
+            collectables = {'y_pred': [], 'y_true': [], 'indices': [], 'probabilities': []}
 
             for i, score_info in enumerate(score_info_list):
                 for collectable_key, collectable_list in collectables.items():
-                    if hasattr(score_info, collectable_key):
+                    if hasattr(score_info, collectable_key) and getattr(score_info, collectable_key) is not None \
+                            and len(getattr(score_info, collectable_key)) > 0:
                         value = getattr(score_info, collectable_key)
                         collectables[collectable_key] = PhotonDataHelper.stack_results(value,
+                                                                                       collectables[collectable_key])
+                    else:
+                        collectables[collectable_key] = PhotonDataHelper.stack_results(np.full(len(score_info.y_true), np.nan),
                                                                                        collectables[collectable_key])
                 fold_nr_array = PhotonDataHelper.stack_results(np.ones((len(score_info.y_true),)) * fold_nr[i],
                                                                fold_nr_array)
