@@ -10,6 +10,8 @@ import zipfile
 import importlib
 import importlib.util
 from sklearn.externals import joblib
+import dask
+from dask.distributed import Client
 
 import datetime
 import pandas as pd
@@ -261,7 +263,8 @@ class Hyperpipe(BaseEstimator):
                  output_settings=None,
                  performance_constraints=None,
                  permutation_id: str=None,
-                 cache_folder: str=None):
+                 cache_folder: str=None,
+                 nr_of_processes: int = 1):
 
         self.name = re.sub(r'\W+', '', name)
         self.permutation_id = permutation_id
@@ -314,7 +317,7 @@ class Hyperpipe(BaseEstimator):
         # ====================== Internals ===========================
 
         self.is_final_fit = False
-
+        self.nr_of_processes = nr_of_processes
         if set_random_seed:
             import random
             random.seed(42)
@@ -829,6 +832,14 @@ class Hyperpipe(BaseEstimator):
         else:
             return estimation_type
 
+    @staticmethod
+    def fit_outer_folds(outer_fold_computer, X, y, kwargs, cache_folder):
+        try:
+            outer_fold_computer.fit(X, y, **kwargs)
+        finally:
+            CacheManager.clear_cache_files(cache_folder)
+        return
+
     def fit(self, data, targets, **kwargs):
         """
         Starts the hyperparameter search and/or fits the pipeline to the data and targets
@@ -858,6 +869,9 @@ class Hyperpipe(BaseEstimator):
             Returns self
 
         """
+        # loop over outer cross validation
+        Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
+
         try:
 
             self._input_data_sanity_checks(data, targets, **kwargs)
@@ -884,6 +898,7 @@ class Hyperpipe(BaseEstimator):
                                                       self.cross_validation.test_size)
 
                 self.cross_validation.outer_folds = {f.fold_id: f for f in outer_folds}
+                delayed_jobs = []
 
                 # Run Dummy Estimator
                 dummy_estimator = self._prepare_dummy_estimator()
@@ -892,7 +907,6 @@ class Hyperpipe(BaseEstimator):
                 if self.cache_folder is not None:
                     Logger().info("Removing Cache Files")
                     CacheManager.clear_cache_files(self.cache_folder, force_all=True)
-
 
                 # loop over outer cross validation
                 for i, outer_f in enumerate(outer_folds):
@@ -917,14 +931,26 @@ class Hyperpipe(BaseEstimator):
                     outer_fold_computer.prepare_optimization(self.elements, outer_fold)
                     dummy_results.append(outer_fold_computer.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
-                    try:
-                        # 3. fit
-                        outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
-                        # 4. save outer fold results
-                        self.results_handler.save()
-                    finally:
-                        # 5. clear cache
-                        CacheManager.clear_cache_files(self.cache_folder)
+                    if self.nr_of_processes > 1:
+                        result = dask.delayed(Hyperpipe.fit_outer_folds)(outer_fold_computer,
+                                                                         self.data.X,
+                                                                         self.data.y,
+                                                                         self.data.kwargs,
+                                                                         self.cache_folder)
+                        delayed_jobs.append(result)
+                    else:
+                        try:
+                            # 3. fit
+                            outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
+                            # 4. save outer fold results
+                            self.results_handler.save()
+                        finally:
+                            # 5. clear cache
+                            CacheManager.clear_cache_files(self.cache_folder)
+
+                if self.nr_of_processes > 1:
+                    dask.compute(*delayed_jobs)
+                    self.results_handler.save()
 
                 # evaluate hyperparameter optimization results for best config
                 self._evaluate_dummy_estimator(dummy_results)
