@@ -345,11 +345,10 @@ class Hyperpipe(BaseEstimator):
     # ============= Data ==================================================================
     class Data:
 
-        def __init__(self, X=None, y=None, kwargs=None, groups=None):
+        def __init__(self, X=None, y=None, kwargs=None):
             self.X = X
             self.y = y
             self.kwargs = kwargs
-            self.groups = groups
 
     # ============= Performance Optimization ==================================================================
     class Optimization:
@@ -890,7 +889,7 @@ class Hyperpipe(BaseEstimator):
 
                 # Outer Folds
                 outer_folds = FoldInfo.generate_folds(self.cross_validation.outer_cv,
-                                                      self.data.X, self.data.y, self.data.groups,
+                                                      self.data.X, self.data.y, self.data.kwargs,
                                                       self.cross_validation.eval_final_performance,
                                                       self.cross_validation.test_size)
 

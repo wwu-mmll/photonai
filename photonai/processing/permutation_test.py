@@ -1,14 +1,14 @@
-import queue
-import numpy as np
 import os
-
+import queue
 from multiprocessing import Process, Queue, current_process
-from pymodm.errors import DoesNotExist, ConnectionError
+
+import numpy as np
 from pymodm import connect
+from pymodm.errors import DoesNotExist, ConnectionError
 
 from photonai.base import OutputSettings, Hyperpipe
-from photonai.processing import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
 from photonai.photonlogger import Logger
+from photonai.processing.results_structure import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
 
 
 class PermutationTest:
