@@ -30,11 +30,10 @@ my_pipe += PipelineElement('ImbalancedDataTransform', method_name='SMOTE', test_
 
 # setup estimator stack
 est_stack = Stack(name='classifier_stack')
-# clf_list = ['RandomForestClassifier', 'LinearSVC', 'NuSVC', "SVC", "MLPClassifier",
-#             "KNeighborsClassifier", "Lasso", "PassiveAggressiveClassifier", "LogisticRegression",
-#             "Perceptron", "RidgeClassifier", "SGDClassifier", "GaussianProcessClassifier",
-#             "AdaBoostClassifier", "BaggingClassifier", "GradientBoostingClassifier"]
-clf_list = ['RandomForestClassifier', 'LinearSVC', 'NuSVC']
+clf_list = ['RandomForestClassifier', 'LinearSVC', 'NuSVC', "SVC", "MLPClassifier",
+            "KNeighborsClassifier", "Lasso", "PassiveAggressiveClassifier", "LogisticRegression",
+            "Perceptron", "RidgeClassifier", "SGDClassifier", "GaussianProcessClassifier",
+            "AdaBoostClassifier", "BaggingClassifier", "GradientBoostingClassifier"]
 
 for clf in clf_list:
     est_stack += PipelineElement(clf)
