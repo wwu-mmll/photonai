@@ -30,7 +30,8 @@ pipe = Hyperpipe('CustomMask',
                  inner_cv=ShuffleSplit(n_splits=1, test_size=0.2),
                  verbosity=2,
                  cache_folder="./cache",
-                 eval_final_performance=False)
+                 eval_final_performance=False,
+                 output_settings=settings)
 
 local_spm_installation = '/spm-data/it-share/software_metis/SPMLauncher/ManagedSoftware/spm/'
 custom_mask = local_spm_installation + 'spm12/toolbox/Anatomy/PMaps/Insula_Ig1.nii'

@@ -1,9 +1,12 @@
+import warnings
+
+import numpy as np
+from nilearn.datasets import fetch_oasis_vbm
+from sklearn.model_selection import ShuffleSplit
+
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.neuro import NeuroBranch
-from sklearn.model_selection import ShuffleSplit
-from nilearn.datasets import fetch_oasis_vbm
-import numpy as np
-import warnings
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
@@ -27,7 +30,8 @@ pipe = Hyperpipe('GrayMatter',
                  inner_cv=ShuffleSplit(n_splits=1, test_size=0.2),
                  verbosity=2,
                  cache_folder="./cache",
-                 eval_final_performance=False)
+                 eval_final_performance=False,
+                 output_settings=settings)
 
 # CHOOSE BETWEEN MASKS
 # available masks

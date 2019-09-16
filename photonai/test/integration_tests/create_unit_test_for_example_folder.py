@@ -2,7 +2,7 @@ import os
 from glob import glob
 
 
-def create_tests_example_scripts():
+def create_tests_example_script():
     examples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../examples/')
     files = [f for f in glob(examples_folder + "**/*.py", recursive=True)]
     string = """
@@ -23,7 +23,7 @@ class TestRunExamples(unittest.TestCase):
         if not "__init__" in file:
             string += """
     def test_{}(self):
-        exec(open("{}").read())
+        exec(open("{}").read(), locals(), globals())
         """.format(os.path.basename(file).strip('.py'), file)
     script = open("examples_test.py", "w")
     script.write(string)
@@ -31,4 +31,4 @@ class TestRunExamples(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    create_tests_example_scripts()
+    create_tests_example_script()

@@ -25,7 +25,8 @@ pipe = Hyperpipe('GrayMatter',
                  inner_cv=ShuffleSplit(n_splits=1, test_size=0.2),
                  verbosity=2,
                  cache_folder="./cache",
-                 eval_final_performance=False)
+                 eval_final_performance=False,
+                 output_settings=settings)
 
 # CHOOSE BETWEEN MASKS
 mask = PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter', extract_mode='vec', batch_size=20)

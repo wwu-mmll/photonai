@@ -1,9 +1,10 @@
 import unittest
-import numpy as np
 from itertools import product
 
+import numpy as np
 from sklearn.datasets import make_regression, make_classification
 from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut
+
 from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, OutputSettings, Branch, DataFilter
 from photonai.optimization import Categorical, FloatRange, IntegerRange
 
@@ -54,7 +55,7 @@ class TestArchitectures(unittest.TestCase):
                           performance_constraints: list = None):
 
         pipe = Hyperpipe(name="architecture_test_pipe",
-                         output_settings=OutputSettings(project_folder="./architecture_tests/", plots=plots),
+                         output_settings=OutputSettings(project_folder="./tmp/", plots=plots),
                          optimizer=optimizer,
                          optimizer_params=optimizer_params,
                          best_config_metric='score',
@@ -63,7 +64,7 @@ class TestArchitectures(unittest.TestCase):
                          outer_cv=outer_cv,
                          eval_final_performance=eval_final_performance,
                          performance_constraints=performance_constraints,
-                         cache_folder="./architecture_tests/cache/",
+                         cache_folder="./tmp/cache/",
                          verbosity=1)
         return pipe
 

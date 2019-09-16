@@ -17,7 +17,8 @@ my_pipe = Hyperpipe('data_integration',
                     best_config_metric='f1_score',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
-                    verbosity=1)
+                    verbosity=1,
+                    output_settings=settings)
 my_pipe += Switch('PreprocessingSwitch', [PipelineElement('SimpleImputer'), PipelineElement('StandardScaler', {}, with_mean=True)])
 
 # Use only "mean" features: [mean_radius, mean_texture, mean_perimeter, mean_area, mean_smoothness, mean_compactness,
