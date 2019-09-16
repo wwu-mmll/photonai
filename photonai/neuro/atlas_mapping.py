@@ -1,20 +1,20 @@
-from typing import Union
-from glob import glob
-import numpy as np
-from nilearn import datasets, surface, plotting
-import matplotlib.pylab as plt
-
-import pandas as pd
-import os
 import json
-import joblib
+import os
+from glob import glob
+from typing import Union
 
-from photonai.neuro.neuro_branch import NeuroBranch
-from photonai.neuro.brain_atlas import BrainAtlas, AtlasLibrary
-from photonai.base.hyperpipe import Hyperpipe
+import joblib
+import matplotlib.pylab as plt
+import numpy as np
+import pandas as pd
+from nilearn import datasets, surface, plotting
+
 from photonai.base import PipelineElement
-from photonai.processing import ResultsHandler
+from photonai.base.hyperpipe import Hyperpipe
+from photonai.neuro.brain_atlas import BrainAtlas, AtlasLibrary
+from photonai.neuro.neuro_branch import NeuroBranch
 from photonai.photonlogger import Logger
+from photonai.processing import ResultsHandler
 
 
 class AtlasMapper:
@@ -101,9 +101,10 @@ class AtlasMapper:
         for roi_name, hyperpipe in self.hyperpipes_to_fit.items():
             hyperpipe.fit(X_extracted[self.roi_indices[roi_name]], y, **kwargs)
             hyperpipe_infos[roi_name] = {'hyperpipe_name': hyperpipe.name,
-                                         'model_filename': hyperpipe.output_settings.pretrained_model_filename,
+                                         'model_filename': os.path.join(hyperpipe.output_settings.results_folder,
+                                                                        'photon_best_model.photon'),
                                          'roi_index': self.roi_indices[roi_name]}
-            hyperpipe_results[roi_name] = ResultsHandler(hyperpipe.result_tree).get_performance_outer_folds()
+            hyperpipe_results[roi_name] = ResultsHandler(hyperpipe.results).get_performance_outer_folds()
 
         self.hyperpipe_infos = hyperpipe_infos
 
