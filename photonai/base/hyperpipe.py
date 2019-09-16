@@ -1,43 +1,39 @@
-import traceback
-import re
-import __main__
-import os
+import datetime
 import glob
-import shutil
-import pickle
-import inspect
-import zipfile
 import importlib
 import importlib.util
-from sklearn.externals import joblib
+import inspect
+import os
+import pickle
+import re
+import shutil
+import traceback
+import zipfile
+
+import __main__
 import dask
-from dask.distributed import Client
-
-import datetime
-import pandas as pd
 import numpy as np
-
+import pandas as pd
 from bson.objectid import ObjectId
-
-from sklearn.dummy import DummyClassifier, DummyRegressor
-from sklearn.model_selection._split import BaseCrossValidator
+from dask.distributed import Client
 from sklearn.base import BaseEstimator
+from sklearn.dummy import DummyClassifier, DummyRegressor
+from sklearn.externals import joblib
+from sklearn.model_selection._split import BaseCrossValidator
 
-from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, PhotonNative
-from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.cache_manager import CacheManager
-
-from photonai.processing import ResultsHandler
-from photonai.processing.outer_folds import OuterFoldManager
-from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.metrics import Scorer
-from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo, MDBDummyResults, MDBHelper, \
-    FoldOperations, MDBConfig, MDBOuterFold
-
+from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
+    PhotonNative
+from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, IntegerRange, FloatRange, Categorical
-
 from photonai.photonlogger import Logger
+from photonai.processing import ResultsHandler
+from photonai.processing.metrics import Scorer
+from photonai.processing.outer_folds import OuterFoldManager
+from photonai.processing.photon_folds import FoldInfo
+from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo, MDBDummyResults, MDBHelper, \
+    FoldOperations, MDBConfig, MDBOuterFold
 
 
 class OutputSettings:
@@ -1041,8 +1037,11 @@ class Hyperpipe(BaseEstimator):
         :return: Hyperpipe
         """
         # create new Hyperpipe instance
-        pipe_copy = Hyperpipe(name=self.name, inner_cv=self.cross_validation.inner_cv,
-                              best_config_metric=self.optimization.best_config_metric, metrics=self.optimization.metrics)
+        pipe_copy = Hyperpipe(name=self.name,
+                              inner_cv=self.cross_validation.inner_cv,
+                              outer_cv=self.cross_validation.outer_cv,
+                              best_config_metric=self.optimization.best_config_metric,
+                              metrics=self.optimization.metrics)
 
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
@@ -1051,7 +1050,7 @@ class Hyperpipe(BaseEstimator):
 
         if hasattr(self, 'preprocessing') and self.preprocessing:
             preprocessing = Preprocessing()
-            for element in self.preprocessing.pipeline_elements:
+            for element in self.preprocessing.elements:
                 preprocessing += element.copy_me()
             pipe_copy += preprocessing
         if hasattr(self, 'elements'):
