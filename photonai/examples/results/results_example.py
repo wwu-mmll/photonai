@@ -1,31 +1,24 @@
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization.Hyperparameters import FloatRange, Categorical
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
-from photonai.processing.ResultsTreeHandler import ResultsHandler
-import matplotlib.pylab as plt
 
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import FloatRange
 
 # WE USE THE BOSTON HOUSING DATA FROM SKLEARN
 X, y = load_boston(True)
 
-
 # DESIGN YOUR PIPELINE
 settings = OutputSettings(save_feature_importances='best', save_predictions='best')
 
-my_pipe = Hyperpipe('results_tree_example',
+my_pipe = Hyperpipe('results_example',
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
                     optimizer_params={'num_iterations': 20, 'acq_func_kwargs': {'kappa': 1}},
-                    #optimizer='random_grid_search',  # which optimizer PHOTON shall use, in this case sk_opt
-                    #optimizer_params={'k': 40},
                     metrics=['mean_squared_error'],
                     best_config_metric='mean_squared_error',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
                     output_settings=settings)
-
-
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
@@ -38,12 +31,12 @@ my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, ra
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
-handler = ResultsHandler(my_pipe.results)
+handler = my_pipe.results_handler
 
 # get predictions for your best configuration (for all outer folds)
 best_config_preds = handler.get_test_predictions()
 y_pred = best_config_preds['y_pred']
-y_pred_probabilities = best_config_preds['y_pred_probabilities']
+y_pred_probabilities = best_config_preds['probabilities']
 y_true = best_config_preds['y_true']
 
 # get feature importances (training set) for your best configuration (for all outer folds)
