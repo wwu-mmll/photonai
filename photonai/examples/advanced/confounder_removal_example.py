@@ -1,8 +1,7 @@
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import FloatRange, Categorical
-from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
 
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 data = load_breast_cancer()
@@ -14,13 +13,15 @@ mean_radius = data.data[:, 0]
 mean_texture = data.data[:, 1]
 
 # BUILD HYPERPIPE
+settings = OutputSettings(project_folder='.')
 pipe = Hyperpipe('confounder_removal_example',
                  optimizer='grid_search',
                  metrics=['accuracy', 'precision', 'recall'],
                  best_config_metric='accuracy',
                  outer_cv=KFold(n_splits=5),
                  inner_cv=KFold(n_splits=3),
-                 verbosity=1)
+                 verbosity=1,
+                 output_settings=settings)
 
 # # there are two ways of specifying multiple confounders
 # # first, you can simply pass a dictionary with "confounder" as key and a data matrix or list as value

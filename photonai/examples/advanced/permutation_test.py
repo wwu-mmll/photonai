@@ -1,10 +1,10 @@
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
+
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import FloatRange, Categorical
-from photonai.processing.permutation_test import PermutationTest
 from photonai.processing import ResultsHandler
-
-from sklearn.model_selection import KFold
-from sklearn.datasets import load_breast_cancer
+from photonai.processing.permutation_test import PermutationTest
 
 
 def create_hyperpipe():
@@ -24,6 +24,7 @@ def create_hyperpipe():
     my_pipe += PipelineElement('SVC', {'kernel': Categorical(['linear']),
                                        'C': FloatRange(1, 2, "linspace", num=2)})
     return my_pipe
+
 
 X, y = load_breast_cancer(True)
 
