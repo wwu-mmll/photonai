@@ -1,20 +1,23 @@
-from photonai.base import Hyperpipe, PipelineElement, Switch
-from photonai.optimization import FloatRange, Categorical
-from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
 
+from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
+from photonai.optimization import FloatRange, Categorical
 
 # GET DATA
 X, y = load_breast_cancer(True)
 
 # CREATE HYPERPIPE
+settings = OutputSettings(project_folder='.')
 my_pipe = Hyperpipe('basic_switch_pipe',
-                    optimizer='grid_search',
+                    optimizer='random_grid_search',
+                    optimizer_params={'k': 10},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=10),
-                    verbosity=1)
+                    inner_cv=KFold(n_splits=5),
+                    verbosity=1,
+                    output_settings=settings)
 
 # Transformer Switch
 my_pipe += Switch('TransformerSwitch', [PipelineElement('StandardScaler'), PipelineElement('PCA', test_disabled=True)])
