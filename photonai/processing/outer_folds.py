@@ -1,13 +1,14 @@
 import datetime
+import warnings
+
 import numpy as np
 
-from photonai.processing.inner_folds import InnerFoldManager
-from photonai.processing.results_structure import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
-from photonai.processing.photon_folds import FoldInfo
 from photonai.optimization import DummyPerformance
 from photonai.photonlogger import Logger
+from photonai.processing.inner_folds import InnerFoldManager
+from photonai.processing.photon_folds import FoldInfo
+from photonai.processing.results_structure import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
 
-import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
@@ -49,7 +50,6 @@ class OuterFoldManager:
         self._validation_X = None
         self._validation_y = None
         self._validation_kwargs = None
-        self._validation_group = None
         self._test_X = None
         self._test_y = None
         self._test_kwargs = None
@@ -74,12 +74,10 @@ class OuterFoldManager:
         else:
             self.constraint_objects = None
 
-    def _prepare_data(self, X, y=None, groups=None, **kwargs):
+    def _prepare_data(self, X, y=None, **kwargs):
         # Prepare Train and validation set data
         self._validation_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
         self._validation_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
-        if groups is not None and len(groups) > 0:
-            self._validation_group = groups[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
         self._test_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
         self._test_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
 
@@ -104,13 +102,13 @@ class OuterFoldManager:
         self.inner_folds = FoldInfo.generate_folds(self.cross_validaton_info.inner_cv,
                                                    self._validation_X,
                                                    self._validation_y,
-                                                   self._validation_group)
+                                                   self._validation_kwargs)
 
         self.cross_validaton_info.inner_folds[self.outer_fold_id] = {f.fold_id: f for f in self.inner_folds}
 
-    def fit(self, X, y=None, groups=None, **kwargs):
+    def fit(self, X, y=None, **kwargs):
 
-        self._prepare_data(X, y, groups, **kwargs)
+        self._prepare_data(X, y, **kwargs)
         self._generate_inner_folds()
 
         outer_fold_fit_start_time = datetime.datetime.now()

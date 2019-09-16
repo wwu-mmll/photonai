@@ -1,7 +1,8 @@
-import numpy as np
 import uuid
 
-from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedKFold, StratifiedShuffleSplit, ShuffleSplit
+import numpy as np
+from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedKFold, \
+    StratifiedShuffleSplit, ShuffleSplit
 
 from photonai.photonlogger import Logger
 from photonai.processing.cross_validation import StratifiedKFoldRegression
@@ -29,8 +30,7 @@ class FoldInfo:
             return dict(zip(unique, counts))
 
     @staticmethod
-    def generate_folds(cv_strategy, X, y=None, groups=None,
-                       eval_final_performance=True, test_size=0.2):
+    def generate_folds(cv_strategy, X, y, kwargs, eval_final_performance=True, test_size=0.2):
         """
         Generates the training and  test set indices for the hyperparameter search
         Returns a tuple of training and test indices
@@ -45,6 +45,11 @@ class FoldInfo:
           training and validation set by the parameter test_size with ShuffleSplit
         """
         # if there is a CV Object for cross validating the hyperparameter search
+        if 'groups' in kwargs.keys():
+            groups = kwargs['groups']
+        else:
+            groups = None
+
         if cv_strategy is not None:
             if groups is not None and (isinstance(cv_strategy, (GroupKFold, GroupShuffleSplit, LeaveOneGroupOut))):
                 try:
