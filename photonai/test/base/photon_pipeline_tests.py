@@ -12,7 +12,7 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold
 from sklearn.base import BaseEstimator
 
-from photonai.base import PipelineElement, Hyperpipe, Preprocessing
+from photonai.base import PipelineElement, Hyperpipe, Preprocessing, OutputSettings
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.cache_manager import CacheManager
 from photonai.neuro import NeuroBranch
@@ -456,7 +456,8 @@ class CachedHyperpipeTests(unittest.TestCase):
                                    optimizer='grid_search',
                                    cache_folder=cache_path,
                                    metrics=['mean_squared_error'],
-                                   best_config_metric='mean_squared_error')
+                                   best_config_metric='mean_squared_error',
+                                   output_settings=OutputSettings(project_folder='./tmp'))
 
         nb = NeuroBranch("SubjectCaching", nr_of_processes=3)
         # increase complexity by adding batching
