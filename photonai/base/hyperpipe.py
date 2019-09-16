@@ -617,7 +617,7 @@ class Hyperpipe(BaseEstimator):
 
         self.results.hyperpipe_info.cross_validation = {'OuterCV': _format_cross_validation(self.cross_validation.outer_cv),
                                                         'InnerCV': _format_cross_validation(self.cross_validation.inner_cv)}
-        self.results.hyperpipe_info.data = {'X.shape': self.data.X.shape, 'y.shape': self.data.y.shape}
+        self.results.hyperpipe_info.data = {'X_shape': self.data.X.shape, 'y_shape': self.data.y.shape}
         self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
                                                         'OptimizerParams': str(self.optimization.optimizer_params),
                                                         'BestConfigMetric': self.optimization.best_config_metric}
