@@ -1,26 +1,23 @@
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization import FloatRange, Categorical
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
-from sklearn.datasets import load_boston
-import matplotlib.pylab as plt
+
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import FloatRange, Categorical
 
 # WE USE THE BOSTON HOUSING DATA FROM SKLEARN
 X, y = load_boston(True)
 
-
-
 # DESIGN YOUR PIPELINE
+settings = OutputSettings(project_folder='.')
 my_pipe = Hyperpipe('skopt_example',
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
-                    optimizer_params={'num_iterations': 50, 'acq_func': 'LCB', 'acq_func_kwargs': {'kappa': 1.96}},
+                    optimizer_params={'num_iterations': 25, 'acq_func': 'LCB', 'acq_func_kwargs': {'kappa': 1.96}},
                     metrics=['mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',
                     outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
                     inner_cv=KFold(n_splits=3),
-                    verbosity=0)
-
-
+                    verbosity=1,
+                    output_settings=settings)
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
@@ -35,9 +32,3 @@ my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, ra
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-# PLOT HYPERPARAMETER SPACE
-my_pipe.optimizer.plot_evaluations()
-plt.show()
-my_pipe.optimizer.plot_objective()
-plt.show()
