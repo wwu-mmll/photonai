@@ -1,6 +1,7 @@
-from photonai.base import Hyperpipe, PipelineElement, CallbackElement
-from sklearn.model_selection import KFold
 from sklearn.datasets import load_boston
+from sklearn.model_selection import KFold
+
+from photonai.base import Hyperpipe, PipelineElement, CallbackElement, OutputSettings
 
 
 # DEFINE CALLBACK ELEMENT
@@ -13,13 +14,16 @@ def my_monitor(X, y=None, **kwargs):
 X, y = load_boston(True)
 
 # DESIGN YOUR PIPELINE
+settings = OutputSettings(project_folder='.')
+
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='grid_search',
                     metrics=['mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
-                    verbosity=1)
+                    verbosity=1,
+                    output_settings=settings)
 
 
 # ADD ELEMENTS TO YOUR PIPELINE

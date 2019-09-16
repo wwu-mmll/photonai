@@ -1,11 +1,9 @@
+import numpy as np
+from nilearn.datasets import fetch_oasis_vbm
+from sklearn.model_selection import ShuffleSplit
+
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.neuro import NeuroBranch
-from sklearn.model_selection import ShuffleSplit
-from nilearn.datasets import fetch_oasis_vbm
-import numpy as np
-import warnings
-warnings.filterwarnings("ignore", category=DeprecationWarning)
-
 
 # GET DATA FROM OASIS
 n_subjects = 50
@@ -30,13 +28,11 @@ pipe = Hyperpipe('GrayMatter',
                  eval_final_performance=False)
 
 # CHOOSE BETWEEN MASKS
-mask = PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter',
-                          extract_mode='vec', batch_size=20)
+mask = PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter', extract_mode='vec', batch_size=20)
 
 # EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
 neuro_branch = NeuroBranch('NeuroBranch')
 neuro_branch += mask
-
 pipe += neuro_branch
 
 pipe += PipelineElement('LinearSVR')
