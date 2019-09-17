@@ -1,26 +1,27 @@
-import unittest
 import os
-import numpy as np
+import unittest
 
+import numpy as np
 from sklearn.model_selection import KFold
 
-from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 from photonai.base import PhotonRegistry
+from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 
 
 class RegistryTest(unittest.TestCase):
 
     def setUp(self):
         self.custom_folder = "./custom_elements"
-        self.registry = PhotonRegistry()
+        self.registry = PhotonRegistry(self.custom_folder)
 
-    def test_custom_folder(self):
-        with self.assertRaises(FileNotFoundError):
-            self.registry.activate("./some_not_existing_folder")
+    def test_register_without_custom_folder(self):
+        registry = PhotonRegistry()
+        with self.assertRaises(ValueError):
+            registry.register('SomeName', 'not_existing_file.SomeName', 'Estimator')
 
     def test_python_file_not_in_custom_folder(self):
         with self.assertRaises(FileNotFoundError):
-            self.registry.register('SomeName', 'not_existing_file.SomeName', 'Estimator', './custom_elements')
+            self.registry.register('SomeName', 'not_existing_file.SomeName', 'Estimator')
 
     def test_list_available_elements(self):
         self.registry.list_available_elements()
@@ -30,11 +31,11 @@ class RegistryTest(unittest.TestCase):
 
     def test_register_element(self):
         with self.assertRaises(ValueError):
-            self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'WrongType', './custom_elements')
+            self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'WrongType')
 
-        self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'Estimator', './custom_elements')
+        self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'Estimator')
 
-        self.registry.activate(self.custom_folder)
+        self.registry.activate()
         settings = OutputSettings(save_output=False)
 
         # DESIGN YOUR PIPELINE
@@ -58,51 +59,52 @@ class RegistryTest(unittest.TestCase):
 
     def test_estimator_check_during_register(self):
         with self.assertRaises(NotImplementedError):
-            self.registry.register('MyCustomEstimatorNoFit', 'custom_estimator.CustomEstimatorNoFit', 'Estimator',
-                                   './custom_elements')
+            self.registry.register('MyCustomEstimatorNoFit', 'custom_estimator.CustomEstimatorNoFit', 'Estimator')
 
         with self.assertRaises(NotImplementedError):
             self.registry.register('MyCustomEstimatorNoPredict', 'custom_estimator.CustomEstimatorNoPredict',
-                                   'Estimator', './custom_elements')
+                                   'Estimator')
 
         with self.assertRaises(NotImplementedError):
-            self.registry.register('MyCustomEstimatorNoEstimatorType', 'custom_estimator.CustomEstimatorNoEstimatorType',
-                                   'Estimator', './custom_elements')
+            self.registry.register('MyCustomEstimatorNoEstimatorType',
+                                   'custom_estimator.CustomEstimatorNoEstimatorType',
+                                   'Estimator')
 
         with self.assertRaises(NotImplementedError):
             self.registry.register('MyCustomEstimatorNotReturningSelf',
-                                       'custom_estimator.CustomEstimatorNotReturningSelf',
-                                       'Estimator', './custom_elements')
+                                   'custom_estimator.CustomEstimatorNotReturningSelf',
+                                   'Estimator')
 
         e = self.registry.register('MyCustomEstimatorReturningFalsePredictions',
                                    'custom_estimator.CustomEstimatorReturningFalsePredictions',
-                                   'Estimator', './custom_elements')
+                                   'Estimator')
         self.assertIsInstance(e, ValueError)
 
         e = self.registry.register('MyCustomEstimatorNotWorking', 'custom_estimator.CustomEstimatorNotWorking',
-                                   'Estimator', './custom_elements')
+                                   'Estimator')
         self.assertIsInstance(e, ValueError)
 
         os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
 
     def test_transformer_needs_covariates(self):
-        self.registry.register('MyCustomTransformerNeedsCovariates', 'custom_transformer.CustomTransformerNeedsCovariates',
-                               'Transformer', './custom_elements')
+        self.registry.register('MyCustomTransformerNeedsCovariates',
+                               'custom_transformer.CustomTransformerNeedsCovariates',
+                               'Transformer')
 
         with self.assertRaises(ValueError):
             self.registry.register('MyCustomTransformerNeedsCovariatesWrongInterface',
                                    'custom_transformer.CustomTransformerNeedsCovariatesWrongInterface',
-                                   'Transformer', './custom_elements')
+                                   'Transformer')
 
     def test_transformer_needs_y(self):
         self.registry.register('MyCustomTransformerNeedsY',
                                'custom_transformer.CustomTransformerNeedsY',
-                               'Transformer', './custom_elements')
+                               'Transformer')
 
         with self.assertRaises(ValueError):
             self.registry.register('MyCustomTransformerNeedsYWrongInterface',
                                    'custom_transformer.CustomTransformerNeedsYWrongInterface',
-                                   'Transformer', './custom_elements')
+                                   'Transformer')
 
     def tearDown(self):
         if os.path.isfile(os.path.join(self.custom_folder, 'CustomElements.json')):
