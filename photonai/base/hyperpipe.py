@@ -866,7 +866,8 @@ class Hyperpipe(BaseEstimator):
 
         """
         # loop over outer cross validation
-        Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
+        if self.nr_of_processes > 1:
+            hyperpipe_client = Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
 
         try:
 
@@ -959,12 +960,14 @@ class Hyperpipe(BaseEstimator):
             else:
                 self.preprocess_data()
                 self._pipe.fit(self.data.X, self.data.y, **kwargs)
-
         except Exception as e:
             Logger().error(e)
             Logger().error(traceback.format_exc())
             traceback.print_exc()
             raise e
+        finally:
+            if self.nr_of_processes > 1:
+                hyperpipe_client.close()
         return self
 
     def predict(self, data, **kwargs):
