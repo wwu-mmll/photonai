@@ -28,6 +28,7 @@ from scipy.spatial.distance import pdist
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import StandardScaler
 
+from photonai.helper.helper import PhotonDataHelper
 from photonai.photonlogger import Logger
 
 
@@ -174,21 +175,6 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
         else:
             return X_new, None, kwargs
 
-    @staticmethod
-    def _concatenate_dict(dict_a: dict, dict_b: dict, axis: int = 0):
-        if not dict_a:
-            return dict_b
-        else:
-            for key, value in dict_b.items():
-                dict_a[key] = np.concatenate((dict_a[key], value), axis=axis)
-            return dict_a
-
-    @staticmethod
-    def _index_dict(d: dict, boolean_index):
-        new_dict = dict()
-        for key, value in d.items():
-            new_dict[key] = value[boolean_index]
-        return new_dict
 
 class SamplePairingRegression(SamplePairingBase):
     _estimator_type = "transformer"
@@ -265,7 +251,8 @@ class SamplePairingClassification(SamplePairingBase):
 
         for label, limit in zip(unique_classes, n_pairs):
             X_new_class, y_new_class, kwargs_new_class = self._return_samples(X[y == label], y[y == label],
-                                                                              self._index_dict(kwargs, y == label),
+                                                                              PhotonDataHelper.index_dict(kwargs,
+                                                                                                          y == label),
                                                                               generator=self.generator,
                                                                               distance_metric=self.distance_metric,
                                                                               draw_limit=limit,
@@ -276,6 +263,6 @@ class SamplePairingClassification(SamplePairingBase):
 
             # get the corresponding kwargs
             if kwargs:
-                kwargs_extended = self._concatenate_dict(kwargs_extended, kwargs_new_class)
+                kwargs_extended = PhotonDataHelper.join_dictionaries(kwargs_extended, kwargs_new_class)
 
         return X_extended, y_extended, kwargs_extended
