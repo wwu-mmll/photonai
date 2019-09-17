@@ -21,10 +21,11 @@ flask
 prettytable
 seaborn
 joblib
-fasteners
+dask
 # sk optimize
 scikit-optimize
 scikit-image
+
 # bcolz
 # fabolas
 # george

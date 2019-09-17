@@ -3,6 +3,8 @@ import numpy as np
 import os
 import glob
 
+from dask.distributed import Client
+
 from sklearn.datasets import load_breast_cancer
 from sklearn.decomposition.pca import PCA
 from sklearn.preprocessing import StandardScaler
@@ -10,7 +12,6 @@ from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.model_selection import KFold
-from sklearn.base import BaseEstimator
 
 from photonai.base import PipelineElement, Hyperpipe, Preprocessing, OutputSettings
 from photonai.base.photon_pipeline import PhotonPipeline
@@ -30,7 +31,6 @@ from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
 # assertNotIn(a, b) 	a not in b 	3.1
 # assertIsInstance(a, b) 	isinstance(a, b) 	3.2
 # assertNotIsInstance(a, b) 	not isinstance(a, b) 	3.2
-
 
 
 class PipelineTests(unittest.TestCase):
@@ -199,6 +199,7 @@ class CacheManagerTests(unittest.TestCase):
         self.config2 = {'PCA__n_components': 20,
                         'SVC__C': 1,
                         'SVC__kernel': 'linear'}
+        self.cache_man.clear_cache()
 
     def test_find_relevant_configuration_items(self):
         self.cache_man.prepare(pipe_elements=self.item_names, X=self.X, config=self.config1)
@@ -218,6 +219,18 @@ class CacheManagerTests(unittest.TestCase):
         result = self.cache_man.load_cached_data("PCA")
         self.assertEqual(result, None)
 
+    def test_check_cache(self):
+        self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
+        self.assertFalse(self.cache_man.check_cache("PCA"))
+        self.cache_man.save_data_to_cache("PCA", (self.X, self.y, self.kwargs))
+        self.assertTrue(self.cache_man.check_cache("PCA"))
+
+    def test_key_hash_equal(self):
+        self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
+        generator_1 = self.cache_man.generate_cache_key("PCA")
+        generator_2 = self.cache_man.generate_cache_key("PCA")
+        self.assertEqual(generator_1, generator_2)
+
     def test_saving_and_loading_transformation(self):
         self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
         self.cache_man.save_data_to_cache("PCA", (self.X, self.y, self.kwargs))
@@ -233,12 +246,8 @@ class CacheManagerTests(unittest.TestCase):
         self.assertTrue(np.array_equal(self.y, y_loaded))
         self.assertTrue(np.array_equal(self.kwargs['covariates'], kwargs_loaded['covariates']))
 
-    def test_index_writing_and_clearing_folder(self):
-        self.cache_man.prepare(pipe_elements=self.item_names, config=self.config1)
-        self.cache_man.save_cache_index()
-        self.assertTrue(os.path.isfile(self.cache_man.cache_file_name))
+    def test_clearing_folder(self):
         self.cache_man.clear_cache()
-        self.assertTrue(not os.path.isfile(self.cache_man.cache_file_name))
         self.assertTrue(len(glob.glob(os.path.join(self.cache_man.cache_folder, "*.p"))) == 0)
 
 
@@ -276,16 +285,16 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         self.pipe.set_params(**self.config1)
         self.pipe.fit(self.X, self.y)
         X_new, y_new, kwargs_new = self.pipe.transform(self.X, self.y)
-        # one result should be cached ( one standard scaler output + one pca output + one index pickle file = 5)
-        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 3)
+        # one result should be cached ( one standard scaler output + one pca output)
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 2)
 
         # transform second config
         self.pipe.set_params(**self.config2)
         self.pipe.fit(self.X, self.y)
         X_config2, y_config2, kwargs_config2 = self.pipe.transform(self.X, self.y)
         # two results should be cached ( one standard scaler output (config hasn't changed)
-        # + two pca outputs  + one index pickle file)
-        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 4)
+        # + two pca outputs  )
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 3)
 
         # now transform with config 1 again, results should be loaded
         self.pipe.set_params(**self.config1)
@@ -314,14 +323,14 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         self.pipe.set_params(**{})
         self.pipe.fit(self.X, self.y)
         X_new, y_new, kwargs_new = self.pipe.transform(self.X, self.y)
-        # one result should be cached ( one standard scaler output + one pca output + one index pickle file = 3)
-        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 3)
+        # one result should be cached ( one standard scaler output + one pca output )
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 2)
 
         self.pipe.set_params(**{})
         self.pipe.fit(self.X, self.y)
         X_new2, y_new2, kwargs_new2 = self.pipe.transform(self.X, self.y)
         # assert nothing happened in the cache folder
-        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 3)
+        self.assertTrue(len(glob.glob(os.path.join(self.pipe.cache_folder, "*.p"))) == 2)
         self.assertTrue(np.array_equal(X_new, X_new2))
         self.assertTrue(np.array_equal(y_new, y_new2))
         self.assertTrue(np.array_equal(kwargs_new, kwargs_new2))
@@ -353,14 +362,14 @@ class CachedPhotonPipelineTests(unittest.TestCase):
             self.assertTrue(nr_of_generated_cache_files == expected_nr_of_files)
 
         # fit with first config
-        # expect one cache file per input file plus one item for the library
-        transform_and_check_folder({'ResampleImages__voxel_size': 5}, nr_of_expected_pickles_per_config + 1)
+        # expect one cache file per input file
+        transform_and_check_folder({'ResampleImages__voxel_size': 5}, nr_of_expected_pickles_per_config)
 
         # after fitting with second config, we expect two times the number of input files to be in cache
-        transform_and_check_folder({'ResampleImages__voxel_size': 10}, (2 * nr_of_expected_pickles_per_config) + 1)
+        transform_and_check_folder({'ResampleImages__voxel_size': 10}, 2 * nr_of_expected_pickles_per_config)
 
         # fit with first config again, we expect to not have generate other cache files, because they exist
-        transform_and_check_folder({'ResampleImages__voxel_size': 5}, (2 * nr_of_expected_pickles_per_config) +1)
+        transform_and_check_folder({'ResampleImages__voxel_size': 5}, 2 * nr_of_expected_pickles_per_config)
 
         # clean up afterwards
         CacheManager.clear_cache_files(cache_folder)
@@ -414,24 +423,22 @@ class CachedPhotonPipelineTests(unittest.TestCase):
         config1 = {'NeuroBranch__ResampleImages__voxel_size': 5, 'PCA__n_components': 7, 'SVR__C': 2}
         config2 = {'NeuroBranch__ResampleImages__voxel_size': 3, 'PCA__n_components': 4, 'SVR__C': 5}
 
-        # first config we expect to have a cached_file for the standard, scaler, the pca and the library
-        # and we expect to have two files (one resampler, one brain mask) for each input data +
-        # one library for the neuro branch in the neuro-specific
-        # cache sub folder
-        transform_and_check_folder(config1, 3, (2 * nr_of_expected_pickles_per_config) + 1)
+        # first config we expect to have a cached_file for the standard scaler and the pca
+        # and we expect to have two files (one resampler, one brain mask) for each input data
+        transform_and_check_folder(config1, 2, 2 * nr_of_expected_pickles_per_config)
 
         # second config we expect to have two cached_file for the standard scaler (one time for 5 voxel input and one
-        # time for 3 vocel input, and two files two for the first and second config pcas and one for the cache index,
-        # and we expect to have 2 * nr of input data for resampler plus one time masker + library for neuro
-        transform_and_check_folder(config2, 5, (4 * nr_of_expected_pickles_per_config) + 1)
+        # time for 3 voxel input) and two files two for the first and second config pcas,
+        # and we expect to have 2 * nr of input data for resampler plus one time masker
+        transform_and_check_folder(config2, 4, 4 * nr_of_expected_pickles_per_config)
 
         # when we transform with the first config again, nothing should happen
-        transform_and_check_folder(config1, 5, (4 * nr_of_expected_pickles_per_config) + 1)
+        transform_and_check_folder(config1, 4, 4 * nr_of_expected_pickles_per_config)
 
         # when we transform with an empty config, a new entry for pca and standard scaler should be generated, as well
         # as a new cache item for each input data from the neuro branch for each itemin the neuro branch
         with self.assertRaises(ValueError):
-            transform_and_check_folder({}, 7, (6 * nr_of_expected_pickles_per_config) + 1)
+            transform_and_check_folder({}, 6, 6 * nr_of_expected_pickles_per_config)
 
         CacheManager.clear_cache_files(cache_folder_base)
         CacheManager.clear_cache_files(cache_folder_neuro)
@@ -459,7 +466,7 @@ class CachedHyperpipeTests(unittest.TestCase):
                                    best_config_metric='mean_squared_error',
                                    output_settings=OutputSettings(project_folder='./tmp'))
 
-        nb = NeuroBranch("SubjectCaching", nr_of_processes=3)
+        nb = NeuroBranch("SubjectCaching", nr_of_processes=1)
         # increase complexity by adding batching
         nb += PipelineElement("ResampleImages", {'voxel_size': [3, 5, 10]}, batch_size=4)
         nb += PipelineElement("BrainMask", batch_size=4)
