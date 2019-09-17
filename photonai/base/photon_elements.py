@@ -10,7 +10,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
 
 from photonai.base.registry.element_dictionary import ElementDictionary
-from photonai.base.helper import PhotonDataHelper
+from photonai.helper.helper import PhotonDataHelper
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.photonlogger import Logger
 from photonai.optimization.config_grid import create_global_config_grid, create_global_config_dict

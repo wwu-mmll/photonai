@@ -11,8 +11,9 @@ from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 class RegistryTest(unittest.TestCase):
 
     def setUp(self):
-        self.custom_folder = "./custom_elements"
+        self.custom_folder = "../../modelwrapper/custom_elements"
         self.registry = PhotonRegistry(self.custom_folder)
+
 
     def test_register_without_custom_folder(self):
         registry = PhotonRegistry()
@@ -34,6 +35,7 @@ class RegistryTest(unittest.TestCase):
             self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'WrongType')
 
         self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'Estimator')
+
 
         self.registry.activate()
         settings = OutputSettings(save_output=False)
@@ -82,6 +84,7 @@ class RegistryTest(unittest.TestCase):
 
         e = self.registry.register('MyCustomEstimatorNotWorking', 'custom_estimator.CustomEstimatorNotWorking',
                                    'Estimator')
+
         self.assertIsInstance(e, ValueError)
 
         os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
@@ -90,7 +93,6 @@ class RegistryTest(unittest.TestCase):
         self.registry.register('MyCustomTransformerNeedsCovariates',
                                'custom_transformer.CustomTransformerNeedsCovariates',
                                'Transformer')
-
         with self.assertRaises(ValueError):
             self.registry.register('MyCustomTransformerNeedsCovariatesWrongInterface',
                                    'custom_transformer.CustomTransformerNeedsCovariatesWrongInterface',

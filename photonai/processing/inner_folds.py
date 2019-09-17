@@ -1,6 +1,5 @@
 import time
 import traceback
-import warnings
 import queue
 import numpy as np
 import json
@@ -8,7 +7,7 @@ from sklearn.pipeline import Pipeline
 from multiprocessing import Process, Queue
 
 from photonai.base.photon_elements import Stack, Branch, Switch
-from photonai.base.helper import PhotonPrintHelper
+from photonai.helper.helper import PhotonPrintHelper
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, FoldOperations, MDBConfig
 from photonai.photonlogger import Logger
 from photonai.processing.metrics import Scorer

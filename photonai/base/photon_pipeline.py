@@ -4,7 +4,7 @@ import datetime
 import os
 
 from photonai.base.cache_manager import CacheManager
-from photonai.base.helper import PhotonDataHelper
+from photonai.helper.helper import PhotonDataHelper
 
 
 class PhotonPipeline(_BaseComposition):
