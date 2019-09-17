@@ -14,7 +14,7 @@ class TestRunExamples(unittest.TestCase):
         pass
 
     def tearDown(self):
-        [rmtree(f) for f in glob("./**/")]
+        [rmtree(f) for f in glob("./**/") if "custom_elements" not in f]
     
     def test_skopt_example(self):
         exec(open(
@@ -60,8 +60,8 @@ class TestRunExamples(unittest.TestCase):
         exec(open(
             "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/basic/regression.py").read(),
              locals(), globals())
-        
-    def test_ipeline_branches(self):
+
+    def test_pipeline_branches(self):
         exec(open(
             "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/basic/pipeline_branches.py").read(),
              locals(), globals())
@@ -120,8 +120,8 @@ class TestRunExamples(unittest.TestCase):
         exec(open(
             "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/register_elements.py").read(),
              locals(), globals())
-        
-    def test_ermutation_test(self):
+
+    def test_permutation_test(self):
         exec(open(
             "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/permutation_test.py").read(),
              locals(), globals())
