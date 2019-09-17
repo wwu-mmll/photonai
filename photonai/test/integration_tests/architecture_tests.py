@@ -1,5 +1,6 @@
 import unittest
 from itertools import product
+from shutil import rmtree
 
 import numpy as np
 from sklearn.datasets import make_regression, make_classification
@@ -10,6 +11,9 @@ from photonai.optimization import Categorical, FloatRange, IntegerRange
 
 
 class TestArchitectures(unittest.TestCase):
+
+    def tearDown(self):
+        rmtree("./tmp/")
 
     def setUp(self):
         n_samples = 40
