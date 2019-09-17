@@ -86,7 +86,7 @@ class DataHelperTests(unittest.TestCase):
         self.assertEqual(len(dict_e_a['variable_two']), 15)
 
     def test_index_dict(self):
-        labels = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
+        labels = np.asarray([0, 0, 0, 0, 0, 1, 1, 1, 1, 1])
         dict_a = {'variable_one': np.random.randn(10),
                   'variable_two': np.random.randn(10, 10)}
         dict_a_1 = PhotonDataHelper.index_dict(dict_a, labels == 0)
