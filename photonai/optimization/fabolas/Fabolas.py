@@ -6,11 +6,12 @@ import json
 from copy import copy
 from time import time
 
-from .GPMCMC import FabolasGPMCMC
-from .Priors import EnvPrior
-from .Maximizer import InformationGainPerUnitCost, Direct, MarginalizationGPMCMC
+from photonai.optimization.fabolas.GPMCMC import FabolasGPMCMC
+from photonai.optimization.fabolas.Priors import EnvPrior
+from photonai.optimization.fabolas.Maximizer import InformationGainPerUnitCost, Direct, MarginalizationGPMCMC
 from photonai.photonlogger import Logger
-from ..Hyperparameters import FloatRange, IntegerRange, Categorical
+from photonai.optimization import FloatRange, IntegerRange, Categorical
+
 
 def _quadratic_bf(x):
     '''
@@ -22,6 +23,7 @@ def _quadratic_bf(x):
     '''
     return (1 - x) ** 2
 
+
 def _linear_bf(x):
     '''
     Linear base-function the mode_cost
@@ -31,6 +33,7 @@ def _linear_bf(x):
     :return: x
     '''
     return x
+
 
 class Fabolas:
     def __init__(

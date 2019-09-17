@@ -1,18 +1,21 @@
 import sys
 import os
-import DIRECT
 import numpy as np
 import scipy
 import emcee
 import abc
-from . import epmgp
 from copy import deepcopy
 from scipy.stats import norm
-
 from multiprocessing import Pool, cpu_count
 from functools import partial
 
 from photonai.photonlogger import Logger
+from photonai.optimization.fabolas import epmgp
+
+try:
+    import DIRECT
+except ModuleNotFoundError:
+    raise ModuleNotFoundError("Module DIRECT not found. Please install the fabolas_requirements PHOTON provides.")
 
 
 class BaseMaximizer(object):
