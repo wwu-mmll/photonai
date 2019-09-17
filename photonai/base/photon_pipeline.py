@@ -24,6 +24,7 @@ class PhotonPipeline(_BaseComposition):
         self._single_subject_caching = False
         self._fix_fold_id = False
         self._do_not_delete_cache_folder = False
+        self._parallel_use = False
 
         # used in parallelization
         self.skip_loading = False
@@ -62,7 +63,7 @@ class PhotonPipeline(_BaseComposition):
             else:
                 self._fold_id = str(value)
             self.caching = True
-            self.cache_man = CacheManager(self._fold_id, self.cache_folder)
+            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use)
 
     @property
     def cache_folder(self):
@@ -83,7 +84,7 @@ class PhotonPipeline(_BaseComposition):
             self.caching = True
             if not os.path.isdir(self._cache_folder):
                 os.makedirs(self._cache_folder)
-            self.cache_man = CacheManager(self._fold_id, self.cache_folder)
+            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use)
         else:
             self.caching = False
 
@@ -183,9 +184,6 @@ class PhotonPipeline(_BaseComposition):
                                                                  initial_X=initial_X)
                 else:
                     X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
-
-        if self.caching:
-            self.cache_man.save_cache_index()
 
         return X, y, kwargs
 
@@ -361,9 +359,6 @@ class PhotonPipeline(_BaseComposition):
             # always work with numpy arrays to avoid checking for shape attribute
             X = self.check_for_numpy_array(X)
             y = self.check_for_numpy_array(y)
-
-        if self.caching:
-            self.cache_man.save_cache_index()
 
         return X, y, kwargs
 

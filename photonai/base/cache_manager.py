@@ -1,37 +1,25 @@
 import os
 import shutil
-import pickle
-import uuid
 import numpy as np
-import fcntl
-
-from contextlib import contextmanager
+import joblib
+import glob
+from dask.distributed import Lock
 
 from photonai.photonlogger import Logger
 
 
 class CacheManager:
 
-    M_READ, M_WRITE, M_READWRITE = range(3)
-    MODES = (
-        # open for reading
-        (os.O_RDONLY, fcntl.LOCK_SH, 'rb'),
-        # create for writing
-        (os.O_WRONLY | os.O_CREAT | os.O_TRUNC, fcntl.LOCK_EX, 'wb'),
-        # open for reading and writing
-        (os.O_RDWR | os.O_CREAT, fcntl.LOCK_EX, 'r+b')
-    )
-    BLOCKING_FLAGS = (fcntl.LOCK_NB, 0)
+    __LOCK_STR = 'photon_cache_manager'
 
-    def __init__(self, _hash=None, cache_folder=None):
+    def __init__(self, _hash=None, cache_folder=None, parallel_use: bool=False):
         self._hash = _hash
         self.cache_folder = cache_folder
 
         self.pipe_order = None
         self.cache_index = None
         self.state = None
-        self.cache_file_name = None
-        self.lock = None
+        self.parallel_use = parallel_use
 
     @property
     def hash(self):
@@ -43,9 +31,6 @@ class CacheManager:
             self._hash = str(value)
         else:
             self._hash = value
-
-    def set_lock(self, lock):
-        self.lock = lock
 
     class State:
         def __init__(self, config=None, nr_items=None,
@@ -64,14 +49,7 @@ class CacheManager:
 
     def prepare(self, pipe_elements, config, X=None, single_subject_caching=False):
 
-        cache_name = 'photon_cache_index.p'
-        self.cache_file_name = os.path.join(self.cache_folder, cache_name)
-
-        # if self.lock is not None:
-        #     with self.lock.read_lock():
-        #         self._read_cache_index()
-        # else:
-        self._read_cache_index()
+        self.read_cache_index()
 
         self.pipe_order = pipe_elements
 
@@ -87,23 +65,6 @@ class CacheManager:
 
         if single_subject_caching:
             self.state.nr_items = 1
-
-    def _read_cache_index(self):
-        if os.path.isfile(self.cache_file_name):
-            # print("Reading cache index ")
-            try:
-                # with open(self.cache_file_name, 'rb') as f:
-                with CacheManager.locked_open(self.cache_file_name, CacheManager.M_READ) as f:
-                    self.cache_index = pickle.load(f)
-                # print(len(self.cache_index))
-            except EOFError as e:
-                print(e)
-                print("EOF Error... retrying!")
-                print("Cache index loaded: " + str(self.cache_index))
-                # retry...
-                self._read_cache_index()
-        else:
-            self.cache_index = {}
 
     def _find_config_for_element(self, pipe_element_name):
         relevant_keys = list()
@@ -132,88 +93,47 @@ class CacheManager:
 
     def load_cached_data(self, pipe_element_name):
 
-        config_hash = self._find_config_for_element(pipe_element_name)
-        cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
+        cache_query = self.generate_cache_key(pipe_element_name)
         if cache_query in self.cache_index:
             Logger().debug("Loading data from cache for " + pipe_element_name + ": "
                            + str(self.state.nr_items) + " items " + self.state.first_data_str
                            + " - " + str(self.state.config))
-            with open(self.cache_index[cache_query], 'rb') as f:
-                (X, y, kwargs) = pickle.load(f)
+            filename = self.cache_index[cache_query]
+            # lock = Lock(filename)
+            # lock.acquire()
+            with open(filename, 'rb') as f:
+                (X, y, kwargs) = joblib.load(f)
 
             return X, y, kwargs
         return None
 
-    def check_cache(self, pipe_element_name):
+    def generate_cache_key(self, pipe_element_name):
         config_hash = self._find_config_for_element(pipe_element_name)
         cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
+        return hash(cache_query)
+
+    def check_cache(self, pipe_element_name):
+        cache_query = self.generate_cache_key(pipe_element_name)
+
         if cache_query in self.cache_index:
             return True
         else:
             return False
 
     def save_data_to_cache(self, pipe_element_name, data):
-
-        config_hash = self._find_config_for_element(pipe_element_name)
-        filename = os.path.join(self.cache_folder, str(uuid.uuid4()) + ".p")
-        self.cache_index[(pipe_element_name, self.hash, config_hash, self.state.nr_items,
-                          self.state.first_data_hash)] = filename
+        cache_query = self.generate_cache_key(pipe_element_name)
+        filename = os.path.join(self.cache_folder, str(cache_query) + ".p")
+        self.cache_index[cache_query] = filename
         Logger().debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
                        + self.state.first_data_str + " - " + str(self.state.config))
 
         # write cached data to filesystem
         with open(filename, 'wb') as f:
-            pickle.dump(data, f)
+            joblib.dump(data, f)
 
-    def save_cache_index(self):
-        # if self.lock is not None:
-        #     with self.lock.write_lock():
-        #         self._write_cache_index()
-        # else:
-        self._write_cache_index()
-
-    def _write_cache_index(self):
-        # with open(self.cache_file_name, 'wb') as f:
-        with CacheManager.locked_open(self.cache_file_name, CacheManager.M_WRITE) as f:
-            # print("Writing cache index")
-            # print(self.cache_index)
-            pickle.dump(self.cache_index, f)
-
-    def _read_cache_index(self):
-
-        if os.path.isfile(self.cache_file_name):
-            # with open(self.cache_file_name, 'rb') as f:
-            with CacheManager.locked_open(self.cache_file_name, CacheManager.M_READ) as f:
-                # print("Reading cache index ")
-                try:
-                    self.cache_index = pickle.load(f)
-                    # print(len(self.cache_index))
-                except EOFError as e:
-                    print("EOF Error... retrying!")
-                    print("Cache index loaded: " + str(self.cache_index))
-                    # retry...
-                    f.close()
-                    # self._read_cache_index()
-        else:
-            self.cache_index = {}
-
-    @contextmanager
-    def locked_open(filename, mode=M_READ, blocking=True):
-        open_mode, flock_flags, mode_str = CacheManager.MODES[mode]
-        flock_flags = flock_flags | CacheManager.BLOCKING_FLAGS[blocking]
-
-        fd = os.open(filename, open_mode)
-        try:
-            fcntl.flock(fd, flock_flags)
-            fileobj = os.fdopen(fd, mode_str)
-
-            try:
-                yield fileobj
-            finally:
-                fileobj.flush()
-                os.fdatasync(fd)
-        finally:
-            os.close(fd)
+    def read_cache_index(self):
+        cached_files = glob.glob(os.path.join(self.cache_folder, "*.p"))
+        self.cache_index = {int(os.path.splitext(os.path.basename(i))[0]): i for i in cached_files}
 
     def clear_cache(self):
         CacheManager.clear_cache_files(self.cache_folder)

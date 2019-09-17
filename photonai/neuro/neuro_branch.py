@@ -1,10 +1,8 @@
-import queue
 import os
-import uuid
+import dask
 import numpy as np
 from nibabel.nifti1 import Nifti1Image
-from multiprocessing import Process, Queue
-from fasteners import ReaderWriterLock
+from dask.distributed import Client, LocalCluster
 
 from photonai.base import Branch, CallbackElement
 from photonai.base.helper import PhotonDataHelper
@@ -30,6 +28,9 @@ class NeuroBranch(Branch):
     def __init__(self, name, nr_of_processes=1, output_img: bool = False):
         Branch.__init__(self, name)
 
+        self._nr_of_processes = 1
+        self.local_cluster = None
+        self.client = None
         self.nr_of_processes = nr_of_processes
         self.output_img = output_img
 
@@ -38,9 +39,30 @@ class NeuroBranch(Branch):
         self.needs_covariates = True
         self.current_config = None
 
+    def __del__(self):
+        if self.local_cluster is not None:
+            self.local_cluster.close()
+
     def fit(self, X, y=None, **kwargs):
         # do nothing here!!
         return self
+
+    @property
+    def nr_of_processes(self):
+        return self._nr_of_processes
+
+    @nr_of_processes.setter
+    def nr_of_processes(self, value):
+        self._nr_of_processes = value
+        if self._nr_of_processes > 1:
+            if self.local_cluster is None:
+                self.local_cluster = Client(threads_per_worker=1,
+                                            n_workers=self.nr_of_processes,
+                                            processes=False)
+            else:
+                self.local_cluster.n_workers = self.nr_of_processes
+        else:
+            self.local_cluster = None
 
     def __iadd__(self, pipe_element):
         """
@@ -130,6 +152,7 @@ class NeuroBranch(Branch):
         new_copy.base_element.current_config = self.base_element.current_config
         new_copy.base_element.single_subject_caching = True
         new_copy.base_element.cache_folder = self.base_element.cache_folder
+        new_copy.local_cluster = self.local_cluster
         new_copy.nr_of_processes = self.nr_of_processes
 
         # todo: clarify this with Ramona
@@ -145,83 +168,38 @@ class NeuroBranch(Branch):
                 return X, y, kwargs
         return X, y, kwargs
 
-    class ImageJob:
-
-        def __init__(self, data, delegate, lock_setter=None, job_key=0, sort_index=0):
-            self.data = data
-            self.delegate = delegate
-            self.sort_index = sort_index
-            self.job_index = job_key
-            self.lock_setter = lock_setter
-
     @staticmethod
-    def parallel_application(folds_to_do, lock):
-        while True:
-            try:
-                task = folds_to_do.get_nowait()
-            except queue.Empty:
-                break
-            else:
-                # apply transform
-                task.lock_setter(lock)
-                task.delegate(task.data)
-
-        return True
+    def parallel_application(pipe_copy, data):
+        pipe_copy.transform(data)
+        return
 
     def apply_transform_parallelized(self, X):
         """
 
-        :param X: the data to which the delegate should be applied paralelly
+        :param X: the data to which the delegate should be applied in parallel
         """
 
         if self.nr_of_processes > 1:
 
-            jobs_to_do = Queue()
-            lock = ReaderWriterLock()
+            jobs_to_do = list()
 
-            # ----------- faking parallelization -----------------------
-            # jobs_unparallel = list()
-            # ----------- faking parallelization -----------------------
-
-            num_of_jobs_todo = 0
             # distribute the data equally to all available cores
             for start, stop in PhotonDataHelper.chunker(PhotonDataHelper.find_n(X), self.nr_of_processes):
 
                 X_batched, _, _ = PhotonDataHelper.split_data(X, None, {}, start, stop)
-                unique_key = uuid.uuid4()
 
                 # copy my pipeline
                 new_pipe_mr = self.copy_me()
                 new_pipe_copy = new_pipe_mr.base_element
                 new_pipe_copy.cache_folder = self.base_element.cache_folder
                 new_pipe_copy.skip_loading = True
+                new_pipe_copy._parallel_use = True
 
-                job_delegate = new_pipe_copy.transform
-                new_job = NeuroBranch.ImageJob(data=X_batched, delegate=job_delegate,
-                                               job_key=unique_key, lock_setter=new_pipe_copy.set_lock,
-                                               sort_index=start)
+                del_job = dask.delayed(NeuroBranch.parallel_application)(new_pipe_copy, X_batched)
+                jobs_to_do.append(del_job)
 
-                jobs_to_do.put(new_job)
+            dask.compute(*jobs_to_do)
 
-                # ----------- faking parallelization -----------------------
-                # jobs_unparallel.append(new_job)
-                # ----------- faking parallelization -----------------------
 
-                num_of_jobs_todo += 1
 
-            process_list = list()
-            # Logger().info("Nr of processes to create:" + str(self.nr_of_processes))
-            for w in range(self.nr_of_processes):
-                p = Process(target=NeuroBranch.parallel_application, args=(jobs_to_do, lock))
-                process_list.append(p)
-                p.start()
-
-            # ----------- faking parallelization -----------------------
-            # for job in jobs_unparallel:
-            #     job.delegate(job.data)
-            # ----------- faking parallelization -----------------------
-
-            for p in process_list:
-                # print("joining process " + str(p))
-                p.join()
 
