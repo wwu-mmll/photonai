@@ -6,8 +6,9 @@ import numpy as np
 from pymodm import connect
 from pymodm.errors import DoesNotExist, ConnectionError
 
-from photonai.base import OutputSettings, Hyperpipe
+from photonai.base import OutputSettings
 from photonai.photonlogger import Logger
+from photonai.processing.inner_folds import Scorer
 from photonai.processing.results_structure import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
 
 
@@ -20,7 +21,7 @@ class PermutationTest:
 
         # we need a mongodb to collect the results!
         if not self.pipe.output_settings.mongodb_connect_url:
-            raise ValueError("MongoDB Connection String must be given for permutation tests")
+            raise ValueError("MongoDB connection string must be given for permutation tests")
 
         self.n_perms = n_perms
         self.permutation_id = permutation_id
@@ -29,18 +30,18 @@ class PermutationTest:
         self.random_state = random_state
 
         # Get all specified metrics
-        self.metrics = PermutationTest.manage_metrics(self.pipe.optimization.metrics, self.pipe.pipeline_elements[-1])
+        self.metrics = PermutationTest.manage_metrics(self.pipe.optimization.metrics, self.pipe.elements[-1])
         best_config_metric = self.pipe.optimization.best_config_metric
         if best_config_metric not in self.metrics.keys():
             self.metrics[best_config_metric] = {'name': best_config_metric,
                                                 'greater_is_better': self.set_greater_is_better(best_config_metric)}
 
-
     @staticmethod
     def manage_metrics(metrics, last_element=None):
         metric_dict = dict()
         for metric in metrics:
-            metric_dict[metric] = {'name': metric, 'greater_is_better': PermutationTest.set_greater_is_better(metric, last_element)}
+            metric_dict[metric] = {'name': metric,
+                                   'greater_is_better': PermutationTest.set_greater_is_better(metric, last_element)}
         return metric_dict
 
     def fit(self, X, y):
@@ -67,16 +68,16 @@ class PermutationTest:
             try:
                 self.pipe.permutation_id = self.mother_permutation_id
                 self.pipe.fit(X, y_true)
-                self.pipe.result_tree.computation_completed = True
+                self.pipe.results.computation_completed = True
 
                 perm_results = MDBPermutationResults(n_perms=self.n_perms)
-                self.pipe.result_tree.permutation_test = perm_results
-                self.pipe.result_tree.save()
+                self.pipe.results.permutation_test = perm_results
+                self.pipe.results.save()
 
             except Exception as e:
-                if self.pipe.result_tree is not None:
-                    self.pipe.result_tree.permutation_failed = str(e)
-                    self.pipe.result_tree.save()
+                if self.pipe.results is not None:
+                    self.pipe.results.permutation_failed = str(e)
+                    self.pipe.results.save()
 
         # find how many permutations have been computed already:
         # existing_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
@@ -211,7 +212,7 @@ class PermutationTest:
                 """.format(metric['name'], true_performance[metric['name']], p_text[metric['name']]))
 
             if save_to_db:
-                # Write results to results tree
+                # Write results to results object
                 if mother_permutation.permutation_test is None:
                     perm_results = MDBPermutationResults(n_perms=number_of_permutations)
                 else:
@@ -311,7 +312,7 @@ class PermutationTest:
                                           'whether it is a classifier, regressor, transformer or '
                                           'clusterer.')
         else:
-            greater_is_better = Hyperpipe.Optimization.greater_is_better_distinction(metric)
+            greater_is_better = Scorer.greater_is_better_distinction(metric)
         return greater_is_better
 
 
@@ -350,13 +351,13 @@ def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, per
         # Fit hyperpipe
         print('Fitting permutation ' + str(perm_run) + ' ...')
         perm_pipe.fit(X, y_perm)
-        perm_pipe.result_tree.computation_completed = True
-        perm_pipe.result_tree.save()
+        perm_pipe.results.computation_completed = True
+        perm_pipe.results.save()
         print('Finished permutation ' + str(perm_run) + ' ...')
     except Exception as e:
-        if perm_pipe.result_tree is not None:
-            perm_pipe.result_tree.permutation_failed = str(e)
-            perm_pipe.result_tree.save()
+        if perm_pipe.results is not None:
+            perm_pipe.results.permutation_failed = str(e)
+            perm_pipe.results.save()
             print('Failed permutation ' + str(perm_run) + ' ...')
     return perm_run
 
