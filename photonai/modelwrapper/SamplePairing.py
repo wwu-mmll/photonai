@@ -19,22 +19,27 @@ Translationale Psychiatrie
 Universitaetsklinikum Muenster
 """
 
-from photonai.photonlogger import Logger
-import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
-import random
-from scipy.spatial.distance import pdist
-import math
 import itertools
+import math
+import random
+
+import numpy as np
+from scipy.spatial.distance import pdist
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.preprocessing import StandardScaler
+
+from photonai.photonlogger import Logger
 
 
 class SamplePairingBase(BaseEstimator, TransformerMixin):
 
-    def _stirling(self, n):
+    @staticmethod
+    def _stirling(n):
         # http://en.wikipedia.org/wiki/Stirling%27s_approximation
         return math.sqrt(2 * math.pi * n) * (n / math.e) ** n
 
-    def _nCr(self, n, r):
+    @staticmethod
+    def _calculate_number_of_possible_combinations(n, r):
         """
         Get number of combinations of r from n items (e.g. n=10, r=2--> pairs from 0 to 10
         :param n: n items to draw from
@@ -42,49 +47,53 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
         :return: approximate number of combinations
         """
         try:
-            return (self._stirling(n) / self._stirling(r) / self._stirling(n - r) if n > 20 else math.factorial(n) / math.factorial(
-                r) / math.factorial(n - r))
+            stirling_n = SamplePairingBase._stirling(n)
+            stirling_r = SamplePairingBase._stirling(r)
+            stirling_n_r = SamplePairingBase._stirling(n - r)
+
+            if n > 20:
+                return stirling_n / stirling_r / stirling_n_r
+            else:
+                math.factorial(n) / math.factorial(r) / math.factorial(n - r)
         except:
             return -1
 
-    def random_pair_generator(self, items, rand_seed=True):
-        """Return an iterator of random pairs from a list of items."""
-        # Keep track of already generated pairs
-        used_pairs = set()
+    @staticmethod
+    def random_pair_generator(sample_indices, rand_seed, draw_limit):
+        """Return a list of random pairs from a list of items."""
         random.seed(rand_seed)
-        i = 0
-        while True:
-            if rand_seed:
-                random.seed(i)
-                i += 1
-            pair = random.sample(items, 2)
-            # Avoid generating both (1, 2) and (2, 1)
-            pair = tuple(sorted(pair))
-            if pair not in used_pairs:
-                used_pairs.add(pair)
-                yield pair
 
-    def nearest_pair_generator(self, X, distance_metric):
-        # return most similar pair (from similar to dissimilar)
-        i = 0
-        # compute distance matrix and get indices
-        # res_order = np.argsort(pdist(X, distance_metric))
-        from sklearn.preprocessing import StandardScaler
-        s = StandardScaler()
-        X = s.fit_transform(X)
-        res_order = np.argsort(pdist(X, distance_metric))
+        pairs = list()
 
-        inds = np.triu_indices(X.shape[0], k=1)
-        while True:
-            # get index tuple for the closest draw_limit samples
-            if i > len(res_order) - 1:
-                # Todo: find out why this is the case?
-                raise StopIteration
-            pair = (inds[0][res_order[i]], (inds[1][res_order[i]]))
-            i += 1
-            yield pair
+        for i in range(draw_limit):
+            n_attempts = 0
+            while True:
+                pair = tuple(sorted(random.sample(sample_indices, 2)))
+                if pair not in pairs:
+                    pairs.append(pair)
+                    break
+                elif n_attempts > draw_limit:
+                    # prevent while loop from continuing infinitely
+                    # stop in case the number of attempts exceeds the draw limit
+                    # this is just an arbitrary threshold
+                    break
+                n_attempts += 1
+        return pairs
 
+    @staticmethod
+    def nearest_pair_generator(X, distance_metric, draw_limit):
+        n_samples = X.shape[0]
+        X = StandardScaler().fit_transform(X)
+        distance_indices = np.argsort(pdist(X, distance_metric))
+        triu_indices = np.triu_indices(n_samples, k=1)
 
+        pairs = list()
+        for i in range(draw_limit):
+            if i > len(distance_indices) - 1:
+                break
+            else:
+                pairs.append((triu_indices[0][distance_indices[i]], (triu_indices[1][distance_indices[i]])))
+        return pairs
 
     def _get_combinations(self, X, draw_limit, rand_seed, distance_metric, generator='random_pair'):
         """
@@ -98,24 +107,25 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
         :return: list of tuples indicating which samples to merge
         """
 
-        items = range(X.shape[0])
+        sample_indices = range(X.shape[0])
+
         # limit the number of new samples generated if all combinations > draw_limit
-        n_combs = self._nCr(n=len(items), r=2)  # get number of possible pairs (combinations of 2) from this data
-        if n_combs > draw_limit or n_combs == -1:
+        n_combinations = self._calculate_number_of_possible_combinations(n=len(sample_indices), r=2)
 
+        if n_combinations > draw_limit or n_combinations == -1:
             if generator == 'random_pair':
-                combs_generator = self.random_pair_generator(items=items, rand_seed=rand_seed)
+                return self.random_pair_generator(sample_indices=sample_indices,
+                                                  rand_seed=rand_seed,
+                                                  draw_limit=draw_limit)
             elif generator == 'nearest_pair':
-                combs_generator = self.nearest_pair_generator(X=X, distance_metric=distance_metric)
-
-            # Get draw_limit sample pairs
-            combs = list()
-            for i in range(draw_limit):
-                combs.append(list(next(combs_generator)))
+                return self.nearest_pair_generator(X=X,
+                                                   distance_metric=distance_metric,
+                                                   draw_limit=draw_limit)
+            else:
+                raise NotImplementedError("{} is not supported. Possible options: 'random_pair', 'nearest_pair")
         else:
             # get all combinations of samples
-            combs = list(itertools.combinations(items, 2))
-        return combs
+            return list(itertools.combinations(sample_indices, 2))
 
     def _get_samples(self, X, y, generator, distance_metric, draw_limit, rand_seed, **kwargs):
         """
@@ -239,8 +249,10 @@ class SamplePairingClassification(SamplePairingBase):
         for t, limit in zip(np.unique(y), nDiff):
 
             X_new_class, y_new_class, kwargs = self._get_samples(X[y == t], y[y == t],
-                                                                 generator=self.generator, distance_metric=self.distance_metric,
-                                                                 draw_limit=limit, rand_seed=self.rand_seed, **kwargs)
+                                                                 generator=self.generator,
+                                                                 distance_metric=self.distance_metric,
+                                                                 draw_limit=limit,
+                                                                 rand_seed=self.rand_seed, **kwargs)
 
             X_new.extend(X_new_class)
             y_new.extend(y_new_class)
