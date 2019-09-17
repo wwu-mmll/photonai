@@ -8,6 +8,8 @@ def create_tests_example_script():
     string = """
 import unittest
 import warnings
+from glob import glob
+from shutil import rmtree
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -17,6 +19,9 @@ class TestRunExamples(unittest.TestCase):
     
     def setUp(self):
         pass
+    
+    def tearDown(self):
+        [rmtree(f) for f in glob("./**/")]
     """
 
     for file in files:
