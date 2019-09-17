@@ -3,12 +3,12 @@ import json
 import os
 import sys
 from os import path
-import numpy as np
 
+import numpy as np
 from sklearn.datasets import load_breast_cancer, load_boston
 
-from photonai.photonlogger import Logger
 from photonai.base.photon_elements import PipelineElement
+from photonai.photonlogger import Logger
 
 
 class PhotonRegistry:
@@ -45,10 +45,13 @@ class PhotonRegistry:
 
     PHOTON_REGISTRIES = ['PhotonCore', 'PhotonNeuro']
 
-    def __init__(self):
-        self.custom_elements = None
-        self.custom_elements_folder = None
-        self.custom_elements_file = None
+    def __init__(self, custom_elements_folder: str = None):
+        if custom_elements_folder:
+            self._load_custom_folder(custom_elements_folder)
+        else:
+            self.custom_elements = None
+            self.custom_elements_folder = None
+            self.custom_elements_file = None
 
     def _load_custom_folder(self, custom_elements_folder):
         self.custom_elements_folder, self.custom_elements_file = self._check_custom_folder(custom_elements_folder)
@@ -71,13 +74,15 @@ class PhotonRegistry:
 
         return custom_folder, custom_file
 
-    def activate(self, custom_elements_folder):
-        if not path.exists(custom_elements_folder):
-            raise FileNotFoundError("Couldn't find custom elements folder: {}".format(custom_elements_folder))
-        if not path.isfile(path.join(custom_elements_folder, 'CustomElements.json')):
+    def activate(self):
+        if not self.custom_elements_folder:
+            raise ValueError("To activate a custom elements folder, specify a folder when instantiating the registry "
+                             "module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER) "
+                             "In case you don't have any custom models, there is no need to activate the registry.")
+        if not path.exists(self.custom_elements_folder):
+            raise FileNotFoundError("Couldn't find custom elements folder: {}".format(self.custom_elements_folder))
+        if not path.isfile(path.join(self.custom_elements_folder, 'CustomElements.json')):
             raise FileNotFoundError("Couldn't find CustomElements.json. Did you register your element first?")
-
-        self._load_custom_folder(custom_elements_folder)
 
         # add folder to python path
         Logger().info("Adding custom elements folder to system path...")
@@ -86,7 +91,7 @@ class PhotonRegistry:
         PipelineElement.ELEMENT_DICTIONARY.update(self._get_package_info(['CustomElements']))
         Logger().info('Successfully activated custom elements!')
 
-    def register(self, photon_name: str, class_str: str, element_type: str, custom_folder: str):
+    def register(self, photon_name: str, class_str: str, element_type: str):
         """
         Save element information to the JSON file
 
@@ -103,7 +108,9 @@ class PhotonRegistry:
         """
 
         # check if folder exists
-        self._load_custom_folder(custom_folder)
+        if not self.custom_elements_folder:
+            raise ValueError("To register an element, specify a custom elements folder when instantiating the registry "
+                             "module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER)")
 
         if not element_type == "Estimator" and not element_type == "Transformer":
             raise ValueError("Variable element_type must be 'Estimator' or 'Transformer'")
@@ -123,7 +130,7 @@ class PhotonRegistry:
             Logger().info('Adding PipelineElement ' + class_str + ' to CustomElements.json as "' + photon_name + '".')
 
             # activate custom elements
-            self.activate(custom_folder)
+            self.activate()
 
             # check custom element
             Logger().info("Running tests on custom element...")

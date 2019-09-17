@@ -1,23 +1,21 @@
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
+
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings, PhotonRegistry
 from photonai.optimization import IntegerRange
-from sklearn.model_selection import KFold
-from sklearn.datasets import load_breast_cancer
-
 
 # REGISTER ELEMENT
 custom_elements_folder = './custom_elements'
-registry = PhotonRegistry()
+registry = PhotonRegistry(custom_elements_folder=custom_elements_folder)
 registry.register(photon_name='MyCustomEstimator',
                   class_str='custom_estimator.CustomEstimator',
-                  element_type='Estimator',
-                  custom_folder=custom_elements_folder)
+                  element_type='Estimator')
 
 registry.register(photon_name='MyCustomTransformer',
                   class_str='custom_transformer.CustomTransformer',
-                  element_type='Transformer',
-                  custom_folder=custom_elements_folder)
+                  element_type='Transformer')
 
-registry.activate(custom_elements_folder=custom_elements_folder)
+registry.activate()
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
