@@ -84,7 +84,8 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
     @staticmethod
     def nearest_pair_generator(X, distance_metric, draw_limit):
         n_samples = X.shape[0]
-        X = StandardScaler().fit_transform(X)
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
         distance_indices = np.argsort(pdist(X, distance_metric))
         triu_indices = np.triu_indices(n_samples, k=1)
 
@@ -201,8 +202,7 @@ class SamplePairingRegression(SamplePairingBase):
         :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
         :return: X_new: X and X_augmented; (y_new: the correspoding targets)
         """
-        return self._return_samples(X, y, self.generator, self.distance_metric, self.draw_limit, self.rand_seed,
-                                    **kwargs)
+        return self._return_samples(X, y, kwargs, self.generator, self.distance_metric, self.draw_limit, self.rand_seed)
 
 
 class SamplePairingClassification(SamplePairingBase):
