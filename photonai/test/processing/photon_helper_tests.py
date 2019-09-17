@@ -65,7 +65,6 @@ class DataHelperTests(unittest.TestCase):
         self.assertTrue(np.array_equal(kwargs_resorted['test'], kwargs['test']))
 
     def test_concatenate_dict(self):
-        from photonai.modelwrapper.SamplePairing import SamplePairingBase
         dict_a = {'variable_one': np.random.randn(10),
                   'variable_two': np.random.randn(15)}
         dict_b = {'variable_one': np.random.randn(20),
@@ -76,9 +75,9 @@ class DataHelperTests(unittest.TestCase):
                   'variable_two': np.random.randn(20, 15)}
         dict_e = {}
 
-        dict_a_b = SamplePairingBase._concatenate_dict(dict_a, dict_b)
-        dict_c_d = SamplePairingBase._concatenate_dict(dict_c, dict_d)
-        dict_e_a = SamplePairingBase._concatenate_dict(dict_e, dict_a)
+        dict_a_b = PhotonDataHelper.join_dictionaries(dict_a, dict_b)
+        dict_c_d = PhotonDataHelper.join_dictionaries(dict_c, dict_d)
+        dict_e_a = PhotonDataHelper.join_dictionaries(dict_e, dict_a)
         self.assertEqual(len(dict_a_b['variable_one']), 30)
         self.assertEqual(len(dict_a_b['variable_two']), 35)
         self.assertEqual(dict_c_d['variable_one'].shape, (30, 10))
@@ -87,11 +86,10 @@ class DataHelperTests(unittest.TestCase):
         self.assertEqual(len(dict_e_a['variable_two']), 15)
 
     def test_index_dict(self):
-        from photonai.modelwrapper.SamplePairing import SamplePairingBase
         labels = [0, 0, 0, 0, 0, 1, 1, 1, 1, 1]
         dict_a = {'variable_one': np.random.randn(10),
                   'variable_two': np.random.randn(10, 10)}
-        dict_a_1 = SamplePairingBase._index_dict(dict_a, labels == 0)
-        dict_a_2 = SamplePairingBase._index_dict(dict_a, labels == 1)
+        dict_a_1 = PhotonDataHelper.index_dict(dict_a, labels == 0)
+        dict_a_2 = PhotonDataHelper.index_dict(dict_a, labels == 1)
         self.assertEqual(len(dict_a_1['variable_one']), 5)
         self.assertEqual(dict_a_2['variable_two'].shape, (5, 10))

@@ -147,18 +147,25 @@ class PhotonDataHelper:
         return processed_X, processed_y, processed_kwargs
 
     @staticmethod
-    def join_dictionaries(kwargs, kwargs_new):
-        processed_kwargs = kwargs
-        if kwargs is None:
-            kwargs = dict()
-        if kwargs_new is not None and len(kwargs_new.items()) > 0:
-            for proc_key, proc_values in kwargs_new.items():
-                new_kwargs_data = kwargs_new[proc_key]
-                if proc_key not in processed_kwargs:
-                    processed_kwargs[proc_key] = new_kwargs_data
+    def join_dictionaries(dict_a: dict, dict_b: dict):
+        new_dict = dict()
+
+        if dict_a is None:
+            dict_a = dict()
+        if dict_b is not None:
+            for key, value in dict_b.items():
+                if key not in dict_a:
+                    new_dict[key] = dict_b[key]
                 else:
-                    processed_kwargs[proc_key] = PhotonDataHelper.stack_results(new_kwargs_data, kwargs[proc_key])
-        return processed_kwargs
+                    new_dict[key] = PhotonDataHelper.stack_results(value, dict_a[key])
+        return new_dict
+
+    @staticmethod
+    def index_dict(d: dict, boolean_index):
+        new_dict = dict()
+        for key, value in d.items():
+            new_dict[key] = value[boolean_index]
+        return new_dict
 
     @staticmethod
     def stack_results(new_a, existing_a):
