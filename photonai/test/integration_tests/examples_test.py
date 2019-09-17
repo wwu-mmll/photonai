@@ -1,6 +1,8 @@
 
 import unittest
 import warnings
+from glob import glob
+from shutil import rmtree
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
@@ -10,6 +12,9 @@ class TestRunExamples(unittest.TestCase):
     
     def setUp(self):
         pass
+
+    def tearDown(self):
+        [rmtree(f) for f in glob("./**/")]
     
     def test_skopt_example(self):
         exec(open(
@@ -145,33 +150,13 @@ class TestRunExamples(unittest.TestCase):
         exec(open(
             "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/callbacks.py").read(),
              locals(), globals())
-
+        
     def test_custom_transformer(self):
         exec(open(
             "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/custom_elements/custom_transformer.py").read(),
              locals(), globals())
-
+        
     def test_custom_estimator(self):
         exec(open(
             "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/custom_elements/custom_estimator.py").read(),
-             locals(), globals())
-
-    def test_hoton_code(self):
-        exec(open(
-            "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/basic_svm_pipe_no_performance_results_2019-09-16_17-26-28/photon_code.py").read(),
-             locals(), globals())
-
-    def test_hoton_code(self):
-        exec(open(
-            "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/basic_svm_pipe_no_performance_results_2019-09-16_17-27-45/photon_code.py").read(),
-             locals(), globals())
-
-    def test_hoton_code(self):
-        exec(open(
-            "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/basic_svm_pipe_no_performance_results_2019-09-16_17-21-50/photon_code.py").read(),
-             locals(), globals())
-
-    def test_hoton_code(self):
-        exec(open(
-            "/home/nwinter/PycharmProjects/photon_projects/photon_core/photonai/test/integration_tests/../../examples/advanced/basic_svm_pipe_no_performance_results_2019-09-16_17-27-16/photon_code.py").read(),
              locals(), globals())
