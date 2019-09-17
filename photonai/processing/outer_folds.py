@@ -5,6 +5,7 @@ import numpy as np
 
 from photonai.optimization import DummyPerformance
 from photonai.photonlogger import Logger
+from photonai.helper.helper import PhotonDataHelper
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
@@ -76,19 +77,11 @@ class OuterFoldManager:
 
     def _prepare_data(self, X, y=None, **kwargs):
         # Prepare Train and validation set data
-        self._validation_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
-        self._validation_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
-        self._test_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
-        self._test_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
-
-        # iterate over all kwargs list to prepare them for cross validation
-        self._validation_kwargs = {}
-        self._test_kwargs = {}
-        if len(kwargs) > 0:
-            for name, list_item in kwargs.items():
-                if isinstance(list_item, (list, np.ndarray)):
-                    self._validation_kwargs[name] = list_item[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
-                    self._test_kwargs[name] = list_item[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
+        train_indices = self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices
+        test_indices = self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices
+        self._validation_X, self._validation_y, self._validation_kwargs = PhotonDataHelper.split_data(X, y, kwargs,
+                                                                                                      indices=train_indices)
+        self._test_X, self._test_y, self._test_kwargs = PhotonDataHelper.split_data(X, y, kwargs, indices=test_indices)
 
         # write numbers to database info object
         self.result_object.number_samples_validation = self._validation_y.shape[0]
