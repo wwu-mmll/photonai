@@ -1,26 +1,25 @@
+import csv
 import itertools
+import os
 import pickle
+import pprint
+from typing import Union
+
+import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
-import csv
-import os
-import matplotlib.pyplot as plt
-
-from scipy.stats import sem
-from sklearn.metrics import confusion_matrix, roc_curve
+from nibabel.nifti1 import Nifti1Image
+from prettytable import PrettyTable
 from pymodm import connect
 from pymongo import DESCENDING
 from pymongo.errors import DocumentTooLarge
-from typing import Union
-from prettytable import PrettyTable
-import pprint
-from nibabel.nifti1 import Nifti1Image
+from scipy.stats import sem
+from sklearn.metrics import confusion_matrix, roc_curve
 
-from photonai.processing.results_structure import MDBHyperpipe
-from photonai.processing.metrics import Scorer
-from photonai.base.helper import PhotonDataHelper
 from photonai.photonlogger import Logger
+from photonai.processing.metrics import Scorer
+from photonai.processing.results_structure import MDBHyperpipe
 
 
 class ResultsHandler:
@@ -344,16 +343,12 @@ class ResultsHandler:
 
             for i, score_info in enumerate(score_info_list):
                 for collectable_key, collectable_list in collectables.items():
-                    if hasattr(score_info, collectable_key) and getattr(score_info, collectable_key) is not None \
-                            and len(getattr(score_info, collectable_key)) > 0:
-                        value = getattr(score_info, collectable_key)
-                        collectables[collectable_key] = PhotonDataHelper.stack_results(value,
-                                                                                       collectables[collectable_key])
+                    if getattr(score_info, collectable_key) is not None and len(
+                            getattr(score_info, collectable_key)) > 0:
+                        collectables[collectable_key].extend(list(getattr(score_info, collectable_key)))
                     else:
-                        collectables[collectable_key] = PhotonDataHelper.stack_results(np.full(len(score_info.y_true), np.nan),
-                                                                                       collectables[collectable_key])
-                fold_nr_array = PhotonDataHelper.stack_results(np.ones((len(score_info.y_true),)) * fold_nr[i],
-                                                               fold_nr_array)
+                        collectables[collectable_key].extend(list(np.full((len(score_info.y_true)), np.nan)))
+                fold_nr_array.extend(list(np.ones((len(score_info.y_true),)) * fold_nr[i]))
 
             collectables["fold"] = fold_nr_array
             # convert to pandas dataframe to use their sorting algorithm
