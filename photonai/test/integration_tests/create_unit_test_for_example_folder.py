@@ -21,7 +21,7 @@ class TestRunExamples(unittest.TestCase):
         pass
     
     def tearDown(self):
-        [rmtree(f) for f in glob("./**/")]
+        [rmtree(f) for f in glob("./**/") if "custom_elements" not in f]
     """
 
     for file in files:
@@ -29,7 +29,7 @@ class TestRunExamples(unittest.TestCase):
             string += """
     def test_{}(self):
         exec(open("{}").read(), locals(), globals())
-        """.format(os.path.basename(file).strip('.py'), file)
+        """.format(os.path.basename(file)[:-3], file)
     script = open("examples_test.py", "w")
     script.write(string)
     script.close()
