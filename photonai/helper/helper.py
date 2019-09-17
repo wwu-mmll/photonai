@@ -97,7 +97,7 @@ class PhotonDataHelper:
         return n
 
     @staticmethod
-    def split_data(X, y, kwargs, start, stop):
+    def split_data(X, y, kwargs, start=0, stop=1, indices=None):
         # iterate through data batchwise
 
         # is that necessary?
@@ -115,11 +115,16 @@ class PhotonDataHelper:
         if start == stop:
             stop = start + 1
 
-        X_batched = X[start:stop]
+        if indices is None:
+            indices_to_use = range(start, stop)
+        else:
+            indices_to_use = indices
+
+        X_batched = X[indices_to_use]
 
         # if we are to batch then apply it
         if y is not None:
-            y_batched = y[start:stop]
+            y_batched = y[indices_to_use]
         else:
             y_batched = None
 
@@ -129,9 +134,10 @@ class PhotonDataHelper:
                 if not isinstance(kwargs_list, np.ndarray):
                     kwargs_list = np.array(kwargs_list)
                 if len(kwargs_list.shape) > 1:
-                    kwargs_dict_batched[key] = kwargs_list[start:stop, :]
+                    kwargs_dict_batched[key] = kwargs_list[indices_to_use, :]
                 else:
-                    kwargs_dict_batched[key] = kwargs_list[start:stop]
+                    kwargs_dict_batched[key] = kwargs_list[indices_to_use]
+
         return X_batched, y_batched, kwargs_dict_batched
 
     @staticmethod

@@ -23,6 +23,22 @@ class FoldInfoTests(unittest.TestCase):
 
 class DataHelperTests(unittest.TestCase):
 
+    def test_data_split_indices(self):
+        vals = np.array([-1, -2, -3, -4, -5, -6, -7, -8, -9, -10])
+        vals_str = np.array([ascii(i) for i in vals])
+        random_features = np.random.randn(10, 20)
+        kwargs = {'test': vals,
+                  'subtest': vals_str,
+                  'random': random_features}
+        pick_list = [1, 3, 5]
+        splitted_X, splitted_y, splitted_example = PhotonDataHelper.split_data(random_features, vals,
+                                                   kwargs, indices=pick_list)
+        self.assertTrue(np.array_equal(splitted_X, random_features[pick_list]))
+        self.assertTrue(np.array_equal(splitted_y, vals[pick_list]))
+        self.assertTrue(np.array_equal(splitted_example['test'], vals[pick_list]))
+        self.assertTrue(np.array_equal(splitted_example['subtest'], vals_str[pick_list]))
+        self.assertTrue(np.array_equal(splitted_example['random'], random_features[pick_list]))
+
     def test_split_join_resorting(self):
         X = np.array([1, 2, 3, 4, 5, 6, 7, 8, 9, 10])
         y = np.array([1, 1, 1, 1, 1, 2, 2, 2, 2, 2])
