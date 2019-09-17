@@ -1,10 +1,11 @@
-from sklearn.utils.metaestimators import _BaseComposition
-import numpy as np
 import datetime
 import os
 
+import numpy as np
+from sklearn.utils.metaestimators import _BaseComposition
+
 from photonai.base.cache_manager import CacheManager
-from photonai.base.helper import PhotonDataHelper
+from photonai.helper.helper import PhotonDataHelper
 
 
 class PhotonPipeline(_BaseComposition):

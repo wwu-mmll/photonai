@@ -1,19 +1,20 @@
+import json
+import queue
 import time
 import traceback
 import warnings
-import queue
-import numpy as np
-import json
-from sklearn.pipeline import Pipeline
 from multiprocessing import Process, Queue
 
+import numpy as np
+from sklearn.pipeline import Pipeline
+
 from photonai.base.photon_elements import Stack, Branch, Switch
-from photonai.base.helper import PhotonPrintHelper
-from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, FoldOperations, MDBConfig
+from photonai.helper.helper import PhotonPrintHelper
 from photonai.photonlogger import Logger
 from photonai.processing.metrics import Scorer
+from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
+    FoldOperations, MDBConfig
 
-import warnings
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 

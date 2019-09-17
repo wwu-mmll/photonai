@@ -1,11 +1,11 @@
 import unittest
-import numpy as np
 
+import numpy as np
+from sklearn.datasets import load_breast_cancer
 from sklearn.decomposition import PCA
+from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from sklearn.pipeline import Pipeline as SKPipeline
-from sklearn.datasets import load_breast_cancer
 
 from photonai.base import PipelineElement, Switch, Stack, Branch, Preprocessing, DataFilter, CallbackElement
 from photonai.base.photon_pipeline import PhotonPipeline
@@ -256,7 +256,7 @@ class SwitchTests(unittest.TestCase):
         self.X, self.y = load_breast_cancer(True)
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.tree_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
-        self.pipe_switch = Switch('switch', [self.svc_pipe_element.copy_me(), self.tree_pipe_element.copy_me()])
+        self.pipe_switch = Switch('switch', [self.svc_pipe_element, self.tree_pipe_element])
         self.branch = Branch('branch')
         self.branch += self.svc_pipe_element
         self.transformer_branch = Branch('transformer_branch')
