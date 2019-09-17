@@ -10,7 +10,7 @@ from photonai.processing.permutation_test import PermutationTest
 def create_hyperpipe():
     settings = OutputSettings(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results',
                               project_folder='./permutation/')
-    my_pipe = Hyperpipe('basic_svm_pipe_permutation_test_3',
+    my_pipe = Hyperpipe('basic_svm_pipe_permutation_test',
                         optimizer='grid_search',
                         metrics=['accuracy', 'precision', 'recall'],
                         best_config_metric='accuracy',
@@ -31,12 +31,14 @@ X, y = load_breast_cancer(True)
 
 # in case the permutation test for this specific hyperpipe has already been calculated, PHOTON will skip the permutation
 # runs and load existing results
-perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, random_state=11, permutation_id='basic_svm_permutation_example_3')
+perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, random_state=11,
+                              permutation_id='my_permutation_test')
 perm_tester.fit(X, y)
 
 # Load results
 handler = ResultsHandler()
-handler.load_from_mongodb(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results', pipe_name='basic_svm_pipe_permutation_test_3')
+handler.load_from_mongodb(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results',
+                          pipe_name='basic_svm_pipe_permutation_test')
 
 perm_results = handler.results.permutation_test
 metric_dict = dict()
