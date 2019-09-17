@@ -22,6 +22,7 @@ prettytable
 seaborn
 joblib
 dask
+distributed
 # sk optimize
 scikit-optimize
 scikit-image
