@@ -45,6 +45,8 @@ setup(
         'scikit-image',
         'seaborn',
         'joblib',
-        'fasteners'
+      'fasteners',
+      'dask',
+      'distributed'
   ]
 )

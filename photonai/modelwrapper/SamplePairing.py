@@ -54,7 +54,7 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
             if n > 20:
                 return stirling_n / stirling_r / stirling_n_r
             else:
-                math.factorial(n) / math.factorial(r) / math.factorial(n - r)
+                return math.factorial(n) / math.factorial(r) / math.factorial(n - r)
         except:
             return -1
 
@@ -95,7 +95,7 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
                 pairs.append((triu_indices[0][distance_indices[i]], (triu_indices[1][distance_indices[i]])))
         return pairs
 
-    def _get_combinations(self, X, draw_limit, rand_seed, distance_metric, generator='random_pair'):
+    def _get_pairs(self, X, draw_limit, rand_seed, distance_metric, generator='random_pair'):
         """
         :param X: data array
         :param draw_limit: in case the full number of combinations is > 10k, how many to draw?
@@ -127,7 +127,7 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
             # get all combinations of samples
             return list(itertools.combinations(sample_indices, 2))
 
-    def _get_samples(self, X, y, generator, distance_metric, draw_limit, rand_seed, **kwargs):
+    def _return_samples(self, X, y, kwargs, generator, distance_metric, draw_limit, rand_seed):
         """
                 Generates "new samples" by computing the mean between all or n_draws pairs of existing samples and appends them to X
                 The target for each new sample is computed as the mean between the constituent targets
@@ -138,34 +138,35 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
                 :return: X_new: X and X_augmented; (y_new: the correspoding targets)
                 """
         # generate combinations
-        combs = self._get_combinations(X=X,
-                                       generator=generator,
-                                       distance_metric=distance_metric,
-                                       draw_limit=draw_limit,
-                                       rand_seed=rand_seed)
+        pairs = self._get_pairs(X=X,
+                                generator=generator,
+                                distance_metric=distance_metric,
+                                draw_limit=draw_limit,
+                                rand_seed=rand_seed)
 
         # compute mean over sample pairs
-        X_aug = np.empty([len(combs), X.shape[1]])
+        X_new = np.empty([len(pairs), X.shape[1]])
         i = 0
-        for c in combs:
-            X_aug[i] = np.mean([X[c[0]], X[c[1]]], axis=0)
+        for pair in pairs:
+            X_new[i] = np.mean([X[pair[0]], X[pair[1]]], axis=0)
             i += 1
+
         # add augmented samples to existing data
-        X_new = np.concatenate((X, X_aug), axis=0)
+        X_new = np.concatenate((X, X_new), axis=0)
 
         # get the corresponding targets and kwargs
         if kwargs:
             for name, kwarg in kwargs.items():
-                kwarg_new = np.empty(len(combs))
-                for i, c in enumerate(combs):
-                    kwarg_new[i] = np.mean([kwargs[name][c[0]], kwargs[name][c[1]]])
+                kwarg_new = np.empty(len(pairs))
+                for i, pair in enumerate(pairs):
+                    kwarg_new[i] = np.mean([kwargs[name][pair[0]], kwargs[name][pair[1]]])
                 kwargs[name] = np.concatenate((np.asarray(kwargs[name]), kwarg_new))
 
         if y is not None:
-            y_aug = np.empty(len(combs))
+            y_aug = np.empty(len(pairs))
             i = 0
-            for c in combs:
-                y_aug[i] = np.mean([y[c[0]], y[c[1]]])
+            for pair in pairs:
+                y_aug[i] = np.mean([y[pair[0]], y[pair[1]]])
                 i += 1
             # add augmented samples to existing data
             y_new = np.concatenate((y, y_aug))
@@ -173,6 +174,21 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
         else:
             return X_new, None, kwargs
 
+    @staticmethod
+    def _concatenate_dict(dict_a: dict, dict_b: dict, axis: int = 0):
+        if not dict_a:
+            return dict_b
+        else:
+            for key, value in dict_b.items():
+                dict_a[key] = np.concatenate((dict_a[key], value), axis=axis)
+            return dict_a
+
+    @staticmethod
+    def _index_dict(d: dict, boolean_index):
+        new_dict = dict()
+        for key, value in d.items():
+            new_dict[key] = value[boolean_index]
+        return new_dict
 
 class SamplePairingRegression(SamplePairingBase):
     _estimator_type = "transformer"
@@ -199,7 +215,8 @@ class SamplePairingRegression(SamplePairingBase):
         :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
         :return: X_new: X and X_augmented; (y_new: the correspoding targets)
         """
-        return self._get_samples(X, y, self.generator, self.distance_metric, self.draw_limit, self.rand_seed, **kwargs)
+        return self._return_samples(X, y, self.generator, self.distance_metric, self.draw_limit, self.rand_seed,
+                                    **kwargs)
 
 
 class SamplePairingClassification(SamplePairingBase):
@@ -233,33 +250,32 @@ class SamplePairingClassification(SamplePairingBase):
         Logger().debug("Pairing " + str(self.draw_limit) + " samples...")
 
         # ensure class balance in the training set if balance_classes is True
-        nDiff = list()
-        for t in np.unique(y):
-            if self.balance_classes == True:
-                nDiff.append(self.draw_limit - np.sum(y == t))
+        unique_classes = np.unique(y)
+        n_pairs = list()
+        for label in unique_classes:
+            if self.balance_classes:
+                n_pairs.append(self.draw_limit - np.sum(y == label))
             else:
-                nDiff.append(self.draw_limit)
+                n_pairs.append(self.draw_limit)
 
         # run get_samples for each class independently
-        kwargs_new = kwargs
+        X_extended = list()
+        y_extended = list()
+        kwargs_extended = dict()
 
-        X_new = list()
-        y_new = list()
+        for label, limit in zip(unique_classes, n_pairs):
+            X_new_class, y_new_class, kwargs_new_class = self._return_samples(X[y == label], y[y == label],
+                                                                              self._index_dict(kwargs, y == label),
+                                                                              generator=self.generator,
+                                                                              distance_metric=self.distance_metric,
+                                                                              draw_limit=limit,
+                                                                              rand_seed=self.rand_seed)
 
-        for t, limit in zip(np.unique(y), nDiff):
-
-            X_new_class, y_new_class, kwargs = self._get_samples(X[y == t], y[y == t],
-                                                                 generator=self.generator,
-                                                                 distance_metric=self.distance_metric,
-                                                                 draw_limit=limit,
-                                                                 rand_seed=self.rand_seed, **kwargs)
-
-            X_new.extend(X_new_class)
-            y_new.extend(y_new_class)
+            X_extended.extend(X_new_class)
+            y_extended.extend(y_new_class)
 
             # get the corresponding kwargs
             if kwargs:
-                for name, kwarg in kwargs.items():
-                    kwargs_new[name] = np.concatenate((np.asarray(kwargs_new[name]), kwarg))
+                kwargs_extended = self._concatenate_dict(kwargs_extended, kwargs_new_class)
 
-        return X_new, y_new, kwargs_new
+        return X_extended, y_extended, kwargs_extended
