@@ -1,19 +1,17 @@
-import inspect
 import glob
+import inspect
 import time
-
-import numpy as np
-import nibabel as nib
-
 from os import path
 from pathlib import Path
+
+import nibabel as nib
+import numpy as np
+from nilearn import image, masking, _utils
+from nilearn._utils.niimg import _safe_get_data
+from nilearn.input_data import NiftiMasker
 from sklearn.base import BaseEstimator
 
-from nilearn import image, masking, _utils
-from nilearn.input_data import NiftiMasker
-from nilearn._utils.niimg import _safe_get_data
-
-from photonai.base.helper import Singleton
+from photonai.helper.helper import Singleton
 from photonai.photonlogger import Logger
 
 

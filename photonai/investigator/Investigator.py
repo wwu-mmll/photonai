@@ -1,12 +1,12 @@
-from photonai.base.hyperpipe import Hyperpipe
-from photonai.photonlogger import Logger
-from photonai.base.helper import Singleton
-from ..investigator.app.main import application
-
-import webbrowser
 import os
-from time import sleep as slp
+import webbrowser
 from threading import Thread
+from time import sleep as slp
+
+from photonai.base.hyperpipe import Hyperpipe
+from photonai.helper.helper import Singleton
+from photonai.photonlogger import Logger
+from ..investigator.app.main import application
 
 
 class Investigator:

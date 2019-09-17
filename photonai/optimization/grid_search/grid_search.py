@@ -1,4 +1,5 @@
 import datetime
+
 import numpy as np
 
 from photonai.optimization.base_optimizer import PhotonBaseOptimizer
@@ -74,4 +75,3 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
         for parameters in super(TimeBoxedRandomGridSearchOptimizer, self).next_config_generator():
             if datetime.datetime.now() < self.end_time:
                 yield parameters
-

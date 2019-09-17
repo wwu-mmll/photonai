@@ -1,14 +1,15 @@
 import os
+
 import dask
 import numpy as np
+from dask.distributed import Client
 from nibabel.nifti1 import Nifti1Image
-from dask.distributed import Client, LocalCluster
 
 from photonai.base import Branch, CallbackElement
-from photonai.base.helper import PhotonDataHelper
-from photonai.photonlogger import Logger
 from photonai.base.registry.element_dictionary import ElementDictionary
+from photonai.helper.helper import PhotonDataHelper
 from photonai.neuro.brain_atlas import BrainAtlas
+from photonai.photonlogger import Logger
 
 
 class NeuroBranch(Branch):
