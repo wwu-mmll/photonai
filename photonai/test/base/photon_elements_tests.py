@@ -256,7 +256,7 @@ class SwitchTests(unittest.TestCase):
         self.X, self.y = load_breast_cancer(True)
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.tree_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
-        self.pipe_switch = Switch('switch', [self.svc_pipe_element.copy_me(), self.tree_pipe_element.copy_me()])
+        self.pipe_switch = Switch('switch', [self.svc_pipe_element, self.tree_pipe_element])
         self.branch = Branch('branch')
         self.branch += self.svc_pipe_element
         self.transformer_branch = Branch('transformer_branch')

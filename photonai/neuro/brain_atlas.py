@@ -13,7 +13,7 @@ from nilearn import image, masking, _utils
 from nilearn.input_data import NiftiMasker
 from nilearn._utils.niimg import _safe_get_data
 
-from photonai.base.helper import Singleton
+from photonai.helper.helper import Singleton
 from photonai.photonlogger import Logger
 
 

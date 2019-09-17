@@ -2,7 +2,7 @@ import datetime
 import inspect
 from enum import Enum
 from functools import total_ordering
-from photonai.base.helper import Singleton
+from photonai.helper.helper import Singleton
 
 
 @Singleton

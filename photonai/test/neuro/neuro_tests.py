@@ -160,27 +160,17 @@ class NeuroTest(unittest.TestCase):
                      "Testing Method on Multi Core Batched"]
 
         def create_instances_and_transform(neuro_class_str, param_dict, transformed_X):
-            instance_list = []
 
-            nmb1 = NeuroBranch(name="single core application", nr_of_processes=1)
+            for i in range(1, 4):
+                if i == 1 or i == 3:
+                    obj = NeuroBranch(name="single core application", nr_of_processes=1)
+                else:
+                    obj = NeuroBranch(name="multi core application", nr_of_processes=3)
 
-            nmb1.add(PipelineElement(neuro_class_str, **param_dict))
-            instance_list.append(nmb1)
-
-            nmb2 = NeuroBranch(name="multi core application", nr_of_processes=3)
-            nmb2.add(PipelineElement(neuro_class_str, **param_dict))
-            instance_list.append(nmb2)
-
-            nmb3 = NeuroBranch(name="batched single core application", nr_of_processes=1)
-            nmb3.add(PipelineElement(neuro_class_str, batch_size=5, **param_dict))
-            instance_list.append(nmb3)
-
-            nmb4 = NeuroBranch(name="batched multi core application", nr_of_processes=3)
-            nmb4.add(PipelineElement(neuro_class_str, batch_size=5, **param_dict))
-            instance_list.append(nmb4)
-
-            for test, obj in enumerate(instance_list):
-                print(testsuite[test])
+                if i < 3:
+                    obj += PipelineElement(neuro_class_str, **param_dict)
+                if i >= 3:
+                    obj += PipelineElement(neuro_class_str, batch_size=5, **param_dict)
 
                 # transform data
                 obj.base_element.cache_folder = os.path.join(self.test_folder, 'cache')
@@ -225,18 +215,18 @@ class NeuroTest(unittest.TestCase):
         # set the config so that caching works
         nmb.set_params(**{'SmoothImages__fwhm': 10, 'ResampleImages__voxel_size': 5})
 
-        # okay we are transforming 8 Niftis with 3 elements, so afterwards there should be 3*8 + 1 for library
+        # okay we are transforming 8 Niftis with 3 elements, so afterwards there should be 3*8
         nr_niftis = 7
         nmb.transform(self.X[:nr_niftis])
         nr_files_in_folder = len(glob.glob(os.path.join(nmb.base_element.cache_folder, "*.p")))
-        self.assertTrue(nr_files_in_folder == (3*nr_niftis) + 1)
+        self.assertTrue(nr_files_in_folder == 3*nr_niftis)
         self.assertTrue(len(nmb.base_element.cache_man.cache_index.items()) == (3*nr_niftis))
 
         # transform 3 items that should have been cached and two more that need new processing
         nmb.transform(self.X[nr_niftis-2::])
-        # now we should have 10 * 3 + 1 elements in the cache folder
+        # now we should have 10 * 3
         nr_files_in_folder = len(glob.glob(os.path.join(nmb.base_element.cache_folder, "*.p")))
-        self.assertTrue(nr_files_in_folder == (3 * len(self.X)) + 1)
+        self.assertTrue(nr_files_in_folder == (3 * len(self.X)))
         self.assertTrue(len(nmb.base_element.cache_man.cache_index.items()) == (3 * len(self.X)))
 
     def neuro_branch_output_img(self):
