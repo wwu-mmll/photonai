@@ -70,7 +70,7 @@ class InnerFoldManager(object):
         original_save_predictions = self.save_predictions
         save_predictions = bool(self.save_predictions)
         save_feature_importances = self.save_feature_importances
-
+        # for metrics across folds we need all predictions preserved
         if self.cross_validation_infos.calculate_metrics_across_folds:
             save_predictions = True
 
@@ -81,8 +81,8 @@ class InnerFoldManager(object):
                 train, test = inner_fold.train_indices, inner_fold.test_indices
 
                 # split kwargs according to cross validation
-                train_X, train_y, kwargs_cv_train = PhotonDataHelper.split_kwargs_dict(X, y, kwargs, indices=train)
-                test_X, test_y, kwargs_cv_test = PhotonDataHelper.split_kwargs_dict(X, y, kwargs, indices=test)
+                train_X, train_y, kwargs_cv_train = PhotonDataHelper.split_data(X, y, kwargs, indices=train)
+                test_X, test_y, kwargs_cv_test = PhotonDataHelper.split_data(X, y, kwargs, indices=test)
 
                 new_pipe = self.pipe()
                 if self.cache_folder is not None and self.cache_updater is not None:
@@ -93,7 +93,7 @@ class InnerFoldManager(object):
 
                 job_data = InnerFoldManager.InnerCVJob(pipe=new_pipe,
                                                        config=dict(self.params),
-                                                       metrics=list(self.optimization_infos.metrics),
+                                                       metrics=self.optimization_infos.metrics,
                                                        callbacks=self.optimization_constraints,
                                                        train_data=InnerFoldManager.JobData(train_X, train_y, train, kwargs_cv_train),
                                                        test_data=InnerFoldManager.JobData(test_X, test_y, test, kwargs_cv_test),
@@ -215,21 +215,21 @@ class InnerFoldManager(object):
                 else:
                     # if we have lists concat
                     axis = 0
-                    overall_y_true_test = np.concatenate((overall_y_true_test, curr_test_fold.y_true), axis=axis)
-                    overall_y_pred_test = np.concatenate((overall_y_pred_test, curr_test_fold.y_pred), axis=axis)
+                overall_y_true_test = np.concatenate((overall_y_true_test, curr_test_fold.y_true), axis=axis)
+                overall_y_pred_test = np.concatenate((overall_y_pred_test, curr_test_fold.y_pred), axis=axis)
 
-                    # we assume y_pred from the training set comes in the same shape as y_pred from the test se
-                    overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
-                    overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
+                # we assume y_pred from the training set comes in the same shape as y_pred from the test se
+                overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
+                overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
 
                 # metrics across folds
                 metrics_to_calculate = list(metrics)
                 if 'score' in metrics_to_calculate:
                     metrics_to_calculate.remove('score')
-                metrics_train = InnerFoldManager.calculate_metrics(overall_y_true_train,
-                                                                   overall_y_pred_train, metrics_to_calculate)
-                metrics_test = InnerFoldManager.calculate_metrics(overall_y_true_test,
-                                                                  overall_y_pred_test, metrics_to_calculate)
+                metrics_train = Scorer.calculate_metrics(overall_y_true_train,
+                                                         overall_y_pred_train, metrics_to_calculate)
+                metrics_test = Scorer.calculate_metrics(overall_y_true_test,
+                                                        overall_y_pred_test, metrics_to_calculate)
 
                 def metric_to_db_class(metric_list):
                     db_metrics = []
@@ -255,19 +255,23 @@ class InnerFoldManager(object):
                 # we needed to save the true/predicted values to calculate the metrics across folds,
                 # but if the user is uninterested in it we dismiss them after the job is done
                 if not original_save_predictions:
-                    for inner_fold in config_item.inner_folds:
-                        # Todo: What about dismissing feature importances, too?
-                        inner_fold.training.y_true = []
-                        inner_fold.training.y_pred = []
-                        inner_fold.training.indices = []
-                        inner_fold.validation.y_true = []
-                        inner_fold.validation.y_pred = []
-                        inner_fold.validation.indices = []
+                    InnerFoldManager.dismiss_predictions(config_item)
 
             elif calculate_metrics_per_fold:
                 # calculate mean and std over all fold metrics
                 config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
                                                                                                                   metrics)
+
+    @staticmethod
+    def dismiss_predictions(config_item):
+        for inner_fold in config_item.inner_folds:
+            # Todo: What about dismissing feature importances, too?
+            inner_fold.training.y_true = []
+            inner_fold.training.y_pred = []
+            inner_fold.training.indices = []
+            inner_fold.validation.y_true = []
+            inner_fold.validation.y_pred = []
+            inner_fold.validation.indices = []
 
     @staticmethod
     def fit_and_score(job: InnerCVJob):
@@ -278,13 +282,7 @@ class InnerFoldManager(object):
         pipe.set_params(**job.config)
 
         # start fitting
-        fit_start_time = time.time()
         pipe.fit(job.train_data.X, job.train_data.y, **job.train_data.cv_kwargs)
-
-        # Todo: Fit Process Metrics
-        # write down how long the fitting took
-        # fit_duration = time.time() - fit_start_time
-        # config_item.fit_duration_minutes = fit_duration
 
         # score test data
         curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics, indices=job.test_data.indices,
@@ -352,7 +350,7 @@ class InnerFoldManager(object):
         # InnerFoldManager.plot_some_data(y_true, y_pred)
 
         if calculate_metrics:
-            score_metrics = InnerFoldManager.calculate_metrics(y_true, y_pred, non_default_score_metrics)
+            score_metrics = Scorer.calculate_metrics(y_true, y_pred, non_default_score_metrics)
 
             # add default metric
             if output_metrics:
@@ -420,39 +418,5 @@ class InnerFoldManager(object):
             f_importances = None
         return f_importances
 
-    @staticmethod
-    def calculate_metrics(y_true, y_pred, metrics):
-        """
-        Applies all metrics to the given predicted and true values.
-        The metrics are encoded via a string literal which is mapped to the according calculation function
-        :param y_true: the truth values
-        :type y_true: list
-        :param y_pred: the predicted values
-        :param metrics: list
-        :return: dict of metrics
-        """
-
-        # Todo: HOW TO CHECK IF ITS REGRESSION?!
-        # The following works only for classification
-        # if np.ndim(y_pred) == 2:
-        #     y_pred = one_hot_to_binary(y_pred)
-        #     Logger().warn("test_predictions was one hot encoded => transformed to binary")
-        #
-        # if np.ndim(y_true) == 2:
-        #     y_true = one_hot_to_binary(y_true)
-        #     Logger().warn("test_y was one hot encoded => transformed to binary")
-
-        output_metrics = {}
-        if metrics:
-            for metric in metrics:
-                scorer = Scorer.create(metric)
-                if scorer is not None:
-                    scorer_value = scorer(y_true, y_pred)
-                    Logger().debug(str(scorer_value))
-                    output_metrics[metric] = scorer_value
-                else:
-                    output_metrics[metric] = np.nan
-
-        return output_metrics
 
 
