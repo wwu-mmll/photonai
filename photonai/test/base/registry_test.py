@@ -1,15 +1,15 @@
 import os
 import unittest
-from shutil import rmtree
+
 
 import numpy as np
 from sklearn.model_selection import KFold
 
 from photonai.base import PhotonRegistry
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
-
-class RegistryTest(unittest.TestCase):
+class RegistryTest(PhotonBaseTest):
 
     def setUp(self):
         self.test_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)).split('test')[0], 'test')
@@ -17,7 +17,6 @@ class RegistryTest(unittest.TestCase):
         self.registry = PhotonRegistry(self.custom_folder)
 
     def tearDown(self):
-        rmtree("./tmp/", ignore_errors=True)
         if os.path.isfile(os.path.join(self.custom_folder, 'CustomElements.json')):
             os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
 

@@ -116,7 +116,7 @@ class PhotonDataHelper:
             stop = start + 1
 
         if indices is None:
-            indices_to_use = range(start, stop)
+            indices_to_use = slice(start, stop)
         else:
             indices_to_use = indices
 
