@@ -7,8 +7,9 @@ from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
-from photonai.base import PipelineElement, Switch, Stack, Branch, Preprocessing, DataFilter, CallbackElement
+from photonai.base import PipelineElement, Switch, Stack, Branch, DataFilter, CallbackElement
 from photonai.base.photon_pipeline import PhotonPipeline
+from photonai.helper.helper import PhotonDataHelper
 from photonai.test.base.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesEstimator, DummyNeedsCovariatesTransformer, DummyNeedsYTransformer, DummyTransformer, \
     DummyNeedsCovariatesAndYTransformer, DummyEstimatorNoPredict, DummyEstimatorWrongType, DummyTransformerWithPredict
@@ -30,18 +31,15 @@ def elements_to_dict(elements):
         for element in elements:
             new_list.append(elements_to_dict(element))
         elements = tuple(new_list)
-    elif isinstance(elements, (Switch, Branch, Preprocessing, Stack, PhotonPipeline)):
+    elif hasattr(elements, '__dict__'):
         new_dict = dict()
         elements = elements.__dict__
         for name, element in elements.items():
             new_dict[name] = elements_to_dict(element)
         elements = new_dict
-    elif isinstance(elements, PipelineElement):
-        new_dict = dict()
-        elements = elements.__dict__
-        if not isinstance(elements["base_element"], dict):
-            new_dict["base_element"] = elements["base_element"].__dict__
-        elements = new_dict
+    else:
+        if not isinstance(elements, (str, float, int, complex, np.ndarray)):
+            return None
     return elements
 
 
@@ -500,9 +498,7 @@ class BranchTests(unittest.TestCase):
             stacking_element += my_dummy
 
     def test_copy_me(self):
-        branch = Branch('MyBranch')
-        branch += self.scaler
-        branch += self.pca
+        branch = Branch('MyBranch', [self.scaler, self.pca])
 
         copy = branch.copy_me()
         self.assertDictEqual(elements_to_dict(copy), elements_to_dict(branch))
@@ -564,30 +560,26 @@ class StackTests(unittest.TestCase):
     def setUp(self):
         self.X, self.y = load_breast_cancer(True)
 
-        self.trans_1 = PipelineElement('PCA', {'n_components': [5, 10]})
-        self.trans_2 = PipelineElement('StandardScaler', {'with_mean': [True]})
-        self.est_1 = PipelineElement('SVC', {'C': [1, 2]})
-        self.est_2 = PipelineElement('DecisionTreeClassifier', {'min_samples_leaf': [3, 5]})
+        self.pca = PipelineElement('PCA', {'n_components': [5, 10]})
+        self.scaler = PipelineElement('StandardScaler', {'with_mean': [True]})
+        self.svc = PipelineElement('SVC', {'C': [1, 2]})
+        self.tree = PipelineElement('DecisionTreeClassifier', {'min_samples_leaf': [3, 5]})
 
-        self.transformer_branch_1 = Branch('TransBranch1')
-        self.transformer_branch_1 += self.trans_1
-        self.transformer_branch_2 = Branch('TransBranch2')
-        self.transformer_branch_2 += self.trans_2
+        self.transformer_branch_1 = Branch('TransBranch1', [self.pca.copy_me()])
+        self.transformer_branch_2 = Branch('TransBranch2', [self.scaler.copy_me()])
 
-        self.estimator_branch_1 = Branch('EstBranch1')
-        self.estimator_branch_1 += self.est_1
-        self.estimator_branch_2 = Branch('EstBranch2')
-        self.estimator_branch_2 += self.est_2
+        self.estimator_branch_1 = Branch('EstBranch1', [self.svc.copy_me()])
+        self.estimator_branch_2 = Branch('EstBranch2', [self.tree.copy_me()])
 
-        self.transformer_stack = Stack('TransformerStack', [self.trans_1.copy_me(), self.trans_2.copy_me()])
-        self.estimator_stack = Stack('EstimatorStack', [self.est_1.copy_me(), self.est_2.copy_me()])
+        self.transformer_stack = Stack('TransformerStack', [self.pca.copy_me(), self.scaler.copy_me()])
+        self.estimator_stack = Stack('EstimatorStack', [self.svc.copy_me(), self.tree.copy_me()])
         self.transformer_branch_stack = Stack('TransBranchStack', [self.transformer_branch_1.copy_me(),
                                                                    self.transformer_branch_2.copy_me()])
         self.estimator_branch_stack = Stack('EstBranchStack', [self.estimator_branch_1.copy_me(),
                                                                self.estimator_branch_2.copy_me()])
 
-        self.stacks = [([self.trans_1, self.trans_2], self.transformer_stack),
-                       ([self.est_1, self.est_2], self.estimator_stack),
+        self.stacks = [([self.pca, self.scaler], self.transformer_stack),
+                       ([self.svc, self.tree], self.estimator_stack),
                        ([self.transformer_branch_1, self.transformer_branch_2], self.transformer_branch_stack),
                        ([self.estimator_branch_1, self.estimator_branch_2], self.estimator_branch_stack)]
 
@@ -622,14 +614,52 @@ class StackTests(unittest.TestCase):
 
             self.assertEqual(Xt.shape[1], Xt_1.shape[-1] + Xt_2.shape[-1])
 
+    def recursive_assertion(self, element_a, element_b):
+        for key in element_a.keys():
+            if isinstance(element_a[key], np.ndarray):
+                np.testing.assert_array_equal(element_a[key], element_b[key])
+            elif isinstance(element_a[key], dict):
+                self.recursive_assertion(element_a[key], element_b[key])
+            else:
+                self.assertEqual(element_a[key], element_b[key])
+
     def test_fit(self):
-        pass
+        for elements, stack in [([self.pca, self.scaler], self.transformer_stack),
+                                ([self.svc, self.tree], self.estimator_stack)]:
+            np.random.seed(42)
+            stack = stack.fit(self.X, self.y)
+            np.random.seed(42)
+            for i, element in enumerate(elements):
+                element = element.fit(self.X, self.y)
+                element_dict = elements_to_dict(element)
+                stack_dict = elements_to_dict(stack.elements[i])
+                self.recursive_assertion(element_dict, stack_dict)
 
     def test_transform(self):
-        pass
+        # todo
+        for elements, stack in self.stacks:
+            np.random.seed(42)
+            Xt_stack, _, _ = stack.fit(self.X, self.y).transform(self.X)
+            np.random.seed(42)
+            Xt_elements = None
+            for i, element in enumerate(elements):
+                Xt_element, _, _ = element.fit(self.X, self.y).transform(self.X)
+                Xt_elements = PhotonDataHelper.stack_results(Xt_element, Xt_elements)
+            np.testing.assert_array_equal(Xt_stack, Xt_elements)
 
     def test_predict(self):
-        pass
+        # todo
+        for elements, stack in [([self.svc, self.tree], self.estimator_stack),
+                                ([self.estimator_branch_1, self.estimator_branch_2], self.estimator_branch_stack)]:
+            np.random.seed(42)
+            stack = stack.fit(self.X, self.y)
+            yt_stack = stack.predict(self.X)
+            np.random.seed(42)
+            Xt_elements = None
+            for i, element in enumerate(elements):
+                Xt_element = element.fit(self.X, self.y).predict(self.X)
+                Xt_elements = PhotonDataHelper.stack_results(Xt_element, Xt_elements)
+            np.testing.assert_array_equal(yt_stack, Xt_elements)
 
     def test_predict_proba(self):
         pass
