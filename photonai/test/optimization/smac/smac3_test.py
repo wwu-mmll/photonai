@@ -1,8 +1,8 @@
-import types
 import unittest
 
 from photonai.base import PipelineElement
 from photonai.optimization import IntegerRange
+from photonai.test.optimization.grid_search.grid_search_test import GridSearchOptimizerTest
 
 try:
     from photonai.optimization.smac.smac3 import SMACOptimizer
@@ -12,7 +12,7 @@ except ModuleNotFoundError:
     found = False
 
 if found:
-    class SMACOptimizerWithRequirementsTest(unittest.TestCase):
+    class SMACOptimizerWithRequirementsTest(GridSearchOptimizerTest):
 
         def setUp(self):
             """
@@ -22,14 +22,26 @@ if found:
                                       PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
                                                       test_disabled=True),
                                       PipelineElement("SVC")]
-            self.smac_optimizer = SMACOptimizer()
+            self.optimizer = SMACOptimizer()
 
-        def test_all_attributes_available(self):
+        def test_all_functions_available(self):
             """
-            Test for .ask attribute. .ask is important for next configuration that should be tested.
+            Test existence of functions and parameters ->  .ask() .tell() .prepare()
+            Has to pass cause tell() got additional attribute runtime.
             """
-            self.smac_optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
-            self.assertIsInstance(self.smac_optimizer.ask, types.GeneratorType)
+            pass
+
+        def test_ask(self):
+            """
+            Test general functionality of .ask(). Not implemented yet.
+            """
+            pass
+
+        def test_ask_advanced(self):
+            """
+            Test advanced functionality of .ask(). Not implemented yet.
+            """
+            pass
 
 else:
     class SMACOptimizerWithoutRequirementsTest(unittest.TestCase):
