@@ -146,10 +146,14 @@ class PipelineElement(BaseEstimator):
 
     def copy_me(self):
         if self.name in self.ELEMENT_DICTIONARY:
-            copy = PipelineElement(self.name, self.hyperparameters, **self.kwargs)
+            copy = PipelineElement(self.name, self.hyperparameters, test_disabled=self.test_disabled,
+                                   disabled=self.disabled, batch_size=self.batch_size, **self.kwargs)
         else:
             # handle custom elements
-            copy = PipelineElement.create(self.name, self.base_element, hyperparameters=self.hyperparameters, **self.kwargs)
+            copy = PipelineElement.create(self.name, self.base_element, hyperparameters=self.hyperparameters,
+                                          test_disabled=self.test_disabled,
+                                          disabled=self.disabled, batch_size=self.batch_size,
+                                          **self.kwargs)
         if self.current_config is not None:
             copy.set_params(**self.current_config)
         return copy
@@ -755,10 +759,6 @@ class Stack(PipelineElement):
         for element in self.elements:
             element_transform = element.predict(X, **kwargs)
             predicted_data = Stack.stack_data(predicted_data, element_transform)
-        if self.voting:
-            if hasattr(predicted_data, 'shape'):
-                if len(predicted_data.shape) > 1:
-                    predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data, kwargs
 
     def predict_proba(self, X, y=None, **kwargs):
@@ -770,10 +770,6 @@ class Stack(PipelineElement):
         for element in self.elements:
             element_transform = element.predict_proba(X)
             predicted_data = Stack.stack_data(predicted_data, element_transform)
-        if self.voting:
-            if hasattr(predicted_data, 'shape'):
-                if len(predicted_data.shape) > 1:
-                    predicted_data = np.mean(predicted_data, axis=1).astype(int)
         return predicted_data
 
     def transform(self, X, y=None, **kwargs):
