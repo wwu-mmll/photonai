@@ -426,6 +426,18 @@ class PhotonPipeline(_BaseComposition):
     def fit_predict(self, X, y=None, **kwargs):
         raise NotImplementedError('fit_predict not yet implemented in PHOTON Pipeline')
 
+    def copy_me(self):
+        pipeline_steps = []
+        for item_name, item in self.elements:
+            cpy = item.copy_me()
+            if isinstance(cpy, list):
+                for new_step in cpy:
+                    pipeline_steps.append((new_step.name, new_step))
+            else:
+                pipeline_steps.append((cpy.name, cpy))
+        new_pipe = PhotonPipeline(pipeline_steps)
+        return new_pipe
+
     @property
     def named_steps(self):
         return dict(self.elements)

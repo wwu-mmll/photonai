@@ -442,7 +442,7 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
         CacheManager.clear_cache_files(cache_folder_neuro)
 
 
-class CachedHyperpipeTests(unittest.TestCase):
+class CachedHyperpipeTests(PhotonBaseTest):
     import warnings
     warnings.filterwarnings('ignore', category=DeprecationWarning)
     warnings.filterwarnings('ignore', category=FutureWarning)
@@ -453,7 +453,7 @@ class CachedHyperpipeTests(unittest.TestCase):
         X = AtlasLibrary().get_nii_files_from_folder(test_folder, extension=".nii")
         y = np.random.randn(len(X))
 
-        cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data/cache')
+        cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), './cache')
 
         self.hyperpipe = Hyperpipe('complex_case',
                                    inner_cv=KFold(n_splits=5),
