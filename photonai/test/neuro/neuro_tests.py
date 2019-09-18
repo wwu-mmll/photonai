@@ -28,6 +28,8 @@ class NeuroTest(unittest.TestCase):
 
     def tearDown(self):
         rmtree('./cache/', ignore_errors=True)
+        rmtree('./tmp/', ignore_errors=True)
+        rmtree('./dask-worker-space/', ignore_errors=True)
 
     def test_single_subject_resampling(self):
         voxel_size = [3, 3, 3]
