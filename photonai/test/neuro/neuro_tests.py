@@ -14,9 +14,10 @@ from photonai.base.photon_pipeline import CacheManager
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import BrainMask, AtlasLibrary, BrainAtlas
 from photonai.processing import ResultsHandler
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 
-class NeuroTest(unittest.TestCase):
+class NeuroTest(PhotonBaseTest):
 
     def setUp(self):
         self.test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_data/')
@@ -26,8 +27,6 @@ class NeuroTest(unittest.TestCase):
         self.X = AtlasLibrary().get_nii_files_from_folder(self.test_folder, extension=".nii")
         self.y = np.random.randn(len(self.X))
 
-    def tearDown(self):
-        rmtree('./cache/', ignore_errors=True)
 
     def test_single_subject_resampling(self):
         voxel_size = [3, 3, 3]

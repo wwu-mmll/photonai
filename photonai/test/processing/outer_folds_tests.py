@@ -1,7 +1,7 @@
 import unittest
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
-
-class OuterFoldTests(unittest.TestCase):
+class OuterFoldTests(PhotonBaseTest):
 
     def setUp(self):
         pass

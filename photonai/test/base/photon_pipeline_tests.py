@@ -1,7 +1,7 @@
 import glob
 import os
 import unittest
-from shutil import rmtree
+
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
@@ -18,7 +18,7 @@ from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
 from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
-
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
@@ -34,7 +34,7 @@ from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
 # assertNotIsInstance(a, b) 	not isinstance(a, b) 	3.2
 
 
-class PipelineTests(unittest.TestCase):
+class PipelineTests(PhotonBaseTest):
 
     def setUp(self):
 
@@ -53,9 +53,6 @@ class PipelineTests(unittest.TestCase):
         self.sk_svc = SVC(random_state=3)
         self.sk_ss = StandardScaler()
         self.sk_dt = DecisionTreeClassifier(random_state=3)
-
-    def tearDown(self):
-        pass
 
     def test_regular_use(self):
 
@@ -184,7 +181,7 @@ class PipelineTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sk_proba, photon_proba))
 
 
-class CacheManagerTests(unittest.TestCase):
+class CacheManagerTests(PhotonBaseTest):
 
     def setUp(self):
         cache_folder = "./cache/"
@@ -201,9 +198,6 @@ class CacheManagerTests(unittest.TestCase):
                         'SVC__C': 1,
                         'SVC__kernel': 'linear'}
         self.cache_man.clear_cache()
-
-    def tearDown(self):
-        rmtree('./cache/', ignore_errors=True)
 
     def test_find_relevant_configuration_items(self):
         self.cache_man.prepare(pipe_elements=self.item_names, X=self.X, config=self.config1)
@@ -255,7 +249,7 @@ class CacheManagerTests(unittest.TestCase):
         self.assertTrue(len(glob.glob(os.path.join(self.cache_man.cache_folder, "*.p"))) == 0)
 
 
-class CachedPhotonPipelineTests(unittest.TestCase):
+class CachedPhotonPipelineTests(PhotonBaseTest):
 
     def setUp(self):
         # Photon Version
@@ -269,7 +263,7 @@ class CachedPhotonPipelineTests(unittest.TestCase):
 
         self.pipe.caching = True
         self.pipe.fold_id = "12345643463434"
-        self.pipe.cache_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data/cache')
+        self.pipe.cache_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), './cache')
 
         self.config1 = {'PCA__n_components': 4,
                         'SVC__C': 3,

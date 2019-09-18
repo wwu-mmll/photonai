@@ -1,7 +1,8 @@
 import unittest
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 
-class InnerFoldTests(unittest.TestCase):
+class InnerFoldTests(PhotonBaseTest):
 
     def setUp(self):
         self.pipe = None

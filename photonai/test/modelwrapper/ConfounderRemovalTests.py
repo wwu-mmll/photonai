@@ -1,5 +1,5 @@
 import unittest
-from shutil import rmtree
+
 
 import numpy as np
 import statsmodels.api as sm
@@ -10,9 +10,10 @@ from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.preprocessing import StandardScaler
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 
-class ConfounderRemovalTests(unittest.TestCase):
+class ConfounderRemovalTests(PhotonBaseTest):
 
     def setUp(self):
 
@@ -82,9 +83,6 @@ class ConfounderRemovalTests(unittest.TestCase):
 
         # convert the data to correlated random variables
         self.z = np.dot(c, x).T
-
-    def tearDown(self):
-        rmtree("./tmp/", ignore_errors=True)
 
     def test_confounder_removal_statistically(self):
         cr = PipelineElement("ConfounderRemoval", {}, standardize_covariates=False)
