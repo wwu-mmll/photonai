@@ -90,6 +90,41 @@ class Scorer(object):
             Logger().error('Specify valid metric to choose best config.')
         raise NameError('Specify valid metric to choose best config.')
 
+    @staticmethod
+    def calculate_metrics(y_true, y_pred, metrics):
+        """
+        Applies all metrics to the given predicted and true values.
+        The metrics are encoded via a string literal which is mapped to the according calculation function
+        :param y_true: the truth values
+        :type y_true: list
+        :param y_pred: the predicted values
+        :param metrics: list
+        :return: dict of metrics
+        """
+
+        # Todo: HOW TO CHECK IF ITS REGRESSION?!
+        # The following works only for classification
+        # if np.ndim(y_pred) == 2:
+        #     y_pred = one_hot_to_binary(y_pred)
+        #     Logger().warn("test_predictions was one hot encoded => transformed to binary")
+        #
+        # if np.ndim(y_true) == 2:
+        #     y_true = one_hot_to_binary(y_true)
+        #     Logger().warn("test_y was one hot encoded => transformed to binary")
+
+        output_metrics = {}
+        if metrics:
+            for metric in metrics:
+                scorer = Scorer.create(metric)
+                if scorer is not None:
+                    scorer_value = scorer(y_true, y_pred)
+                    Logger().debug(str(scorer_value))
+                    output_metrics[metric] = scorer_value
+                else:
+                    output_metrics[metric] = np.nan
+
+        return output_metrics
+
 
 def binary_to_one_hot(binary_vector):
     classes = np.unique(binary_vector)

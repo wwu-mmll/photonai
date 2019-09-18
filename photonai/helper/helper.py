@@ -120,10 +120,14 @@ class PhotonDataHelper:
         else:
             indices_to_use = indices
 
+        if not isinstance(X, np.ndarray):
+            X = np.asarray(X)
         X_batched = X[indices_to_use]
 
         # if we are to batch then apply it
         if y is not None:
+            if not isinstance(y, np.ndarray):
+                y = np.asarray(y)
             y_batched = y[indices_to_use]
         else:
             y_batched = None
