@@ -5,7 +5,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.svm import SVC
+from sklearn.tree import DecisionTreeClassifier
 
 from photonai.base import PipelineElement, Switch, Stack, Branch, Preprocessing, DataFilter, CallbackElement
 from photonai.base.photon_pipeline import PhotonPipeline
@@ -254,97 +254,136 @@ class SwitchTests(unittest.TestCase):
 
     def setUp(self):
         self.X, self.y = load_breast_cancer(True)
-        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
-        self.tree_pipe_element = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
-        self.pipe_switch = Switch('switch', [self.svc_pipe_element, self.tree_pipe_element])
-        self.branch = Branch('branch')
-        self.branch += self.svc_pipe_element
-        self.transformer_branch = Branch('transformer_branch')
-        self.transformer_branch += PipelineElement('PCA')
-        self.transformer = PipelineElement('PCA')
-        self.pipe_switch_with_branch = Switch('switch_with_branch', [self.tree_pipe_element, self.branch])
-        self.pipe_transformer_switch_with_branch = Switch('transformer_switch_with_branch',
-                                                          [self.transformer, self.transformer_branch])
-        self.switch_in_switch = Switch('Switch_in_switch', [self.transformer_branch,
-                                                            self.pipe_transformer_switch_with_branch])
+        self.svc = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        self.tree = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
+        self.gpc = PipelineElement('GaussianProcessClassifier')
+        self.pca = PipelineElement('PCA')
+
+        self.estimator_branch = Branch('estimator_branch', [self.svc.copy_me()])
+        self.transformer_branch = Branch('transformer_branch', [self.pca.copy_me()])
+
+        self.estimator_switch = Switch('estimator_switch',
+                                       [self.svc.copy_me(), self.tree.copy_me(), self.gpc.copy_me()])
+        self.estimator_switch_with_branch = Switch('estimator_switch_with_branch',
+                                                   [self.tree.copy_me(), self.estimator_branch.copy_me()])
+        self.transformer_switch_with_branch = Switch('transformer_switch_with_branch',
+                                                     [self.pca.copy_me(), self.transformer_branch.copy_me()])
+        self.switch_in_switch = Switch('Switch_in_switch',
+                                       [self.transformer_branch.copy_me(),
+                                        self.transformer_switch_with_branch.copy_me()])
 
     def test_init(self):
-        self.assertEqual(self.pipe_switch.name, 'switch')
+        self.assertEqual(self.estimator_switch.name, 'estimator_switch')
 
     def test_hyperparams(self):
         # assert number of different configs to test
         # each config combi for each element: 4 for SVC and 3 for logistic regression = 7
-        self.assertEqual(len(self.pipe_switch.pipeline_element_configurations), 2)
-        self.assertEqual(len(self.pipe_switch.pipeline_element_configurations[0]), 4)
-        self.assertEqual(len(self.pipe_switch.pipeline_element_configurations[1]), 3)
+        self.assertEqual(len(self.estimator_switch.pipeline_element_configurations), 3)
+        self.assertEqual(len(self.estimator_switch.pipeline_element_configurations[0]), 4)
+        self.assertEqual(len(self.estimator_switch.pipeline_element_configurations[1]), 3)
 
         # hyperparameters
-        self.assertDictEqual(self.pipe_switch.hyperparameters, {'switch__current_element': [(0, 0), (0, 1),
-                                                                                            (0, 2), (0, 3),
-                                                                                            (1, 0), (1, 1),
-                                                                                            (1, 2)]})
+        self.assertDictEqual(self.estimator_switch.hyperparameters,
+                             {'estimator_switch__current_element': [(0, 0), (0, 1), (0, 2), (0, 3),
+                                                                    (1, 0), (1, 1), (1, 2), (2, 0)]})
 
         # config grid
-        self.assertListEqual(self.pipe_switch.generate_config_grid(), [{'switch__current_element': (0, 0)},
-                                                                       {'switch__current_element': (0, 1)},
-                                                                       {'switch__current_element': (0, 2)},
-                                                                       {'switch__current_element': (0, 3)},
-                                                                       {'switch__current_element': (1, 0)},
-                                                                       {'switch__current_element': (1, 1)},
-                                                                       {'switch__current_element': (1, 2)}])
+        self.assertListEqual(self.estimator_switch.generate_config_grid(),
+                             [{'estimator_switch__current_element': (0, 0)},
+                              {'estimator_switch__current_element': (0, 1)},
+                              {'estimator_switch__current_element': (0, 2)},
+                              {'estimator_switch__current_element': (0, 3)},
+                              {'estimator_switch__current_element': (1, 0)},
+                              {'estimator_switch__current_element': (1, 1)},
+                              {'estimator_switch__current_element': (1, 2)},
+                              {'estimator_switch__current_element': (2, 0)}])
 
     def test_set_params(self):
 
         # test for grid search
         false_config = {'current_element': 1}
         with self.assertRaises(ValueError):
-            self.pipe_switch.set_params(**false_config)
+            self.estimator_switch.set_params(**false_config)
 
         correct_config = {'current_element': (0, 1)}
-        self.pipe_switch.set_params(**correct_config)
-        self.assertEqual(self.pipe_switch.base_element.base_element.C, 0.1)
-        self.assertEqual(self.pipe_switch.base_element.base_element.kernel, 'sigmoid')
+        self.estimator_switch.set_params(**correct_config)
+        self.assertEqual(self.estimator_switch.base_element.base_element.C, 0.1)
+        self.assertEqual(self.estimator_switch.base_element.base_element.kernel, 'sigmoid')
 
         # test for other optimizers
         smac_config = {'SVC__C': 2, 'SVC__kernel': 'rbf'}
-        self.pipe_switch.set_params(**smac_config)
-        self.assertEqual(self.pipe_switch.base_element.base_element.C, 2)
-        self.assertEqual(self.pipe_switch.base_element.base_element.kernel, 'rbf')
+        self.estimator_switch.set_params(**smac_config)
+        self.assertEqual(self.estimator_switch.base_element.base_element.C, 2)
+        self.assertEqual(self.estimator_switch.base_element.base_element.kernel, 'rbf')
 
     def test_fit(self):
-        self.pipe_switch.set_params(**{'current_element': (1, 1)})
-        self.pipe_switch.fit(self.X, self.y)
-        self.tree_pipe_element.fit(self.X, self.y)
-        np.testing.assert_array_equal(self.tree_pipe_element.base_element.feature_importances_,
-                                      self.pipe_switch.base_element.feature_importances_)
+        np.random.seed(42)
+        self.estimator_switch.set_params(**{'current_element': (1, 0)})
+        self.estimator_switch.fit(self.X, self.y)
+        np.random.seed(42)
+        self.tree.set_params(**{'min_samples_split': 2})
+        self.tree.fit(self.X, self.y)
+        np.testing.assert_array_equal(self.tree.base_element.feature_importances_,
+                                      self.estimator_switch.base_element.feature_importances_)
 
     def test_transform(self):
-        self.pipe_switch.set_params(**{'current_element': (1, 1)})
-        self.pipe_switch.fit(self.X, self.y)
-        self.tree_pipe_element.fit(self.X, self.y)
+        self.transformer_switch_with_branch.set_params(**{'current_element': (0, 0)})
+        self.transformer_switch_with_branch.fit(self.X, self.y)
+        self.pca.fit(self.X, self.y)
+
+        switch_Xt, _, _ = self.transformer_switch_with_branch.transform(self.X)
+        pca_Xt, _, _ = self.pca.transform(self.X)
+        self.assertTrue(np.array_equal(pca_Xt, switch_Xt))
 
     def test_predict(self):
-        pass
+        self.estimator_switch.set_params(**{'current_element': (1, 0)})
+        np.random.seed(42)
+        self.estimator_switch.fit(self.X, self.y)
+        self.tree.set_params(**{'min_samples_split': 2})
+        np.random.seed(42)
+        self.tree.fit(self.X, self.y)
+
+        switch_preds = self.estimator_switch.predict(self.X)
+        tree_preds = self.tree.predict(self.X)
+        self.assertTrue(np.array_equal(switch_preds, tree_preds))
 
     def test_predict_proba(self):
-        pass
+        gpc = PipelineElement('GaussianProcessClassifier')
+        svc = PipelineElement('SVC')
+        switch = Switch('EstimatorSwitch', [gpc, svc])
+        switch.set_params(**{'current_element': (0, 0)})
+        np.random.seed(42)
+        switch_probas = switch.fit(self.X, self.y).predict_proba(self.X)
+        np.random.seed(42)
+        gpr_probas = self.gpc.fit(self.X, self.y).predict_proba(self.X)
+        self.assertTrue(np.array_equal(switch_probas, gpr_probas))
 
     def test_inverse_transform(self):
-        pass
+        self.transformer_switch_with_branch.set_params(**{'current_element': (0, 0)})
+        self.transformer_switch_with_branch.fit(self.X, self.y)
+        self.pca.fit(self.X, self.y)
+        Xt_pca, _, _ = self.pca.transform(self.X)
+        Xt_switch, _, _ = self.transformer_switch_with_branch.transform(self.X)
+        X_pca, _, _ = self.pca.inverse_transform(Xt_pca)
+        X_switch, _, _ = self.transformer_switch_with_branch.inverse_transform(Xt_switch)
+
+        self.assertTrue(np.array_equal(Xt_pca, Xt_switch))
+        self.assertTrue(np.array_equal(X_pca, X_switch))
+        np.testing.assert_almost_equal(X_switch, self.X)
 
     def test_base_element(self):
-        # grid search
-        self.pipe_switch.set_params(**{'current_element': (1, 1)})
-        self.assertIs(self.pipe_switch.base_element, self.tree_pipe_element)
-        self.assertIs(self.pipe_switch.base_element.base_element, self.tree_pipe_element.base_element)
+        switch = Switch('switch', [self.svc, self.tree])
+        switch.set_params(**{'current_element': (1, 1)})
+        self.assertIs(switch.base_element, self.tree)
+        self.assertIs(switch.base_element.base_element, self.tree.base_element)
 
         # other optimizer
-        self.pipe_switch.set_params(**{'DecisionTreeClassifier__min_samples_split': 2})
-        self.assertIs(self.pipe_switch.base_element, self.tree_pipe_element)
-        self.assertIs(self.pipe_switch.base_element.base_element, self.tree_pipe_element.base_element)
+        switch.set_params(**{'DecisionTreeClassifier__min_samples_split': 2})
+        self.assertIs(switch.base_element, self.tree)
+        self.assertIs(switch.base_element.base_element, self.tree.base_element)
 
     def test_copy_me(self):
-        switches = [self.pipe_switch, self.pipe_switch_with_branch, self.pipe_transformer_switch_with_branch,
+        switches = [self.estimator_switch, self.estimator_switch_with_branch, self.transformer_switch_with_branch,
                     self.switch_in_switch]
 
         for switch in switches:
@@ -383,17 +422,18 @@ class SwitchTests(unittest.TestCase):
         switch = Switch('MySwitch', [tree_reg, svr])
         self.assertEqual(switch._estimator_type, 'regressor')
 
-        self.assertEqual(self.pipe_switch._estimator_type, 'classifier')
-        self.assertEqual(self.pipe_switch_with_branch._estimator_type, 'classifier')
-        self.assertEqual(self.pipe_transformer_switch_with_branch._estimator_type, None)
+        self.assertEqual(self.estimator_switch._estimator_type, 'classifier')
+        self.assertEqual(self.estimator_switch_with_branch._estimator_type, 'classifier')
+        self.assertEqual(self.transformer_switch_with_branch._estimator_type, None)
         self.assertEqual(self.switch_in_switch._estimator_type, None)
 
     def test_add(self):
-        self.assertEqual(len(self.pipe_switch.elements), 2)
+        self.assertEqual(len(self.estimator_switch.elements), 3)
         self.assertEqual(len(self.switch_in_switch.elements), 2)
-        self.assertEqual(len(self.pipe_transformer_switch_with_branch.elements), 2)
+        self.assertEqual(len(self.transformer_switch_with_branch.elements), 2)
 
-        self.assertEqual(list(self.pipe_switch.elements_dict.keys()), ['SVC', 'DecisionTreeClassifier'])
+        self.assertEqual(list(self.estimator_switch.elements_dict.keys()), ['SVC', 'DecisionTreeClassifier',
+                                                                            'GaussianProcessClassifier'])
         self.assertEqual(list(self.switch_in_switch.elements_dict.keys()), ['transformer_branch',
                                                                       'transformer_switch_with_branch'])
 
@@ -403,48 +443,54 @@ class SwitchTests(unittest.TestCase):
         switch += PipelineElement('FastICA')
 
         with self.assertRaises(Exception):
-            self.pipe_switch += self.pipe_switch.elements[0]
+            self.estimator_switch += self.estimator_switch.elements[0]
 
 
 class BranchTests(unittest.TestCase):
 
     def setUp(self):
         self.X, self.y = load_breast_cancer(True)
-        self.ss_pipe_element = PipelineElement("StandardScaler", {'with_mean': True})
-        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True, random_state=3)
-        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']}, random_state=3)
-        self.branch = Branch('MyBranch')
-        self.branch += self.ss_pipe_element
-        self.branch += self.pca_pipe_element
+        self.scaler = PipelineElement("StandardScaler", {'with_mean': True})
+        self.pca = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True, random_state=3)
+        self.tree = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]}, random_state=3)
 
-    def test_easy_use_case(self):
-        sk_pipe = SKPipeline([("SS", StandardScaler()), ("PCA", PCA(random_state=3)), ("SVC", SVC(random_state=3))])
-        sk_pipe.fit(self.X, self.y)
-        sk_pred = sk_pipe.predict(self.X)
+        self.transformer_branch = Branch('MyBranch', [self.scaler, self.pca])
+        self.transformer_branch_sklearn = SKPipeline([("SS", StandardScaler()),
+                                                      ("PCA", PCA(random_state=3))])
+        self.estimator_branch = Branch('MyBranch', [self.scaler, self.pca, self.tree])
+        self.estimator_branch_sklearn = SKPipeline([("SS", StandardScaler()),
+                                                    ("PCA", PCA(random_state=3)),
+                                                    ("Tree", DecisionTreeClassifier(random_state=3))])
 
-        branch = Branch("my_amazing_branch")
-        branch += self.ss_pipe_element
-        branch += self.pca_pipe_element
-        branch += self.svc_pipe_element
-        branch.fit(self.X, self.y)
-        branch_pred = branch.predict(self.X)
+    def test_fit(self):
+        self.estimator_branch_sklearn.fit(self.X, self.y)
+        sk_pred = self.estimator_branch_sklearn.predict(self.X)
+
+        self.estimator_branch.fit(self.X, self.y)
+        branch_pred = self.estimator_branch.predict(self.X)
 
         self.assertTrue(np.array_equal(sk_pred, branch_pred))
 
-    def test_fit(self):
-        pass
-
     def test_transform(self):
-        pass
+        Xt, _, _ = self.estimator_branch.fit(self.X, self.y).transform(self.X)
+        Xt_sklearn = self.transformer_branch_sklearn.fit(self.X, self.y).transform(self.X)
+        self.assertTrue(np.array_equal(Xt, Xt_sklearn))
 
     def test_predict(self):
-        pass
+        y_pred = self.estimator_branch.fit(self.X, self.y).predict(self.X)
+        y_pred_sklearn = self.estimator_branch_sklearn.fit(self.X, self.y).predict(self.X)
+        np.testing.assert_array_equal(y_pred, y_pred_sklearn)
 
     def test_predict_proba(self):
-        pass
+        proba = self.estimator_branch.fit(self.X, self.y).predict_proba(self.X)
+        proba_sklearn = self.estimator_branch_sklearn.fit(self.X, self.y).predict_proba(self.X)
+        np.testing.assert_array_equal(proba, proba_sklearn)
 
     def test_inverse_transform(self):
-        pass
+        self.estimator_branch.fit(self.X, self.y)
+        feature_importances = self.estimator_branch.elements[-1].base_element.feature_importances_
+        Xt, _, _ = self.estimator_branch.inverse_transform(feature_importances)
+        self.assertEqual(self.X.shape[1], Xt.shape[0])
 
     def test_no_y_transformers(self):
         stacking_element = Stack("forbidden_stack")
@@ -455,8 +501,8 @@ class BranchTests(unittest.TestCase):
 
     def test_copy_me(self):
         branch = Branch('MyBranch')
-        branch += self.ss_pipe_element
-        branch += self.pca_pipe_element
+        branch += self.scaler
+        branch += self.pca
 
         copy = branch.copy_me()
         self.assertDictEqual(elements_to_dict(copy), elements_to_dict(branch))
@@ -470,23 +516,23 @@ class BranchTests(unittest.TestCase):
         self.assertEqual(fake_copy.elements[1].base_element.n_components, branch.elements[1].base_element.n_components)
 
     def test_prepare_pipeline(self):
-        self.assertEqual(len(self.branch.elements), 2)
+        self.assertEqual(len(self.transformer_branch.elements), 2)
         config_grid = {'MyBranch__PCA__n_components': [1, 2],
                        'MyBranch__PCA__disabled': [False, True],
                        'MyBranch__StandardScaler__with_mean': True}
-        self.assertDictEqual(config_grid, self.branch._hyperparameters)
+        self.assertDictEqual(config_grid, self.transformer_branch._hyperparameters)
 
     def test_set_params(self):
         config = {'PCA__n_components': 2,
                   'PCA__disabled': True,
                   'StandardScaler__with_mean': True}
-        self.branch.set_params(**config)
-        self.assertTrue(self.branch.base_element.elements[1][1].disabled)
-        self.assertEqual(self.branch.base_element.elements[1][1].base_element.n_components, 2)
-        self.assertEqual(self.branch.base_element.elements[0][1].base_element.with_mean, True)
+        self.transformer_branch.set_params(**config)
+        self.assertTrue(self.transformer_branch.base_element.elements[1][1].disabled)
+        self.assertEqual(self.transformer_branch.base_element.elements[1][1].base_element.n_components, 2)
+        self.assertEqual(self.transformer_branch.base_element.elements[0][1].base_element.with_mean, True)
 
         with self.assertRaises(ValueError):
-            self.branch.set_params(**{'any_weird_param': 1})
+            self.transformer_branch.set_params(**{'any_weird_param': 1})
 
     def test_estimator_type(self):
         def callback(X, y=None):
