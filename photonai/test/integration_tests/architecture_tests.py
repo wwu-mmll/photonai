@@ -56,7 +56,7 @@ class TestArchitectures(unittest.TestCase):
     def create_hyperpipes(metrics: list = None, inner_cv=KFold(n_splits=3, shuffle=True, random_state=42),
                           outer_cv=ShuffleSplit(n_splits=1, test_size=.2),
                           plots: bool = False, optimizer: str = 'random_grid_search',
-                          optimizer_params: dict = None, eval_final_performance: bool = True,
+                          optimizer_params={'k': 15}, eval_final_performance: bool = True,
                           performance_constraints: list = None):
 
         pipe = Hyperpipe(name="architecture_test_pipe",
