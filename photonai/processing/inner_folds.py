@@ -1,15 +1,11 @@
-import json
-import queue
+
 import time
 import traceback
 import warnings
-from multiprocessing import Process, Queue
-
 import numpy as np
-from sklearn.pipeline import Pipeline
-
+import json
 from photonai.base.photon_elements import Stack, Branch, Switch
-from photonai.helper.helper import PhotonPrintHelper
+from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper
 from photonai.photonlogger import Logger
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
@@ -28,12 +24,10 @@ class InnerFoldManager(object):
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
                  cross_validation_infos, outer_fold_id, optimization_constraints: list=None,
                  raise_error: bool=False, save_predictions: bool=False, save_feature_importances: bool=False,
-                 training: bool = False, cache_folder = None, cache_updater = None,
-                 parallel_cv: bool = False, nr_of_parrallel_processes: int = 4):
+                 training: bool = False, cache_folder=None, cache_updater=None):
         """
         Creates a new InnerFoldManager object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
-        :type pipe: Pipeline
         :param specific_config: The hyperparameter configuration to test
         :type specific_config: dict
         :param raise_error: if true, raises exception when training and testing the pipeline fails
@@ -53,9 +47,6 @@ class InnerFoldManager(object):
 
         self.raise_error = raise_error
         self.training = training
-
-        self.parallel_cv = parallel_cv
-        self.nr_of_parallel_processes = nr_of_parrallel_processes
 
     def fit(self, X, y, **kwargs):
         """
@@ -79,14 +70,9 @@ class InnerFoldManager(object):
         original_save_predictions = self.save_predictions
         save_predictions = bool(self.save_predictions)
         save_feature_importances = self.save_feature_importances
-
+        # for metrics across folds we need all predictions preserved
         if self.cross_validation_infos.calculate_metrics_across_folds:
             save_predictions = True
-
-        if self.parallel_cv:
-            nr_of_processes = min(self.nr_of_parallel_processes, )
-            folds_to_do = Queue()
-            folds_done = Queue()
 
         try:
             # do inner cv
@@ -95,13 +81,8 @@ class InnerFoldManager(object):
                 train, test = inner_fold.train_indices, inner_fold.test_indices
 
                 # split kwargs according to cross validation
-                kwargs_cv_train = {}
-                kwargs_cv_test = {}
-                if len(kwargs) > 0:
-                    for name, sublist in kwargs.items():
-                        if isinstance(sublist, (list, np.ndarray)):
-                            kwargs_cv_train[name] = sublist[train]
-                            kwargs_cv_test[name] = sublist[test]
+                train_X, train_y, kwargs_cv_train = PhotonDataHelper.split_data(X, y, kwargs, indices=train)
+                test_X, test_y, kwargs_cv_test = PhotonDataHelper.split_data(X, y, kwargs, indices=test)
 
                 new_pipe = self.pipe()
                 if self.cache_folder is not None and self.cache_updater is not None:
@@ -112,63 +93,45 @@ class InnerFoldManager(object):
 
                 job_data = InnerFoldManager.InnerCVJob(pipe=new_pipe,
                                                        config=dict(self.params),
-                                                       metrics=list(self.optimization_infos.metrics),
+                                                       metrics=self.optimization_infos.metrics,
                                                        callbacks=self.optimization_constraints,
-                                                       train_data=InnerFoldManager.JobData(X[train], y[train], train, dict(kwargs_cv_train)),
-                                                       test_data=InnerFoldManager.JobData(X[test], y[test], test, dict(kwargs_cv_test)),
+                                                       train_data=InnerFoldManager.JobData(train_X, train_y, train, kwargs_cv_train),
+                                                       test_data=InnerFoldManager.JobData(test_X, test_y, test, kwargs_cv_test),
                                                        save_feature_importances=save_feature_importances,
                                                        save_predictions=save_predictions)
 
-                if not self.parallel_cv:
-                    # only for unparallel processing
-                    # inform children in which inner fold we are
-                    # self.pipe.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=fold_cnt)
-                    # self.mother_inner_fold_handle(fold_cnt)
+                # only for unparallel processing
+                # inform children in which inner fold we are
+                # self.pipe.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=fold_cnt)
+                # self.mother_inner_fold_handle(fold_cnt)
 
-                    # --> write that output in InnerFoldManager!
-                    Logger().debug(config_item.human_readable_config)
-                    Logger().debug('calculating...')
+                # --> write that output in InnerFoldManager!
+                Logger().debug(config_item.human_readable_config)
+                Logger().debug('calculating...')
 
-                    curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
-                    durations = job_data.pipe.time_monitor
-                    self.update_config_item_with_inner_fold(config_item=config_item,
-                                                            fold_cnt=idx+1,
-                                                            curr_train_fold=curr_train_fold,
-                                                            curr_test_fold=curr_test_fold,
-                                                            time_monitor=durations)
+                curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
+                durations = job_data.pipe.time_monitor
+                self.update_config_item_with_inner_fold(config_item=config_item,
+                                                        fold_cnt=idx+1,
+                                                        curr_train_fold=curr_train_fold,
+                                                        curr_test_fold=curr_test_fold,
+                                                        time_monitor=durations)
 
-                    if isinstance(self.optimization_constraints, list):
-                        break_cv = 0
-                        for cf in self.optimization_constraints:
-                            if not cf.shall_continue(config_item):
-                                Logger().debug(
-                                    'Skip further cross validation of config because of performance constraints')
-                                break_cv += 1
-                                break
-                        if break_cv > 0:
-                            break
-                    elif self.optimization_constraints is not None:
-                        if not self.optimization_constraints.shall_continue(config_item):
+                if isinstance(self.optimization_constraints, list):
+                    break_cv = 0
+                    for cf in self.optimization_constraints:
+                        if not cf.shall_continue(config_item):
                             Logger().debug(
                                 'Skip further cross validation of config because of performance constraints')
+                            break_cv += 1
                             break
-
-                else:
-                    folds_to_do.put(job_data)
-
-            if self.parallel_cv:
-                process_list = list()
-                for w in range(nr_of_processes):
-                    p = Process(target=InnerFoldManager.parallel_inner_cv, args=(folds_to_do, folds_done))
-                    process_list.append(p)
-                    p.start()
-
-                for p in process_list:
-                    p.join()
-
-                while not folds_done.empty():
-                    curr_test_fold, curr_train_fold = folds_done.get()
-                    self.update_config_item_with_inner_fold(config_item, 0, curr_test_fold, curr_train_fold, {})
+                    if break_cv > 0:
+                        break
+                elif self.optimization_constraints is not None:
+                    if not self.optimization_constraints.shall_continue(config_item):
+                        Logger().debug(
+                            'Skip further cross validation of config because of performance constraints')
+                        break
 
             InnerFoldManager.process_fit_results(config_item,
                                                  self.cross_validation_infos.calculate_metrics_across_folds,
@@ -212,21 +175,6 @@ class InnerFoldManager(object):
             self.save_feature_importances = save_feature_importances
 
     @staticmethod
-    def parallel_inner_cv(folds_to_do, folds_done):
-            while True:
-                try:
-                    task = folds_to_do.get_nowait()
-                except queue.Empty:
-                    break
-                else:
-                    # print("Starting Inner CV from process number " + current_process().name)
-                    fold_output = InnerFoldManager.fit_and_score(task)
-                    folds_done.put(fold_output)
-                    # print("Stopping Inner CV from process number " + current_process().name)
-
-            return True
-
-    @staticmethod
     def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor):
         # fill result tree with fold information
         inner_fold = MDBInnerFold()
@@ -267,21 +215,21 @@ class InnerFoldManager(object):
                 else:
                     # if we have lists concat
                     axis = 0
-                    overall_y_true_test = np.concatenate((overall_y_true_test, curr_test_fold.y_true), axis=axis)
-                    overall_y_pred_test = np.concatenate((overall_y_pred_test, curr_test_fold.y_pred), axis=axis)
+                overall_y_true_test = np.concatenate((overall_y_true_test, curr_test_fold.y_true), axis=axis)
+                overall_y_pred_test = np.concatenate((overall_y_pred_test, curr_test_fold.y_pred), axis=axis)
 
-                    # we assume y_pred from the training set comes in the same shape as y_pred from the test se
-                    overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
-                    overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
+                # we assume y_pred from the training set comes in the same shape as y_pred from the test se
+                overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
+                overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
 
                 # metrics across folds
                 metrics_to_calculate = list(metrics)
                 if 'score' in metrics_to_calculate:
                     metrics_to_calculate.remove('score')
-                metrics_train = InnerFoldManager.calculate_metrics(overall_y_true_train,
-                                                                   overall_y_pred_train, metrics_to_calculate)
-                metrics_test = InnerFoldManager.calculate_metrics(overall_y_true_test,
-                                                                  overall_y_pred_test, metrics_to_calculate)
+                metrics_train = Scorer.calculate_metrics(overall_y_true_train,
+                                                         overall_y_pred_train, metrics_to_calculate)
+                metrics_test = Scorer.calculate_metrics(overall_y_true_test,
+                                                        overall_y_pred_test, metrics_to_calculate)
 
                 def metric_to_db_class(metric_list):
                     db_metrics = []
@@ -307,19 +255,23 @@ class InnerFoldManager(object):
                 # we needed to save the true/predicted values to calculate the metrics across folds,
                 # but if the user is uninterested in it we dismiss them after the job is done
                 if not original_save_predictions:
-                    for inner_fold in config_item.inner_folds:
-                        # Todo: What about dismissing feature importances, too?
-                        inner_fold.training.y_true = []
-                        inner_fold.training.y_pred = []
-                        inner_fold.training.indices = []
-                        inner_fold.validation.y_true = []
-                        inner_fold.validation.y_pred = []
-                        inner_fold.validation.indices = []
+                    InnerFoldManager.dismiss_predictions(config_item)
 
             elif calculate_metrics_per_fold:
                 # calculate mean and std over all fold metrics
                 config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
                                                                                                                   metrics)
+
+    @staticmethod
+    def dismiss_predictions(config_item):
+        for inner_fold in config_item.inner_folds:
+            # Todo: What about dismissing feature importances, too?
+            inner_fold.training.y_true = []
+            inner_fold.training.y_pred = []
+            inner_fold.training.indices = []
+            inner_fold.validation.y_true = []
+            inner_fold.validation.y_pred = []
+            inner_fold.validation.indices = []
 
     @staticmethod
     def fit_and_score(job: InnerCVJob):
@@ -330,13 +282,7 @@ class InnerFoldManager(object):
         pipe.set_params(**job.config)
 
         # start fitting
-        fit_start_time = time.time()
         pipe.fit(job.train_data.X, job.train_data.y, **job.train_data.cv_kwargs)
-
-        # Todo: Fit Process Metrics
-        # write down how long the fitting took
-        # fit_duration = time.time() - fit_start_time
-        # config_item.fit_duration_minutes = fit_duration
 
         # score test data
         curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics, indices=job.test_data.indices,
@@ -349,7 +295,6 @@ class InnerFoldManager(object):
                                                  save_predictions=job.save_predictions,
                                                  save_feature_importances=job.save_feature_importances,
                                                  training=True, **job.train_data.cv_kwargs)
-
 
         return curr_test_fold, curr_train_fold
 
@@ -390,7 +335,6 @@ class InnerFoldManager(object):
         if not training:
             y_pred = estimator.predict(X, **kwargs)
         else:
-            # durchs Cachen kommt hier X mit zu wenig items zurück...
             X, y_true_new, kwargs_new = estimator.transform(X, y_true, **kwargs)
             if y_true_new is not None:
                 y_true = y_true_new
@@ -406,7 +350,7 @@ class InnerFoldManager(object):
         # InnerFoldManager.plot_some_data(y_true, y_pred)
 
         if calculate_metrics:
-            score_metrics = InnerFoldManager.calculate_metrics(y_true, y_pred, non_default_score_metrics)
+            score_metrics = Scorer.calculate_metrics(y_true, y_pred, non_default_score_metrics)
 
             # add default metric
             if output_metrics:
@@ -474,39 +418,5 @@ class InnerFoldManager(object):
             f_importances = None
         return f_importances
 
-    @staticmethod
-    def calculate_metrics(y_true, y_pred, metrics):
-        """
-        Applies all metrics to the given predicted and true values.
-        The metrics are encoded via a string literal which is mapped to the according calculation function
-        :param y_true: the truth values
-        :type y_true: list
-        :param y_pred: the predicted values
-        :param metrics: list
-        :return: dict of metrics
-        """
-
-        # Todo: HOW TO CHECK IF ITS REGRESSION?!
-        # The following works only for classification
-        # if np.ndim(y_pred) == 2:
-        #     y_pred = one_hot_to_binary(y_pred)
-        #     Logger().warn("test_predictions was one hot encoded => transformed to binary")
-        #
-        # if np.ndim(y_true) == 2:
-        #     y_true = one_hot_to_binary(y_true)
-        #     Logger().warn("test_y was one hot encoded => transformed to binary")
-
-        output_metrics = {}
-        if metrics:
-            for metric in metrics:
-                scorer = Scorer.create(metric)
-                if scorer is not None:
-                    scorer_value = scorer(y_true, y_pred)
-                    Logger().debug(str(scorer_value))
-                    output_metrics[metric] = scorer_value
-                else:
-                    output_metrics[metric] = np.nan
-
-        return output_metrics
 
 

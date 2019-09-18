@@ -14,9 +14,10 @@ from photonai.base.photon_pipeline import CacheManager
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import BrainMask, AtlasLibrary, BrainAtlas
 from photonai.processing import ResultsHandler
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 
-class NeuroTest(unittest.TestCase):
+class NeuroTest(PhotonBaseTest):
 
     def setUp(self):
         self.test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_data/')

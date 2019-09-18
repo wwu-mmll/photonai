@@ -18,7 +18,6 @@ class Scorer(object):
     ELEMENT_DICTIONARY = {
         # Classification
         'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', 'score'),
-        'confusion_matrix': ('sklearn.metrics', 'confusion_matrix', None),
         'accuracy': ('sklearn.metrics', 'accuracy_score', 'score'),
         'f1_score': ('sklearn.metrics', 'f1_score', 'score'),
         'hamming_loss': ('sklearn.metrics', 'hamming_loss', 'error'),
@@ -30,7 +29,6 @@ class Scorer(object):
         'specificity': ('photonai.processing.metrics', 'specificity', 'score'),
         'balanced_accuracy': ('photonai.processing.metrics', 'balanced_accuracy', 'score'),
         'categorical_accuracy': ('photonai.processing.metrics', 'categorical_accuracy_score', 'score'),
-        'categorical_crossentropy': ('photonai.processing.metrics', 'categorical_crossentropy', 'error'),
 
         # Regression
         'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error'),
@@ -90,19 +88,54 @@ class Scorer(object):
             Logger().error('Specify valid metric to choose best config.')
         raise NameError('Specify valid metric to choose best config.')
 
+    @staticmethod
+    def calculate_metrics(y_true, y_pred, metrics):
+        """
+        Applies all metrics to the given predicted and true values.
+        The metrics are encoded via a string literal which is mapped to the according calculation function
+        :param y_true: the truth values
+        :type y_true: list
+        :param y_pred: the predicted values
+        :param metrics: list
+        :return: dict of metrics
+        """
+
+        # Todo: HOW TO CHECK IF ITS REGRESSION?!
+        # The following works only for classification
+        # if np.ndim(y_pred) == 2:
+        #     y_pred = one_hot_to_binary(y_pred)
+        #     Logger().warn("test_predictions was one hot encoded => transformed to binary")
+        #
+        # if np.ndim(y_true) == 2:
+        #     y_true = one_hot_to_binary(y_true)
+        #     Logger().warn("test_y was one hot encoded => transformed to binary")
+
+        output_metrics = {}
+        if metrics:
+            for metric in metrics:
+                scorer = Scorer.create(metric)
+                if scorer is not None:
+                    scorer_value = scorer(y_true, y_pred)
+                    Logger().debug(str(scorer_value))
+                    output_metrics[metric] = scorer_value
+                else:
+                    output_metrics[metric] = np.nan
+
+        return output_metrics
+
 
 def binary_to_one_hot(binary_vector):
     classes = np.unique(binary_vector)
-    out = np.zeros((binary_vector.shape[0],len(classes)),  dtype=np.int)
+    out = np.zeros((binary_vector.shape[0], len(classes)),  dtype=np.int)
     for i, c in enumerate(classes):
-        out[binary_vector==c,i] = 1
+        out[binary_vector == c, i] = 1
     return out
 
 
 def one_hot_to_binary(one_hot_matrix):
     out = np.zeros((one_hot_matrix.shape[0]))
     for i in range(one_hot_matrix.shape[0]):
-        out[i] = np.nonzero(one_hot_matrix[i,:])[0]
+        out[i] = np.nonzero(one_hot_matrix[i, :])[0]
     return out
 
 
@@ -133,7 +166,8 @@ def sensitivity(y_true, y_pred):  # = true positive rate, hit rate, recall
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
         return tp / (tp + fn)
     else:
-        Logger().info('Sensitivity (metric) is valid only for binary classification problems. You have ' + str(len(np.unique(y_true))) + ' classes.')
+        Logger().info('Sensitivity (metric) is valid only for binary classification problems. You have ' +
+                      str(len(np.unique(y_true))) + ' classes.')
         return np.nan
 
 
@@ -143,7 +177,8 @@ def specificity(y_true, y_pred):  # = true negative rate
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
         return tn / (tn + fp)
     else:
-        Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' + str(len(np.unique(y_true))) + ' classes.')
+        Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' +
+                      str(len(np.unique(y_true))) + ' classes.')
         return np.nan
 
 
@@ -151,6 +186,6 @@ def balanced_accuracy(y_true, y_pred):  # = true negative rate
     if len(np.unique(y_true)) == 2:
         return (specificity(y_true, y_pred) + sensitivity(y_true, y_pred)) / 2
     else:
-        Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' + str(len(np.unique(y_true))) + ' classes.')
+        Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' +
+                      str(len(np.unique(y_true))) + ' classes.')
         return np.nan
-

@@ -12,7 +12,8 @@ from photonai.optimization import Categorical, FloatRange, IntegerRange
 
 class TestArchitectures(unittest.TestCase):
 
-    def tearDown(self):
+    @classmethod
+    def tearDownClass(cls):
         rmtree("./tmp/", ignore_errors=True)
         rmtree("./cache/", ignore_errors=True)
 
@@ -56,7 +57,7 @@ class TestArchitectures(unittest.TestCase):
     def create_hyperpipes(metrics: list = None, inner_cv=KFold(n_splits=3, shuffle=True, random_state=42),
                           outer_cv=ShuffleSplit(n_splits=1, test_size=.2),
                           plots: bool = False, optimizer: str = 'random_grid_search',
-                          optimizer_params={'k': 15}, eval_final_performance: bool = True,
+                          optimizer_params: dict = {'k': 10}, eval_final_performance: bool = True,
                           performance_constraints: list = None):
 
         pipe = Hyperpipe(name="architecture_test_pipe",
@@ -114,8 +115,10 @@ class TestArchitectures(unittest.TestCase):
             switch += PipelineElement('SVR', hyperparameters={'kernel': Categorical(['linear', 'rbf']),
                                                               'C': Categorical([.01, 1, 5])})
             switch += PipelineElement('RandomForestRegressor',
-                                      hyperparameters={'min_samples_split':
-                                                           FloatRange(start=.05, step=.1, stop=.26, range_type='range')})
+                                      hyperparameters={'min_samples_split': FloatRange(start=.05,
+                                                                                       step=.1,
+                                                                                       stop=.26,
+                                                                                       range_type='range')})
             pipe += switch
 
             self.run_hyperpipe(pipe, self.regression)

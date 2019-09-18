@@ -1,11 +1,9 @@
-import types
-import unittest
-
 from photonai.base import PipelineElement
 from photonai.optimization import SkOptOptimizer, IntegerRange
+from photonai.test.optimization.grid_search.grid_search_test import GridSearchOptimizerTest
 
 
-class SkOptOptimizerTest(unittest.TestCase):
+class SkOptOptimizerTest(GridSearchOptimizerTest):
 
     def setUp(self):
         """
@@ -15,11 +13,4 @@ class SkOptOptimizerTest(unittest.TestCase):
                                   PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
                                                   test_disabled=True),
                                   PipelineElement("SVC")]
-        self.scikit_optimizer = SkOptOptimizer()
-
-    def test_all_attributes_available(self):
-        """
-        Test for .ask attribute. .ask is important for next configuration that should be tested.
-        """
-        self.scikit_optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
-        self.assertIsInstance(self.scikit_optimizer.ask, types.GeneratorType)
+        self.optimizer = SkOptOptimizer()

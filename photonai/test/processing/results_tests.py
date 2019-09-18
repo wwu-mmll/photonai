@@ -1,6 +1,5 @@
 import os
 import unittest
-from shutil import rmtree
 
 import numpy as np
 import pandas as pd
@@ -11,7 +10,7 @@ from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import IntegerRange, FloatRange, Categorical
-
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 class XPredictor(BaseEstimator, ClassifierMixin):
 
@@ -40,7 +39,7 @@ class XPredictor(BaseEstimator, ClassifierMixin):
         return X/10
 
 
-class ResultHandlerAndHelperTests(unittest.TestCase):
+class ResultHandlerAndHelperTests(PhotonBaseTest):
 
     def setUp(self):
 
@@ -57,9 +56,6 @@ class ResultHandlerAndHelperTests(unittest.TestCase):
                                    best_config_metric='mean_absolute_error',
                                    output_settings=OutputSettings(save_predictions='all',
                                                                   project_folder='./tmp'))
-
-    def tearDown(self):
-        rmtree('./tmp/', ignore_errors=True)
 
     def test_cv_config_and_dummy_nr(self):
         X, y = load_boston(True)
