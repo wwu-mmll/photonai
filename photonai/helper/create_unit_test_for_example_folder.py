@@ -8,21 +8,20 @@ def create_tests_example_script():
     string = """
 import unittest
 import warnings
-from shutil import rmtree
-from os.path import join
+
+from os.path import join, isdir
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)
 
 
-class TestRunExamples(unittest.TestCase):
+class TestRunExamples(PhotonBaseTest):
     
     def setUp(self):
-        self.examples_folder = "{}"
-    
-    def tearDown(self):
-        rmtree("./tmp/", ignore_errors=True)
-        rmtree("./cache/", ignore_errors=True)
+        self.examples_folder = "../examples"
+        if not isdir(self.examples_folder):
+            self.examples_folder = "../../examples"
     """.format(examples_folder)
 
     for file in files:

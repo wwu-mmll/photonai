@@ -1,8 +1,8 @@
-import types
 import unittest
 
 from photonai.base import PipelineElement
 from photonai.optimization import IntegerRange
+from photonai.test.optimization.grid_search.grid_search_test import GridSearchOptimizerTest
 
 try:
     from photonai.optimization.fabolas.fabolas_optimizer import FabolasOptimizer
@@ -12,7 +12,7 @@ except ModuleNotFoundError:
     found = False
 
 if found:
-    class FabolasOptimizerWithRequirementsTest(unittest.TestCase):
+    class FabolasOptimizerWithRequirementsTest(GridSearchOptimizerTest):
 
         def setUp(self):
             """
@@ -22,14 +22,19 @@ if found:
                                       PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
                                                       test_disabled=True),
                                       PipelineElement("SVC")]
-            self.fabolas_optimizer = FabolasOptimizer(n_min_train_data=100, n_train_data=10000)
+            self.optimizer = FabolasOptimizer(n_min_train_data=100, n_train_data=10000)
 
-        def test_all_attributes_available(self):
+        def test_ask(self):
             """
-            Test for .ask and .param_grid attribute. .ask is important for next configuration that should be tested.
+            Test general functionality of .ask(). Not implemented yet.
             """
-            self.fabolas_optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
-            self.assertIsInstance(self.fabolas_optimizer.ask, types.GeneratorType)
+            pass
+
+        def test_ask_advanced(self):
+            """
+            Test advanced functionality of .ask(). Not implemented yet.
+            """
+            pass
 
 else:
     class FabolasOptimizerWithoutRequirementsTest(unittest.TestCase):

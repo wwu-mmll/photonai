@@ -37,7 +37,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
      Searches for the best configuration by randomly testing k possible hyperparameter combinations.
     """
 
-    def __init__(self, k=None):
+    def __init__(self, k=25):
         super(RandomGridSearchOptimizer, self).__init__()
         self.k = k
 
