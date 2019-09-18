@@ -20,7 +20,7 @@ registry.activate()
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
 
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('custom_estimator_pipe',

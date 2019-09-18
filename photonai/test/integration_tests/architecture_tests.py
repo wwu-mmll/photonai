@@ -13,7 +13,8 @@ from photonai.optimization import Categorical, FloatRange, IntegerRange
 class TestArchitectures(unittest.TestCase):
 
     def tearDown(self):
-        rmtree("./tmp/")
+        rmtree("./tmp/", ignore_errors=True)
+        rmtree("./cache/", ignore_errors=True)
 
     def setUp(self):
         n_samples = 40

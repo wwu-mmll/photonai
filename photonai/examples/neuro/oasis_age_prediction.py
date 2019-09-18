@@ -24,7 +24,7 @@ def my_monitor(X, y=None, **kwargs):
 
 
 # DEFINE OUTPUT SETTINGS
-folder = './oasis_age'
+folder = './tmp/'
 settings = OutputSettings(project_folder=folder)
 
 # DESIGN YOUR PIPELINE

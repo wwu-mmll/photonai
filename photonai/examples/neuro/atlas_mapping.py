@@ -11,8 +11,8 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 # Specify where the results should be written to and the name of your analysis
-results_folder = './atlas_mapping/'
-cache_folder = './atlas_mapping/cache'
+results_folder = './tmp/'
+cache_folder = './tmp/cache'
 
 # GET DATA FROM OASIS
 n_subjects = 200
@@ -47,8 +47,7 @@ my_pipe += PipelineElement('LinearSVC')
 #brain_atlas = PipelineElement('BrainAtlas', atlas_name="Yeo_7", extract_mode='vec',
 #                                rois='all', batch_size=200)
 brain_atlas = PipelineElement('BrainAtlas', atlas_name="AAL",
-                              rois=['Hippocampus_L', 'Hippocampus_R', "Frontal_Sup_Orb_L", "Cingulum_Mid_R",
-                                    "Cerebelum_7b_L", "Temporal_Pole_Sup_R", "Paracentral_Lobule_L"], batch_size=200)
+                              rois=['Hippocampus_L', 'Hippocampus_R', "Frontal_Sup_Orb_L"], batch_size=200)
 
 neuro_branch = NeuroBranch('NeuroBranch')
 neuro_branch += brain_atlas

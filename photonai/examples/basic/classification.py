@@ -9,7 +9,7 @@ from photonai.optimization import FloatRange, Categorical, IntegerRange
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(True)
 
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline

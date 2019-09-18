@@ -1,5 +1,6 @@
 import os
 import unittest
+from shutil import rmtree
 
 import numpy as np
 from sklearn.model_selection import KFold
@@ -11,8 +12,14 @@ from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 class RegistryTest(unittest.TestCase):
 
     def setUp(self):
-        self.custom_folder = "../../modelwrapper/custom_elements"
+        self.test_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)).split('test')[0], 'test')
+        self.custom_folder = os.path.join(self.test_directory, 'base/custom_elements/')
         self.registry = PhotonRegistry(self.custom_folder)
+
+    def tearDown(self):
+        rmtree("./tmp/", ignore_errors=True)
+        if os.path.isfile(os.path.join(self.custom_folder, 'CustomElements.json')):
+            os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
 
     def test_register_without_custom_folder(self):
         registry = PhotonRegistry()
@@ -36,7 +43,7 @@ class RegistryTest(unittest.TestCase):
         self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'Estimator')
 
         self.registry.activate()
-        settings = OutputSettings(save_output=False)
+        settings = OutputSettings(save_output=False, project_folder='./tmp/')
 
         # DESIGN YOUR PIPELINE
         pipe = Hyperpipe('custom_estimator_pipe',
@@ -106,8 +113,5 @@ class RegistryTest(unittest.TestCase):
                                    'custom_transformer.CustomTransformerNeedsYWrongInterface',
                                    'Transformer')
 
-    def tearDown(self):
-        if os.path.isfile(os.path.join(self.custom_folder, 'CustomElements.json')):
-            os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
 
 

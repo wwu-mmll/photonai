@@ -6,7 +6,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_boston(True)
 
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipeline

@@ -20,7 +20,7 @@ X = np.array(dataset_files.gray_matter_maps)
 
 
 # DEFINE OUTPUT SETTINGS
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 pipe = Hyperpipe('Limbic_System',

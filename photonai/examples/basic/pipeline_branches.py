@@ -6,7 +6,7 @@ from photonai.optimization import IntegerRange, Categorical
 
 X, y = load_breast_cancer(True)
 
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 
 my_pipe = Hyperpipe('basic_stacking',
                     optimizer='grid_search',

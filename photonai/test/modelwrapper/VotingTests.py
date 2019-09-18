@@ -1,7 +1,12 @@
 import unittest
+
 import numpy as np
+
 from photonai.modelwrapper import Voting
 
+
+# Todo
+#  update this
 
 class VotingTests(unittest.TestCase):
 

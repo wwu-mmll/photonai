@@ -27,7 +27,7 @@ X = np.array(dataset_files.gray_matter_maps)
 
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='.', overwrite_results=True)
+settings = OutputSettings(project_folder='./tmp/', overwrite_results=True)
 
 my_pipe = Hyperpipe('Limbic_Pipeline',
                     optimizer='grid_search',

@@ -21,7 +21,7 @@ X = np.array(dataset_files.gray_matter_maps)
 
 
 # DEFINE OUTPUT SETTINGS
-settings = OutputSettings(project_folder='.', save_feature_importances='best')
+settings = OutputSettings(project_folder='./tmp/', save_feature_importances='best')
 
 # DESIGN YOUR PIPELINE
 pipe = Hyperpipe('Limbic_System',
@@ -79,7 +79,7 @@ importance_scores_outer_folds = handler.get_importance_scores()
 importance_scores_optimum_pipe = handler.results.best_config_feature_importances
 
 img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
-img.to_filename('best_config_feature_importances.nii.gz')
+img.to_filename('./tmp/best_config_feature_importances.nii.gz')
 debug = True
 
 

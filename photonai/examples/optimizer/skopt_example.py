@@ -8,7 +8,7 @@ from photonai.optimization import FloatRange, Categorical
 X, y = load_boston(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('skopt_example',
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
                     optimizer_params={'num_iterations': 25, 'acq_func': 'LCB', 'acq_func_kwargs': {'kappa': 1.96}},
