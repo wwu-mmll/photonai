@@ -912,7 +912,7 @@ class Hyperpipe(BaseEstimator):
 
                     # 1. generate OuterFolds Object
 
-                    outer_fold_computer = OuterFoldManager(self._copy_pipeline,
+                    outer_fold_computer = OuterFoldManager(self._pipe.copy_me,
                                                            self.optimization,
                                                            outer_f.fold_id,
                                                            self.cross_validation,
@@ -1061,25 +1061,6 @@ class Hyperpipe(BaseEstimator):
                 pipe_copy += element.copy_me()
         return pipe_copy
 
-    def _copy_pipeline(self):
-        """
-        Copy Pipeline by building a new sklearn Pipeline with Pipeline Elements
-
-        Returns
-        -------
-        new sklearn Pipeline object
-        """
-        pipeline_steps = []
-        for item in self.elements:
-            cpy = item.copy_me()
-            if isinstance(cpy, list):
-                for new_step in cpy:
-                    pipeline_steps.append((new_step.name, new_step))
-            else:
-                pipeline_steps.append((cpy.name, cpy))
-        new_pipe = PhotonPipeline(pipeline_steps)
-        return new_pipe
-
     def save_optimum_pipe(self, filename=None, password=None):
         if filename is None:
             filename = "photon_" + self.name + "_best_model.p"
@@ -1113,7 +1094,7 @@ class Hyperpipe(BaseEstimator):
         -------
         Inversed data as array
         """
-        copied_pipe = self._copy_pipeline()
+        copied_pipe = self.pipe.copy_me()
         copied_pipe.set_params(**hyperparameters)
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)
