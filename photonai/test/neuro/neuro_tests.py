@@ -1,6 +1,7 @@
 import glob
 import os
 import unittest
+from shutil import rmtree
 
 import numpy as np
 from nibabel.nifti1 import Nifti1Image
@@ -26,7 +27,7 @@ class NeuroTest(unittest.TestCase):
         self.y = np.random.randn(len(self.X))
 
     def tearDown(self):
-        pass
+        rmtree('./cache/', ignore_errors=True)
 
     def test_single_subject_resampling(self):
         voxel_size = [3, 3, 3]
@@ -257,7 +258,7 @@ class NeuroTest(unittest.TestCase):
         pass
 
     def test_inverse_transform(self):
-        settings = OutputSettings(project_folder='test_results',
+        settings = OutputSettings(project_folder='./tmp/',
                                   save_feature_importances='best',
                                   overwrite_results=True)
 
@@ -292,7 +293,7 @@ class NeuroTest(unittest.TestCase):
         importance_scores_optimum_pipe = handler.results.best_config_feature_importances
 
         manual_img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
-        img = image.load_img('test_results/Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz')
+        img = image.load_img('./tmp/Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz')
         self.assertTrue(np.array_equal(manual_img.get_data(), img.get_data()))
 
     def test_all_atlases(self):

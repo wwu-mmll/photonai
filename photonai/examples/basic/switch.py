@@ -8,7 +8,7 @@ from photonai.optimization import FloatRange, Categorical
 X, y = load_breast_cancer(True)
 
 # CREATE HYPERPIPE
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('basic_switch_pipe',
                     optimizer='random_grid_search',
                     optimizer_params={'k': 10},

@@ -14,7 +14,7 @@ def my_monitor(X, y=None, **kwargs):
 X, y = load_boston(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='grid_search',

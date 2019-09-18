@@ -1,24 +1,25 @@
-import unittest
-import numpy as np
-import os
 import glob
+import os
+import unittest
+from shutil import rmtree
 
-from dask.distributed import Client
-
+import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.decomposition.pca import PCA
+from sklearn.model_selection import KFold
+from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
-from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.model_selection import KFold
 
 from photonai.base import PipelineElement, Hyperpipe, Preprocessing, OutputSettings
-from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.cache_manager import CacheManager
+from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
 from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
+
+
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
 # assertTrue(x) 	bool(x) is True
@@ -200,6 +201,9 @@ class CacheManagerTests(unittest.TestCase):
                         'SVC__C': 1,
                         'SVC__kernel': 'linear'}
         self.cache_man.clear_cache()
+
+    def tearDown(self):
+        rmtree('./cache/', ignore_errors=True)
 
     def test_find_relevant_configuration_items(self):
         self.cache_man.prepare(pipe_elements=self.item_names, X=self.X, config=self.config1)

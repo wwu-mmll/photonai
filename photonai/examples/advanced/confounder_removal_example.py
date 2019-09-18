@@ -13,7 +13,7 @@ mean_radius = data.data[:, 0]
 mean_texture = data.data[:, 1]
 
 # BUILD HYPERPIPE
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 pipe = Hyperpipe('confounder_removal_example',
                  optimizer='grid_search',
                  metrics=['accuracy', 'precision', 'recall'],

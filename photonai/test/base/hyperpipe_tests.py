@@ -1,8 +1,9 @@
 import unittest
-import numpy as np
+from shutil import rmtree
 
-from sklearn.model_selection import KFold
+import numpy as np
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
 
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing
 from photonai.test.base.photon_pipeline_tests import DummyYAndCovariatesTransformer
@@ -25,6 +26,9 @@ class HyperpipeTests(unittest.TestCase):
         dataset = load_breast_cancer()
         self.__X = dataset.data
         self.__y = dataset.target
+
+    def tearDown(self):
+        rmtree('./tmp/', ignore_errors=True)
 
     def test_init(self):
         self.assertEqual(self.hyperpipe.name, 'god')

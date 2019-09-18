@@ -10,7 +10,7 @@ X, y = load_breast_cancer(True)
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
 mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
                                 save_predictions='best',
-                                save_feature_importances='None', project_folder='.')
+                                save_feature_importances='None', project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_MongoDB_pipe',  # the name of your pipeline

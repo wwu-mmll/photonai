@@ -8,7 +8,7 @@ from photonai.optimization import FloatRange
 X, y = load_boston(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(save_feature_importances='best', save_predictions='best', project_folder='.')
+settings = OutputSettings(save_feature_importances='best', save_predictions='best', project_folder='./tmp/')
 
 my_pipe = Hyperpipe('results_example',
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
@@ -56,6 +56,6 @@ handler.plot_optimizer_history(metric='mean_squared_error',
                                title='Scikit Optimize 20 Eval (Scatter)',
                                type='scatter',
                                reduce_scatter_by=1,
-                               file='optimizer_history_scikit_optimize_20_scatter.png')
+                               file='./tmp/optimizer_history_scikit_optimize_20_scatter.png')
 
 debug = True

@@ -11,7 +11,7 @@ X, y = load_breast_cancer(True)
 groups = np.random.random_integers(0, 3, (len(y), ))
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='grid_search',

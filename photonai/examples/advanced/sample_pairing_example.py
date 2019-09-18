@@ -8,7 +8,7 @@ from photonai.optimization import Categorical
 X, y = load_breast_cancer(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='.')
+settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('sample_pairing_example_classification',
                     optimizer='grid_search',
                     metrics=['accuracy'],
