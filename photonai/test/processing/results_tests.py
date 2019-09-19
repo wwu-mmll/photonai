@@ -11,7 +11,7 @@ from sklearn.model_selection import KFold
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import IntegerRange, FloatRange, Categorical
 from photonai.test.PhotonBaseTest import PhotonBaseTest
-
+from photonai.processing.results_structure import MDBHelper, FoldOperations
 
 class XPredictor(BaseEstimator, ClassifierMixin):
 
@@ -178,6 +178,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    eval_final_performance=False,
                                    best_config_metric='mean_absolute_error',
+                                   calculate_metrics_across_folds=True,
                                    output_settings=OutputSettings(save_predictions='all',
                                                                   project_folder=self.tmp_folder_path))
 
@@ -190,6 +191,8 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    eval_final_performance=False,
                                    best_config_metric='mean_absolute_error',
+                                   calculate_metrics_per_fold=True,
+                                   calculate_metrics_across_folds=True,
                                    output_settings=OutputSettings(save_predictions='all',
                                                                   project_folder=self.tmp_folder_path))
 
@@ -240,6 +243,13 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
             check_metrics('mean_absolute_error', inner_fold_metrics['train'], config.metrics_train)
             check_metrics('mean_absolute_error', inner_fold_metrics['test'], config.metrics_test)
+
+            # calculate metrics across folds
+            if self.hyperpipe.cross_validation.calculate_metrics_across_folds:
+                expected_mean_absolute_error_across_folds = mean_absolute_error(XPredictor.adapt_X(outer_fold.train_indices),
+                                                                                outer_fold.train_indices)
+                actual_mean_absolute_error_across_folds = MDBHelper.get_metric(config, FoldOperations.RAW, 'mean_absolute_error')
+                self.assertEqual(expected_mean_absolute_error_across_folds, actual_mean_absolute_error_across_folds)
 
             if self.hyperpipe.cross_validation.eval_final_performance:
                 expected_outer_test_mae = mean_absolute_error(XPredictor.adapt_X(outer_fold.test_indices),
