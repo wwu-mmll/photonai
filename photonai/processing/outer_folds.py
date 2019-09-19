@@ -16,21 +16,25 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 class OuterFoldManager:
 
-    def __init__(self, copy_pipe_fnc,
+    def __init__(self, pipe,
                  optimization_info,
                  outer_fold_id,
                  cross_validation_info,
-                 save_predictions: bool=False,
-                 save_feature_importances: bool=False,
-                 save_best_config_predictions: bool=True,
-                 save_best_config_feature_importances: bool=True,
+                 save_predictions: bool = False,
+                 save_feature_importances: bool = False,
+                 save_best_config_predictions: bool = True,
+                 save_best_config_feature_importances: bool = True,
                  cache_folder=None,
-                 cache_updater=None):
+                 cache_updater=None,
+                 dummy_estimator=None,
+                 result_obj=None):
         # Information from the Hyperpipe about the design choices
         self.outer_fold_id = outer_fold_id
         self.cross_validaton_info = cross_validation_info
         self.optimization_info = optimization_info
-        self.copy_pipe_fnc = copy_pipe_fnc
+        self._pipe = pipe
+        self.copy_pipe_fnc = self._pipe.copy_me
+        self.dummy_estimator = dummy_estimator
 
         self.save_predictions = save_predictions
         self.save_feature_importances = save_feature_importances
@@ -42,12 +46,11 @@ class OuterFoldManager:
         # Information about the optimization progress
         self.current_best_config = None
         self.optimizer = None
-        self.dummy_results = None
         self.constraint_objects = None
 
         # data
+        self.result_object = result_obj
         self.inner_folds = None
-        self.result_object = None
         self._validation_X = None
         self._validation_y = None
         self._validation_kwargs = None
@@ -57,21 +60,24 @@ class OuterFoldManager:
 
     # How to get optimizer instance?
 
-    def prepare_optimization(self, pipeline_elements: list, outer_fold_result_obj):
+    def _prepare_optimization(self):
+        pipeline_elements = [e for name, e in self._pipe.elements]
+
         self.optimizer = self.optimization_info.get_optimizer()
-        # Todo: copy performance constraints for each outer fold
         self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
 
-        # todo: we've got some super strange pymodm problems here
-        #  somehow some information from the previous outer fold lingers on and can be found within a completely new
-        #  instantiated OuterFoldMDB object
-        #  hence, clearing it
-        outer_fold_result_obj.tested_config_list = list()
-        self.result_object = outer_fold_result_obj
+        # we've got some super strange pymodm problems here
+        # somehow some information from the previous outer fold lingers on and can be found within a completely new
+        # instantiated OuterFoldMDB object
+        # hence, clearing it
+        self.result_object.tested_config_list = list()
 
         # copy constraint objects.
-        if self.optimization_info.inner_cv_callback_functions is not None:
-            self.constraint_objects = [original.copy_me() for original in self.optimization_info.inner_cv_callback_functions]
+        if self.optimization_info.performance_constraints is not None:
+            if isinstance(self.optimization_info.performance_constraints, list):
+                self.constraint_objects = [original.copy_me() for original in self.optimization_info.performance_constraints]
+            else:
+                self.constraint_objects = [self.optimization_info.performance_constraints.copy_me()]
         else:
             self.constraint_objects = None
 
@@ -87,8 +93,8 @@ class OuterFoldManager:
         self.result_object.number_samples_validation = self._validation_y.shape[0]
         self.result_object.number_samples_test = self._test_y.shape[0]
         if self.optimization_info.maximize_metric:
-            self.result_object.class_distribution_validation = FoldInfo._data_overview(self._validation_y)
-            self.result_object.class_distribution_test = FoldInfo._data_overview(self._test_y)
+            self.result_object.class_distribution_validation = FoldInfo.data_overview(self._validation_y)
+            self.result_object.class_distribution_test = FoldInfo.data_overview(self._test_y)
 
     def _generate_inner_folds(self):
 
@@ -102,7 +108,9 @@ class OuterFoldManager:
     def fit(self, X, y=None, **kwargs):
 
         self._prepare_data(X, y, **kwargs)
+        self._fit_dummy()
         self._generate_inner_folds()
+        self._prepare_optimization()
 
         outer_fold_fit_start_time = datetime.datetime.now()
         best_metric_yet = None
@@ -112,7 +120,12 @@ class OuterFoldManager:
         # self.__distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
         #                                                 outer_fold_counter=outer_fold_counter)
 
-        # do the optimizing
+        if self.cross_validaton_info.calculate_metrics_per_fold:
+            fold_operation = FoldOperations.MEAN
+        else:
+            fold_operation = FoldOperations.RAW
+
+        # do the optimizing1
         for current_config in self.optimizer.ask:
 
             tested_config_counter += 1
@@ -137,12 +150,6 @@ class OuterFoldManager:
             current_config_mdb.config_nr = tested_config_counter
 
             if not current_config_mdb.config_failed:
-                # get optimizer_metric and forward to optimizer
-                # todo: also pass greater_is_better=True/False to optimizer
-                if self.cross_validaton_info.calculate_metrics_per_fold:
-                    fold_operation = FoldOperations.MEAN
-                else:
-                    fold_operation = FoldOperations.RAW
                 metric_train = MDBHelper.get_metric(current_config_mdb, fold_operation,
                                                     self.optimization_info.best_config_metric)
                 metric_test = MDBHelper.get_metric(current_config_mdb, fold_operation,
@@ -153,14 +160,17 @@ class OuterFoldManager:
                 config_performance = (metric_train, metric_test)
                 if best_metric_yet is None:
                     best_metric_yet = config_performance
+                    self.current_best_config = current_config_mdb
                 else:
                     # check if we have the next superstar around that exceeds any old performance
                     if self.optimization_info.maximize_metric:
                         if metric_test > best_metric_yet[1]:
                             best_metric_yet = config_performance
+                            self.current_best_config = current_config_mdb
                     else:
                         if metric_test < best_metric_yet[1]:
                             best_metric_yet = config_performance
+                            self.current_best_config = current_config_mdb
 
                 # Print Result for config
                 Logger().debug('...done:')
@@ -172,22 +182,24 @@ class OuterFoldManager:
                 Logger().debug('...failed:')
                 Logger().error(current_config_mdb.config_error)
 
-            # add config to result tree and do intermediate saving
+            # add config to result tree
             self.result_object.tested_config_list.append(current_config_mdb)
 
             # 3. inform optimizer about performance
             self.optimizer.tell(current_config, config_performance)
 
-        # generate outer cvs
+        # now go on with the best config found
         if tested_config_counter > 0:
-            best_config_outer_fold = self.optimization_info.get_optimum_config(self.result_object.tested_config_list)
+            best_config_outer_fold = self.optimization_info.get_optimum_config(self.result_object.tested_config_list,
+                                                                               fold_operation)
 
             if not best_config_outer_fold:
                 raise Exception("No best config was found!")
 
             # ... and create optimal pipeline
             optimum_pipe = self.copy_pipe_fnc()
-            self.cache_updater(optimum_pipe, self.cache_folder, "fixed_fold_id")
+            if self.cache_updater is not None:
+                self.cache_updater(optimum_pipe, self.cache_folder, "fixed_fold_id")
             optimum_pipe.caching = False
             # set self to best config
             optimum_pipe.set_params(**best_config_outer_fold.config_dict)
@@ -257,7 +269,7 @@ class OuterFoldManager:
                     # training
                     train_item_metrics = {}
                     for m in metric_dict:
-                        if m.operation == str(FoldOperations.MEAN):
+                        if m.operation == str(fold_operation):
                             train_item_metrics[m.metric_name] = m.value
                     train_item = MDBScoreInformation()
                     train_item.metrics_copied_from_inner = True
@@ -274,44 +286,46 @@ class OuterFoldManager:
 
         Logger().info('This took {} minutes.'.format((datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
-    def fit_dummy(self, X, y, dummy):
+    def _fit_dummy(self):
+        if self.dummy_estimator is not None:
+            try:
+                if isinstance(self._validation_X, np.ndarray):
+                    if len(self._validation_X.shape) > 2:
+                        Logger().info("Skipping dummy estimator because of too much dimensions")
+                        self.result_object.dummy_results = None
+                        return
 
-        try:
-            train_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
-            train_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices]
+                self.dummy_estimator.fit(self._validation_X, self._validation_y)
+                train_scores = InnerFoldManager.score(self.dummy_estimator, self._validation_X, self._validation_y,
+                                                      metrics=self.optimization_info.metrics)
 
-            if isinstance(train_X, np.ndarray):
-                if len(train_X.shape) > 2:
-                    Logger().info("Skipping dummy estimator because of too much dimensions")
+                # fill result tree with fold information
+                inner_fold = MDBInnerFold()
+                inner_fold.training = train_scores
 
-            dummy.fit(train_X, train_y)
-            train_scores = InnerFoldManager.score(dummy, train_X, train_y, metrics=self.optimization_info.metrics)
+                if self.cross_validaton_info.eval_final_performance:
+                    test_scores = InnerFoldManager.score(self.dummy_estimator,
+                                                         self._test_X, self._test_y,
+                                                         metrics=self.optimization_info.metrics)
+                    Logger().info("Dummy Results: " + str(test_scores))
+                    inner_fold.validation = test_scores
 
-            # fill result tree with fold information
-            inner_fold = MDBInnerFold()
-            inner_fold.training = train_scores
+                self.result_object.dummy_results = inner_fold
 
-            if self.cross_validaton_info.eval_final_performance:
-                test_X = X[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
-                test_y = y[self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices]
-                test_scores = InnerFoldManager.score(dummy, test_X, test_y, metrics=self.optimization_info.metrics)
-                Logger().info("Dummy Results: " + str(test_scores))
-                inner_fold.validation = test_scores
+                # performaceConstraints: DummyEstimator
+                if self.constraint_objects is not None:
+                    dummy_constraint_objs = [opt for opt in self.constraint_objects if isinstance(opt, DummyPerformance)]
+                    if dummy_constraint_objs:
+                        for dummy_constraint_obj in dummy_constraint_objs:
+                            dummy_constraint_obj.set_dummy_performance(self.result_object.dummy_results)
 
-            self.dummy_results = inner_fold
-
-            # performaceConstraints: DummyEstimator
-            if self.constraint_objects is not None:
-                dummy_constraint_objs = [opt for opt in self.constraint_objects if isinstance(opt, DummyPerformance)]
-                if dummy_constraint_objs:
-                    for dummy_constraint_obj in dummy_constraint_objs:
-                        dummy_constraint_obj.set_dummy_performance(self.dummy_results)
-
-            return inner_fold
-        except Exception as e:
-            Logger().error(e)
-            Logger().info("Skipping dummy because of error..")
-            return None
+                return inner_fold
+            except Exception as e:
+                Logger().error(e)
+                Logger().info("Skipping dummy because of error..")
+                return None
+        else:
+            Logger().info("Skipping dummy ..")
 
     @staticmethod
     def extract_feature_importances(optimum_pipe):

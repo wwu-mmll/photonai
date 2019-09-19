@@ -368,7 +368,7 @@ class Hyperpipe(BaseEstimator):
             self.metrics = metrics
             self.best_config_metric = best_config_metric
             self.maximize_metric = True
-            self.inner_cv_callback_functions = performance_constraints
+            self.performance_constraints = performance_constraints
 
         def sanity_check_metrics(self):
 
@@ -418,7 +418,7 @@ class Hyperpipe(BaseEstimator):
                 # Todo: check if object has the right interface
                 return self.optimizer_input
 
-        def get_optimum_config(self, tested_configs):
+        def get_optimum_config(self, tested_configs, fold_operation=FoldOperations.MEAN):
             """
             Looks for the best configuration according to the metric with which the configurations are compared -> best config metric
             :param tested_configs: the list of tested configurations and their performances
@@ -437,7 +437,7 @@ class Hyperpipe(BaseEstimator):
                 else:
                     for config in list_of_non_failed_configs:
                         list_of_config_vals.append(
-                            MDBHelper.get_metric(config, FoldOperations.MEAN, self.best_config_metric, train=False))
+                            MDBHelper.get_metric(config, fold_operation, self.best_config_metric, train=False))
 
                     if self.maximize_metric:
                         # max metric
@@ -634,6 +634,9 @@ class Hyperpipe(BaseEstimator):
         # 2. finding overall best config
         # 3. training model with best config
         # 4. persisting best model
+
+        # computer dummy metrics
+        self._evaluate_dummy_estimator([outer_fold.dummy_results for outer_fold in self.results.outer_folds])
 
         # Compute all final metrics
         self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
@@ -899,7 +902,6 @@ class Hyperpipe(BaseEstimator):
 
                 # Run Dummy Estimator
                 dummy_estimator = self._prepare_dummy_estimator()
-                dummy_results = []
 
                 if self.cache_folder is not None:
                     Logger().info("Removing Cache Files")
@@ -911,8 +913,8 @@ class Hyperpipe(BaseEstimator):
                                   .format(self.name, outer_f.fold_nr))
 
                     # 1. generate OuterFolds Object
-
-                    outer_fold_computer = OuterFoldManager(self._copy_pipeline,
+                    outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
+                    outer_fold_computer = OuterFoldManager(self._pipe,
                                                            self.optimization,
                                                            outer_f.fold_id,
                                                            self.cross_validation,
@@ -921,12 +923,11 @@ class Hyperpipe(BaseEstimator):
                                                            save_best_config_feature_importances=self.output_settings.save_best_config_feature_importances,
                                                            save_best_config_predictions=self.output_settings.save_best_config_predictions,
                                                            cache_folder=self.cache_folder,
-                                                           cache_updater=self.recursive_cache_folder_propagation)
-                    # 2. prepare
-                    outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
+                                                           cache_updater=self.recursive_cache_folder_propagation,
+                                                           dummy_estimator=dummy_estimator,
+                                                           result_obj=outer_fold)
+                    # 2. monitor outputs
                     self.results.outer_folds.append(outer_fold)
-                    outer_fold_computer.prepare_optimization(self.elements, outer_fold)
-                    dummy_results.append(outer_fold_computer.fit_dummy(self.data.X, self.data.y, dummy_estimator))
 
                     if self.nr_of_processes > 1:
                         result = dask.delayed(Hyperpipe.fit_outer_folds)(outer_fold_computer,
@@ -950,7 +951,6 @@ class Hyperpipe(BaseEstimator):
                     self.results_handler.save()
 
                 # evaluate hyperparameter optimization results for best config
-                self._evaluate_dummy_estimator(dummy_results)
                 self._finalize_optimization()
 
                 # clear complete cache ?
@@ -1061,25 +1061,6 @@ class Hyperpipe(BaseEstimator):
                 pipe_copy += element.copy_me()
         return pipe_copy
 
-    def _copy_pipeline(self):
-        """
-        Copy Pipeline by building a new sklearn Pipeline with Pipeline Elements
-
-        Returns
-        -------
-        new sklearn Pipeline object
-        """
-        pipeline_steps = []
-        for item in self.elements:
-            cpy = item.copy_me()
-            if isinstance(cpy, list):
-                for new_step in cpy:
-                    pipeline_steps.append((new_step.name, new_step))
-            else:
-                pipeline_steps.append((cpy.name, cpy))
-        new_pipe = PhotonPipeline(pipeline_steps)
-        return new_pipe
-
     def save_optimum_pipe(self, filename=None, password=None):
         if filename is None:
             filename = "photon_" + self.name + "_best_model.p"
@@ -1113,7 +1094,7 @@ class Hyperpipe(BaseEstimator):
         -------
         Inversed data as array
         """
-        copied_pipe = self._copy_pipeline()
+        copied_pipe = self.pipe.copy_me()
         copied_pipe.set_params(**hyperparameters)
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)

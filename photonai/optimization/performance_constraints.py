@@ -155,7 +155,7 @@ class DummyPerformance(PhotonBaseConstraint):
     If not further testing of the configuration is skipped, as it is regarded as not promising enough.
     """
 
-    def __init__(self, metric: str = '', margin: float = 1., strategy='first'):
+    def __init__(self, metric: str = '', margin: float = 0, strategy='first'):
         super(DummyPerformance, self).__init__(strategy=strategy, metric=metric, margin=margin)
 
     def set_dummy_performance(self, dummy_result):
