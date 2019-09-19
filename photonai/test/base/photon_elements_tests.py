@@ -636,7 +636,6 @@ class StackTests(unittest.TestCase):
                 self.recursive_assertion(element_dict, stack_dict)
 
     def test_transform(self):
-        # todo
         for elements, stack in self.stacks:
             np.random.seed(42)
             Xt_stack, _, _ = stack.fit(self.X, self.y).transform(self.X)
@@ -644,11 +643,10 @@ class StackTests(unittest.TestCase):
             Xt_elements = None
             for i, element in enumerate(elements):
                 Xt_element, _, _ = element.fit(self.X, self.y).transform(self.X)
-                Xt_elements = PhotonDataHelper.stack_results(Xt_element, Xt_elements)
+                Xt_elements = PhotonDataHelper.stack_data_horizontally(Xt_elements, Xt_element)
             np.testing.assert_array_equal(Xt_stack, Xt_elements)
 
     def test_predict(self):
-        # todo
         for elements, stack in [([self.svc, self.tree], self.estimator_stack),
                                 ([self.estimator_branch_1, self.estimator_branch_2], self.estimator_branch_stack)]:
             np.random.seed(42)
@@ -658,14 +656,25 @@ class StackTests(unittest.TestCase):
             Xt_elements = None
             for i, element in enumerate(elements):
                 Xt_element = element.fit(self.X, self.y).predict(self.X)
-                Xt_elements = PhotonDataHelper.stack_results(Xt_element, Xt_elements)
+                Xt_elements = PhotonDataHelper.stack_data_horizontally(Xt_elements, Xt_element)
             np.testing.assert_array_equal(yt_stack, Xt_elements)
 
     def test_predict_proba(self):
-        pass
+        for elements, stack in [([self.svc, self.tree], self.estimator_stack),
+                                ([self.estimator_branch_1, self.estimator_branch_2], self.estimator_branch_stack)]:
+            np.random.seed(42)
+            stack = stack.fit(self.X, self.y)
+            yt_stack = stack.predict_proba(self.X)
+            np.random.seed(42)
+            Xt_elements = None
+            for i, element in enumerate(elements):
+                Xt_element = element.fit(self.X, self.y).predict_proba(self.X)
+                Xt_elements = PhotonDataHelper.stack_data_horizontally(Xt_elements, Xt_element)
+            np.testing.assert_array_equal(yt_stack, Xt_elements)
 
     def test_inverse_transform(self):
-        pass
+        with self.assertRaises(NotImplementedError):
+            self.stacks[0][1].fit(self.X, self.y).inverse_transform(self.X)
 
     def test_set_params(self):
         trans_config = {'PCA__n_components': 2,

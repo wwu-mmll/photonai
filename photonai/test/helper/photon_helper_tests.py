@@ -68,7 +68,7 @@ class DataHelperTests(unittest.TestCase):
                 X_new, y_new, kwargs_new = PhotonDataHelper.join_data(X_new, X_batched, y_new, y_batched, kwargs_new, kwargs_batched)
 
         # test if joining works
-        joined_idx = PhotonDataHelper.stack_results(idx_list_one, idx_list_two)
+        joined_idx = PhotonDataHelper.stack_data_vertically(idx_list_two, idx_list_one)
         self.assertTrue(np.array_equal(X_new, X[joined_idx]))
         self.assertTrue(np.array_equal(y_new, y[joined_idx]))
         self.assertTrue(np.array_equal(kwargs_new['test'], kwargs['test'][joined_idx]))
