@@ -12,6 +12,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import IntegerRange, FloatRange, Categorical
 from photonai.test.PhotonBaseTest import PhotonBaseTest
 
+
 class XPredictor(BaseEstimator, ClassifierMixin):
 
     _estimator_type = 'classifier'
@@ -42,7 +43,7 @@ class XPredictor(BaseEstimator, ClassifierMixin):
 class ResultHandlerAndHelperTests(PhotonBaseTest):
 
     def setUp(self):
-
+        super(ResultHandlerAndHelperTests, self).setUp()
         self.inner_fold_nr = 10
         self.outer_fold_nr = 5
         
@@ -55,7 +56,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    best_config_metric='mean_absolute_error',
                                    output_settings=OutputSettings(save_predictions='all',
-                                                                  project_folder='./tmp'))
+                                                                  project_folder=self.tmp_folder_path))
 
     def test_cv_config_and_dummy_nr(self):
         X, y = load_boston(True)
@@ -178,7 +179,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    eval_final_performance=False,
                                    best_config_metric='mean_absolute_error',
                                    output_settings=OutputSettings(save_predictions='all',
-                                                                  project_folder='./tmp'))
+                                                                  project_folder=self.tmp_folder_path))
 
         self.test_metrics_and_aggregations()
 
@@ -190,7 +191,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    eval_final_performance=False,
                                    best_config_metric='mean_absolute_error',
                                    output_settings=OutputSettings(save_predictions='all',
-                                                                  project_folder='./tmp'))
+                                                                  project_folder=self.tmp_folder_path))
 
         self.test_metrics_and_aggregations()
 

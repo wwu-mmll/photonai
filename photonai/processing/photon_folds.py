@@ -18,7 +18,7 @@ class FoldInfo:
         self.test_indices = test_indices
 
     @staticmethod
-    def _data_overview(y):
+    def data_overview(y):
         if len(y.shape) > 1:
             # one hot encoded
             Logger().info("One Hot Encoded data fold information not yet implemented")

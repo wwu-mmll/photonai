@@ -11,6 +11,8 @@ from photonai.test.PhotonBaseTest import PhotonBaseTest
 class HyperpipeTests(PhotonBaseTest):
 
     def setUp(self):
+
+        super(HyperpipeTests, self).setUp()
         self.ss_pipe_element = PipelineElement('StandardScaler')
         self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True)
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})

@@ -23,7 +23,7 @@ from photonai.processing.results_structure import FoldOperations
 class InnerFoldTests(PhotonBaseTest):
 
     def setUp(self):
-
+        super(InnerFoldTests, self).setUp()
         self.pipe = PhotonPipeline([('StandardScaler', PipelineElement('StandardScaler')),
                                     ('PCA', PipelineElement('PCA')),
                                     ('RidgeClassifier', PipelineElement('RidgeClassifier'))])

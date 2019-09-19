@@ -20,17 +20,13 @@ from photonai.test.PhotonBaseTest import PhotonBaseTest
 class NeuroTest(PhotonBaseTest):
 
     def setUp(self):
+        super(NeuroTest, self).setUp()
         self.test_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_data/')
         self.atlas_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../neuro/atlases/')
         self.atlas_name = "AAL"
         self.roi_list = ["Hippocampus_R", "Hippocampus_L", "Amygdala_L", "Amygdala_R"]
         self.X = AtlasLibrary().get_nii_files_from_folder(self.test_folder, extension=".nii")
         self.y = np.random.randn(len(self.X))
-
-    def tearDown(self):
-        rmtree('./cache/', ignore_errors=True)
-        rmtree('./tmp/', ignore_errors=True)
-        rmtree('./dask-worker-space/', ignore_errors=True)
 
     def test_single_subject_resampling(self):
         voxel_size = [3, 3, 3]
@@ -177,7 +173,7 @@ class NeuroTest(PhotonBaseTest):
                     obj += PipelineElement(neuro_class_str, batch_size=5, **param_dict)
 
                 # transform data
-                obj.base_element.cache_folder = os.path.join(self.test_folder, 'cache')
+                obj.base_element.cache_folder = self.cache_folder_path
                 obj.base_element.current_config = {'test_suite': 1}
                 new_X, _, _ = obj.transform(self.X)
                 obj.base_element.clear_cache()
@@ -214,7 +210,7 @@ class NeuroTest(PhotonBaseTest):
         nmb += PipelineElement('BrainAtlas', rois=['Hippocampus_L', 'Hippocampus_R'],
                                atlas_name="AAL", extract_mode='vec')
 
-        nmb.base_element.cache_folder = os.path.join(self.test_folder, 'cache')
+        nmb.base_element.cache_folder = self.cache_folder_path
         CacheManager.clear_cache_files(nmb.base_element.cache_folder, True)
         # set the config so that caching works
         nmb.set_params(**{'SmoothImages__fwhm': 10, 'ResampleImages__voxel_size': 5})
@@ -261,7 +257,7 @@ class NeuroTest(PhotonBaseTest):
         pass
 
     def test_inverse_transform(self):
-        settings = OutputSettings(project_folder='./tmp/',
+        settings = OutputSettings(project_folder=self.tmp_folder_path,
                                   save_feature_importances='best',
                                   overwrite_results=True)
 
@@ -273,7 +269,7 @@ class NeuroTest(PhotonBaseTest):
                          outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
                          inner_cv=ShuffleSplit(n_splits=1, test_size=0.2),
                          verbosity=2,
-                         cache_folder="./cache",
+                         cache_folder=self.cache_folder_path,
                          eval_final_performance=True,
                          output_settings=settings)
 
@@ -296,7 +292,7 @@ class NeuroTest(PhotonBaseTest):
         importance_scores_optimum_pipe = handler.results.best_config_feature_importances
 
         manual_img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
-        img = image.load_img('./tmp/Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz')
+        img = image.load_img(os.path.join(self.tmp_folder_path, 'Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz')
         self.assertTrue(np.array_equal(manual_img.get_data(), img.get_data()))
 
     def test_all_atlases(self):
