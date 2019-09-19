@@ -14,6 +14,13 @@ class MDBFoldMetric(EmbeddedMongoModel):
     metric_name = fields.CharField(blank=True)
     value = fields.FloatField(blank=True)
 
+    def __str__(self):
+        if self.operation is not None:
+            op = self.operation.split(".")[1]
+        else:
+            op = ''
+        return "__".join([self.metric_name, op, str(self.value)])
+
 
 class MDBScoreInformation(EmbeddedMongoModel):
     class Meta:
@@ -84,6 +91,7 @@ class MDBOuterFold(EmbeddedMongoModel):
     class_distribution_test = fields.DictField(blank=True, default={})
     class_distribution_validation = fields.DictField(blank=True, default={})
     number_samples_validation = fields.IntegerField(blank=True)
+    dummy_results = fields.EmbeddedDocumentField(MDBInnerFold, blank=True)
 
 
 class MDBPermutationMetrics(EmbeddedMongoModel):

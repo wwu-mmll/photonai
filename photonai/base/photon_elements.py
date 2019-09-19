@@ -323,8 +323,8 @@ class PipelineElement(BaseEstimator):
 
                 # todo: in case _final_estimator is a Branch, we do not know beforehand it the base elements will
                 #  have a predict_proba -> if not, just return None (@Ramona, does this make sense?)
-                #Logger().error('BaseException. base Element should have "predict_proba" function.')
-                #raise BaseException('base Element should have predict_proba function.')
+                # Logger().error('BaseException. base Element should have "predict_proba" function.')
+                # raise BaseException('base Element should have predict_proba function.')
                 return None
         return X
 

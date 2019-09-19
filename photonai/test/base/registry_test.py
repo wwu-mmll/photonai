@@ -9,14 +9,17 @@ from photonai.base import PhotonRegistry
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 from photonai.test.PhotonBaseTest import PhotonBaseTest
 
+
 class RegistryTest(PhotonBaseTest):
 
     def setUp(self):
+        super(RegistryTest, self).setUp()
         self.test_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)).split('test')[0], 'test')
         self.custom_folder = os.path.join(self.test_directory, 'base/custom_elements/')
         self.registry = PhotonRegistry(self.custom_folder)
 
     def tearDown(self):
+        super(RegistryTest, self).tearDown()
         if os.path.isfile(os.path.join(self.custom_folder, 'CustomElements.json')):
             os.remove(os.path.join(self.custom_folder, 'CustomElements.json'))
 

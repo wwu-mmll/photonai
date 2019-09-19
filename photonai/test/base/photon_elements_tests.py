@@ -54,9 +54,6 @@ class PipelineElementTests(unittest.TestCase):
         self.yt = self.y + 1
         self.kwargst = {'covariates': self.y + 1}
 
-    def tearDown(self):
-        pass
-
     def test_create_failure(self):
         with self.assertRaises(NameError):
             PipelineElement('NONSENSEName', {})

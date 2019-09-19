@@ -1,6 +1,5 @@
 import unittest
 from itertools import product
-from shutil import rmtree
 
 import numpy as np
 from sklearn.datasets import make_regression, make_classification
@@ -8,16 +7,13 @@ from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut
 
 from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, OutputSettings, Branch, DataFilter
 from photonai.optimization import Categorical, FloatRange, IntegerRange
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 
-class TestArchitectures(unittest.TestCase):
-
-    @classmethod
-    def tearDownClass(cls):
-        rmtree("./tmp/", ignore_errors=True)
-        rmtree("./cache/", ignore_errors=True)
+class TestArchitectures(PhotonBaseTest):
 
     def setUp(self):
+        super(TestArchitectures, self).setUp()
         n_samples = 40
 
         self.test_multiple_hyperpipes = False
@@ -42,7 +38,9 @@ class TestArchitectures(unittest.TestCase):
                                                               inner_cv=inner_cv,
                                                               outer_cv=outer_cv,
                                                               eval_final_performance=eval_final_performance,
-                                                              performance_constraints=performance_constraints))
+                                                              performance_constraints=performance_constraints,
+                                                              cache_folder=self.cache_folder_path,
+                                                              tmp_folder=self.tmp_folder_path))
         else:
             self.hyperpipes.append(self.create_hyperpipes())
 
@@ -58,10 +56,10 @@ class TestArchitectures(unittest.TestCase):
                           outer_cv=ShuffleSplit(n_splits=1, test_size=.2),
                           plots: bool = False, optimizer: str = 'random_grid_search',
                           optimizer_params: dict = {'k': 10}, eval_final_performance: bool = True,
-                          performance_constraints: list = None):
+                          performance_constraints: list = None, cache_folder='./cache', tmp_folder='./tmp'):
 
         pipe = Hyperpipe(name="architecture_test_pipe",
-                         output_settings=OutputSettings(project_folder="./tmp/", plots=plots),
+                         output_settings=OutputSettings(project_folder=tmp_folder, plots=plots),
                          optimizer=optimizer,
                          optimizer_params=optimizer_params,
                          best_config_metric='score',
@@ -70,7 +68,7 @@ class TestArchitectures(unittest.TestCase):
                          outer_cv=outer_cv,
                          eval_final_performance=eval_final_performance,
                          performance_constraints=performance_constraints,
-                         cache_folder="./tmp/cache/",
+                         cache_folder=cache_folder,
                          verbosity=1)
         return pipe
 

@@ -13,6 +13,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 class TestRunExamples(PhotonBaseTest):
     
     def setUp(self):
+        super(TestRunExamples, self).setUp()
         self.examples_folder = "../examples"
         if not isdir(self.examples_folder):
             self.examples_folder = "../../examples"
