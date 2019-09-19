@@ -275,7 +275,7 @@ class PipelineElement(BaseEstimator):
 
             # predict
             y_pred = delegate(X_batched, **kwargs_dict_batched)
-            processed_y = PhotonDataHelper.stack_results(y_pred, processed_y)
+            processed_y = PhotonDataHelper.stack_data_vertically(processed_y, y_pred)
 
         return processed_y
 
@@ -306,7 +306,7 @@ class PipelineElement(BaseEstimator):
         if self.batch_size == 0:
             return self.__predict_proba(X, **kwargs)
         else:
-            return self.__batch_predict(self.__predict_proba(X, **kwargs))
+            return self.__batch_predict(self.__predict_proba, X, **kwargs)
 
     def __predict_proba(self, X, **kwargs):
         """
@@ -758,8 +758,8 @@ class Stack(PipelineElement):
         predicted_data = np.array([])
         for element in self.elements:
             element_transform = element.predict(X, **kwargs)
-            predicted_data = Stack.stack_data(predicted_data, element_transform)
-        return predicted_data, kwargs
+            predicted_data = PhotonDataHelper.stack_data_horizontally(predicted_data, element_transform)
+        return predicted_data
 
     def predict_proba(self, X, y=None, **kwargs):
         """
@@ -769,7 +769,7 @@ class Stack(PipelineElement):
         predicted_data = np.array([])
         for element in self.elements:
             element_transform = element.predict_proba(X)
-            predicted_data = Stack.stack_data(predicted_data, element_transform)
+            predicted_data = PhotonDataHelper.stack_data_horizontally(predicted_data, element_transform)
         return predicted_data
 
     def transform(self, X, y=None, **kwargs):
@@ -782,7 +782,7 @@ class Stack(PipelineElement):
         for element in self.elements:
             # if it is a hyperpipe with a final estimator, we want to use predict:
                 element_transform, _, _ = element.transform(X, y, **kwargs)
-                transformed_data = Stack.stack_data(transformed_data, element_transform)
+            transformed_data = PhotonDataHelper.stack_data_horizontally(transformed_data, element_transform)
 
         return transformed_data, y, kwargs
 
@@ -794,37 +794,7 @@ class Stack(PipelineElement):
         ps.base_element = self.base_element
         return ps
 
-    @classmethod
-    def stack_data(cls, a, b):
-        """
-        Helper method to horizontally join the outcome of each child
-
-        Parameters
-        ----------
-        * `a` [ndarray]:
-            The existing matrix
-        * `b` [ndarray]:
-            The matrix that is to be attached horizontally
-
-        Returns
-        -------
-        New matrix, that is a and b horizontally joined
-
-        """
-        if a is None or (isinstance(a, np.ndarray) and a.size == 0):
-            a = b
-        else:
-            # Todo: check for right dimensions!
-            if a.ndim == 1 and b.ndim == 1:
-                a = np.column_stack((a, b))
-            else:
-                if b.ndim == 1:
-                    b = np.reshape(b, (b.shape[0], 1))
-                # a = np.concatenate((a, b), 1)
-                a = np.concatenate((a, b), axis=1)
-        return a
-
-    def inverse_transform(self, X, y, **kwargs):
+    def inverse_transform(self, X, **kwargs):
         raise NotImplementedError("Inverse Transform is not yet implemented for a Stacking Element in PHOTON")
 
     @property

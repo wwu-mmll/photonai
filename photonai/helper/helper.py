@@ -146,10 +146,10 @@ class PhotonDataHelper:
 
     @staticmethod
     def join_data(X, X_new, y, y_new, kwargs, kwargs_new):
-        processed_X = PhotonDataHelper.stack_results(X_new, X)
+        processed_X = PhotonDataHelper.stack_data_vertically(X, X_new)
 
         if y_new is not None:
-            processed_y = PhotonDataHelper.stack_results(y_new, y)
+            processed_y = PhotonDataHelper.stack_data_vertically(y, y_new)
         else:
             processed_y = None
 
@@ -167,7 +167,7 @@ class PhotonDataHelper:
                 if key not in dict_a:
                     new_dict[key] = dict_b[key]
                 else:
-                    new_dict[key] = PhotonDataHelper.stack_results(value, dict_a[key])
+                    new_dict[key] = PhotonDataHelper.stack_data_vertically(dict_a[key], value)
         return new_dict
 
     @staticmethod
@@ -178,19 +178,49 @@ class PhotonDataHelper:
         return new_dict
 
     @staticmethod
-    def stack_results(new_a, existing_a):
-        if existing_a is not None and len(existing_a) != 0:
-            if isinstance(new_a, np.ndarray) and len(new_a.shape) < 2:
-                existing_a = np.hstack((existing_a, new_a))
-            elif isinstance(new_a, list):
-                    existing_a = existing_a + new_a
-            elif new_a is None and len(existing_a) == 0:
+    def stack_data_vertically(existing_array, new_array):
+        if existing_array is not None and len(existing_array) != 0:
+            if isinstance(new_array, np.ndarray) and len(new_array.shape) < 2:
+                existing_array = np.hstack((existing_array, new_array))
+            elif isinstance(new_array, list):
+                existing_array = existing_array + new_array
+            elif new_array is None and len(existing_array) == 0:
                 return None
             else:
-                existing_a = np.vstack((existing_a, new_a))
+                existing_array = np.vstack((existing_array, new_array))
         else:
-            existing_a = new_a
-        return existing_a
+            existing_array = new_array
+        return existing_array
+
+    @staticmethod
+    def stack_data_horizontally(existing_array, new_array):
+        """
+        Helper method to horizontally join the outcome of each child
+
+        Parameters
+        ----------
+        * `a` [ndarray]:
+            The existing matrix
+        * `b` [ndarray]:
+            The matrix that is to be attached horizontally
+
+        Returns
+        -------
+        New matrix, that is a and b horizontally joined
+
+        """
+        if existing_array is None or (isinstance(existing_array, np.ndarray) and existing_array.size == 0):
+            existing_array = new_array
+        else:
+            # Todo: check for right dimensions!
+            if existing_array.ndim == 1 and new_array.ndim == 1:
+                existing_array = np.column_stack((existing_array, new_array))
+            else:
+                if new_array.ndim == 1:
+                    new_array = np.reshape(new_array, (new_array.shape[0], 1))
+                # a = np.concatenate((a, b), 1)
+                existing_array = np.concatenate((existing_array, new_array), axis=1)
+        return existing_array
 
     @staticmethod
     def resort_splitted_data(X, y, kwargs, idx_list):

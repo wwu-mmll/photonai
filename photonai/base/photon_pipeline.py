@@ -235,9 +235,9 @@ class PhotonPipeline(_BaseComposition):
                     list_of_idx_cached.append(start)
                 else:
                     list_of_idx_non_cached.append(start)
-                    X_uncached = PhotonDataHelper.stack_results(X_batched, X_uncached)
-                    y_uncached = PhotonDataHelper.stack_results(y_batched, y_uncached)
-                    initial_X_uncached = PhotonDataHelper.stack_results(X_key, initial_X_uncached)
+                    X_uncached = PhotonDataHelper.stack_data_vertically(X_uncached, X_batched)
+                    y_uncached = PhotonDataHelper.stack_data_vertically(y_uncached, y_batched)
+                    initial_X_uncached = PhotonDataHelper.stack_data_vertically(initial_X_uncached, X_key)
                     kwargs_uncached = PhotonDataHelper.join_dictionaries(kwargs_uncached, kwargs_dict_batched)
 
             # now we know which part can be loaded and which part should be transformed
@@ -294,8 +294,9 @@ class PhotonPipeline(_BaseComposition):
                 processed_X, processed_y, processed_kwargs = PhotonDataHelper.resort_splitted_data(processed_X,
                                                                                                    processed_y,
                                                                                                    processed_kwargs,
-                                                                                                   PhotonDataHelper.stack_results(list_of_idx_non_cached,
-                                                                                                                                  list_of_idx_cached))
+                                                                                                   PhotonDataHelper.stack_data_vertically(
+                                                                                                       list_of_idx_cached,
+                                                                                                       list_of_idx_non_cached))
 
             return processed_X, processed_y, processed_kwargs
 
