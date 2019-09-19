@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 from nilearn.datasets import fetch_oasis_vbm
 from sklearn.model_selection import KFold
-
+import os
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.neuro import NeuroBranch
 from photonai.optimization import Categorical
@@ -24,8 +24,11 @@ def my_monitor(X, y=None, **kwargs):
 
 
 # DEFINE OUTPUT SETTINGS
-folder = './tmp/'
-settings = OutputSettings(project_folder=folder)
+base_folder = os.path.dirname(os.path.abspath(__file__))
+cache_folder_path = os.path.join(base_folder, "cache")
+tmp_folder_path = os.path.join(base_folder, "tmp")
+
+settings = OutputSettings(project_folder=tmp_folder_path)
 
 # DESIGN YOUR PIPELINE
 pipe = Hyperpipe('Limbic_System',
@@ -36,7 +39,7 @@ pipe = Hyperpipe('Limbic_System',
                  inner_cv=KFold(n_splits=3, shuffle=True),
                  output_settings=settings,
                  verbosity=1,
-                 cache_folder=folder + "/cache4",
+                 cache_folder=cache_folder_path,
                  eval_final_performance=True)
 
 batch_size = 25
