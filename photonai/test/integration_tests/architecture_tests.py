@@ -1,6 +1,5 @@
 import unittest
 from itertools import product
-from shutil import rmtree
 
 import numpy as np
 from sklearn.datasets import make_regression, make_classification
@@ -8,24 +7,21 @@ from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut
 
 from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, OutputSettings, Branch, DataFilter
 from photonai.optimization import Categorical, FloatRange, IntegerRange
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 
-class TestArchitectures(unittest.TestCase):
+class TestArchitectures(PhotonBaseTest):
 
     @classmethod
-    def tearDownClass(cls):
-        rmtree("./tmp/", ignore_errors=True)
-        rmtree("./cache/", ignore_errors=True)
-
-    def setUp(self):
+    def setUpClass(cls) -> None:
         n_samples = 40
 
-        self.test_multiple_hyperpipes = False
-        self.hyperpipes = list()
-        self.regression = 'regression'
-        self.classification = 'classification'
+        cls.test_multiple_hyperpipes = False
+        cls.hyperpipes = list()
+        cls.regression = 'regression'
+        cls.classification = 'classification'
 
-        if self.test_multiple_hyperpipes:
+        if cls.test_multiple_hyperpipes:
             optimizer_list = ['random_grid_search', 'sk_opt']
             eval_final_performance_list = [True, False]
             inner_cv_list = [KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.2), LeaveOneOut()]
@@ -37,31 +33,33 @@ class TestArchitectures(unittest.TestCase):
             combinations = list(product(optimizer_list, eval_final_performance_list, inner_cv_list, outer_cv_list,
                                 performance_constraints_list, plots_bool_list))
             for optimizer, eval_final_performance, inner_cv, outer_cv, performance_constraints, plots_bool in combinations:
-                self.hyperpipes.append(self.create_hyperpipes(plots=plots_bool,
-                                                              optimizer=optimizer,
-                                                              inner_cv=inner_cv,
-                                                              outer_cv=outer_cv,
-                                                              eval_final_performance=eval_final_performance,
-                                                              performance_constraints=performance_constraints))
+                cls.hyperpipes.append(cls.create_hyperpipes(plots=plots_bool,
+                                                            optimizer=optimizer,
+                                                            inner_cv=inner_cv,
+                                                            outer_cv=outer_cv,
+                                                            eval_final_performance=eval_final_performance,
+                                                            performance_constraints=performance_constraints,
+                                                            cache_folder=cls.cache_folder_path,
+                                                            tmp_folder=cls.tmp_folder_path))
         else:
-            self.hyperpipes.append(self.create_hyperpipes())
+            cls.hyperpipes.append(cls.create_hyperpipes())
 
-        self.regression_data = make_regression(n_samples=n_samples, n_features=20)
-        self.classification_data = make_classification(n_samples=n_samples, n_features=20)
-        self.X_shape = self.regression_data[0].shape
-        self.groups = np.random.randint(low=1, high=3 + 1, size=n_samples)
-        self.cov1 = np.random.rand(n_samples)
-        self.cov2 = np.random.rand(n_samples)
+        cls.regression_data = make_regression(n_samples=n_samples, n_features=20)
+        cls.classification_data = make_classification(n_samples=n_samples, n_features=20)
+        cls.X_shape = cls.regression_data[0].shape
+        cls.groups = np.random.randint(low=1, high=3 + 1, size=n_samples)
+        cls.cov1 = np.random.rand(n_samples)
+        cls.cov2 = np.random.rand(n_samples)
 
     @staticmethod
     def create_hyperpipes(metrics: list = None, inner_cv=KFold(n_splits=3, shuffle=True, random_state=42),
                           outer_cv=ShuffleSplit(n_splits=1, test_size=.2),
                           plots: bool = False, optimizer: str = 'random_grid_search',
                           optimizer_params: dict = {'k': 10}, eval_final_performance: bool = True,
-                          performance_constraints: list = None):
+                          performance_constraints: list = None, cache_folder='./cache', tmp_folder='./tmp'):
 
         pipe = Hyperpipe(name="architecture_test_pipe",
-                         output_settings=OutputSettings(project_folder="./tmp/", plots=plots),
+                         output_settings=OutputSettings(project_folder=tmp_folder, plots=plots),
                          optimizer=optimizer,
                          optimizer_params=optimizer_params,
                          best_config_metric='score',
@@ -70,7 +68,7 @@ class TestArchitectures(unittest.TestCase):
                          outer_cv=outer_cv,
                          eval_final_performance=eval_final_performance,
                          performance_constraints=performance_constraints,
-                         cache_folder="./tmp/cache/",
+                         cache_folder=cache_folder,
                          verbosity=1)
         return pipe
 

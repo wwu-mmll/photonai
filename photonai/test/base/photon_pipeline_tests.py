@@ -184,9 +184,9 @@ class PipelineTests(PhotonBaseTest):
 class CacheManagerTests(PhotonBaseTest):
 
     def setUp(self):
-        cache_folder = "./cache/"
-        os.makedirs(cache_folder, exist_ok=True)
-        self.cache_man = CacheManager("123353423434", cache_folder)
+        super(CacheManagerTests, self).setUp()
+
+        self.cache_man = CacheManager("123353423434", self.cache_folder_path)
         self.X, self.y, self.kwargs = np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3, 4, 5]), {'covariates': [9, 8, 7, 6, 5]}
 
         self.config1 = {'PCA__n_components': 5,
@@ -197,7 +197,6 @@ class CacheManagerTests(PhotonBaseTest):
         self.config2 = {'PCA__n_components': 20,
                         'SVC__C': 1,
                         'SVC__kernel': 'linear'}
-        self.cache_man.clear_cache()
 
     def test_find_relevant_configuration_items(self):
         self.cache_man.prepare(pipe_elements=self.item_names, X=self.X, config=self.config1)
@@ -252,6 +251,7 @@ class CacheManagerTests(PhotonBaseTest):
 class CachedPhotonPipelineTests(PhotonBaseTest):
 
     def setUp(self):
+        super(CachedPhotonPipelineTests, self).setUp()
         # Photon Version
         ss = PipelineElement("StandardScaler", {})
         pca = PipelineElement("PCA", {'n_components': [3, 10, 50]}, random_state=3)
@@ -263,7 +263,7 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
 
         self.pipe.caching = True
         self.pipe.fold_id = "12345643463434"
-        self.pipe.cache_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)), './cache')
+        self.pipe.cache_folder = self.cache_folder_path
 
         self.config1 = {'PCA__n_components': 4,
                         'SVC__C': 3,
@@ -276,8 +276,6 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
         self.X, self.y = load_breast_cancer(True)
 
     def test_group_caching(self):
-
-        CacheManager.clear_cache_files(self.pipe.cache_folder)
 
         # transform one config
         self.pipe.set_params(**self.config1)
@@ -311,12 +309,7 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(y_uc, y_2))
         self.assertTrue(np.array_equal(kwargs_uc, kwargs_2))
 
-        CacheManager.clear_cache_files(self.pipe.cache_folder)
-
     def test_empty_hyperparameters(self):
-
-        CacheManager.clear_cache_files(self.pipe.cache_folder)
-
         # test if one can use it when only default parameters are given and hyperparameter space is empty
         self.pipe.set_params(**{})
         self.pipe.fit(self.X, self.y)
@@ -333,8 +326,6 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(y_new, y_new2))
         self.assertTrue(np.array_equal(kwargs_new, kwargs_new2))
 
-        CacheManager.clear_cache_files(self.pipe.cache_folder)
-
     def test_single_subject_caching(self):
 
         nb = NeuroBranch("subject_caching_test")
@@ -345,11 +336,9 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
         X = AtlasLibrary().get_nii_files_from_folder(test_folder, extension=".nii")
         y = np.random.randn(len(X))
 
-        curr_dir = os.path.dirname(os.path.abspath(__file__))
-        cache_folder = os.path.join(curr_dir, 'cache')
+        cache_folder = self.cache_folder_path
         cache_folder = os.path.join(cache_folder, 'subject_caching_test')
         nb.base_element.cache_folder = cache_folder
-        CacheManager.clear_cache_files(cache_folder)
 
         nr_of_expected_pickles_per_config = len(X)
 
@@ -381,8 +370,7 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
         y = np.random.randn(len(X))
 
         # 2. specify cache directories
-        curr_dir = os.path.dirname(os.path.abspath(__file__))
-        cache_folder_base = os.path.join(curr_dir, 'cache')
+        cache_folder_base = self.cache_folder_path
         cache_folder_neuro = os.path.join(cache_folder_base, 'subject_caching_test')
 
         CacheManager.clear_cache_files(cache_folder_base)
@@ -442,7 +430,7 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
         CacheManager.clear_cache_files(cache_folder_neuro)
 
 
-class CachedHyperpipeTests(unittest.TestCase):
+class CachedHyperpipeTests(PhotonBaseTest):
     import warnings
     warnings.filterwarnings('ignore', category=DeprecationWarning)
     warnings.filterwarnings('ignore', category=FutureWarning)
@@ -453,7 +441,7 @@ class CachedHyperpipeTests(unittest.TestCase):
         X = AtlasLibrary().get_nii_files_from_folder(test_folder, extension=".nii")
         y = np.random.randn(len(X))
 
-        cache_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'test_data/cache')
+        cache_path = self.cache_folder_path
 
         self.hyperpipe = Hyperpipe('complex_case',
                                    inner_cv=KFold(n_splits=5),
