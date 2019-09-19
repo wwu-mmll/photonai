@@ -781,7 +781,7 @@ class Stack(PipelineElement):
         transformed_data = np.array([])
         for element in self.elements:
             # if it is a hyperpipe with a final estimator, we want to use predict:
-                element_transform, _, _ = element.transform(X, y, **kwargs)
+            element_transform, _, _ = element.transform(X, y, **kwargs)
             transformed_data = PhotonDataHelper.stack_data_horizontally(transformed_data, element_transform)
 
         return transformed_data, y, kwargs
