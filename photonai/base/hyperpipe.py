@@ -78,7 +78,7 @@ class OutputSettings:
                  save_output: bool = True,
                  plots: bool = True,
                  overwrite_results: bool = False,
-                 project_folder = '',
+                 project_folder: str = '',
                  user_id: str = '',
                  wizard_object_id: str = '',
                  wizard_project_name: str = ''):
@@ -364,12 +364,34 @@ class Hyperpipe(BaseEstimator):
         def __init__(self, optimizer_input, optimizer_params,
                      metrics, best_config_metric, performance_constraints):
 
-            self.optimizer_input = optimizer_input
+            self._optimizer_input = ''
+            self.optimizer_input_str = optimizer_input
             self.optimizer_params = optimizer_params
             self.metrics = metrics
-            self.best_config_metric = best_config_metric
+            self._best_config_metric = ''
             self.maximize_metric = True
+            self.best_config_metric = best_config_metric
             self.performance_constraints = performance_constraints
+
+        @property
+        def best_config_metric(self):
+            return self._best_config_metric
+
+        @best_config_metric.setter
+        def best_config_metric(self, value):
+            if isinstance(self.best_config_metric, str):
+                self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
+
+        @property
+        def optimizer_input_str(self):
+            return self._optimizer_input
+
+        @optimizer_input_str.setter
+        def optimizer_input_str(self, value):
+            if isinstance(value, str):
+                if value not in Hyperpipe.Optimization.OPTIMIZER_DICTIONARY:
+                    raise ValueError("Optimizer " + value + "not supported right now.")
+            self._optimizer_input = value
 
         def sanity_check_metrics(self):
 
@@ -409,15 +431,14 @@ class Hyperpipe(BaseEstimator):
                     raise ValueError(metric_error_text)
 
         def get_optimizer(self):
-            if isinstance(self.optimizer_input, str):
+            if isinstance(self.optimizer_input_str, str):
                 # instantiate optimizer from string
-                #  Todo: check if optimizer strategy is already implemented
-                optimizer_class = self.OPTIMIZER_DICTIONARY[self.optimizer_input]
+                optimizer_class = self.OPTIMIZER_DICTIONARY[self.optimizer_input_str]
                 optimizer_instance = optimizer_class(**self.optimizer_params)
                 return optimizer_instance
             else:
                 # Todo: check if object has the right interface
-                return self.optimizer_input
+                return self.optimizer_input_str
 
         def get_optimum_config(self, tested_configs, fold_operation=FoldOperations.MEAN):
             """
@@ -475,42 +496,6 @@ class Hyperpipe(BaseEstimator):
             best_config = outer_folds[best_config_metric_nr].best_config
             return best_config
 
-        def define_optimizer_metric(self):
-            """
-            Analyse and prepare the best config metric.
-            Derive if it is better when the value increases or decreases.
-            """
-            if isinstance(self.best_config_metric, str):
-                self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
-
-    # Setters
-    #
-    #
-    def _set_verbosity(self, verbosity):
-        """
-        Set verbosity level manually
-        Returns None
-
-        Parameters
-        ----------
-        * `verbosity` [Integer]:
-            Verbosity level can be 0, 1, or 2.
-
-        """
-        Logger().set_verbosity(verbosity)
-
-    def _set_persist_options(self, persist_options):
-        """
-        Set persist options manually
-        Returns None
-
-        Parameters
-        ----------
-        * `persist_options` [OutputSettings]:
-
-        """
-        self.output_settings = persist_options
-
     # Pipeline Management & Interface
     #
     #
@@ -533,8 +518,6 @@ class Hyperpipe(BaseEstimator):
         else:
             if isinstance(pipe_element, PipelineElement) or issubclass(type(pipe_element), PhotonNative):
                 self.elements.append(pipe_element)
-                # Todo: is repeated each time element is added....
-                self._prepare_pipeline()
             else:
                 raise TypeError("Element must be of type Pipeline Element")
         return self
@@ -618,7 +601,7 @@ class Hyperpipe(BaseEstimator):
         self.results.hyperpipe_info.cross_validation = {'OuterCV': _format_cross_validation(self.cross_validation.outer_cv),
                                                         'InnerCV': _format_cross_validation(self.cross_validation.inner_cv)}
         self.results.hyperpipe_info.data = {'X_shape': self.data.X.shape, 'y_shape': self.data.y.shape}
-        self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input,
+        self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input_str,
                                                         'OptimizerParams': str(self.optimization.optimizer_params),
                                                         'BestConfigMetric': self.optimization.best_config_metric}
 
@@ -876,15 +859,11 @@ class Hyperpipe(BaseEstimator):
         try:
 
             self._input_data_sanity_checks(data, targets, **kwargs)
+            self._prepare_pipeline()
             self.preprocess_data()
             Logger().set_verbosity(self.verbosity)
 
             if not self.is_final_fit:
-
-                # first check if correct optimizer metric has been chosen
-                # pass elements so that OptimizerMetric can look for last
-                # element and use the corresponding score method
-                self.optimization.define_optimizer_metric()
 
                 start = datetime.datetime.now()
                 self._prepare_result_logging(start)
@@ -1026,6 +1005,7 @@ class Hyperpipe(BaseEstimator):
         build sklearn pipeline from PipelineElements and
         calculate parameter grid for all combinations of pipeline element hyperparameters
         """
+        # Todo: make sure no CallbackElement is the last item of the pipeline
         # prepare pipeline
         pipeline_steps = []
         for item in self.elements:
@@ -1146,7 +1126,7 @@ class FlowchartCreator(object):
 
     @staticmethod
     def format_optimizer(optimizer):
-        return optimizer.optimizer_input, optimizer.optimizer_params, optimizer.metrics, optimizer.best_config_metric
+        return optimizer.optimizer_input_str, optimizer.optimizer_params, optimizer.metrics, optimizer.best_config_metric
 
     def format_kwargs(self, kwargs):
         pass
