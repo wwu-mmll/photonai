@@ -9,6 +9,7 @@ import re
 import shutil
 import traceback
 import zipfile
+from copy import deepcopy
 
 import __main__
 import dask
@@ -1039,16 +1040,26 @@ class Hyperpipe(BaseEstimator):
         Helper function to copy an entire Hyperpipe
         :return: Hyperpipe
         """
+        signature = inspect.getfullargspec(OutputSettings.__init__)[0]
+        settings = OutputSettings()
+        for attr in signature:
+            if hasattr(self.output_settings, attr):
+                setattr(settings, attr, getattr(self.output_settings, attr))
+        settings.log_file = os.path.join(settings.project_folder, 'photon_output.log')
+
         # create new Hyperpipe instance
         pipe_copy = Hyperpipe(name=self.name,
-                              inner_cv=self.cross_validation.inner_cv,
-                              outer_cv=self.cross_validation.outer_cv,
+                              inner_cv=deepcopy(self.cross_validation.inner_cv),
+                              outer_cv=deepcopy(self.cross_validation.outer_cv),
                               best_config_metric=self.optimization.best_config_metric,
-                              metrics=self.optimization.metrics)
+                              metrics=self.optimization.metrics,
+                              optimizer=self.optimization.optimizer_input,
+                              optimizer_params=self.optimization.optimizer_params,
+                              output_settings=settings)
 
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
-            if hasattr(self, attr):
+            if hasattr(self, attr) and attr != 'output_settings':
                 setattr(pipe_copy, attr, getattr(self, attr))
 
         if hasattr(self, 'preprocessing') and self.preprocessing:

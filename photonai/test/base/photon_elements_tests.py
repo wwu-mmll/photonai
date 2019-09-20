@@ -206,9 +206,14 @@ class PipelineElementTests(unittest.TestCase):
         svc = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         svc.set_params(**{'C': 0.1, 'kernel': 'sigmoid'})
         copy = svc.copy_me()
+
         self.assertNotEqual(copy.base_element, svc.base_element)
         self.assertDictEqual(elements_to_dict(copy), elements_to_dict(svc))
         self.assertEqual(copy.base_element.C, svc.base_element.C)
+
+        # check if copies are still the same, even when making a copy of a fitted PipelineElement
+        copy_after_fit = svc.fit(self.X, self.y).copy_me()
+        self.assertDictEqual(elements_to_dict(copy), elements_to_dict(copy_after_fit))
 
         svc = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         copy = svc.copy_me()

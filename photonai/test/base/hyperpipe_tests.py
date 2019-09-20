@@ -3,9 +3,10 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing
-from photonai.test.base.photon_pipeline_tests import DummyYAndCovariatesTransformer
+from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement
 from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.base.photon_elements_tests import elements_to_dict
+from photonai.test.base.photon_pipeline_tests import DummyYAndCovariatesTransformer
 
 
 class HyperpipeTests(PhotonBaseTest):
@@ -151,7 +152,6 @@ class HyperpipeTests(PhotonBaseTest):
 
         # Todo: check that no outer fold metrics have been created
 
-
     def test_preprocessing(self):
 
         prepro_pipe = Preprocessing()
@@ -161,3 +161,47 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.fit(self.__X, self.__y)
 
         self.assertTrue(np.array_equal(self.__y + 1, self.hyperpipe.data.y))
+
+    def test_estimation_type(self):
+        def callback(X, y=None, **kwargs):
+            pass
+
+        pipe = Hyperpipe('name', inner_cv=KFold(n_splits=2), best_config_metric='mean_squared_error')
+
+        with self.assertRaises(NotImplementedError):
+            pipe += PipelineElement('PCA')
+            est_type = pipe.estimation_type
+
+        pipe += PipelineElement('SVC')
+        self.assertEqual(pipe.estimation_type, 'classifier')
+
+        pipe.elements[-1] = PipelineElement('SVR')
+        self.assertEqual(pipe.estimation_type, 'regressor')
+
+        with self.assertRaises(NotImplementedError):
+            pipe.elements[-1] = CallbackElement('MyCallback', callback)
+            est_type = pipe.estimation_type
+
+    def test_copy_me(self):
+        self.maxDiff = None
+        copy = self.hyperpipe.copy_me()
+        copy2 = self.hyperpipe.copy_me()
+        self.assertDictEqual(elements_to_dict(copy), elements_to_dict(self.hyperpipe))
+
+        copy_after_fit = self.hyperpipe.fit(self.__X, self.__y).copy_me()
+
+        copy_after_fit = elements_to_dict(copy_after_fit)
+        # the current_configs of the elements are not None after calling fit() on a hyperpipe
+        # when copying the respective PipelineElement, these current_configs are copied, too
+        # this is why we need to delete _pipe and elements before asserting for equality
+        copy_after_fit['_pipe'] = None
+        copy_after_fit['elements'] = None
+        copy = elements_to_dict(copy)
+        copy['_pipe'] = None
+        copy['elements'] = None
+        self.assertDictEqual(copy, copy_after_fit)
+
+        # check if deepcopy worked
+        copy2.cross_validation.inner_cv.n_splits = 10
+        self.assertEqual(copy2.cross_validation.inner_cv.n_splits, 10)
+        self.assertEqual(self.hyperpipe.cross_validation.inner_cv.n_splits, 3)
