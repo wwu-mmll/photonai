@@ -600,6 +600,8 @@ class Preprocessing(Branch):
         self.needs_y = True
         self.needs_covariates = True
         self.name = 'Preprocessing'
+        self.is_transformer = True
+        self.is_estimator = False
 
     def __iadd__(self, pipe_element):
         """
@@ -625,6 +627,10 @@ class Preprocessing(Branch):
     def predict(self, data, **kwargs):
         raise Warning("There is no predict function of the preprocessing pipe, it is a transformer only.")
         pass
+
+    @property
+    def _estimator_type(self):
+        return None
 
 
 class Stack(PipelineElement):

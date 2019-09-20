@@ -1,3 +1,4 @@
+import os
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
@@ -20,7 +21,7 @@ class HyperpipeTests(PhotonBaseTest):
         self.cv_object = KFold(n_splits=3)
         self.hyperpipe = Hyperpipe('god', inner_cv=self.cv_object, metrics=["accuracy"],
                                    best_config_metric="accuracy",
-                                   output_settings=OutputSettings(project_folder='./tmp'))
+                                   output_settings=OutputSettings(project_folder='./tmp', overwrite_results=True))
         self.hyperpipe += self.ss_pipe_element
         self.hyperpipe += self.pca_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
@@ -141,7 +142,8 @@ class HyperpipeTests(PhotonBaseTest):
                             inner_cv=KFold(n_splits=3),
                             # outer_cv=KFold(n_splits=3),
                             eval_final_performance=True,
-                            output_settings=OutputSettings(save_predictions='all', project_folder='./tmp'))
+                            output_settings=OutputSettings(save_predictions='all', project_folder='./tmp',
+                                                           overwrite_results=True))
 
         my_pipe += PipelineElement('StandardScaler')
         my_pipe += PipelineElement('PCA', {'n_components': [pca_n_components]}, random_state=3)
@@ -205,3 +207,39 @@ class HyperpipeTests(PhotonBaseTest):
         copy2.cross_validation.inner_cv.n_splits = 10
         self.assertEqual(copy2.cross_validation.inner_cv.n_splits, 10)
         self.assertEqual(self.hyperpipe.cross_validation.inner_cv.n_splits, 3)
+
+    def recursive_assertion(self, element_a, element_b):
+        if isinstance(element_a, dict):
+            for key in element_a.keys():
+                self.recursive_assertion(element_a[key], element_b[key])
+        elif isinstance(element_a, np.ndarray):
+            np.testing.assert_array_equal(element_a, element_b)
+        elif isinstance(element_a, list):
+            for i, _ in enumerate(element_a):
+                self.recursive_assertion(element_a[i], element_b[i])
+        elif isinstance(element_a, tuple):
+            for i in range(len(element_a)):
+                self.recursive_assertion(element_a[i], element_b[i])
+        else:
+            self.assertEqual(element_a, element_b)
+
+    def test_save_optimum_pipe(self):
+        # todo
+        #  fix is_transformer and is_estimator
+        #  redo ModelPersistor and accommodate for Branches and so on (especially Custom Elements within Branches and so on)
+        preproc = Preprocessing()
+        preproc += PipelineElement('LabelEncoder')
+        self.hyperpipe += preproc
+        self.hyperpipe.name = "hyperpipe"
+        self.hyperpipe.output_settings.project_folder = "./tmp/optimum_pipypipe/"
+        pipe_copy = self.hyperpipe.copy_me()
+        pipe_copy.output_settings.save_output = False
+        pipe_copy.fit(self.__X, self.__y)
+        self.assertFalse(os.path.exists("./tmp/optimum_pipypipe/hyperpipe_results/"))
+
+        self.hyperpipe.fit(self.__X, self.__y)
+        self.assertTrue(os.path.exists("./tmp/optimum_pipypipe/hyperpipe_results/photon_best_model.photon"))
+
+        # check if load_optimum_pipe also works
+        optimum_pipe = Hyperpipe.load_optimum_pipe("./tmp/optimum_pipypipe/hyperpipe_results/photon_best_model.photon")
+        self.recursive_assertion(elements_to_dict(optimum_pipe), elements_to_dict(self.hyperpipe.optimum_pipe))
