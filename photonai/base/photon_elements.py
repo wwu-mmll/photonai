@@ -1111,6 +1111,7 @@ class CallbackElement(PhotonNative):
         self.needs_covariates = True
         self.needs_y = True
         self.name = name
+        # todo: check if delegate function accepts X, y, kwargs
         self.delegate_function = delegate_function
         self.method_to_monitor = method_to_monitor
         self.hyperparameters = {}
