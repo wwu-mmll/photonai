@@ -6,7 +6,7 @@ from photonai.optimization import IntegerRange, Categorical
 
 X, y = load_breast_cancer(True)
 
-settings = OutputSettings(project_folder='./tmp/')
+settings = OutputSettings(project_folder='./tmp/', overwrite_results=True)
 
 my_pipe = Hyperpipe('basic_stacking',
                     optimizer='grid_search',
@@ -39,3 +39,6 @@ my_pipe += Stack('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branc
 my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
 
 my_pipe.fit(X, y)
+
+optimum_pipe = Hyperpipe.load_optimum_pipe('./tmp/basic_stacking_results/photon_best_model.photon')
+debug = True

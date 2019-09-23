@@ -1,5 +1,4 @@
 import datetime
-import glob
 import importlib
 import importlib.util
 import inspect
@@ -1263,7 +1262,52 @@ class FlowchartCreator(object):
 class PhotonModelPersistor:
 
     @staticmethod
-    def save_optimum_pipe(hyperpipe, file, password=None):
+    def save_elements(elements, folder):
+        if not os.path.exists(folder):
+            os.makedirs(folder)
+        element_identifier = list()
+
+        for i, element in enumerate(elements):
+            if element.disabled:
+                continue
+
+            if isinstance(element, (Stack, Branch, Preprocessing)):
+                filename = '_' + str(i) + '_' + element.name
+                new_folder = os.path.join(folder, filename)
+                element_identifier.append({'element_name': element.name, 'filename': filename, 'folder': new_folder})
+                elements = element.elements
+                PhotonModelPersistor.save_elements(elements=elements, folder=new_folder)
+                element.elements = []
+                joblib.dump(element, os.path.join(folder, filename) + '.pkl', compress=1)
+                element_identifier[-1]['mode'] = 'PhotonBuildingBlock'
+                element.elements = elements
+            else:
+                base_element = element.base_element
+                filename = '_' + str(i) + '_' + element.name
+                element_identifier.append({'element_name': element.name, 'filename': filename})
+                if hasattr(base_element, 'save'):
+                    wrapper_file = inspect.getfile(base_element.__class__)
+                    base_element.save(os.path.join(folder, filename))
+                    element_identifier[-1]['mode'] = 'custom'
+                    element_identifier[-1]['wrapper_script'] = os.path.basename(wrapper_file)
+                    element_identifier[-1]['test_disabled'] = element.test_disabled
+                    element_identifier[-1]['disabled'] = element.disabled
+                    element_identifier[-1]['hyperparameters'] = element.hyperparameters
+                    shutil.copy(wrapper_file, os.path.join(folder, os.path.basename(wrapper_file)))
+                else:
+                    try:
+                        joblib.dump(element, os.path.join(folder, filename) + '.pkl', compress=1)
+                        element_identifier[-1]['mode'] = 'pickle'
+                    except:
+                        raise NotImplementedError("Custom pipeline element must implement .save() method or "
+                                                  "allow pickle.")
+
+        # save pipeline blueprint to make loading of pipeline easier
+        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'wb') as f:
+            pickle.dump(element_identifier, f)
+
+    @staticmethod
+    def save_optimum_pipe(optimum_pipe, zip_file, password=None):
         """
         Save optimal pipeline only. Complete hyperpipe will no not be saved.
 
@@ -1275,67 +1319,63 @@ class PhotonModelPersistor:
             Password used to encrypt the pipeline file
 
         """
-        def save_element(element, element_number, element_name, folder, wrapper_files):
-            filename = '_optimum_pipe_' + str(element_number) + '_' + element_name
-            element_identifier.append({'element_name': element_name,
-                                       'filename': filename})
-            if hasattr(element, 'base_element'):
-                base_element = element.base_element
-            else:
-                base_element = element
-            if hasattr(base_element, 'save'):
-                base_element.save(os.path.join(folder, filename))
-                element_identifier[-1]['mode'] = 'custom'
-                element_identifier[-1]['wrapper_script'] = os.path.basename(inspect.getfile(base_element.__class__))
-                wrapper_files.append(inspect.getfile(base_element.__class__))
-                element_identifier[-1]['test_disabled'] = element.test_disabled
-                element_identifier[-1]['disabled'] = element.disabled
-                element_identifier[-1]['hyperparameters'] = element.hyperparameters
-
-            else:
-                try:
-                    joblib.dump(element, os.path.join(folder, filename) + '.pkl', compress=1)
-                    element_identifier[-1]['mode'] = 'pickle'
-                except:
-                    raise NotImplementedError("Custom pipeline element must implement .save() method or "
-                                              "allow pickle.")
-            return wrapper_files
-
-        element_number = 0
-        element_identifier = list()
-        folder = os.path.splitext(file)[0]
-        file = os.path.splitext(file)[0] + '.photon'
+        folder = os.path.splitext(zip_file)[0]
+        zip_file = os.path.splitext(zip_file)[0] + '.photon'
 
         if os.path.exists(folder):
             Logger().warn('The file you specified already exists as a folder.')
         else:
             os.makedirs(folder)
-        wrapper_files = list()
 
-        for name, element in hyperpipe.optimum_pipe.elements:
-            wrapper_files = save_element(element, element_number, name, folder, wrapper_files)
-            element_number += 1
-
-        # save pipeline blueprint to make loading of pipeline easier
-        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'wb') as f:
-            pickle.dump(element_identifier, f)
+        PhotonModelPersistor.save_elements(optimum_pipe.elements, folder)
 
         # get all files
-        files = glob.glob(os.path.join(folder, '_optimum_pipe_*'))
+        files = list()
+        for root, directories, filenames in os.walk(folder):
+            for filename in filenames:
+                files.append(os.path.join(root, filename))
 
         if password is not None:
-            # ToDo: Do this without the need for pyminizip's C++ requirements
             import pyminizip
-            pyminizip.compress(files, file, password)
+            pyminizip.compress(files, zip_file, password)
         else:
-            with zipfile.ZipFile(file, 'w') as myzip:
+            with zipfile.ZipFile(zip_file, 'w') as myzip:
+                root_len = len(os.path.dirname(zip_file)) + 1
                 for f in files:
-                    myzip.write(f, os.path.basename(f))
+                    # in order to work even with subdirectories, we need to substract the dirname from our file
+                    # this is why I'm saving the root_len first
+                    myzip.write(f, f[root_len:])
                     os.remove(f)
-                for f in wrapper_files:
-                    myzip.write(f, os.path.splitext(os.path.basename(f))[0] + '.py')
-        os.removedirs(folder)
+        shutil.rmtree(folder)
 
+    @staticmethod
+    def load_elements(folder):
+        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'rb') as f:
+            setup_info = pickle.load(f)
+            element_list = list()
+            for element_info in setup_info:
+                if element_info['mode'] == 'PhotonBuildingBlock':
+                    photon_building_block = joblib.load(os.path.join(folder, element_info['filename'] + '.pkl'))
+                    base_elements = PhotonModelPersistor.load_elements(element_info['folder'])
+                    for _, element in base_elements:
+                        photon_building_block += element
+                    element_list.append((element_info['element_name'], photon_building_block))
+                elif element_info['mode'] == 'custom':
+                    spec = importlib.util.spec_from_file_location(element_info['element_name'],
+                                                                  os.path.join(folder, element_info['wrapper_script']))
+                    imported_module = importlib.util.module_from_spec(spec)
+                    spec.loader.exec_module(imported_module)
+                    base_element = getattr(imported_module, element_info['element_name'])
+                    custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
+                                                     hyperparameters=element_info['hyperparameters'],
+                                                     test_disabled=element_info['test_disabled'],
+                                                     disabled=element_info['disabled'])
+                    custom_element.base_element.load(os.path.join(folder, element_info['filename']))
+                    element_list.append((element_info['element_name'], custom_element))
+                else:
+                    loaded_pipeline_element = joblib.load(os.path.join(folder, element_info['filename'] + '.pkl'))
+                    element_list.append((element_info['element_name'], loaded_pipeline_element))
+        return element_list
 
     @staticmethod
     def load_optimum_pipe(file, password=None):
@@ -1353,53 +1393,17 @@ class PhotonModelPersistor:
         sklearn Pipeline with all trained photon_pipelines
         """
         if file.endswith('.photon'):
-            archive_name = os.path.splitext(file)[0]
-            folder = archive_name
+            folder = os.path.dirname(file)
             zf = zipfile.ZipFile(file)
             zf.extractall(folder, pwd=password)
         else:
             raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
 
-        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'rb') as f:
-            setup_info = pickle.load(f)
-            element_list = list()
-            for element_info in setup_info:
-                if element_info['mode'] == 'custom':
-                    spec = importlib.util.spec_from_file_location(element_info['element_name'],
-                                                                  os.path.join(folder, element_info['wrapper_script']))
-                    imported_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(imported_module)
-                    base_element = getattr(imported_module, element_info['element_name'])
-                    custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
-                                                     hyperparameters=element_info['hyperparameters'],
-                                                     test_disabled=element_info['test_disabled'],
-                                                     disabled=element_info['disabled'])
-                    custom_element.base_element.load(os.path.join(folder, element_info['filename']))
-                    element_list.append((element_info['element_name'], custom_element))
-                else:
+        element_list = PhotonModelPersistor.load_elements(folder=os.path.join(folder, 'photon_best_model'))
 
-                    loaded_pipeline_element = joblib.load(os.path.join(folder, element_info['filename'] + '.pkl'))
-
-                    # This is only for compatibility with older versions
-                    if not hasattr(loaded_pipeline_element, 'needs_y'):
-                        if hasattr(loaded_pipeline_element.base_element, 'needs_y'):
-                            loaded_pipeline_element.needs_y = loaded_pipeline_element.base_element.needs_y
-                        else:
-                            loaded_pipeline_element.needs_y = False
-                    if not hasattr(loaded_pipeline_element, 'needs_covariates'):
-                        if hasattr(loaded_pipeline_element.base_element, 'needs_covariates'):
-                            loaded_pipeline_element.needs_covariates = loaded_pipeline_element.base_element.needs_covariates
-                        else:
-                            loaded_pipeline_element.needs_covariates = False
-
-                    loaded_pipeline_element.is_transformer = hasattr(loaded_pipeline_element.base_element, "transform")
-                    loaded_pipeline_element.is_estimator = hasattr(loaded_pipeline_element.base_element, "predict")
-
-                    element_list.append((element_info['element_name'], loaded_pipeline_element))
-
-            # delete unpacked folder to clean up
-            # ToDo: Don't unpack at all, but use PHOTON file directly
-            from shutil import rmtree
-            rmtree(folder, ignore_errors=True)
+        # delete unpacked folder to clean up
+        # ToDo: Don't unpack at all, but use PHOTON file directly
+        from shutil import rmtree
+        rmtree(os.path.join(folder, 'photon_best_model'), ignore_errors=True)
 
         return PhotonPipeline(element_list)
