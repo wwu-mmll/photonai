@@ -217,7 +217,10 @@ class PipelineElement(BaseEstimator):
         """
         Forwards the get_params request to the wrapped base element
         """
-        return self.base_element.get_params(deep)
+        if hasattr(self.base_element, 'get_params'):
+            return self.base_element.get_params(deep)
+        else:
+            return None
 
     def set_params(self, **kwargs):
         """
@@ -583,7 +586,7 @@ class Branch(PipelineElement):
             for attribute, value_list in element.hyperparameters.items():
                 self._hyperparameters[self.name + '__' + attribute] = value_list
 
-    def _check_hyper(self,BaseEstimator):
+    def _check_hyper(self, BaseEstimator):
         pass
 
 
@@ -1111,6 +1114,7 @@ class CallbackElement(PhotonNative):
         self.needs_covariates = True
         self.needs_y = True
         self.name = name
+        # todo: check if delegate function accepts X, y, kwargs
         self.delegate_function = delegate_function
         self.method_to_monitor = method_to_monitor
         self.hyperparameters = {}

@@ -51,3 +51,4 @@ class ScorerTest(unittest.TestCase):
             np.testing.assert_equal(Scorer.calculate_metrics([1, 1, 0, 1],
                                                              [0, 1, 0, 1],
                                                              [not_implemented_metric])[not_implemented_metric], np.nan)
+
