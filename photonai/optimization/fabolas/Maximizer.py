@@ -11,7 +11,8 @@ import scipy
 from scipy.stats import norm
 
 from photonai.optimization.fabolas import epmgp
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 try:
     import DIRECT
@@ -397,7 +398,7 @@ class InformationGain(BaseAcquisitionFunction):
                 break
             else:
                 if self.verbose:
-                    Logger().debug("Fabolas.InformationGain: Infinity")
+                    logger.debug("Fabolas.InformationGain: Infinity")
 
         if len(self.zb.shape) == 1:
             self.zb = self.zb[:, None]
@@ -655,7 +656,7 @@ class InformationGainPerUnitCost(InformationGain):
                 break
             else:
                 if self.verbose:
-                    Logger().debug("Fabolas.InformationGainPerUnitCost: Infinity")
+                    logger.debug("Fabolas.InformationGainPerUnitCost: Infinity")
         if np.any(np.isinf(self.lmb)):
             raise ValueError("Could not sample valid representer points! LogEI is -infinity")
         if len(self.zb.shape) == 1:

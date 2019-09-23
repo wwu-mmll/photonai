@@ -10,7 +10,8 @@ from functools import partial
 from copy import deepcopy
 from . import normalization
 
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class BaseModel(object):
@@ -507,7 +508,7 @@ class GaussianProcess(BaseModel):
             self.hypers = np.append(self.hypers, np.log(self.noise))
 
         if self.verbose:
-            Logger().debug("Fabolas.GaussianProcess: GP Hyperparameters: " + str(self.hypers))
+            logger.debug("Fabolas.GaussianProcess: GP Hyperparameters: " + str(self.hypers))
 
         self.gp.compute(self.X, yerr=np.sqrt(self.noise))
 
@@ -598,7 +599,7 @@ class GaussianProcess(BaseModel):
                 results = optimize.minimize(self.nll, p0)
                 theta = results.x
             except ValueError:
-                Logger().error("Fabolas.GaussianProcess: Could not find a valid hyperparameter configuration! Use initial configuration")
+                logger.error("Fabolas.GaussianProcess: Could not find a valid hyperparameter configuration! Use initial configuration")
                 theta = p0
 
         return theta

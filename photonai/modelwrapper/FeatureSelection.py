@@ -11,7 +11,9 @@ from pathlib import Path
 import statsmodels.api as sm
 import multiprocessing
 import os
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
+
 
 class PearsonFeatureSelector(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
@@ -218,7 +220,7 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
         hash = sha1(np.asarray(X)).hexdigest()
         hash_file = Path(str(self.logs + '/' + hash + '.txt'))
         if hash_file.is_file():
-            Logger().debug('Reloading GWAS p-values...')
+            logger.debug('Reloading GWAS p-values...')
             self.ps = np.loadtxt(self.logs + '/' + hash + '.txt')
 
         else:
@@ -238,7 +240,7 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
 
     def transform(self, X):
         X_selected = X[:,self.ps <= self.p_thres]
-        Logger().debug('Remaining features after GWAS feature selection: {}'.format(X_selected.shape[1]))
+        logger.debug('Remaining features after GWAS feature selection: {}'.format(X_selected.shape[1]))
         return X_selected
 
     def parallelized_logistic_regression(self, params):
@@ -246,7 +248,7 @@ class LogisticGWASFeatureSelection(BaseEstimator,TransformerMixin):
         warnings.filterwarnings('ignore')
         i, x = params
         if ((i+1) % 10000) == 0:
-            Logger().info('Running GWAS Feature Selection...done with {} SNPs.'.format(i+1))
+            logger.info('Running GWAS Feature Selection...done with {} SNPs.'.format(i+1))
         exog = np.concatenate([np.reshape(x, (x.shape[0], 1)), self.components], axis=1)
         exog = sm.add_constant(exog)
         logit_mod = sm.Logit(self._y, exog)

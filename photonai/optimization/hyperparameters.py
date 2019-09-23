@@ -1,5 +1,6 @@
 import numpy as np
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class PhotonHyperparam:
@@ -110,12 +111,12 @@ class NumberRange(PhotonHyperparam):
 
         if self.range_type == "geomspace" and self.start == 0:
             error_message = "Geometric sequence cannot include zero"
-            Logger().error(error_message)
+            logger.error(error_message)
             raise ValueError(error_message)
         if self.range_type == "range" and self.start > self.stop:
             warn_message = "NumberRange or one of its subclasses is empty cause np.arange " + \
                            "does not deal with start greater than stop."
-            Logger().warn(warn_message)
+            logger.warn(warn_message)
 
         values = []
 

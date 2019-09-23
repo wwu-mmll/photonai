@@ -9,6 +9,7 @@ import shutil
 import traceback
 import zipfile
 from copy import deepcopy
+import logging
 
 import __main__
 import dask
@@ -27,7 +28,8 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, IntegerRange, FloatRange, Categorical
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.processing import ResultsHandler
 from photonai.processing.metrics import Scorer
 from photonai.processing.outer_folds import OuterFoldManager
@@ -133,7 +135,7 @@ class OutputSettings:
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
 
             self.log_file = self._add_timestamp(self.log_file)
-            Logger().set_custom_log_file(self.log_file)
+            #logging.set_custom_log_file(self.log_file)
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
@@ -403,12 +405,12 @@ class Hyperpipe(BaseEstimator):
                                    "PHOTON chose the first one from the list of metrics to calculate."
 
                     self.best_config_metric = self.metrics[0]
-                    Logger().warn(warning_text)
+                    logger.warn(warning_text)
                     raise Warning(warning_text)
                 else:
                     error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
                                 "the best_config_metric so that PHOTON which optimizes for"
-                    Logger().error(error_msg)
+                    logger.error(error_msg)
                     raise ValueError(error_msg)
 
             if self.best_config_metric is not None:
@@ -422,12 +424,12 @@ class Hyperpipe(BaseEstimator):
                 self.best_config_metric = self.metrics[0]
                 warning_text = "No best config metric was given, so PHOTON chose the first in the list of metrics as " \
                                "criteria for choosing the best configuration."
-                Logger().warn(warning_text)
+                logger.warn(warning_text)
                 raise Warning(warning_text)
             else:
                 if self.metrics is None or len(self.metrics) == 0:
                     metric_error_text = "List of Metrics to calculate should not be empty"
-                    Logger().error(metric_error_text)
+                    logger.error(metric_error_text)
                     raise ValueError(metric_error_text)
 
         def get_optimizer(self):
@@ -471,14 +473,14 @@ class Hyperpipe(BaseEstimator):
                     best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
 
                 # inform user
-                Logger().verbose('Number of tested configurations:' + str(len(tested_configs)))
-                Logger().verbose('Optimizer metric: ' + self.best_config_metric + '\n' +
+                logger.debug('Number of tested configurations:' + str(len(tested_configs)))
+                logger.debug('Optimizer metric: ' + self.best_config_metric + '\n' +
                                  '   --> Greater is better: ' + str(self.maximize_metric))
-                Logger().info('Best config: ' + str(best_config_outer_fold.human_readable_config))
+                logger.info('Best config: ' + str(best_config_outer_fold.human_readable_config))
 
                 return best_config_outer_fold
             except BaseException as e:
-                Logger().error(str(e))
+                logger.error(str(e))
 
         def get_optimum_config_outer_folds(self, outer_folds):
             list_of_scores = list()
@@ -495,6 +497,25 @@ class Hyperpipe(BaseEstimator):
 
             best_config = outer_folds[best_config_metric_nr].best_config
             return best_config
+
+    def set_log_level(self, logfile):
+        if self.verbosity == 0:
+            level = logging.INFO
+        elif self.verbosity == 1:
+            level = 15
+        elif self.verbosity == 2:
+            level = logging.DEBUG
+        else:
+            level = logging.WARN
+
+        logger = logging.getLogger('photon')
+        logger.setLevel(level)
+        for handler in logger.handlers:
+            handler.setLevel(level)
+
+        fh = logging.FileHandler(logfile)
+        fh.setLevel(level)
+        logger.addHandler(fh)
 
     # Pipeline Management & Interface
     #
@@ -536,7 +557,7 @@ class Hyperpipe(BaseEstimator):
         self.__iadd__(pipe_element)
 
     def _prepare_dummy_estimator(self):
-        Logger().info("Running Dummy Estimator.")
+        logger.info("Running Dummy Estimator.")
         self.results.dummy_estimator = MDBDummyResults()
 
         if self.estimation_type == 'regressor':
@@ -546,7 +567,7 @@ class Hyperpipe(BaseEstimator):
             self.results.dummy_estimator.strategy = 'most_frequent'
             return DummyClassifier(strategy=self.results.dummy_estimator.strategy)
         else:
-            Logger().info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
+            logger.info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
                           'step skipped.')
             return
 
@@ -624,21 +645,21 @@ class Hyperpipe(BaseEstimator):
                                                                                                             self.optimization.metrics)
 
         # save result tree to db or file or both
-        Logger().info('Finished hyperparameter optimization!')
+        logger.info('Finished hyperparameter optimization!')
 
         # Find best config across outer folds
         best_config =  self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
         self.best_config = best_config.config_dict
         self.results.best_config = best_config
-        Logger().info('OVERALL BEST CONFIGURATION')
-        Logger().info('--------------------------')
-        Logger().info(self.results.best_config.human_readable_config)
+        logger.info('OVERALL BEST CONFIGURATION')
+        logger.info('--------------------------')
+        logger.info(self.results.best_config.human_readable_config)
 
         # save results again
         self.results.time_of_results = datetime.datetime.now()
         self.results.computation_completed = True
         self.results_handler.save()
-        Logger().info("Saved overall best config to database ")
+        logger.info("Saved overall best config to database ")
 
         # write all convenience files (summary, predictions_file and plots)
         self.results_handler.write_convenience_files()
@@ -657,7 +678,7 @@ class Hyperpipe(BaseEstimator):
         if self.output_settings.save_best_config_feature_importances:
             self.disable_multiprocessing_recursively(self.optimum_pipe)
 
-        Logger().info("Fitting best model...")
+        logger.info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
         # Before saving the optimum pipe, add preprocessing
@@ -667,21 +688,21 @@ class Hyperpipe(BaseEstimator):
         self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
         if self.output_settings.save_output:
-            Logger().info("Saving best model...")
+            logger.info("Saving best model...")
             try:
                 pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
                 PhotonModelPersistor.save_optimum_pipe(self, pretrained_model_filename)
-                Logger().info("Saved optimum pipe model to file")
+                logger.info("Saved optimum pipe model to file")
             except FileNotFoundError as e:
-                Logger().info("Could not save optimum pipe model to file")
-                Logger().error(str(e))
+                logger.info("Could not save optimum pipe model to file")
+                logger.error(str(e))
 
         if self.output_settings.save_best_config_feature_importances and self.output_settings.save_output:
             # get feature importances of optimum pipe
-            Logger().info("Mapping back feature importances...")
+            logger.info("Mapping back feature importances...")
             feature_importances = OuterFoldManager.extract_feature_importances(self.optimum_pipe)
             if not feature_importances:
-                Logger().info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
+                logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
                 return
 
             self.results.best_config_feature_importances = feature_importances
@@ -731,13 +752,13 @@ class Hyperpipe(BaseEstimator):
                 raise IndexError(
                     "Size of targets mismatch to the size of the data: " + str(shape_X[0]) + " - " + str(shape_y[0]))
         except IndexError as ie:
-            Logger().error("IndexError: " + str(ie))
+            logger.error("IndexError: " + str(ie))
             raise ie
         except ValueError as ve:
-            Logger().error("ValueError: " + str(ve))
+            logger.error("ValueError: " + str(ve))
             raise ve
         except Exception as e:
-            Logger().error("Error: " + str(e))
+            logger.error("Error: " + str(e))
             raise e
 
         # be compatible to list of (image-) files
@@ -755,16 +776,16 @@ class Hyperpipe(BaseEstimator):
             nans_in_y = np.isnan(self.data.y)
             nr_of_nans = len(np.where(nans_in_y == 1)[0])
             if nr_of_nans > 0:
-                Logger().info("You have " + str(nr_of_nans) + " Nans in your target vector, "
+                logger.info("You have " + str(nr_of_nans) + " Nans in your target vector, "
                                                               "PHOTON erases every data item that has a Nan Target")
                 self.data.X = self.data.X[~nans_in_y]
                 self.data.y = self.data.y[~nans_in_y]
         except Exception as e:
             # This is only for convenience so if it fails then never mind
-            Logger().error("Removing Nans in target vector failed: " + str(e))
+            logger.error("Removing Nans in target vector failed: " + str(e))
             pass
 
-        Logger().info("Hyperpipe is training with " + str(self.data.y.shape[0]) + " samples.")
+        logger.info("Hyperpipe is training with " + str(self.data.y.shape[0]) + " samples.")
 
     # @staticmethod
     # def prepare_caching(cache_folder):
@@ -799,7 +820,7 @@ class Hyperpipe(BaseEstimator):
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
         if self.preprocessing is not None:
-            Logger().info("Applying preprocessing.")
+            logger.info("Applying preprocessing.")
             self.preprocessing.fit(self.data.X, self.data.y, **self.data.kwargs)
             self.data.X, self.data.y, self.data.kwargs = self.preprocessing.transform(self.data.X, self.data.y,
                                                                                       **self.data.kwargs)
@@ -858,7 +879,7 @@ class Hyperpipe(BaseEstimator):
             self._input_data_sanity_checks(data, targets, **kwargs)
             self._prepare_pipeline()
             self.preprocess_data()
-            Logger().set_verbosity(self.verbosity)
+            #logging.set_verbosity(self.verbosity)
 
             if not self.is_final_fit:
 
@@ -867,6 +888,9 @@ class Hyperpipe(BaseEstimator):
 
                 # update output options to add pipe name and timestamp to results folder
                 self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
+
+                # configure logging
+                self.set_log_level(self.output_settings.log_file)
 
                 # Outer Folds
                 outer_folds = FoldInfo.generate_folds(self.cross_validation.outer_cv,
@@ -881,12 +905,12 @@ class Hyperpipe(BaseEstimator):
                 dummy_estimator = self._prepare_dummy_estimator()
 
                 if self.cache_folder is not None:
-                    Logger().info("Removing Cache Files")
+                    logger.info("Removing Cache Files")
                     CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
                 # loop over outer cross validation
                 for i, outer_f in enumerate(outer_folds):
-                    Logger().info('HYPERPARAMETER SEARCH OF {0}, Outer Cross validation Fold {1}'
+                    logger.info('HYPERPARAMETER SEARCH OF {0}, Outer Cross validation Fold {1}'
                                   .format(self.name, outer_f.fold_nr))
 
                     # 1. generate OuterFolds Object
@@ -938,8 +962,8 @@ class Hyperpipe(BaseEstimator):
                 self.preprocess_data()
                 self._pipe.fit(self.data.X, self.data.y, **kwargs)
         except Exception as e:
-            Logger().error(e)
-            Logger().error(traceback.format_exc())
+            logger.error(e)
+            logger.error(traceback.format_exc())
             traceback.print_exc()
             raise e
         finally:
@@ -1284,7 +1308,7 @@ class PhotonModelPersistor:
         zip_file = os.path.splitext(zip_file)[0] + '.photon'
 
         if os.path.exists(folder):
-            Logger().warn('The file you specified already exists as a folder.')
+            logger.warn('The file you specified already exists as a folder.')
         else:
             os.makedirs(folder)
 

@@ -6,7 +6,8 @@ import numpy as np
 import json
 from photonai.base.photon_elements import Stack, Branch, Switch
 from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
     FoldOperations, MDBConfig
@@ -106,8 +107,8 @@ class InnerFoldManager(object):
                 # self.mother_inner_fold_handle(fold_cnt)
 
                 # --> write that output in InnerFoldManager!
-                Logger().debug(config_item.human_readable_config)
-                Logger().debug('calculating...')
+                logger.debug(config_item.human_readable_config)
+                logger.debug('calculating...')
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
                 durations = job_data.pipe.time_monitor
@@ -121,7 +122,7 @@ class InnerFoldManager(object):
                     break_cv = 0
                     for cf in self.optimization_constraints:
                         if not cf.shall_continue(config_item):
-                            Logger().debug(
+                            logger.debug(
                                 'Skip further cross validation of config because of performance constraints')
                             break_cv += 1
                             break
@@ -129,7 +130,7 @@ class InnerFoldManager(object):
                         break
                 elif self.optimization_constraints is not None:
                     if not self.optimization_constraints.shall_continue(config_item):
-                        Logger().debug(
+                        logger.debug(
                             'Skip further cross validation of config because of performance constraints')
                         break
 
@@ -141,16 +142,16 @@ class InnerFoldManager(object):
         except Exception as e:
             if self.raise_error:
                 raise e
-            Logger().error(e)
-            Logger().error(traceback.format_exc())
+            logger.error(e)
+            logger.error(traceback.format_exc())
             traceback.print_exc()
             if not isinstance(e, Warning):
                 config_item.config_failed = True
             config_item.config_error = str(e)
             warnings.warn('One test iteration of pipeline failed with error')
 
-        Logger().debug('...done with')
-        Logger().info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
+        logger.debug('...done with')
+        logger.info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
         return config_item
 

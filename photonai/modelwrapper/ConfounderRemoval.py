@@ -2,7 +2,8 @@ import numpy as np
 import statsmodels.api as sm
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import StandardScaler
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from typing import Union
 
 
@@ -45,11 +46,11 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
         if X.shape[0] != sample_ols_confounder.shape[0]:
             err_msg = 'Number of samples (N=' + str(X.shape[0]) + ') is not the same as number of cases (N=' + str(
                 sample_ols_confounder.shape[0]) + ') in confounder!'
-            Logger().error(err_msg)
+            logger.error(err_msg)
             raise ValueError(err_msg)
 
     def _standardize(self, covariates, is_fit):
-        Logger().debug('Standardizing confounder prior to removal.')
+        logger.debug('Standardizing confounder prior to removal.')
         scaled_covs = list()
         if is_fit:
             # standardize covariates
@@ -82,7 +83,7 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y=None, **kwargs):
-        Logger().debug('Regress out confounder.')
+        logger.debug('Regress out confounder.')
         sample_ols_confounder = self._check_for_confounders(kwargs)
         self._validate_dimension(X, sample_ols_confounder)
 

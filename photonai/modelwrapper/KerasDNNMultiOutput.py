@@ -41,7 +41,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
 
         self.model = None
 
-        if Logger().verbosity_level == 2:
+        if logging.verbosity_level == 2:
             self.verbosity = 2
         else:
             self.verbosity = 0
@@ -101,7 +101,7 @@ class KerasDNNMultiOutput(BaseEstimator, ClassifierMixin):
                 multi_y.append(y[:, i])
 
             # fit the model
-            Logger().warn('Cannot use Keras Callbacks because of small sample size...')
+            logger.warn('Cannot use Keras Callbacks because of small sample size...')
             results = self.model.fit(X, multi_y, batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=self.verbosity)

@@ -4,7 +4,8 @@ import warnings
 import numpy as np
 
 from photonai.optimization import DummyPerformance
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.helper.helper import PhotonDataHelper
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
@@ -173,14 +174,14 @@ class OuterFoldManager:
                             self.current_best_config = current_config_mdb
 
                 # Print Result for config
-                Logger().debug('...done:')
-                Logger().info(self.optimization_info.best_config_metric + str(config_performance))
-                Logger().info('best config performance so far: ' + str(best_metric_yet))
+                logger.debug('Performance')
+                logger.info(self.optimization_info.best_config_metric + str(config_performance))
+                logger.info('best config performance so far: ' + str(best_metric_yet))
             else:
                 config_performance = (-1, -1)
                 # Print Result for config
-                Logger().debug('...failed:')
-                Logger().error(current_config_mdb.config_error)
+                logger.debug('...failed:')
+                logger.error(current_config_mdb.config_error)
 
             # add config to result tree
             self.result_object.tested_config_list.append(current_config_mdb)
@@ -219,7 +220,7 @@ class OuterFoldManager:
 
             # self.__distribute_cv_info_to_hyperpipe_children(reset=True)
 
-            Logger().verbose('...now fitting with optimum configuration')
+            logger.debug('...now fitting with optimum configuration')
             optimum_pipe.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
 
             self.result_object.best_config = best_config_outer_fold
@@ -232,7 +233,7 @@ class OuterFoldManager:
 
             if self.cross_validaton_info.eval_final_performance:
                 # Todo: generate mean and std over outer folds as well. move this items to the top
-                Logger().verbose('...now predicting unseen data on test set')
+                logger.debug('...now predicting unseen data on test set')
 
                 test_score_mdb = InnerFoldManager.score(optimum_pipe, self._test_X, self._test_y,
                                                         indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices,
@@ -241,8 +242,8 @@ class OuterFoldManager:
                                                         save_feature_importances=self.save_best_config_feature_importances,
                                                         **self._test_kwargs)
 
-                Logger().info('.. calculating metrics for test set')
-                Logger().verbose('...now predicting final model with training data')
+                logger.info('.. calculating metrics for test set')
+                logger.debug('...now predicting final model with training data')
 
                 train_score_mdb = InnerFoldManager.score(optimum_pipe, self._validation_X, self._validation_y,
                                                          indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices,
@@ -255,13 +256,13 @@ class OuterFoldManager:
                 best_config_performance_mdb.training = train_score_mdb
                 best_config_performance_mdb.validation = test_score_mdb
 
-                Logger().info('PERFORMANCE TRAIN:')
+                logger.info('PERFORMANCE TRAIN:')
                 for m_key, m_value in train_score_mdb.metrics.items():
-                    Logger().info(str(m_key) + ": " + str(m_value))
+                    logger.info(str(m_key) + ": " + str(m_value))
 
-                Logger().info('PERFORMANCE TEST:')
+                logger.info('PERFORMANCE TEST:')
                 for m_key, m_value in test_score_mdb.metrics.items():
-                    Logger().info(str(m_key) + ": " + str(m_value))
+                    logger.info(str(m_key) + ": " + str(m_value))
             else:
 
                 def _copy_inner_fold_means(metric_dict):
@@ -284,14 +285,14 @@ class OuterFoldManager:
             # write best config performance to best config item
             self.result_object.best_config.best_config_score = best_config_performance_mdb
 
-        Logger().info('This took {} minutes.'.format((datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
+        logger.info('This took {} minutes.'.format((datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
     def _fit_dummy(self):
         if self.dummy_estimator is not None:
             try:
                 if isinstance(self._validation_X, np.ndarray):
                     if len(self._validation_X.shape) > 2:
-                        Logger().info("Skipping dummy estimator because of too much dimensions")
+                        logger.info("Skipping dummy estimator because of too much dimensions")
                         self.result_object.dummy_results = None
                         return
 
@@ -307,7 +308,7 @@ class OuterFoldManager:
                     test_scores = InnerFoldManager.score(self.dummy_estimator,
                                                          self._test_X, self._test_y,
                                                          metrics=self.optimization_info.metrics)
-                    Logger().info("Dummy Results: " + str(test_scores))
+                    logger.info("Dummy Results: " + str(test_scores))
                     inner_fold.validation = test_scores
 
                 self.result_object.dummy_results = inner_fold
@@ -321,11 +322,11 @@ class OuterFoldManager:
 
                 return inner_fold
             except Exception as e:
-                Logger().error(e)
-                Logger().info("Skipping dummy because of error..")
+                logger.error(e)
+                logger.info("Skipping dummy because of error..")
                 return None
         else:
-            Logger().info("Skipping dummy ..")
+            logger.info("Skipping dummy ..")
 
     @staticmethod
     def extract_feature_importances(optimum_pipe):

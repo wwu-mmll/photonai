@@ -10,7 +10,8 @@ from photonai.optimization import FloatRange, IntegerRange, Categorical
 from photonai.optimization.fabolas.GPMCMC import FabolasGPMCMC
 from photonai.optimization.fabolas.Maximizer import InformationGainPerUnitCost, Direct, MarginalizationGPMCMC
 from photonai.optimization.fabolas.Priors import EnvPrior
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 def _quadratic_bf(x):
@@ -122,7 +123,7 @@ class Fabolas:
             log['path'] = os.path.realpath(os.path.join(str(log['path']), log['bn']))
             if not os.path.exists(log['path']):
                 os.makedirs(log['path'])
-            Logger().info("Fabolas: writing logs to "+log['path'])
+            logger.info("Fabolas: writing logs to "+log['path'])
 
         self._log = log
         self._verbose_maximizer = verbose_maximizer
@@ -352,34 +353,34 @@ class Fabolas:
         :return: next configuration to test, subset-frag to use, tracking-vars
         :rtype: dict, int, dict
         '''
-        Logger().info('**Fabolas: Starting initialization')
+        logger.info('**Fabolas: Starting initialization')
         for self._it in range(0, self._n_init):
-            Logger().debug('Fabolas: step ' + str(self._it) + ' (init)')
+            logger.debug('Fabolas: step ' + str(self._it) + ' (init)')
             start = time()
             result = self._init_models()
             tracking = {'overhead_time': time()-start}
-            Logger().debug('Fabolas: needed {t!s}s'.format(t=tracking['overhead_time']))
+            logger.debug('Fabolas: needed {t!s}s'.format(t=tracking['overhead_time']))
             yield self._create_param_dict(result, tracking)
 
         self._X = np.array(self._X)
         self._Y = np.array(self._Y)
         self._cost = np.array(self._cost)
 
-        Logger().info('**Fabolas: Starting optimization')
+        logger.info('**Fabolas: Starting optimization')
         for self._it in range(self._n_init, self._num_iterations):
-            Logger().debug('Fabolas: step ' + str(self._it) + ' (opt)')
+            logger.debug('Fabolas: step ' + str(self._it) + ' (opt)')
             start = time()
             result = self._optimize_config()
             tracking = {'overhead_time': time()-start}
-            Logger().debug('Fabolas: needed {t!s}s'.format(t=tracking['overhead_time']))
+            logger.debug('Fabolas: needed {t!s}s'.format(t=tracking['overhead_time']))
             yield self._create_param_dict(result, tracking)
 
-        Logger().info('Fabolas: Final config')
+        logger.info('Fabolas: Final config')
         start = time()
         self._model_objective.train(self._X, self._Y, do_optimize=True)
         result = self.get_incumbent()
         tracking = {'overhead_time': time()-start}
-        Logger().debug('Fabolas: needed {t!s}s'.format(t=tracking['overhead_time']))
+        logger.debug('Fabolas: needed {t!s}s'.format(t=tracking['overhead_time']))
         yield self._create_param_dict(result, tracking)
 
     def process_result(self, config, score, cost):
@@ -536,19 +537,19 @@ class Fabolas:
         :rtype: list, int
         '''
         # Train models
-        Logger().debug("Fabolas: Train model_objective")
+        logger.debug("Fabolas: Train model_objective")
         self._model_objective.train(self._X, self._Y, do_optimize=True)
-        Logger().debug("Fabolas: Train model_cost")
+        logger.debug("Fabolas: Train model_cost")
         self._model_cost.train(self._X, self._cost, do_optimize=True)
 
         # Maximize acquisition function
-        Logger().debug("Fabolas: Update acquisition func")
+        logger.debug("Fabolas: Update acquisition func")
         self._acquisition_func.update(self._model_objective, self._model_cost)
-        Logger().debug("Fabolas: Generate new config by maximizing")
+        logger.debug("Fabolas: Generate new config by maximizing")
         new_x = self._maximizer.maximize()
 
         s = self._s_max/self._retransform(new_x[-1])
-        Logger().debug("Fabolas: config generation done for this step")
+        logger.debug("Fabolas: config generation done for this step")
 
         return new_x[:-1], int(s)
 
@@ -595,7 +596,7 @@ class Fabolas:
         if self._log is None:
             return
 
-        Logger().debug("Fabolas: generating log")
+        logger.debug("Fabolas: generating log")
         l = {
             'config': conf,
             'subset_frac': subset,

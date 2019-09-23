@@ -8,7 +8,8 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, ClassifierMixin
 from sklearn.model_selection import ShuffleSplit
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.modelwrapper.KerasBaseEstimator import KerasBaseEstimator
 
 
@@ -34,7 +35,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin, KerasBaseEstimator):
         #self.model = None
 
         # Todo: Check why Logger singleton doesn't work in this scenario
-        # if Logger().verbosity_level == 2:
+        # if logging.verbosity_level == 2:
         #     self.verbosity = 2
         # else:
         #     self.verbosity = 0
@@ -94,7 +95,7 @@ class KerasDNNClassifier(BaseEstimator, ClassifierMixin, KerasBaseEstimator):
                                      callbacks=callbacks_list)
         else:
             # fit the model
-            Logger().warn('Cannot use Keras Callbacks because of small sample size...')
+            logger.warn('Cannot use Keras Callbacks because of small sample size...')
             results = self.model.fit(X, y, batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=self.verbosity)

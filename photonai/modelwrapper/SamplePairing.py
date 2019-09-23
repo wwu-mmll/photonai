@@ -29,7 +29,8 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import StandardScaler
 
 from photonai.helper.helper import PhotonDataHelper
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class SamplePairingBase(BaseEstimator, TransformerMixin):
@@ -233,7 +234,7 @@ class SamplePairingClassification(SamplePairingBase):
         :return: X_new: X and X_augmented; (y_new: the correspoding targets)
         """
 
-        Logger().debug("Pairing " + str(self.draw_limit) + " samples...")
+        logger.debug("Pairing " + str(self.draw_limit) + " samples...")
 
         # ensure class balance in the training set if balance_classes is True
         unique_classes = np.unique(y)

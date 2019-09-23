@@ -1,4 +1,5 @@
-import logging
+from photonai.photonlogger.logger import logger
+
 import time
 
 import numpy as np
@@ -175,7 +176,7 @@ class SMACOptimizer(PhotonBaseOptimizer):
                     else:
                         yield self.check(challenger.get_dictionary())
 
-            logging.debug(
+            logger.debug(
                 "Remaining budget: %f (wallclock), %f (ta costs), %f (target runs)"
                 % (self.optimizer.stats.get_remaing_time_budget(),
                    self.optimizer.stats.get_remaining_ta_budget(),
