@@ -379,9 +379,9 @@ class Hyperpipe(BaseEstimator):
 
         @best_config_metric.setter
         def best_config_metric(self, value):
+            self._best_config_metric = value
             if isinstance(self.best_config_metric, str):
                 self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
-            self._best_config_metric = value
 
         @property
         def optimizer_input_str(self):
@@ -538,8 +538,6 @@ class Hyperpipe(BaseEstimator):
 
     def _prepare_dummy_estimator(self):
         Logger().info("Running Dummy Estimator.")
-
-        # Run Dummy Estimator
         self.results.dummy_estimator = MDBDummyResults()
 
         if self.estimation_type == 'regressor':
@@ -553,18 +551,11 @@ class Hyperpipe(BaseEstimator):
                           'step skipped.')
             return
 
-    def _evaluate_dummy_estimator(self, fold_list):
-        config_item = MDBConfig()
-        config_item.inner_folds = [f for f in fold_list if f is not None]
-        if len(config_item.inner_folds) > 0:
-            self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
-                                                                                                                 self.optimization.metrics)
-
     def _prepare_result_logging(self, start_time):
-        results_object_name = self.name
 
-        self.results = MDBHyperpipe(name=results_object_name)
+        self.results = MDBHyperpipe(name=self.name)
         self.results.hyperpipe_info = MDBHyperpipeInfo()
+
         # in case eval final performance is false, we have no outer fold predictions
         if not self.cross_validation.eval_final_performance:
             self.output_settings.save_predictions_from_best_config_inner_folds = True
@@ -621,7 +612,13 @@ class Hyperpipe(BaseEstimator):
         # 4. persisting best model
 
         # computer dummy metrics
-        self._evaluate_dummy_estimator([outer_fold.dummy_results for outer_fold in self.results.outer_folds])
+        config_item = MDBConfig()
+        dummy_results = [outer_fold.dummy_results for outer_fold in self.results.outer_folds]
+        config_item.inner_folds = [f for f in dummy_results if f is not None]
+        if len(config_item.inner_folds) > 0:
+            self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics_for_inner_folds(
+                config_item.inner_folds,
+                self.optimization.metrics)
 
         # Compute all final metrics
         self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
@@ -629,14 +626,14 @@ class Hyperpipe(BaseEstimator):
 
         # save result tree to db or file or both
         Logger().info('Finished hyperparameter optimization!')
-        self.results_handler.save()
 
         # Find best config across outer folds
-        self.best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
-        self.results.best_config = self.best_config
+        best_config =  self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
+        self.best_config = best_config.config_dict
+        self.results.best_config = best_config
         Logger().info('OVERALL BEST CONFIGURATION')
         Logger().info('--------------------------')
-        Logger().info(self.best_config.human_readable_config)
+        Logger().info(self.results.best_config.human_readable_config)
 
         # save results again
         self.results.time_of_results = datetime.datetime.now()
@@ -649,7 +646,7 @@ class Hyperpipe(BaseEstimator):
 
         # set self to best config
         self.optimum_pipe = self._pipe
-        self.optimum_pipe.set_params(**self.best_config.config_dict)
+        self.optimum_pipe.set_params(**self.best_config)
 
         # set caching
         # we want caching disabled in general but still want to do single subject caching
@@ -703,7 +700,7 @@ class Hyperpipe(BaseEstimator):
             if hasattr(pipe, 'nr_of_processes'):
                 pipe.nr_of_processes = 1
             for child in pipe.elements:
-                if hasattr(child, 'base_elements'):
+                if hasattr(child, 'base_element'):
                     Hyperpipe.disable_multiprocessing_recursively(child.base_element)
         elif isinstance(pipe, PhotonPipeline):
             for name, child in pipe.named_steps.items():
@@ -779,7 +776,7 @@ class Hyperpipe(BaseEstimator):
     def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
         if isinstance(element, (Switch, Stack, Preprocessing)):
             for child in element.elements:
-                Hyperpipe.recursive_cache_folder_propagation(child.base_element, cache_folder, inner_fold_id)
+                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
 
         elif isinstance(element, Branch):
             # in case it's a Branch, we create a cache subfolder and propagate it to every child
@@ -1017,7 +1014,7 @@ class Hyperpipe(BaseEstimator):
                               outer_cv=deepcopy(self.cross_validation.outer_cv),
                               best_config_metric=self.optimization.best_config_metric,
                               metrics=self.optimization.metrics,
-                              optimizer=self.optimization.optimizer_input,
+                              optimizer=self.optimization.optimizer_input_str,
                               optimizer_params=self.optimization.optimizer_params,
                               output_settings=settings)
 
