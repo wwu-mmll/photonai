@@ -11,7 +11,8 @@ from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.registry.element_dictionary import ElementDictionary
 from photonai.helper.helper import PhotonDataHelper
 from photonai.optimization.config_grid import create_global_config_grid, create_global_config_dict
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class PhotonNative:
@@ -69,11 +70,11 @@ class PipelineElement(BaseEstimator):
                     desired_class = getattr(imported_module, desired_class_name)
                     self.base_element = desired_class(**kwargs)
                 except AttributeError as ae:
-                    Logger().error('ValueError: Could not find according class:'
+                    logger.error('ValueError: Could not find according class:'
                                    + str(PipelineElement.ELEMENT_DICTIONARY[name]))
                     raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
             else:
-                Logger().error('Element not supported right now:' + name)
+                logger.error('Element not supported right now:' + name)
                 raise NameError('Element not supported right now:', name)
         else:
             self.base_element = base_element
@@ -141,7 +142,7 @@ class PipelineElement(BaseEstimator):
         if not_supported_hyperparameters:
             error_message = 'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + \
                             str(not_supported_hyperparameters)
-            Logger().error(error_message)
+            logger.error(error_message)
             raise ValueError(error_message)
 
     def copy_me(self):
@@ -261,7 +262,7 @@ class PipelineElement(BaseEstimator):
 
     def __batch_predict(self, delegate, X, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
-            Logger().warn("Cannot do batching on a single entity.")
+            logger.warn("Cannot do batching on a single entity.")
             return delegate(X, **kwargs)
 
             # initialize return values
@@ -271,7 +272,7 @@ class PipelineElement(BaseEstimator):
         batch_idx = 0
         for start, stop in PhotonDataHelper.chunker(nr, self.batch_size):
             batch_idx += 1
-            Logger().debug(self.name + " is predicting batch nr " + str(batch_idx))
+            logger.debug(self.name + " is predicting batch nr " + str(batch_idx))
 
             # split data in batches
             X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, None, kwargs, start, stop)
@@ -290,7 +291,7 @@ class PipelineElement(BaseEstimator):
                 #return self.base_element.predict(X)
                 return self.adjusted_predict_call(self.base_element.predict, X, **kwargs)
             else:
-                Logger().error('BaseException. base Element should have function ' +
+                logger.error('BaseException. base Element should have function ' +
                                'predict.')
                 raise BaseException('base Element should have function predict.')
         else:
@@ -326,7 +327,7 @@ class PipelineElement(BaseEstimator):
 
                 # todo: in case _final_estimator is a Branch, we do not know beforehand it the base elements will
                 #  have a predict_proba -> if not, just return None (@Ramona, does this make sense?)
-                # Logger().error('BaseException. base Element should have "predict_proba" function.')
+                # logger.error('BaseException. base Element should have "predict_proba" function.')
                 # raise BaseException('base Element should have predict_proba function.')
                 return None
         return X
@@ -338,7 +339,7 @@ class PipelineElement(BaseEstimator):
             elif hasattr(self.base_element, 'predict'):
                 return self.predict(X, **kwargs), y, kwargs
             else:
-                Logger().error('BaseException: transform-predict-mess')
+                logger.error('BaseException: transform-predict-mess')
                 raise BaseException('transform-predict-mess')
         else:
             return X, y, kwargs
@@ -363,7 +364,7 @@ class PipelineElement(BaseEstimator):
 
     def __batch_transform(self, X, y=None, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
-            Logger().warn("Cannot do batching on a single entity.")
+            logger.warn("Cannot do batching on a single entity.")
             return self.__transform(X, y, **kwargs)
 
             # initialize return values
@@ -376,7 +377,7 @@ class PipelineElement(BaseEstimator):
         batch_idx = 0
         for start, stop in PhotonDataHelper.chunker(nr, self.batch_size):
             batch_idx += 1
-            Logger().debug(self.name + " is transforming batch nr " + str(batch_idx))
+            logger.debug(self.name + " is transforming batch nr " + str(batch_idx))
 
             # split data in batches
             X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, y, kwargs, start, stop)
@@ -890,7 +891,7 @@ class Switch(PipelineElement):
             self.elements_dict[pipeline_element.name] = pipeline_element
         else:
             error_msg = "Already added a pipeline element with that name to the pipeline switch " + self.name
-            Logger().error(error_msg)
+            logger.error(error_msg)
             raise Exception(error_msg)
         self.generate_private_config_grid()
         return self
@@ -991,7 +992,7 @@ class Switch(PipelineElement):
                     break
         else:
             if not isinstance(config_nr, (tuple, list)):
-                Logger().error('ValueError: current_element must be of type Tuple')
+                logger.error('ValueError: current_element must be of type Tuple')
                 raise ValueError('current_element must be of type Tuple')
 
             # grid search hack

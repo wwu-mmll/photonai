@@ -4,7 +4,8 @@ import numpy as np
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedKFold, \
     StratifiedShuffleSplit, ShuffleSplit
 
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.processing.cross_validation import StratifiedKFoldRegression
 
 
@@ -21,7 +22,7 @@ class FoldInfo:
     def data_overview(y):
         if len(y.shape) > 1:
             # one hot encoded
-            Logger().info("One Hot Encoded data fold information not yet implemented")
+            logger.info("One Hot Encoded data fold information not yet implemented")
             return {}
         else:
             unique, counts = np.unique(y, return_counts=True)
@@ -55,14 +56,14 @@ class FoldInfo:
                 try:
                     data_test_cases = cv_strategy.split(X, y, groups)
                 except:
-                    Logger().error("Could not split data according to groups")
+                    logger.error("Could not split data according to groups")
             elif groups is not None and (isinstance(cv_strategy, (StratifiedKFoldRegression,
                                                                   StratifiedKFold,
                                                                   StratifiedShuffleSplit))):
                 try:
                     data_test_cases = cv_strategy.split(X, groups)
                 except:
-                    Logger().error("Could not stratify data for outer cross validation according to "
+                    logger.error("Could not stratify data for outer cross validation according to "
                                    "group variable")
             else:
                 data_test_cases = cv_strategy.split(X, y)

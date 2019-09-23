@@ -12,7 +12,8 @@ from nilearn.input_data import NiftiMasker
 from sklearn.base import BaseEstimator
 
 from photonai.helper.helper import Singleton
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class RoiObject:
@@ -93,12 +94,12 @@ class AtlasLibrary:
 
     def list_rois(self, atlas: str):
         if atlas not in self.ATLAS_DICTIONARY.keys():
-            Logger().info('Atlas {} is not supported.'.format(atlas))
+            logger.info('Atlas {} is not supported.'.format(atlas))
             return
 
         atlas = self.get_atlas(atlas)
         roi_names = [roi.label for roi in atlas.roi_list]
-        Logger().info(str(roi_names))
+        logger.info(str(roi_names))
         return roi_names
 
     def _add_atlas_to_library(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
@@ -302,7 +303,7 @@ class BrainAtlas(BaseEstimator):
             collection_mode = self.collection_mode
         else:
             collection_mode = 'concat'
-            Logger().error("Collection mode {} not supported. Use 'list' or 'concat' instead."
+            logger.error("Collection mode {} not supported. Use 'list' or 'concat' instead."
                            "Falling back to concat mode.".format(self.collection_mode))
 
         # 1. validate if all X are in the same space and have the same voxelsize and have the same orientation
@@ -337,7 +338,7 @@ class BrainAtlas(BaseEstimator):
         mask_indices = list()
 
         for i, roi in enumerate(roi_objects):
-            Logger().debug("Extracting ROI {}".format(roi.label))
+            logger.debug("Extracting ROI {}".format(roi.label))
             # simply call apply_mask to extract one roi
             extraction = self.apply_mask(series, roi.mask)
             if collection_mode == 'list':
@@ -355,7 +356,7 @@ class BrainAtlas(BaseEstimator):
             self.mask_indices = mask_indices
 
         elapsed_time = time.time() - t1
-        Logger().debug("Time for extracting {} ROIs in {} subjects: {} seconds".format(len(roi_objects), n_subjects, elapsed_time))
+        logger.debug("Time for extracting {} ROIs in {} subjects: {} seconds".format(len(roi_objects), n_subjects, elapsed_time))
         return roi_data
 
     def apply_mask(self, series, mask_img):
@@ -433,7 +434,7 @@ class BrainMask(BaseEstimator):
             img = X
         else:
             error_msg = "Can only process strings as file paths to nifti images or nifti image object"
-            Logger().error(error_msg)
+            logger.error(error_msg)
             raise ValueError(error_msg)
 
         if len(img.shape) > 3:
@@ -478,7 +479,7 @@ class BrainMask(BaseEstimator):
             try:
                 single_roi = self.masker.fit_transform(X)
             except BaseException as e:
-                Logger().error(str(e))
+                logger.error(str(e))
                 single_roi = None
 
             if single_roi is not None:

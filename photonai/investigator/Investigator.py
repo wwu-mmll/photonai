@@ -5,7 +5,8 @@ from time import sleep as slp
 
 from photonai.base.hyperpipe import Hyperpipe
 from photonai.helper.helper import Singleton
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from ..investigator.app.main import application
 
 
@@ -41,7 +42,7 @@ class Investigator:
         # make sure that Flask is running
         FlaskManager().set_pipe_object(pipe.name, pipe.results)
         url = Investigator.__build_url("a", pipe.name)
-        Logger().info("Your url is: " + url)
+        logger.info("Your url is: " + url)
         Investigator.__delayed_browser(url)
         FlaskManager().run_app()
 
@@ -61,7 +62,7 @@ class Investigator:
         """
         FlaskManager().set_mongo_db_url(mongo_connect_url)
         url = Investigator.__build_url("m", pipe_name)
-        Logger().info("Your url is: " + url)
+        logger.info("Your url is: " + url)
         Investigator.__delayed_browser(url)
         FlaskManager().run_app()
 
@@ -83,7 +84,7 @@ class Investigator:
         FlaskManager().set_mongo_db_url(mongo_connect_url)
         for pipe in pipe_names:
             url = Investigator.__build_url("m", pipe)
-            Logger().info("Your url is: " + url)
+            logger.info("Your url is: " + url)
         FlaskManager().run_app()
 
     @staticmethod

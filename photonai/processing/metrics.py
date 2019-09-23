@@ -6,7 +6,8 @@ function_name(y_true, y_pred)
 
 import numpy as np
 from scipy.stats import spearmanr
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from sklearn.metrics import accuracy_score
 
 
@@ -60,12 +61,12 @@ class Scorer(object):
                 scoring_method = desired_class
                 return scoring_method
             except AttributeError as ae:
-                Logger().error('ValueError: Could not find according class: '
+                logger.error('ValueError: Could not find according class: '
                                + Scorer.ELEMENT_DICTIONARY[metric])
                 raise ValueError('Could not find according class:',
                                  Scorer.ELEMENT_DICTIONARY[metric])
         else:
-            Logger().error('NameError: Metric not supported right now:' + metric)
+            logger.error('NameError: Metric not supported right now:' + metric)
             # raise Warning('Metric not supported right now:', metric)
             return None
 
@@ -82,10 +83,10 @@ class Scorer(object):
             else:
                 # Todo: better error checking?
                 error_msg = "Metric not suitable for optimizer."
-                Logger().error(error_msg)
+                logger.error(error_msg)
                 raise NameError(error_msg)
         else:
-            Logger().error('Specify valid metric to choose best config.')
+            logger.error('Specify valid metric to choose best config.')
         raise NameError('Specify valid metric to choose best config.')
 
     @staticmethod
@@ -104,11 +105,11 @@ class Scorer(object):
         # The following works only for classification
         # if np.ndim(y_pred) == 2:
         #     y_pred = one_hot_to_binary(y_pred)
-        #     Logger().warn("test_predictions was one hot encoded => transformed to binary")
+        #     logger.warn("test_predictions was one hot encoded => transformed to binary")
         #
         # if np.ndim(y_true) == 2:
         #     y_true = one_hot_to_binary(y_true)
-        #     Logger().warn("test_y was one hot encoded => transformed to binary")
+        #     logger.warn("test_y was one hot encoded => transformed to binary")
 
         output_metrics = {}
         if metrics:
@@ -116,7 +117,7 @@ class Scorer(object):
                 scorer = Scorer.create(metric)
                 if scorer is not None:
                     scorer_value = scorer(y_true, y_pred)
-                    Logger().debug(str(scorer_value))
+                    logger.debug(str(scorer_value))
                     output_metrics[metric] = scorer_value
                 else:
                     output_metrics[metric] = np.nan
@@ -166,7 +167,7 @@ def sensitivity(y_true, y_pred):  # = true positive rate, hit rate, recall
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
         return tp / (tp + fn)
     else:
-        Logger().info('Sensitivity (metric) is valid only for binary classification problems. You have ' +
+        logger.info('Sensitivity (metric) is valid only for binary classification problems. You have ' +
                       str(len(np.unique(y_true))) + ' classes.')
         return np.nan
 
@@ -177,7 +178,7 @@ def specificity(y_true, y_pred):  # = true negative rate
         tn, fp, fn, tp = confusion_matrix(y_true, y_pred).ravel()
         return tn / (tn + fp)
     else:
-        Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' +
+        logger.info('Specificity (metric) is valid only for binary classification problems. You have ' +
                       str(len(np.unique(y_true))) + ' classes.')
         return np.nan
 
@@ -186,6 +187,6 @@ def balanced_accuracy(y_true, y_pred):  # = true negative rate
     if len(np.unique(y_true)) == 2:
         return (specificity(y_true, y_pred) + sensitivity(y_true, y_pred)) / 2
     else:
-        Logger().info('Specificity (metric) is valid only for binary classification problems. You have ' +
+        logger.info('Specificity (metric) is valid only for binary classification problems. You have ' +
                       str(len(np.unique(y_true))) + ' classes.')
         return np.nan

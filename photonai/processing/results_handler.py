@@ -17,7 +17,8 @@ from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
 from sklearn.metrics import confusion_matrix, roc_curve
 
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
 
@@ -37,7 +38,7 @@ class ResultsHandler:
             self.results = results[0]
         elif len(results) > 1:
             self.results = MDBHyperpipe.objects.order_by([("time_of_results", DESCENDING)]).raw({'name': pipe_name}).first()
-            Logger().warn('Found multiple hyperpipes with that name. Returning most recent one.')
+            logger.warn('Found multiple hyperpipes with that name. Returning most recent one.')
         else:
             raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
 
@@ -205,7 +206,7 @@ class ResultsHandler:
             # now do smoothing
             if isinstance(reduce_scatter_by, str):
                 if reduce_scatter_by != 'auto':
-                    Logger().warn('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
+                    logger.warn('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
                         reduce_scatter_by))
 
                 # if auto, then calculate size of reduce_scatter_by so that 75 points on x remain
@@ -279,10 +280,10 @@ class ResultsHandler:
         np.set_printoptions(precision=2)
         if normalize:
             cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-            Logger().info("Normalized confusion matrix")
+            logger.info("Normalized confusion matrix")
         else:
-            Logger().info('Confusion matrix')
-        Logger().info(cm)
+            logger.info('Confusion matrix')
+        logger.info(cm)
 
         plt.figure()
         cmap = plt.cm.Blues
@@ -531,18 +532,18 @@ class ResultsHandler:
 
         if self.output_settings.mongodb_connect_url:
             connect(self.output_settings.mongodb_connect_url, alias='photon_core')
-            Logger().debug('Write results to mongodb...')
+            logger.debug('Write results to mongodb...')
             try:
                 self.results.save()
             except DocumentTooLarge as e:
-                Logger().error('Could not save document into MongoDB: Document too large')
+                logger.error('Could not save document into MongoDB: Document too large')
                 # try to reduce the amount of configs saved
                 # if len(results_tree.outer_folds[0].tested_config_list) > 100:
                 #     for outer_fold in results_tree.outer_folds:
                 #         metrics_configs = [outer_fold.tested_configlist
 
         if self.output_settings.save_output:
-            Logger().info("Writing results to project folder...")
+            logger.info("Writing results to project folder...")
             self.write_result_tree_to_file()
 
     def save_backmapping(self, filename: str, backmapping):
@@ -556,7 +557,7 @@ class ResultsHandler:
 
     def write_convenience_files(self):
         if self.output_settings.save_output:
-            Logger().info("Writing convenience files (summary, predictions, plots...)")
+            logger.info("Writing convenience files (summary, predictions, plots...)")
             self.write_summary()
             self.write_predictions_file()
 
@@ -571,8 +572,8 @@ class ResultsHandler:
             pickle.dump(self.results.to_son(), file_opened)
             file_opened.close()
         except OSError as e:
-            Logger().error("Could not write results to local file")
-            Logger().error(str(e))
+            logger.error("Could not write results to local file")
+            logger.error(str(e))
 
     def write_predictions_file(self):
         if self.output_settings.save_predictions or self.output_settings.save_best_config_predictions:
@@ -649,10 +650,10 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
             text_file = open(summary_filename, "w")
             text_file.write(final_text)
             text_file.close()
-            Logger().info("Saved results to summary file.")
+            logger.info("Saved results to summary file.")
         except OSError as e:
-            Logger().error("Could not write summary file")
-            Logger().error(str(e))
+            logger.error("Could not write summary file")
+            logger.error(str(e))
 
     def get_dict_from_metric_list(self, metric_list):
         best_config_metrics = {}

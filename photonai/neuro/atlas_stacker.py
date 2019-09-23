@@ -1,6 +1,7 @@
 import pickle
 from photonai.base import Hyperpipe, PipelineElement, Stack
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from sklearn.base import BaseEstimator
 from sklearn.model_selection import ShuffleSplit
 import numpy as np
@@ -62,7 +63,7 @@ class AtlasStacker(BaseEstimator):
             for i in range(len(self.rois)):
                 tmp_inner_pipe = Hyperpipe(self.atlas_name + '_' + str(self.rois[i]), optimizer='grid_search',
                                            inner_cv=ShuffleSplit(n_splits=1, test_size=0.2, random_state=3),
-                                           eval_final_performance=False, verbose=Logger().verbosity_level,
+                                           eval_final_performance=False, verbose=logging.verbosity_level,
                                            best_config_metric=self.best_config_metric, metrics=self.metrics)
 
                 # at first set a filter element

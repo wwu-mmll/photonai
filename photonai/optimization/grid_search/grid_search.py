@@ -4,7 +4,8 @@ import numpy as np
 
 from photonai.optimization.base_optimizer import PhotonBaseOptimizer
 from photonai.optimization.config_grid import create_global_config_grid
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class GridSearchOptimizer(PhotonBaseOptimizer):
@@ -21,7 +22,7 @@ class GridSearchOptimizer(PhotonBaseOptimizer):
         self.pipeline_elements = pipeline_elements
         self.ask = self.next_config_generator()
         self.param_grid = create_global_config_grid(self.pipeline_elements)
-        Logger().info("Grid Search generated " + str(len(self.param_grid)) + " configurations")
+        logger.info("Grid Search generated " + str(len(self.param_grid)) + " configurations")
 
     def next_config_generator(self):
         for parameters in self.param_grid:

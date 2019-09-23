@@ -9,7 +9,8 @@ from keras.models import Sequential
 from keras.optimizers import Adam
 from sklearn.base import BaseEstimator, RegressorMixin
 from sklearn.model_selection import ShuffleSplit
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.modelwrapper.KerasBaseEstimator import KerasBaseEstimator
 
 
@@ -82,7 +83,7 @@ class KerasDNNRegressor(BaseEstimator, RegressorMixin, KerasBaseEstimator):
                 # todo: pass scheduler configuration to constructor
                 lr_schedule = LearningRateScheduler(self.learning_rate_schedule)
             # fit the model
-            Logger().debug('Cannot use Keras Callbacks because of small sample size...')
+            logger.debug('Cannot use Keras Callbacks because of small sample size...')
             results = self.model.fit(X, y, batch_size=self.batch_size,
                                      epochs=self.nb_epoch,
                                      verbose=self.verbosity)

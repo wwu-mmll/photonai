@@ -13,7 +13,8 @@ from photonai.base import PipelineElement
 from photonai.base.hyperpipe import Hyperpipe
 from photonai.neuro.brain_atlas import BrainAtlas, AtlasLibrary
 from photonai.neuro.neuro_branch import NeuroBranch
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.processing import ResultsHandler
 
 
@@ -85,7 +86,7 @@ class AtlasMapper:
 
         # Get data from BrainAtlas first and save to .npz
         # ToDo: currently not supported for hyperparameters inside neurobranch
-        Logger().set_verbosity(self.verbosity)
+        logging.set_verbosity(self.verbosity)
         self.neuro_element.fit(X)
 
         # extract regions

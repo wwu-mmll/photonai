@@ -8,7 +8,8 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer, load_boston
 
 from photonai.base.photon_elements import PipelineElement
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class PhotonRegistry:
@@ -63,12 +64,12 @@ class PhotonRegistry:
     @staticmethod
     def _check_custom_folder(custom_folder):
         if not path.exists(custom_folder):
-            Logger().info('Creating folder {}'.format(custom_folder))
+            logger.info('Creating folder {}'.format(custom_folder))
             os.makedirs(custom_folder)
 
         custom_file = path.join(custom_folder, 'CustomElements.json')
         if not path.isfile(custom_file):
-            Logger().info('Creating CustomElements.json')
+            logger.info('Creating CustomElements.json')
             with open(custom_file, 'w') as f:
                 json.dump('', f)
 
@@ -85,11 +86,11 @@ class PhotonRegistry:
             raise FileNotFoundError("Couldn't find CustomElements.json. Did you register your element first?")
 
         # add folder to python path
-        Logger().info("Adding custom elements folder to system path...")
+        logger.info("Adding custom elements folder to system path...")
         sys.path.append(self.custom_elements_folder)
 
         PipelineElement.ELEMENT_DICTIONARY.update(self._get_package_info(['CustomElements']))
-        Logger().info('Successfully activated custom elements!')
+        logger.info('Successfully activated custom elements!')
 
     def register(self, photon_name: str, class_str: str, element_type: str):
         """
@@ -127,16 +128,16 @@ class PhotonRegistry:
 
             # write back to file
             self._write2json(self.custom_elements)
-            Logger().info('Adding PipelineElement ' + class_str + ' to CustomElements.json as "' + photon_name + '".')
+            logger.info('Adding PipelineElement ' + class_str + ' to CustomElements.json as "' + photon_name + '".')
 
             # activate custom elements
             self.activate()
 
             # check custom element
-            Logger().info("Running tests on custom element...")
+            logger.info("Running tests on custom element...")
             return self._run_tests(photon_name, element_type)
         else:
-            Logger().error('Could not register element!')
+            logger.error('Could not register element!')
 
     def _run_tests(self, photon_name, element_type):
         # check import
@@ -177,7 +178,7 @@ class PhotonRegistry:
             # test fit
             returned_element = custom_element.base_element.fit(X, y, **kwargs)
         except Exception as e:
-            Logger().info("Not able to run tests on fit() method. Test data not compatible.")
+            logger.info("Not able to run tests on fit() method. Test data not compatible.")
             return e
 
         if not isinstance(returned_element, custom_element.base_element.__class__):
@@ -223,14 +224,14 @@ class PhotonRegistry:
                 raise ValueError("Custom element does not return X, y and kwargs the way it should "
                                           "according to needs_y and needs_covariates.")
             else:
-                Logger().info(ve.args[0])
+                logger.info(ve.args[0])
                 return ve
         except Exception as e:
-            Logger().info(e.args[0])
-            Logger().info("Not able to run tests on transform() or predict() method. Test data probably not compatible.")
+            logger.info(e.args[0])
+            logger.info("Not able to run tests on transform() or predict() method. Test data probably not compatible.")
             return e
 
-        Logger().info('All tests on custom element passed.')
+        logger.info('All tests on custom element passed.')
 
     def info(self, photon_name):
         """
@@ -261,10 +262,10 @@ class PhotonRegistry:
                     print("{:<35} {:<75}".format(item, str(more_info)))
                 print("----------------------------------")
             except Exception as e:
-                Logger().error(e)
-                Logger().error("Could not instantiate class " + element_namespace + "." + element_name)
+                logger.error(e)
+                logger.error("Could not instantiate class " + element_namespace + "." + element_name)
         else:
-            Logger().error("Could not find element " + photon_name)
+            logger.error("Could not find element " + photon_name)
 
     def delete(self, photon_name):
         """
@@ -280,9 +281,9 @@ class PhotonRegistry:
             del self.custom_elements[photon_name]
 
             self._write2json(self.custom_elements)
-            Logger().info('Removing the PipelineElement named "{0}" from CustomElements.json.'.format(photon_name))
+            logger.info('Removing the PipelineElement named "{0}" from CustomElements.json.'.format(photon_name))
         else:
-            Logger().info('Cannot remove "{0}" from CustomElements.json. Element has not been registered before.'.format(photon_name))
+            logger.info('Cannot remove "{0}" from CustomElements.json. Element has not been registered before.'.format(photon_name))
 
     @staticmethod
     def _check_duplicate(photon_name, class_str, content):
@@ -305,12 +306,12 @@ class PhotonRegistry:
 
         # check for duplicate name (dict key)
         if photon_name in content:
-            Logger().info('A PipelineElement named ' + photon_name + ' has already been registered.')
+            logger.info('A PipelineElement named ' + photon_name + ' has already been registered.')
             return True
 
         # check for duplicate class_str
         if any(class_str in '.'.join([s[0], s[1]]) for s in content.values()):
-            Logger().info('The Class named ' + class_str + ' has already been registered.')
+            logger.info('The Class named ' + class_str + ' has already been registered.')
             return True
         return False
 
@@ -347,7 +348,7 @@ class PhotonRegistry:
             except json.JSONDecodeError as jde:
                 # handle empty file
                 if jde.msg == 'Expecting value':
-                    Logger().error("Package File " + file_name + " was empty.")
+                    logger.error("Package File " + file_name + " was empty.")
                 else:
                     raise jde
         if not file_content:

@@ -9,7 +9,8 @@ import matplotlib.pylab as plt
 from photonai.optimization import FloatRange, IntegerRange
 from photonai.optimization.base_optimizer import PhotonBaseOptimizer
 from photonai.optimization import Categorical as PhotonCategorical
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class SkOptOptimizer(PhotonBaseOptimizer):
@@ -45,7 +46,7 @@ class SkOptOptimizer(PhotonBaseOptimizer):
                     if skopt_param is not None:
                         space.append(skopt_param)
         if len(space) == 0:
-            Logger().warn("Did not find any hyperparameters to convert into skopt space")
+            logger.warn("Did not find any hyperparameters to convert into skopt space")
             self.optimizer = None
         else:
             self.optimizer = Optimizer(space, "ET", acq_func=self.acq_func, acq_func_kwargs=self.acq_func_kwargs)

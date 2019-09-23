@@ -9,7 +9,8 @@ from photonai.base import Branch, CallbackElement
 from photonai.base.registry.element_dictionary import ElementDictionary
 from photonai.helper.helper import PhotonDataHelper
 from photonai.neuro.brain_atlas import BrainAtlas
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class NeuroBranch(Branch):
@@ -89,7 +90,7 @@ class NeuroBranch(Branch):
             self.elements.append(pipe_element)
             self._prepare_pipeline()
         else:
-            Logger().error('PipelineElement {} is not part of the Neuro module:'.format(pipe_element.name))
+            logger.error('PipelineElement {} is not part of the Neuro module:'.format(pipe_element.name))
 
         return self
 
@@ -137,7 +138,7 @@ class NeuroBranch(Branch):
                 # so the next step only has to reload the data ...
                 self.apply_transform_parallelized(X)
             else:
-                Logger().error("Cannot use parallelization without a cache folder specified in the hyperpipe."
+                logger.error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
 
         X_new, _, _ = self.base_element.transform(X)

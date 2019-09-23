@@ -7,7 +7,8 @@ from pymodm import connect
 from pymodm.errors import DoesNotExist, ConnectionError
 
 from photonai.base import OutputSettings
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 from photonai.processing.inner_folds import Scorer
 from photonai.processing.results_structure import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
 
@@ -61,10 +62,10 @@ class PermutationTest:
             existing_reference = MDBHyperpipe.objects.raw({'permutation_id': self.mother_permutation_id,
                                                            'computation_completed': True}).first()
             # check if all outer folds exist
-            Logger().info("Found hyperpipe computation with true targets, skipping the optimization process with true targets")
+            logger.info("Found hyperpipe computation with true targets, skipping the optimization process with true targets")
         except DoesNotExist:
             # if we havent computed the reference value do it:
-            Logger().info("Calculating Reference Values with true targets.")
+            logger.info("Calculating Reference Values with true targets.")
             try:
                 self.pipe.permutation_id = self.mother_permutation_id
                 self.pipe.fit(X, y_true)
@@ -92,7 +93,7 @@ class PermutationTest:
         else:
             perms_todo = np.arange(self.n_perms)
 
-        Logger().info(str(len(perms_todo)) + " permutation runs to do")
+        logger.info(str(len(perms_todo)) + " permutation runs to do")
         # Run parallel pool
         self.run_parallelized_hyperpipes(self.permutations, self.hyperpipe_constructor, X, self.permutation_id,
                                          perms_todo)
@@ -175,8 +176,8 @@ class PermutationTest:
                     perm_performances_global.append(perm_performances)
                 except Exception as e:
                     # we suspect that the task was killed during computation of this permutation
-                    Logger().error("Dismissed one permutation from calculation:")
-                    Logger().error(e)
+                    logger.error("Dismissed one permutation from calculation:")
+                    logger.error(e)
 
             # Reorder results
             perm_perf_metrics = dict()
@@ -197,14 +198,14 @@ class PermutationTest:
                     p_text[metric['name']] = "p = {}".format(p[metric['name']])
 
             # Print results
-            Logger().info("""
+            logger.info("""
             Done with permutations...
     
             Results Permutation test
             ===============================================
             """)
             for _, metric in metrics.items():
-                Logger().info("""
+                logger.info("""
                     Metric: {}
                     True Performance: {}
                     p Value: {}
@@ -280,7 +281,7 @@ class PermutationTest:
     def collect_results(self, result):
         # This is called whenever foo_pool(i) returns a result.
         # result_list is modified only by the main process, not the pool workers.
-        Logger().info("Finished Permutation Run" + str(result))
+        logger.info("Finished Permutation Run" + str(result))
 
     @staticmethod
     def calculate_p(true_performance, perm_performances, metrics, n_perms):
@@ -304,7 +305,7 @@ class PermutationTest:
                 greater_is_better = True
             else:
                 # Todo: better error checking?
-                Logger().error('NotImplementedError: ' +
+                logger.error('NotImplementedError: ' +
                                'No metric was chosen and last pipeline element does not specify ' +
                                'whether it is a classifier, regressor, transformer or ' +
                                'clusterer.')

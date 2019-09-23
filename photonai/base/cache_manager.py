@@ -5,7 +5,7 @@ import joblib
 import glob
 from dask.distributed import Lock
 
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
 
 
 class CacheManager:
@@ -95,7 +95,7 @@ class CacheManager:
 
         cache_query = self.generate_cache_key(pipe_element_name)
         if cache_query in self.cache_index:
-            Logger().debug("Loading data from cache for " + pipe_element_name + ": "
+            logger.debug("Loading data from cache for " + pipe_element_name + ": "
                            + str(self.state.nr_items) + " items " + self.state.first_data_str
                            + " - " + str(self.state.config))
             filename = self.cache_index[cache_query]
@@ -124,7 +124,7 @@ class CacheManager:
         cache_query = self.generate_cache_key(pipe_element_name)
         filename = os.path.join(self.cache_folder, str(cache_query) + ".p")
         self.cache_index[cache_query] = filename
-        Logger().debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
+        logger.debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
                        + self.state.first_data_str + " - " + str(self.state.config))
 
         # write cached data to filesystem

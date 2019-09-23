@@ -4,7 +4,8 @@ from sklearn.base import BaseEstimator
 from nilearn.image import resample_img, smooth_img, index_img
 from nibabel.nifti1 import Nifti1Image
 
-from photonai.photonlogger import Logger
+from photonai.photonlogger.logger import logger
+
 
 
 class NeuroTransformerMixin:
@@ -113,7 +114,7 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
 class PatchImages(BaseEstimator):
 
     def __init__(self, patch_size=25, random_state=42, nr_of_processes=3):
-        Logger().info("Nr or processes: " + str(nr_of_processes))
+        logger.info("Nr or processes: " + str(nr_of_processes))
         super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes)
         # Todo: give cache folder to mother class
 
@@ -124,7 +125,7 @@ class PatchImages(BaseEstimator):
         return self
 
     def transform(self, X, y=None, **kwargs):
-        Logger().info("Drawing patches")
+        logger.info("Drawing patches")
         return self.draw_patches(X, self.patch_size)
 
 
@@ -141,7 +142,7 @@ class PatchImages(BaseEstimator):
 
     @staticmethod
     def draw_patch_from_mri(patch_x, patch_size):
-        # Logger().info("drawing patch..")
+        # logger.info("drawing patch..")
         if isinstance(patch_x, str):
             from nilearn import image
             patch_x = np.ascontiguousarray(image.load_img(patch_x).get_data())
