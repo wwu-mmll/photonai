@@ -128,20 +128,3 @@ class Logger:
                 return self.value < other.value
             return NotImplemented
 
-
-if __name__ == "__main__":
-    logger = Logger()
-    logger.set_verbosity(2)
-
-    logger.debug('test-Log debug message')
-    logger.info('test-Log info message')
-    logger.warn('test-Log warn message')
-    logger.error('test-Log error message')
-
-    # Starting here, only warn and error logs
-    # should be created
-    logger.set_verbosity(0)
-    logger.debug('test-Log debug message')
-    logger.info('test-Log info message')
-    logger.warn('test-Log warn message')
-    logger.error('test-Log error message')
