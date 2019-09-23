@@ -381,6 +381,7 @@ class Hyperpipe(BaseEstimator):
         def best_config_metric(self, value):
             if isinstance(self.best_config_metric, str):
                 self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
+            self._best_config_metric = value
 
         @property
         def optimizer_input_str(self):
@@ -982,23 +983,6 @@ class Hyperpipe(BaseEstimator):
         if self._pipe:
             X, _, _ = self.optimum_pipe.transform(data, y=None, **kwargs)
             return X
-
-    def get_params(self, deep=True):
-        """
-        Retrieve parameters from sklearn pipeline
-        """
-        if self._pipe is not None:
-            return self._pipe.get_params(deep)
-        else:
-            return None
-
-    def set_params(self, **params):
-        """
-        Give parameter values to the pipeline elements
-        """
-        if self._pipe is not None:
-            self._pipe.set_params(**params)
-        return self
 
     def _prepare_pipeline(self):
         """
