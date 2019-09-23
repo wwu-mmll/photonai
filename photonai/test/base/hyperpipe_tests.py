@@ -4,8 +4,10 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement
+from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack
+from photonai.optimization import IntegerRange, Categorical
 from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.base.dummy_elements import DummyTransformer
 from photonai.test.base.photon_elements_tests import elements_to_dict
 from photonai.test.base.photon_pipeline_tests import DummyYAndCovariatesTransformer
 
@@ -224,22 +226,54 @@ class HyperpipeTests(PhotonBaseTest):
             self.assertEqual(element_a, element_b)
 
     def test_save_optimum_pipe(self):
-        # todo
-        #  fix is_transformer and is_estimator
-        #  redo ModelPersistor and accommodate for Branches and so on (especially Custom Elements within Branches and so on)
+        # todo: test .save() of custom model
+        settings = OutputSettings(project_folder='./tmp/optimum_pipypipe/', overwrite_results=True)
+
+        my_pipe = Hyperpipe('hyperpipe',
+                            optimizer='random_grid_search',
+                            optimizer_params={'k': 3},
+                            metrics=['accuracy', 'precision', 'recall'],
+                            best_config_metric='f1_score',
+                            outer_cv=KFold(n_splits=2),
+                            inner_cv=KFold(n_splits=2),
+                            verbosity=1,
+                            output_settings=settings)
+
         preproc = Preprocessing()
         preproc += PipelineElement('LabelEncoder')
-        self.hyperpipe += preproc
-        self.hyperpipe.name = "hyperpipe"
-        self.hyperpipe.output_settings.project_folder = "./tmp/optimum_pipypipe/"
-        pipe_copy = self.hyperpipe.copy_me()
+
+        # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
+        tree_qua_branch = Branch('tree_branch')
+        tree_qua_branch += PipelineElement('QuantileTransformer')
+        tree_qua_branch += PipelineElement('DecisionTreeClassifier', {'min_samples_split': IntegerRange(2, 4)},
+                                           criterion='gini')
+
+        # BRANCH WITH MinMaxScaler AND DecisionTreeClassifier
+        svm_mima_branch = Branch('svm_branch')
+        svm_mima_branch += PipelineElement('MinMaxScaler')
+        svm_mima_branch += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']), 'C': 2.0}, gamma='auto')
+
+        # BRANCH WITH StandardScaler AND KNeighborsClassifier
+        knn_sta_branch = Branch('neighbour_branch')
+        knn_sta_branch += PipelineElement.create("dummy", DummyTransformer(), {})
+        knn_sta_branch += PipelineElement('KNeighborsClassifier')
+
+        # voting = True to mean the result of every branch
+        my_pipe += Stack('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch])
+
+        my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
+
+        pipe_copy = my_pipe.copy_me()
         pipe_copy.output_settings.save_output = False
         pipe_copy.fit(self.__X, self.__y)
         self.assertFalse(os.path.exists("./tmp/optimum_pipypipe/hyperpipe_results/"))
 
-        self.hyperpipe.fit(self.__X, self.__y)
+        my_pipe.fit(self.__X, self.__y)
         self.assertTrue(os.path.exists("./tmp/optimum_pipypipe/hyperpipe_results/photon_best_model.photon"))
 
         # check if load_optimum_pipe also works
-        optimum_pipe = Hyperpipe.load_optimum_pipe("./tmp/optimum_pipypipe/hyperpipe_results/photon_best_model.photon")
-        self.recursive_assertion(elements_to_dict(optimum_pipe), elements_to_dict(self.hyperpipe.optimum_pipe))
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(
+            "./tmp/optimum_pipypipe/hyperpipe_results/photon_best_model.photon")
+        y_pred_loaded = loaded_optimum_pipe.predict(self.__X)
+        y_pred = my_pipe.optimum_pipe.predict(self.__X)
+        np.testing.assert_array_equal(y_pred_loaded, y_pred)
