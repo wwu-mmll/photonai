@@ -51,6 +51,10 @@ class NeuroBranch(Branch):
     @property
     def nr_of_processes(self):
         return self._nr_of_processes
+    # Todo : !
+    # @classmethod
+    # def set_local_cluster(cls, nr_of_processes):
+    #     cls.local_cluster =
 
     @nr_of_processes.setter
     def nr_of_processes(self, value):

@@ -212,8 +212,6 @@ class InnerFoldTests(PhotonBaseTest):
         assert_fold_operations([FoldOperations.MEAN, FoldOperations.STD], per_fold_config_item.metrics_train)
         assert_fold_operations([FoldOperations.MEAN, FoldOperations.STD], per_fold_config_item.metrics_test)
 
-        # Todo: evaluate correctness of actual value of metrics computed across folds in ResultsHandlerTests
-
     def test_extract_feature_importances(self):
         # one machine with coef_
         self.pipe.fit(self.X, self.y)
@@ -238,7 +236,4 @@ class InnerFoldTests(PhotonBaseTest):
         no_f_imps = InnerFoldManager.extract_feature_importances(no_f_imp_pipe)
         self.assertTrue(no_f_imps is None )
 
-    # def test_calculate_metrics(self):
-    #     # todo: move to Scorer??
-    #     pass
 
