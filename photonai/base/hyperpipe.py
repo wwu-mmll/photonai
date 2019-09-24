@@ -744,13 +744,18 @@ class Hyperpipe(BaseEstimator):
             if self.data.y is None:
                 raise ValueError("(Input-)target is a NoneType.")
 
-            shape_X = np.shape(self.data.X)
+            shape_x = np.shape(self.data.X)
             shape_y = np.shape(self.data.y)
             if len(shape_y) != 1:
-                raise ValueError("Target is not one-dimensional.")
-            if not shape_X[0] == shape_y[0]:
+                if len(np.shape(np.squeeze(self.data.y))) == 1:
+                    # use np.squeeze for non 1D targets.
+                    self.data.y = np.squeeze(self.data.y)
+                    shape_y = np.shape(self.data.y)
+                else:
+                    raise ValueError("Target is not one-dimensional.")
+            if not shape_x[0] == shape_y[0]:
                 raise IndexError(
-                    "Size of targets mismatch to the size of the data: " + str(shape_X[0]) + " - " + str(shape_y[0]))
+                    "Size of targets mismatch to size of the data: " + str(shape_x[0]) + " - " + str(shape_y[0]))
         except IndexError as ie:
             logger.error("IndexError: " + str(ie))
             raise ie
