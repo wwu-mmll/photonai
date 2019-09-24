@@ -1,13 +1,12 @@
-
+import json
 import time
 import traceback
 import warnings
+
 import numpy as np
-import json
-from photonai.base.photon_elements import Stack, Branch, Switch
+
 from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper
 from photonai.photonlogger.logger import logger
-
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
     FoldOperations, MDBConfig
@@ -24,8 +23,7 @@ class InnerFoldManager(object):
 
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
                  cross_validation_infos, outer_fold_id, optimization_constraints: list=None,
-                 raise_error: bool=False, save_predictions: bool=False, save_feature_importances: bool=False,
-                 training: bool = False, cache_folder=None, cache_updater=None):
+                 raise_error: bool = False, training: bool = False, cache_folder=None, cache_updater=None):
         """
         Creates a new InnerFoldManager object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -41,8 +39,6 @@ class InnerFoldManager(object):
         self.outer_fold_id = outer_fold_id
         self.cross_validation_infos = cross_validation_infos
 
-        self.save_predictions = save_predictions
-        self.save_feature_importances = save_feature_importances
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
 
@@ -67,14 +63,6 @@ class InnerFoldManager(object):
         config_item.metrics_test = []
         config_item.metrics_train = []
 
-        # if we want to collect the predictions, we need to save them into the tree
-        original_save_predictions = self.save_predictions
-        save_predictions = bool(self.save_predictions)
-        save_feature_importances = self.save_feature_importances
-        # for metrics across folds we need all predictions preserved
-        if self.cross_validation_infos.calculate_metrics_across_folds:
-            save_predictions = True
-
         try:
             # do inner cv
             for idx, (inner_fold_id, inner_fold) in enumerate(self.cross_validation_infos.inner_folds[self.outer_fold_id].items()):
@@ -90,16 +78,17 @@ class InnerFoldManager(object):
                     self.cache_updater(new_pipe, self.cache_folder, inner_fold_id)
 
                 if not config_item.human_readable_config:
-                    config_item.human_readable_config = PhotonPrintHelper.config_to_human_readable_dict(new_pipe, self.params)
+                    config_item.human_readable_config = PhotonPrintHelper.config_to_human_readable_dict(new_pipe,
+                                                                                                        self.params)
 
                 job_data = InnerFoldManager.InnerCVJob(pipe=new_pipe,
                                                        config=dict(self.params),
                                                        metrics=self.optimization_infos.metrics,
                                                        callbacks=self.optimization_constraints,
-                                                       train_data=InnerFoldManager.JobData(train_X, train_y, train, kwargs_cv_train),
-                                                       test_data=InnerFoldManager.JobData(test_X, test_y, test, kwargs_cv_test),
-                                                       save_feature_importances=save_feature_importances,
-                                                       save_predictions=save_predictions)
+                                                       train_data=InnerFoldManager.JobData(train_X, train_y, train,
+                                                                                           kwargs_cv_train),
+                                                       test_data=InnerFoldManager.JobData(test_X, test_y, test,
+                                                                                          kwargs_cv_test))
 
                 # only for unparallel processing
                 # inform children in which inner fold we are
@@ -137,7 +126,7 @@ class InnerFoldManager(object):
             InnerFoldManager.process_fit_results(config_item,
                                                  self.cross_validation_infos.calculate_metrics_across_folds,
                                                  self.cross_validation_infos.calculate_metrics_per_fold,
-                                                 original_save_predictions, self.optimization_infos.metrics)
+                                                 self.optimization_infos.metrics)
 
         except Exception as e:
             if self.raise_error:
@@ -164,16 +153,13 @@ class InnerFoldManager(object):
 
     class InnerCVJob:
 
-        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data,
-                     save_predictions, save_feature_importances):
+        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data):
             self.pipe = pipe
             self.config = config
             self.metrics = metrics
             self.callbacks = callbacks
             self.train_data = train_data
             self.test_data = test_data
-            self.save_predictions = save_predictions
-            self.save_feature_importances = save_feature_importances
 
     @staticmethod
     def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor):
@@ -194,7 +180,6 @@ class InnerFoldManager(object):
     def process_fit_results(config_item,
                             calculate_metrics_across_folds,
                             calculate_metrics_per_fold,
-                            original_save_predictions,
                             metrics):
 
         overall_y_pred_test = []
@@ -253,26 +238,10 @@ class InnerFoldManager(object):
                     config_item.metrics_train = db_metrics_train
                     config_item.metrics_test = db_metrics_test
 
-                # we needed to save the true/predicted values to calculate the metrics across folds,
-                # but if the user is uninterested in it we dismiss them after the job is done
-                if not original_save_predictions:
-                    InnerFoldManager.dismiss_predictions(config_item)
-
             elif calculate_metrics_per_fold:
                 # calculate mean and std over all fold metrics
                 config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
                                                                                                                   metrics)
-
-    @staticmethod
-    def dismiss_predictions(config_item):
-        for inner_fold in config_item.inner_folds:
-            # Todo: What about dismissing feature importances, too?
-            inner_fold.training.y_true = []
-            inner_fold.training.y_pred = []
-            inner_fold.training.indices = []
-            inner_fold.validation.y_true = []
-            inner_fold.validation.y_pred = []
-            inner_fold.validation.indices = []
 
     @staticmethod
     def fit_and_score(job: InnerCVJob):
@@ -286,22 +255,19 @@ class InnerFoldManager(object):
         pipe.fit(job.train_data.X, job.train_data.y, **job.train_data.cv_kwargs)
 
         # score test data
-        curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics, indices=job.test_data.indices,
-                                                save_predictions=job.save_predictions,
-                                                save_feature_importances=job.save_feature_importances, **job.test_data.cv_kwargs)
+        curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics,
+                                                indices=job.test_data.indices,
+                                                **job.test_data.cv_kwargs)
 
         # score train data
         curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
                                                  indices=job.train_data.indices,
-                                                 save_predictions=job.save_predictions,
-                                                 save_feature_importances=job.save_feature_importances,
                                                  training=True, **job.train_data.cv_kwargs)
 
         return curr_test_fold, curr_train_fold
 
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
-              save_predictions=False, save_feature_importances=False,
               calculate_metrics: bool=True, training: bool=False, **kwargs):
         """
         Uses the pipeline to predict the given data, compare it to the truth values and calculate metrics
@@ -343,9 +309,10 @@ class InnerFoldManager(object):
                 kwargs = kwargs_new
             y_pred = estimator.predict(X, training=True, **kwargs)
 
-        f_importances = []
-        if save_feature_importances:
-            f_importances = InnerFoldManager.extract_feature_importances(estimator)
+        if hasattr(estimator, 'feature_importances_'):
+            f_importances = estimator.feature_importances_
+        else:
+            f_importances = None
 
         # Nice to have
         # InnerFoldManager.plot_some_data(y_true, y_pred)
@@ -362,9 +329,9 @@ class InnerFoldManager(object):
             output_metrics = {}
 
         final_scoring_time = time.time() - scoring_time_start
-        if save_predictions:
 
-            probabilities = []
+        probabilities = []
+        if hasattr(estimator, '_final_estimator'):
             if hasattr(estimator._final_estimator.base_element, 'predict_proba'):
                 probabilities = estimator.predict_proba(X, training=training,  **kwargs)
 
@@ -375,49 +342,16 @@ class InnerFoldManager(object):
                 except:
                     warnings.warn('No probabilities available.')
 
-            if not isinstance(y_pred, list):
-                y_pred = np.asarray(y_pred).tolist()
-            if not isinstance(y_true, list):
-                y_true = np.asarray(y_true).tolist()
+        if not isinstance(y_pred, list):
+            y_pred = np.asarray(y_pred).tolist()
+        if not isinstance(y_true, list):
+            y_true = np.asarray(y_true).tolist()
 
-            score_result_object = MDBScoreInformation(metrics=output_metrics,
-                                                      score_duration=final_scoring_time,
-                                                      y_pred=y_pred, y_true=y_true,
-                                                      indices=np.asarray(indices).tolist(),
-                                                      probabilities=probabilities)
-            if save_feature_importances:
-                score_result_object.feature_importances = f_importances
-        elif save_feature_importances:
-            score_result_object = MDBScoreInformation(metrics=output_metrics,
-                                                      score_duration=final_scoring_time,
-                                                      feature_importances=f_importances)
-        else:
-            score_result_object = MDBScoreInformation(metrics=output_metrics,
-                                                      score_duration=final_scoring_time)
+        score_result_object = MDBScoreInformation(metrics=output_metrics,
+                                                  score_duration=final_scoring_time,
+                                                  y_pred=y_pred, y_true=y_true,
+                                                  indices=np.asarray(indices).tolist(),
+                                                  probabilities=probabilities)
+        score_result_object.feature_importances = f_importances
+
         return score_result_object
-
-    @staticmethod
-    def extract_feature_importances(estimator):
-
-        final_estimator = estimator._final_estimator
-        if isinstance(final_estimator, Switch):
-            base_element = final_estimator.base_element.base_element
-        elif isinstance(final_estimator, (Branch, Stack)):
-            return None
-        else:
-            base_element = final_estimator.base_element
-
-        if hasattr(base_element, 'coef_'):
-            f_importances = base_element.coef_
-            if f_importances is not None:
-                f_importances = f_importances.tolist()
-        elif hasattr(base_element, 'feature_importances_'):
-            f_importances = base_element.feature_importances_
-            if f_importances is not None:
-                f_importances = f_importances.tolist()
-        else:
-            f_importances = None
-        return f_importances
-
-
-

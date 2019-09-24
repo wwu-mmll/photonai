@@ -1,23 +1,23 @@
 import numpy as np
-
-from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
-
-# stuff for simultaneously training and testing with sklearn
-from sklearn.preprocessing import StandardScaler
 from sklearn.decomposition.pca import PCA
 from sklearn.linear_model import RidgeClassifier
-from sklearn.pipeline import Pipeline
 from sklearn.metrics import recall_score, accuracy_score
-# ------------------------------------------------------------
+from sklearn.model_selection import KFold
+from sklearn.pipeline import Pipeline
+# stuff for simultaneously training and testing with sklearn
+from sklearn.preprocessing import StandardScaler
 
 from photonai.base import PipelineElement, Hyperpipe
-from photonai.test.PhotonBaseTest import PhotonBaseTest
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.inner_folds import InnerFoldManager
 from photonai.optimization import MinimumPerformance
+from photonai.processing.inner_folds import InnerFoldManager
+from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import FoldOperations
+from photonai.test.PhotonBaseTest import PhotonBaseTest
+
+
+# ------------------------------------------------------------
 
 
 class InnerFoldTests(PhotonBaseTest):
@@ -39,8 +39,7 @@ class InnerFoldTests(PhotonBaseTest):
 
     def test_fit_against_sklearn(self):
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
-                                     self.cross_validation, self.outer_fold_id,
-                                     save_predictions=True, save_feature_importances=True)
+                                     self.cross_validation, self.outer_fold_id)
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
 
@@ -117,51 +116,28 @@ class InnerFoldTests(PhotonBaseTest):
             test_pipe.fit(self.X, self.y[:10])
 
     def test_save_predictions(self):
+
         # assert that we have the predictions stored
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
-                                     self.cross_validation, self.outer_fold_id,
-                                     save_predictions=True)
-        config_item = test_pipe.fit(self.X, self.y)
-
-        inner_folds = self.cross_validation.inner_folds[self.outer_fold_id]
-
-        for inner_fold in config_item.inner_folds:
-            self.assertEqual(len(inner_fold.training.y_pred), len(inner_folds[inner_fold.fold_nr - 1].train_indices))
-            self.assertEqual(len(inner_fold.validation.y_pred), len(inner_folds[inner_fold.fold_nr - 1].test_indices))
-
-        # assert that we don't have the predictions stored
-        test_pipe.save_predictions = False
-        config_item = test_pipe.fit(self.X, self.y)
-
-        for inner_fold in config_item.inner_folds:
-            self.assertEqual(len(inner_fold.training.y_pred), 0)
-            self.assertEqual(len(inner_fold.validation.y_pred), 0)
+                                     self.cross_validation, self.outer_fold_id)
 
         # in case we want to have metrics calculated across false, we need to temporarily store the predictions
-        # afterwards they should be removed if save_predictions = False
         test_pipe.optimization_infos.calculate_metrics_across_folds = True
         config_item = test_pipe.fit(self.X, self.y)
 
         for inner_fold in config_item.inner_folds:
-            self.assertEqual(len(inner_fold.training.y_pred), 0)
-            self.assertEqual(len(inner_fold.validation.y_pred), 0)
+            self.assertEqual(len(inner_fold.training.y_pred), inner_fold.number_samples_training)
+            self.assertEqual(len(inner_fold.validation.y_pred), inner_fold.number_samples_validation)
 
     def test_save_feature_importances(self):
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
-                                     self.cross_validation, self.outer_fold_id,
-                                     save_feature_importances=True)
+                                     self.cross_validation, self.outer_fold_id)
 
         # we expect the feature importances to be of length 5 because the input is through the PCA reduced to 5 dimensions
         output_config = test_pipe.fit(self.X, self.y)
         for inner_fold in output_config.inner_folds:
             # todo: feature_importances should be one level up in the results tree
             self.assertEqual(len(inner_fold.training.feature_importances[0]), 5)
-
-        test_pipe.save_feature_importances = False
-        output_config = test_pipe.fit(self.X, self.y)
-        for inner_fold in output_config.inner_folds:
-            # todo: feature_importances should be one level up in the results tree
-            self.assertEqual(len(inner_fold.training.feature_importances), 0)
 
     def test_process_fit_results(self):
 
@@ -215,7 +191,7 @@ class InnerFoldTests(PhotonBaseTest):
     def test_extract_feature_importances(self):
         # one machine with coef_
         self.pipe.fit(self.X, self.y)
-        f_importances_coef = InnerFoldManager.extract_feature_importances(self.pipe)
+        f_importances_coef = self.pipe.feature_importances_
         self.assertTrue(f_importances_coef is not None)
         self.assertTrue(isinstance(f_importances_coef, list))
 
@@ -224,7 +200,7 @@ class InnerFoldTests(PhotonBaseTest):
                                     ('PCA', PipelineElement('PCA')),
                                     ('DecisionTreeClassifier', PipelineElement('DecisionTreeClassifier'))])
         f_imp_pipe.fit(self.X, self.y)
-        f_importances = InnerFoldManager.extract_feature_importances(f_imp_pipe)
+        f_importances = f_imp_pipe.feature_importances_
         self.assertTrue(f_importances is not None)
         self.assertTrue(isinstance(f_importances, list))
 
@@ -233,7 +209,7 @@ class InnerFoldTests(PhotonBaseTest):
                                         ('PCA', PipelineElement('PCA')),
                                         ('SVC', PipelineElement('SVC', kernel='rbf'))])
         no_f_imp_pipe.fit(self.X, self.y)
-        no_f_imps = InnerFoldManager.extract_feature_importances(no_f_imp_pipe)
+        no_f_imps = no_f_imp_pipe.feature_importances_
         self.assertTrue(no_f_imps is None )
 
 

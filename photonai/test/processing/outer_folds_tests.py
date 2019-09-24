@@ -1,15 +1,15 @@
 import numpy as np
-from sklearn.model_selection import ShuffleSplit
 from sklearn.datasets import load_boston
 from sklearn.dummy import DummyRegressor
+from sklearn.model_selection import ShuffleSplit
 
-from photonai.test.PhotonBaseTest import PhotonBaseTest
 from photonai.base import PipelineElement, Hyperpipe
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.outer_folds import OuterFoldManager
-from photonai.processing.results_structure import MDBOuterFold, FoldOperations, MDBHelper
 from photonai.optimization import DummyPerformance, MinimumPerformance, GridSearchOptimizer
+from photonai.processing.outer_folds import OuterFoldManager
+from photonai.processing.photon_folds import FoldInfo
+from photonai.processing.results_structure import MDBOuterFold, FoldOperations, MDBHelper
+from photonai.test.PhotonBaseTest import PhotonBaseTest
 
 
 class OuterFoldTests(PhotonBaseTest):
@@ -155,11 +155,11 @@ class OuterFoldTests(PhotonBaseTest):
         case_check(outer_fold_man, "RAW", FoldOperations.RAW)
 
     def test_save_predictions_and_feature_importances(self):
+        # todo: the best config should have feature importances and predictions, all others shouldn't have them
+        #  reuse test_save_predictions() and test_feature_importances() from inner_fold_tests.py
         # in case only the best shall be saved, the first one should have predictions in the best_config score for the test set
         outer_fold_man1 = OuterFoldManager(self.pipe, self.optimization_info, self.outer_fold_id, self.cv_info,
-                                           result_obj=MDBOuterFold(fold_nr=1),
-                                           save_predictions=False, save_feature_importances=False,
-                                           save_best_config_feature_importances=True, save_best_config_predictions=True)
+                                           result_obj=MDBOuterFold(fold_nr=1))
         self.prepare_and_fit(outer_fold_man1)
 
         self.assertTrue(len(outer_fold_man1.result_object.best_config.best_config_score.validation.y_pred) == len(self.cv_info.outer_folds[self.outer_fold_id].test_indices))
@@ -168,26 +168,6 @@ class OuterFoldTests(PhotonBaseTest):
         for config in outer_fold_man1.result_object.tested_config_list:
             self.assertTrue(np.sum(len(fold.validation.y_pred) for fold in config.inner_folds) == 0)
             self.assertTrue(np.sum(len(fold.validation.feature_importances) for fold in config.inner_folds) == 0)
-
-        # in case we save everything, both tested config should have predictions and feature importances for all inner folds validation sets
-        outer_fold_man2 = OuterFoldManager(self.pipe, self.optimization_info, self.outer_fold_id, self.cv_info,
-                                           result_obj=MDBOuterFold(fold_nr=1),
-                                           save_predictions=True, save_feature_importances=True,
-                                           save_best_config_feature_importances=True, save_best_config_predictions=True)
-        self.prepare_and_fit(outer_fold_man2)
-
-        for i, config in enumerate(outer_fold_man2.result_object.tested_config_list):
-            total_predictions_written = np.sum(len(fold.validation.y_pred) for fold in config.inner_folds)
-            items_in_validation_set = np.sum([len(f.test_indices) for _, f in self.cv_info.inner_folds[self.outer_fold_id].items()])
-            self.assertTrue(total_predictions_written == items_in_validation_set)
-            # in sum we should have
-            total_feature_predictions_written = np.sum(len(fold.validation.feature_importances) for fold in config.inner_folds)
-            # first config = 4 features
-            if i == 0:
-                num_features = 4
-            else:
-                num_features = self.X.shape[1]
-            self.assertTrue(total_feature_predictions_written == self.fold_nr_inner_cv * num_features)
 
     def test_find_best_config_always_again(self):
         outer_fold_man1 = self.prepare_and_fit()

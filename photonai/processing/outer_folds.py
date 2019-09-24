@@ -3,10 +3,9 @@ import warnings
 
 import numpy as np
 
+from photonai.helper.helper import PhotonDataHelper
 from photonai.optimization import DummyPerformance
 from photonai.photonlogger.logger import logger
-
-from photonai.helper.helper import PhotonDataHelper
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
@@ -21,10 +20,6 @@ class OuterFoldManager:
                  optimization_info,
                  outer_fold_id,
                  cross_validation_info,
-                 save_predictions: bool = False,
-                 save_feature_importances: bool = False,
-                 save_best_config_predictions: bool = True,
-                 save_best_config_feature_importances: bool = True,
                  cache_folder=None,
                  cache_updater=None,
                  dummy_estimator=None,
@@ -37,10 +32,6 @@ class OuterFoldManager:
         self.copy_pipe_fnc = self._pipe.copy_me
         self.dummy_estimator = dummy_estimator
 
-        self.save_predictions = save_predictions
-        self.save_feature_importances = save_feature_importances
-        self.save_best_config_predictions = save_best_config_predictions
-        self.save_best_config_feature_importances = save_best_config_feature_importances
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
 
@@ -141,8 +132,6 @@ class OuterFoldManager:
             hp = InnerFoldManager(pipe_ctor, current_config,
                                   self.optimization_info,
                                   self.cross_validaton_info, self.outer_fold_id, self.constraint_objects,
-                                  save_predictions=self.save_predictions,
-                                  save_feature_importances=self.save_feature_importances,
                                   cache_folder=self.cache_folder,
                                   cache_updater=self.cache_updater)
 
@@ -168,10 +157,14 @@ class OuterFoldManager:
                         if metric_test > best_metric_yet[1]:
                             best_metric_yet = config_performance
                             self.current_best_config = current_config_mdb
+                        else:
+                            current_config_mdb.save_memory()
                     else:
                         if metric_test < best_metric_yet[1]:
                             best_metric_yet = config_performance
                             self.current_best_config = current_config_mdb
+                        else:
+                            current_config_mdb.save_memory()
 
                 # Print Result for config
                 logger.debug('Performance')
@@ -238,8 +231,6 @@ class OuterFoldManager:
                 test_score_mdb = InnerFoldManager.score(optimum_pipe, self._test_X, self._test_y,
                                                         indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices,
                                                         metrics=self.optimization_info.metrics,
-                                                        save_predictions=self.save_best_config_predictions,
-                                                        save_feature_importances=self.save_best_config_feature_importances,
                                                         **self._test_kwargs)
 
                 logger.info('.. calculating metrics for test set')
@@ -248,8 +239,6 @@ class OuterFoldManager:
                 train_score_mdb = InnerFoldManager.score(optimum_pipe, self._validation_X, self._validation_y,
                                                          indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices,
                                                          metrics=self.optimization_info.metrics,
-                                                         save_predictions=self.save_best_config_predictions,
-                                                         save_feature_importances=self.save_best_config_feature_importances,
                                                          training=True,
                                                          **self._validation_kwargs)
 
@@ -328,6 +317,3 @@ class OuterFoldManager:
         else:
             logger.info("Skipping dummy ..")
 
-    @staticmethod
-    def extract_feature_importances(optimum_pipe):
-        return InnerFoldManager.extract_feature_importances(optimum_pipe)

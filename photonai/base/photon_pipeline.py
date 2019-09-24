@@ -459,3 +459,6 @@ class PhotonPipeline(_BaseComposition):
         if preprocessing:
             self.elements.insert(0, (preprocessing.name, preprocessing))
 
+    @property
+    def feature_importances_(self):
+        return self.elements[-1][1].feature_importances_

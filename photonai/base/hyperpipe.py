@@ -2,6 +2,7 @@ import datetime
 import importlib
 import importlib.util
 import inspect
+import logging
 import os
 import pickle
 import re
@@ -9,7 +10,6 @@ import shutil
 import traceback
 import zipfile
 from copy import deepcopy
-import logging
 
 import __main__
 import dask
@@ -29,7 +29,6 @@ from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, IntegerRange, FloatRange, Categorical
 from photonai.photonlogger.logger import logger
-
 from photonai.processing import ResultsHandler
 from photonai.processing.metrics import Scorer
 from photonai.processing.outer_folds import OuterFoldManager
@@ -74,8 +73,6 @@ class OutputSettings:
        How the project is titled in the PHOTON Wizard
     """
     def __init__(self, mongodb_connect_url: str = None,
-                 save_predictions: str = 'best',
-                 save_feature_importances: str = 'best',
                  save_output: bool = True,
                  plots: bool = True,
                  overwrite_results: bool = False,
@@ -87,9 +84,6 @@ class OutputSettings:
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
 
-        self.save_best_config_predictions, self.save_predictions = self._set_save_options(save_predictions)
-        self.save_best_config_feature_importances, self.save_feature_importances = self._set_save_options(save_feature_importances)
-
         self.__main_file__ = __main__.__file__
         if project_folder == '':
             self.project_folder = os.path.dirname(self.__main_file__)
@@ -99,28 +93,12 @@ class OutputSettings:
         self.results_folder = None
         self.log_file = os.path.join(self.project_folder, 'photon_output.log')
         self.save_output = save_output
+        self.save_predictions_from_best_config_inner_folds = None
         self.plots = plots
-
-        # in case eval final performance is false, we have no outer fold predictions
-        self.save_predictions_from_best_config_inner_folds = False
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
-
-    def _set_save_options(self, specifier):
-        if specifier == 'best':
-            save_best = True
-            save_all = False
-        elif specifier == 'all':
-            save_best = True
-            save_all = True
-        elif specifier == 'None':
-            save_best = False
-            save_all = False
-        else:
-            raise ValueError('Possible options for saving predictions or feature importances are: "best", "all", "None"')
-        return save_best, save_all
 
     def _update_settings(self, name, timestamp):
         if self.save_output:
@@ -135,7 +113,6 @@ class OutputSettings:
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
 
             self.log_file = self._add_timestamp(self.log_file)
-            #logging.set_custom_log_file(self.log_file)
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
@@ -508,7 +485,7 @@ class Hyperpipe(BaseEstimator):
         else:
             level = logging.WARN
 
-        logger = logging.getLogger('photon')
+        logger = logging.getLogger('PHOTON')
         logger.setLevel(level)
         for handler in logger.handlers:
             handler.setLevel(level)
@@ -648,7 +625,7 @@ class Hyperpipe(BaseEstimator):
         logger.info('Finished hyperparameter optimization!')
 
         # Find best config across outer folds
-        best_config =  self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
+        best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
         self.best_config = best_config.config_dict
         self.results.best_config = best_config
         logger.info('OVERALL BEST CONFIGURATION')
@@ -673,10 +650,9 @@ class Hyperpipe(BaseEstimator):
         self.recursive_cache_folder_propagation(self.optimum_pipe, self.cache_folder, 'fixed_fold_id')
         self.optimum_pipe.caching = False
 
-        # disable multiprocessing when fitting optimum pipe and save_feature_importances is true
+        # disable multiprocessing when fitting optimum pipe
         # (otherwise inverse_transform won't work for BrainAtlas/Mask)
-        if self.output_settings.save_best_config_feature_importances:
-            self.disable_multiprocessing_recursively(self.optimum_pipe)
+        self.disable_multiprocessing_recursively(self.optimum_pipe)
 
         logger.info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
@@ -697,10 +673,9 @@ class Hyperpipe(BaseEstimator):
                 logger.info("Could not save optimum pipe model to file")
                 logger.error(str(e))
 
-        if self.output_settings.save_best_config_feature_importances and self.output_settings.save_output:
             # get feature importances of optimum pipe
             logger.info("Mapping back feature importances...")
-            feature_importances = OuterFoldManager.extract_feature_importances(self.optimum_pipe)
+            feature_importances = self.optimum_pipe.feature_importances_
             if not feature_importances:
                 logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
                 return
@@ -712,7 +687,7 @@ class Hyperpipe(BaseEstimator):
 
             # save backmapping
             self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
-                                 backmapping=backmapping)
+                                                  backmapping=backmapping)
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):
@@ -884,7 +859,6 @@ class Hyperpipe(BaseEstimator):
             self._input_data_sanity_checks(data, targets, **kwargs)
             self._prepare_pipeline()
             self.preprocess_data()
-            #logging.set_verbosity(self.verbosity)
 
             if not self.is_final_fit:
 
@@ -916,7 +890,7 @@ class Hyperpipe(BaseEstimator):
                 # loop over outer cross validation
                 for i, outer_f in enumerate(outer_folds):
                     logger.info('HYPERPARAMETER SEARCH OF {0}, Outer Cross validation Fold {1}'
-                                  .format(self.name, outer_f.fold_nr))
+                                .format(self.name, outer_f.fold_nr))
 
                     # 1. generate OuterFolds Object
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
@@ -924,10 +898,6 @@ class Hyperpipe(BaseEstimator):
                                                            self.optimization,
                                                            outer_f.fold_id,
                                                            self.cross_validation,
-                                                           save_feature_importances=self.output_settings.save_feature_importances,
-                                                           save_predictions=self.output_settings.save_predictions,
-                                                           save_best_config_feature_importances=self.output_settings.save_best_config_feature_importances,
-                                                           save_best_config_predictions=self.output_settings.save_best_config_predictions,
                                                            cache_folder=self.cache_folder,
                                                            cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,
