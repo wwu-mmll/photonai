@@ -1,5 +1,4 @@
 import os
-import unittest
 
 import numpy as np
 import pandas as pd
@@ -10,8 +9,9 @@ from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import IntegerRange, FloatRange, Categorical
-from photonai.test.PhotonBaseTest import PhotonBaseTest
 from photonai.processing.results_structure import MDBHelper, FoldOperations
+from photonai.test.PhotonBaseTest import PhotonBaseTest
+
 
 class XPredictor(BaseEstimator, ClassifierMixin):
 
@@ -55,8 +55,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    outer_cv=KFold(n_splits=self.outer_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    best_config_metric='mean_absolute_error',
-                                   output_settings=OutputSettings(save_predictions='all',
-                                                                  project_folder=self.tmp_folder_path))
+                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
 
     def test_cv_config_and_dummy_nr(self):
         X, y = load_boston(True)
@@ -179,8 +178,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    eval_final_performance=False,
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(save_predictions='all',
-                                                                  project_folder=self.tmp_folder_path))
+                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
 
         self.test_metrics_and_aggregations()
 
@@ -193,8 +191,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_per_fold=True,
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(save_predictions='all',
-                                                                  project_folder=self.tmp_folder_path))
+                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
 
         self.test_metrics_and_aggregations()
 

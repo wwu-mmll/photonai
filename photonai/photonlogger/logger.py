@@ -7,7 +7,7 @@ for handler in dask_logger.handlers:
     handler.setLevel(logging.ERROR)
 
 # create photon logger
-logger = logging.getLogger('photon')
+logger = logging.getLogger('PHOTON')
 handler = logging.StreamHandler()
 logger.addHandler(handler)
 

@@ -1,8 +1,9 @@
-from pymodm import MongoModel, EmbeddedMongoModel, fields
-from enum import Enum
-import numpy as np
 import pickle
 import uuid
+from enum import Enum
+
+import numpy as np
+from pymodm import MongoModel, EmbeddedMongoModel, fields
 
 
 class MDBFoldMetric(EmbeddedMongoModel):
@@ -77,6 +78,17 @@ class MDBConfig(EmbeddedMongoModel):
 
     def set_photon_id(self):
         self.photon_config_id = str(uuid.uuid4())
+
+    def save_memory(self):
+        for fold in self.inner_folds:
+            fold.training.y_true = []
+            fold.training.y_pred = []
+            fold.training.indices = []
+            fold.validation.y_true = []
+            fold.validation.y_pred = []
+            fold.validation.indices = []
+            fold.training.feature_importances = []
+            fold.validation.feature_importances = []
 
 
 class MDBOuterFold(EmbeddedMongoModel):

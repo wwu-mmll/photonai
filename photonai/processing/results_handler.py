@@ -18,7 +18,6 @@ from scipy.stats import sem
 from sklearn.metrics import confusion_matrix, roc_curve
 
 from photonai.photonlogger.logger import logger
-
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
 
@@ -576,20 +575,19 @@ class ResultsHandler:
             logger.error(str(e))
 
     def write_predictions_file(self):
-        if self.output_settings.save_predictions or self.output_settings.save_best_config_predictions:
-            filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+        filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
 
-            # usually we write the predictions for the outer fold
-            if not self.output_settings.save_predictions_from_best_config_inner_folds:
-                return self.get_test_predictions(filename)
-            # in case no outer folds exist, we write the inner_fold predictions
-            else:
-                score_info_list = []
-                fold_nr = []
-                for inner_fold in self.results.best_config.inner_folds:
-                    score_info_list.append(inner_fold.validation)
-                    fold_nr.append(inner_fold.fold_nr)
-                self.collect_fold_lists(score_info_list, fold_nr, filename)
+        # usually we write the predictions for the outer fold
+        if not self.output_settings.save_predictions_from_best_config_inner_folds:
+            return self.get_test_predictions(filename)
+        # in case no outer folds exist, we write the inner_fold predictions
+        else:
+            score_info_list = []
+            fold_nr = []
+            for inner_fold in self.results.best_config.inner_folds:
+                score_info_list.append(inner_fold.validation)
+                fold_nr.append(inner_fold.fold_nr)
+            self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_summary(self):
 

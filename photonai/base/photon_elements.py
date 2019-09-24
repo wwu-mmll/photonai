@@ -14,7 +14,6 @@ from photonai.optimization.config_grid import create_global_config_grid, create_
 from photonai.photonlogger.logger import logger
 
 
-
 class PhotonNative:
     """only for checking if code is meeting requirements"""
     pass
@@ -180,12 +179,9 @@ class PipelineElement(BaseEstimator):
     @property
     def feature_importances_(self):
         if hasattr(self.base_element, 'feature_importances_'):
-            return self.base_element.feature_importances_
-
-    @property
-    def coef_(self):
-        if hasattr(self.base_element, 'coef_'):
-            return self.base_element.coef_
+            return self.base_element.feature_importances_.tolist()
+        elif hasattr(self.base_element, 'coef_'):
+            return self.base_element.coef_.tolist()
 
     def generate_config_grid(self):
         config_dict = create_global_config_dict([self])
@@ -590,6 +586,11 @@ class Branch(PipelineElement):
     def _check_hyper(self, BaseEstimator):
         pass
 
+    @property
+    def feature_importances_(self):
+        if hasattr(self.elements[-1], 'feature_importances_'):
+            return getattr(self.elements[-1], 'feature_importances_')
+
 
 class Preprocessing(Branch):
     """
@@ -634,7 +635,7 @@ class Preprocessing(Branch):
 
     @property
     def _estimator_type(self):
-        return None
+        return
 
 
 class Stack(PipelineElement):
@@ -813,6 +814,10 @@ class Stack(PipelineElement):
 
     def _check_hyper(self,BaseEstimator):
         pass
+
+    @property
+    def feature_importances_(self):
+        return
 
 
 class Switch(PipelineElement):
@@ -1077,7 +1082,12 @@ class Switch(PipelineElement):
         elif len(unique_types) == 1:
             return list(unique_types)[0]
         else:
-            return None
+            return
+
+    @property
+    def feature_importances_(self):
+        if hasattr(self.base_element, 'feature_importances_'):
+            return getattr(self.base_element, 'feature_importances_')
 
 
 class DataFilter(BaseEstimator):
@@ -1105,7 +1115,7 @@ class DataFilter(BaseEstimator):
 
     @property
     def _estimator_type(self):
-        return None
+        return
 
 
 class CallbackElement(PhotonNative):
@@ -1142,3 +1152,6 @@ class CallbackElement(PhotonNative):
     def _estimator_type(self):
         return None
 
+    @property
+    def feature_importances_(self):
+        return
