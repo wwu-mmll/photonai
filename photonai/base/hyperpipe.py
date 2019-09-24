@@ -984,12 +984,13 @@ class Hyperpipe(BaseEstimator):
         build sklearn pipeline from PipelineElements and
         calculate parameter grid for all combinations of pipeline element hyperparameters
         """
-        # Todo: make sure no CallbackElement is the last item of the pipeline
         # prepare pipeline
-        pipeline_steps = []
-        for item in self.elements:
-            # pipeline_steps.append((item.name, item.base_element))
-            pipeline_steps.append((item.name, item))
+        pipeline_steps = [(item.name, item) for item in self.elements]
+
+        if isinstance(pipeline_steps[-1][1], CallbackElement):
+            raise Warning("Last element of pipeline cannot be callback element, would be mistaken for estimator")
+            Logger().warn("Last element of pipeline cannot be callback element, would be mistaken for estimator")
+            del pipeline_steps[-1]
 
         # build pipeline...
         self._pipe = PhotonPipeline(pipeline_steps)
