@@ -2,6 +2,7 @@ import os
 import unittest
 import numpy as np
 import datetime
+import shutil
 
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
@@ -228,6 +229,36 @@ class HyperpipeTests(PhotonBaseTest):
         y_pred_loaded = loaded_optimum_pipe.predict(self.__X)
         y_pred = my_pipe.optimum_pipe.predict(self.__X)
         np.testing.assert_array_equal(y_pred_loaded, y_pred)
+
+    def test_overwrite_result_folder(self):
+        """
+        Test for right handling of parameter output_settings.overwrite.
+        """
+        # first run
+        self.hyperpipe.output_settings.save_output = True
+        self.hyperpipe.fit(self.__X, self.__y)
+
+        # test for overwrite_results = False
+        self.hyperpipe.output_settings.overwrite_results = False
+        tmp_path = os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
+        tmp_date = os.path.getmtime(tmp_path)
+        self.hyperpipe.fit(self.__X, self.__y)
+        self.assertEqual(tmp_date, os.path.getmtime(tmp_path))
+        self.assertNotEqual(tmp_path, os.path.getmtime(os.path.join(self.hyperpipe.output_settings.results_folder,
+                                                       'photon_summary.txt')))
+        # test for overwrite_results = True
+        self.hyperpipe.output_settings.overwrite_results = True
+        self.hyperpipe.cache_folder = self.cache_folder_path
+        shutil.rmtree(self.cache_folder_path, ignore_errors=True)
+
+        self.hyperpipe.fit(self.__X, self.__y)
+        self.assertTrue(os.path.exists(self.cache_folder_path))
+
+        tmp_path = os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
+        tmp_date = os.path.getmtime(tmp_path)
+        self.hyperpipe.fit(self.__X, self.__y)
+        self.assertEqual(tmp_path, os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt'))
+        self.assertNotEqual(tmp_date, os.path.getmtime(tmp_path))
 
     def test_dummy_estimator_preparation(self):
 
