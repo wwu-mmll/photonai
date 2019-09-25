@@ -522,7 +522,7 @@ class BranchTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sk_pred, branch_pred))
 
     def test_transform(self):
-        Xt, _, _ = self.estimator_branch.fit(self.X, self.y).transform(self.X)
+        Xt, _, _ = self.transformer_branch.fit(self.X, self.y).transform(self.X)
         Xt_sklearn = self.transformer_branch_sklearn.fit(self.X, self.y).transform(self.X)
         self.assertTrue(np.array_equal(Xt, Xt_sklearn))
 
@@ -813,7 +813,7 @@ class StackTests(unittest.TestCase):
     def test_feature_importances(self):
         # single item
         self.estimator_stack.fit(self.X, self.y)
-        self.assertisNone(self.estimator_stack.feature_importances_)
+        self.assertIsNone(self.estimator_stack.feature_importances_)
 
         self.estimator_branch_stack.fit(self.X, self.y)
         self.assertIsNone(self.estimator_branch_stack.feature_importances_)

@@ -101,6 +101,10 @@ class OutputSettings:
         self.wizard_project_name = wizard_project_name
 
     def _update_settings(self, name, timestamp):
+
+        if not os.path.exists(self.project_folder):
+            os.makedirs(self.project_folder)
+
         if self.save_output:
             # Todo: give rights to user if this is done by docker container
             if self.overwrite_results:
@@ -1214,8 +1218,9 @@ class PhotonModelPersistor:
         element_identifier = list()
 
         for i, element in enumerate(elements):
-            if element.disabled:
-                continue
+            if hasattr(element, 'disabled'):
+                if element.disabled:
+                    continue
 
             if isinstance(element, (Stack, Branch, Preprocessing)):
                 filename = '_' + str(i) + '_' + element.name
