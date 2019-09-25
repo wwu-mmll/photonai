@@ -857,7 +857,8 @@ class Hyperpipe(BaseEstimator):
         try:
 
             self._input_data_sanity_checks(data, targets, **kwargs)
-            self._prepare_pipeline()
+            self._pipe = Branch.prepare_photon_pipe(self.elements)
+            self._pipe = Branch.sanity_check_pipeline(self._pipe)
             self.preprocess_data()
 
             if not self.is_final_fit:
@@ -978,22 +979,6 @@ class Hyperpipe(BaseEstimator):
         if self._pipe:
             X, _, _ = self.optimum_pipe.transform(data, y=None, **kwargs)
             return X
-
-    def _prepare_pipeline(self):
-        """
-        build sklearn pipeline from PipelineElements and
-        calculate parameter grid for all combinations of pipeline element hyperparameters
-        """
-        # prepare pipeline
-        pipeline_steps = [(item.name, item) for item in self.elements]
-
-        if isinstance(pipeline_steps[-1][1], CallbackElement):
-            raise Warning("Last element of pipeline cannot be callback element, would be mistaken for estimator")
-            Logger().warn("Last element of pipeline cannot be callback element, would be mistaken for estimator")
-            del pipeline_steps[-1]
-
-        # build pipeline...
-        self._pipe = PhotonPipeline(pipeline_steps)
 
     def copy_me(self):
         """

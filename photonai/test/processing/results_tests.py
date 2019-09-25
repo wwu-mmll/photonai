@@ -298,3 +298,25 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         outer_fold_performances = self.hyperpipe.results_handler.get_performance_outer_folds()
         self.assertListEqual(outer_fold_performances['mean_absolute_error'], outer_collection['test'])
 
+    def test_three_levels_of_feature_importances(self):
+        hyperpipe = Hyperpipe('fimps',
+                              inner_cv=KFold(n_splits=4),
+                              outer_cv=KFold(n_splits=3),
+                              metrics=['mean_absolute_error', 'mean_squared_error'],
+                              best_config_metric='mean_squared_error',
+                              output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+        hyperpipe += PipelineElement('StandardScaler')
+        hyperpipe += PipelineElement('DecisionTreeRegressor')
+        X, y = load_boston(True)
+        hyperpipe.fit(X, y)
+
+        exepcted_nr_of_feature_importances = X.shape[1]
+        self.assertTrue(len(hyperpipe.results.best_config_feature_importances) == exepcted_nr_of_feature_importances)
+
+        for outer_fold in hyperpipe.results.outer_folds:
+            self.assertTrue(len(outer_fold.best_config.best_config_score.feature_importances) == exepcted_nr_of_feature_importances)
+            for inner_fold in outer_fold.best_config.inner_folds:
+                self.assertTrue(len(inner_fold.feature_importances) == exepcted_nr_of_feature_importances)
+
+
+

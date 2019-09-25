@@ -179,7 +179,8 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_save_optimum_pipe(self):
         # todo: test .save() of custom model
-        settings = OutputSettings(project_folder='./tmp/optimum_pipypipe/', overwrite_results=True)
+        tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
+        settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
 
         my_pipe = Hyperpipe('hyperpipe',
                             optimizer='random_grid_search',
@@ -218,14 +219,14 @@ class HyperpipeTests(PhotonBaseTest):
         pipe_copy = my_pipe.copy_me()
         pipe_copy.output_settings.save_output = False
         pipe_copy.fit(self.__X, self.__y)
-        self.assertFalse(os.path.exists("./tmp/optimum_pipypipe/hyperpipe_results/"))
+        self.assertFalse(os.path.exists(my_pipe.output_settings.results_folder))
 
         my_pipe.fit(self.__X, self.__y)
-        self.assertTrue(os.path.exists("./tmp/optimum_pipypipe/hyperpipe_results/photon_best_model.photon"))
+        model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
+        self.assertTrue(os.path.exists(model_path))
 
         # check if load_optimum_pipe also works
-        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(
-            "./tmp/optimum_pipypipe/hyperpipe_results/photon_best_model.photon")
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(model_path)
         y_pred_loaded = loaded_optimum_pipe.predict(self.__X)
         y_pred = my_pipe.optimum_pipe.predict(self.__X)
         np.testing.assert_array_equal(y_pred_loaded, y_pred)
@@ -259,9 +260,6 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.fit(self.__X, self.__y)
         self.assertEqual(tmp_path, os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt'))
         self.assertNotEqual(tmp_date, os.path.getmtime(tmp_path))
-
-    def test_prepare_pipeline(self):
-        pass
 
     def test_dummy_estimator_preparation(self):
 
