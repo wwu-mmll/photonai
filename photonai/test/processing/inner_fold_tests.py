@@ -61,7 +61,9 @@ class InnerFoldTests(PhotonBaseTest):
             self.assertTrue(np.array_equal(sklearn_predictions, photon_test_results.y_pred))
 
             for fi, sklearn_feature_importance_score in enumerate(sklearn_feature_importances[0]):
-                self.assertAlmostEqual(sklearn_feature_importance_score, photon_test_results.feature_importances[0][fi])
+                self.assertAlmostEqual(sklearn_feature_importance_score,
+                                       photon_results_config_item.inner_folds[fold_obj.fold_nr - 1].feature_importances[
+                                           0][fi])
 
             accuracy = accuracy_score(test_y, sklearn_predictions)
             self.assertEqual(photon_test_results.metrics['accuracy'], accuracy)
@@ -136,8 +138,7 @@ class InnerFoldTests(PhotonBaseTest):
         # we expect the feature importances to be of length 5 because the input is through the PCA reduced to 5 dimensions
         output_config = test_pipe.fit(self.X, self.y)
         for inner_fold in output_config.inner_folds:
-            # todo: feature_importances should be one level up in the results tree
-            self.assertEqual(len(inner_fold.training.feature_importances[0]), 5)
+            self.assertEqual(len(inner_fold.feature_importances[0]), 5)
 
     def test_process_fit_results(self):
 

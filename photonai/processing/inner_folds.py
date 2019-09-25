@@ -101,11 +101,13 @@ class InnerFoldManager(object):
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
                 durations = job_data.pipe.time_monitor
+
                 self.update_config_item_with_inner_fold(config_item=config_item,
                                                         fold_cnt=idx+1,
                                                         curr_train_fold=curr_train_fold,
                                                         curr_test_fold=curr_test_fold,
-                                                        time_monitor=durations)
+                                                        time_monitor=durations,
+                                                        feature_importances=new_pipe.feature_importances_)
 
                 if isinstance(self.optimization_constraints, list):
                     break_cv = 0
@@ -162,7 +164,8 @@ class InnerFoldManager(object):
             self.test_data = test_data
 
     @staticmethod
-    def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor):
+    def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor,
+                                           feature_importances):
         # fill result tree with fold information
         inner_fold = MDBInnerFold()
         inner_fold.fold_nr = fold_cnt
@@ -172,7 +175,7 @@ class InnerFoldManager(object):
         inner_fold.number_samples_validation = len(curr_test_fold.indices)
         inner_fold.number_samples_training = len(curr_train_fold.indices)
         inner_fold.time_monitor = time_monitor
-
+        inner_fold.feature_importances = feature_importances
         # save all inner folds to the tree under the config item
         config_item.inner_folds.append(inner_fold)
 
@@ -277,8 +280,6 @@ class InnerFoldManager(object):
         :param y_true: the truth values for the data
         :param metrics: the metrics to be calculated
         :param indices: the indices of the given data and targets that are logged into the result tree
-        :param save_predictions: if True, the predicted value array is stored in to the result tree
-        :param save_feature_importances: if True, the feature importances of the estimator, if any, are stored to the result tree
         :param training: if True, all training_only pipeline elements are executed, if False they are skipped
         :param calculate_metrics: if True, calculates metrics for given data
         :return: ScoreInformation object
@@ -308,11 +309,6 @@ class InnerFoldManager(object):
             if kwargs_new is not None and len(kwargs_new) > 0:
                 kwargs = kwargs_new
             y_pred = estimator.predict(X, training=True, **kwargs)
-
-        if hasattr(estimator, 'feature_importances_'):
-            f_importances = estimator.feature_importances_
-        else:
-            f_importances = None
 
         # Nice to have
         # InnerFoldManager.plot_some_data(y_true, y_pred)
@@ -352,6 +348,5 @@ class InnerFoldManager(object):
                                                   y_pred=y_pred, y_true=y_true,
                                                   indices=np.asarray(indices).tolist(),
                                                   probabilities=probabilities)
-        score_result_object.feature_importances = f_importances
 
         return score_result_object

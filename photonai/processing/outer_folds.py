@@ -156,12 +156,14 @@ class OuterFoldManager:
                     if self.optimization_info.maximize_metric:
                         if metric_test > best_metric_yet[1]:
                             best_metric_yet = config_performance
+                            self.current_best_config.save_memory()
                             self.current_best_config = current_config_mdb
                         else:
                             current_config_mdb.save_memory()
                     else:
                         if metric_test < best_metric_yet[1]:
                             best_metric_yet = config_performance
+                            self.current_best_config.save_memory()
                             self.current_best_config = current_config_mdb
                         else:
                             current_config_mdb.save_memory()
@@ -223,6 +225,7 @@ class OuterFoldManager:
             best_config_performance_mdb.fold_nr = -99
             best_config_performance_mdb.number_samples_training = self._validation_y.shape[0]
             best_config_performance_mdb.number_samples_validation = self._test_y.shape[0]
+            best_config_performance_mdb.feature_importances = optimum_pipe.feature_importances_
 
             if self.cross_validaton_info.eval_final_performance:
                 # Todo: generate mean and std over outer folds as well. move this items to the top

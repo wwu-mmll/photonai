@@ -38,8 +38,8 @@ class OuterFoldTests(PhotonBaseTest):
                                                         optimizer_input='grid_search', optimizer_params={},
                                                         performance_constraints=None)
         self.elements = [PipelineElement('StandardScaler'),
-                         PipelineElement('PCA', {'n_components': [4, None]}),
-                         PipelineElement('Ridge', solver='svd', random_state=42)]
+                         PipelineElement('PCA', {'n_components': [4, 7]}),
+                         PipelineElement('DecisionTreeRegressor', random_state=42)]
         self.pipe = PhotonPipeline([(p.name, p) for p in self.elements])
 
     def prepare_and_fit(self, outer_fold_man=None):
@@ -157,17 +157,26 @@ class OuterFoldTests(PhotonBaseTest):
     def test_save_predictions_and_feature_importances(self):
         # todo: the best config should have feature importances and predictions, all others shouldn't have them
         #  reuse test_save_predictions() and test_feature_importances() from inner_fold_tests.py
-        # in case only the best shall be saved, the first one should have predictions in the best_config score for the test set
+        np.random.seed(42)
         outer_fold_man1 = OuterFoldManager(self.pipe, self.optimization_info, self.outer_fold_id, self.cv_info,
                                            result_obj=MDBOuterFold(fold_nr=1))
         self.prepare_and_fit(outer_fold_man1)
 
-        self.assertTrue(len(outer_fold_man1.result_object.best_config.best_config_score.validation.y_pred) == len(self.cv_info.outer_folds[self.outer_fold_id].test_indices))
-        self.assertTrue(len(outer_fold_man1.result_object.best_config.best_config_score.validation.feature_importances) == 4)
+        best_config = outer_fold_man1.result_object.best_config
+        self.assertTrue(len(best_config.best_config_score.validation.y_true) == len(
+            self.cv_info.outer_folds[self.outer_fold_id].test_indices))
+        self.assertTrue(len(best_config.best_config_score.validation.y_pred) == len(
+            self.cv_info.outer_folds[self.outer_fold_id].test_indices))
+        self.assertTrue(len(best_config.best_config_score.feature_importances) == 7)
 
         for config in outer_fold_man1.result_object.tested_config_list:
-            self.assertTrue(np.sum(len(fold.validation.y_pred) for fold in config.inner_folds) == 0)
-            self.assertTrue(np.sum(len(fold.validation.feature_importances) for fold in config.inner_folds) == 0)
+            if config.config_nr == best_config.config_nr:
+                for fold_i, fold in enumerate(config.inner_folds):
+                    self.assertTrue(np.sum(len(fold.validation.y_pred) == 41))
+                    self.assertTrue(np.sum(len(fold.feature_importances) == 7))
+            else:
+                self.assertTrue(np.sum(len(fold.validation.y_pred) for fold in config.inner_folds) == 0)
+                self.assertTrue(np.sum(len(fold.feature_importances) for fold in config.inner_folds) == 0)
 
     def test_find_best_config_always_again(self):
         outer_fold_man1 = self.prepare_and_fit()
