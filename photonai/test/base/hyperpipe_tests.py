@@ -219,7 +219,7 @@ class HyperpipeTests(PhotonBaseTest):
         pipe_copy = my_pipe.copy_me()
         pipe_copy.output_settings.save_output = False
         pipe_copy.fit(self.__X, self.__y)
-        self.assertFalse(os.path.exists(my_pipe.output_settings.results_folder))
+        self.assertIsNone(my_pipe.output_settings.results_folder)
 
         my_pipe.fit(self.__X, self.__y)
         model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
@@ -244,7 +244,7 @@ class HyperpipeTests(PhotonBaseTest):
         tmp_path = os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
         tmp_date = os.path.getmtime(tmp_path)
         self.hyperpipe.fit(self.__X, self.__y)
-        self.assertEqual(tmp_date, os.path.getmtime(tmp_path))
+        self.assertAlmostEqual(tmp_date, os.path.getmtime(tmp_path))
         self.assertNotEqual(tmp_path, os.path.getmtime(os.path.join(self.hyperpipe.output_settings.results_folder,
                                                        'photon_summary.txt')))
         # test for overwrite_results = True
@@ -312,13 +312,13 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_recursive_disabling(self):
         list_of_elements_to_detect = self.setup_crazy_pipe()
-        self.hyperpipe._prepare_pipeline()
+        self.hyperpipe._pipe = Branch.prepare_photon_pipe(list_of_elements_to_detect)
         Hyperpipe.disable_multiprocessing_recursively(self.hyperpipe._pipe)
         self.assertTrue([i.nr_of_processes == 1 for i in list_of_elements_to_detect])
 
     def test_recursive_cache_folder_propagation(self):
         list_of_elements = self.setup_crazy_pipe()
-        self.hyperpipe._prepare_pipeline()
+        self.hyperpipe._pipe = Branch.prepare_photon_pipe(self.hyperpipe.elements)
         self.hyperpipe.recursive_cache_folder_propagation(self.hyperpipe._pipe, self.cache_folder_path, 'fold_id_123')
         for i, nmbranch in enumerate(list_of_elements):
             if i > 1:
