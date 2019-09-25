@@ -33,7 +33,6 @@ class MDBScoreInformation(EmbeddedMongoModel):
     y_true = fields.ListField(blank=True)
     y_pred = fields.ListField(blank=True)
     indices = fields.ListField(blank=True)
-    feature_importances = fields.ListField(blank=True)
     probabilities = fields.ListField(blank=True)
     metrics_copied_from_inner = fields.BooleanField(default=False)
 
@@ -52,6 +51,7 @@ class MDBInnerFold(EmbeddedMongoModel):
     number_samples_training = fields.IntegerField(blank=True)
     number_samples_validation = fields.IntegerField(blank=True)
     time_monitor = fields.DictField(blank=True)
+    feature_importances = fields.ListField(blank=True)
 
 
 class MDBConfig(EmbeddedMongoModel):
@@ -87,8 +87,7 @@ class MDBConfig(EmbeddedMongoModel):
             fold.validation.y_true = []
             fold.validation.y_pred = []
             fold.validation.indices = []
-            fold.training.feature_importances = []
-            fold.validation.feature_importances = []
+            fold.feature_importances = []
 
 
 class MDBOuterFold(EmbeddedMongoModel):
