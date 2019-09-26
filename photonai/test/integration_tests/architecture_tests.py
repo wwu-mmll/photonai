@@ -1,7 +1,7 @@
 from itertools import product
 
 import numpy as np
-from sklearn.datasets import make_regression, make_classification
+from sklearn.datasets import make_regression, make_classification, load_iris
 from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut
 
 from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, OutputSettings, Branch, DataFilter
@@ -534,9 +534,7 @@ class TestArchitectures(PhotonBaseTest):
     def test_classification_11(self):
         for original_hyperpipe in self.hyperpipes:
             pipe = original_hyperpipe.copy_me()
-
             # Simple estimator Stack (train Random Forest on estimator stack proba outputs)
-            # ToDo: USE PROBA OUTPUTS!
             # create estimator stack
             SVC1 = PipelineElement('SVC',
                                    hyperparameters={'kernel': Categorical(['linear']), 'C': Categorical([.01, 1, 5])})
@@ -544,7 +542,28 @@ class TestArchitectures(PhotonBaseTest):
                                    hyperparameters={'kernel': Categorical(['rbf']), 'C': Categorical([.01, 1, 5])})
             RF = PipelineElement('RandomForestClassifier')
             # add to pipe
-            pipe += Stack('estimator_stack', elements=[SVC1, SVC2, RF])
+            pipe += Stack('estimator_stack', elements=[SVC1, SVC2, RF], use_probabilities=True)
             pipe += PipelineElement('RandomForestClassifier')
 
             self.run_hyperpipe(pipe, self.classification)
+
+    def test_classification_12(self):
+        X, y = load_iris(True)
+        # multiclass classification
+        for original_hyperpipe in self.hyperpipes:
+            pipe = original_hyperpipe.copy_me()
+            # Simple estimator Stack (train Random Forest on estimator stack proba outputs)
+            # create estimator stack
+            SVC1 = PipelineElement('SVC',
+                                   hyperparameters={'kernel': Categorical(['linear']), 'C': Categorical([.01, 1, 5])})
+            SVC2 = PipelineElement('SVC',
+                                   hyperparameters={'kernel': Categorical(['rbf']), 'C': Categorical([.01, 1, 5])})
+            RF = PipelineElement('RandomForestClassifier')
+            # add to pipe
+            pipe += Stack('estimator_stack', elements=[SVC1, SVC2, RF], use_probabilities=True)
+            pipe += PipelineElement('RandomForestClassifier')
+
+            pipe.optimization.metrics = ['accuracy']
+            pipe.optimization.best_config_metric = 'accuracy'
+
+            pipe.fit(X, y)
