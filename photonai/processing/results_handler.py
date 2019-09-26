@@ -255,7 +255,7 @@ class ResultsHandler:
         """
         imps = []
         for i, fold in enumerate(self.results.outer_folds):
-            imps.append(fold.best_config.best_config_score.training.feature_importances)
+            imps.append(fold.best_config.best_config_score.feature_importances)
         return imps
 
     def plot_true_pred(self, confidence_interval=95):
