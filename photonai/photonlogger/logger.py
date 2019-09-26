@@ -1,5 +1,9 @@
 import logging
+import sys
 
+import sklearn
+
+logging.getLogger(sklearn.__name__).setLevel(logging.ERROR)
 
 dask_logger = logging.getLogger('distributed.utils_perf')
 dask_logger.setLevel(logging.ERROR)
@@ -8,7 +12,7 @@ for handler in dask_logger.handlers:
 
 # create photon logger
 logger = logging.getLogger('PHOTON')
-handler = logging.StreamHandler()
+handler = logging.StreamHandler(stream=sys.stdout)
 logger.addHandler(handler)
 
 

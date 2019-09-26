@@ -671,6 +671,8 @@ class StackTests(unittest.TestCase):
             Xt_elements = None
             for i, element in enumerate(elements):
                 Xt_element = element.fit(self.X, self.y).predict_proba(self.X)
+                if Xt_element is None:
+                    Xt_element = element.fit(self.X, self.y).predict(self.X)
                 Xt_elements = PhotonDataHelper.stack_data_horizontally(Xt_elements, Xt_element)
             np.testing.assert_array_equal(yt_stack, Xt_elements)
 
@@ -720,6 +722,19 @@ class StackTests(unittest.TestCase):
                                   Switch('MySwitch', [PipelineElement('PCA'), PipelineElement('FastICA')]),
                                   Branch('MyBranch', [PipelineElement('PCA')])])
         self.assertEqual(len(stack.elements), 4)
+
+    def test_use_probabilities(self):
+        self.estimator_stack.use_probabilities = True
+        self.estimator_stack.fit(self.X, self.y)
+        probas = self.estimator_stack.predict(self.X)
+        self.assertEqual(probas.shape[1], 3)
+
+        self.estimator_stack.use_probabilities = False
+        self.estimator_stack.fit(self.X, self.y)
+        preds = self.estimator_stack.predict(self.X)
+        self.assertEqual(preds.shape[1], 2)
+        probas = self.estimator_stack.predict_proba(self.X)
+        self.assertEqual(probas.shape[1], 3)
 
 
 class DataFilterTests(unittest.TestCase):
