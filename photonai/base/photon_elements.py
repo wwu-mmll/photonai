@@ -1123,7 +1123,7 @@ class Switch(PipelineElement):
             return getattr(self.base_element, 'feature_importances_')
 
 
-class DataFilter(BaseEstimator):
+class DataFilter(BaseEstimator, PhotonNative):
     """
     Helper Class to split the data e.g. for stacking.
     """

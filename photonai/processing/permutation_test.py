@@ -339,14 +339,14 @@ def do_jobs(tasks_to_accomplish):
 def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id):
     # Create new instance of hyperpipe and set all parameters
     perm_pipe = hyperpipe_constructor()
-    perm_pipe._set_verbosity(-1)
+    perm_pipe.verbosity = -1
     perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
     perm_pipe.permutation_id = permutation_id
 
     # print(y_perm)
     po = OutputSettings(mongodb_connect_url=perm_pipe.output_settings.mongodb_connect_url,
-                        save_predictions='None', save_feature_importances='None', save_output=False)
-    perm_pipe._set_persist_options(po)
+                        save_output=False)
+    perm_pipe.output_settings = po
     perm_pipe.calculate_metrics_across_folds = False
     try:
         # Fit hyperpipe

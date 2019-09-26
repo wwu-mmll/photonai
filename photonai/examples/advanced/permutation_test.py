@@ -1,13 +1,15 @@
 from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization import FloatRange, Categorical
+
 from photonai.processing import ResultsHandler
 from photonai.processing.permutation_test import PermutationTest
 
-
 def create_hyperpipe():
+    # this is needed here for the unit tests
+    from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+    from photonai.optimization import FloatRange, Categorical
+    from sklearn.model_selection import KFold
+
     settings = OutputSettings(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results',
                               project_folder='./tmp/')
     my_pipe = Hyperpipe('basic_svm_pipe_permutation_test',

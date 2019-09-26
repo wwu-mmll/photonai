@@ -2,16 +2,13 @@ import unittest
 
 import numpy as np
 
-from photonai.modelwrapper import Voting
+from photonai.modelwrapper.Voting import PhotonVotingRegressor
 
-
-# Todo
-#  update this
 
 class VotingTests(unittest.TestCase):
 
     def setUp(self):
-        self.voter = Voting()
+        self.voter = PhotonVotingRegressor()
 
     def test_wrong_strategy(self):
         with self.assertRaises(ValueError):

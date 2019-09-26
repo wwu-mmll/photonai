@@ -1,3 +1,5 @@
+import os
+
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
@@ -5,7 +7,11 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings, PhotonRegi
 from photonai.optimization import IntegerRange
 
 # REGISTER ELEMENT
-custom_elements_folder = './custom_elements'
+base_folder = os.path.dirname(os.path.abspath(__file__))
+print(base_folder)
+custom_elements_folder = os.path.join(base_folder, 'custom_elements')
+print(custom_elements_folder)
+
 registry = PhotonRegistry(custom_elements_folder=custom_elements_folder)
 registry.register(photon_name='MyCustomEstimator',
                   class_str='custom_estimator.CustomEstimator',
