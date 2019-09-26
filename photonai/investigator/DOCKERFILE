@@ -1,6 +1,7 @@
 FROM tiangolo/uwsgi-nginx-flask:python3.6
 ADD /requirements.txt requirements.txt
 RUN pip install -r requirements.txt
+RUN pip install git+https://github.com/photon-team/photon.git
 
 ADD ./app /app
 
