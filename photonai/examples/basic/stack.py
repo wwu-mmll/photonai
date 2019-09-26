@@ -21,11 +21,13 @@ my_pipe = Hyperpipe('basic_stack_pipe',
 my_pipe += PipelineElement('StandardScaler')
 
 tree = PipelineElement('DecisionTreeClassifier', hyperparameters={'criterion': ['gini'],
-                                                                            'min_samples_split': IntegerRange(2, 4)})
+                                                                  'min_samples_split': IntegerRange(2, 4)})
 
 svc = PipelineElement('LinearSVC', hyperparameters={'C': FloatRange(0.5, 25)})
 
-my_pipe += Stack('final_stack', [tree, svc])
+# for a stack that includes estimators you can choose whether predict or predict_proba is called for all estimators
+# in case only some implement predict_proba, predict is called for the remaining estimators
+my_pipe += Stack('final_stack', [tree, svc], use_probabilities=True)
 
 my_pipe += PipelineElement('LinearSVC')
 my_pipe.fit(X, y)

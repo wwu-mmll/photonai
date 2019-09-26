@@ -647,7 +647,8 @@ class Stack(PipelineElement):
     and horizontally concatenated.
 
     """
-    def __init__(self, name: str, elements=None):
+
+    def __init__(self, name: str, elements=None, use_probabilities: bool = False):
         """
         Creates a new Stack element.
         Collects all possible hyperparameter combinations of the children
@@ -673,6 +674,7 @@ class Stack(PipelineElement):
         # todo: Stack should not be allowed to change y, only covariates
         self.needs_y = False
         self.needs_covariates = True
+        self.use_probabilities = use_probabilities
 
     def __iadd__(self, item):
         """
@@ -761,6 +763,12 @@ class Stack(PipelineElement):
         return self
 
     def predict(self, X, **kwargs):
+        if not self.use_probabilities:
+            return self._predict(X, **kwargs)
+        else:
+            return self.predict_proba(X, **kwargs)
+
+    def _predict(self, X, **kwargs):
         """
         Iteratively calls predict on every child.
         """
@@ -774,12 +782,13 @@ class Stack(PipelineElement):
 
     def predict_proba(self, X, y=None, **kwargs):
         """
-        Predict probabilities for every pipe element and
-        stack them together. Alternatively, do voting instead.
+        Predict probabilities for every pipe element and stack them together.
         """
         predicted_data = np.array([])
         for element in self.elements:
             element_transform = element.predict_proba(X)
+            if element_transform is None:
+                element_transform = element.predict(X)
             predicted_data = PhotonDataHelper.stack_data_horizontally(predicted_data, element_transform)
         return predicted_data
 

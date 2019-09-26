@@ -210,7 +210,7 @@ class PhotonDataHelper:
 
         """
         if existing_array is None or (isinstance(existing_array, np.ndarray) and existing_array.size == 0):
-            existing_array = new_array
+            return new_array
         else:
             # Todo: check for right dimensions!
             if existing_array.ndim == 1 and new_array.ndim == 1:
@@ -218,7 +218,8 @@ class PhotonDataHelper:
             else:
                 if new_array.ndim == 1:
                     new_array = np.reshape(new_array, (new_array.shape[0], 1))
-                # a = np.concatenate((a, b), 1)
+                if existing_array.ndim == 1:
+                    existing_array = np.reshape(existing_array, (existing_array.shape[0], 1))
                 existing_array = np.concatenate((existing_array, new_array), axis=1)
         return existing_array
 
