@@ -24,7 +24,7 @@ X = np.array(dataset_files.gray_matter_maps)
 
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-settings = OutputSettings(save_predictions='best', project_folder=results_folder)
+settings = OutputSettings(project_folder=results_folder)
 
 
 # DESIGN YOUR PIPELINE

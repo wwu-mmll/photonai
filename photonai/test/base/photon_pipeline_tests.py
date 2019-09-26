@@ -12,13 +12,14 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
-from photonai.base import PipelineElement, Hyperpipe, Preprocessing, OutputSettings
+from photonai.base import PipelineElement, Hyperpipe, Preprocessing, OutputSettings, Stack, Switch, Branch, CallbackElement
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
 from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
 from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.optimization import IntegerRange
 
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
@@ -179,6 +180,35 @@ class PipelineTests(PhotonBaseTest):
         photon_proba = photon_pipe.predict_proba(self.X)
 
         self.assertTrue(np.array_equal(sk_proba, photon_proba))
+
+    def test_copy_me(self):
+        switch = Switch("my_copy_switch")
+        switch += PipelineElement("StandardScaler")
+        switch += PipelineElement("RobustScaler", test_disabled=True)
+
+        stack = Stack("RandomStack")
+        stack += PipelineElement("SVC")
+        branch = Branch('Random_Branch')
+        pca_hyperparameters = {'n_components': [5, 10]}
+        branch += PipelineElement("PCA", hyperparameters=pca_hyperparameters)
+        branch += PipelineElement("DecisionTreeClassifier")
+        stack += branch
+
+        photon_pipe = PhotonPipeline([("SimpleImputer", PipelineElement("SimpleImputer")),
+                                      ("my_copy_switch", switch),
+                                      ('RandomStack', stack),
+                                      ('Callback1', CallbackElement('tmp_callback', np.mean)),
+                                      ("PhotonVotingClassifier", PipelineElement("PhotonVotingClassifier"))])
+
+        copy_of_the_pipe = photon_pipe.copy_me()
+
+        self.assertTrue(len(copy_of_the_pipe.elements) == 5)
+        self.assertTrue(copy_of_the_pipe.elements[2][1].name == "RandomStack")
+        self.assertTrue(copy_of_the_pipe.named_steps["my_copy_switch"].elements[1].test_disabled)
+        self.assertDictEqual(copy_of_the_pipe.elements[2][1].elements[1].elements[0].hyperparameters,
+                             {"PCA__n_components": [5, 10]})
+        self.assertTrue(isinstance(copy_of_the_pipe.elements[3][1], CallbackElement))
+        self.assertTrue(copy_of_the_pipe.named_steps["tmp_callback"].delegate_function == np.mean)
 
 
 class CacheManagerTests(PhotonBaseTest):

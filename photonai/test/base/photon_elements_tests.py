@@ -7,7 +7,7 @@ from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
-from photonai.base import PipelineElement, Switch, Stack, Branch, DataFilter, CallbackElement
+from photonai.base import PipelineElement, Switch, Stack, Branch, DataFilter, CallbackElement, Preprocessing
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.helper.helper import PhotonDataHelper
 from photonai.test.base.dummy_elements import DummyEstimator, \
@@ -249,6 +249,35 @@ class PipelineElementTests(unittest.TestCase):
         with self.assertRaises(NotImplementedError):
             est_type = estimator._estimator_type
 
+    def test_sanity_check_item_for_add(self):
+        valid_type = PipelineElement('StandardScaler')
+        valid_type2 = CallbackElement('my_callback', None)
+        invalid_type = StandardScaler()
+        invalid_type2 = Preprocessing()
+
+        PipelineElement.sanity_check_element_type_for_building_photon_pipes(valid_type, PipelineElement)
+        PipelineElement.sanity_check_element_type_for_building_photon_pipes(valid_type2, PipelineElement)
+
+        with self.assertRaises(TypeError):
+            PipelineElement.sanity_check_element_type_for_building_photon_pipes(invalid_type, PipelineElement)
+
+        with self.assertRaises(TypeError):
+            PipelineElement.sanity_check_element_type_for_building_photon_pipes(invalid_type2, PipelineElement)
+
+        classes_to_test = [Stack, Switch, Branch, Preprocessing]
+        for photon_class in classes_to_test:
+            # we name it SVC so it suits all classes
+            if photon_class is Preprocessing:
+                instance = photon_class()
+            else:
+                instance = photon_class('tmp_instance')
+            instance.add(valid_type)
+            instance.add(valid_type2)
+            with self.assertRaises(TypeError):
+                instance.add(invalid_type)
+            with self.assertRaises(TypeError):
+                instance.add(invalid_type2)
+
 
 class SwitchTests(unittest.TestCase):
 
@@ -259,7 +288,7 @@ class SwitchTests(unittest.TestCase):
         self.gpc = PipelineElement('GaussianProcessClassifier')
         self.pca = PipelineElement('PCA')
 
-        self.estimator_branch = Branch('estimator_branch', [self.svc.copy_me()])
+        self.estimator_branch = Branch('estimator_branch', [self.tree.copy_me()])
         self.transformer_branch = Branch('transformer_branch', [self.pca.copy_me()])
 
         self.estimator_switch = Switch('estimator_switch',
@@ -435,7 +464,7 @@ class SwitchTests(unittest.TestCase):
         self.assertEqual(list(self.estimator_switch.elements_dict.keys()), ['SVC', 'DecisionTreeClassifier',
                                                                             'GaussianProcessClassifier'])
         self.assertEqual(list(self.switch_in_switch.elements_dict.keys()), ['transformer_branch',
-                                                                      'transformer_switch_with_branch'])
+                                                                            'transformer_switch_with_branch'])
 
         switch = Switch('MySwitch', [PipelineElement('PCA'), PipelineElement('FastICA')])
         switch = Switch('MySwitch')
@@ -444,6 +473,27 @@ class SwitchTests(unittest.TestCase):
 
         with self.assertRaises(Exception):
             self.estimator_switch += self.estimator_switch.elements[0]
+
+    def test_feature_importances(self):
+
+        self.estimator_switch.set_params(**{'current_element': (1, 0)})
+        self.estimator_switch.fit(self.X, self.y)
+        self.assertTrue(len(self.estimator_switch.feature_importances_) == self.X.shape[1])
+
+        self.estimator_switch_with_branch.set_params(**{'current_element': (1, 0)})
+        self.estimator_switch_with_branch.fit(self.X, self.y)
+        self.assertTrue(len(self.estimator_switch_with_branch.feature_importances_) == self.X.shape[1])
+
+        self.estimator_switch.set_params(**{'current_element': (2, 0)})
+        self.estimator_switch.fit(self.X, self.y)
+        self.assertIsNone(self.estimator_branch.feature_importances_)
+
+        self.switch_in_switch.set_params(**{'current_element': (1, 0)})
+        self.switch_in_switch.fit(self.X, self.y)
+        self.assertIsNone(self.switch_in_switch.feature_importances_)
+        self.estimator_switch.set_params(**{'current_element': (1, 0)})
+        self.switch_in_switch.fit(self.X, self.y)
+        self.assertIsNone(self.switch_in_switch.feature_importances_)
 
 
 class BranchTests(unittest.TestCase):
@@ -472,7 +522,7 @@ class BranchTests(unittest.TestCase):
         self.assertTrue(np.array_equal(sk_pred, branch_pred))
 
     def test_transform(self):
-        Xt, _, _ = self.estimator_branch.fit(self.X, self.y).transform(self.X)
+        Xt, _, _ = self.transformer_branch.fit(self.X, self.y).transform(self.X)
         Xt_sklearn = self.transformer_branch_sklearn.fit(self.X, self.y).transform(self.X)
         self.assertTrue(np.array_equal(Xt, Xt_sklearn))
 
@@ -512,6 +562,33 @@ class BranchTests(unittest.TestCase):
         fake_copy = branch
         fake_copy.elements[1].base_element.n_components = 3
         self.assertEqual(fake_copy.elements[1].base_element.n_components, branch.elements[1].base_element.n_components)
+
+    def test_prepare_photon_pipeline(self):
+        test_branch = Branch('my_test_branch')
+        test_branch += PipelineElement('SimpleImputer')
+        test_branch += Switch('my_crazy_switch_bitch')
+        test_branch += Stack('my_stacking_stack')
+        test_branch += PipelineElement('SVC')
+
+        generated_pipe = test_branch.prepare_photon_pipe(test_branch.elements)
+
+        self.assertEqual(len(generated_pipe.named_steps), 4)
+        for idx, element in enumerate(test_branch.elements):
+            self.assertIs(generated_pipe.named_steps[element.name], element)
+            self.assertIs(generated_pipe.elements[idx][1], test_branch.elements[idx])
+
+    def test_sanity_check_pipe(self):
+        test_branch = Branch('my_test_branch')
+
+        def callback_func(X, y, **kwargs):
+            pass
+
+        with self.assertRaises(Warning):
+            my_callback = CallbackElement('final_element_callback', delegate_function=callback_func)
+            test_branch += my_callback
+            no_callback_pipe = test_branch.prepare_photon_pipe(test_branch.elements)
+            test_branch.sanity_check_pipeline(no_callback_pipe)
+            self.assertFalse(no_callback_pipe[-1] is not my_callback)
 
     def test_prepare_pipeline(self):
         self.assertEqual(len(self.transformer_branch.elements), 2)
@@ -555,6 +632,18 @@ class BranchTests(unittest.TestCase):
         branch += PipelineElement('FastICA')
         self.assertEqual(len(branch.elements), 2)
         self.assertDictEqual(branch._hyperparameters, {'MyBranch__PCA__n_components': [5]})
+
+    def test_feature_importances(self):
+
+        self.estimator_branch.fit(self.X, self.y)
+        self.assertTrue(len(self.estimator_branch.feature_importances_) == self.X.shape[1])
+
+        self.estimator_branch.elements[-1] = PipelineElement("GaussianProcessClassifier")
+        self.estimator_branch.fit(self.X, self.y)
+        self.assertIsNone(self.estimator_branch.feature_importances_)
+
+        self.transformer_branch.fit(self.X, self.y)
+        self.assertIsNone(self.transformer_branch.feature_importances_)
 
 
 class StackTests(unittest.TestCase):
@@ -723,6 +812,14 @@ class StackTests(unittest.TestCase):
                                   Branch('MyBranch', [PipelineElement('PCA')])])
         self.assertEqual(len(stack.elements), 4)
 
+    def test_feature_importances(self):
+        # single item
+        self.estimator_stack.fit(self.X, self.y)
+        self.assertIsNone(self.estimator_stack.feature_importances_)
+
+        self.estimator_branch_stack.fit(self.X, self.y)
+        self.assertIsNone(self.estimator_branch_stack.feature_importances_)
+
     def test_use_probabilities(self):
         self.estimator_stack.use_probabilities = True
         self.estimator_stack.fit(self.X, self.y)
@@ -765,6 +862,11 @@ class CallbackElementTests(unittest.TestCase):
             self.assertEqual(X.shape, (569, ))
             print('Shape of predictions: {}'.format(X.shape))
 
+        def callback_test_equality(X, y=None, **kwargs):
+            self.assertTrue(np.array_equal(self.X, X))
+            if y is not None:
+                self.assertListEqual(self.y.tolist(), y.tolist())
+
         self.X, self.y = load_breast_cancer(True)
 
         self.clean_pipeline = PhotonPipeline(elements=[('PCA', PipelineElement('PCA')),
@@ -772,26 +874,40 @@ class CallbackElementTests(unittest.TestCase):
         self.callback_pipeline = PhotonPipeline(elements=[('First', CallbackElement('First', callback)),
                                                           ('PCA', PipelineElement('PCA')),
                                                           ('Second', CallbackElement('Second', callback)),
-                                                          ('LogisticRegression', PipelineElement('LogisticRegression')),
-                                                          ('Third', CallbackElement('Third', predict_callback))])
+                                                          ('LogisticRegression', PipelineElement('LogisticRegression'))])
         self.clean_branch_pipeline = PhotonPipeline(elements=[('MyBranch',
                                                                Branch('MyBranch', [PipelineElement('PCA')])),
                                                               ('LogisticRegression',
                                                                PipelineElement('LogisticRegression'))])
         self.callback_branch_pipeline = PhotonPipeline(elements=[('First', CallbackElement('First', callback)),
                                                                  ('MyBranch', Branch('MyBranch', [CallbackElement('Second',
-                                                                                                     callback),
-                                                                                     PipelineElement('PCA'),
-                                                                                     CallbackElement('Third',
-                                                                                                     callback)])),
+                                                                                                                  callback),
+                                                                                                  PipelineElement('PCA')])),
                                                                  ('Fourth', CallbackElement('Fourth', callback)),
                                                                  ('LogisticRegression',
-                                                                  PipelineElement('LogisticRegression')),
-                                                                 ('Fifth', CallbackElement('Fifth', predict_callback))])
+                                                                  PipelineElement('LogisticRegression'))])
+        self.callback_branch_pipeline_error = PhotonPipeline(elements=[('First', CallbackElement('First', callback)),
+                                                                       ('MyBranch', Branch('MyBranch', [CallbackElement('Second',
+                                                                                                                        callback),
+                                                                                                        PipelineElement('PCA'),
+                                                                                                        CallbackElement('Third',
+                                                                                                                        callback)])),
+                                                                       ('Fourth', CallbackElement('Fourth', callback)),
+                                                                       ('LogisticRegression',
+                                                                        PipelineElement('LogisticRegression')),
+                                                                       ('Fifth', CallbackElement('Fifth', predict_callback))])
+        # test that data is unaffected from pipeline
+        self.callback_after_callback_pipeline = PhotonPipeline([('Callback1', CallbackElement('Callback1', callback)),
+                                                                ('Callback2', CallbackElement('Callback2', callback_test_equality)),
+                                                                ('StandarcScaler', PipelineElement('StandardScaler'),
+                                                                 ('SVR', PipelineElement('SVR')))])
 
     def test_callback(self):
         pipelines = [self.clean_pipeline, self.callback_pipeline, self.clean_branch_pipeline,
-                     self.callback_branch_pipeline]
+                     self.callback_branch_pipeline, self.callback_after_callback_pipeline]
 
         for pipeline in pipelines:
             pipeline.fit(self.X, self.y).predict(self.X)
+
+        with self.assertRaises(Warning):
+            self.callback_branch_pipeline_error.fit(self.X, self.y).predict(self.X)

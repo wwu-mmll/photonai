@@ -454,6 +454,11 @@ class PipelineElement(BaseEstimator):
             else:
                 return config_name + '=' + str(config_value)
 
+    @staticmethod
+    def sanity_check_element_type_for_building_photon_pipes(pipe_element, type_of_self):
+        if (not isinstance(pipe_element, PipelineElement) and not isinstance(pipe_element, PhotonNative)) or isinstance(pipe_element, Preprocessing):
+            raise TypeError(str(type_of_self) + " only accepts PHOTON elements. Cannot add element of type " + str(type(pipe_element)))
+
 
 class Branch(PipelineElement):
     """
@@ -487,9 +492,12 @@ class Branch(PipelineElement):
                 self.add(element)
 
     def fit(self, X, y=None, **kwargs):
+        self.base_element = Branch.sanity_check_pipeline(self.base_element)
         return super().fit(X, y, **kwargs)
 
     def transform(self, X, y=None, **kwargs):
+        if self._estimator_type == 'classifier' or self._estimator_type == 'regressor':
+            return super().predict(X), y, kwargs
         return super().transform(X, y, **kwargs)
 
     def predict(self, X, **kwargs):
@@ -506,6 +514,7 @@ class Branch(PipelineElement):
             The object to add, being either a transformer or an estimator.
 
         """
+        PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipe_element, Branch)
         self.elements.append(pipe_element)
         self._prepare_pipeline()
         return self
@@ -523,19 +532,30 @@ class Branch(PipelineElement):
            """
         self.__iadd__(pipe_element)
 
+    @staticmethod
+    def prepare_photon_pipe(elements):
+        pipeline_steps = list()
+        for item in elements:
+            pipeline_steps.append((item.name, item))
+        return PhotonPipeline(pipeline_steps)
+
+    @staticmethod
+    def sanity_check_pipeline(pipe):
+        if isinstance(pipe.elements[-1][1], CallbackElement):
+            raise Warning("Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it.")
+            Logger().warn("Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it.")
+            del pipeline_steps[-1]
+        return pipe
+
     def _prepare_pipeline(self):
         """ Generates sklearn pipeline with all underlying elements """
-        pipeline_steps = []
 
-        for item in self.elements:
-            # pipeline_steps.append((item.name, item.base_element))
-            pipeline_steps.append((item.name, item))
-            if hasattr(item, 'hyperparameters'):
-                self._hyperparameters[item.name] = item.hyperparameters
+        self._hyperparameters = {item.name: item.hyperparameters for item in self.elements
+                                 if hasattr(item, 'hyperparameters')}
 
         if self.has_hyperparameters:
             self.generate_sklearn_hyperparameters()
-        new_pipe = PhotonPipeline(pipeline_steps)
+        new_pipe = Branch.prepare_photon_pipe(self.elements)
         new_pipe._fix_fold_id = self.fix_fold_id
         new_pipe._do_not_delete_cache_folder = self.do_not_delete_cache_folder
         self.base_element = new_pipe
@@ -620,6 +640,7 @@ class Preprocessing(Branch):
 
         """
         if hasattr(pipe_element, "transform"):
+            PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipe_element, Preprocessing)
             if len(pipe_element.hyperparameters) > 0:
                 raise ValueError("A preprocessing transformer must not have any hyperparameter "
                                  "because it is not part of the optimization and cross validation procedure")
@@ -685,6 +706,7 @@ class Stack(PipelineElement):
             The Element that should be stacked and will run in a vertical parallelization in the original pipe.
         """
         self.check_if_needs_y(item)
+        PipelineElement.sanity_check_element_type_for_building_photon_pipes(item, Stack)
         self.elements.append(item)
 
         # for each configuration
@@ -900,6 +922,7 @@ class Switch(PipelineElement):
         * `pipeline_element` [PipelineElement]:
             Item that should be tested against other competing elements at that position in the pipeline.
         """
+        PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipeline_element, Switch)
         self.elements.append(pipeline_element)
         if not pipeline_element.name in self.elements_dict:
             self.elements_dict[pipeline_element.name] = pipeline_element
@@ -945,16 +968,17 @@ class Switch(PipelineElement):
             # for config_key, config_value in distinct_values_config.items():
             #     distinct_values_config_copy[self.name + "__" + config_key] = config_value
 
-            element_configurations = pipe_element.generate_config_grid()
-            final_configuration_list = []
-            if len(element_configurations) == 0:
-                final_configuration_list.append({})
-            # else:
-            for dict_item in element_configurations:
-                # copy_of_dict_item = {}
-                # for key, value in dict_item.items():
-                #     copy_of_dict_item[self.name + '__' + key] = value
-                final_configuration_list.append(dict(dict_item))
+            if hasattr(pipe_element, 'generate_config_grid'):
+                element_configurations = pipe_element.generate_config_grid()
+                final_configuration_list = []
+                if len(element_configurations) == 0:
+                    final_configuration_list.append({})
+                # else:
+                for dict_item in element_configurations:
+                    # copy_of_dict_item = {}
+                    # for key, value in dict_item.items():
+                    #     copy_of_dict_item[self.name + '__' + key] = value
+                    final_configuration_list.append(dict(dict_item))
 
             self.pipeline_element_configurations.append(final_configuration_list)
             hyperparameters += [(i, nr) for nr in range(len(final_configuration_list))]

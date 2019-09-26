@@ -101,6 +101,10 @@ class OutputSettings:
         self.wizard_project_name = wizard_project_name
 
     def _update_settings(self, name, timestamp):
+
+        if not os.path.exists(self.project_folder):
+            os.makedirs(self.project_folder)
+
         if self.save_output:
             # Todo: give rights to user if this is done by docker container
             if self.overwrite_results:
@@ -857,7 +861,8 @@ class Hyperpipe(BaseEstimator):
         try:
 
             self._input_data_sanity_checks(data, targets, **kwargs)
-            self._prepare_pipeline()
+            self._pipe = Branch.prepare_photon_pipe(self.elements)
+            self._pipe = Branch.sanity_check_pipeline(self._pipe)
             self.preprocess_data()
 
             if not self.is_final_fit:
@@ -978,21 +983,6 @@ class Hyperpipe(BaseEstimator):
         if self._pipe:
             X, _, _ = self.optimum_pipe.transform(data, y=None, **kwargs)
             return X
-
-    def _prepare_pipeline(self):
-        """
-        build sklearn pipeline from PipelineElements and
-        calculate parameter grid for all combinations of pipeline element hyperparameters
-        """
-        # Todo: make sure no CallbackElement is the last item of the pipeline
-        # prepare pipeline
-        pipeline_steps = []
-        for item in self.elements:
-            # pipeline_steps.append((item.name, item.base_element))
-            pipeline_steps.append((item.name, item))
-
-        # build pipeline...
-        self._pipe = PhotonPipeline(pipeline_steps)
 
     def copy_me(self):
         """
@@ -1228,8 +1218,9 @@ class PhotonModelPersistor:
         element_identifier = list()
 
         for i, element in enumerate(elements):
-            if element.disabled:
-                continue
+            if hasattr(element, 'disabled'):
+                if element.disabled:
+                    continue
 
             if isinstance(element, (Stack, Branch, Preprocessing)):
                 filename = '_' + str(i) + '_' + element.name
