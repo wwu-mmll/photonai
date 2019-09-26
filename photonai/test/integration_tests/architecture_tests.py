@@ -13,6 +13,7 @@ class TestArchitectures(PhotonBaseTest):
 
     @classmethod
     def setUpClass(cls) -> None:
+        super(TestArchitectures, cls).setUpClass()
         n_samples = 40
 
         cls.test_multiple_hyperpipes = False
@@ -61,7 +62,7 @@ class TestArchitectures(PhotonBaseTest):
                          output_settings=OutputSettings(project_folder=tmp_folder, plots=plots),
                          optimizer=optimizer,
                          optimizer_params=optimizer_params,
-                         best_config_metric='score',
+                         best_config_metric='accuracy',
                          metrics=metrics,
                          inner_cv=inner_cv,
                          outer_cv=outer_cv,

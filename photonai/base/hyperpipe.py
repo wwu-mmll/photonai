@@ -1233,7 +1233,10 @@ class PhotonModelPersistor:
                 element_identifier[-1]['mode'] = 'PhotonBuildingBlock'
                 element.elements = elements
             else:
-                base_element = element.base_element
+                if not hasattr(element, 'base_element'):
+                    base_element = element
+                else:
+                    base_element = element.base_element
                 filename = '_' + str(i) + '_' + element.name
                 element_identifier.append({'element_name': element.name, 'filename': filename})
                 if hasattr(base_element, 'save'):

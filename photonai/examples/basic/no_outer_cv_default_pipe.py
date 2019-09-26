@@ -6,7 +6,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 
 X, y = load_boston(True)
 
-os = OutputSettings(save_predictions='all', plots=False, project_folder='./tmp/')
+os = OutputSettings(plots=False, project_folder='./tmp/')
 
 my_pipe = Hyperpipe(name='default_pipe',  # the name of your pipeline
                     metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],  # the performance metrics of interest

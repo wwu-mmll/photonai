@@ -12,7 +12,6 @@ from photonai.neuro.brain_atlas import BrainAtlas
 from photonai.photonlogger.logger import logger
 
 
-
 class NeuroBranch(Branch):
     """
     A substream of neuro elements that are encapsulated into a single block of PipelineElements that all perform

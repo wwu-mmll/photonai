@@ -99,7 +99,7 @@ class AtlasMapper:
         hyperpipe_results = dict()
 
         for roi_name, hyperpipe in self.hyperpipes_to_fit.items():
-            hyperpipe.set_log_level(self.verbosity)
+            hyperpipe.verbosity = self.verbosity
             hyperpipe.fit(X_extracted[self.roi_indices[roi_name]], y, **kwargs)
             hyperpipe_infos[roi_name] = {'hyperpipe_name': hyperpipe.name,
                                          'model_filename': os.path.join(hyperpipe.output_settings.results_folder,

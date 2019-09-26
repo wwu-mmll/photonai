@@ -59,14 +59,15 @@ neuro_branch += PipelineElement('BrainAtlas', hyperparameters={},
 # finally, add your neuro branch to your hyperpipe
 neuro_branch += CallbackElement('NeuroCallback', my_monitor)
 my_pipe += neuro_branch
-#my_pipe += CallbackElement('NeuroCallback', my_monitor)
+# my_pipe += CallbackElement('NeuroCallback', my_monitor)
 
 # now, add standard ML algorithms to your liking
 feature_engineering = Branch('FeatureEngineering')
 feature_engineering += PipelineElement('StandardScaler')
-feature_engineering += CallbackElement('FECallback', my_monitor)
+
 
 my_pipe += feature_engineering
+my_pipe += CallbackElement('FECallback', my_monitor)
 my_pipe += PipelineElement('SVR', hyperparameters={'kernel': Categorical(['rbf', 'linear'])}, gamma='scale')
 
 # NOW TRAIN YOUR PIPELINE
