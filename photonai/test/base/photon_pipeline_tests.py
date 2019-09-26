@@ -1,7 +1,5 @@
 import glob
 import os
-import unittest
-
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
@@ -12,14 +10,15 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
 from sklearn.tree import DecisionTreeClassifier
 
-from photonai.base import PipelineElement, Hyperpipe, Preprocessing, OutputSettings, Stack, Switch, Branch, CallbackElement
+from photonai.base import PipelineElement, Hyperpipe, Preprocessing, OutputSettings, Stack, Switch, Branch, \
+    CallbackElement
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
 from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
-from photonai.test.PhotonBaseTest import PhotonBaseTest
-from photonai.optimization import IntegerRange
+from photonai.test.photon_base_test import PhotonBaseTest
+
 
 # assertEqual(a, b) 	a == b
 # assertNotEqual(a, b) 	a != b
@@ -155,6 +154,7 @@ class PipelineTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(sk_pred, p_pred))
 
     def test_inverse_tansform(self):
+        # simple pipe
         sk_pipe = SKPipeline([("SS", self.sk_ss), ("PCA", self.sk_pca)])
         sk_pipe.fit(self.X, self.y)
         sk_transform = sk_pipe.transform(self.X)
@@ -166,6 +166,15 @@ class PipelineTests(PhotonBaseTest):
         p_inverse_transformed, _, _ = photon_pipe.inverse_transform(p_transform)
 
         self.assertTrue(np.array_equal(sk_inverse_transformed, p_inverse_transformed))
+
+        # now including stack
+        stack = Stack('stack', [self.p_pca])
+        stack_pipeline = PhotonPipeline([("stack", stack), ('StandardScaler', PipelineElement('StandardScaler')),
+                                         ('LinearSVC', PipelineElement('LinearSVC'))])
+        stack_pipeline.fit(self.X, self.y)
+        feature_importances = stack_pipeline.feature_importances_
+        inversed_data, _, _ = stack_pipeline.inverse_transform(feature_importances)
+        self.assertEqual(inversed_data.shape[1], self.X.shape[1])
 
     # Todo: add tests for kwargs
 

@@ -1,10 +1,8 @@
-
-import unittest
 import warnings
-
-from photonai.test.PhotonBaseTest import PhotonBaseTest
-
 from os.path import join, isdir
+
+from photonai.test.photon_base_test import PhotonBaseTest
+
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
 warnings.filterwarnings("ignore", category=FutureWarning)

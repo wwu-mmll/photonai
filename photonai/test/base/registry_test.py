@@ -1,13 +1,11 @@
 import os
-import unittest
-
 
 import numpy as np
 from sklearn.model_selection import KFold
 
 from photonai.base import PhotonRegistry
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class RegistryTest(PhotonBaseTest):

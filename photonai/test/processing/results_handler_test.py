@@ -1,17 +1,15 @@
-import unittest
 import os
-from io import StringIO
-import pandas as pd
-import numpy as np
-import pickle
 import shutil
+from io import StringIO
 
-from sklearn.model_selection import KFold
+import numpy as np
+import pandas as pd
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, OutputSettings, Stack
+from photonai.base import Hyperpipe, OutputSettings
 from photonai.base import PipelineElement
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class ResultsHandlerTest(PhotonBaseTest):

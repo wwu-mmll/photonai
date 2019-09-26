@@ -1,27 +1,28 @@
-import os
-import unittest
-import numpy as np
 import datetime
+import os
 import shutil
+import unittest
 
+import numpy as np
 from sklearn.datasets import load_breast_cancer
-from sklearn.model_selection import KFold
 from sklearn.decomposition.pca import PCA
-from sklearn.ensemble import RandomForestClassifier
-from sklearn.preprocessing import StandardScaler
-from sklearn.pipeline import Pipeline as SKLPipeline
 from sklearn.dummy import DummyRegressor, DummyClassifier
+from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import KFold
+from sklearn.pipeline import Pipeline as SKLPipeline
+from sklearn.preprocessing import StandardScaler
 
-from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, Switch
-from photonai.optimization import IntegerRange, Categorical
-from photonai.test.PhotonBaseTest import PhotonBaseTest
-from photonai.test.base.photon_elements_tests import elements_to_dict
+from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
+    Switch
 from photonai.neuro import NeuroBranch
+from photonai.optimization import IntegerRange, Categorical
+from photonai.processing.results_handler import ResultsHandler
 from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, FoldOperations, \
     MDBInnerFold, MDBOuterFold, MDBScoreInformation, MDBDummyResults, MDBHyperpipe
-from photonai.processing.results_handler import ResultsHandler
-from photonai.test.base.photon_pipeline_tests import DummyYAndCovariatesTransformer
 from photonai.test.base.dummy_elements import DummyTransformer
+from photonai.test.base.photon_elements_tests import elements_to_dict
+from photonai.test.base.photon_pipeline_tests import DummyYAndCovariatesTransformer
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class HyperpipeTests(PhotonBaseTest):
@@ -50,10 +51,10 @@ class HyperpipeTests(PhotonBaseTest):
         self.__y = dataset.target
 
     def test_init(self):
-        # test that all initi paramters can be retrieved via the cleaned up subclasses
+        # test that all init parameters can be retrieved via the cleaned up subclasses
         self.assertEqual(self.hyperpipe.name, 'god')
 
-        # in case don't give infomartion, check for the default parameters, otherwise for the infos given in setUp
+        # in case don't give information, check for the default parameters, otherwise for the infos given in setUp
         # Cross Validation
         self.assertIsNotNone(self.hyperpipe.cross_validation)
         self.assertEqual(self.hyperpipe.cross_validation.inner_cv, self.inner_cv_object)
@@ -161,21 +162,6 @@ class HyperpipeTests(PhotonBaseTest):
         copy2.cross_validation.inner_cv.n_splits = 10
         self.assertEqual(copy2.cross_validation.inner_cv.n_splits, 10)
         self.assertEqual(self.hyperpipe.cross_validation.inner_cv.n_splits, 3)
-
-    def recursive_assertion(self, element_a, element_b):
-        if isinstance(element_a, dict):
-            for key in element_a.keys():
-                self.recursive_assertion(element_a[key], element_b[key])
-        elif isinstance(element_a, np.ndarray):
-            np.testing.assert_array_equal(element_a, element_b)
-        elif isinstance(element_a, list):
-            for i, _ in enumerate(element_a):
-                self.recursive_assertion(element_a[i], element_b[i])
-        elif isinstance(element_a, tuple):
-            for i in range(len(element_a)):
-                self.recursive_assertion(element_a[i], element_b[i])
-        else:
-            self.assertEqual(element_a, element_b)
 
     def test_save_optimum_pipe(self):
         # todo: test .save() of custom model
@@ -372,7 +358,7 @@ class HyperpipeTests(PhotonBaseTest):
                                                     'photon_best_model.photon')))
 
         # backmapping
-        # because the pca is best disabled, we expect the number of features
+        # because the pca is test disabled, we expect the number of features
         self.assertEqual(len(self.hyperpipe.results.best_config_feature_importances[0]), self.__X.shape[1])
         backmapped_feature_importances = os.path.join(self.hyperpipe.output_settings.results_folder,
                                                       'optimum_pipe_feature_importances_backmapped.npz')

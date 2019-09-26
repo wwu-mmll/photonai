@@ -14,7 +14,7 @@ from photonai.optimization import MinimumPerformance
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import FoldOperations
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 # ------------------------------------------------------------

@@ -836,7 +836,7 @@ class Stack(PipelineElement):
         ps.base_element = self.base_element
         return ps
 
-    def inverse_transform(self, X, **kwargs):
+    def inverse_transform(self, X, y=None, **kwargs):
         raise NotImplementedError("Inverse Transform is not yet implemented for a Stacking Element in PHOTON")
 
     @property

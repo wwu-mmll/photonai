@@ -9,7 +9,7 @@ from photonai.optimization import DummyPerformance, MinimumPerformance, GridSear
 from photonai.processing.outer_folds import OuterFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBOuterFold, FoldOperations, MDBHelper
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class OuterFoldTests(PhotonBaseTest):

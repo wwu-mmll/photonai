@@ -1,6 +1,3 @@
-import unittest
-
-
 import numpy as np
 import statsmodels.api as sm
 from scipy.linalg import cholesky
@@ -10,7 +7,7 @@ from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.preprocessing import StandardScaler
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class ConfounderRemovalTests(PhotonBaseTest):

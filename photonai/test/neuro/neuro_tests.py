@@ -1,7 +1,5 @@
 import glob
 import os
-import unittest
-from shutil import rmtree
 
 import numpy as np
 from nibabel.nifti1 import Nifti1Image
@@ -14,7 +12,7 @@ from photonai.base.photon_pipeline import CacheManager
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import BrainMask, AtlasLibrary, BrainAtlas
 from photonai.processing import ResultsHandler
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class NeuroTest(PhotonBaseTest):
