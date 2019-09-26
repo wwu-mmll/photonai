@@ -84,7 +84,7 @@ class OuterFoldManager:
         # write numbers to database info object
         self.result_object.number_samples_validation = self._validation_y.shape[0]
         self.result_object.number_samples_test = self._test_y.shape[0]
-        if self.optimization_info.maximize_metric:
+        if self._pipe._estimator_type == "classifier":
             self.result_object.class_distribution_validation = FoldInfo.data_overview(self._validation_y)
             self.result_object.class_distribution_test = FoldInfo.data_overview(self._test_y)
 

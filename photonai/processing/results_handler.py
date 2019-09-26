@@ -639,7 +639,7 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
         text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
 
         for outer_fold in result_tree.outer_folds:
-            text_list.append(self.print_outer_fold(outer_fold))
+            text_list.append(self.print_outer_fold(outer_fold, result_tree.hyperpipe_info.estimation_type))
 
         final_text = ''.join(text_list)
 
@@ -675,7 +675,7 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
 
         return text
 
-    def print_outer_fold(self, outer_fold):
+    def print_outer_fold(self, outer_fold, estimation_type="classifier"):
 
         pp = pprint.PrettyPrinter(indent=4)
         outer_fold_text = []
@@ -689,16 +689,20 @@ Best Config:
 {}
 
 Number of samples training {}
-Class distribution training {}
 Number of samples test {}
-Class distribution test {}
 
             """.format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config),
                        outer_fold.best_config.best_config_score.number_samples_training,
-                       outer_fold.class_distribution_validation,
                        outer_fold.best_config.best_config_score.number_samples_validation,
-                       outer_fold.class_distribution_test))
+                       ))
 
+            if estimation_type == "classifier":
+                outer_fold_text.append("""
+Class distribution training {}
+Class distribution test {}
+
+                """.format(outer_fold.class_distribution_validation,
+                           outer_fold.class_distribution_test))
             if outer_fold.best_config.config_failed:
                 outer_fold_text.append("""
 Config Failed: {}            
