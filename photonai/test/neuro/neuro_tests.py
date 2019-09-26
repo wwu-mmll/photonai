@@ -256,7 +256,6 @@ class NeuroTest(PhotonBaseTest):
 
     def test_inverse_transform(self):
         settings = OutputSettings(project_folder=self.tmp_folder_path,
-                                  save_feature_importances='best',
                                   overwrite_results=True)
 
         # DESIGN YOUR PIPELINE
@@ -290,7 +289,8 @@ class NeuroTest(PhotonBaseTest):
         importance_scores_optimum_pipe = handler.results.best_config_feature_importances
 
         manual_img, _, _ = pipe.optimum_pipe.inverse_transform(importance_scores_optimum_pipe, None)
-        img = image.load_img(os.path.join(self.tmp_folder_path, 'Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz')
+        img = image.load_img(os.path.join(self.tmp_folder_path,
+                                          'Limbic_System_results/optimum_pipe_feature_importances_backmapped.nii.gz'))
         self.assertTrue(np.array_equal(manual_img.get_data(), img.get_data()))
 
     def test_all_atlases(self):
