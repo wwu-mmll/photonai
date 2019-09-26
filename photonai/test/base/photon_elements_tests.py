@@ -13,34 +13,7 @@ from photonai.helper.helper import PhotonDataHelper
 from photonai.test.base.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesEstimator, DummyNeedsCovariatesTransformer, DummyNeedsYTransformer, DummyTransformer, \
     DummyNeedsCovariatesAndYTransformer, DummyEstimatorNoPredict, DummyEstimatorWrongType, DummyTransformerWithPredict
-
-
-def elements_to_dict(elements):
-    if isinstance(elements, dict):
-        new_dict = dict()
-        for name, element in elements.items():
-            new_dict[name] = elements_to_dict(element)
-        elements = new_dict
-    elif isinstance(elements, list):
-        new_list = list()
-        for element in elements:
-            new_list.append(elements_to_dict(element))
-        elements = new_list
-    elif isinstance(elements, tuple):
-        new_list = list()
-        for element in elements:
-            new_list.append(elements_to_dict(element))
-        elements = tuple(new_list)
-    elif hasattr(elements, '__dict__'):
-        new_dict = dict()
-        elements = elements.__dict__
-        for name, element in elements.items():
-            new_dict[name] = elements_to_dict(element)
-        elements = new_dict
-    else:
-        if not isinstance(elements, (str, float, int, complex, np.ndarray)):
-            return None
-    return elements
+from photonai.test.photon_base_test import elements_to_dict
 
 
 class PipelineElementTests(unittest.TestCase):

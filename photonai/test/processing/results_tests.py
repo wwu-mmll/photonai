@@ -10,7 +10,7 @@ from sklearn.model_selection import KFold
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import IntegerRange, FloatRange, Categorical
 from photonai.processing.results_structure import MDBHelper, FoldOperations
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class XPredictor(BaseEstimator, ClassifierMixin):

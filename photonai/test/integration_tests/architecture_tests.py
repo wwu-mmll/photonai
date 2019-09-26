@@ -1,4 +1,3 @@
-import unittest
 from itertools import product
 
 import numpy as np
@@ -7,7 +6,7 @@ from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut
 
 from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, OutputSettings, Branch, DataFilter
 from photonai.optimization import Categorical, FloatRange, IntegerRange
-from photonai.test.PhotonBaseTest import PhotonBaseTest
+from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class TestArchitectures(PhotonBaseTest):
