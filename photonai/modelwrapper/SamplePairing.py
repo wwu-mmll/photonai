@@ -32,7 +32,6 @@ from photonai.helper.helper import PhotonDataHelper
 from photonai.photonlogger.logger import logger
 
 
-
 class SamplePairingBase(BaseEstimator, TransformerMixin):
 
     @staticmethod
@@ -181,14 +180,14 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
 class SamplePairingRegression(SamplePairingBase):
     _estimator_type = "transformer"
 
-    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, rand_seed=True):
+    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, random_state=45):
 
         self.needs_covariates = True
         self.needs_y = True
         self.generator = generator
         self.distance_metric = distance_metric
         self.draw_limit = draw_limit
-        self.rand_seed = rand_seed
+        self.random_state = random_state
 
     def fit(self, X, y=None, **kwargs):
         return self
@@ -203,13 +202,13 @@ class SamplePairingRegression(SamplePairingBase):
         :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
         :return: X_new: X and X_augmented; (y_new: the correspoding targets)
         """
-        return self._return_samples(X, y, kwargs, self.generator, self.distance_metric, self.draw_limit, self.rand_seed)
+        return self._return_samples(X, y, kwargs, self.generator, self.distance_metric, self.draw_limit, self.random_state)
 
 
 class SamplePairingClassification(SamplePairingBase):
     _estimator_type = "transformer"
 
-    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, rand_seed=True,
+    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, random_state=45,
                  balance_classes=True):
 
         self.needs_covariates = True
@@ -217,7 +216,7 @@ class SamplePairingClassification(SamplePairingBase):
         self.generator = generator
         self.distance_metric = distance_metric
         self.draw_limit = draw_limit
-        self.rand_seed = rand_seed
+        self.random_state = random_state
         self.balance_classes = balance_classes
 
     def fit(self, X, y=None, **kwargs):
@@ -257,7 +256,7 @@ class SamplePairingClassification(SamplePairingBase):
                                                                               generator=self.generator,
                                                                               distance_metric=self.distance_metric,
                                                                               draw_limit=limit,
-                                                                              rand_seed=self.rand_seed)
+                                                                              rand_seed=self.random_state)
 
             X_extended.extend(X_new_class)
             y_extended.extend(y_new_class)

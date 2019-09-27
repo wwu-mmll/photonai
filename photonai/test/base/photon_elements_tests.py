@@ -113,6 +113,27 @@ class PipelineElementTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             self.pca_pipe_element.set_params(**{'any_weird_param': 1})
 
+    def test_set_random_state(self):
+        # we handle all elements in one method that is inherited so we capture them all in this test
+        random_state = 53
+        my_branch = Branch("random_state_branch")
+        my_branch += PipelineElement("StandardScaler")
+        my_switch = Switch("transformer_Switch")
+        my_switch += PipelineElement("LassoFeatureSelection")
+        my_switch += PipelineElement("PCA")
+        my_branch += my_switch
+        my_stack = Stack("Estimator_Stack")
+        my_stack += PipelineElement("SVR")
+        my_stack += PipelineElement("Ridge")
+        my_branch += my_stack
+        my_branch += PipelineElement("ElasticNet")
+
+        my_branch.random_state = random_state
+        self.assertTrue(my_switch.elements[1].random_state == random_state)
+        self.assertTrue(my_switch.elements[1].base_element.random_state == random_state)
+        self.assertTrue(my_stack.elements[1].random_state == random_state)
+        self.assertTrue(my_stack.elements[1].base_element.random_state == random_state)
+
     def test_adjusted_delegate_call_transformer(self):
         # check standard transformer
         trans = PipelineElement.create('Transformer', base_element=DummyTransformer(), hyperparameters={})
@@ -180,6 +201,7 @@ class PipelineElementTests(unittest.TestCase):
         svc.set_params(**{'C': 0.1, 'kernel': 'sigmoid'})
         copy = svc.copy_me()
 
+        self.assertEqual(svc.random_state, copy.random_state)
         self.assertNotEqual(copy.base_element, svc.base_element)
         self.assertDictEqual(elements_to_dict(copy), elements_to_dict(svc))
         self.assertEqual(copy.base_element.C, svc.base_element.C)
@@ -391,11 +413,14 @@ class SwitchTests(unittest.TestCase):
         for switch in switches:
             copy = switch.copy_me()
 
+            self.assertEqual(switch.random_state, copy.random_state)
+
             for i, element in enumerate(copy.elements):
                 self.assertNotEqual(copy.elements[i], switch.elements[i])
 
             switch = elements_to_dict(switch)
             copy = elements_to_dict(copy)
+
 
             self.assertDictEqual(copy, switch)
 
@@ -526,6 +551,7 @@ class BranchTests(unittest.TestCase):
         branch = Branch('MyBranch', [self.scaler, self.pca])
 
         copy = branch.copy_me()
+        self.assertEqual(branch.random_state, copy.random_state)
         self.assertDictEqual(elements_to_dict(copy), elements_to_dict(branch))
 
         copy = branch.copy_me()
@@ -651,6 +677,7 @@ class StackTests(unittest.TestCase):
         for stack in self.stacks:
             stack = stack[1]
             copy = stack.copy_me()
+            self.assertEqual(stack.random_state, copy.random_state)
             self.assertFalse(stack.elements[0].__dict__ == copy.elements[0].__dict__)
             self.assertDictEqual(elements_to_dict(stack), elements_to_dict(copy))
 

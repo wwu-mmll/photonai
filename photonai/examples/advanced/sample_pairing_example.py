@@ -16,7 +16,8 @@ my_pipe = Hyperpipe('sample_pairing_example_classification',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=settings)
+                    output_settings=settings,
+                    random_seed=42123)
 
 
 # ADD ELEMENTS TO YOUR PIPELINE

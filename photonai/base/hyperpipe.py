@@ -237,7 +237,7 @@ class Hyperpipe(BaseEstimator):
                  optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
                  best_config_metric=None, eval_final_performance=True, test_size: float = 0.2,
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
-                 set_random_seed: bool=False,
+                 random_seed = False,
                  verbosity=0,
                  output_settings=None,
                  performance_constraints=None,
@@ -297,10 +297,10 @@ class Hyperpipe(BaseEstimator):
 
         self.is_final_fit = False
         self.nr_of_processes = nr_of_processes
-        if set_random_seed:
+        self.random_state = random_seed
+        if random_seed:
             import random
-            random.seed(42)
-            print('set random seed to 42')
+            random.seed(random_seed)
 
     # Helper Classes
     #
@@ -809,6 +809,12 @@ class Hyperpipe(BaseEstimator):
             self.data.X, self.data.y, self.data.kwargs = self.preprocessing.transform(self.data.X, self.data.y,
                                                                                       **self.data.kwargs)
 
+    def _prepare_pipeline(self):
+        self._pipe = Branch.prepare_photon_pipe(self.elements)
+        self._pipe = Branch.sanity_check_pipeline(self._pipe)
+        if self.random_state:
+            self._pipe.random_state = self.random_state
+
     @property
     def estimation_type(self):
         estimation_type = getattr(self.elements[-1], '_estimator_type')
@@ -861,8 +867,7 @@ class Hyperpipe(BaseEstimator):
         try:
 
             self._input_data_sanity_checks(data, targets, **kwargs)
-            self._pipe = Branch.prepare_photon_pipe(self.elements)
-            self._pipe = Branch.sanity_check_pipeline(self._pipe)
+            self._prepare_pipeline()
             self.preprocess_data()
 
             if not self.is_final_fit:

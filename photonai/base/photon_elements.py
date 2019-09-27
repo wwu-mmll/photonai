@@ -117,6 +117,22 @@ class PipelineElement(BaseEstimator):
         else:
             self.needs_covariates = False
 
+        self._random_state = False
+
+    @property
+    def random_state(self):
+        return self._random_state
+
+    @random_state.setter
+    def random_state(self, random_state):
+        self._random_state = random_state
+        if hasattr(self, 'elements'):
+            for el in self.elements:
+                if hasattr(el, 'random_state'):
+                    el.random_state = self._random_state
+        if hasattr(self, "base_element") and hasattr(self.base_element, "random_state"):
+            self.base_element.random_state = random_state
+
     @property
     def _estimator_type(self):
         if hasattr(self.base_element, '_estimator_type'):
@@ -156,6 +172,7 @@ class PipelineElement(BaseEstimator):
                                           **self.kwargs)
         if self.current_config is not None:
             copy.set_params(**self.current_config)
+        copy._random_state = self._random_state
         return copy
 
     @classmethod
@@ -570,6 +587,7 @@ class Branch(PipelineElement):
             new_copy_of_me += copy_item
         if self.current_config is not None:
             new_copy_of_me.set_params(**self.current_config)
+        new_copy_of_me._random_state = self._random_state
         return new_copy_of_me
 
     @property
@@ -834,6 +852,7 @@ class Stack(PipelineElement):
             new_element = element.copy_me()
             ps += new_element
         ps.base_element = self.base_element
+        ps._random_state = self._random_state
         return ps
 
     def inverse_transform(self, X, y=None, **kwargs):
@@ -902,6 +921,7 @@ class Switch(PipelineElement):
         # we assume we test models against each other, but only guessing
         self.is_estimator = True
         self.is_transformer = True
+        self._random_state = False
 
         self.elements_dict = {}
 
@@ -1053,6 +1073,7 @@ class Switch(PipelineElement):
             new_element = element.copy_me()
             ps += new_element
         ps.base_element = self.base_element
+        ps._random_state = self._random_state
         return ps
 
     def prettify_config_output(self, config_name, config_value, return_dict=False):
