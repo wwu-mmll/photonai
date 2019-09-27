@@ -10,9 +10,9 @@ from photonai.helper.helper import PhotonDataHelper
 
 class PhotonPipeline(_BaseComposition):
 
-    def __init__(self, elements):
+    def __init__(self, elements, random_state=False):
         self.elements = elements
-
+        self.random_state = random_state
         self.current_config = None
         # caching stuff
         self.caching = False
@@ -29,6 +29,7 @@ class PhotonPipeline(_BaseComposition):
 
         # used in parallelization
         self.skip_loading = False
+
 
     def set_lock(self, lock):
         self.cache_man.lock = lock
@@ -149,6 +150,8 @@ class PhotonPipeline(_BaseComposition):
 
         if self._final_estimator is not None:
             fit_start_time = datetime.datetime.now()
+            if self.random_state:
+                self._final_estimator.random_state = self.random_state
             self._final_estimator.fit(X, y, **kwargs)
             n = PhotonDataHelper.find_n(X)
             fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
@@ -303,6 +306,8 @@ class PhotonPipeline(_BaseComposition):
     def _do_timed_fit_transform(self, name, transformer, fit, X, y, **kwargs):
 
         n = PhotonDataHelper.find_n(X)
+        if self.random_state:
+            transformer.random_state = self.random_state
 
         if fit:
             fit_start_time = datetime.datetime.now()
@@ -437,6 +442,7 @@ class PhotonPipeline(_BaseComposition):
             else:
                 pipeline_steps.append((cpy.name, cpy))
         new_pipe = PhotonPipeline(pipeline_steps)
+        new_pipe.random_state = self.random_state
         return new_pipe
 
     @property

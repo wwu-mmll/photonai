@@ -247,6 +247,16 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(tmp_path, os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt'))
         self.assertNotEqual(tmp_date, os.path.getmtime(tmp_path))
 
+    def test_random_state(self):
+        self.hyperpipe.random_state = 4567
+        self.hyperpipe.fit(self.__X, self.__y)
+        # assure we spread the word.. !
+        self.assertEqual(self.hyperpipe.random_state, 4567)
+        self.assertEqual(self.hyperpipe._pipe.random_state, 4567)
+        self.assertEqual(self.hyperpipe.optimum_pipe.random_state, 4567)
+        self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].random_state, 4567)
+        self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].base_element.random_state, 4567)
+
     def test_dummy_estimator_preparation(self):
 
         self.hyperpipe.results = MDBHyperpipe()

@@ -211,6 +211,7 @@ class PipelineTests(PhotonBaseTest):
 
         copy_of_the_pipe = photon_pipe.copy_me()
 
+        self.assertEqual(photon_pipe.random_state, copy_of_the_pipe.random_state)
         self.assertTrue(len(copy_of_the_pipe.elements) == 5)
         self.assertTrue(copy_of_the_pipe.elements[2][1].name == "RandomStack")
         self.assertTrue(copy_of_the_pipe.named_steps["my_copy_switch"].elements[1].test_disabled)
@@ -218,6 +219,14 @@ class PipelineTests(PhotonBaseTest):
                              {"PCA__n_components": [5, 10]})
         self.assertTrue(isinstance(copy_of_the_pipe.elements[3][1], CallbackElement))
         self.assertTrue(copy_of_the_pipe.named_steps["tmp_callback"].delegate_function == np.mean)
+
+    def test_random_state(self):
+        photon_pipe = PhotonPipeline([("SS", self.p_ss), ("PCA", PipelineElement('PCA')), ("SVC", self.p_dt)])
+        photon_pipe.random_state = 666
+        photon_pipe.fit(self.X, self.y)
+        self.assertEqual(self.p_dt.random_state, photon_pipe.random_state)
+        self.assertEqual(photon_pipe.elements[1][-1].random_state, photon_pipe.random_state)
+        self.assertEqual(self.p_dt.random_state, 666)
 
 
 class CacheManagerTests(PhotonBaseTest):
