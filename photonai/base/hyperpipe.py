@@ -28,6 +28,7 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, IntegerRange, FloatRange, Categorical
+from photonai.optimization.smac.smac_new import SMACOptimizer
 from photonai.photonlogger.logger import logger
 from photonai.processing import ResultsHandler
 from photonai.processing.metrics import Scorer
@@ -339,7 +340,8 @@ class Hyperpipe(BaseEstimator):
         OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                                 'random_grid_search': RandomGridSearchOptimizer,
                                 'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
-                                'sk_opt': SkOptOptimizer}  # ,
+                                'sk_opt': SkOptOptimizer,
+                                'smac' : SMACOptimizer}
 
         # 'fabolas': FabolasOptimizer}
 

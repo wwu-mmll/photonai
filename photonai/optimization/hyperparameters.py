@@ -142,9 +142,9 @@ class NumberRange(PhotonHyperparam):
                 values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         # convert to python datatype because mongodb needs it
         if self.num_type == np.int32:
-            self.values = list(set([int(i) for i in values]))
+            self.values = sorted(list(set([int(i) for i in values])))
         elif self.num_type == np.float32:
-            self.values = list(set([float(i) for i in values]))
+            self.values = [float(i) for i in values]
 
     @property
     def range_type(self):
