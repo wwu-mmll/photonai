@@ -165,6 +165,7 @@ class MDBHyperpipe(MongoModel):
 
     computation_completed = fields.BooleanField(default=False)
     computation_start_time = fields.DateTimeField(blank=True)
+    computation_end_time = fields.DateTimeField(blank=True)
     time_of_results = fields.DateTimeField(blank=True)
 
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)

@@ -80,6 +80,7 @@ class InnerFoldManager(object):
                 if not config_item.human_readable_config:
                     config_item.human_readable_config = PhotonPrintHelper.config_to_human_readable_dict(new_pipe,
                                                                                                         self.params)
+                    logger.info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
                 job_data = InnerFoldManager.InnerCVJob(pipe=new_pipe,
                                                        config=dict(self.params),
@@ -142,7 +143,8 @@ class InnerFoldManager(object):
             warnings.warn('One test iteration of pipeline failed with error')
 
         logger.debug('...done with')
-        logger.info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
+        logger.debug('Current Configuration')
+        logger.debug(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
         return config_item
 

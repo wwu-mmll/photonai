@@ -1,5 +1,3 @@
-import time
-
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
@@ -40,10 +38,7 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 
 
 # NOW TRAIN YOUR PIPELINE
-start_time = time.time()
 my_pipe.fit(X, y)
-elapsed_time = time.time() - start_time
-print(time.strftime("%H:%M:%S", time.gmtime(elapsed_time)))
 
 #Investigator.show(my_pipe)
 debug = True
