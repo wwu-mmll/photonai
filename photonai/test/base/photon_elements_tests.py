@@ -14,6 +14,7 @@ from photonai.test.base.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesEstimator, DummyNeedsCovariatesTransformer, DummyNeedsYTransformer, DummyTransformer, \
     DummyNeedsCovariatesAndYTransformer, DummyEstimatorNoPredict, DummyEstimatorWrongType, DummyTransformerWithPredict
 from photonai.test.photon_base_test import elements_to_dict
+from photonai.optimization import GridSearchOptimizer
 
 
 class PipelineElementTests(unittest.TestCase):
@@ -222,6 +223,11 @@ class PipelineElementTests(unittest.TestCase):
         copy = custom_element.copy_me()
         self.assertDictEqual(elements_to_dict(custom_element), elements_to_dict(copy))
 
+        custom_element2 = PipelineElement.create('MyUnDeepcopyableObject', base_element=GridSearchOptimizer(),
+                                                 hyperparameters={})
+        with self.assertRaises(Exception):
+            custom_element2.copy_me()
+
     def test_estimator_type(self):
         estimator = PipelineElement('SVC')
         self.assertEqual(estimator._estimator_type, 'classifier')
@@ -421,7 +427,6 @@ class SwitchTests(unittest.TestCase):
             switch = elements_to_dict(switch)
             copy = elements_to_dict(copy)
 
-
             self.assertDictEqual(copy, switch)
 
     def test_estimator_type(self):
@@ -465,12 +470,24 @@ class SwitchTests(unittest.TestCase):
                                                                             'transformer_switch_with_branch'])
 
         switch = Switch('MySwitch', [PipelineElement('PCA'), PipelineElement('FastICA')])
-        switch = Switch('MySwitch')
+        switch = Switch('MySwitch2')
         switch += PipelineElement('PCA')
         switch += PipelineElement('FastICA')
 
-        with self.assertRaises(Exception):
+        # test doubled names
+        with self.assertRaises(ValueError):
             self.estimator_switch += self.estimator_switch.elements[0]
+        self.estimator_switch += PipelineElement("SVC")
+        self.assertEqual(self.estimator_switch.elements[-1].name, "SVC2")
+        self.estimator_switch += PipelineElement("SVC", hyperparameters={'kernel': ['polynomial', 'sigmoid']})
+        self.assertEqual(self.estimator_switch.elements[-1].name, "SVC3")
+        self.estimator_switch += PipelineElement("SVR")
+        self.assertEqual(self.estimator_switch.elements[-1].name, "SVR")
+        self.estimator_switch += PipelineElement("SVC")
+        self.assertEqual(self.estimator_switch.elements[-1].name, "SVC4")
+
+        # check that hyperparameters are renamed respectively
+        self.assertEqual(self.estimator_switch.pipeline_element_configurations[4][0]["SVC3__kernel"], 'polynomial')
 
     def test_feature_importances(self):
 
@@ -631,6 +648,11 @@ class BranchTests(unittest.TestCase):
         branch += PipelineElement('FastICA')
         self.assertEqual(len(branch.elements), 2)
         self.assertDictEqual(branch._hyperparameters, {'MyBranch__PCA__n_components': [5]})
+
+        # add doubled item
+        branch += PipelineElement('PCA', {'n_components': [10, 20]})
+        self.assertEqual(branch.elements[-1].name, 'PCA2')
+        self.assertDictEqual(branch.hyperparameters, {'MyBranch__PCA__n_components': [5], 'MyBranch__PCA2__n_components': [10, 20]})
 
     def test_feature_importances(self):
 
@@ -811,6 +833,15 @@ class StackTests(unittest.TestCase):
                                   Switch('MySwitch', [PipelineElement('PCA'), PipelineElement('FastICA')]),
                                   Branch('MyBranch', [PipelineElement('PCA')])])
         self.assertEqual(len(stack.elements), 4)
+
+        # test doubled item
+        with self.assertRaises(ValueError):
+            stack += stack.elements[0]
+
+        stack += PipelineElement('PCA', {'n_components': [10, 20]})
+        self.assertEqual(stack.elements[-1].name, 'PCA2')
+        self.assertDictEqual(stack.hyperparameters, {'MyStack__MySwitch__current_element': [(0, 0), (1, 0)],
+                                                     'MyStack__PCA2__n_components': [10, 20]})
 
     def test_feature_importances(self):
         # single item
