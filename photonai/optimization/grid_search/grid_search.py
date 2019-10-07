@@ -7,7 +7,6 @@ from photonai.optimization.config_grid import create_global_config_grid
 from photonai.photonlogger.logger import logger
 
 
-
 class GridSearchOptimizer(PhotonBaseOptimizer):
     """
     Searches for the best configuration by iteratively testing all possible hyperparameter combinations.
