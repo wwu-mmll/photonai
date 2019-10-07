@@ -15,16 +15,18 @@ logger = logging.getLogger('PHOTON')
 handler = logging.StreamHandler(stream=sys.stdout)
 logger.addHandler(handler)
 
+VERBOSE_LEVELV_NUM = 25
+
 
 # add custom log level
-def verbose(self, message, *args, **kws):
+def photon_system_log(self, message, *args, **kws):
     # Yes, logger takes its '*args' as 'args'.
-    self._log(VERBOSE_LEVELV_NUM, message, args, **kws)
+    if self.isEnabledFor(VERBOSE_LEVELV_NUM):
+        self._log(VERBOSE_LEVELV_NUM, message, args, **kws)
 
 
-VERBOSE_LEVELV_NUM = 15
-logging.addLevelName(VERBOSE_LEVELV_NUM, "VERBOSE")
-logging.Logger.verbose = verbose
+logging.addLevelName(VERBOSE_LEVELV_NUM, "PHOTON_SYSTEM_LOG")
+logging.Logger.photon_system_log = photon_system_log
 
 
 

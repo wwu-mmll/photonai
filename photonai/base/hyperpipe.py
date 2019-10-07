@@ -9,6 +9,8 @@ import re
 import shutil
 import traceback
 import zipfile
+import json
+import time
 from copy import deepcopy
 
 import __main__
@@ -21,6 +23,7 @@ from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier, DummyRegressor
 from sklearn.externals import joblib
 from sklearn.model_selection._split import BaseCrossValidator
+from sklearn.model_selection import KFold
 
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
@@ -234,12 +237,12 @@ class Hyperpipe(BaseEstimator):
                             verbose=2)
 
    """
-    def __init__(self, name, inner_cv: BaseCrossValidator, outer_cv=None,
+    def __init__(self, name, inner_cv: BaseCrossValidator = KFold(n_splits=3), outer_cv=None,
                  optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
                  best_config_metric=None, eval_final_performance=True, test_size: float = 0.2,
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
-                 random_seed = False,
-                 verbosity=0,
+                 random_seed=False,
+                 verbosity=1,
                  output_settings=None,
                  performance_constraints=None,
                  permutation_id: str=None,
@@ -302,6 +305,8 @@ class Hyperpipe(BaseEstimator):
         if random_seed:
             import random
             random.seed(random_seed)
+
+        self.set_log_level(self.output_settings.log_file)
 
     # Helper Classes
     #
@@ -456,10 +461,15 @@ class Hyperpipe(BaseEstimator):
                     best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
 
                 # inform user
-                logger.debug('Number of tested configurations:' + str(len(tested_configs)))
                 logger.debug('Optimizer metric: ' + self.best_config_metric + '\n' +
-                                 '   --> Greater is better: ' + str(self.maximize_metric))
-                logger.info('Best config: ' + str(best_config_outer_fold.human_readable_config))
+                             '   --> Maximize metric: ' + str(self.maximize_metric))
+
+                logger.photon_system_log('Number of tested configurations: ' + str(len(tested_configs)))
+                logger.photon_system_log('------------------------------------------------------------------------')
+                logger.photon_system_log('BEST_CONFIG ')
+                logger.photon_system_log('------------------------------------------------------------------------')
+                logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
+                                                    sort_keys=True))
 
                 return best_config_outer_fold
             except BaseException as e:
@@ -483,9 +493,9 @@ class Hyperpipe(BaseEstimator):
 
     def set_log_level(self, logfile):
         if self.verbosity == 0:
-            level = logging.INFO
+            level = 25
         elif self.verbosity == 1:
-            level = 15
+            level = logging.INFO
         elif self.verbosity == 2:
             level = logging.DEBUG
         else:
@@ -540,7 +550,6 @@ class Hyperpipe(BaseEstimator):
         self.__iadd__(pipe_element)
 
     def _prepare_dummy_estimator(self):
-        logger.info("Running Dummy Estimator.")
         self.results.dummy_estimator = MDBDummyResults()
 
         if self.estimation_type == 'regressor':
@@ -627,26 +636,26 @@ class Hyperpipe(BaseEstimator):
         self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
                                                                                                             self.optimization.metrics)
 
-        # save result tree to db or file or both
-        logger.info('Finished hyperparameter optimization!')
-
         # Find best config across outer folds
         best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
         self.best_config = best_config.config_dict
         self.results.best_config = best_config
-        logger.info('OVERALL BEST CONFIGURATION')
-        logger.info('--------------------------')
-        logger.info(self.results.best_config.human_readable_config)
+
+        logger.photon_system_log('')
+        logger.photon_system_log('***********************************************************************')
+        logger.photon_system_log('OVERALL BEST CONFIGURATION')
+        logger.photon_system_log('***********************************************************************')
+        logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
 
         # save results again
         self.results.time_of_results = datetime.datetime.now()
         self.results.computation_completed = True
         self.results_handler.save()
-        logger.info("Saved overall best config to database ")
 
         # write all convenience files (summary, predictions_file and plots)
         self.results_handler.write_convenience_files()
 
+        logger.info("Fitting best model...")
         # set self to best config
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config)
@@ -660,7 +669,6 @@ class Hyperpipe(BaseEstimator):
         # (otherwise inverse_transform won't work for BrainAtlas/Mask)
         self.disable_multiprocessing_recursively(self.optimum_pipe)
 
-        logger.info("Fitting best model...")
         self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
         # Before saving the optimum pipe, add preprocessing
@@ -670,13 +678,12 @@ class Hyperpipe(BaseEstimator):
         self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
         if self.output_settings.save_output:
-            logger.info("Saving best model...")
             try:
                 pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
                 PhotonModelPersistor.save_optimum_pipe(self, pretrained_model_filename)
-                logger.info("Saved optimum pipe model to file")
+                logger.info("Saved best model to file.")
             except FileNotFoundError as e:
-                logger.info("Could not save optimum pipe model to file")
+                logger.info("Could not save best model to file")
                 logger.error(str(e))
 
             # get feature importances of optimum pipe
@@ -694,6 +701,18 @@ class Hyperpipe(BaseEstimator):
             # save backmapping
             self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
                                                   backmapping=backmapping)
+
+        self.results.computation_end_time = datetime.datetime.now()
+        elapsed_time = self.results.computation_end_time - self.results.computation_start_time
+        logger.photon_system_log('************************************************************************')
+        logger.photon_system_log(
+            'Analysis ' + self.name + " done in " + str(elapsed_time))
+        if self.output_settings.results_folder is not None:
+            logger.photon_system_log('Your results are stored in ' + self.output_settings.results_folder)
+        logger.photon_system_log('*')
+        logger.photon_system_log('PHOTON v1.0.0 - www.photon-ai.com ')
+        logger.photon_system_log('************************************************************************')
+
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):
@@ -771,7 +790,7 @@ class Hyperpipe(BaseEstimator):
             logger.error("Removing Nans in target vector failed: " + str(e))
             pass
 
-        logger.info("Hyperpipe is training with " + str(self.data.y.shape[0]) + " samples.")
+        logger.info("Running analysis with " + str(self.data.y.shape[0]) + " samples.")
 
     # @staticmethod
     # def prepare_caching(cache_folder):
@@ -806,7 +825,7 @@ class Hyperpipe(BaseEstimator):
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
         if self.preprocessing is not None:
-            logger.info("Applying preprocessing.")
+            logger.info("Applying preprocessing steps...")
             self.preprocessing.fit(self.data.X, self.data.y, **self.data.kwargs)
             self.data.X, self.data.y, self.data.kwargs = self.preprocessing.transform(self.data.X, self.data.y,
                                                                                       **self.data.kwargs)
@@ -862,6 +881,13 @@ class Hyperpipe(BaseEstimator):
             Returns self
 
         """
+        # configure logging
+        self.set_log_level(self.output_settings.log_file)
+        logger.photon_system_log('************************************************************************')
+        logger.photon_system_log('PHOTON ANALYSIS: ' + self.name)
+        logger.photon_system_log('************************************************************************')
+        logger.info("Preparing data and PHOTON objects for analysis...")
+
         # loop over outer cross validation
         if self.nr_of_processes > 1:
             hyperpipe_client = Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
@@ -880,9 +906,6 @@ class Hyperpipe(BaseEstimator):
                 # update output options to add pipe name and timestamp to results folder
                 self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
 
-                # configure logging
-                self.set_log_level(self.output_settings.log_file)
-
                 # Outer Folds
                 outer_folds = FoldInfo.generate_folds(self.cross_validation.outer_cv,
                                                       self.data.X, self.data.y, self.data.kwargs,
@@ -896,13 +919,11 @@ class Hyperpipe(BaseEstimator):
                 dummy_estimator = self._prepare_dummy_estimator()
 
                 if self.cache_folder is not None:
-                    logger.info("Removing Cache Files")
+                    logger.info("Removing cache files...")
                     CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
                 # loop over outer cross validation
                 for i, outer_f in enumerate(outer_folds):
-                    logger.info('HYPERPARAMETER SEARCH OF {0}, Outer Cross validation Fold {1}'
-                                .format(self.name, outer_f.fold_nr))
 
                     # 1. generate OuterFolds Object
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)

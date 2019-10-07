@@ -9,7 +9,9 @@ from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, OutputSettings
 from photonai.base import PipelineElement
+from photonai.processing import ResultsHandler
 from photonai.test.photon_base_test import PhotonBaseTest
+from photonai.processing.results_structure import MDBHyperpipe
 
 
 class ResultsHandlerTest(PhotonBaseTest):
@@ -200,3 +202,24 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.assertIsNone(self.hyperpipe.results.plot_true_pred())
         self.assertIsNone(self.hyperpipe.results.plot_confusion_matrix())
         self.assertIsNone(self.hyperpipe.results.plot_roc_curve())
+
+    def test_load_from_file(self):
+        X, y = load_breast_cancer(True)
+        my_pipe = Hyperpipe('load_results_file_test',
+                            metrics=['accuracy'],
+                            best_config_metric='accuracy',
+                            output_settings=OutputSettings(project_folder='./tmp'))
+        my_pipe += PipelineElement("StandardScaler")
+        my_pipe += PipelineElement("SVC")
+        my_pipe.fit(X, y)
+
+        results_file = os.path.join(my_pipe.output_settings.results_folder, "photon_result_file.p")
+        my_result_handler = ResultsHandler()
+        my_result_handler.load_from_file(results_file)
+        self.assertIsInstance(my_result_handler.results, MDBHyperpipe)
+
+    def test_get_performance_table(self):
+        pass
+
+    def test_load_from_mongodb(self):
+        pass

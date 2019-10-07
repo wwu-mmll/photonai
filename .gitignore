@@ -3,6 +3,9 @@ configuration.ini
 
 photonai/photonai
 
+**/tmp
+**/cache
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

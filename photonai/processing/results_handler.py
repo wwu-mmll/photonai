@@ -648,7 +648,6 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
             text_file = open(summary_filename, "w")
             text_file.write(final_text)
             text_file.close()
-            logger.info("Saved results to summary file.")
         except OSError as e:
             logger.error("Could not write summary file")
             logger.error(str(e))
