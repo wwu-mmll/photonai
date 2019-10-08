@@ -42,6 +42,8 @@ class InnerFoldTests(PhotonBaseTest):
                                      self.cross_validation, self.outer_fold_id)
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
+        self.assertIsNotNone(photon_results_config_item.computation_start_time)
+        self.assertIsNotNone(photon_results_config_item.computation_end_time)
 
         # now sklearn.
         sklearn_pipe = Pipeline([('StandardScaler', StandardScaler()),

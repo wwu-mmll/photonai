@@ -25,6 +25,7 @@ from sklearn.externals import joblib
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.model_selection import KFold
 
+from photonai.__init__ import __version__
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
     PhotonNative
@@ -100,6 +101,10 @@ class OutputSettings:
         self.save_predictions_from_best_config_inner_folds = None
         self.plots = plots
 
+        # logging file handler
+        self.logging_file_handler = None
+        self.verbosity = 0
+
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
@@ -121,9 +126,39 @@ class OutputSettings:
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
 
             self.log_file = self._add_timestamp(self.log_file)
+            self.set_log_file()
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
+
+    def _get_log_level(self):
+        if self.verbosity == 0:
+            level = 25
+        elif self.verbosity == 1:
+            level = logging.INFO  # 20
+        elif self.verbosity == 2:
+            level = logging.DEBUG  # 10
+        else:
+            level = logging.WARN  # 30
+        return level
+
+    def set_log_file(self):
+        logfile_directory = os.path.dirname(self.log_file)
+        if not os.path.exists(logfile_directory):
+            os.makedirs(logfile_directory)
+        if self.logging_file_handler is None:
+            self.logging_file_handler = logging.FileHandler(self.log_file)
+            self.logging_file_handler.setLevel(self._get_log_level())
+            logger.addHandler(self.logging_file_handler)
+        else:
+            self.logging_file_handler.close()
+            self.logging_file_handler.baseFilename = self.log_file
+
+    def set_log_level(self):
+        verbose_num = self._get_log_level()
+        logger.setLevel(verbose_num)
+        for handler in logger.handlers:
+            handler.setLevel(verbose_num)
 
 
 class Hyperpipe(BaseEstimator):
@@ -276,7 +311,6 @@ class Hyperpipe(BaseEstimator):
             self.output_settings = output_settings
         else:
             self.output_settings = OutputSettings()
-        self.verbosity = verbosity
         self.results_handler = None
         self.results = None
         self.best_config = None
@@ -306,7 +340,12 @@ class Hyperpipe(BaseEstimator):
             import random
             random.seed(random_seed)
 
-        self.set_log_level(self.output_settings.log_file)
+        # initialize logging
+
+        # update output options to add pipe name and timestamp to results folder
+        self._verbosity = 0
+        self.verbosity = verbosity
+        self.output_settings.set_log_file()
 
     # Helper Classes
     #
@@ -464,10 +503,10 @@ class Hyperpipe(BaseEstimator):
                 logger.debug('Optimizer metric: ' + self.best_config_metric + '\n' +
                              '   --> Maximize metric: ' + str(self.maximize_metric))
 
-                logger.photon_system_log('Number of tested configurations: ' + str(len(tested_configs)))
-                logger.photon_system_log('------------------------------------------------------------------------')
+                logger.info('Number of tested configurations: ' + str(len(tested_configs)))
+                logger.photon_system_log('---------------------------------------------------------------------------------------------------------------')
                 logger.photon_system_log('BEST_CONFIG ')
-                logger.photon_system_log('------------------------------------------------------------------------')
+                logger.photon_system_log('---------------------------------------------------------------------------------------------------------------')
                 logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
                                                     sort_keys=True))
 
@@ -491,28 +530,19 @@ class Hyperpipe(BaseEstimator):
             best_config = outer_folds[best_config_metric_nr].best_config
             return best_config
 
-    def set_log_level(self, logfile):
-        if self.verbosity == 0:
-            level = 25
-        elif self.verbosity == 1:
-            level = logging.INFO
-        elif self.verbosity == 2:
-            level = logging.DEBUG
-        else:
-            level = logging.WARN
-
-        logger = logging.getLogger('PHOTON')
-        logger.setLevel(level)
-        for handler in logger.handlers:
-            handler.setLevel(level)
-
-        fh = logging.FileHandler(logfile)
-        fh.setLevel(level)
-        logger.addHandler(fh)
-
     # Pipeline Management & Interface
     #
     #
+    @property
+    def verbosity(self):
+        return self._verbosity
+
+    @verbosity.setter
+    def verbosity(self, value):
+        self._verbosity = value
+        self.output_settings.verbosity = self._verbosity
+        self.output_settings.set_log_level()
+
     def __iadd__(self, pipe_element):
         """
         Add an element to the machine learning pipeline
@@ -565,7 +595,7 @@ class Hyperpipe(BaseEstimator):
 
     def _prepare_result_logging(self, start_time):
 
-        self.results = MDBHyperpipe(name=self.name)
+        self.results = MDBHyperpipe(name=self.name, version=__version__)
         self.results.hyperpipe_info = MDBHyperpipeInfo()
 
         # in case eval final performance is false, we have no outer fold predictions
@@ -622,6 +652,11 @@ class Hyperpipe(BaseEstimator):
         # 2. finding overall best config
         # 3. training model with best config
         # 4. persisting best model
+        logger.clean_info('')
+        logger.clean_info(
+            '***************************************************************************************************************')
+        logger.info("Finished all outer fold hyperparameter optimizations.")
+        logger.info("Now analysing the results...")
 
         # computer dummy metrics
         config_item = MDBConfig()
@@ -642,9 +677,11 @@ class Hyperpipe(BaseEstimator):
         self.results.best_config = best_config
 
         logger.photon_system_log('')
-        logger.photon_system_log('***********************************************************************')
+        logger.photon_system_log(
+            '===============================================================================================================')
         logger.photon_system_log('OVERALL BEST CONFIGURATION')
-        logger.photon_system_log('***********************************************************************')
+        logger.photon_system_log(
+            '===============================================================================================================')
         logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
 
         # save results again
@@ -704,15 +741,13 @@ class Hyperpipe(BaseEstimator):
 
         self.results.computation_end_time = datetime.datetime.now()
         elapsed_time = self.results.computation_end_time - self.results.computation_start_time
-        logger.photon_system_log('************************************************************************')
+        logger.photon_system_log('')
         logger.photon_system_log(
             'Analysis ' + self.name + " done in " + str(elapsed_time))
         if self.output_settings.results_folder is not None:
             logger.photon_system_log('Your results are stored in ' + self.output_settings.results_folder)
-        logger.photon_system_log('*')
-        logger.photon_system_log('PHOTON v1.0.0 - www.photon-ai.com ')
-        logger.photon_system_log('************************************************************************')
-
+        logger.photon_system_log('***************************************************************************************************************')
+        logger.photon_system_log('PHOTON ' + str(__version__) + ' - www.photon-ai.com ')
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):
@@ -734,6 +769,7 @@ class Hyperpipe(BaseEstimator):
         # 1. Make to numpy arrays
         # 2. erase all Nan targets
 
+        logger.info("Checking input data...")
         self.data.X = data
         self.data.y = targets
         self.data.kwargs = kwargs
@@ -881,11 +917,14 @@ class Hyperpipe(BaseEstimator):
             Returns self
 
         """
-        # configure logging
-        self.set_log_level(self.output_settings.log_file)
-        logger.photon_system_log('************************************************************************')
+
+        # switch to result output folder
+        start = datetime.datetime.now()
+        self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
+
+        logger.photon_system_log('***************************************************************************************************************')
         logger.photon_system_log('PHOTON ANALYSIS: ' + self.name)
-        logger.photon_system_log('************************************************************************')
+        logger.photon_system_log('***************************************************************************************************************')
         logger.info("Preparing data and PHOTON objects for analysis...")
 
         # loop over outer cross validation
@@ -893,18 +932,16 @@ class Hyperpipe(BaseEstimator):
             hyperpipe_client = Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
 
         try:
-
+            # check data
             self._input_data_sanity_checks(data, targets, **kwargs)
+            # create photon pipeline
             self._prepare_pipeline()
+            # initialize the progress monitors
+            self._prepare_result_logging(start)
+            # apply preprocessing
             self.preprocess_data()
 
             if not self.is_final_fit:
-
-                start = datetime.datetime.now()
-                self._prepare_result_logging(start)
-
-                # update output options to add pipe name and timestamp to results folder
-                self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
 
                 # Outer Folds
                 outer_folds = FoldInfo.generate_folds(self.cross_validation.outer_cv,
@@ -1311,6 +1348,11 @@ class PhotonModelPersistor:
 
         PhotonModelPersistor.save_elements(optimum_pipe.elements, folder)
 
+        # write meta infos from pipeline
+        with open(os.path.join(folder, '_optimum_pipe_meta.pkl'), 'wb') as f:
+            meta_infos = {'photon_version': __version__}
+            pickle.dump(meta_infos, f)
+
         # get all files
         files = list()
         for root, directories, filenames in os.walk(folder):
@@ -1381,11 +1423,21 @@ class PhotonModelPersistor:
         else:
             raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
 
-        element_list = PhotonModelPersistor.load_elements(folder=os.path.join(folder, 'photon_best_model'))
+        load_folder = os.path.join(folder, 'photon_best_model')
+        meta_infos = {}
+        try:
+            with open(os.path.join(load_folder, '_optimum_pipe_meta.pkl'), 'rb') as f:
+                meta_infos = pickle.load(f)
+        except:
+            print("Could not load meta information for optimum pipe")
+
+        element_list = PhotonModelPersistor.load_elements(folder=load_folder)
 
         # delete unpacked folder to clean up
         # ToDo: Don't unpack at all, but use PHOTON file directly
         from shutil import rmtree
         rmtree(os.path.join(folder, 'photon_best_model'), ignore_errors=True)
 
-        return PhotonPipeline(element_list)
+        photon_pipe = PhotonPipeline(element_list)
+        photon_pipe._meta_information = meta_infos
+        return photon_pipe

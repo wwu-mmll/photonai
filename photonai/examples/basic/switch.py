@@ -11,7 +11,7 @@ X, y = load_breast_cancer(True)
 settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('basic_switch_pipe',
                     optimizer='random_grid_search',
-                    optimizer_params={'k': 10},
+                    optimizer_params={'n_configurations': 10},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),

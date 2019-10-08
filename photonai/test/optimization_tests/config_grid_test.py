@@ -1,9 +1,10 @@
 import unittest
 
-from photonai.base import PipelineElement, Switch, Branch
-from photonai.optimization import IntegerRange
+from sklearn.datasets import load_breast_cancer
+from photonai.base import PipelineElement, Switch, Branch, Hyperpipe, OutputSettings, Stack
+from photonai.optimization import IntegerRange, FloatRange
 from photonai.optimization.config_grid import create_global_config_dict, create_global_config_grid
-
+from photonai.test.photon_base_test import PhotonBaseTest
 
 class CreateGlobalConfigBaseElements(unittest.TestCase):
 
@@ -70,7 +71,7 @@ class CreateGlobalConfigBaseElements(unittest.TestCase):
              {'StandardScaler__disabled': True, 'PCA__n_components': 2, 'SVC__C': 1, 'SVC__kernel': 'sigmoid'}])
 
 
-class CreateGlobalConfigAdvancedElements(unittest.TestCase):
+class CreateGlobalConfigAdvancedElements(PhotonBaseTest):
 
     def setUp(self):
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
@@ -147,3 +148,18 @@ class CreateGlobalConfigAdvancedElements(unittest.TestCase):
                                                                  {'Switch_in_switch__current_element': (1, 4)},
                                                                  {'Switch_in_switch__current_element': (1, 5)},
                                                                  {'Switch_in_switch__current_element': (1, 6)}])
+
+    def test_huge_combinations(self):
+        hp = Hyperpipe('huge_combinations', metrics=['accuracy'], best_config_metric='accuracy',
+                       output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+
+        hp += PipelineElement("PCA", hyperparameters={'n_components': [5, 10]})
+        stack = Stack('ensemble')
+        for i in range(20):
+            stack += PipelineElement('SVC', hyperparameters={'C': FloatRange(0.001, 5),
+                                                             'kernel': ["linear", "rbf", "sigmoid", "polynomial"]})
+        hp += stack
+        hp += PipelineElement("SVC", hyperparameters={'kernel': ["linear", "rbf", "sigmoid"]})
+        X, y = load_breast_cancer(True)
+        with self.assertRaises(Warning):
+            hp.fit(X, y)

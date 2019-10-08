@@ -88,10 +88,10 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
         """
         Test for parameter k.
         """
-        self.optimizer = RandomGridSearchOptimizer(k=3)
+        self.optimizer = RandomGridSearchOptimizer(n_configurations=3)
         self.optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
         self.assertEqual(len(self.optimizer.param_grid), 3)
-        self.optimizer = RandomGridSearchOptimizer(k=500)
+        self.optimizer = RandomGridSearchOptimizer(n_configurations=500)
         self.optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
         self.assertEqual(len(self.optimizer.param_grid), 16)
 

@@ -55,7 +55,7 @@ class TestArchitectures(PhotonBaseTest):
     def create_hyperpipes(metrics: list = None, inner_cv=KFold(n_splits=3, shuffle=True, random_state=42),
                           outer_cv=ShuffleSplit(n_splits=1, test_size=.2),
                           plots: bool = False, optimizer: str = 'random_grid_search',
-                          optimizer_params: dict = {'k': 10}, eval_final_performance: bool = True,
+                          optimizer_params: dict = {'n_configurations': 10}, eval_final_performance: bool = True,
                           performance_constraints: list = None, cache_folder='./cache', tmp_folder='./tmp'):
 
         pipe = Hyperpipe(name="architecture_test_pipe",

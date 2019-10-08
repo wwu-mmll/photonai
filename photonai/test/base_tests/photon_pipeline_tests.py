@@ -16,7 +16,7 @@ from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.neuro import NeuroBranch
 from photonai.neuro.brain_atlas import AtlasLibrary
-from photonai.test.base.dummy_elements import DummyYAndCovariatesTransformer
+from photonai.test.base_tests.dummy_elements import DummyYAndCovariatesTransformer
 from photonai.test.photon_base_test import PhotonBaseTest
 
 

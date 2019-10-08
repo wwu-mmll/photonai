@@ -11,7 +11,7 @@ X, y = load_boston(True)
 settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('skopt_example',
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
-                    optimizer_params={'num_iterations': 25, 'acq_func': 'LCB', 'acq_func_kwargs': {'kappa': 1.96}},
+                    optimizer_params={'n_configurations': 25, 'acq_func': 'LCB', 'acq_func_kwargs': {'kappa': 1.96}},
                     metrics=['mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',
                     outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
