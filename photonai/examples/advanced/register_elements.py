@@ -31,7 +31,7 @@ settings = OutputSettings(project_folder='./tmp/')
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('custom_estimator_pipe',
                     optimizer='random_grid_search',
-                    optimizer_params={'k': 2},
+                    optimizer_params={'n_configurations': 2},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),

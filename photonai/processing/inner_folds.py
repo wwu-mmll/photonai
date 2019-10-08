@@ -2,7 +2,7 @@ import json
 import time
 import traceback
 import warnings
-
+import datetime
 import numpy as np
 
 from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper
@@ -62,6 +62,7 @@ class InnerFoldManager(object):
         config_item.inner_folds = []
         config_item.metrics_test = []
         config_item.metrics_train = []
+        config_item.computation_start_time = datetime.datetime.now()
 
         try:
             # do inner cv
@@ -80,7 +81,7 @@ class InnerFoldManager(object):
                 if not config_item.human_readable_config:
                     config_item.human_readable_config = PhotonPrintHelper.config_to_human_readable_dict(new_pipe,
                                                                                                         self.params)
-                    logger.info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
+                    logger.clean_info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
                 job_data = InnerFoldManager.InnerCVJob(pipe=new_pipe,
                                                        config=dict(self.params),
@@ -97,14 +98,15 @@ class InnerFoldManager(object):
                 # self.mother_inner_fold_handle(fold_cnt)
 
                 # --> write that output in InnerFoldManager!
-                logger.debug(config_item.human_readable_config)
-                logger.debug('calculating...')
+                # logger.debug(config_item.human_readable_config)
+                fold_nr = idx + 1
+                logger.debug('calculating inner fold ' + str(fold_nr) + '...')
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
                 durations = job_data.pipe.time_monitor
 
                 self.update_config_item_with_inner_fold(config_item=config_item,
-                                                        fold_cnt=idx+1,
+                                                        fold_cnt=fold_nr,
                                                         curr_train_fold=curr_train_fold,
                                                         curr_test_fold=curr_test_fold,
                                                         time_monitor=durations,
@@ -143,9 +145,9 @@ class InnerFoldManager(object):
             warnings.warn('One test iteration of pipeline failed with error')
 
         logger.debug('...done with')
-        logger.debug('Current Configuration')
         logger.debug(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
+        config_item.computation_end_time = datetime.datetime.now()
         return config_item
 
     class JobData:

@@ -12,7 +12,7 @@ settings = OutputSettings(project_folder='./tmp/')
 
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='random_grid_search',
-                    optimizer_params={'k': 5},
+                    optimizer_params={'n_configurations': 5},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),

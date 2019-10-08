@@ -19,13 +19,24 @@ from photonai.optimization import IntegerRange, Categorical
 from photonai.processing.results_handler import ResultsHandler
 from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, FoldOperations, \
     MDBInnerFold, MDBOuterFold, MDBScoreInformation, MDBDummyResults, MDBHyperpipe
-from photonai.test.base.dummy_elements import DummyTransformer
-from photonai.test.base.photon_elements_tests import elements_to_dict
-from photonai.test.base.photon_pipeline_tests import DummyYAndCovariatesTransformer
+from photonai.test.base_tests.dummy_elements import DummyTransformer
+from photonai.test.base_tests.photon_elements_tests import elements_to_dict
+from photonai.test.base_tests.photon_pipeline_tests import DummyYAndCovariatesTransformer
 from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class HyperpipeTests(PhotonBaseTest):
+
+    def setup_hyperpipe(self, output_settings=None):
+        if output_settings is None:
+            output_settings = OutputSettings(project_folder=self.tmp_folder_path)
+        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
+                                   metrics=self.metrics,
+                                   best_config_metric=self.best_config_metric,
+                                   output_settings=output_settings)
+        self.hyperpipe += self.ss_pipe_element
+        self.hyperpipe += self.pca_pipe_element
+        self.hyperpipe.add(self.svc_pipe_element)
 
     def setUp(self):
 
@@ -38,13 +49,7 @@ class HyperpipeTests(PhotonBaseTest):
         self.inner_cv_object = KFold(n_splits=3)
         self.metrics = ["accuracy", 'recall', 'precision']
         self.best_config_metric = "accuracy"
-        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
-                                   metrics=self.metrics,
-                                   best_config_metric=self.best_config_metric,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
-        self.hyperpipe += self.ss_pipe_element
-        self.hyperpipe += self.pca_pipe_element
-        self.hyperpipe.add(self.svc_pipe_element)
+        self.setup_hyperpipe()
 
         dataset = load_breast_cancer()
         self.__X = dataset.data
@@ -170,7 +175,7 @@ class HyperpipeTests(PhotonBaseTest):
 
         my_pipe = Hyperpipe('hyperpipe',
                             optimizer='random_grid_search',
-                            optimizer_params={'k': 3},
+                            optimizer_params={'n_configurations': 3},
                             metrics=['accuracy', 'precision', 'recall'],
                             best_config_metric='f1_score',
                             outer_cv=KFold(n_splits=2),
@@ -202,17 +207,17 @@ class HyperpipeTests(PhotonBaseTest):
 
         my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
 
-        pipe_copy = my_pipe.copy_me()
-        pipe_copy.output_settings.save_output = False
-        pipe_copy.fit(self.__X, self.__y)
-        self.assertIsNone(my_pipe.output_settings.results_folder)
-
         my_pipe.fit(self.__X, self.__y)
         model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
         self.assertTrue(os.path.exists(model_path))
 
         # check if load_optimum_pipe also works
+        # check if we have the meta information recovered
         loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(model_path)
+        self.assertIsNotNone(loaded_optimum_pipe._meta_information)
+        self.assertIsNotNone(loaded_optimum_pipe._meta_information['photon_version'])
+
+        # check if predictions stay realiably the same
         y_pred_loaded = loaded_optimum_pipe.predict(self.__X)
         y_pred = my_pipe.optimum_pipe.predict(self.__X)
         np.testing.assert_array_equal(y_pred_loaded, y_pred)
@@ -221,31 +226,49 @@ class HyperpipeTests(PhotonBaseTest):
         """
         Test for right handling of parameter output_settings.overwrite.
         """
-        # first run
-        self.hyperpipe.output_settings.save_output = True
-        self.hyperpipe.fit(self.__X, self.__y)
+        def get_summary_file():
+            return os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
 
-        # test for overwrite_results = False
-        self.hyperpipe.output_settings.overwrite_results = False
-        tmp_path = os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
-        tmp_date = os.path.getmtime(tmp_path)
+        # Case 1: default
+        output_settings1 = OutputSettings(project_folder=self.tmp_folder_path,
+                                          save_output=True,
+                                          overwrite_results=False)
+        self.setup_hyperpipe(output_settings1)
         self.hyperpipe.fit(self.__X, self.__y)
-        self.assertAlmostEqual(tmp_date, os.path.getmtime(tmp_path))
-        self.assertNotEqual(tmp_path, os.path.getmtime(os.path.join(self.hyperpipe.output_settings.results_folder,
-                                                       'photon_summary.txt')))
-        # test for overwrite_results = True
-        self.hyperpipe.output_settings.overwrite_results = True
+        tmp_path = get_summary_file()
+
+        # again with same settings
+        self.setup_hyperpipe(output_settings1)
+        self.hyperpipe.fit(self.__X, self.__y)
+        tmp_path2 = get_summary_file()
+
+        # we expect a new output folder each time with timestamp
+        self.assertNotEqual(tmp_path, tmp_path2)
+
+        # Case 2 overwrite results: all in the same folder
+        output_settings2 = OutputSettings(project_folder=self.tmp_folder_path,
+                                          save_output=True,
+                                          overwrite_results=True)
+        self.setup_hyperpipe(output_settings2)
+        self.hyperpipe.fit(self.__X, self.__y)
+        tmp_path = get_summary_file()
+        tmp_date = os.path.getmtime(tmp_path)
+
+        self.setup_hyperpipe(output_settings2)
+        self.hyperpipe.fit(self.__X, self.__y)
+        tmp_path2 = get_summary_file()
+        tmp_date2 = os.path.getmtime(tmp_path2)
+
+        # same folder but summary file is overwritten through the new analysis
+        self.assertEqual(tmp_path, tmp_path2)
+        self.assertNotEqual(tmp_date, tmp_date2)
+
+        # Case 3: we have a cache folder
         self.hyperpipe.cache_folder = self.cache_folder_path
         shutil.rmtree(self.cache_folder_path, ignore_errors=True)
-
         self.hyperpipe.fit(self.__X, self.__y)
         self.assertTrue(os.path.exists(self.cache_folder_path))
 
-        tmp_path = os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
-        tmp_date = os.path.getmtime(tmp_path)
-        self.hyperpipe.fit(self.__X, self.__y)
-        self.assertEqual(tmp_path, os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt'))
-        self.assertNotEqual(tmp_date, os.path.getmtime(tmp_path))
 
     def test_random_state(self):
         self.hyperpipe.random_state = 4567

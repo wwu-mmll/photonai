@@ -10,7 +10,7 @@ settings = OutputSettings(project_folder='./tmp/')
 
 my_pipe = Hyperpipe('basic_stack_pipe',
                     optimizer='sk_opt',
-                    optimizer_params={'num_iterations': 5},
+                    optimizer_params={'n_configurations': 5},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),

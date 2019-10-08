@@ -10,7 +10,7 @@ from sklearn.tree import DecisionTreeClassifier
 from photonai.base import PipelineElement, Switch, Stack, Branch, DataFilter, CallbackElement, Preprocessing
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.helper.helper import PhotonDataHelper
-from photonai.test.base.dummy_elements import DummyEstimator, \
+from photonai.test.base_tests.dummy_elements import DummyEstimator, \
     DummyNeedsCovariatesEstimator, DummyNeedsCovariatesTransformer, DummyNeedsYTransformer, DummyTransformer, \
     DummyNeedsCovariatesAndYTransformer, DummyEstimatorNoPredict, DummyEstimatorWrongType, DummyTransformerWithPredict
 from photonai.test.photon_base_test import elements_to_dict

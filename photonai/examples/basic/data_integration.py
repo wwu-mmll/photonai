@@ -12,7 +12,7 @@ X, y = load_breast_cancer(True)
 settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('data_integration',
                     optimizer='random_grid_search',
-                    optimizer_params={'k': 2},
+                    optimizer_params={'n_configurations': 2},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='f1_score',
                     outer_cv=KFold(n_splits=3),

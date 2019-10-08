@@ -556,7 +556,7 @@ class ResultsHandler:
 
     def write_convenience_files(self):
         if self.output_settings.save_output:
-            logger.info("Writing convenience files (summary, predictions, plots...)")
+            logger.info("Writing summary file, plots and prediction csv to result folder ...")
             self.write_summary()
             self.write_predictions_file()
 
@@ -602,8 +602,10 @@ PHOTON RESULT SUMMARY
 ANALYSIS NAME: {}
 BEST CONFIG METRIC: {}
 TIME OF RESULT: {}
+VERSION: {}
 
-        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.time_of_results)
+        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.time_of_results,
+                   result_tree.version)
         text_list.append(intro_text)
 
         if result_tree.dummy_estimator:

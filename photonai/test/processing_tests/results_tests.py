@@ -68,6 +68,9 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
         expected_configs = 4 * 10 * 2
 
+        # check version is present
+        self.assertIsNotNone(self.hyperpipe.results.version)
+
         # check nr of outer and inner folds
         self.assertTrue(len(self.hyperpipe.results.outer_folds) == self.outer_fold_nr)
         self.assertTrue(len(self.hyperpipe.cross_validation.outer_folds) == self.outer_fold_nr)

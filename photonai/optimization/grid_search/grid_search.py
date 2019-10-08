@@ -37,20 +37,20 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
      Searches for the best configuration by randomly testing k possible hyperparameter combinations.
     """
 
-    def __init__(self, k=25):
+    def __init__(self, n_configurations=25):
         super(RandomGridSearchOptimizer, self).__init__()
-        self.k = k
+        self.n_configurations = n_configurations
 
     def prepare(self, pipeline_elements, maximize_metric):
         super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
         self.param_grid = list(self.param_grid)
         # create random chaos in list
         np.random.shuffle(self.param_grid)
-        if self.k is not None:
+        if self.n_configurations is not None:
             # k is maximal all grid items
-            if self.k > len(self.param_grid):
-                self.k = len(self.param_grid)
-            self.param_grid = self.param_grid[0:self.k]
+            if self.n_configurations > len(self.param_grid):
+                self.n_configurations = len(self.param_grid)
+            self.param_grid = self.param_grid[0:self.n_configurations]
 
 
 class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):

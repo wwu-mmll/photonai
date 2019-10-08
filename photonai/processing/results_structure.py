@@ -62,6 +62,8 @@ class MDBConfig(EmbeddedMongoModel):
     photon_config_id = fields.CharField(blank=True)
     inner_folds = fields.EmbeddedDocumentListField(MDBInnerFold, default=[], blank=True)
     best_config_score = fields.EmbeddedDocumentField(MDBInnerFold, blank=True)
+    computation_start_time = fields.DateTimeField(blank=True)
+    computation_end_time = fields.DateTimeField(blank=True)
     fit_duration_minutes = fields.IntegerField(blank=True)
     pipe_name = fields.CharField(blank=True)
     config_dict = fields.DictField(blank=True)
@@ -158,6 +160,7 @@ class MDBHyperpipe(MongoModel):
         connection_alias = 'photon_core'
 
     name = fields.CharField()
+    version = fields.CharField()
 
     permutation_id = fields.CharField()
     permutation_failed = fields.CharField(blank=True)

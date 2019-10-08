@@ -27,6 +27,9 @@ class PhotonPipeline(_BaseComposition):
         self._do_not_delete_cache_folder = False
         self._parallel_use = False
 
+        # helper for optimum pipe
+        self._meta_information = None
+
         # used in parallelization
         self.skip_loading = False
 

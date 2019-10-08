@@ -6,14 +6,27 @@ except ImportError:
     from setuptools import setup, find_packages
 
 
-__version__ = '0.5.0'
+__version__ = '1.0.0'
 
 setup(
   name='photonai',
   packages=find_packages(),
   include_package_data=True,
   version=__version__,
-  description='A Python-Based Hyperparameter optimization Toolbox for Neural Networks',
+  description="""
+PHOTON
+is a rapid prototyping framework enabling (not so experienced) users to build, train, optimize, evaluate,
+and share even complex machine learning pipelines with very high efficiency.
+
+PHOTON is an object-oriented python framework designed to leave you deciding the important things and automatizing the rest:
+ By treating each pipeline element as a building block, we create a system in which the user can select and combine
+ processing steps, adapt their arrangement or stack them in more advanced pipeline layouts.
+
+PHOTON gives you an easy way of setting up a full stack machine learning pipeline including nested cross-validation and hyperparameter search.
+After PHOTON has found the best configuration for your model, it offers a convenient possibility to explore the analyzed hyperparameter space.
+It also enables you to persist and load your optimal model, including all preprocessing elements, with only one line of code.
+
+""",
   author='PHOTON Team',
   author_email='hahnt@wwu.de',
   url='https://github.com/photonai-team/photonai.git',
