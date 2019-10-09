@@ -57,6 +57,5 @@ def create_global_config_grid(pipeline_elements, add_name=''):
     config_dicts = []
     # get all configs in one
     for c in config_list:
-
         config_dicts.append(dict((praefix + pair[0], pair[1]) for d in c for pair in d.items()))
     return config_dicts
