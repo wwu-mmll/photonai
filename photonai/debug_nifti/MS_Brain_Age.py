@@ -13,27 +13,31 @@ import glob
 gm_list_learn = pd.read_csv("/spm-data/Scratch/spielwiese_vincent/brain_age_CTQ_project_070119_all_studies.csv")
 nifti_learn_paths = gm_list_learn['vbm_gray_matter_path']
 age_to_learn = gm_list_learn['age']
-print('loading nifti files')
-nifti_learn = load_img(nifti_learn_paths).get_data()
-print(nifti_learn.shape)
-nifti_learn = np.moveaxis(nifti_learn, 3, 0)
-print(nifti_learn.shape)
+# print('loading nifti files')
+# nifti_learn = load_img(nifti_learn_paths).get_data()
+# print(nifti_learn.shape)
+# nifti_learn = np.moveaxis(nifti_learn, 3, 0)
+# print(nifti_learn.shape)
 
 
-#set up pipeline
+nifti_learn_paths = nifti_learn_paths[0:50]
+age_to_learn = age_to_learn[0:50]
+
+# set up pipeline
 my_pipe = Hyperpipe('MS_Brain_Age_Pipe',
-                        optimizer='grid_search',
-                        metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],
-                        best_config_metric='mean_absolute_error',
-                        inner_cv=KFold(n_splits=5, shuffle=True, random_state=42),
-                        outer_cv=KFold(n_splits=5, shuffle=True, random_state=42),
-                        verbosity=1,
-                        eval_final_performance=True)
+                    optimizer='grid_search',
+                    metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],
+                    best_config_metric='mean_absolute_error',
+                    inner_cv=KFold(n_splits=5, shuffle=True, random_state=42),
+                    outer_cv=KFold(n_splits=5, shuffle=True, random_state=42),
+                    verbosity=2,
+                    eval_final_performance=True,
+                    cache_folder='./cache')
 
 mask = PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter',
-                          extract_mode='vec', batch_size=10)
+                       extract_mode='vec', batch_size=25)
 
-neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=1)
+neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=4)
 neuro_branch += mask
 
 my_pipe += neuro_branch
@@ -41,8 +45,8 @@ my_pipe += neuro_branch
 my_pipe += PipelineElement('SVR')
 
 
-#train pipeline
-my_pipe.fit(nifti_learn, age_to_learn)
+# train pipeline
+my_pipe.fit(nifti_learn_paths, age_to_learn)
 
 #load files to predict
 #load predict files with labels
