@@ -8,6 +8,7 @@ from photonai.base.cache_manager import CacheManager
 from photonai.helper.helper import PhotonDataHelper
 from photonai.photonlogger.logger import logger
 
+
 class PhotonPipeline(_BaseComposition):
 
     def __init__(self, elements, random_state=False):

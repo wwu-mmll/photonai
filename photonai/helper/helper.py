@@ -1,5 +1,6 @@
 from collections.abc import Iterable
-
+from prettytable import PrettyTable
+from photonai.photonlogger.logger import logger
 import numpy as np
 
 
@@ -234,3 +235,16 @@ class PhotonDataHelper:
                 kwargs[k] = v[_sort_order]
         return X, y, kwargs
 
+
+def print_metrics(header, metric_dict):
+    t = PrettyTable(['PERFORMANCE ' + header, ''])
+    for m_key, m_value in metric_dict.items():
+        t.add_row([m_key, "%.4f" % m_value])
+    logger.photon_system_log(t)
+
+
+def print_double_metrics(metric_dict_train, metric_dict_test):
+    t = PrettyTable(['METRIC', 'PERFORMANCE TRAIN', 'PERFORMANCE TEST'])
+    for m_key, m_value in metric_dict_train.items():
+        t.add_row([m_key, "%.4f" % m_value, "%.4f" % metric_dict_test[m_key]])
+    logger.photon_system_log(t)

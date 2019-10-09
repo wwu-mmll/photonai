@@ -5,7 +5,7 @@ import json
 
 from prettytable import PrettyTable
 
-from photonai.helper.helper import PhotonDataHelper
+from photonai.helper.helper import PhotonDataHelper, print_double_metrics, print_metrics
 from photonai.optimization import DummyPerformance
 from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
@@ -101,18 +101,6 @@ class OuterFoldManager:
                                                    self._validation_kwargs)
 
         self.cross_validaton_info.inner_folds[self.outer_fold_id] = {f.fold_id: f for f in self.inner_folds}
-
-    def _print_metrics(self, header, metric_dict):
-        t = PrettyTable(['PERFORMANCE ' + header, ''])
-        for m_key, m_value in metric_dict.items():
-            t.add_row([m_key, "%.4f" % m_value])
-        logger.photon_system_log(t)
-
-    def _print_double_metrics(self, metric_dict_train, metric_dict_test):
-        t = PrettyTable(['METRIC', 'PERFORMANCE TRAIN', 'PERFORMANCE TEST'])
-        for m_key, m_value in metric_dict_train.items():
-            t.add_row([m_key, "%.4f" % m_value, "%.4f" % metric_dict_test[m_key]])
-        logger.photon_system_log(t)
 
     def fit(self, X, y=None, **kwargs):
         logger.photon_system_log('')
@@ -278,7 +266,7 @@ class OuterFoldManager:
                 best_config_performance_mdb.training = train_score_mdb
                 best_config_performance_mdb.validation = test_score_mdb
 
-                self._print_double_metrics(train_score_mdb.metrics, test_score_mdb.metrics)
+                print_double_metrics(train_score_mdb.metrics, test_score_mdb.metrics)
             else:
 
                 def _copy_inner_fold_means(metric_dict):
@@ -326,7 +314,7 @@ class OuterFoldManager:
                     test_scores = InnerFoldManager.score(self.dummy_estimator,
                                                          self._test_X, self._test_y,
                                                          metrics=self.optimization_info.metrics)
-                    self._print_metrics("DUMMY", test_scores.metrics)
+                    print_metrics("DUMMY", test_scores.metrics)
                     inner_fold.validation = test_scores
 
                 self.result_object.dummy_results = inner_fold
