@@ -6,7 +6,7 @@ from sklearn.utils.metaestimators import _BaseComposition
 
 from photonai.base.cache_manager import CacheManager
 from photonai.helper.helper import PhotonDataHelper
-
+from photonai.photonlogger.logger import logger
 
 class PhotonPipeline(_BaseComposition):
 
@@ -152,6 +152,7 @@ class PhotonPipeline(_BaseComposition):
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs, fit=True)
 
         if self._final_estimator is not None:
+            logger.debug('PhotonPipeline: Fitting ' + self._final_estimator.name + ' ...')
             fit_start_time = datetime.datetime.now()
             if self.random_state:
                 self._final_estimator.random_state = self.random_state
@@ -190,6 +191,7 @@ class PhotonPipeline(_BaseComposition):
                                                                  self._final_estimator,
                                                                  initial_X=initial_X)
                 else:
+                    logger.debug('PhotonPipeline: Transforming data with ' + self._final_estimator.name + ' ...')
                     X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
 
         return X, y, kwargs
@@ -313,11 +315,13 @@ class PhotonPipeline(_BaseComposition):
             transformer.random_state = self.random_state
 
         if fit:
+            logger.debug('PhotonPipeline: Fitting ' + transformer.name + ' ...')
             fit_start_time = datetime.datetime.now()
             transformer.fit(X, y, **kwargs)
             fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
             self.time_monitor['fit'].append((name, fit_duration, n))
 
+        logger.debug('PhotonPipeline: Transforming data with ' + transformer.name + ' ...')
         transform_start_time = datetime.datetime.now()
         X, y, kwargs = transformer.transform(X, y, **kwargs)
         transform_duration = (datetime.datetime.now() - transform_start_time).total_seconds()
@@ -388,6 +392,7 @@ class PhotonPipeline(_BaseComposition):
         # then call predict on final estimator
         if self._final_estimator is not None:
             if self._final_estimator.is_estimator:
+                logger.debug('PhotonPipeline: Predicting with ' + self._final_estimator.name + ' ...')
                 predict_start_time = datetime.datetime.now()
                 y_pred = self._final_estimator.predict(X, **kwargs)
                 predict_duration = (datetime.datetime.now() - predict_start_time).total_seconds()
