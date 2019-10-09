@@ -18,6 +18,7 @@ logger.addHandler(handler)
 VERBOSE_LEVELV_NUM = 25
 CLEAN_LEVELV_NUM = 21
 INFO_LEVELV_NUM = 20
+DEBUG_LEVELV_NUM = 10
 
 
 # add custom log level
@@ -40,11 +41,22 @@ def info(self, message, *args, **kws):
         self._log(INFO_LEVELV_NUM, log_message, args, **kws)
 
 
+def debug(self, message, *args, **kws):
+    if self.isEnabledFor(DEBUG_LEVELV_NUM):
+        timestamp = datetime.datetime.now()
+        log_message = timestamp.strftime("%d/%m/%Y-%H:%M:%S")
+        if message:
+            log_message += " | " + message
+        self._log(DEBUG_LEVELV_NUM, log_message, args, **kws)
+
+
 logging.addLevelName(VERBOSE_LEVELV_NUM, "PHOTON_SYSTEM_LOG")
 logging.Logger.photon_system_log = photon_system_log
 logging.addLevelName(CLEAN_LEVELV_NUM, "CLEAN_INFO")
 logging.Logger.clean_info = clean_info
 logging.addLevelName(INFO_LEVELV_NUM, "INFO")
 logging.Logger.info = info
+logging.addLevelName(DEBUG_LEVELV_NUM, "DEBUG")
+logging.Logger.debug = debug
 
 
