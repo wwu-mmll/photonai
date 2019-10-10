@@ -131,6 +131,8 @@ class NumberRange(PhotonHyperparam):
             else:
                 values = np.linspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         elif self.range_type == "logspace":
+            if self.num_type == np.int32:
+                raise ValueError("Cannot use logspace for integer,  use geomspace instead.")
             if self.num:
                 values = np.logspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
             else:
@@ -142,7 +144,7 @@ class NumberRange(PhotonHyperparam):
                 values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         # convert to python datatype because mongodb needs it
         if self.num_type == np.int32:
-            self.values = sorted(list(set([int(i) for i in values])))
+            self.values = [int(i) for i in values]
         elif self.num_type == np.float32:
             self.values = [float(i) for i in values]
 

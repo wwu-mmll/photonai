@@ -58,6 +58,7 @@ class FRegressionFilterPValue(BaseEstimator, TransformerMixin):
     def transform(self, X):
         return X[:, self.selected_indices]
 
+
 class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
 
@@ -76,6 +77,7 @@ class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
 
+
 class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
 
@@ -93,7 +95,6 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
-
 
 
 class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
@@ -134,7 +135,6 @@ class AnovaSelectPercentile(BaseEstimator, TransformerMixin):
         return return_values
 
 
-
 class MIClassifSelectPercentile(BaseEstimator, TransformerMixin):
     _estimator_type = 'transformer'
 
@@ -171,6 +171,7 @@ class MIRegressionSelectPercentile(BaseEstimator, TransformerMixin):
     def transform(self, X):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
+
 
 class Chi2KBest(BaseEstimator, TransformerMixin):
     _estimator_type = 'transformer'
