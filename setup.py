@@ -5,15 +5,14 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-
-__version__ = '1.0.0'
+__version__ = '1.0.0b'
 
 setup(
-  name='photonai',
-  packages=find_packages(),
-  include_package_data=True,
-  version=__version__,
-  description="""
+    name='photonai',
+    packages=find_packages(),
+    include_package_data=True,
+    version=__version__,
+    description="""
 PHOTON
 is a rapid prototyping framework enabling (not so experienced) users to build, train, optimize, evaluate,
 and share even complex machine learning pipelines with very high efficiency.
@@ -27,22 +26,21 @@ After PHOTON has found the best configuration for your model, it offers a conven
 It also enables you to persist and load your optimal model, including all preprocessing elements, with only one line of code.
 
 """,
-  author='PHOTON Team',
-  author_email='hahnt@wwu.de',
-  url='https://github.com/photonai-team/photonai.git',
-  download_url='https://github.com/photonai-team/photonai/archive/' + __version__ + '.tar.gz',
-  keywords=['machine learning', 'deep learning', 'neural networks', 'hyperparameter'],
-  classifiers=[],
-    install_requires=['numpy',
+    author='PHOTON Team',
+    author_email='hahnt@wwu.de',
+    url='https://github.com/photonai-team/photonai.git',
+    download_url='https://github.com/photonai-team/photonai/archive/' + __version__ + '.tar.gz',
+    keywords=['machine learning', 'deep learning', 'neural networks', 'hyperparameter'],
+    classifiers=[],
+    install_requires=['numpy>=1.15.0',
                       'matplotlib',
                       'progressbar2',
                       'Pillow',
-                      'scikit-learn',
+                      'scikit-learn>=0.21.3',
                       'keras',
                       'nilearn==0.5.0',
-                      'pandas',
-                      'nibabel',
-                      'pandas',
+                      'pandas>=0.24.0',
+                      'nibabel>=2.3.0',
                       'six',
                       'h5py',
                       'xlrd',
@@ -53,11 +51,11 @@ It also enables you to persist and load your optimal model, including all prepro
                       'statsmodels',
                       'flask',
                       'prettytable',
-                      'scikit-optimize',
+                      'scikit-optimize>=0.5.2',
                       'scikit-image',
                       'seaborn',
-                      'joblib',
+                      'joblib>=0.13.2',
                       'fasteners',
                       'dask',
-                      'distributed']
+                      'distributed>=1.13.2']
 )
