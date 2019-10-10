@@ -423,16 +423,8 @@
     "photonai.modelwrapper.SourceSplitter.SourceSplitter",
     "Transformer"
   ],
-  "CategorialANOVASelectPercentile":[
-    "photonai.modelwrapper.FeatureSelection.AnovaSelectPercentile",
-    "Transformer"
-  ],
   "FClassifSelectPercentile":[
     "photonai.modelwrapper.FeatureSelection.FClassifSelectPercentile",
-    "Transformer"
-  ],
-  "PearsonFeatureSelector":[
-    "photonai.modelwrapper.FeatureSelection.PearsonFeatureSelector",
     "Transformer"
   ],
   "FRegressionFilterPValue":[
@@ -443,10 +435,6 @@
     "photonai.modelwrapper.FeatureSelection.FRegressionSelectPercentile",
     "Transformer"
   ],
-  "PhotonPCA":[
-    "photonai.modelwrapper.PhotonPCA.PhotonPCA",
-    "Transformer"
-  ],
   "PhotonOneClassSVM":[
     "photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM",
     "Estimator"
@@ -454,14 +442,6 @@
   "ImbalancedDataTransform":[
     "photonai.modelwrapper.ImbalancedWrapper.ImbalancedDataTransform",
     "Transformer"
-  ],
-  "AnomalyDetectorWrapper":[
-    "photonai.modelwrapper.AnomalyDetectorWrapper.AnomalyDetectorWrapper",
-    "Estimator"
-  ],
-  "AutoSklearnRegressor":[
-    "photonai.modelwrapper.AutoSklearnRegressor.AutoSklearnRegressor",
-    "Estimator"
   ],
   "SamplePairingRegression": [
     "photonai.modelwrapper.SamplePairing.SamplePairingRegression",
