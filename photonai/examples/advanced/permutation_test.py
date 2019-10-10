@@ -1,6 +1,5 @@
 from sklearn.datasets import load_breast_cancer
 
-
 from photonai.processing import ResultsHandler
 from photonai.processing.permutation_test import PermutationTest
 
