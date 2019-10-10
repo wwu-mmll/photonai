@@ -113,7 +113,7 @@ class AtlasLibrary:
         if atlas_name in self.photon_atlases.keys():
             original_atlas_object = self.photon_atlases[atlas_name]
         else:
-            print("Checking custom atlas")
+            logger.debug("Checking custom atlas")
             original_atlas_object = self._check_custom_atlas(atlas_name)
 
         # now create new atlas object with different affine, shape and mask_threshold
@@ -149,7 +149,7 @@ class AtlasLibrary:
 
             # check if map indices correspond with indices in the labels file
             if not sorted(atlas_object.indices) == sorted(list(labels_dict.keys())):
-                print("""
+                logger.error("""
                 The indices in map image ARE NOT the same as those in your *_labels.txt! Ignoring *_labels.txt.
                 MapImage: 
                 {}
@@ -184,7 +184,7 @@ class AtlasLibrary:
 
         # finally add atlas to atlas library
         self.library[(atlas_name, str(target_affine), str(target_shape), str(mask_threshold))] = atlas_object
-        print("Done adding atlas to library!")
+        logger.debug("BrainAtlas: Done adding atlas to library!")
 
     def _add_mask_to_library(self, mask_name: str = '', target_affine=None, target_shape=None, mask_threshold=None):
         # Todo: find solution for multiprocessing spaming
@@ -196,7 +196,7 @@ class AtlasLibrary:
         if mask_name in self.photon_masks.keys():
             original_mask_object = self.photon_masks[mask_name]
         else:
-            print("Checking custom mask")
+            logger.debug("Checking custom mask")
             original_mask_object = self._check_custom_mask(mask_name)
 
         mask_object = MaskObject(name=mask_name, mask_file=original_mask_object.mask_file)
@@ -208,11 +208,11 @@ class AtlasLibrary:
 
         # check if roi is empty
         if np.sum(mask_object.mask.dataobj != 0) == 0:
-            print('No voxels in mask after resampling (' + mask_object.name + ').')
+            logger.error('No voxels in mask after resampling (' + mask_object.name + ').')
             mask_object.is_empty = True
 
         self.library[(mask_object.name, str(target_affine), str(target_shape), str(mask_threshold))] = mask_object
-        print("Done adding mask to library!")
+        logger.debug("BrainMask: Done adding mask to library!")
 
     def get_atlas(self, atlas_name, target_affine=None, target_shape=None, mask_threshold=None):
         if (atlas_name, str(target_affine), str(target_shape), str(mask_threshold)) not in self.library:
@@ -234,7 +234,7 @@ class AtlasLibrary:
             orient_data = ''.join(nib.aff2axcodes(target_affine))
             orient_roi = ''.join(nib.aff2axcodes(mask.affine))
             if not orient_roi == orient_data:
-                print('Orientation of mask and data are not the same: ' + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
+                logger.error('Orientation of mask and data are not the same: ' + orient_roi + ' (mask) vs. ' + orient_data + ' (data)')
         return mask
 
     @staticmethod
@@ -249,7 +249,7 @@ class AtlasLibrary:
             raise FileNotFoundError("Cannot find custom atlas {}".format(atlas_file))
         labels_file = path.split(atlas_file)[0] + '_labels.txt'
         if not path.isfile(labels_file):
-            print("Didn't find .txt file with ROI labels. Using indices as labels.")
+            logger.error("Didn't find .txt file with ROI labels. Using indices as labels.")
         return AtlasObject(name=atlas_file, path=atlas_file, labels_file=labels_file)
 
     @staticmethod
@@ -479,7 +479,7 @@ class BrainMask(BaseEstimator):
             try:
                 single_roi = self.masker.fit_transform(X)
             except BaseException as e:
-                logger.error(str(e))
+                logger.error(e)
                 single_roi = None
 
             if single_roi is not None:
@@ -496,11 +496,11 @@ class BrainMask(BaseEstimator):
                     return self.masker.inverse_transform(single_roi)
 
                 else:
-                    print("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
+                    logger.error("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
             else:
-                print("Extracting ROI failed.")
+                logger.error("Extracting ROI failed.")
         else:
-            print("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
+            logger.error("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
 
     def inverse_transform(self, X, y=None, **kwargs):
         if not self.extract_mode == 'vec':
