@@ -140,6 +140,7 @@ class NeuroBranch(Branch):
                 logger.error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
 
+        logger.debug('NeuroBranch' + self.name + ' is collecting data from the different cores...' )
         X_new, _, _ = self.base_element.transform(X)
 
         # check if we have a list of niftis, should avoid this, except when output_image = True
@@ -189,8 +190,12 @@ class NeuroBranch(Branch):
             jobs_to_do = list()
 
             # distribute the data equally to all available cores
-            for start, stop in PhotonDataHelper.chunker(PhotonDataHelper.find_n(X), self.nr_of_processes):
-
+            number_of_items_to_process = PhotonDataHelper.find_n(X)
+            number_of_items_for_each_core = int(np.ceil(number_of_items_to_process / self.nr_of_processes))
+            logger.info('NeuroBranch ' + self.name +
+                         ': Using ' + str(self.nr_of_processes) + ' cores calculating ' + str(number_of_items_for_each_core)
+                         + ' items each')
+            for start, stop in PhotonDataHelper.chunker(number_of_items_to_process, number_of_items_for_each_core):
                 X_batched, _, _ = PhotonDataHelper.split_data(X, None, {}, start, stop)
 
                 # copy my pipeline

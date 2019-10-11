@@ -18,51 +18,36 @@ class NumberRangeTest(unittest.TestCase):
         Test for class IntegerRange and FloatRange.
         """
         dtypes = {int: np.int32, float: np.float32}
-        for numberType in [int, float]:
-            if numberType == float:
-                number_range = FloatRange(start=self.start, stop=self.end)
-            else:
-                number_range = IntegerRange(start=self.start, stop=self.end)
-            # range_type: range
-            number_range.range_type = "range"
-            for step in [1, 2, 3]:
-                number_range.step = step
-                number_range.transform()
-                self.assertListEqual(number_range.values, list(np.arange(self.start, self.end, step)))
 
-            number_range.step = 1
-            # range_type: linspace
-            number_range.range_type = "linspace"
+        expected_linspace = [1, 2, 3, 4, 5, 6, 7, 8, 9]
+        number_range_linspace = IntegerRange(start=1, stop=9, num=9, range_type="linspace")
+        number_range_linspace.transform()
+        self.assertListEqual(expected_linspace, number_range_linspace.values)
+
+        expected_geomspace = [1, 10, 100, 1000, 10000]
+        number_range_geomspace = IntegerRange(1, 10000, num=5, range_type="geomspace")
+        number_range_geomspace.transform()
+        self.assertListEqual(expected_geomspace, number_range_geomspace.values)
+
+        number_range_range = IntegerRange(self.start, self.end, step=2, range_type="range")
+        number_range_range.transform()
+        self.assertListEqual(number_range_range.values, list(np.arange(self.start, self.end, 2)))
+
+        number_range_logspace = FloatRange(-1, 1, num=50, range_type='logspace')
+        number_range_logspace.transform()
+        np.testing.assert_array_almost_equal(number_range_logspace.values,  np.logspace(-1, 1, num=50).tolist())
+
+        # error tests
+        with self.assertRaises(ValueError):
+            number_range = IntegerRange(start=0, stop=self.end, range_type="geomspace")
             number_range.transform()
-            self.assertEqual(number_range.values[-1], self.end)
-            self.assertListEqual(number_range.values,
-                                 list(set([numberType(x) for x in
-                                           np.linspace(self.start, self.end, dtype=dtypes[numberType])])))
 
-            # range_type: geomspace
-            number_range.range_type = "geomspace"
-            number_range.start += 1
+        with self.assertRaises(ValueError):
+            number_range = IntegerRange(start=1, stop=15, range_type="logspace")
             number_range.transform()
-            self.assertListEqual(number_range.values,
-                                 list(set([numberType(x) for x in
-                                           np.geomspace(number_range.start, self.end, dtype=dtypes[numberType])])))
 
-            # range_type: logspace
-            number_range.range_type = "logspace"
-            number_range.start = self.start / 1000
-            number_range.stop = self.end / 1000
-            number_range.transform()
-            self.assertListEqual(number_range.values,
-                                 list(set([numberType(x) for x in
-                                           np.logspace(self.start / 1000, self.end / 1000, dtype=dtypes[numberType])])))
-
-            # error tests
-            with self.assertRaises(ValueError):
-                number_range = IntegerRange(start=0, stop=self.end, range_type="geomspace")
-                number_range.transform()
-
-            with self.assertRaises(ValueError):
-                IntegerRange(start=self.start, stop=self.end, range_type="ownspace")
+        with self.assertRaises(ValueError):
+            IntegerRange(start=self.start, stop=self.end, range_type="ownspace")
 
 
 class HyperparameterOtherTest(unittest.TestCase):

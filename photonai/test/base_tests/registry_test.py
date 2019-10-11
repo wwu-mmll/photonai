@@ -13,7 +13,7 @@ class RegistryTest(PhotonBaseTest):
     def setUp(self):
         super(RegistryTest, self).setUp()
         self.test_directory = os.path.join(os.path.dirname(os.path.abspath(__file__)).split('test')[0], 'test')
-        self.custom_folder = os.path.join(self.test_directory, 'base/custom_elements/')
+        self.custom_folder = os.path.join(self.test_directory, 'base_tests/custom_elements/')
         self.registry = PhotonRegistry(self.custom_folder)
 
     def tearDown(self):

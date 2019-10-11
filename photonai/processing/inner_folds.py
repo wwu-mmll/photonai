@@ -5,7 +5,7 @@ import warnings
 import datetime
 import numpy as np
 
-from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper
+from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper, print_double_metrics
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
@@ -103,6 +103,9 @@ class InnerFoldManager(object):
                 logger.debug('calculating inner fold ' + str(fold_nr) + '...')
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
+                logger.debug('Performance inner fold ' + str(fold_nr))
+                print_double_metrics(curr_train_fold.metrics, curr_test_fold.metrics, photon_system_log=False)
+
                 durations = job_data.pipe.time_monitor
 
                 self.update_config_item_with_inner_fold(config_item=config_item,
@@ -261,11 +264,14 @@ class InnerFoldManager(object):
         # start fitting
         pipe.fit(job.train_data.X, job.train_data.y, **job.train_data.cv_kwargs)
 
+        logger.debug('Scoring Training Data')
+
         # score test data
         curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics,
                                                 indices=job.test_data.indices,
                                                 **job.test_data.cv_kwargs)
 
+        logger.debug('Scoring Test Data')
         # score train data
         curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
                                                  indices=job.train_data.indices,
