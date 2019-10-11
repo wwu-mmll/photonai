@@ -1,6 +1,6 @@
 from sklearn.base import BaseEstimator
 from sklearn.preprocessing import OrdinalEncoder
-from ..base.PhotonBase import Stack
+from photonai.helper.helper import PhotonDataHelper
 import numpy as np
 
 
@@ -33,5 +33,5 @@ class FeatureEncoder(BaseEstimator):
                 trans_X = transformer.transform(feature)
             else:
                 trans_X = feature
-            new_X = Stack.stack_data(new_X, trans_X)
+            new_X = PhotonDataHelper.stack_data_horizontally(new_X, trans_X)
         return new_X

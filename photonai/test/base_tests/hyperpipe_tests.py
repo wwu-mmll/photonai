@@ -1,4 +1,5 @@
 import datetime
+import time
 import os
 import shutil
 import unittest
@@ -236,6 +237,8 @@ class HyperpipeTests(PhotonBaseTest):
         self.setup_hyperpipe(output_settings1)
         self.hyperpipe.fit(self.__X, self.__y)
         tmp_path = get_summary_file()
+
+        time.sleep(2)
 
         # again with same settings
         self.setup_hyperpipe(output_settings1)
