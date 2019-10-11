@@ -1,15 +1,16 @@
 from flask import render_template
-from ..main import application
 from pymodm.errors import ValidationError, ConnectionError
-from ..model.ConfigItem import ConfigItem
+
+from .helper import load_pipe, load_available_pipes
+from ..main import application
+from ..model.BestConfigPlot import BestConfigPlot
+from ..model.BestConfigTrace import BestConfigTrace
 from ..model.Config import Config
+from ..model.ConfigItem import ConfigItem
+from ..model.Figures import plotly_confusion_matrix, plot_scatter
 from ..model.Metric import Metric
 from ..model.PlotlyPlot import PlotlyPlot
 from ..model.PlotlyTrace import PlotlyTrace
-from ..model.BestConfigTrace import BestConfigTrace
-from ..model.BestConfigPlot import BestConfigPlot
-from ..model.Figures import plotly_confusion_matrix, plot_scatter
-from .helper import load_pipe, load_available_pipes
 
 
 @application.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>')
@@ -107,7 +108,7 @@ def show_outer_fold(storage, name, fold_nr):
                 elif test.operation == 'FoldOperations.STD':
                     trace_test.add_error_y(test.value)
 
-            for key, value in config.config_dict.items():
+            for key, value in config.human_readable_config.items():
                 config_item = ConfigItem(str(key), str(value))
                 config_dict.add_item(config_item)
             config_dict_list.append(config_dict)

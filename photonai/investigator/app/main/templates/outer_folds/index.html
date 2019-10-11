@@ -28,7 +28,7 @@
                         <th>Variable</th>
                         <th>Value</th>
                     </tr>
-                    {% for key, value in outer_fold.best_config.config_dict.items() %}
+                    {% for key, value in outer_fold.best_config.human_readable_config.items() %}
                         <tr>
                             <td>{{ key }}</td>
                             <td>{{ value }}</td>

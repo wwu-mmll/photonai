@@ -1,16 +1,17 @@
 from flask import render_template
-from ..main import application
-
-from photonai.processing.results_structure import MDBHyperpipe
-from photonai.processing.results_handler import ResultsHandler
 from pymodm.errors import ValidationError, ConnectionError
-from ..model.Metric import Metric
-from ..model.BestConfigTrace import BestConfigTrace
-from ..model.BestConfigPlot import BestConfigPlot
-from ..model.PlotlyTrace import PlotlyTrace
-from ..model.PlotlyPlot import PlotlyPlot
+
+from photonai import __version__
+from photonai.processing.results_handler import ResultsHandler
+from photonai.processing.results_structure import MDBHyperpipe
 from .helper import load_pipe, load_available_pipes
+from ..main import application
+from ..model.BestConfigPlot import BestConfigPlot
+from ..model.BestConfigTrace import BestConfigTrace
 from ..model.Figures import plotly_optimizer_history, plot_scatter, plotly_confusion_matrix
+from ..model.Metric import Metric
+from ..model.PlotlyPlot import PlotlyPlot
+from ..model.PlotlyTrace import PlotlyTrace
 
 
 @application.route('/pipeline/<storage>')
@@ -63,17 +64,24 @@ def show_pipeline(storage, name):
         # confusion matrix or scatter plot
         true_and_pred_val = list()
         true_and_pred_train = list()
-        for fold in pipe.outer_folds:
-            true_and_pred_val.append([fold.best_config.best_config_score.validation.y_true,
-                                  fold.best_config.best_config_score.validation.y_pred])
-            true_and_pred_train.append([fold.best_config.best_config_score.training.y_true,
-                                  fold.best_config.best_config_score.training.y_pred])
-        if pipe.hyperpipe_info.estimation_type == 'regressor':
-            predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train', 'True/Pred Training')
-            predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
-        else:
-            predictions_plot_train = plotly_confusion_matrix('predictions_plot_train', 'Confusion Matrix Training', true_and_pred_train)
-            predictions_plot_test = plotly_confusion_matrix('predictions_plot_test', 'Confusion Matrix Test', true_and_pred_val)
+        predictions_plot_train = ""
+        predictions_plot_test = ""
+
+        if pipe.hyperpipe_info.eval_final_performance:
+            for fold in pipe.outer_folds:
+                true_and_pred_val.append([fold.best_config.best_config_score.validation.y_true,
+                                          fold.best_config.best_config_score.validation.y_pred])
+                true_and_pred_train.append([fold.best_config.best_config_score.training.y_true,
+                                            fold.best_config.best_config_score.training.y_pred])
+            if pipe.hyperpipe_info.estimation_type == 'regressor':
+                predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train',
+                                                      'True/Pred Training')
+                predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
+            else:
+                predictions_plot_train = plotly_confusion_matrix('predictions_plot_train', 'Confusion Matrix Training',
+                                                                 true_and_pred_train)
+                predictions_plot_test = plotly_confusion_matrix('predictions_plot_test', 'Confusion Matrix Test',
+                                                                true_and_pred_val)
 
         for fold in pipe.outer_folds:
 
@@ -167,7 +175,8 @@ def show_pipeline(storage, name):
                                available_pipes=available_pipes,
                                cross_validation_info=cross_validation_info,
                                data_info=data_info,
-                               optimizer_info=optimizer_info)
+                               optimizer_info=optimizer_info,
+                               photon_version=__version__)
     except ValidationError as exc:
         return exc.message
     except ConnectionError as exc:

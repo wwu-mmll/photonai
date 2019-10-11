@@ -1,7 +1,7 @@
 import datetime
-import time
 import os
 import shutil
+import time
 import unittest
 
 import numpy as np
@@ -272,7 +272,6 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.fit(self.__X, self.__y)
         self.assertTrue(os.path.exists(self.cache_folder_path))
 
-
     def test_random_state(self):
         self.hyperpipe.random_state = 4567
         self.hyperpipe.fit(self.__X, self.__y)
@@ -434,7 +433,6 @@ class HyperpipeTests(PhotonBaseTest):
         else:
             step2 = step1
         self.assertTrue(np.array_equal(step2, self.hyperpipe.transform(self.__X)))
-
 
 
 class HyperpipeOptimizationClassTests(unittest.TestCase):

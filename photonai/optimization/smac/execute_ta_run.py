@@ -34,7 +34,7 @@ class MyExecuteTARun(ExecuteTARun):
 
             self.run_limit = run_limit
         else:
-            raise ModuleNotFoundError("Module smac not found or not installed like expected. "
+            raise ModuleNotFoundError("Module smac not found or not installed as expected. "
                                       "Please install the smac_requirements.txt PHOTON provides.")
 
     def start(self, config: Configuration,

@@ -16,12 +16,14 @@ class GridSearchOptimizer(PhotonBaseOptimizer):
         self.pipeline_elements = None
         self.parameter_iterable = None
         self.ask = self.next_config_generator()
+        self.n_configurations = None
 
     def prepare(self, pipeline_elements, maximize_metric):
         self.pipeline_elements = pipeline_elements
         self.ask = self.next_config_generator()
         self.param_grid = create_global_config_grid(self.pipeline_elements)
-        logger.info("Grid Search generated " + str(len(self.param_grid)) + " configurations")
+        self.n_configurations = len(self.param_grid)
+        logger.info("Grid Search generated " + str(self.n_configurations) + " configurations")
 
     def next_config_generator(self):
         for parameters in self.param_grid:

@@ -6,7 +6,6 @@ from time import sleep as slp
 from photonai.base.hyperpipe import Hyperpipe
 from photonai.helper.helper import Singleton
 from photonai.photonlogger.logger import logger
-
 from ..investigator.app.main import application
 
 
@@ -38,7 +37,7 @@ class Investigator:
 
         assert isinstance(pipe, Hyperpipe), "Investigator.show needs an object of type Hyperpipe"
         assert pipe is not None, "Investigator.show needs an object of Hyperpipe, is None"
-        assert pipe.results is not None, "Investigator.show needs an Hyperpipe that is already optimized, so it can show the result tree"
+        assert pipe.results is not None, "Investigator.show needs n Hyperpipe that is already optimized, so it can show the result tree"
         # make sure that Flask is running
         FlaskManager().set_pipe_object(pipe.name, pipe.results)
         url = Investigator.__build_url("a", pipe.name)
