@@ -1,7 +1,9 @@
+import datetime
 import logging
 import sys
-import datetime
+
 import sklearn
+from prettytable import PrettyTable
 
 logging.getLogger(sklearn.__name__).setLevel(logging.ERROR)
 
@@ -46,7 +48,8 @@ def debug(self, message, *args, **kws):
         timestamp = datetime.datetime.now()
         log_message = timestamp.strftime("%d/%m/%Y-%H:%M:%S")
         if message:
-            log_message += " | " + message
+            if not isinstance(message, PrettyTable):
+                log_message += " | " + message
         self._log(DEBUG_LEVELV_NUM, log_message, args, **kws)
 
 

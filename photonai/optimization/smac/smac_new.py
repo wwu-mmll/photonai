@@ -47,7 +47,7 @@ class SMACOptimizer(PhotonBaseOptimizer):
             self.constant_dictionary = {}
 
         else:
-            raise ModuleNotFoundError("Module smac not found or not installed like expected. "
+            raise ModuleNotFoundError("Module smac not found or not installed as expected. "
                                       "Please install the smac_requirements.txt PHOTON provides.")
 
     @staticmethod
