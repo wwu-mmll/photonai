@@ -150,6 +150,7 @@ class MDBHyperpipeInfo(EmbeddedMongoModel):
     flowchart = fields.CharField(blank=True)
     metrics = fields.ListField(blank=True)
     best_config_metric = fields.CharField(blank=True)
+    maximize_best_config_metric = fields.BooleanField(blank=True)
     estimation_type = fields.CharField(blank=True)
     eval_final_performance = fields.BooleanField(blank=True)
 
@@ -169,7 +170,6 @@ class MDBHyperpipe(MongoModel):
     computation_completed = fields.BooleanField(default=False)
     computation_start_time = fields.DateTimeField(blank=True)
     computation_end_time = fields.DateTimeField(blank=True)
-    time_of_results = fields.DateTimeField(blank=True)
 
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)

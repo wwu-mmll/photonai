@@ -243,8 +243,11 @@ def print_metrics(header, metric_dict):
     logger.photon_system_log(t)
 
 
-def print_double_metrics(metric_dict_train, metric_dict_test):
+def print_double_metrics(metric_dict_train, metric_dict_test, photon_system_log = True):
     t = PrettyTable(['METRIC', 'PERFORMANCE TRAIN', 'PERFORMANCE TEST'])
     for m_key, m_value in metric_dict_train.items():
         t.add_row([m_key, "%.4f" % m_value, "%.4f" % metric_dict_test[m_key]])
-    logger.photon_system_log(t)
+    if photon_system_log:
+        logger.photon_system_log(t)
+    else:
+        logger.debug(t)

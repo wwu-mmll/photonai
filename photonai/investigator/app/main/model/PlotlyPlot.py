@@ -126,3 +126,48 @@ class PlotlyPlot:
         result += "Plotly.newPlot('" + self.plot_name + "', data, layout);"
 
         return result
+
+
+class PiePlotlyPlot(PlotlyPlot):
+
+    def __init__(self, plot_name: str, title: str, traces: list = None, show_legend: bool = True):
+
+        super(PiePlotlyPlot, self).__init__(plot_name=plot_name, title=title, traces=traces, show_legend=show_legend)
+        self.result_dict = {'layout': {'title': 'Time Monitor Pie Chart',
+                                       'showlegend': True,
+                                       'annotations': []},
+                            'data': []
+                       }
+
+    def append(self, labels, values, name, colors, domain):
+
+       self.result_dict.append({'labels': labels,
+                'values': values,
+                'type': 'pie',
+                'name': name,
+                'marker': {'colors': colors},
+                'domain': domain,
+                'hoverinfo': 'label+percent+name',
+                'textinfo': 'stestsetset'
+                })
+       self.result_dict['layout']['annotations'].append({
+                "x": 0.225,
+                "y": 1,
+                "font": {
+                  "size": 16
+                },
+                "text": "Plot 1",
+                "xref": "paper",
+                "yref": "paper",
+                "xanchor": "center",
+                "yanchor": "bottom",
+                "showarrow": False
+       })
+
+    def to_plot(self) -> str:
+        """ Returns a string to print script for plot in views
+        :return: Javascript String to print in views
+        """
+
+
+        return str(self.result_dict).replace("False","false").replace("True","true")

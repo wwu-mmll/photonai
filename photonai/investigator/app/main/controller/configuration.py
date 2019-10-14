@@ -1,11 +1,12 @@
 from flask import render_template, request
-from ..main import application
 from pymodm.errors import ValidationError, ConnectionError
-from ..model.PlotlyTrace import PlotlyTrace
-from ..model.PlotlyPlot import PlotlyPlot
-from ..model.ConfigItem import ConfigItem
-from ..model.Config import Config
+
 from .helper import load_pipe, load_available_pipes
+from ..main import application
+from ..model.Config import Config
+from ..model.ConfigItem import ConfigItem
+from ..model.PlotlyPlot import PlotlyPlot
+from ..model.PlotlyTrace import PlotlyTrace
 
 
 @application.route('/pipeline/<storage>/<name>/outer_fold/<fold_nr>/compare_configurations', methods=['POST'])
@@ -43,7 +44,7 @@ def compare_configurations(storage, name, fold_nr):
                 trace_training_list.append(trace_training)
                 trace_test_list.append(trace_test)
 
-                for key, value in config.config_dict.items():
+                for key, value in config.human_readable_config.items():
                     config_item = ConfigItem(str(key), str(value))
                     config_dict.add_item(config_item)
                 config_dict_list.append(config_dict)
