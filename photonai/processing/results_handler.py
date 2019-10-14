@@ -561,7 +561,11 @@ class ResultsHandler:
             ax = plt.subplot(gs[int(i/3), i % 3])
             ax.set_prop_cycle("color", colors)
             data = [element[k]["total_seconds"] if k in element else 0 for name, element in result_dict.items()]
-            patches, _, _ = plt.pie([val/sum(data) for val in data],
+            data_sum = sum(data)
+            if data_sum == 0:
+                data_sum = 1
+            values = [val/data_sum for val in data]
+            patches, _, _ = plt.pie(values,
                                     shadow=True,
                                     startangle=90,
                                     autopct=eval_mean_time_autopct(data),
@@ -569,7 +573,7 @@ class ResultsHandler:
             plt.axis('equal')
             plt.title(k)
             append_plotly(labels=[str(d) for d in element_names],
-                          values=[val/sum(data) for val in data],
+                          values=values,
                           name=k,
                           colors=[(col) for col in colors],
                           domain={'x': [i/len(plot_list), (i+1)/len(plot_list)], 'y': [0.55, 1]})

@@ -96,7 +96,8 @@ class OutputSettings:
             self.project_folder = project_folder
 
         self.results_folder = None
-        self.log_file = os.path.join(self.project_folder, 'photon_setup_errors.log')
+        self.log_file = None
+        self.initialize_log_file()
         self.save_output = save_output
         self.save_predictions_from_best_config_inner_folds = None
         self.plots = plots
@@ -108,6 +109,9 @@ class OutputSettings:
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
+
+    def initialize_log_file(self):
+        self.log_file = os.path.join(self.project_folder, 'photon_setup_errors.log')
 
     def _update_settings(self, name, timestamp):
 
@@ -648,7 +652,7 @@ class Hyperpipe(BaseEstimator):
             self.results.hyperpipe_info.flowchart = flowchart.create_str()
         except:
             self.results.hyperpipe_info.flowchart = ""
-        self.results_handler.save()
+        # self.results_handler.save()
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
@@ -1062,7 +1066,7 @@ class Hyperpipe(BaseEstimator):
         for attr in signature:
             if hasattr(self.output_settings, attr):
                 setattr(settings, attr, getattr(self.output_settings, attr))
-        settings.log_file = os.path.join(settings.project_folder, 'photon_output.log')
+        settings.initialize_log_file()
 
         # create new Hyperpipe instance
         pipe_copy = Hyperpipe(name=self.name,

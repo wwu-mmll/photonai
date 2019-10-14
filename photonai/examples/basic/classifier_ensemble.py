@@ -2,7 +2,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
 
 from photonai.base import Hyperpipe, PipelineElement, Stack, OutputSettings
-from photonai.optimization import IntegerRange
+from photonai.optimization import FloatRange
 
 X, y = load_breast_cancer(True)
 
@@ -21,8 +21,10 @@ my_pipe = Hyperpipe(name='Estimator_pipe',
 my_pipe += PipelineElement('StandardScaler')
 
 # some feature selection
-my_pipe += PipelineElement('CategorialANOVASelectPercentile',
-                           hyperparameters={'percentile': IntegerRange(start=5, step=2, stop=20, range_type='range')},
+my_pipe += PipelineElement('LassoFeatureSelection',
+                           hyperparameters={'percentile_to_keep': FloatRange(start=0.1, step=0.1, stop=0.7,
+                                                                             range_type='range'),
+                                            'alpha': FloatRange(0.5, 1)},
                            test_disabled=True)
 
 # add imbalanced group handling
