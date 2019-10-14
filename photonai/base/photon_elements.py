@@ -1,7 +1,6 @@
 import importlib
 import importlib.util
 import inspect
-import os
 from copy import deepcopy
 
 import numpy as np
@@ -350,7 +349,7 @@ class PipelineElement(BaseEstimator):
         batch_idx = 0
         for start, stop in PhotonDataHelper.chunker(nr, self.batch_size):
             batch_idx += 1
-            logger.debug(self.name + " is predicting batch nr " + str(batch_idx))
+            logger.debug(self.name + " is predicting batch " + str(batch_idx))
 
             # split data in batches
             X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, None, kwargs, start, stop)
@@ -460,7 +459,7 @@ class PipelineElement(BaseEstimator):
             X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, y, kwargs, start, stop)
 
             actual_batch_size = PhotonDataHelper.find_n(X_batched)
-            logger.debug(self.name + " is transforming batch nr " + str(batch_idx) + " with " + str(actual_batch_size)
+            logger.debug(self.name + " is transforming batch " + str(batch_idx) + " with " + str(actual_batch_size)
                          + " items.")
 
             # call transform

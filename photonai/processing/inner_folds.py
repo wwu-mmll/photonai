@@ -104,7 +104,7 @@ class InnerFoldManager(object):
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
                 logger.debug('Performance inner fold ' + str(fold_nr))
-                print_double_metrics(curr_train_fold.metrics, curr_test_fold.metrics)
+                print_double_metrics(curr_train_fold.metrics, curr_test_fold.metrics, photon_system_log=False)
 
                 durations = job_data.pipe.time_monitor
 

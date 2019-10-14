@@ -1,5 +1,3 @@
-from photonai.photonlogger.logger import logger
-
 import time
 
 import numpy as np
@@ -8,6 +6,7 @@ from photonai.base import Switch
 from photonai.optimization import Categorical as PhotonCategorical
 from photonai.optimization import FloatRange, IntegerRange, BooleanSwitch
 from photonai.optimization.base_optimizer import PhotonBaseOptimizer
+from photonai.photonlogger.logger import logger
 
 try:
     from smac.configspace import UniformFloatHyperparameter, UniformIntegerHyperparameter, CategoricalHyperparameter, \
@@ -17,7 +16,7 @@ try:
     # from smac.facade.smac_facade import SMAC, SMBO
     from smac.facade.smac_bo_facade import SMAC4BO, SMAC4AC
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("Module smac not found or not installed like expected. "
+    raise ModuleNotFoundError("Module smac not found or not installed as expected. "
                               "Please install the smac_requirements.txt PHOTON provides.")
 
 

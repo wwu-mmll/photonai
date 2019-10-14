@@ -5,6 +5,7 @@ import pickle
 import pprint
 from typing import Union
 
+import matplotlib
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -110,7 +111,7 @@ class ResultsHandler:
                 performance[metric] = list()
 
             for i in range(maximum_fold):
-                #for config in outer_fold.tested_config_list:
+                # for config in outer_fold.tested_config_list:
                 for metric in self.results.hyperpipe_info.metrics:
                     if i >= len(outer_fold.tested_config_list):
                         performance[metric].append(np.nan)
@@ -186,7 +187,8 @@ class ResultsHandler:
         # handle different lengths
         min_corresponding = len(min(config_evaluations[metric], key=len))
         config_evaluations_corres = [configs[:min_corresponding] for configs in config_evaluations[metric]]
-        minimum_config_evaluations_corres = [configs[:min_corresponding] for configs in minimum_config_evaluations[metric]]
+        minimum_config_evaluations_corres = [configs[:min_corresponding]
+                                             for configs in minimum_config_evaluations[metric]]
 
         mean = np.nanmean(np.asarray(config_evaluations_corres), axis=0)
         mean_min = np.nanmean(np.asarray(minimum_config_evaluations_corres), axis=0)
@@ -290,7 +292,7 @@ class ResultsHandler:
         plt.title(title)
         plt.colorbar()
 
-        if classes == None:
+        if classes is None:
             classes = ['class ' + str(c + 1) for c in np.unique(preds['y_true'])]
         tick_marks = np.arange(len(classes))
         plt.xticks(tick_marks, classes, rotation=45)
@@ -306,14 +308,15 @@ class ResultsHandler:
         plt.tight_layout()
         plt.ylabel('True label')
         plt.xlabel('Predicted label')
-        #plotlyFig = ResultsHandler.__plotlyfy(plt)
+        # plotlyFig = ResultsHandler.__plotlyfy(plt)
         plt.show()
 
     def plot_roc_curve(self, pos_label=1, y_score_col=1):
         """
         This function plots the ROC curve.
         :param pos_label: In binary classiciation, what is the positive class label?
-        :param y_score_col: In binary classiciation, which column of the probability matrix contains the positive class probabilities?
+        :param y_score_col: In binary classiciation, which column of the probability matrix contains the positive
+        class probabilities?
         :return: None
         """
 
@@ -393,7 +396,7 @@ class ResultsHandler:
 
         return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
 
-    def eval_mean_time_components(self):
+    def eval_mean_time_components(self, write_results=True, plotly_return=False):
         """
             This function create charts and tables out of the time-monitoring.
         """
@@ -457,12 +460,13 @@ class ResultsHandler:
                                 result_dict[name]["transform"][info] += result_dict[name]["transform_computed"][info]
                     if "transform_computed" in sub_result_dict:
                         # calculate a ratio, if caching was helpful and how much of the time it saved
-                        result_dict[name]["cache_ratio"] = result_dict[name]["transform_cached"]["total_seconds"]/result_dict[name]["transform_computed"]["total_seconds"]
+                        result_dict[name]["cache_ratio"] = result_dict[name]["transform_cached"]["total_seconds"] / \
+                                                           result_dict[name]["transform_computed"]["total_seconds"]
 
             # in case of caching we have different plot plus a different csv file
             csv_keys = ["fit", "transform", "transform_computed", "transform_cached", "predict"]
             csv_titles = csv_keys
-            plot_list = ["fit", "transform"]
+            plot_list = ["fit", "transform", "transform_cached"]
             method_list = ["fit", "transform_computed", "transform_cached", "predict"]
         else:
             csv_keys = ["fit", "transform_computed", "predict"]
@@ -471,61 +475,150 @@ class ResultsHandler:
             method_list = ["fit", "transform_computed", "predict"]
 
         # write csv file with time analysis
-        sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
-        csv_filename = os.path.join(self.output_settings.results_folder, 'time_monitor.csv')
-        with open(csv_filename, 'w') as csvfile:
-            writer = csv.writer(csvfile)
-            header1 = [""]
-            for k_name in csv_titles:
-                header1.extend([k_name, "", ""])
-            header2 = ["Element"] + (sub_keys * len(csv_titles))
-            if caching:
-                header1.append("")
-                header2.append("cache_ratio")
-            writer.writerow(header1)
-            writer.writerow(header2)
-            for item, item_dict in result_dict.items():
-                row = [item]
-                for time_key in csv_keys:
-                    for sub_key in sub_keys:
-                        if time_key in item_dict:
-                            row.append(format_str.format(item_dict[time_key][sub_key]))
-                        else:
-                            row.append('')
+        if write_results:
+            sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
+            csv_filename = os.path.join(self.output_settings.results_folder, 'time_monitor.csv')
+            with open(csv_filename, 'w') as csvfile:
+                writer = csv.writer(csvfile)
+                header1 = [""]
+                for k_name in csv_titles:
+                    header1.extend([k_name, "", ""])
+                header2 = ["Element"] + (sub_keys * len(csv_titles))
                 if caching:
-                    if "cache_ratio" in item_dict:
-                        row.append(item_dict["cache_ratio"])
-                writer.writerow(row)
-
-        def eval_mean_time_autopct(value):
-            if value > 1:
-                return int(round(value, 0))
-            return None
+                    header1.append("")
+                    header2.append("cache_ratio")
+                writer.writerow(header1)
+                writer.writerow(header2)
+                for item, item_dict in result_dict.items():
+                    row = [item]
+                    for time_key in csv_keys:
+                        for sub_key in sub_keys:
+                            if time_key in item_dict:
+                                row.append(format_str.format(item_dict[time_key][sub_key]))
+                            else:
+                                row.append('')
+                    if caching:
+                        if "cache_ratio" in item_dict:
+                            row.append(item_dict["cache_ratio"])
+                    writer.writerow(row)
 
         # plot figure
-        fig = plt.figure(figsize=(18, 10), dpi=160)
+        # TODO! Use PiePlotlyPlot class without cricle imports
+        plotly_dict = {'layout': {'title': 'Time Monitor Pie Chart',
+                                  'showlegend': True,
+                                  'height': 600,
+                                  'annotations': []},
+                       'data': []
+                       }
+
+        def append_plotly(labels, values, name, colors, domain):
+            """
+            helper function (temporary -> to.do above)
+            """
+            plotly_dict["data"].append({'labels': labels,
+                                        'values': values,
+                                        'type': 'pie',
+                                        'name': name,
+                                        'marker': {'colors': colors},
+                                        'domain': domain,
+                                        'hoverinfo': 'label+percent',
+                                        'textposition': 'inside'})
+            plotly_dict['layout']['annotations'].append({
+                "x": np.mean(domain["x"]),
+                "y": (domain["y"][1]),
+                "font": {
+                    "size": 16
+                },
+                "text": name,
+                "xref": "paper",
+                "yref": "paper",
+                "xanchor": "center",
+                "yanchor": "bottom",
+                "showarrow": False
+            })
+
+        def eval_mean_time_autopct(values):
+            def my_autopct(pct):
+                total = sum(values)
+                if pct/total >= 1:
+                    return str(round(pct,1))+"%"
+                else:
+                    return None
+
+            return my_autopct
+
+        # Create nxm sub plots
+        cpl = len(plot_list)
+        gs = matplotlib.gridspec.GridSpec(int((cpl-1)/3)+2, min(cpl, 3))
+        legend_theme = plt.get_cmap('Set3')
+        legend_theme2 = plt.get_cmap('tab10')
+
+        element_names = [name for name, element in result_dict.items()]
+
+        fig = plt.figure(figsize=(10, 7), dpi=160)
+        colors = [legend_theme(1. * i / len(element_names)) for i in range(len(element_names))]
         for i, k in enumerate(plot_list):
-            ax1 = fig.add_subplot(231+i)
-            data = [element[k]["total_seconds"] for name, element in result_dict.items() if k in element]
-            patches, _, _ = plt.pie(data, shadow=True, startangle=90, autopct=eval_mean_time_autopct, pctdistance=0.7)
-            plt.legend(patches, [name for name, element in result_dict.items() if k in element], loc="best")
+            ax = plt.subplot(gs[int(i/3), i % 3])
+            ax.set_prop_cycle("color", colors)
+            data = [element[k]["total_seconds"] if k in element else 0 for name, element in result_dict.items()]
+            patches, _, _ = plt.pie([val/sum(data) for val in data],
+                                    shadow=True,
+                                    startangle=90,
+                                    autopct=eval_mean_time_autopct(data),
+                                    pctdistance=0.7)
             plt.axis('equal')
-            plt.tight_layout()
-            plt.title(csv_titles[i])
+            plt.title(k)
+            append_plotly(labels=[str(d) for d in element_names],
+                          values=[val/sum(data) for val in data],
+                          name=k,
+                          colors=[(col) for col in colors],
+                          domain={'x': [i/len(plot_list), (i+1)/len(plot_list)], 'y': [0.55, 1]})
+
+        plt.legend(
+            loc='upper left',
+            labels=['%s' % l for l in element_names],
+            prop={'size': 10},
+            bbox_to_anchor=(0.0, 1),
+            bbox_transform=fig.transFigure
+        )
 
         # add another plot for the comparison of the fit/transform/predict methods
-        ax1 = fig.add_subplot(231 + len(plot_list))
+        ax2 = plt.subplot(gs[int(i/3)+1, :])
+        colors = [legend_theme2(1. * i / len(data)) for i in range(len(method_list))]
+        ax2.set_prop_cycle("color", colors)
         data = []
         for k in method_list:
             data.append(np.sum([element[k]["total_seconds"] for name, element in result_dict.items() if k in element]))
-        patches, _ = plt.pie(data, shadow=True, startangle=90, pctdistance=0.7)  # utopct=self.eval_mean_time_Autopct,
-        plt.legend(patches, method_list, loc="best")
-        plt.axis('equal')
-        plt.tight_layout()
-        plt.title("methods")
+        patches_an, _, _ = plt.pie([val/sum(data) for val in data],
+                                   shadow=True,
+                                   startangle=90,
+                                   pctdistance=0.7,
+                                   autopct=eval_mean_time_autopct(data))
 
-        plt.savefig(os.path.join(self.output_settings.results_folder, 'time_monitor_pie.png'))
+        append_plotly(labels=method_list, values=[val / sum(data) for val in data], name="methods",
+                           colors=[(col) for col in colors],
+                           domain={'x': [0, 1], 'y': [0, 0.45]})
+
+        plt.axis('equal')
+        plt.title("methods")
+        plt.legend(
+            loc='lower left',
+            labels=['%s' % l for l in method_list],
+            prop={'size': 10},
+            bbox_transform=fig.transFigure
+        )
+
+        # for only one legend
+        #fig.legend(patches+patches_an, element_names+method_list, prop={'size': 10}, loc='lower left')
+
+        if write_results:
+            plt.savefig(os.path.join(self.output_settings.results_folder, 'time_monitor_pie.png'))
         plt.close()
+        if plotly_return:
+            str_fig = "var layout =" + str(plotly_dict["layout"]) + ";"
+            str_fig += "var data = " + str(plotly_dict["data"]) + ";"
+            str_fig += "Plotly.newPlot('" + "time_monitor_pie_id" + "',data, layout);"
+            return str_fig.replace("False", "false").replace("True", "true")
 
     def save(self):
 
@@ -604,7 +697,7 @@ BEST CONFIG METRIC: {}
 TIME OF RESULT: {}
 VERSION: {}
 
-        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.time_of_results,
+        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.computation_end_time,
                    result_tree.version)
         text_list.append(intro_text)
 
