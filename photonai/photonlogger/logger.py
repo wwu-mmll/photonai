@@ -46,10 +46,11 @@ def info(self, message, *args, **kws):
 def debug(self, message, *args, **kws):
     if self.isEnabledFor(DEBUG_LEVELV_NUM):
         timestamp = datetime.datetime.now()
-        log_message = timestamp.strftime("%d/%m/%Y-%H:%M:%S")
-        if message:
-            if not isinstance(message, PrettyTable):
-                log_message += " | " + message
+        if isinstance(message, str):
+            log_message = timestamp.strftime("%d/%m/%Y-%H:%M:%S")
+            log_message += " | " + message
+        else:
+            log_message = message
         self._log(DEBUG_LEVELV_NUM, log_message, args, **kws)
 
 

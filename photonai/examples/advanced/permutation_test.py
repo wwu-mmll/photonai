@@ -33,7 +33,7 @@ X, y = load_breast_cancer(True)
 # in case the permutation test for this specific hyperpipe has already been calculated, PHOTON will skip the permutation
 # runs and load existing results
 perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, random_state=11,
-                              permutation_id='my_permutation_test')
+                              permutation_id='permutation_test123456')
 perm_tester.fit(X, y)
 
 # Load results
