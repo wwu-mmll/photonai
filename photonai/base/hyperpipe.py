@@ -730,18 +730,18 @@ class Hyperpipe(BaseEstimator):
             # get feature importances of optimum pipe
             logger.info("Mapping back feature importances...")
             feature_importances = self.optimum_pipe.feature_importances_
+
             if not feature_importances:
                 logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
-                return
+            else:
+                self.results.best_config_feature_importances = feature_importances
 
-            self.results.best_config_feature_importances = feature_importances
+                # get backmapping
+                backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
 
-            # get backmapping
-            backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
-
-            # save backmapping
-            self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
-                                                  backmapping=backmapping)
+                # save backmapping
+                self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
+                                                      backmapping=backmapping)
 
         elapsed_time = self.results.computation_end_time - self.results.computation_start_time
         logger.photon_system_log('')
@@ -808,7 +808,7 @@ class Hyperpipe(BaseEstimator):
         # be compatible to list of (image-) files
         if isinstance(self.data.X, list):
             self.data.X = np.asarray(self.data.X)
-        elif isinstance(self.data.X, pd.DataFrame):
+        elif isinstance(self.data.X, (pd.DataFrame, pd.Series)):
             self.data.X = self.data.X.to_numpy()
         if isinstance(self.data.y, list):
             self.data.y = np.asarray(self.data.y)
