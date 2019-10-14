@@ -697,7 +697,7 @@ BEST CONFIG METRIC: {}
 TIME OF RESULT: {}
 VERSION: {}
 
-        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.time_of_results,
+        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.computation_end_time,
                    result_tree.version)
         text_list.append(intro_text)
 
