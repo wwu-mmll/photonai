@@ -119,16 +119,16 @@ class InnerFoldManager(object):
                     break_cv = 0
                     for cf in self.optimization_constraints:
                         if not cf.shall_continue(config_item):
-                            logger.debug(
-                                'Skip further cross validation of config because of performance constraints')
+                            logger.info(
+                                'Skipped further cross validation after fold ' + str(fold_nr) + ' due to performance constraints in ' + cf.metric)
                             break_cv += 1
                             break
                     if break_cv > 0:
                         break
                 elif self.optimization_constraints is not None:
                     if not self.optimization_constraints.shall_continue(config_item):
-                        logger.debug(
-                            'Skip further cross validation of config because of performance constraints')
+                        logger.info(
+                            'Skipped further cross validation after fold ' + str(fold_nr) + ' due to performance constraints in ' + cf.metric)
                         break
 
             InnerFoldManager.process_fit_results(config_item,
