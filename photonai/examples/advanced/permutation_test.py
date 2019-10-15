@@ -1,3 +1,4 @@
+import uuid
 from sklearn.datasets import load_breast_cancer
 
 from photonai.processing import ResultsHandler
@@ -33,7 +34,7 @@ X, y = load_breast_cancer(True)
 # in case the permutation test for this specific hyperpipe has already been calculated, PHOTON will skip the permutation
 # runs and load existing results
 perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, random_state=11,
-                              permutation_id='permutation_test123456')
+                              permutation_id=str(uuid.uuid4()))
 perm_tester.fit(X, y)
 
 # Load results

@@ -37,7 +37,7 @@ class ResultsHandler:
         if len(results) == 1:
             self.results = results[0]
         elif len(results) > 1:
-            self.results = MDBHyperpipe.objects.order_by([("time_of_results", DESCENDING)]).raw({'name': pipe_name}).first()
+            self.results = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': pipe_name}).first()
             logger.warn('Found multiple hyperpipes with that name. Returning most recent one.')
         else:
             raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
