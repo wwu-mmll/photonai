@@ -290,7 +290,7 @@ class PermutationTest:
         if mother_permutation is not None:
             # find distinct list of metrics
             metric_list = list(set([m.metric_name for m in mother_permutation.metrics_test]))
-            metric_dict = PermutationTest.manage_metrics(metric_list, None)
+            metric_dict = PermutationTest.manage_metrics(metric_list, None, mother_permutation.hyperpipe_info.best_config_metric)
             return PermutationTest._calculate_results(permutation_id, metric_dict, save_to_db)
         else:
             return None
