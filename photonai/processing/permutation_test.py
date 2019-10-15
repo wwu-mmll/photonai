@@ -153,6 +153,9 @@ class PermutationTest:
                                                          'computation_completed': True})
             number_of_permutations = all_permutations.count()
 
+            if number_of_permutations == 0:
+                number_of_permutations = 1
+
             # collect true performance
             # collect test set performances and calculate mean
             n_outer_folds = len(mother_permutation.outer_folds)
