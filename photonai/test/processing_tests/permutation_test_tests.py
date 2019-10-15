@@ -16,12 +16,14 @@ class PermutationTestTests(PhotonBaseTest):
         super(PermutationTestTests, cls).setUpClass()
 
         cls.perm_id = uuid.uuid4()
+        cls.wizard_obj_id = ObjectId()
         cls.hyperpipe = Hyperpipe("permutation_test_pipe",
                                    inner_cv = KFold(n_splits=4),
                                    outer_cv = KFold(n_splits=3),
                                    metrics=["accuracy", "balanced_accuracy"],
                                    best_config_metric="balanced_accuracy",
-                                   output_settings=OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results"),
+                                   output_settings=OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
+                                                                  wizard_object_id=str(cls.wizard_obj_id)),
                                    permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
         cls.hyperpipe += PipelineElement("SVC")
@@ -34,20 +36,24 @@ class PermutationTestTests(PhotonBaseTest):
         self.assertEqual(round(returned_duration.total_seconds(), 2), round(cached_duration.total_seconds(), 2))
 
     def test_validate_usability(self):
-        self.assertTrue(PermutationTest.validate_permutation_test_usability(str(self.perm_id)))
+        self.assertTrue(PermutationTest.validate_permutation_test_usability(self.wizard_obj_id))
         # Todo setup case where it is false
 
     def test_find_reference(self):
         obj_id = self.hyperpipe.results._id
         returned_obj_id = PermutationTest.find_reference(self.hyperpipe.output_settings.mongodb_connect_url,
-                                                         self.perm_id, False)._id
+                                                         str(self.perm_id), False)._id
         self.assertEqual(obj_id, returned_obj_id)
-        # todo: setup case where it finds wizard object
+
+        wizard_obj_id = str(self.wizard_obj_id)
+        latest_item = PermutationTest.find_reference(self.hyperpipe.output_settings.mongodb_connect_url,
+                                                     ObjectId(wizard_obj_id), True)
+        self.assertEqual(latest_item.name, wizard_obj_id)
 
     def test_update_perm_id_for_wizard(self):
         perm_id = uuid.uuid4()
         wizard_id = ObjectId()
-        self.hyperpipe.output_settings.wizard_object_id = wizard_id
+        self.hyperpipe.output_settings.wizard_object_id = str(wizard_id)
         self.hyperpipe.output_settings.wizard_system_name = "wizard_proj_1"
         self.hyperpipe.output_settings.user_id = "phoebe"
         self.hyperpipe.fit(self.X, self.y)

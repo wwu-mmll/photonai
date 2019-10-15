@@ -5,6 +5,7 @@ from multiprocessing import Process, Queue, current_process
 import numpy as np
 from pymodm import connect
 from pymodm.errors import DoesNotExist, ConnectionError
+from pymongo import DESCENDING
 
 from photonai.base import OutputSettings
 from photonai.photonlogger.logger import logger
@@ -257,14 +258,14 @@ class PermutationTest:
             self.n_perms = n_perms
 
     @staticmethod
-    def find_reference(mongo_db_connect_url, permutation_id, find_wizard_id = False):
+    def find_reference(mongo_db_connect_url, permutation_id, find_wizard_id=False):
         def _find_mummy(permutation_id):
             if not find_wizard_id:
                 return MDBHyperpipe.objects.raw(
                     {'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
-                     'computation_completed': True}).first()
+                     'computation_completed': True}).order_by([('computation_start_time', DESCENDING)]).first()
             else:
-                return MDBHyperpipe.objects.raw({'wizard_object_id': permutation_id}).first()
+                return MDBHyperpipe.objects.raw({'wizard_object_id': permutation_id}).order_by([('computation_start_time', DESCENDING)]).first()
 
         try:
             # in case we haven't been connected try again
@@ -304,9 +305,10 @@ class PermutationTest:
             return None
 
     @staticmethod
-    def validate_permutation_test_usability(permutation_id,
+    def validate_permutation_test_usability(wizard_id,
                                             mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
-        mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id)
+        mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id=wizard_id,
+                                                            find_wizard_id=True)
         if mother_permutation is not None:
             if mother_permutation.dummy_estimator:
                 best_config_metric = mother_permutation.hyperpipe_info.best_config_metric
