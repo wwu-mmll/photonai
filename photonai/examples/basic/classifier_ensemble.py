@@ -8,6 +8,7 @@ X, y = load_breast_cancer(True)
 
 # DESIGN YOUR PIPELINE
 settings = OutputSettings(project_folder='./tmp/')
+
 my_pipe = Hyperpipe(name='Estimator_pipe',
                     optimizer='grid_search',
                     metrics=['balanced_accuracy'],
