@@ -13,7 +13,7 @@ def create_hyperpipe():
     settings = OutputSettings(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results',
                               project_folder='./tmp/')
     my_pipe = Hyperpipe('basic_svm_pipe_permutation_test',
-                        optimizer='grid_search',
+                        optimizer='sk_opt',
                         metrics=['accuracy', 'precision', 'recall'],
                         best_config_metric='accuracy',
                         outer_cv=KFold(n_splits=2),
