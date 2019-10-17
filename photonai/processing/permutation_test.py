@@ -102,25 +102,33 @@ class PermutationTest:
         if len(perms_todo) > 0:
             # create permutation labels
             np.random.seed(self.random_state)
-            self.permutations = [np.random.permutation(y_true) for i in range(self.n_perms)]
+            self.permutations = [np.random.permutation(y_true) for _ in range(self.n_perms)]
 
             # Run parallel pool
             job_list = list()
-            try:
-                my_client = Client(threads_per_worker=1,
-                                   n_workers=self.n_processes,
-                                   processes=False)
+            if self.n_processes > 1:
+                try:
 
+                    my_client = Client(threads_per_worker=1,
+                                       n_workers=self.n_processes,
+                                       processes=False)
+
+                    for perm_run in perms_todo:
+                        del_job = dask.delayed(PermutationTest.run_parallelized_permutation)(self.hyperpipe_constructor, X,
+                                                                                             perm_run,
+                                                                                             self.permutations[perm_run],
+                                                                                             self.permutation_id)
+                        job_list.append(del_job)
+
+                    dask.compute(*job_list)
+
+                finally:
+                    my_client.close()
+            else:
                 for perm_run in perms_todo:
-                    del_job = dask.delayed(PermutationTest.run_parallelized_permutation)(self.hyperpipe_constructor, X,
-                                                                                         perm_run,
-                                                                                         self.permutations[perm_run],
-                                                                                         self.permutation_id)
-                    job_list.append(del_job)
-
-                dask.compute(*job_list)
-            finally:
-                my_client.close()
+                    PermutationTest.run_parallelized_permutation(self.hyperpipe_constructor, X, perm_run,
+                                                                 self.permutations[perm_run],
+                                                                 self.permutation_id)
 
         self._calculate_results(self.permutation_id, self.metrics)
 
