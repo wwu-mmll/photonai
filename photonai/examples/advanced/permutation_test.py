@@ -7,12 +7,12 @@ from photonai.processing.permutation_test import PermutationTest
 def create_hyperpipe():
     # this is needed here for the unit tests
     from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-    from photonai.optimization import FloatRange, Categorical
+    from photonai.optimization import FloatRange, Categorical, IntegerRange
     from sklearn.model_selection import KFold
 
     settings = OutputSettings(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results',
                               project_folder='./tmp/')
-    my_pipe = Hyperpipe('basic_svm_pipe_permutation_test',
+    my_pipe = Hyperpipe('permutation_test_1',
                         optimizer='sk_opt',
                         metrics=['accuracy', 'precision', 'recall'],
                         best_config_metric='accuracy',
@@ -23,9 +23,18 @@ def create_hyperpipe():
                         verbosity=1,
                         output_settings=settings)
 
-    my_pipe += PipelineElement('StandardScaler')
-    my_pipe += PipelineElement('SVC', {'kernel': Categorical(['linear']),
-                                       'C': FloatRange(1, 2, "linspace", num=2)})
+    # Add transformer elements
+    my_pipe += PipelineElement("StandardScaler", hyperparameters={},
+                               test_disabled=True, with_mean=True, with_std=True)
+    my_pipe += PipelineElement("PCA", hyperparameters={'n_components': IntegerRange(5, 15)},
+                               test_disabled=False)
+
+    # Add estimator
+    my_pipe += PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 5), 'kernel': ['linear', 'rbf']}, gamma='scale')
+
+    # my_pipe += PipelineElement('StandardScaler')
+    # my_pipe += PipelineElement('SVC', {'kernel': Categorical(['linear']),
+    #                                    'C': FloatRange(1, 2, "linspace", num=2)})
     return my_pipe
 
 
@@ -40,7 +49,7 @@ perm_tester.fit(X, y)
 # Load results
 handler = ResultsHandler()
 handler.load_from_mongodb(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results',
-                          pipe_name='basic_svm_pipe_permutation_test')
+                          pipe_name='permutation_test_1')
 
 perm_results = handler.results.permutation_test
 metric_dict = dict()
