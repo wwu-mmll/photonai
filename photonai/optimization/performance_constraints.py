@@ -87,7 +87,7 @@ class PhotonBaseConstraint:
                           "Performance constraints are constantly True.")
             return True
         if self.metric not in config_item.inner_folds[0].validation.metrics:
-            logger.warn("The metric is not calculated. Please insert "+self.metric+" to Hyperpipe.metrics. " +
+            logger.warn("The metric is not calculated. Please insert " + self.metric + " to Hyperpipe.metrics. " +
                           "Performance constraints are constantly False.")
             return False
         if self._greater_is_better:

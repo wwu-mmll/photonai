@@ -44,6 +44,7 @@ def show_pipeline(storage, name):
         config_evaluations = handler.get_config_evaluations()
         min_config_evaluations = handler.get_minimum_config_evaluations()
         optimizer_history = plotly_optimizer_history('optimizer_history', config_evaluations, min_config_evaluations, pipe.hyperpipe_info.best_config_metric)
+        plotly_dict = handler.eval_mean_time_components(write_results=False, plotly_return=True)
 
         # get information on cv, optimizer and data
         data_info = pipe.hyperpipe_info.data
@@ -71,6 +72,7 @@ def show_pipeline(storage, name):
                                cross_validation_info=cross_validation_info,
                                data_info=data_info,
                                optimizer_info=optimizer_info,
+                               time_monitor_pie=plotly_dict,
                                photon_version=__version__)
     except ValidationError as exc:
         return exc.message

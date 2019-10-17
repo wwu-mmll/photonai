@@ -239,6 +239,26 @@
                 <p class="no-posts">Nothing to see yet! Come back soon and check for updates.</p>
             {% endif %}
         </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header">
+                        <h3 class="box-title">Time Monitor Pie Chart</h3>
+                    </div>
+                        <div id="time_monitor_pie_id">
+
+                        </div>
+                </div>
+            </div>
+
+            </div>
+            <script>
+                {{ time_monitor_pie | safe }}
+                // var graphs =
+                // Plotly.plot('test_pie',graphs,{});
+            </script>
+        </div>
     </section>
 {% endblock %}
 
