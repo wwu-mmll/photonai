@@ -1,3 +1,4 @@
+import numpy as np
 from flask import render_template
 from pymodm.errors import ValidationError, ConnectionError
 
@@ -34,14 +35,9 @@ def show_error(msg):
 
 @application.route('/pipeline/<storage>/<name>')
 def show_pipeline(storage, name):
-
     try:
-
         available_pipes = load_available_pipes()
         pipe = load_pipe(storage, name)
-
-        # if not isinstance(pipe, MDBHyperpipe):
-        #     return render_template("default/error.html", error_msg=pipe)
 
         # plot optimizer history
         handler = ResultsHandler(pipe)
@@ -54,120 +50,19 @@ def show_pipeline(storage, name):
         optimizer_info = pipe.hyperpipe_info.optimization
         cross_validation_info = pipe.hyperpipe_info.cross_validation
 
-        # Best config plot
-        best_config_plot_list = list()
+        # overall performance plots
+        overview_plots = create_performance_overview_plots_new(pipe)
 
-        # overview plot on top of the page
-        overview_plot_train = PlotlyPlot("overview_plot_training", "Training Performance", show_legend=False)
-        overview_plot_test = PlotlyPlot("overview_plot_test", "Test Performance", show_legend=False)
+        # best config plots outer folds
+        best_config_plot_list = create_best_config_plot(pipe)
 
         # confusion matrix or scatter plot
-        true_and_pred_val = list()
-        true_and_pred_train = list()
-        predictions_plot_train = ""
-        predictions_plot_test = ""
+        predictions_plot_train, predictions_plot_test = create_prediction_plot(pipe)
 
-        if pipe.hyperpipe_info.eval_final_performance:
-            for fold in pipe.outer_folds:
-                true_and_pred_val.append([fold.best_config.best_config_score.validation.y_true,
-                                          fold.best_config.best_config_score.validation.y_pred])
-                true_and_pred_train.append([fold.best_config.best_config_score.training.y_true,
-                                            fold.best_config.best_config_score.training.y_pred])
-            if pipe.hyperpipe_info.estimation_type == 'regressor':
-                predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train',
-                                                      'True/Pred Training')
-                predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
-            else:
-                predictions_plot_train = plotly_confusion_matrix('predictions_plot_train', 'Confusion Matrix Training',
-                                                                 true_and_pred_train)
-                predictions_plot_test = plotly_confusion_matrix('predictions_plot_test', 'Confusion Matrix Test',
-                                                                true_and_pred_val)
-
-        for fold in pipe.outer_folds:
-
-            overview_plot_training_trace = PlotlyTrace("fold_" + str(fold.fold_nr) + "_training", trace_color="rgb(91, 91, 91)")
-            overview_plot_test_trace = PlotlyTrace("fold_" + str(fold.fold_nr) + "_test", trace_color="rgb(91, 91, 91)")
-
-            if fold.best_config:
-
-                metric_training_list = list()
-                metric_validation_list = list()
-
-                # save metrics for training dynamically in list
-                for key, value in fold.best_config.best_config_score.training.metrics.items():
-                    overview_plot_training_trace.add_x(key)
-                    overview_plot_training_trace.add_y(value)
-                    metric = Metric(key, value)
-                    metric_training_list.append(metric)
-
-                # save metrics for validation dynamically in list
-                for key, value in fold.best_config.best_config_score.validation.metrics.items():
-                    overview_plot_test_trace.add_x(key)
-                    overview_plot_test_trace.add_y(value)
-                    metric = Metric(key, value)
-                    metric_validation_list.append(metric)
-
-            overview_plot_train.add_trace(overview_plot_training_trace)
-            overview_plot_test.add_trace(overview_plot_test_trace)
-
-            metric_training_trace = BestConfigTrace("training", metric_training_list, "", "bar")
-            metric_test_trace = BestConfigTrace("test", metric_validation_list, "", "bar")
-
-            best_config_plot = BestConfigPlot("outer_fold_" + str(fold.fold_nr) + "_best_config_overview",
-                                              "Best Performance Outer Fold " + str(fold.fold_nr),
-                                              metric_training_trace, metric_test_trace)
-            best_config_plot_list.append(best_config_plot)
-
-        training_mean_trace = PlotlyTrace("mean", trace_size=8, trace_color="rgb(31, 119, 180)")
-        test_mean_trace = PlotlyTrace("mean", trace_size=8, trace_color="rgb(214, 123, 25)")
-
-        for metric in pipe.metrics_train:
-            if metric.operation == 'FoldOperations.MEAN':
-                training_mean_trace.add_x(metric.metric_name)
-                training_mean_trace.add_y(metric.value)
-
-        for metric in pipe.metrics_test:
-            if metric.operation == 'FoldOperations.MEAN':
-                test_mean_trace.add_x(metric.metric_name)
-                test_mean_trace.add_y(metric.value)
-
-        # # Start calculating mean values grouped by metrics and training or validation set
-        # temp = {}
-        # count = {}
-        # for metric in metric_training_list:
-        #     temp[metric.name] = 0
-        #     count[metric.name] = 0
-        #
-        # for metric in metric_training_list:
-        #     temp[metric.name] += float(metric.value)
-        #     count[metric.name] += 1
-        #
-        # for key, value in temp.items():
-        #     training_mean_trace.add_x(key)
-        #     training_mean_trace.add_y(value / count[key])
-        #
-        # temp.clear()
-        # count.clear()
-        #
-        # for metric in metric_validation_list:
-        #     temp[metric.name] = 0
-        #     count[metric.name] = 0
-        #
-        # for metric in metric_validation_list:
-        #     temp[metric.name] += float(metric.value)
-        #     count[metric.name] += 1
-        #
-        # for key, value in temp.items():
-        #     test_mean_trace.add_x(key)
-        #     test_mean_trace.add_y(value / count[key])
-        # END calculating mean values grouped by metrics and training or validation set
-
-        overview_plot_train.add_trace(training_mean_trace)
-        overview_plot_test.add_trace(test_mean_trace)
-
-        return render_template('outer_folds/index.html', pipe=pipe, best_config_plot_list=best_config_plot_list,
-                               overview_plot_train=overview_plot_train,
-                               overview_plot_test=overview_plot_test,
+        return render_template('outer_folds/index.html',
+                               pipe=pipe,
+                               best_config_plot_list=best_config_plot_list,
+                               overview_plots=overview_plots,
                                predictions_plot_train=predictions_plot_train,
                                predictions_plot_test=predictions_plot_test,
                                optimizer_history=optimizer_history,
@@ -181,3 +76,120 @@ def show_pipeline(storage, name):
         return exc.message
     except ConnectionError as exc:
         return exc.message
+
+
+def create_performance_overview_plots_new(pipe):
+    metrics = np.unique([metric.metric_name for metric in pipe.metrics_train])
+    overview_plots = list()
+    for metric in metrics:
+        overview_plot = PlotlyPlot("overview_plot_" + metric, metric.replace("_", " "), show_legend=False,
+                                   margin={'r': 10, 'l': 10})
+        for fold in pipe.outer_folds:
+            overview_plot_train_trace = PlotlyTrace("train_fold_" + str(fold.fold_nr), trace_color="train_color_bold",
+                                                    trace_size=10)
+            overview_plot_test_trace = PlotlyTrace("test_fold_" + str(fold.fold_nr), trace_color="test_color_bold",
+                                                   trace_size=10)
+
+            if fold.best_config:
+                # save metrics for training dynamically in list
+                overview_plot_train_trace.add_x('train')
+                overview_plot_train_trace.add_y(fold.best_config.best_config_score.training.metrics[metric])
+                overview_plot_test_trace.add_x('test')
+                overview_plot_test_trace.add_y(fold.best_config.best_config_score.validation.metrics[metric])
+
+            overview_plot.add_trace(overview_plot_train_trace)
+            overview_plot.add_trace(overview_plot_test_trace)
+
+        # add mean performance
+        training_mean_trace = PlotlyTrace("mean_train", trace_size=4, trace_color="train_color", trace_type='bar',
+                                          width=0.1)
+        test_mean_trace = PlotlyTrace("mean_test", trace_size=4, trace_color="test_color", trace_type='bar',
+                                      width=0.1)
+
+        # add dummy performance
+        # training_dummy_trace = PlotlyTrace("dummy_train", trace_size=4, trace_color="dummy_color", trace_type='bar',
+        #                                   width=0.1, opacity=0, marker_line_width=3)
+        test_dummy_trace = PlotlyTrace("dummy_test", trace_size=4, trace_color="dummy_color", trace_type='bar',
+                                       width=0.1, opacity=0)
+        #
+        # for dummy_train in pipe.dummy_estimator.train:
+        #     if dummy_train.metric_name == metric:
+        #         if dummy_train.operation == 'FoldOperations.MEAN':
+        #             training_dummy_trace.add_x('train')
+        #             training_dummy_trace.add_y(dummy_train.value)
+
+        for dummy_test in pipe.dummy_estimator.train:
+            if dummy_test.metric_name == metric:
+                if dummy_test.operation == 'FoldOperations.MEAN':
+                    test_dummy_trace.add_x('dummy')
+                    test_dummy_trace.add_y(dummy_test.value)
+
+        for metric_train in pipe.metrics_train:
+            if metric_train.metric_name == metric:
+                if metric_train.operation == 'FoldOperations.MEAN':
+                    training_mean_trace.add_x('train')
+                    training_mean_trace.add_y(metric_train.value)
+
+        for metric_test in pipe.metrics_test:
+            if metric_test.metric_name == metric:
+                if metric_test.operation == 'FoldOperations.MEAN':
+                    test_mean_trace.add_x('test')
+                    test_mean_trace.add_y(metric_test.value)
+
+        overview_plot.add_trace(training_mean_trace)
+        overview_plot.add_trace(test_mean_trace)
+        # overview_plot.add_trace(training_dummy_trace)
+        overview_plot.add_trace(test_dummy_trace)
+
+        overview_plots.append(overview_plot)
+    return overview_plots
+
+
+def create_best_config_plot(pipe):
+    best_config_plot_list = list()
+    for fold in pipe.outer_folds:
+        metric_training_list = list()
+        metric_validation_list = list()
+        if fold.best_config:
+            # save metrics for training dynamically in list
+            for key, value in fold.best_config.best_config_score.training.metrics.items():
+                metric = Metric(key, value)
+                metric_training_list.append(metric)
+
+            # save metrics for validation dynamically in list
+            for key, value in fold.best_config.best_config_score.validation.metrics.items():
+                metric = Metric(key, value)
+                metric_validation_list.append(metric)
+
+        metric_training_trace = BestConfigTrace("training", metric_training_list, "", "bar")
+        metric_test_trace = BestConfigTrace("test", metric_validation_list, "", "bar")
+
+        best_config_plot = BestConfigPlot("outer_fold_" + str(fold.fold_nr) + "_best_config_overview",
+                                          "Best Performance Outer Fold " + str(fold.fold_nr),
+                                          metric_training_trace, metric_test_trace)
+        best_config_plot_list.append(best_config_plot)
+    return best_config_plot_list
+
+
+def create_prediction_plot(pipe):
+    true_and_pred_val = list()
+    true_and_pred_train = list()
+    predictions_plot_train = ""
+    predictions_plot_test = ""
+
+    if pipe.hyperpipe_info.eval_final_performance:
+        for fold in pipe.outer_folds:
+            true_and_pred_val.append([fold.best_config.best_config_score.validation.y_true,
+                                      fold.best_config.best_config_score.validation.y_pred])
+            true_and_pred_train.append([fold.best_config.best_config_score.training.y_true,
+                                        fold.best_config.best_config_score.training.y_pred])
+        if pipe.hyperpipe_info.estimation_type == 'regressor':
+            predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train',
+                                                  'True/Pred Training')
+            predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
+        else:
+            predictions_plot_train = plotly_confusion_matrix('predictions_plot_train', 'Confusion Matrix Training',
+                                                             true_and_pred_train)
+            predictions_plot_test = plotly_confusion_matrix('predictions_plot_test', 'Confusion Matrix Test',
+                                                            true_and_pred_val)
+    return predictions_plot_train, predictions_plot_test

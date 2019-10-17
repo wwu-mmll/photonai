@@ -3,8 +3,6 @@ from pymodm.errors import ValidationError, ConnectionError
 
 from .helper import load_pipe, load_available_pipes
 from ..main import application
-from ..model.BestConfigPlot import BestConfigPlot
-from ..model.BestConfigTrace import BestConfigTrace
 from ..model.Config import Config
 from ..model.ConfigItem import ConfigItem
 from ..model.Figures import plotly_confusion_matrix, plot_scatter
@@ -35,42 +33,64 @@ def show_outer_fold(storage, name, fold_nr):
             metric = Metric(key, value)
             metric_validation_list.append(metric)
 
-        # building traces out of lists
-        metric_training_trace = BestConfigTrace("training", metric_training_list, '', 'bar')
-        metric_validation_trace = BestConfigTrace("validation", metric_validation_list, '', 'bar')
+        best_config_plots = list()
+        for metric in outer_fold.best_config.best_config_score.validation.metrics.keys():
+            best_config_plot = PlotlyPlot('fold_performance_' + metric, metric.replace("_", " "), show_legend=False,
+                                          margin={'r': 30, 'l': 30})
+            # add mean performance
+            training_mean_trace = PlotlyTrace("mean_train", trace_size=4, trace_color="train_color", trace_type='bar',
+                                              width=0.1)
+            test_mean_trace = PlotlyTrace("mean_test", trace_size=4, trace_color="test_color", trace_type='bar',
+                                          width=0.1)
+            for metric_train in metric_training_list:
+                if metric_train.name == metric:
+                    training_mean_trace.add_x('train')
+                    training_mean_trace.add_y(metric_train.value)
 
-        # building plot out of traces
-        best_config_plot = BestConfigPlot('best_config_overview', 'Best Configuration Overview', metric_training_trace, metric_validation_trace)
+            for metric_test in metric_validation_list:
+                if metric_test.name == metric:
+                    test_mean_trace.add_x('test')
+                    test_mean_trace.add_y(metric_test.value)
+            best_config_plot.add_trace(training_mean_trace)
+            best_config_plot.add_trace(test_mean_trace)
+            best_config_plots.append(best_config_plot)
 
         #---------------------
         # Training
         #---------------------
-        # START building final values for training set (best config)
-        y_true = outer_fold.best_config.best_config_score.training.y_true
-        y_pred = outer_fold.best_config.best_config_score.training.y_pred
-        if pipe.hyperpipe_info.estimation_type == 'classifier':
-            final_value_training_plot = plotly_confusion_matrix('best_config_training_values', 'Confusion Matrix Train',
-                                        [[y_true, y_pred]])
+        if not pipe.hyperpipe_info.eval_final_performance:
+            final_value_training_plot = ""
+            final_value_validation_plot = ""
         else:
-            final_value_training_plot = plot_scatter([[y_true, y_pred]],
-                                                     title='True/Predict for Training Set',
-                                                     name='best_config_training_values')
-        # END building final values for training set (best config)
+            # START building final values for training set (best config)
+            y_true = outer_fold.best_config.best_config_score.training.y_true
+            y_pred = outer_fold.best_config.best_config_score.training.y_pred
+            if pipe.hyperpipe_info.estimation_type == 'classifier':
+                final_value_training_plot = plotly_confusion_matrix('best_config_training_values',
+                                                                    'Confusion Matrix Train',
+                                                                    [[y_true, y_pred]])
+            else:
+                final_value_training_plot = plot_scatter([[y_true, y_pred]],
+                                                         title='True/Predict for Training Set',
+                                                         name='best_config_training_values', trace_color='train_color')
+            # END building final values for training set (best config)
 
-        #---------------------
-        # Validation
-        #---------------------
-        y_true = outer_fold.best_config.best_config_score.validation.y_true
-        y_pred = outer_fold.best_config.best_config_score.validation.y_pred
-        if pipe.hyperpipe_info.estimation_type == 'classifier':
-            final_value_validation_plot = plotly_confusion_matrix('best_config_validation_values', 'Confusion Matrix Test',
-                                        [[y_true, y_pred]])
-        else:
-            # START building final values for validation set (best config)
-            final_value_validation_plot = plot_scatter([[y_true, y_pred]],
-                                                       title='True/Predict for Validation Set',
-                                                       name='best_config_validation_values')
-            # END building final values for validation set (best config)
+            # ---------------------
+            # Validation
+            # ---------------------
+            y_true = outer_fold.best_config.best_config_score.validation.y_true
+            y_pred = outer_fold.best_config.best_config_score.validation.y_pred
+            if pipe.hyperpipe_info.estimation_type == 'classifier':
+                final_value_validation_plot = plotly_confusion_matrix('best_config_validation_values',
+                                                                      'Confusion Matrix Test',
+                                                                      [[y_true, y_pred]])
+            else:
+                # START building final values for validation set (best config)
+                final_value_validation_plot = plot_scatter([[y_true, y_pred]],
+                                                           title='True/Predict for Test Set',
+                                                           name='best_config_validation_values',
+                                                           trace_color='test_color')
+                # END building final values for validation set (best config)
 
         # START building plot objects for each tested config
         for config in outer_fold.tested_config_list:
@@ -121,7 +141,7 @@ def show_outer_fold(storage, name, fold_nr):
         # END building plot objects for each tested config
 
         return render_template('outer_folds/show.html', pipe=pipe, outer_fold=outer_fold,
-                               error_plot_list=error_plot_list, bestConfigPlot=best_config_plot,
+                               error_plot_list=error_plot_list, best_config_plots=best_config_plots,
                                final_value_training_plot=final_value_training_plot,
                                final_value_validation_plot=final_value_validation_plot,
                                config_dict_list=config_dict_list,

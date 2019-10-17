@@ -77,6 +77,11 @@
                     </div>
                 </div>
                 <div class="row">
+                    {% for inner_fold in config.inner_folds %}
+                    <div class="col-md-4">
+
+                    </div>
+                    {% endfor %}
                     <div class="col-md-12">
                         <div id="modal_tab_{{ config.config_nr }}" class="nav-tabs-custom">
                             <ul class="nav nav-tabs">
@@ -128,47 +133,74 @@
             <div class="col-md-12">
                 <div class="box box-default">
                     <div class="box-header">
-                        <h3 class="box-title">Best Configuration</h3>
+                        <h3 class="box-title">Performance of Best Configuration</h3>
                     </div>
                     <div class="box-body">
                         <!-- Custom Tabs -->
-                        <div class="nav-tabs-custom">
-                            <ul class="nav nav-tabs">
-                                <li class="active"><a href="#tab_1" data-toggle="tab">Overview performance metrics</a></li>
-                                <li><a href="#tab_2" data-toggle="tab">Final values training set</a></li>
-                                <li><a href="#tab_3" data-toggle="tab">Final values validation set</a></li>
-                            </ul>
-                            <div class="tab-content">
-                                <div class="tab-pane active" id="tab_1">
-                                    <div id="best_config_overview">
-                                        <!-- graph best_config_overview will be shown here -->
-                                    </div>
-                                    <script>
-                                        {{ bestConfigPlot.to_plot() | safe }}
-                                    </script>
-                                </div>
-                                <div class="tab-pane" id="tab_2">
-                                    <div id="best_config_training_values">
-                                        <!-- graph will be shown here -->
-                                    </div>
-                                    <script>
-                                        {{ final_value_training_plot | safe }}
-                                    </script>
-                                </div>
-                                <div class="tab-pane" id="tab_3">
-                                    <div id="best_config_validation_values">
-                                        <!-- graph will be shown here -->
-                                    </div>
-                                    <script>
-                                        {{ final_value_validation_plot | safe }}
-                                    </script>
-                                </div>
+                        {% for best_config_plot in best_config_plots %}
+                        <div class="col-md-3">
+                            <div id="{{best_config_plot.plot_name}}">
                             </div>
+                            <script>
+                                {
+                                    {
+                                        best_config_plot.to_plot() | safe
+                                    }
+                                }
+                            </script>
                         </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header">
+                        <h3 class="box-title">Predictions</h3>
+                    </div>
+                    <div class="box-body">
+                        {% if not pipe.hyperpipe_info.eval_final_performance %}
+                        <h4 class="btn btn-warning">Not available in case "eval_final_performance" is False</h4>
+                        {% else %}
+                        <div class="col-md-1">
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Training Set</h4>
+                            <div id="best_config_training_values">
+                            </div>
+                            <script>
+                                {
+                                    {
+                                        final_value_training_plot | safe
+                                    }
+                                }
+                            </script>
+                        </div>
+                        <div class="col-md-2">
+                        </div>
+                        <div class="col-md-4">
+                            <h4>Test Set</h4>
+                            <div id="best_config_validation_values">
+                            </div>
+                            <script>
+                                {
+                                    {
+                                        final_value_validation_plot | safe
+                                    }
+                                }
+                            </script>
+                        </div>
+                        <div class="col-md-1">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+
 
         <!----------------------------- END BEST CONFIG ----------------------------->
 

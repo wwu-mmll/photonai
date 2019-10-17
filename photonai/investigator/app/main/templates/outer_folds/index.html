@@ -9,7 +9,7 @@
             <div class="box-header with-border">
                 <i class="fa fa-folder-open"></i>
 
-                <h3 class="box-title">Fold {{ outer_fold.fold_nr }}</h3>
+                <h3 class="box-title">Best Config Fold {{ outer_fold.fold_nr }}</h3>
                 <div class="pull-right">
                     <a href="{{ url_for('show_outer_fold', storage=s, name=name, fold_nr=outer_fold.fold_nr) }}" class="btn btn-sm btn-default"><span class="glyphicon glyphicon-th-list"></span> Show details</a>
                 </div>
@@ -17,16 +17,15 @@
             <!-- /.box-header -->
             <div class="box-body">
 
-                <div id="outer_fold_{{ outer_fold.fold_nr }}_best_config_overview">
-                    <!-- graph best_config_overview will be shown here -->
-                    <!-- will be filled through javascripts block -->
-                </div>
+                <!--                <div id="outer_fold_{{ outer_fold.fold_nr }}_best_config_overview">-->
+                <!--                    &lt;!&ndash; graph best_config_overview will be shown here &ndash;&gt;-->
+                <!--                    &lt;!&ndash; will be filled through javascripts block &ndash;&gt;-->
+                <!--                </div>-->
 
-{#                <h4>Best Configuration Fold {{ outer_fold.fold_nr }}</h4>#}
-                <table class="table table-hover" style="margin-top: 2em;">
+                <table class="table table-hover">
                     <tr>
-                        <th>Variable</th>
-                        <th>Value</th>
+                        <th>Element</th>
+                        <th>Hyperparameter</th>
                     </tr>
                     {% for key, value in outer_fold.best_config.human_readable_config.items() %}
                         <tr>
@@ -136,152 +135,100 @@
             <div class="col-md-12">
                 <div class="box box-default">
                     <div class="box-header">
-                        <h3 class="box-title">Performance and Predictions of all Folds</h3>
+                        <h3 class="box-title">Performance of All Folds</h3>
                     </div>
                     <div class="box-body">
-                        <!-- Custom Tabs -->
-                        <div class="nav-tabs-custom">
-                            <ul class="nav nav-tabs">
-                                <li class="active"><a href="#tab_1" data-toggle="tab">Performance</a></li>
-                                <li><a href="#tab_2" data-toggle="tab">Predictions</a></li>
-                            </ul>
-                            <div class="tab-content">
-
-                                <div class="tab-pane active" id="tab_1">
-                                    <div class="col-md-4">
-                                        <div id="overview_plot_training">
-                                            <!-- graph best_config_overview will be shown here -->
-
-                                        </div>
-                                        <script>
-                                            {{ overview_plot_train.to_plot() | safe }}
-                                        </script>
-
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div id="overview_plot_test">
-
-                                        </div>
-                                        <script>
-                                            {{ overview_plot_test.to_plot() | safe }}
-                                        </script>
-
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div id="optimizer_history">
-
-                                        </div>
-                                        <script>
-                                            {{ optimizer_history | safe}}
-                                        </script>
-
-                                    </div>
-                                </div>
-
-                                <div class="tab-pane" id="tab_2">
-                                    <div class="col-md-1">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div id="predictions_plot_train">
-                                            <!-- graph best_config_overview will be shown here -->
-
-                                        </div>
-                                        <script>
-                                            {{ predictions_plot_train | safe }}
-                                        </script>
-
-                                    </div>
-                                    <div class="col-md-2">
-                                    </div>
-                                    <div class="col-md-4">
-                                        <div id="predictions_plot_test">
-
-                                        </div>
-                                        <script>
-                                            {{ predictions_plot_test | safe }}
-                                        </script>
-
-                                    </div>
-                                    <div class="col-md-1">
-                                    </div>
-                                </div>
-
-                            </div>
+                        <div class="col-md-6">
+                            <h4>Overall Best Configuration</h4>
+                            <table class="table table-hover" style="margin-top: 2em;">
+                                <tr>
+                                    <th>Element</th>
+                                    <th>Hyperparameter</th>
+                                </tr>
+                                {% for key, value in pipe.best_config.human_readable_config.items() %}
+                                <tr>
+                                    <td>{{ key }}</td>
+                                    <td>{{ value }}</td>
+                                </tr>
+                                {% endfor %}
+                            </table>
                         </div>
+                        <div class="col-md-6">
+                            <div id="optimizer_history">
+                            </div>
+                            <script>
+                                {
+                                    {
+                                        optimizer_history | safe
+                                    }
+                                }
+                            </script>
+                        </div>
+                        {% for overview_plot in overview_plots %}
+                        <div class="col-md-3">
+                            <div id="{{overview_plot.plot_name}}">
+                            </div>
+                            <script>
+                                {
+                                    {
+                                        overview_plot.to_plot() | safe
+                                    }
+                                }
+                            </script>
+                        </div>
+                        {% endfor %}
                     </div>
                 </div>
             </div>
         </div>
 
-        <!--<div class="box box-solid">-->
-            <!--<div class="box-header">-->
-                <!--<h1 class="box-title">Training and Test Predictions</h1>-->
-            <!--</div>-->
-            <!--<div class="box-body">-->
-                <!--<div class="col-md-1">-->
-                <!--</div>-->
-                <!--<div class="col-md-4">-->
-                    <!--<div id="predictions_plot_train">-->
-                        <!--&lt;!&ndash; graph best_config_overview will be shown here &ndash;&gt;-->
+        <div class="row">
+            <div class="col-md-12">
+                <div class="box box-default">
+                    <div class="box-header">
+                        <h3 class="box-title">Predictions</h3>
+                    </div>
+                    <div class="box-body">
+                        {% if not pipe.hyperpipe_info.eval_final_performance %}
+                        <h4 class="btn btn-warning">Not available in case "eval_final_performance" is False</h4>
+                        {% else %}
 
-                        <!--</div>-->
-                    <!--<script>-->
-                        <!--{{ predictions_plot_train | safe }}-->
-                    <!--</script>-->
+                        <div class="col-md-1">
+                        </div>
+                        <div class="col-md-4">
 
-                <!--</div>-->
-                <!--<div class="col-md-2">-->
-                <!--</div>-->
-                <!--<div class="col-md-4">-->
-                    <!--<div id="predictions_plot_test">-->
+                            <div id="predictions_plot_train">
+                                <!-- graph best_config_overview will be shown here -->
+                            </div>
+                            <script>
+                                {
+                                    {
+                                        predictions_plot_train | safe
+                                    }
+                                }
+                            </script>
 
-                    <!--</div>-->
-                    <!--<script>-->
-                    <!--{{ predictions_plot_test | safe }}-->
-                    <!--</script>-->
-
-                <!--</div>-->
-                <!--<div class="col-md-1">-->
-                <!--</div>-->
-            <!--</div>-->
-        <!--</div>-->
-
-        <!--<div class="box box-solid">-->
-            <!--<div class="box-header">-->
-                <!--<h1 class="box-title">Performance of all Folds</h1>-->
-            <!--</div>-->
-            <!--<div class="box-body">-->
-                <!--<div class="col-md-4">-->
-                    <!--<div id="overview_plot_training">-->
-                        <!--&lt;!&ndash; graph best_config_overview will be shown here &ndash;&gt;-->
-
-                        <!--</div>-->
-                    <!--<script>-->
-                        <!--{{ overview_plot_train.to_plot() | safe }}-->
-                    <!--</script>-->
-
-                <!--</div>-->
-                <!--<div class="col-md-4">-->
-                    <!--<div id="overview_plot_test">-->
-
-                    <!--</div>-->
-                    <!--<script>-->
-                    <!--{{ overview_plot_test.to_plot() | safe }}-->
-                    <!--</script>-->
-
-                <!--</div>-->
-                <!--<div class="col-md-4">-->
-                    <!--<div id="optimizer_history">-->
-
-                    <!--</div>-->
-                    <!--<script>-->
-                    <!--{{ optimizer_history | safe}}-->
-                    <!--</script>-->
-
-                <!--</div>-->
-            <!--</div>-->
-        <!--</div>-->
-
+                        </div>
+                        <div class="col-md-2">
+                        </div>
+                        <div class="col-md-4">
+                            <div id="predictions_plot_test">
+                            </div>
+                            <script>
+                                {
+                                    {
+                                        predictions_plot_test | safe
+                                    }
+                                }
+                            </script>
+                        </div>
+                        <div class="col-md-1">
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div class="row">
             {% if pipe.outer_folds %}

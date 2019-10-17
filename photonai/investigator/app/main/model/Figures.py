@@ -1,13 +1,12 @@
-from sklearn.metrics import confusion_matrix
-from photonai.processing.metrics import Scorer
 import numpy as np
-from .PlotlyTrace import PlotlyTrace
-from .PlotlyPlot import PlotlyPlot
-from sklearn import linear_model
 from scipy.stats import pearsonr
-from matplotlib import cm
+from sklearn import linear_model
+from sklearn.metrics import confusion_matrix
 from sklearn.utils.multiclass import unique_labels
-import matplotlib.pylab as plt
+
+from photonai.processing.metrics import Scorer
+from .PlotlyPlot import PlotlyPlot
+from .PlotlyTrace import PlotlyTrace
 
 
 def plotly_confusion_matrix(plot_name, title, folds):
@@ -138,7 +137,7 @@ def plotly_optimizer_history(name, config_evaluations, minimum_config_evaluation
     return plot.to_plot()
 
 
-def plot_scatter(folds, name, title, colormap='nipy_spectral'):
+def plot_scatter(folds, name, title, colormap='nipy_spectral', trace_color=None):
     import seaborn as sns
     color = sns.hls_palette(len(folds), l=.3, s=.8)
 
@@ -149,8 +148,11 @@ def plot_scatter(folds, name, title, colormap='nipy_spectral'):
     fold_nr = 1
     for y_true, y_pred in folds:
         c = color[fold_nr-1]
-        validation_trace = PlotlyTrace('Fold {}'.format(fold_nr), 'markers', 'scatter', trace_size=7,
-
+        if trace_color:
+            validation_trace = PlotlyTrace('Fold {}'.format(fold_nr), 'markers', 'scatter', trace_size=7,
+                                           trace_color=trace_color)
+        else:
+            validation_trace = PlotlyTrace('Fold {}'.format(fold_nr), 'markers', 'scatter', trace_size=7,
                                        trace_color='rgba({}, {}, {}, 0.5)'.format(c[0], c[1], c[2]))
         for true_item in y_true:
             validation_trace.add_x(true_item)
@@ -165,7 +167,12 @@ def plot_scatter(folds, name, title, colormap='nipy_spectral'):
         regr.fit(np.reshape(y_true, (len(y_true), 1)), y_pred)
         regr_out = regr.predict(np.reshape(y_true, (len(y_true), 1)))
         r = pearsonr(y_true, y_pred)[0]
-        regr_trace = PlotlyTrace('r={0:.2f}'.format(r), 'lines', 'scatter', trace_color='rgba({}, {}, {}, 0.8)'.format(c[0], c[1], c[2]))
+        if trace_color:
+            regr_trace = PlotlyTrace('r={0:.2f}'.format(r), 'lines', 'scatter',
+                                     trace_color=trace_color)
+        else:
+            regr_trace = PlotlyTrace('r={0:.2f}'.format(r), 'lines', 'scatter',
+                                     trace_color='rgba({}, {}, {}, 0.8)'.format(c[0], c[1], c[2]))
         #regr_trace = PlotlyTrace('cool', 'lines', 'scatter', trace_color='black')
         for i, true_item in enumerate(y_true):
             regr_trace.add_x(true_item)

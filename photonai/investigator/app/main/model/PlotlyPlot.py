@@ -8,7 +8,7 @@ class PlotlyPlot:
     """
 
     def __init__(self, plot_name: str, title: str, traces: list=None, show_legend: bool=True,
-                 xlabel: str='', ylabel: str='', regression_line: bool = False):
+                 xlabel: str = '', ylabel: str = '', regression_line: bool = False, margin=None):
         """ Constructor
         :param plot_name: Name of the div-Element which will show the plot
         :param title: title of the plot
@@ -24,6 +24,7 @@ class PlotlyPlot:
         self.xlabel = xlabel
         self.ylabel = ylabel
         self.regression_line = regression_line
+        self.margin = margin
 
     def trace_names_to_string(self) -> str:
         """ Returns a comma separated string of containing trace names
@@ -54,9 +55,15 @@ class PlotlyPlot:
             result += ", name: '" + item.variable_name + "'"
             result += ", mode: '" + item.mode + "'"
             result += ", type: '" + item.trace_type + "'"
+
+            if item.width:
+                result += ", width: {}".format(item.width)
+            if item.opacity:
+                result += ", opacity: {}".format(item.opacity)
             result += ", marker: {"
             if item.trace_color:
                 result += "color: '" + item.trace_color + "', "
+
             if item.trace_size != 0:
                 result += "size: " + str(item.trace_size) + ", "
             if item.marker_line_width:
@@ -65,13 +72,16 @@ class PlotlyPlot:
                 if item.marker_line_color:
                     result += ", color: '{}'".format(item.marker_line_color)
                 result += "}, "
+            if item.width:
+                result += "width: {}".format(item.width) + ", "
             if item.colorscale:
                 result += "colorscale: {}".format(item.colorscale)
             result += "}};"
 
         result += str("var layout = { title: '" + str(self.title) + "'")
         # result += str("var layout = { title: '" + str(self.title) + "', yaxis: {range: [-0.25, 1.25]}")
-
+        if self.margin:
+            result += ", margin: {}".format(self.margin)
         if self.show_legend:
             result += ", showlegend: true"
         else:

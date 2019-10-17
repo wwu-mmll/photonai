@@ -6,10 +6,28 @@ class PlotlyTrace:
     author: Julian Gebker
     version: 1.0.0
     """
+    COLOR_PALETTE = {
+        # "train_color": "#379683",
+        # "train_color_bold": "#00624E",
+        # "val_color": "#FFA347",
+        # "val_color_bold": "#CF6700",
+        # "test_color": "#FF8045",
+        # "test_color_bold": "#E94A00",
+        # "dummy_color": "#DEDEDE",
+        # "dummy_color_bold": "#BCBCBC",
+        "train_color": "#2388FE",
+        "train_color_bold": "#0E57AB",
+        "val_color": "#C7D7FE",
+        "val_color_bold": "#0E0E1D",
+        "test_color": "#5C4A79",
+        "test_color_bold": "#0E0E1D",
+        "dummy_color": "#DEDEDE",
+        "dummy_color_bold": "#BCBCBC",
+    }
 
     def __init__(self, variable_name: str, mode: str="markers", trace_type: str="scatter", trace_size: int=0,
                  trace_color: str="", with_error: bool=False, colorscale: list=None, marker_line_width: int=None,
-                 marker_line_color: str = None):
+                 marker_line_color: str = None, width=None, opacity: float = 1.):
         """ Constructor
         :param variable_name: Variable name in javascript
         :param mode: Trace's mode (default: 'markers')
@@ -24,10 +42,12 @@ class PlotlyTrace:
         self.error_y = []
         self.trace_size = trace_size
         self.with_error = with_error
-        self.trace_color = trace_color
+        self.trace_color = self.get_color(trace_color)
         self.colorscale = colorscale
         self.marker_line_width = marker_line_width
         self.marker_line_color = marker_line_color
+        self.width = width
+        self.opacity = opacity
 
     def add_x(self, x):
         """ function to add new value for x axis
@@ -119,3 +139,9 @@ class PlotlyTrace:
                 else:
                     result += str(item) + ","
         return result.rstrip(",")
+
+    def get_color(self, color):
+        if color in self.COLOR_PALETTE.keys():
+            return self.COLOR_PALETTE[color]
+        else:
+            return color
