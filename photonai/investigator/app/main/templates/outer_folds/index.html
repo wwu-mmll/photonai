@@ -157,11 +157,7 @@
                             <div id="optimizer_history">
                             </div>
                             <script>
-                                {
-                                    {
-                                        optimizer_history | safe
-                                    }
-                                }
+                                {{ optimizer_history | safe }}
                             </script>
                         </div>
                         {% for overview_plot in overview_plots %}
@@ -169,11 +165,7 @@
                             <div id="{{overview_plot.plot_name}}">
                             </div>
                             <script>
-                                {
-                                    {
-                                        overview_plot.to_plot() | safe
-                                    }
-                                }
+                                {{ overview_plot.to_plot() | safe }}
                             </script>
                         </div>
                         {% endfor %}
@@ -201,11 +193,7 @@
                                 <!-- graph best_config_overview will be shown here -->
                             </div>
                             <script>
-                                {
-                                    {
-                                        predictions_plot_train | safe
-                                    }
-                                }
+                                {{ predictions_plot_train | safe }}
                             </script>
 
                         </div>
@@ -215,11 +203,7 @@
                             <div id="predictions_plot_test">
                             </div>
                             <script>
-                                {
-                                    {
-                                        predictions_plot_test | safe
-                                    }
-                                }
+                                {{ predictions_plot_test | safe }}
                             </script>
                         </div>
                         <div class="col-md-1">
