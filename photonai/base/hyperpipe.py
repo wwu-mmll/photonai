@@ -96,7 +96,8 @@ class OutputSettings:
             self.project_folder = project_folder
 
         self.results_folder = None
-        self.log_file = os.path.join(self.project_folder, 'photon_output.log')
+        self.log_file = None
+        self.initialize_log_file()
         self.save_output = save_output
         self.save_predictions_from_best_config_inner_folds = None
         self.plots = plots
@@ -108,6 +109,9 @@ class OutputSettings:
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
+
+    def initialize_log_file(self):
+        self.log_file = os.path.join(self.project_folder, 'photon_setup_errors.log')
 
     def _update_settings(self, name, timestamp):
 
@@ -125,6 +129,8 @@ class OutputSettings:
                 os.makedirs(self.results_folder)
             shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
 
+            if os.path.basename(self.log_file) == "photon_setup_errors.log":
+                self.log_file = 'photon_output.log'
             self.log_file = self._add_timestamp(self.log_file)
             self.set_log_file()
 
@@ -621,6 +627,7 @@ class Hyperpipe(BaseEstimator):
         self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
+        self.results.hyperpipe_info.maximize_best_config_metric = self.optimization.maximize_metric
 
         # optimization
         def _format_cross_validation(cv):
@@ -645,6 +652,7 @@ class Hyperpipe(BaseEstimator):
             self.results.hyperpipe_info.flowchart = flowchart.create_str()
         except:
             self.results.hyperpipe_info.flowchart = ""
+        # self.results_handler.save()
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
@@ -685,7 +693,7 @@ class Hyperpipe(BaseEstimator):
         logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
 
         # save results again
-        self.results.time_of_results = datetime.datetime.now()
+        self.results.computation_end_time = datetime.datetime.now()
         self.results.computation_completed = True
         self.results_handler.save()
 
@@ -726,20 +734,19 @@ class Hyperpipe(BaseEstimator):
             # get feature importances of optimum pipe
             logger.info("Mapping back feature importances...")
             feature_importances = self.optimum_pipe.feature_importances_
+
             if not feature_importances:
                 logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
-                return
+            else:
+                self.results.best_config_feature_importances = feature_importances
 
-            self.results.best_config_feature_importances = feature_importances
+                # get backmapping
+                backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
 
-            # get backmapping
-            backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
+                # save backmapping
+                self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
+                                                      backmapping=backmapping)
 
-            # save backmapping
-            self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
-                                                  backmapping=backmapping)
-
-        self.results.computation_end_time = datetime.datetime.now()
         elapsed_time = self.results.computation_end_time - self.results.computation_start_time
         logger.photon_system_log('')
         logger.photon_system_log(
@@ -805,7 +812,7 @@ class Hyperpipe(BaseEstimator):
         # be compatible to list of (image-) files
         if isinstance(self.data.X, list):
             self.data.X = np.asarray(self.data.X)
-        elif isinstance(self.data.X, pd.DataFrame):
+        elif isinstance(self.data.X, (pd.DataFrame, pd.Series)):
             self.data.X = self.data.X.to_numpy()
         if isinstance(self.data.y, list):
             self.data.y = np.asarray(self.data.y)
@@ -1059,7 +1066,7 @@ class Hyperpipe(BaseEstimator):
         for attr in signature:
             if hasattr(self.output_settings, attr):
                 setattr(settings, attr, getattr(self.output_settings, attr))
-        settings.log_file = os.path.join(settings.project_folder, 'photon_output.log')
+        settings.initialize_log_file()
 
         # create new Hyperpipe instance
         pipe_copy = Hyperpipe(name=self.name,
