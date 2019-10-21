@@ -140,7 +140,7 @@ class PermutationTest:
     def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id):
         # Create new instance of hyperpipe and set all parameters
         perm_pipe = hyperpipe_constructor()
-        perm_pipe.verbosity = -1
+        perm_pipe.verbosity = 2
         perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
         perm_pipe.permutation_id = permutation_id
 
