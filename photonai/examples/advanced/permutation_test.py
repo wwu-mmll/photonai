@@ -30,7 +30,8 @@ def create_hyperpipe():
                                test_disabled=False)
 
     # Add estimator
-    my_pipe += PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 5), 'kernel': ['linear', 'rbf']}, gamma='scale')
+    my_pipe += PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 5), 'kernel': ['linear', 'rbf']},
+                               gamma='scale', max_iter=1000000)
 
     # my_pipe += PipelineElement('StandardScaler')
     # my_pipe += PipelineElement('SVC', {'kernel': Categorical(['linear']),
@@ -42,7 +43,7 @@ X, y = load_breast_cancer(True)
 
 # in case the permutation test for this specific hyperpipe has already been calculated, PHOTON will skip the permutation
 # runs and load existing results
-perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=3, random_state=11,
+perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=1, random_state=11,
                               permutation_id=str(uuid.uuid4()))
 perm_tester.fit(X, y)
 
