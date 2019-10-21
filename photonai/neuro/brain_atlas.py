@@ -500,6 +500,8 @@ class BrainMask(BaseEstimator):
             else:
                 if isinstance(X, str):
                     logger.error("Extracting ROI failed for " + X)
+                elif isinstance(X, list) and isinstance(X[0], str):
+                    logger.error("Extracting ROI failed for item in" + str(X))
                 else:
                     logger.error("Extracting ROI failed for nifti image obj. Cannot trace back path of failed file.")
         else:
