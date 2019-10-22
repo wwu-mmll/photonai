@@ -1,3 +1,5 @@
+import numpy as np
+
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
@@ -11,7 +13,7 @@ settings = OutputSettings(project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
-                    optimizer='random_grid_search',  # which optimizer PHOTON shall use
+                    optimizer='sk_opt',  # which optimizer PHOTON shall use
                     optimizer_params={'n_configurations': 10},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],  # the performance metrics of your interest
                     best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
@@ -37,8 +39,11 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 # my_pipe += PipelineElement('LogisticRegression', hyperparameters={'penalty': ['l1', 'l2'], 'C': [0.5, 1]})
 
 
+y = np.random.permutation(y)
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
+
+
 
 #Investigator.show(my_pipe)
 debug = True
