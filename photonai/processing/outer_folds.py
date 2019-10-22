@@ -199,7 +199,9 @@ class OuterFoldManager:
             self.result_object.tested_config_list.append(current_config_mdb)
 
             # 3. inform optimizer about performance
+            logger.debug("Telling hyperparameter optimizer about recent performance.")
             self.optimizer.tell(current_config, config_performance)
+            logger.debug("Asking hyperparameter optimizer for new config.")
         logger.clean_info('---------------------------------------------------------------------------------------------------------------')
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
         # now go on with the best config found

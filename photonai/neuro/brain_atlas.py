@@ -498,7 +498,12 @@ class BrainMask(BaseEstimator):
                 else:
                     logger.error("Currently there are no other methods than 'vec', 'mean', and 'box' supported!")
             else:
-                logger.error("Extracting ROI failed.")
+                if isinstance(X, str):
+                    logger.error("Extracting ROI failed for " + X)
+                elif isinstance(X, list) and isinstance(X[0], str):
+                    logger.error("Extracting ROI failed for item in" + str(X))
+                else:
+                    logger.error("Extracting ROI failed for nifti image obj. Cannot trace back path of failed file.")
         else:
             logger.error("Skipping self.mask_image " + self.mask_image.label + " because it is empty.")
 
