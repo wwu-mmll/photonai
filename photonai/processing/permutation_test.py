@@ -350,7 +350,7 @@ class PermutationTest:
                         else:
                             return False
                     else:
-                        if mother_permutation.best_config.best_config_scoretest.validation.metrics[best_config_metric] < dummy_threshold_to_beat:
+                        if mother_permutation.best_config.best_config_score.validation.metrics[best_config_metric] < dummy_threshold_to_beat:
                             return True
                         else:
                             return False
