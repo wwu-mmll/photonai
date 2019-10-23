@@ -478,5 +478,21 @@
   "PhotonMLPClassifier":[
     "photonai.modelwrapper.PhotonMLPClassifier.PhotonMLPClassifier",
     "Estimator"
+  ],
+  "KerasDnnClassifier":[
+    "photonai.modelwrapper.keras_dnn_classifier.KerasDnnClassifier",
+    "Estimator"
+  ],
+  "KerasDnnRegressor":[
+    "photonai.modelwrapper.keras_dnn_regressor.KerasDnnRegressor",
+    "Estimator"
+  ],
+    "KerasBaseClassifier":[
+    "photonai.modelwrapper.keras_base_models.KerasBaseClassifier",
+    "Estimator"
+  ],
+    "KerasBaseRegression":[
+    "photonai.modelwrapper.keras_base_models.KerasBaseRegression",
+    "Estimator"
   ]
 }
