@@ -3,6 +3,7 @@ import unittest
 from photonai.base import PipelineElement
 from photonai.optimization import IntegerRange
 from photonai.test.optimization.grid_search.grid_search_test import GridSearchOptimizerTest
+from photonai.base.photon_pipeline import PhotonPipeline
 
 try:
     from photonai.optimization.smac.smac3 import SMACOptimizer
@@ -52,3 +53,23 @@ else:
             """
             with self.assertRaises(ModuleNotFoundError):
                 from photonai.optimization.smac.smac3 import SMACOptimizer
+
+
+
+
+class Smac3IntegrationTest(unittest.TestCase):
+
+    def test_against_smac(self):
+        pass
+
+    @staticmethod
+    def objective_function(cfg):
+
+        my_pipe = PhotonPipeline([('StandardScaler', StandardScaler()), ('SVC', SVC())])
+        my_pipe.random_state = seed
+        my_pipe.set_params(**cfg)
+        my_pipe.fit(X, y)
+        y_pred = my_pipe.predict(X_train)
+        metric = accuracy_score(y_pred, y_true)
+
+        return metric
