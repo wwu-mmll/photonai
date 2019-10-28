@@ -41,10 +41,12 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
 
     def __init__(self, n_configurations=25):
         super(RandomGridSearchOptimizer, self).__init__()
-        self.n_configurations = n_configurations
+        self._k = n_configurations
+        self.n_configurations = self._k
 
     def prepare(self, pipeline_elements, maximize_metric):
         super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
+        self.n_configurations = self._k
         self.param_grid = list(self.param_grid)
         # create random chaos in list
         np.random.shuffle(self.param_grid)

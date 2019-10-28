@@ -140,7 +140,7 @@ class NeuroBranch(Branch):
                 logger.error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
 
-        logger.debug('NeuroBranch' + self.name + ' is collecting data from the different cores...' )
+        logger.debug('NeuroBranch' + self.name + ' is collecting data from the different cores...')
         X_new, _, _ = self.base_element.transform(X)
 
         # check if we have a list of niftis, should avoid this, except when output_image = True
