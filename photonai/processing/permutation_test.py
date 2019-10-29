@@ -142,8 +142,8 @@ class PermutationTest:
 
         perm_result = self._calculate_results(self.permutation_id, self.metrics)
 
-        performance_df = pd.DataFrame(perm_result.perm_performances)
-        performance_df.to_csv(os.path.join(self.pipe.output_settings.project_folder, 'permutation_test_results.csv'))
+        performance_df = pd.DataFrame(perm_result.p_values)
+        performance_df.to_csv(os.path.join(existing_reference.output_folder, 'permutation_test_results.csv'))
         return self
 
     @staticmethod
