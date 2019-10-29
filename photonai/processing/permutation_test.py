@@ -1,5 +1,7 @@
 import numpy as np
+import pandas as pd
 import dask
+import os
 from dask.distributed import Client
 
 from pymodm import connect
@@ -15,7 +17,8 @@ from photonai.processing.results_structure import MDBPermutationResults, MDBPerm
 
 class PermutationTest:
 
-    def __init__(self, hyperpipe_constructor, permutation_id: str, n_perms=1000, n_processes=1, random_state=15):
+    def __init__(self, hyperpipe_constructor, permutation_id: str, n_perms=1000, n_processes=1, random_state=15,
+                 verbosity=-1):
 
         self.hyperpipe_constructor = hyperpipe_constructor
         self.n_perms = n_perms
@@ -23,6 +26,7 @@ class PermutationTest:
         self.mother_permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
         self.n_processes = n_processes
         self.random_state = random_state
+        self.verbosity = verbosity
         self.pipe = None
         self.metrics = None
 
@@ -78,11 +82,16 @@ class PermutationTest:
 
                 self.pipe.results.permutation_test = MDBPermutationResults(n_perms=self.n_perms)
                 self.pipe.results.save()
+                existing_reference = self.pipe.results
 
             except Exception as e:
                 if self.pipe.results is not None:
                     self.pipe.results.permutation_failed = str(e)
                     self.pipe.results.save()
+
+        # check for sanity
+        if not self.__validate_usability(existing_reference):
+            raise RuntimeError("Permutation Test is not adviced because results are not better than dummy. Aborting.")
 
         # find how many permutations have been computed already:
         # existing_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
@@ -117,7 +126,8 @@ class PermutationTest:
                         del_job = dask.delayed(PermutationTest.run_parallelized_permutation)(self.hyperpipe_constructor, X,
                                                                                              perm_run,
                                                                                              self.permutations[perm_run],
-                                                                                             self.permutation_id)
+                                                                                             self.permutation_id,
+                                                                                             self.verbosity)
                         job_list.append(del_job)
 
                     dask.compute(*job_list)
@@ -128,19 +138,19 @@ class PermutationTest:
                 for perm_run in perms_todo:
                     PermutationTest.run_parallelized_permutation(self.hyperpipe_constructor, X, perm_run,
                                                                  self.permutations[perm_run],
-                                                                 self.permutation_id)
+                                                                 self.permutation_id, self.verbosity)
 
-        self._calculate_results(self.permutation_id, self.metrics)
+        perm_result = self._calculate_results(self.permutation_id, self.metrics)
 
+        performance_df = pd.DataFrame(perm_result.perm_performances)
+        performance_df.to_csv(os.path.join(self.pipe.output_settings.project_folder, 'permutation_test_results.csv'))
         return self
 
-
-
     @staticmethod
-    def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id):
+    def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id, verbosity=-1):
         # Create new instance of hyperpipe and set all parameters
         perm_pipe = hyperpipe_constructor()
-        perm_pipe.verbosity = 2
+        perm_pipe.verbosity = verbosity
         perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
         perm_pipe.permutation_id = permutation_id
 
@@ -203,7 +213,7 @@ class PermutationTest:
                         performance = list()
                         for fold in range(n_outer_folds):
                             performance.append(
-                                perm_pipe.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[
+                                perm_pipe.outer_folds[fold].best_config.best_config_score.validation.metrics[
                                     metric['name']])
                         perm_performances[metric['name']] = np.mean(performance)
                     perm_performances['ind_perm'] = index
@@ -337,6 +347,11 @@ class PermutationTest:
                                             mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
         mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id=wizard_id,
                                                             find_wizard_id=True)
+
+        return PermutationTest.__validate_usability(mother_permutation)
+
+    @staticmethod
+    def __validate_usability(mother_permutation):
         if mother_permutation is not None:
             if mother_permutation.dummy_estimator:
                 best_config_metric = mother_permutation.hyperpipe_info.best_config_metric
@@ -354,6 +369,9 @@ class PermutationTest:
                             return True
                         else:
                             return False
+                else:
+                    # we have no dummy results so we assume it should be okay
+                    return True
         else:
             return None
 
