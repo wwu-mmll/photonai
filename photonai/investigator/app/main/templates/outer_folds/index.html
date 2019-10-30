@@ -112,17 +112,19 @@
                             </pre>
                             <canvas id='Canvas01'></canvas>
                             <script>
-                                var canvas = document.getElementById("Canvas01");
-                                var source = document.getElementById("Source01").innerHTML;
-                                var options = {
-                                          fontSize: 14,
-                                        shadeColor: "#B0C4DE",
-                                    favorUniformNodeSizes: true,
-                                    useSmartArrows: true,
-                                    fontFamily: "Source Sans Pro",
-                                    favorGoldenRatioLabelSize: true
-                                        };
-                                pinker.draw(canvas, source, options);
+                                 $( document ).ready(function() {
+                                     var canvas = document.getElementById("Canvas01");
+                                     var source = document.getElementById("Source01").innerHTML;
+                                     var options = {
+                                         fontSize: 14,
+                                         shadeColor: "#B0C4DE",
+                                         favorUniformNodeSizes: true,
+                                         useSmartArrows: true,
+                                         fontFamily: "Source Sans Pro",
+                                         favorGoldenRatioLabelSize: true
+                                     };
+                                     pinker.draw(canvas, source, options);
+                                 });
                             </script>
                         </div>
                     </div>
