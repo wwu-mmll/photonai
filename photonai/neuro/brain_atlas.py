@@ -8,6 +8,7 @@ import nibabel as nib
 import numpy as np
 from nilearn import image, masking, _utils
 from nilearn._utils.niimg import _safe_get_data
+from nilearn.image import math_img
 from nilearn.input_data import NiftiMasker
 from sklearn.base import BaseEstimator
 
@@ -201,7 +202,8 @@ class AtlasLibrary:
 
         mask_object = MaskObject(name=mask_name, mask_file=original_mask_object.mask_file)
 
-        mask_object.mask = image.threshold_img(mask_object.mask_file, threshold=mask_threshold)
+        #mask_object.mask = image.threshold_img(mask_object.mask_file, threshold=mask_threshold)
+        mask_object.mask = math_img('img > {}'.format(mask_threshold), img=mask_object.mask_file)
 
         if target_affine is not None and target_shape is not None:
             mask_object.mask = self._resample(mask_object.mask, target_affine=target_affine, target_shape=target_shape)
