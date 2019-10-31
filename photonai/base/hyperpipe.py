@@ -611,6 +611,7 @@ class Hyperpipe(BaseEstimator):
 
         self.results.computation_start_time = start_time
         self.results.hyperpipe_info.estimation_type = self.estimation_type
+        self.results.output_folder = self.output_settings.results_folder
 
         if self.permutation_id is not None:
             self.results.permutation_id = self.permutation_id

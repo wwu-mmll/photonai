@@ -162,8 +162,9 @@ class MDBHyperpipe(MongoModel):
 
     name = fields.CharField()
     version = fields.CharField()
+    output_folder = fields.CharField(blank=True)
 
-    permutation_id = fields.CharField()
+    permutation_id = fields.CharField(blank=True)
     permutation_failed = fields.CharField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
 
