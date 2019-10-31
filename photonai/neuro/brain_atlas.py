@@ -186,7 +186,7 @@ class AtlasLibrary:
         self.library[(atlas_name, str(target_affine), str(target_shape), str(mask_threshold))] = atlas_object
         logger.debug("BrainAtlas: Done adding atlas to library!")
 
-    def _add_mask_to_library(self, mask_name: str = '', target_affine=None, target_shape=None, mask_threshold=None):
+    def _add_mask_to_library(self, mask_name: str = '', target_affine=None, target_shape=None, mask_threshold=0.5):
         # Todo: find solution for multiprocessing spaming
         # print('Adding mask to library: {} - Shape {} - Affine {} - Threshold {}'.format(mask_name,
         #                                                                                      target_shape,
@@ -201,7 +201,7 @@ class AtlasLibrary:
 
         mask_object = MaskObject(name=mask_name, mask_file=original_mask_object.mask_file)
 
-        mask_object.mask = masking.compute_background_mask(mask_object.mask_file)
+        mask_object.mask = image.threshold_img(mask_object.mask_file, threshold=mask_threshold)
 
         if target_affine is not None and target_shape is not None:
             mask_object.mask = self._resample(mask_object.mask, target_affine=target_affine, target_shape=target_shape)
@@ -220,7 +220,7 @@ class AtlasLibrary:
 
         return self.library[(atlas_name, str(target_affine), str(target_shape), str(mask_threshold))]
 
-    def get_mask(self, mask_name, target_affine=None, target_shape=None, mask_threshold=None):
+    def get_mask(self, mask_name, target_affine=None, target_shape=None, mask_threshold=0.5):
         if (mask_name, str(target_affine), str(target_shape)) not in self.library:
             self._add_mask_to_library(mask_name, target_affine, target_shape, mask_threshold)
 
@@ -413,7 +413,7 @@ class BrainAtlas(BaseEstimator):
 
 class BrainMask(BaseEstimator):
 
-    def __init__(self, mask_image='MNI_ICBM152_WholeBrain', affine=None, shape=None, mask_threshold=None, extract_mode='vec'):
+    def __init__(self, mask_image='MNI_ICBM152_WholeBrain', affine=None, shape=None, mask_threshold=0.5, extract_mode='vec'):
         self.mask_image = mask_image
         self.affine = affine
         self.shape = shape
