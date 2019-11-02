@@ -8,8 +8,6 @@ from photonai.optimization import FloatRange, IntegerRange, Categorical
 # LOAD DATA FROM SKLEARN
 X, y = load_breast_cancer(True)
 
-# CREATE HYPERPIPE
-settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('data_integration',
                     optimizer='random_grid_search',
                     optimizer_params={'n_configurations': 2},
@@ -18,8 +16,10 @@ my_pipe = Hyperpipe('data_integration',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=settings)
-my_pipe += Switch('PreprocessingSwitch', [PipelineElement('SimpleImputer'), PipelineElement('StandardScaler', {}, with_mean=True)])
+                    output_settings=OutputSettings(project_folder='./tmp/'))
+
+my_pipe += PipelineElement('SimpleImputer')
+my_pipe += PipelineElement('StandardScaler', {}, with_mean=True)
 
 # Use only "mean" features: [mean_radius, mean_texture, mean_perimeter, mean_area, mean_smoothness, mean_compactness,
 # mean_concavity, mean_concave_points, mean_symmetry, mean_fractal_dimension
@@ -37,14 +37,10 @@ worst_branch = Branch('WorstFeature')
 worst_branch += DataFilter(indices=np.arange(20, 30))
 worst_branch += PipelineElement('SVC')
 
-# voting = True to mean the result of every branch
 my_pipe += Stack('SourceStack', [mean_branch, error_branch, worst_branch])
 
 my_pipe += Switch('EstimatorSwitch', [PipelineElement('RandomForestClassifier', {'n_estimators': IntegerRange(2, 5)}),
                                       PipelineElement('SVC')])
 
 my_pipe.fit(X, y)
-
-# Investigator.show(my_pipe)
-debug = True
 

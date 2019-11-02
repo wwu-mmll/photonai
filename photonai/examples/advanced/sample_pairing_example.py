@@ -8,7 +8,7 @@ from photonai.optimization import Categorical
 X, y = load_breast_cancer(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
+
 my_pipe = Hyperpipe('sample_pairing_example_classification',
                     optimizer='grid_search',
                     metrics=['accuracy'],
@@ -16,25 +16,23 @@ my_pipe = Hyperpipe('sample_pairing_example_classification',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=settings,
+                    output_settings=OutputSettings(project_folder='./tmp/'),
                     random_seed=42123)
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
-# first normalize all features
 my_pipe += PipelineElement('StandardScaler')
 
-# add sample pairing
-my_pipe += PipelineElement('SamplePairingClassification', {'draw_limit': [500, 1000, 10000],
-                                                           'generator': Categorical(['nearest_pair'])},
-                           distance_metric='euclidean', test_disabled=True)
+my_pipe += PipelineElement('SamplePairingClassification',
+                           hyperparameters={'draw_limit': [500, 1000, 10000],
+                                            'generator': Categorical(['nearest_pair'])},
+                           distance_metric='euclidean',
+                           test_disabled=True)
 
-# engage and optimize a Random Forest Classifier
-my_pipe += PipelineElement('RandomForestClassifier', hyperparameters={'n_estimators': [10]})
+my_pipe += PipelineElement('RandomForestClassifier',
+                           hyperparameters={'n_estimators': [10]})
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-debug = True
 
 

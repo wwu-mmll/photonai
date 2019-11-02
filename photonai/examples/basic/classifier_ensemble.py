@@ -43,5 +43,5 @@ for clf in clf_list:
 my_pipe += est_stack
 
 my_pipe += PipelineElement('PhotonVotingClassifier')
-# my_pipe += PipelineElement("RandomForestClassifier")
+
 my_pipe.fit(X, y)

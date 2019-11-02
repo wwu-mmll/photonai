@@ -28,7 +28,7 @@ with only one line of code.
 In order to use PHOTON you only need to have your favourite Python IDE ready.
 Then install it simply via pip
 ```
-pip install photonai
+pip install git+https://github.com/photon-team/photon
 ```
 
 You can setup a full stack machine learning pipeline in a few lines of code:
