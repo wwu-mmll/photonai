@@ -8,9 +8,7 @@ from photonai.optimization import IntegerRange
 
 # REGISTER ELEMENT
 base_folder = os.path.dirname(os.path.abspath(__file__))
-print(base_folder)
 custom_elements_folder = os.path.join(base_folder, 'custom_elements')
-print(custom_elements_folder)
 
 registry = PhotonRegistry(custom_elements_folder=custom_elements_folder)
 registry.register(photon_name='MyCustomEstimator',
@@ -47,19 +45,14 @@ registry.list_available_elements()
 registry.info('MyCustomEstimator')
 registry.info('MyCustomTransformer')
 
-
-# ADD ELEMENTS TO YOUR PIPELINE
-# first normalize all features
 my_pipe.add(PipelineElement('StandardScaler'))
-# then do feature selection using a PCA, specify which values to try in the hyperparameter search
+
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}, test_disabled=True)
-# engage and optimize the good old SVM for Classification
+
 my_pipe += PipelineElement('MyCustomEstimator')
 
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-debug = True
 
 

@@ -19,8 +19,6 @@ y = np.array(age)
 X = np.array(dataset_files.gray_matter_maps)
 
 
-# DEFINE OUTPUT SETTINGS
-settings = OutputSettings(project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 pipe = Hyperpipe('Limbic_System',
@@ -32,7 +30,7 @@ pipe = Hyperpipe('Limbic_System',
                  verbosity=2,
                  cache_folder="./cache",
                  eval_final_performance=False,
-                 output_settings=settings)
+                 output_settings=OutputSettings(project_folder='./tmp/'))
 
 """
 AVAILABLE ATLASES
@@ -79,11 +77,7 @@ neuro_stack += ho_sub
 # ADD NEURO ELEMENTS TO HYPERPIPE
 
 pipe += neuro_branch
-#pipe += atlas
-#pipe += neuro_stack
-
 pipe += PipelineElement('PCA', n_components=20)
-
 pipe += PipelineElement('RandomForestRegressor')
 
 pipe.fit(X, y)
