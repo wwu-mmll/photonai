@@ -8,7 +8,7 @@ from photonai.optimization import Categorical
 X, y = load_boston(return_X_y=True)
 
 
-settings = OutputSettings(project_folder='./tmp/')
+settings =
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_keras_regression_pipe',
@@ -19,7 +19,7 @@ my_pipe = Hyperpipe('basic_keras_regression_pipe',
                     outer_cv=KFold(n_splits=2),
                     inner_cv=KFold(n_splits=2),
                     verbosity=1,
-                    output_settings=settings)
+                    output_settings=OutputSettings(project_folder='./tmp/'))
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
@@ -27,6 +27,8 @@ my_pipe.add(PipelineElement('StandardScaler'))
 
 # attention: hidden_layer count == activation size. So if you want to choose a function in every layer,
 # grid_search does not forbid combinations with len(hidden_layer_size) != len(activations)
+
+# USE KERASDNNCLASSIFIER FOR CLASSIFICATION
 my_pipe += PipelineElement('KerasDnnRegressor',
                            hyperparameters={'hidden_layer_sizes': Categorical([[10, 8, 4], [20, 5]]),
                                             'dropout_rate': Categorical([0.5, [0.5, 0.2]])
