@@ -23,6 +23,10 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
 # first normalize all features
 my_pipe += PipelineElement('StandardScaler')
 
+my_pipe += PipelineElement('PCA',
+                           hyperparameters={'n_components': [0.5, 0.8, 0.3]})
+
+# engage and optimize the good old SVM for Classification
 my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': IntegerRange(10, 50)})
 
 
