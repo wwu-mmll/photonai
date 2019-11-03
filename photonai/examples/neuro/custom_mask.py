@@ -18,9 +18,6 @@ y = np.array(age)
 X = np.array(dataset_files.gray_matter_maps)
 
 
-# DEFINE OUTPUT SETTINGS
-settings = OutputSettings(project_folder='./tmp/')
-
 # DESIGN YOUR PIPELINE
 pipe = Hyperpipe('CustomMask',
                  optimizer='grid_search',
@@ -31,7 +28,7 @@ pipe = Hyperpipe('CustomMask',
                  verbosity=2,
                  cache_folder="./cache",
                  eval_final_performance=False,
-                 output_settings=settings)
+                 output_settings=OutputSettings(project_folder='./tmp/'))
 
 local_spm_installation = '/spm-data/it-share/software_metis/SPMLauncher/ManagedSoftware/spm/'
 custom_mask = local_spm_installation + 'spm12/toolbox/Anatomy/PMaps/Insula_Ig1.nii'
@@ -43,10 +40,8 @@ neuro_branch = NeuroBranch('NeuroBranch')
 neuro_branch += mask
 
 pipe += neuro_branch
-#pipe += mask
 
 pipe += PipelineElement('PCA', n_components=10)
-
 pipe += PipelineElement('RandomForestRegressor')
 
 pipe.fit(X, y)

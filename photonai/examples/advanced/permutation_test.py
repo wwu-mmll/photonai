@@ -45,4 +45,5 @@ perm_tester = PermutationTest(create_hyperpipe, n_perms=20, n_processes=1, rando
                               permutation_id=my_perm_id)
 perm_tester.fit(X, y)
 
-print(PermutationTest.get_permutation_status(my_perm_id, "mongodb://trap-umbriel:27017/photon_results"))
+results = PermutationTest.get_permutation_status(my_perm_id, "mongodb://trap-umbriel:27017/photon_results")
+print(results.p_values)

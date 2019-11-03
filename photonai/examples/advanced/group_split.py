@@ -11,16 +11,14 @@ X, y = load_breast_cancer(True)
 groups = np.random.random_integers(0, 3, (len(y), ))
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
-
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
+my_pipe = Hyperpipe('group_split_pipe,
                     optimizer='grid_search',
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=GroupKFold(n_splits=4),
                     inner_cv=GroupShuffleSplit(n_splits=10),
                     verbosity=1,
-                    output_settings=settings)
+                    output_settings=OutputSettings(project_folder='./tmp/'))
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
@@ -33,7 +31,4 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y, groups=groups)
-
-debug = True
-
 

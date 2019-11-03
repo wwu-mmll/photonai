@@ -7,9 +7,6 @@ from photonai.optimization import Categorical
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_digits(n_class=5, return_X_y=True)
 
-
-settings = OutputSettings(project_folder='./tmp/')
-
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_keras_multiclass_pipe',
                     optimizer='grid_search',
@@ -19,7 +16,7 @@ my_pipe = Hyperpipe('basic_keras_multiclass_pipe',
                     outer_cv=KFold(n_splits=2),
                     inner_cv=KFold(n_splits=2),
                     verbosity=1,
-                    output_settings=settings)
+                    output_settings=OutputSettings(project_folder='./tmp/'))
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
@@ -39,5 +36,4 @@ my_pipe += PipelineElement('KerasDnnClassifier',
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
-debug = True
 Investigator.show(my_pipe)

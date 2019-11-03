@@ -2,6 +2,7 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import IntegerRange
 from photonai.investigator import Investigator
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
@@ -22,7 +23,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
 # first normalize all features
 my_pipe += PipelineElement('StandardScaler')
 
-my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators':[10]})
+my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': IntegerRange(10, 50)})
 
 
 # NOW TRAIN YOUR PIPELINE

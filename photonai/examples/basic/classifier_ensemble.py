@@ -7,15 +7,13 @@ from photonai.optimization import FloatRange
 X, y = load_breast_cancer(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
-
 my_pipe = Hyperpipe(name='Estimator_pipe',
                     optimizer='grid_search',
                     metrics=['balanced_accuracy'],
                     best_config_metric='balanced_accuracy',
                     outer_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                     inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
-                    output_settings=settings)
+                    output_settings=OutputSettings(project_folder='./tmp/'))
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
