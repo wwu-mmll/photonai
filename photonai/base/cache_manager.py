@@ -12,14 +12,17 @@ class CacheManager:
 
     __LOCK_STR = 'photon_cache_manager'
 
-    def __init__(self, _hash=None, cache_folder=None, parallel_use: bool=False):
+    def __init__(self, _hash=None, cache_folder=None, parallel_use: bool = False,
+                 single_subject_caching: bool =False):
         self._hash = _hash
         self.cache_folder = cache_folder
 
         self.pipe_order = None
         self.cache_index = None
         self.state = None
+
         self.parallel_use = parallel_use
+        self.single_subject_caching = single_subject_caching
 
     @property
     def hash(self):
@@ -95,9 +98,10 @@ class CacheManager:
 
         cache_query = self.generate_cache_key(pipe_element_name)
         if cache_query in self.cache_index:
-            logger.debug("Loading data from cache for " + pipe_element_name + ": "
-                           + str(self.state.nr_items) + " items " + self.state.first_data_str
-                           + " - " + str(self.state.config))
+            if not self.single_subject_caching:
+                logger.debug("Loading data from cache for " + pipe_element_name + ": "
+                             + str(self.state.nr_items) + " items " + self.state.first_data_str
+                             + " - " + str(self.state.config))
             filename = self.cache_index[cache_query]
             # lock = Lock(filename)
             # lock.acquire()
@@ -124,8 +128,9 @@ class CacheManager:
         cache_query = self.generate_cache_key(pipe_element_name)
         filename = os.path.join(self.cache_folder, str(cache_query) + ".p")
         self.cache_index[cache_query] = filename
-        logger.debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
-                       + self.state.first_data_str + " - " + str(self.state.config))
+        if not self.single_subject_caching:
+            logger.debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
+                         + self.state.first_data_str + " - " + str(self.state.config))
 
         # write cached data to filesystem
         with open(filename, 'wb') as f:

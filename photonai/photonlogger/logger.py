@@ -1,9 +1,8 @@
 import datetime
 import logging
 import sys
-
+import os
 import sklearn
-from prettytable import PrettyTable
 
 logging.getLogger(sklearn.__name__).setLevel(logging.ERROR)
 

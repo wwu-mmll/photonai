@@ -47,7 +47,7 @@ It also enables you to persist and load your optimal model, including all prepro
                       'plotly',
                       'imblearn',
                       'pymodm==0.4.1',
-                      'scipy',
+                      'scipy==1.2',
                       'statsmodels',
                       'flask',
                       'prettytable',
