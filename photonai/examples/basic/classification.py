@@ -44,6 +44,6 @@ my_pipe += PipelineElement('SVC',
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
-Investigator.show(my_pipe)
+# Investigator.show(my_pipe)
 
 

@@ -55,7 +55,7 @@ class PipelineElementTests(unittest.TestCase):
 
         Xt, _, _ = self.pca_pipe_element.transform(self.X)
         self.assertEqual(Xt.shape, (569, 30))
-        self.assertEqual(Xt[0, 0], 1160.1425737041347)
+        self.assertAlmostEqual(Xt[0, 0], 1160.1425737041347)
 
     def test_predict(self):
         self.svc_pipe_element.fit(self.X, self.y)

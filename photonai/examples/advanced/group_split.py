@@ -11,7 +11,7 @@ X, y = load_breast_cancer(True)
 groups = np.random.random_integers(0, 3, (len(y), ))
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('group_split_pipe,
+my_pipe = Hyperpipe('group_split_pipe',
                     optimizer='grid_search',
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',

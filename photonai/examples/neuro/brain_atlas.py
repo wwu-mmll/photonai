@@ -56,7 +56,7 @@ atlas = PipelineElement('BrainAtlas',
                         atlas_name="AAL", extract_mode='vec', batch_size=20)
 
 
-neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=2)
+neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=3)
 neuro_branch += atlas
 # V2 -------------------------------------------------------------
 # it's also possible to combine ROIs from different atlases
