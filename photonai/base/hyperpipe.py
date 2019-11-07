@@ -77,7 +77,8 @@ class OutputSettings:
     * `wizard_project_name` [str]:
        How the project is titled in the PHOTON Wizard
     """
-    def __init__(self, mongodb_connect_url: str = None,
+    def __init__(self,
+                 mongodb_connect_url: str = None,
                  save_output: bool = True,
                  plots: bool = True,
                  overwrite_results: bool = False,

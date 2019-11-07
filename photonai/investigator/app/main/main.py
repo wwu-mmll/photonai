@@ -14,10 +14,10 @@ application = Flask(__name__, template_folder=template_dir)
 application.config['pipe_files'] = {}
 application.config['pipe_objects'] = {}
 
-application.config['wizard'] = True
+application.config['wizard'] = False
 
 application.config['SECRET_KEY'] = 'Random_Lovely_Key'
-application.config['DEBUG'] = False
+application.config['DEBUG'] = True
 
 from pymodm.connection import connect
 connect('mongodb://trap-umbriel:27017/photon_results')

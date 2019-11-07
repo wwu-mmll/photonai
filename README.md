@@ -1,265 +1,114 @@
 ![PHOTON LOGO](http://www.photon-ai.com/static/img/PhotonLogo.jpg "PHOTON Logo")
 
-# PHOTON
-#### A **P**ython-based **H**yperparameter **O**ptimization **To**olbox for **N**eural Networks designed to accelerate and simplify the construction, training, and evaluation of machine learning models.
+#### PHOTON is a high level python API for designing and optimizing machine learning pipelines.
 
-PHOTON gives you an easy way of setting up a full stack machine learning pipeline including
-nested cross-validation and hyperparameter search. After PHOTON has found the best configuration
-for your model, it offers a convenient possibility to explore the analyzed hyperparameter space.
-It also enables you to persist and load your optimal model, including all preprocessing steps,
-with only one line of code.
+We developed a framework which pre-structures and automatizes the repetitive part of the model development process so that the user can focus on the important design decisions regarding pipeline architecture and the choice of parameters.
 
+By treating each pipeline element as a building block, we create a system in which the user can select and combine processing steps, adapt their arrangement or stack them in more advanced pipeline layouts.
+
+PHOTON is designed to give any user easy access to state-of-the-art machine learning and integrates the power of various machine learning toolboxes and algorithms.
+
+[Read the Documentation](https://www.photon-ai.com)
 
 ---
-
-## Table of Contents
-- [Getting Started](#markdown-header-getting-started)
-- [Features](#markdown-header-features)
-- [Usage](#markdown-header-usage-step-by-step)
-- [PHOTON Investigator](#markdown-header-photon-investigator)
-- [Save your models](#markdown-header-save-your-models)
-- [Stacking](#markdown-header-stacking)
-- [Switch Estimators](#markdown-header-estimators)
-- [Speed Hacks](#markdown-header-speed-hacks)
-- [Custom Learning Model](#markdown-header-custom-learning-model)
-- [Complete Code Example](#markdown-header-complete-code-example)
-
 ## Getting Started
 In order to use PHOTON you only need to have your favourite Python IDE ready.
 Then install it simply via pip
 ```
-pip install photonai
+pip install git+https://github.com/photon-team/photon
 ```
 
 You can setup a full stack machine learning pipeline in a few lines of code:
 
 ```python
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
-                    optimizer='grid_search',
-                    metrics=['accuracy', 'precision', 'recall'],
-                    best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=10))
-
-my_pipe += PipelineElement('StandardScaler')
-
-my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
-
-my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
-                                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
-
-my_pipe.fit(X, y)
-```
-
-## Features
-
-**PHOTON is an object-oriented python framework for optimizing machine learning pipelines,
-designed to leave you deciding the important things and automatizing the rest.**
-
-- includes nested-cross-validation
-- includes hyperparameter optimization strategies
-- add any number of preprocessing steps of your choice
-- add the learning model of your choice
-- compatible with all scikit-learn algorithms
-- add any custom keras or tensorflow models
-- choose the performance metrics of your interest
-- choose according to which performance metric the best configuration is picked
-- add you own models, preprocessing steps, performance metrics, callbacks and optimizers
-- automatic hyperparameter optimization for all your models
-- save best performing models
-- persist hyperparameter search results in local file or MongoDB
-- web-based investigation tool based on microframework Flask
-- convenient exploration of the hyperparameter search results and performance visualization
-
-## Usage Step by Step
-
-PHOTON is designed to leave you deciding the important things and automatizing the rest.
-
-The first thing to do is choosing your basic setup:
-
-```python
-my_pipe = Hyperpipe('basic_svm_pipe',
-                    optimizer='grid_search',
-                    metrics=['accuracy', 'precision', 'recall'],
-                    best_config_metric='accuracy',
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=10))
-```
-
-
-- Give your pipeline a **name**.
-
-- Choose a **hyperparameter optimization strategy**.
-
-     Feel free to choose the good old buddy called grid search in order to scan
-  the hyperparameter space for the best configuraton. You can also check out his friends
-  RandomGridSearch or TimeboxedRandomGridSearch. Add your own optimizer
-  by adhering to PHOTON's optimizer interface.
-
-- Which strategies you want to use for the **nested cross-validation**.
-
-     As PHOTON employs nested cross validation you can pick an outer-cross-validation strategy as
-  well as an inner-cross-validation strategy. PHOTON expects objects adhering to scikit-learns
-  BaseCrossValidator Interface, so you can use any of scikit-learn's
-  already implemented cross validation strategies.
-
-- Which **performance metrics** you are interested in
-
-     We registered a lot of performance metrics in PHOTON that you can easily
-  pick by its name, such as 'accuracy', 'precision', 'recall', 'f1_score',
-  'mean_squared_error', 'mean_absolute_error' etc ..
-
-
-- Which performance metrics you want to use in order to **pick the best model**
-
-     After the optimization strategy tested a lot of configuration, you tell PHOTON
-  which performance metric you want to use in order to pick the best from all
-  configurations
-
-### Now you can setup your pipeline elements
-As you have customized the generic training and test procedures
-with the Hyperpipe construct above, you are now free to add any
-preprocessing steps as well as your learning model of choice.
-
-```python
-my_pipe += PipelineElement('StandardScaler')
-
-my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
-
-my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
-                                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
-```
-
-We are using a very basic setup here:
-
-1. normalize all features using a standard scaler
-2. do feature selection using a PCA
-3. learn the task good old SVM for Classification
-
-
-For each element you can specifiy which hyperparameters to test, that is
-you declare the hyperparameter space in which the optimizer looks for the
-optimum configuration.
-
-You can give PHOTON a list of distinct values of any kind, or use
-PHOTON classes for specifying the hyperparamter space:
-
-- Categorical
-- FloatRange (can generate a range, a linspace or a logspace)
-- IntegerRange (can generate a range, a linspace or a logspace)
-- BooleanSwitch (try both TRUE and FALSE)
-
-### Train and test the model
-
-You start the training and test procedure including the hyperparamter search
-by simply asking the hyperpipe to fit to the data and targets.
-
-```python
-my_pipe.fit(X, y)
-```
-
-
-### Save best performing pipeline
-
-After the training and testing is done and PHOTON found the optimum
-configuation it automatically fits your pipeline to that best configuration.
-You can save the complete pipeline for further use.
-
-```python
-my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
-```
-
-
-### Explore hyperparameter search results
-
-The PHOTON Investigator is a convenient web-based tool for analyzing the training
-and test performances of the configurations explored in the hyperparamter search.
-
-You start it by calling
-```python
-Investigator.show(my_pipe)
-```
-
-## Photon Investigator
-.. to be continued ..
-
-## Speed Hacks
-.. to be continued ..
-
-## Save your models
-.. to be continued ..
-
-## Stacking
-.. to be continued ..
-
-## Switch Estimators
-.. to be continued ..
-
-## Custom Learning Model
-.. to be continued ..
-
-## Complete Code Example
-
-```python
-from photonai.base.PhotonBase import Hyperpipe, PipelineElement, PersistOptions
-from photonai.optimization.Hyperparameters import FloatRange, Categorical
-from photonai.optimization.SpeedHacks import MinimumPerformance
-from photonai.investigator.Investigator import Investigator
-from photonai.configuration.Register import PhotonRegister
-
-from sklearn.model_selection import KFold
-from sklearn.datasets import load_breast_cancer
-
-# WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_breast_cancer(True)
-
-# YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-OutputSettings                                 save_predictions=False,
-#                                 save_feature_importances=False)
-
-
-save_options = OutputSettings(local_file="/home/photon_user/photon_test/test_item.p")
-
+imports ...
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',  # the name of your pipeline
-                    optimizer='grid_search',  # which optimizer PHOTON shall use
-                    metrics=['accuracy', 'precision', 'recall'],  # the performance metrics of your interest
-                    best_config_metric='accuracy',  # after hyperparameter search, the metric declares the winner config
-                    outer_cv=KFold(n_splits=3),  # repeat hyperparameter search three times
-                    inner_cv=KFold(n_splits=10),  # test each configuration ten times respectively
-                    # skips next folds of inner cv if accuracy and precision in first fold are below 0.96.
-                    performance_constraints=[MinimumPerformance('accuracy', 0.96),
-                                             MinimumPerformance('precision', 0.96)],
-                    verbosity=1, # get error, warn and info messages
-                    persist_options=save_options)
+my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
+                    # which optimizer PHOTON shall use
+                    optimizer='sk_opt',
+                    optimizer_params={'n_configurations': 10},
+                    # the performance metrics of your interest
+                    metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
+                    # after hyperparameter optimization, this metric declares the winner config
+                    best_config_metric='accuracy',
+                    # repeat hyperparameter optimization three times
+                    outer_cv=KFold(n_splits=3),
+                    # test each configuration five times respectively,
+                    inner_cv=KFold(n_splits=5),
+                    verbosity=1,
+                    output_settings=OutputSettings(project_folder='./tmp/'))
 
 
-# SHOW WHAT IS POSSIBLE IN THE CONSOLE
-PhotonRegister.list()
-
-# NOW FIND OUT MORE ABOUT A SPECIFIC ELEMENT
-PhotonRegister.info('SVC')
-
-
-# ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
-my_pipe += PipelineElement('StandardScaler')
-# then do feature selection using a PCA, specify which values to try in the hyperparameter search
-my_pipe += PipelineElement('PCA', hyperparameters={'n_components': [5, 10, None]}, test_disabled=True)
+my_pipe.add(PipelineElement('StandardScaler'))
+
+# then do feature selection using a PCA
+my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}, test_disabled=True)
+
 # engage and optimize the good old SVM for Classification
 my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf', 'linear']),
-                                                   'C': FloatRange(0.5, 2, "linspace", num=5)})
+                                                   'C': FloatRange(0.5, 2)}, gamma='scale')
 
-# NOW TRAIN YOUR PIPELINE
+# train pipeline
+X, y = load_breast_cancer(True)
 my_pipe.fit(X, y)
 
-# AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
+# visualize results
 Investigator.show(my_pipe)
-
-# YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE
-my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
-
-# YOU CAN ALSO LOAD YOUR RESULTS FROM THE MONGO DB
-# Investigator.load_from_db(mongo_settings.mongodb_connect_url, my_pipe.name)
 ```
+---
+## Features
+
+**PHOTON is designed to give all the power to the important decicions in the model development process.**
+
+### Automatized Training and Test Procedure
+- It offers prestructured and automatized training and test procedure integrating nested cross-validation and hyperparameter optimization
+- includes hyperparameter optimization strategies (grid_search, random_grid_search, scikit-optimize, smac3)
+and an easy way to specify hyperparameters
+- automatically computes the performance metrics of your interest
+- automatically chooses the best hyperparameter configuration 
+- standardized format for saving, loading and distributing optimized and fully trained pipeline architectures with only one line of code
+- persist hyperparameter optimization process logs in local file or MongoDB
+
+[(see Hyperpipe)](http://www.photon-ai.com/documentation/hyperpipe)
+
+
+### Convenient Functionality for Designing ML Pipeline Architectures 
+-  provides access to manifold algorithms from diverse machine learning python toolboxes, that can be used without the 
+need to acquire toolbox specific syntax skills 
+[(see PipelineElement)](http://www.photon-ai.com/documentation/pipeline_element)
+- compatible with all scikit-learn algorithms 
+[(see Classifier Ensemble)](http://www.photon-ai.com/documentation/classifier_ensemble)
+- compatible with kera, tensorflow and other python neural net model development libraries
+[(see Keras DNN Multiclass Classifier)](http://www.photon-ai.com/documentation/keras_multiclass)
+- integrate custom neural net models
+[(see Custom Neural Net)](http://photon-ai.com/documentation/neural_net) 
+- add any custom learning algorithm 
+[(see Custom Estimator)](http://www.photon-ai.com/documentation/)
+- add any custom preprocessing method 
+[(see Custom Transformer)](http://www.photon-ai.com/documentation/)
+- handles parallel data streams encapsulated in AND-Elements
+[(see PHOTON Stack)](http://www.photon-ai.com/documentation/stack_element)
+- offers automatic selection of two or more competing algorithms in OR-Elements 
+[(see PHOTON Switch)](http://www.photon-ai.com/documentation/switch_element) 
+- has the possibility to branch of several parallel sub-pipelines each containing a sequence of data transformations.
+[(see PHOTON Branch)](http://www.photon-ai.com/documentation/subpipelines)
+- automatizes statistical validtion using PermutationTests
+[(see PermutationTest)](http://www.photon-ai.com/documentation/permutation_test)
+
+### Integration of state-of-the art algorithms in the field 
+- handles dynamic target manipulations, e.g. for Data Augmentation
+[(see Sample Paring)](http://www.photon-ai.com/documentation/sample_pairing) 
+- integrates functionality for imbalanced datasets from imblearn for Over- and Undersampling 
+[(see Over- and Undersampling)](http://www.photon-ai.com/documentation/imbalanced_data)  
+- provides access to supplementary data not included in the feature matrix matched to the cross-validation split,
+e.g. for confounder removal [(see Confounder Removal)](http://www.photon-ai.com/documentation/confounder_removal)
+- provides a module for model development specialized on neuroimaging data [(see Brain Age)](http://www.photon-ai.com/documentation/brain_age) 
+
+### Visualization of model performance and the hyperparameter optimization process
+- web-based investigation tool based on microframework Flask
+- convenient exploration of the hyperparameter search results and performance visualization
+[(see Investigator)](http://www.photon-ai.com/documentation/investigator)
+
+###[Read the Documentation and explore the Examples](https://www.photon-ai.com/documentation)

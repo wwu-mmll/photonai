@@ -19,8 +19,6 @@ y = np.array(age)
 X = np.array(dataset_files.gray_matter_maps)
 
 
-# DEFINE OUTPUT SETTINGS
-settings = OutputSettings(project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE
 pipe = Hyperpipe('Limbic_System',
@@ -32,7 +30,7 @@ pipe = Hyperpipe('Limbic_System',
                  verbosity=2,
                  cache_folder="./cache",
                  eval_final_performance=False,
-                 output_settings=settings)
+                 output_settings=OutputSettings(project_folder='./tmp/'))
 
 """
 AVAILABLE ATLASES
@@ -52,14 +50,15 @@ AtlasLibrary().list_rois('HarvardOxford_Cortical_Threshold_25')
 AtlasLibrary().list_rois('HarvardOxford_Subcortical_Threshold_25')
 
 # PICK AN ATLAS
+# V1 ----------------------------------------------------------------
 atlas = PipelineElement('BrainAtlas',
                         rois=['Hippocampus_L', 'Hippocampus_R', 'Amygdala_L', 'Amygdala_R'],
                         atlas_name="AAL", extract_mode='vec', batch_size=20)
 
-# EITHER ADD A NEURO BRANCH OR THE ATLAS ITSELF
-neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=2)
-neuro_branch += atlas
 
+neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=3)
+neuro_branch += atlas
+# V2 -------------------------------------------------------------
 # it's also possible to combine ROIs from different atlases
 neuro_stack = Stack('HarvardOxford')
 
@@ -77,13 +76,12 @@ neuro_stack += ho_cort
 neuro_stack += ho_sub
 
 # ADD NEURO ELEMENTS TO HYPERPIPE
-
+# V1 --------------------------------------------
 pipe += neuro_branch
-#pipe += atlas
-#pipe += neuro_stack
-
+# V2 --------------------------------------------
+# pipe += neuro_stack
+# ------------------------------------------------
 pipe += PipelineElement('PCA', n_components=20)
-
 pipe += PipelineElement('RandomForestRegressor')
 
 pipe.fit(X, y)

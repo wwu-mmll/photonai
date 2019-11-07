@@ -1,7 +1,7 @@
 from pymodm.connection import connect
 from bson.objectid import ObjectId
 from pymongo import DESCENDING
-from flask import request
+from flask import request, session, abort
 from pymodm.errors import DoesNotExist, ConnectionError, ValidationError
 
 from photonai.processing.results_structure import MDBHyperpipe, MDBHelper
@@ -59,9 +59,8 @@ def load_pipe(storage, name):
             debug = True
 
     if not pipe:
-        # or not isinstance(pipe, MDBHyperpipe):
-        # return "Could not load pipeline"
-        return error
+        session["error_msg"] = "Could not load result object."
+        abort(500)
     return pipe
 
 def shutdown_server():

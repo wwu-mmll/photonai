@@ -671,6 +671,14 @@ class ResultsHandler:
             logger.error("Could not write results to local file")
             logger.error(str(e))
 
+    def get_best_config_inner_fold_predictions(self, filename=''):
+        score_info_list = []
+        fold_nr = []
+        for inner_fold in self.results.best_config.inner_folds:
+            score_info_list.append(inner_fold.validation)
+            fold_nr.append(inner_fold.fold_nr)
+        return self.collect_fold_lists(score_info_list, fold_nr, filename)
+
     def write_predictions_file(self):
         filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
 
@@ -679,12 +687,7 @@ class ResultsHandler:
             return self.get_test_predictions(filename)
         # in case no outer folds exist, we write the inner_fold predictions
         else:
-            score_info_list = []
-            fold_nr = []
-            for inner_fold in self.results.best_config.inner_folds:
-                score_info_list.append(inner_fold.validation)
-                fold_nr.append(inner_fold.fold_nr)
-            self.collect_fold_lists(score_info_list, fold_nr, filename)
+            return self.get_best_config_inner_fold_predictions(filename)
 
     def write_summary(self):
 
@@ -738,7 +741,8 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
         text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
 
         for outer_fold in result_tree.outer_folds:
-            text_list.append(self.print_outer_fold(outer_fold, result_tree.hyperpipe_info.estimation_type))
+            text_list.append(self.print_outer_fold(outer_fold, result_tree.hyperpipe_info.estimation_type,
+                                                   result_tree.hyperpipe_info.eval_final_performance))
 
         final_text = ''.join(text_list)
 
@@ -773,7 +777,7 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
 
         return text
 
-    def print_outer_fold(self, outer_fold, estimation_type="classifier"):
+    def print_outer_fold(self, outer_fold, estimation_type="classifier", eval_final_performance=True):
 
         pp = pprint.PrettyPrinter(indent=4)
         outer_fold_text = []
@@ -784,15 +788,14 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
 OUTER FOLD {}
 -------------------------------------------------------------------
 Best Config:
-{}
-
+{}""".format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config)))
+        if eval_final_performance:
+            outer_fold_text.append("""
+            
 Number of samples training {}
 Number of samples test {}
-
-            """.format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config),
-                       outer_fold.best_config.best_config_score.number_samples_training,
-                       outer_fold.best_config.best_config_score.number_samples_validation,
-                       ))
+            """.format(outer_fold.best_config.best_config_score.number_samples_training,
+                       outer_fold.best_config.best_config_score.number_samples_validation))
 
             if estimation_type == "classifier":
                 outer_fold_text.append("""

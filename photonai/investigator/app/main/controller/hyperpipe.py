@@ -38,7 +38,6 @@ def show_pipeline(storage, name):
     try:
         available_pipes = load_available_pipes()
         pipe = load_pipe(storage, name)
-
         # plot optimizer history
         handler = ResultsHandler(pipe)
         config_evaluations = handler.get_config_evaluations()
@@ -58,7 +57,7 @@ def show_pipeline(storage, name):
         best_config_plot_list = create_best_config_plot(pipe)
 
         # confusion matrix or scatter plot
-        predictions_plot_train, predictions_plot_test = create_prediction_plot(pipe)
+        predictions_plot_train, predictions_plot_test = create_prediction_plot(handler)
 
         return render_template('outer_folds/index.html',
                                pipe=pipe,
@@ -173,25 +172,35 @@ def create_best_config_plot(pipe):
     return best_config_plot_list
 
 
-def create_prediction_plot(pipe):
+def create_prediction_plot(handler):
     true_and_pred_val = list()
     true_and_pred_train = list()
+
+    if handler.results.hyperpipe_info.eval_final_performance:
+        for outer_fold in handler.results.outer_folds:
+            outer_fold_values_val = handler.collect_fold_lists([outer_fold.best_config.best_config_score.validation],
+                                                               [outer_fold.fold_nr])
+            true_and_pred_val.append([outer_fold_values_val["y_true"], outer_fold_values_val["y_pred"]])
+
+            outer_fold_values_train = handler.collect_fold_lists([outer_fold.best_config.best_config_score.training],
+                                                               [outer_fold.fold_nr])
+            true_and_pred_train.append([outer_fold_values_train["y_true"], outer_fold_values_train["y_pred"]])
+    else:
+        for inner_fold in handler.results.best_config.inner_folds:
+            inner_fold_values_val = handler.collect_fold_lists([inner_fold.validation], [inner_fold.fold_nr])
+            true_and_pred_val.append([inner_fold_values_val["y_true"], inner_fold_values_val["y_pred"]])
+            inner_fold_values_train = handler.collect_fold_lists([inner_fold.training], [inner_fold.fold_nr])
+            true_and_pred_train.append([inner_fold_values_train["y_true"], inner_fold_values_train["y_pred"]])
+
     predictions_plot_train = ""
     predictions_plot_test = ""
-
-    if pipe.hyperpipe_info.eval_final_performance:
-        for fold in pipe.outer_folds:
-            true_and_pred_val.append([fold.best_config.best_config_score.validation.y_true,
-                                      fold.best_config.best_config_score.validation.y_pred])
-            true_and_pred_train.append([fold.best_config.best_config_score.training.y_true,
-                                        fold.best_config.best_config_score.training.y_pred])
-        if pipe.hyperpipe_info.estimation_type == 'regressor':
-            predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train',
-                                                  'True/Pred Training')
-            predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
-        else:
-            predictions_plot_train = plotly_confusion_matrix('predictions_plot_train', 'Confusion Matrix Training',
-                                                             true_and_pred_train)
-            predictions_plot_test = plotly_confusion_matrix('predictions_plot_test', 'Confusion Matrix Test',
-                                                            true_and_pred_val)
+    if handler.results.hyperpipe_info.estimation_type == 'regressor':
+        predictions_plot_train = plot_scatter(true_and_pred_train, 'predictions_plot_train',
+                                              'True/Pred Training')
+        predictions_plot_test = plot_scatter(true_and_pred_val, 'predictions_plot_test', 'True/Pred Test')
+    else:
+        predictions_plot_train = plotly_confusion_matrix('predictions_plot_train', 'Confusion Matrix Training',
+                                                         true_and_pred_train)
+        predictions_plot_test = plotly_confusion_matrix('predictions_plot_test', 'Confusion Matrix Test',
+                                                        true_and_pred_val)
     return predictions_plot_train, predictions_plot_test
