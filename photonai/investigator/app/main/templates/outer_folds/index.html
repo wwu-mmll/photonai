@@ -180,11 +180,15 @@
             <div class="col-md-12">
                 <div class="box box-default">
                     <div class="box-header">
-                        <h3 class="box-title">Predictions</h3>
+                        {% if not pipe.hyperpipe_info.eval_final_performance %}
+                            <h3 class="box-title">Validation Set Predictions</h3>
+                        {% else %}
+                            <h3 class="box_title">Test Set Predictions</h3>
+                        {% endif %}
                     </div>
                     <div class="box-body">
-                        {% if not pipe.hyperpipe_info.eval_final_performance %}
-                        <h4 class="btn btn-warning">Not available in case "eval_final_performance" is False</h4>
+                        {% if not predictions_plot_train %}
+                        <h4 class="btn btn-warning">Prediction plots are not available</h4>
                         {% else %}
 
                         <div class="col-md-1">

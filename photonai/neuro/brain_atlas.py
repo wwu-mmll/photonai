@@ -425,6 +425,7 @@ class BrainMask(BaseEstimator):
 
     @staticmethod
     def get_format_info_from_first_image(X):
+        img = None
         if isinstance(X, str):
             img = image.load_img(X)
         elif isinstance(X, list) or isinstance(X, np.ndarray):
@@ -439,11 +440,14 @@ class BrainMask(BaseEstimator):
             logger.error(error_msg)
             raise ValueError(error_msg)
 
-        if len(img.shape) > 3:
-            img_shape = img.shape[:3]
+        if img is not None:
+            if len(img.shape) > 3:
+                img_shape = img.shape[:3]
+            else:
+                img_shape = img.shape
+            return img.affine, img_shape
         else:
-            img_shape = img.shape
-        return img.affine, img_shape
+            raise ValueError("Could not load image for affine and shape definition.")
 
     @staticmethod
     def _get_box(in_imgs, roi):

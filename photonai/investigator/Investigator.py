@@ -6,7 +6,7 @@ from time import sleep as slp
 from photonai.base.hyperpipe import Hyperpipe
 from photonai.helper.helper import Singleton
 from photonai.photonlogger.logger import logger
-from ..investigator.app.main import application
+from photonai.investigator.app.main import application
 
 
 class Investigator:
@@ -38,13 +38,18 @@ class Investigator:
         assert isinstance(pipe, Hyperpipe), "Investigator.show needs an object of type Hyperpipe"
         assert pipe is not None, "Investigator.show needs an object of Hyperpipe, is None"
         assert pipe.results is not None, "Investigator.show needs n Hyperpipe that is already optimized, so it can show the result tree"
+
         # make sure that Flask is running
         FlaskManager().set_pipe_object(pipe.name, pipe.results)
-        url = Investigator.__build_url("a", pipe.name)
+        Investigator.start_flask("a", pipe.name)
+
+    @staticmethod
+    def start_flask(storage, pipe_name):
+
+        url = Investigator.__build_url(storage, pipe_name)
         logger.info("Your url is: " + url)
         Investigator.__delayed_browser(url)
         FlaskManager().run_app()
-
 
     @staticmethod
     def load_from_db(mongo_connect_url: str, pipe_name: str):
@@ -60,10 +65,7 @@ class Investigator:
             The name of the pipeline to load
         """
         FlaskManager().set_mongo_db_url(mongo_connect_url)
-        url = Investigator.__build_url("m", pipe_name)
-        logger.info("Your url is: " + url)
-        Investigator.__delayed_browser(url)
-        FlaskManager().run_app()
+        Investigator.start_flask("m", pipe_name)
 
 
     @staticmethod
@@ -100,9 +102,7 @@ class Investigator:
         """
         assert os.path.isfile(file_url), "File" + file_url + " does not exist or is not a file. Please give absolute path."
         FlaskManager().set_pipe_file(name, file_url)
-        url = Investigator.__build_url("f", name)
-        Investigator.__delayed_browser(url)
-        FlaskManager().run_app()
+        Investigator.start_flask("f", name)
 
     # @staticmethod
     # def load_files(file_list: list):
