@@ -391,6 +391,10 @@ class BrainAtlas(BaseEstimator):
         new_image = image.new_img_like(atlas_obj.atlas, unmasked)
         return new_image
 
+    def _validity_check_roi_extraction(self, X, y=None, filename='validity_check.nii', **kwargs):
+        new_image = self.inverse_transform(X, y, **kwargs)
+        new_image.to_filename(filename)
+
     @staticmethod
     def _get_rois(atlas_obj, which_rois='all', background_id=0):
 

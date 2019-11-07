@@ -303,5 +303,17 @@ class NeuroTest(PhotonBaseTest):
             brain_mask = PipelineElement('BrainMask', mask_image=mask, extract_mode='vec')
             brain_mask.transform(self.X)
 
+    def test_validity_check_roi_extraction(self):
+        for atlas in AtlasLibrary().ATLAS_DICTIONARY.keys():
+            rois = AtlasLibrary().get_atlas(atlas).roi_list[1:3]
+            rois = [roi.label for roi in rois]
+            brain_atlas = BrainAtlas(atlas_name=atlas)
+            brain_atlas.rois = rois
+            X_t = brain_atlas.transform(self.X[0:2])
+
+            "-".join(rois)
+            name = os.path.join(self.test_folder, atlas + '_' + "-".join(rois))
+            brain_atlas._validity_check_roi_extraction(X_t[0], filename=name)
+
 
 

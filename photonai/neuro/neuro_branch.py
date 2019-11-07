@@ -104,7 +104,7 @@ class NeuroBranch(Branch):
         copy_of_me.output_img = True
         for p_element in copy_of_me.pipeline_elements:
             if isinstance(p_element.base_element, BrainAtlas):
-                p_element.base_element.extract_mode = 'img'
+                p_element.base_element.extract_mode = 'list'
 
         filename = self.name + "_testcase_"
 
@@ -140,7 +140,7 @@ class NeuroBranch(Branch):
                 logger.error("Cannot use parallelization without a cache folder specified in the hyperpipe."
                                "Using single core instead")
 
-        logger.debug('NeuroBranch' + self.name + ' is collecting data from the different cores...')
+            logger.debug('NeuroBranch ' + self.name + ' is collecting data from the different cores...')
         X_new, _, _ = self.base_element.transform(X)
 
         # check if we have a list of niftis, should avoid this, except when output_image = True
