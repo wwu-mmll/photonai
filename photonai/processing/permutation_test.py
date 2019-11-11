@@ -177,62 +177,34 @@ class PermutationTest:
     @staticmethod
     def _calculate_results(permutation_id,  metrics, save_to_db=True):
 
+        logger.info("Calculating permutation test results")
         try:
             mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
                                                            'computation_completed': True}).first()
 
         except DoesNotExist:
-            return None, None
+            return None
         else:
-            all_permutations = MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
-                                                         'computation_completed': True})
-            number_of_permutations = all_permutations.count()
+            all_permutations = list(MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
+                                                              'computation_completed': True}).project({'metrics_test': 1}))
+            # all_permutations = MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
+            #                                              'computation_completed': True}).only('metrics_test')
+            number_of_permutations = len(all_permutations)
 
             if number_of_permutations == 0:
                 number_of_permutations = 1
 
-            # collect true performance
-            # collect test set performances and calculate mean
-            n_outer_folds = len(mother_permutation.outer_folds)
-            true_performance = dict()
+            true_performances = dict([(m.metric_name, m.value) for m in mother_permutation.metrics_test
+                                      if m.operation == "FoldOperations.MEAN"])
+
+            perm_performances = dict()
             for _, metric in metrics.items():
-                performance = list()
-                for fold in range(n_outer_folds):
-                    performance.append(mother_permutation.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
-                true_performance[metric['name']] = np.mean(performance)
-
-            # collect perm performances
-
-            perm_performances_global = list()
-            for index, perm_pipe in enumerate(all_permutations):
-                try:
-                    # collect test set predictions
-                    n_outer_folds = len(perm_pipe.outer_folds)
-                    perm_performances = dict()
-                    for _, metric in metrics.items():
-                        performance = list()
-                        for fold in range(n_outer_folds):
-                            performance.append(
-                                perm_pipe.outer_folds[fold].best_config.best_config_score.validation.metrics[
-                                    metric['name']])
-                        perm_performances[metric['name']] = np.mean(performance)
-                    perm_performances['ind_perm'] = index
-                    perm_performances_global.append(perm_performances)
-                except Exception as e:
-                    # we suspect that the task was killed during computation of this permutation
-                    logger.error("Dismissed one permutation from calculation:")
-                    logger.error(e)
-
-            # Reorder results
-            perm_perf_metrics = dict()
-            for _, metric in metrics.items():
-                perms = list()
-                for i in range(len(perm_performances_global)):
-                    perms.append(perm_performances_global[i][metric['name']])
-                perm_perf_metrics[metric['name']] = perms
+                perm_performances[metric["name"]] = [m.value for i in all_permutations for m in i.metrics_test
+                                                     if m.metric_name == metric["name"]
+                                                     and m.operation == "FoldOperations.MEAN"]
 
             # Calculate p-value
-            p = PermutationTest.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics,
+            p = PermutationTest.calculate_p(true_performance=true_performances, perm_performances=perm_performances,
                                             metrics=metrics, n_perms=number_of_permutations)
             p_text = dict()
             for _, metric in metrics.items():
@@ -244,7 +216,7 @@ class PermutationTest:
             # Print results
             logger.clean_info("""
             Done with permutations...
-    
+
             Results Permutation test
             ===============================================
             """)
@@ -253,8 +225,8 @@ class PermutationTest:
                     Metric: {}
                     True Performance: {}
                     p Value: {}
-    
-                """.format(metric['name'], true_performance[metric['name']], p_text[metric['name']]))
+
+                """.format(metric['name'], true_performances[metric['name']], p_text[metric['name']]))
 
             if save_to_db:
                 # Write results to results object
@@ -266,8 +238,8 @@ class PermutationTest:
                 results_all_metrics = list()
                 for _, metric in metrics.items():
                     perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']],
-                                                         metric_value=true_performance[metric['name']])
-                    perm_metrics.values_permutations = perm_perf_metrics[metric['name']]
+                                                         metric_value=true_performances[metric['name']])
+                    perm_metrics.values_permutations = perm_performances[metric['name']]
                     results_all_metrics.append(perm_metrics)
                 perm_results.metrics = results_all_metrics
                 mother_permutation.permutation_test = perm_results
@@ -279,8 +251,8 @@ class PermutationTest:
                 # we guess?
                 n_perms = 1000
 
-            result = PermutationTest.PermutationResult(true_performance, perm_perf_metrics, p, number_of_permutations,
-                                                       n_perms)
+            result = PermutationTest.PermutationResult(true_performances, perm_performances,
+                                                       p, number_of_permutations, n_perms)
 
             return result
 
