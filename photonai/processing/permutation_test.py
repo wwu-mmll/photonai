@@ -140,7 +140,7 @@ class PermutationTest:
                                                                  self.permutations[perm_run],
                                                                  self.permutation_id, self.verbosity)
 
-        perm_result = self._calculate_results(self.permutation_id, self.metrics)
+        perm_result = self._calculate_results(self.permutation_id)
 
         performance_df = pd.DataFrame(dict([(name, [i]) for name, i in perm_result.p_values.items()]))
         performance_df.to_csv(os.path.join(existing_reference.output_folder, 'permutation_test_results.csv'))
@@ -175,64 +175,41 @@ class PermutationTest:
         return perm_run
 
     @staticmethod
-    def _calculate_results(permutation_id,  metrics, save_to_db=True):
+    def _calculate_results(permutation_id, save_to_db=True):
 
+        logger.info("Calculating permutation test results")
         try:
-            mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
-                                                           'computation_completed': True}).first()
+            mother_permutation = PermutationTest.find_reference("mongodb://trap-umbriel:27017/photon_results", permutation_id)
+            # mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
+            #                                                'computation_completed': True}).first()
 
         except DoesNotExist:
-            return None, None
+            return None
         else:
-            all_permutations = MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
-                                                         'computation_completed': True})
-            number_of_permutations = all_permutations.count()
+            all_permutations = list(MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
+                                                              'computation_completed': True}).project({'metrics_test': 1}))
+            # all_permutations = MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
+            #                                              'computation_completed': True}).only('metrics_test')
+            number_of_permutations = len(all_permutations)
 
             if number_of_permutations == 0:
                 number_of_permutations = 1
 
-            # collect true performance
-            # collect test set performances and calculate mean
-            n_outer_folds = len(mother_permutation.outer_folds)
-            true_performance = dict()
+            true_performances = dict([(m.metric_name, m.value) for m in mother_permutation.metrics_test
+                                      if m.operation == "FoldOperations.MEAN"])
+
+            perm_performances = dict()
+            metric_list = list(set([m.metric_name for m in mother_permutation.metrics_test]))
+            metrics = PermutationTest.manage_metrics(metric_list, None,
+                                                     mother_permutation.hyperpipe_info.best_config_metric)
+
             for _, metric in metrics.items():
-                performance = list()
-                for fold in range(n_outer_folds):
-                    performance.append(mother_permutation.outer_folds[fold].best_config.inner_folds[-1].validation.metrics[metric['name']])
-                true_performance[metric['name']] = np.mean(performance)
-
-            # collect perm performances
-
-            perm_performances_global = list()
-            for index, perm_pipe in enumerate(all_permutations):
-                try:
-                    # collect test set predictions
-                    n_outer_folds = len(perm_pipe.outer_folds)
-                    perm_performances = dict()
-                    for _, metric in metrics.items():
-                        performance = list()
-                        for fold in range(n_outer_folds):
-                            performance.append(
-                                perm_pipe.outer_folds[fold].best_config.best_config_score.validation.metrics[
-                                    metric['name']])
-                        perm_performances[metric['name']] = np.mean(performance)
-                    perm_performances['ind_perm'] = index
-                    perm_performances_global.append(perm_performances)
-                except Exception as e:
-                    # we suspect that the task was killed during computation of this permutation
-                    logger.error("Dismissed one permutation from calculation:")
-                    logger.error(e)
-
-            # Reorder results
-            perm_perf_metrics = dict()
-            for _, metric in metrics.items():
-                perms = list()
-                for i in range(len(perm_performances_global)):
-                    perms.append(perm_performances_global[i][metric['name']])
-                perm_perf_metrics[metric['name']] = perms
+                perm_performances[metric["name"]] = [m.value for i in all_permutations for m in i.metrics_test
+                                                     if m.metric_name == metric["name"]
+                                                     and m.operation == "FoldOperations.MEAN"]
 
             # Calculate p-value
-            p = PermutationTest.calculate_p(true_performance=true_performance, perm_performances=perm_perf_metrics,
+            p = PermutationTest.calculate_p(true_performance=true_performances, perm_performances=perm_performances,
                                             metrics=metrics, n_perms=number_of_permutations)
             p_text = dict()
             for _, metric in metrics.items():
@@ -244,7 +221,7 @@ class PermutationTest:
             # Print results
             logger.clean_info("""
             Done with permutations...
-    
+
             Results Permutation test
             ===============================================
             """)
@@ -253,8 +230,8 @@ class PermutationTest:
                     Metric: {}
                     True Performance: {}
                     p Value: {}
-    
-                """.format(metric['name'], true_performance[metric['name']], p_text[metric['name']]))
+
+                """.format(metric['name'], true_performances[metric['name']], p_text[metric['name']]))
 
             if save_to_db:
                 # Write results to results object
@@ -266,8 +243,8 @@ class PermutationTest:
                 results_all_metrics = list()
                 for _, metric in metrics.items():
                     perm_metrics = MDBPermutationMetrics(metric_name=metric['name'], p_value=p[metric['name']],
-                                                         metric_value=true_performance[metric['name']])
-                    perm_metrics.values_permutations = perm_perf_metrics[metric['name']]
+                                                         metric_value=true_performances[metric['name']])
+                    perm_metrics.values_permutations = perm_performances[metric['name']]
                     results_all_metrics.append(perm_metrics)
                 perm_results.metrics = results_all_metrics
                 mother_permutation.permutation_test = perm_results
@@ -279,8 +256,8 @@ class PermutationTest:
                 # we guess?
                 n_perms = 1000
 
-            result = PermutationTest.PermutationResult(true_performance, perm_perf_metrics, p, number_of_permutations,
-                                                       n_perms)
+            result = PermutationTest.PermutationResult(true_performances, perm_performances,
+                                                       p, number_of_permutations, n_perms)
 
             return result
 
@@ -321,34 +298,15 @@ class PermutationTest:
         return mother_permutation
 
     @staticmethod
-    def get_permutation_status(permutation_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results",
-                               save_to_db=False):
-
-        mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id)
-        if mother_permutation is not None:
-            # find distinct list of metrics
-            metric_list = list(set([m.metric_name for m in mother_permutation.metrics_test]))
-            metric_dict = PermutationTest.manage_metrics(metric_list, None, mother_permutation.hyperpipe_info.best_config_metric)
-            return PermutationTest._calculate_results(permutation_id, metric_dict, save_to_db)
-        else:
-            return None
-
-    @staticmethod
-    def estimated_duration_per_permutation(permutation_id,
-                                          mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
-        mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id)
-        if mother_permutation is not None:
-            return mother_permutation.computation_end_time - mother_permutation.computation_start_time
-        else:
-            return None
-
-    @staticmethod
-    def validate_permutation_test_usability(wizard_id,
-                                            mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
+    def prepare_for_wizard(permutation_id, wizard_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
         mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id=wizard_id,
                                                             find_wizard_id=True)
-
-        return PermutationTest.__validate_usability(mother_permutation)
+        mother_permutation.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
+        mother_permutation.save()
+        result = dict()
+        result["estimated_duration"] = mother_permutation.computation_end_time - mother_permutation.computation_start_time
+        result["usability"] = PermutationTest.__validate_usability(mother_permutation)
+        return result
 
     @staticmethod
     def __validate_usability(mother_permutation):
@@ -374,13 +332,6 @@ class PermutationTest:
                     return True
         else:
             return None
-
-    @staticmethod
-    def update_permutation_id(wizard_pipe_id, permutation_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
-        reference_obj = PermutationTest.find_reference(mongo_db_connect_url, wizard_pipe_id, find_wizard_id=True)
-        if reference_obj is not None:
-            reference_obj.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
-            reference_obj.save()
 
     def collect_results(self, result):
         # This is called whenever foo_pool(i) returns a result.
