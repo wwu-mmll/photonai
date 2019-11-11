@@ -78,7 +78,7 @@ class PlotlyPlot:
                 result += "colorscale: {}".format(item.colorscale)
             result += "}};"
 
-        result += str("var layout = { title: '" + str(self.title) + "'")
+        result += str("var layout = {margin: {l: 200}, hovermode: 'closest', title: '" + str(self.title) + "'")
         # result += str("var layout = { title: '" + str(self.title) + "', yaxis: {range: [-0.25, 1.25]}")
         if self.margin:
             result += ", margin: {}".format(self.margin)

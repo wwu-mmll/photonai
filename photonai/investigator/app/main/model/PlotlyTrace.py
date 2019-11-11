@@ -23,6 +23,8 @@ class PlotlyTrace:
         "test_color_bold": "#0E0E1D",
         "dummy_color": "#DEDEDE",
         "dummy_color_bold": "#BCBCBC",
+        "alternative_test_color": "#FF5930",
+        "alternative_test_color_bold": "#E22D00"
     }
 
     def __init__(self, variable_name: str, mode: str="markers", trace_type: str="scatter", trace_size: int=0,

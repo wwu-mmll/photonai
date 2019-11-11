@@ -84,11 +84,11 @@ def create_performance_overview_plots_new(pipe):
     overview_plots = list()
     for metric in metrics:
         overview_plot = PlotlyPlot("overview_plot_" + metric, metric.replace("_", " "), show_legend=False,
-                                   margin={'r': 10, 'l': 10})
+                                   margin={'r': 30, 'l': 30})
         for fold in pipe.outer_folds:
             overview_plot_train_trace = PlotlyTrace("train_fold_" + str(fold.fold_nr), trace_color="train_color_bold",
                                                     trace_size=10)
-            overview_plot_test_trace = PlotlyTrace("test_fold_" + str(fold.fold_nr), trace_color="test_color_bold",
+            overview_plot_test_trace = PlotlyTrace("test_fold_" + str(fold.fold_nr), trace_color="alternative_test_color_bold",
                                                    trace_size=10)
 
             if fold.best_config:
@@ -104,7 +104,7 @@ def create_performance_overview_plots_new(pipe):
         # add mean performance
         training_mean_trace = PlotlyTrace("mean_train", trace_size=4, trace_color="train_color", trace_type='bar',
                                           width=0.1)
-        test_mean_trace = PlotlyTrace("mean_test", trace_size=4, trace_color="test_color", trace_type='bar',
+        test_mean_trace = PlotlyTrace("mean_test", trace_size=4, trace_color="alternative_test_color", trace_type='bar',
                                       width=0.1)
 
         # add dummy performance

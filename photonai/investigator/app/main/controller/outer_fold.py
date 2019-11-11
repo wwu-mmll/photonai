@@ -40,7 +40,7 @@ def show_outer_fold(storage, name, fold_nr):
             # add mean performance
             training_mean_trace = PlotlyTrace("mean_train", trace_size=4, trace_color="train_color", trace_type='bar',
                                               width=0.1)
-            test_mean_trace = PlotlyTrace("mean_test", trace_size=4, trace_color="test_color", trace_type='bar',
+            test_mean_trace = PlotlyTrace("mean_test", trace_size=4, trace_color="alternative_test_color", trace_type='bar',
                                           width=0.1)
             for metric_train in metric_training_list:
                 if metric_train.name == metric:
@@ -89,7 +89,7 @@ def show_outer_fold(storage, name, fold_nr):
                 final_value_validation_plot = plot_scatter([[y_true, y_pred]],
                                                            title='True/Predict for Test Set',
                                                            name='best_config_validation_values',
-                                                           trace_color='test_color')
+                                                           trace_color='alternative_test_color')
                 # END building final values for validation set (best config)
 
         # START building plot objects for each tested config
