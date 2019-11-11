@@ -179,8 +179,9 @@ class PermutationTest:
 
         logger.info("Calculating permutation test results")
         try:
-            mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
-                                                           'computation_completed': True}).first()
+            mother_permutation = PermutationTest.find_reference("mongodb://trap-umbriel:27017/photon_results", permutation_id)
+            # mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
+            #                                                'computation_completed': True}).first()
 
         except DoesNotExist:
             return None
@@ -295,11 +296,6 @@ class PermutationTest:
             except DoesNotExist:
                 return None
         return mother_permutation
-
-    @staticmethod
-    def get_permutation_status(permutation_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results",
-                               save_to_db=False):
-        return PermutationTest._calculate_results(permutation_id, save_to_db)
 
     @staticmethod
     def prepare_for_wizard(permutation_id, wizard_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
