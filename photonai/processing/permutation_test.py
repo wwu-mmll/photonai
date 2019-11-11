@@ -140,7 +140,7 @@ class PermutationTest:
                                                                  self.permutations[perm_run],
                                                                  self.permutation_id, self.verbosity)
 
-        perm_result = self._calculate_results(self.permutation_id, self.metrics)
+        perm_result = self._calculate_results(self.permutation_id)
 
         performance_df = pd.DataFrame(dict([(name, [i]) for name, i in perm_result.p_values.items()]))
         performance_df.to_csv(os.path.join(existing_reference.output_folder, 'permutation_test_results.csv'))
@@ -175,7 +175,7 @@ class PermutationTest:
         return perm_run
 
     @staticmethod
-    def _calculate_results(permutation_id,  metrics, save_to_db=True):
+    def _calculate_results(permutation_id, save_to_db=True):
 
         logger.info("Calculating permutation test results")
         try:
@@ -198,6 +198,10 @@ class PermutationTest:
                                       if m.operation == "FoldOperations.MEAN"])
 
             perm_performances = dict()
+            metric_list = list(set([m.metric_name for m in mother_permutation.metrics_test]))
+            metrics = PermutationTest.manage_metrics(metric_list, None,
+                                                     mother_permutation.hyperpipe_info.best_config_metric)
+
             for _, metric in metrics.items():
                 perm_performances[metric["name"]] = [m.value for i in all_permutations for m in i.metrics_test
                                                      if m.metric_name == metric["name"]
@@ -295,32 +299,18 @@ class PermutationTest:
     @staticmethod
     def get_permutation_status(permutation_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results",
                                save_to_db=False):
-
-        mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id)
-        if mother_permutation is not None:
-            # find distinct list of metrics
-            metric_list = list(set([m.metric_name for m in mother_permutation.metrics_test]))
-            metric_dict = PermutationTest.manage_metrics(metric_list, None, mother_permutation.hyperpipe_info.best_config_metric)
-            return PermutationTest._calculate_results(permutation_id, metric_dict, save_to_db)
-        else:
-            return None
+        return PermutationTest._calculate_results(permutation_id, save_to_db)
 
     @staticmethod
-    def estimated_duration_per_permutation(permutation_id,
-                                          mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
-        mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id)
-        if mother_permutation is not None:
-            return mother_permutation.computation_end_time - mother_permutation.computation_start_time
-        else:
-            return None
-
-    @staticmethod
-    def validate_permutation_test_usability(wizard_id,
-                                            mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
+    def prepare_for_wizard(permutation_id, wizard_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
         mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id=wizard_id,
                                                             find_wizard_id=True)
-
-        return PermutationTest.__validate_usability(mother_permutation)
+        mother_permutation.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
+        mother_permutation.save()
+        result = dict()
+        result["estimated_duration"] = mother_permutation.computation_end_time - mother_permutation.computation_start_time
+        result["usability"] = PermutationTest.__validate_usability(mother_permutation)
+        return result
 
     @staticmethod
     def __validate_usability(mother_permutation):
@@ -346,13 +336,6 @@ class PermutationTest:
                     return True
         else:
             return None
-
-    @staticmethod
-    def update_permutation_id(wizard_pipe_id, permutation_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
-        reference_obj = PermutationTest.find_reference(mongo_db_connect_url, wizard_pipe_id, find_wizard_id=True)
-        if reference_obj is not None:
-            reference_obj.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
-            reference_obj.save()
 
     def collect_results(self, result):
         # This is called whenever foo_pool(i) returns a result.
