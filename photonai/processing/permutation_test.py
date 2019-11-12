@@ -166,6 +166,8 @@ class PermutationTest:
             print('Fitting permutation ' + str(perm_run) + ' ...')
             perm_pipe.fit(X, y_perm, **kwargs)
             perm_pipe.results.computation_completed = True
+            perm_pipe.results.outer_folds = list()
+            perm_pipe.results.best_config = None
             perm_pipe.results.save()
             print('Finished permutation ' + str(perm_run) + ' ...')
         except Exception as e:
@@ -188,7 +190,8 @@ class PermutationTest:
             return None
         else:
             all_permutations = list(MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
-                                                              'computation_completed': True}).project({'metrics_test': 1}))
+                                                              'computation_completed': True,
+                                                              'permutation_failed': None}).project({'metrics_test': 1}))
             # all_permutations = MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
             #                                              'computation_completed': True}).only('metrics_test')
             number_of_permutations = len(all_permutations)
