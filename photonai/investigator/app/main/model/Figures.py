@@ -39,10 +39,11 @@ def plotly_confusion_matrix(plot_name, title, folds):
         trace.add_x(name)
 
     classes.reverse()
-    for single_class in classes:
+    for i, single_class in enumerate(classes):
         name = 'Class {}'.format(single_class + 1)
         trace.add_y(name)
-        trace.add_z(mean_cm[single_class, :])
+        # todo: make class nr and index independent!!!!!!!
+        trace.add_z(mean_cm[i, :])
 
     # create string from trace
     string_trace = "var trace1 = {type: 'heatmap'"
