@@ -46,7 +46,7 @@ class PermutationTest:
         m_perm = permutation_id + "_reference"
         return m_perm
 
-    def fit(self, X, y):
+    def fit(self, X, y, **kwargs):
 
         self.pipe = self.hyperpipe_constructor()
 
@@ -77,7 +77,7 @@ class PermutationTest:
             logger.info("Calculating Reference Values with true targets.")
             try:
                 self.pipe.permutation_id = self.mother_permutation_id
-                self.pipe.fit(X, y_true)
+                self.pipe.fit(X, y_true, **kwargs)
                 self.pipe.results.computation_completed = True
 
                 self.pipe.results.permutation_test = MDBPermutationResults(n_perms=self.n_perms)
@@ -127,7 +127,7 @@ class PermutationTest:
                                                                                              perm_run,
                                                                                              self.permutations[perm_run],
                                                                                              self.permutation_id,
-                                                                                             self.verbosity)
+                                                                                             self.verbosity, **kwargs)
                         job_list.append(del_job)
 
                     dask.compute(*job_list)
@@ -138,7 +138,7 @@ class PermutationTest:
                 for perm_run in perms_todo:
                     PermutationTest.run_parallelized_permutation(self.hyperpipe_constructor, X, perm_run,
                                                                  self.permutations[perm_run],
-                                                                 self.permutation_id, self.verbosity)
+                                                                 self.permutation_id, self.verbosity, **kwargs)
 
         perm_result = self._calculate_results(self.permutation_id)
 
@@ -147,7 +147,8 @@ class PermutationTest:
         return self
 
     @staticmethod
-    def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id, verbosity=-1):
+    def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id, verbosity=-1,
+                                     **kwargs):
         # Create new instance of hyperpipe and set all parameters
         perm_pipe = hyperpipe_constructor()
         perm_pipe.verbosity = verbosity
@@ -163,7 +164,7 @@ class PermutationTest:
             # Fit hyperpipe
             # WE DO PRINT BECAUSE WE HAVE NO COMMON LOGGER!!!
             print('Fitting permutation ' + str(perm_run) + ' ...')
-            perm_pipe.fit(X, y_perm)
+            perm_pipe.fit(X, y_perm, **kwargs)
             perm_pipe.results.computation_completed = True
             perm_pipe.results.save()
             print('Finished permutation ' + str(perm_run) + ' ...')
@@ -175,11 +176,11 @@ class PermutationTest:
         return perm_run
 
     @staticmethod
-    def _calculate_results(permutation_id, save_to_db=True):
+    def _calculate_results(permutation_id, save_to_db=True, mongodb_path="mongodb://trap-umbriel:27017/photon_results"):
 
         logger.info("Calculating permutation test results")
         try:
-            mother_permutation = PermutationTest.find_reference("mongodb://trap-umbriel:27017/photon_results", permutation_id)
+            mother_permutation = PermutationTest.find_reference(mongodb_path, permutation_id)
             # mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
             #                                                'computation_completed': True}).first()
 

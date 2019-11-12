@@ -11,7 +11,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 
 
 # GET DATA FROM OASIS
-n_subjects = 50
+n_subjects = 10
 dataset_files = fetch_oasis_vbm(n_subjects=n_subjects)
 age = dataset_files.ext_vars['age'].astype(float)
 y = np.array(age)
@@ -51,7 +51,7 @@ neuro_branch += mask
 pipe += neuro_branch
 #pipe += mask
 
-pipe += PipelineElement('PCA', n_components=10)
+pipe += PipelineElement('PCA', n_components=5)
 
 pipe += PipelineElement('RandomForestRegressor')
 

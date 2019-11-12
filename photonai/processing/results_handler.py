@@ -644,7 +644,10 @@ class ResultsHandler:
 
     def save_backmapping(self, filename: str, backmapping):
         if isinstance(backmapping, np.ndarray):
-            np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+            if backmapping.shape[1] > 1000:
+                np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+            else:
+                np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
         elif isinstance(backmapping, Nifti1Image):
             backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
         else:
