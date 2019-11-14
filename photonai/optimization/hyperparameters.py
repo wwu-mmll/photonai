@@ -1,10 +1,22 @@
 import numpy as np
+import random
 from photonai.photonlogger.logger import logger
 
 
 
-class PhotonHyperparam:
-    pass
+class PhotonHyperparam(object):
+
+    def __init__(self, value):
+        self.value = value
+
+    def get_random_value(self, definite_list:bool=True):
+        if definite_list:
+            return random.choice(self.values)
+        else:
+            msg = "The PhotonHyperparam has no own random function."
+            logger.error(msg)
+            raise ValueError(msg)
+
 
 
 class Categorical(PhotonHyperparam):
@@ -205,6 +217,15 @@ class IntegerRange(NumberRange):
     def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
         super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
 
+    def get_random_value(self, definite_list: bool = False):
+        if definite_list:
+            if not self.values:
+                msg = "No values were set. Please use transform method."
+                logger.error(msg)
+                raise ValueError(msg)
+            return random.choice(self.values)
+        else:
+            return random.randint(self.start, self.stop-1)
 
 class FloatRange(NumberRange):
     """
@@ -248,3 +269,13 @@ class FloatRange(NumberRange):
 
     def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
             super().__init__(start, stop, range_type, step, num, np.float32, **kwargs)
+
+    def get_random_value(self, definite_list: bool = False):
+        if definite_list:
+            if not self.values:
+                msg = "No values were set. Please use transform method."
+                logger.error(msg)
+                raise ValueError(msg)
+            return random.choice(self.values)
+        else:
+            return random.uniform(self.start, self.stop)

@@ -40,9 +40,11 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
                                                 activations=activations,  # list or str
                                                 optimizer=optimizer)  # list or keras.optimizer)
 
-
-        super(KerasBaseClassifier, self).__init__(model=None, epochs=epochs ,batch_size=batch_size ,verbosity=verbosity)
-
+        super(KerasBaseClassifier, self).__init__(model=None,
+                                                  epochs=epochs,
+                                                  multi_class=self.multi_class,
+                                                  batch_size=batch_size,
+                                                  verbosity=verbosity)
     @property
     def target_activation(self):
         return self._target_activation

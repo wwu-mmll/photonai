@@ -1,7 +1,7 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Switch
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # WE USE THE BOSTON HOUSING DATA FROM SKLEARN
@@ -25,12 +25,18 @@ my_pipe = Hyperpipe('smac_example',
 my_pipe.add(PipelineElement('StandardScaler'))
 # then do feature selection using a PCA, specify which values to try in the hyperparameter search
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 10)}, test_disabled=True)
+
+switch = Switch("Test_Switch")
 # engage and optimize SVR
 # linspace and logspace is converted to uniform and log-uniform priors in skopt
-my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(0, 10, range_type='linspace'),
+switch += PipelineElement('SVR', hyperparameters={'C': FloatRange(0, 10, range_type='linspace'),
                                                    'epsilon': FloatRange(0, 0.0001, range_type='linspace'),
                                                    'tol': FloatRange(1e-4, 1e-2, range_type='linspace'),
                                                    'kernel': Categorical(['linear', 'rbf', 'poly'])})
+
+switch += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': Categorical([10, 20])})
+
+my_pipe += switch
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
