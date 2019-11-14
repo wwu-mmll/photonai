@@ -13,7 +13,6 @@ import json
 import time
 from copy import deepcopy
 
-import __main__
 import dask
 import numpy as np
 import pandas as pd
@@ -90,9 +89,8 @@ class OutputSettings:
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
 
-        self.__main_file__ = __main__.__file__
         if project_folder == '':
-            self.project_folder = os.path.dirname(self.__main_file__)
+            self.project_folder = os.getcwd()
         else:
             self.project_folder = project_folder
 
@@ -126,9 +124,10 @@ class OutputSettings:
             else:
                 self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
 
+            logger.info("Output Folder: " + self.results_folder)
+
             if not os.path.exists(self.results_folder):
                 os.makedirs(self.results_folder)
-            shutil.copy(self.__main_file__, os.path.join(self.results_folder, 'photon_code.py'))
 
             if os.path.basename(self.log_file) == "photon_setup_errors.log":
                 self.log_file = 'photon_output.log'
