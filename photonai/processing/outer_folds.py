@@ -132,6 +132,8 @@ class OuterFoldManager:
 
         # do the optimizing1
         for current_config in self.optimizer.ask:
+            if not current_config:
+                continue
             logger.clean_info('---------------------------------------------------------------------------------------------------------------')
             tested_config_counter += 1
 

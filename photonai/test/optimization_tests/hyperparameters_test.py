@@ -3,6 +3,43 @@ import numpy as np
 
 from photonai.optimization import FloatRange, IntegerRange, Categorical, BooleanSwitch
 
+class BaseTest(unittest.TestCase):
+
+    def setUp(self):
+        """
+        Set default start setting for all tests.
+        """
+        self.intger_range = IntegerRange(2,6)
+        self.float_range = FloatRange(0.1, 5.7)
+        self.categorical = Categorical(["a","b","c","d","e","f","g","h"])
+        self.bool = BooleanSwitch()
+
+    def test_rand_success(self):
+
+        for _ in range(100):
+            self.assertIn(self.intger_range.get_random_value(), list(range(2,6)))
+
+            self.assertGreaterEqual(self.float_range.get_random_value(), 0.1)
+            self.assertLess(self.float_range.get_random_value(), 5.7)
+
+            self.assertIn(self.categorical.get_random_value(), ["a","b","c","d","e","f","g","h"])
+
+            self.assertIn(self.bool.get_random_value(), [True, False])
+
+        self.float_range.transform()
+        self.intger_range.transform()
+
+        for _ in range(100):
+            self.assertIn(self.intger_range.get_random_value(definite_list=True), self.intger_range.values)
+            self.assertIn(self.float_range.get_random_value(definite_list=True), self.float_range.values)
+
+    def test_rand_error(self):
+        with self.assertRaises(ValueError):
+            self.intger_range.get_random_value(definite_list=True)
+            self.float_range.get_random_value(definite_list=True)
+            self.bool.get_random_value(definite_list=True)
+            self.categorical.get_random_value(definite_list=True)
+
 
 class NumberRangeTest(unittest.TestCase):
 

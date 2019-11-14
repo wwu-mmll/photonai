@@ -296,7 +296,9 @@ class PipelineElement(BaseEstimator):
         Forwards the get_params request to the wrapped base element
         """
         if hasattr(self.base_element, 'get_params'):
-            return self.base_element.get_params(deep)
+            params = self.base_element.get_params(deep)
+            params["name"] = self.name
+            return params
         else:
             return None
 

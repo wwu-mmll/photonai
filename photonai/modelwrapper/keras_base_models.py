@@ -51,8 +51,10 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
                  model=None,
                  epochs: int = 10,
                  batch_size: int = 64,
+                 multi_class: bool = True,
                  verbosity: int = 0):
         super(KerasBaseClassifier, self).__init__(model=model, epochs=epochs, batch_size=batch_size, verbosity=verbosity)
+        self.multi_class = multi_class
 
     def predict(self, X):
         predict_result = self.model.predict(X, batch_size=self.batch_size)
@@ -60,7 +62,10 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
         return max_index
 
     def encode_targets(self, y):
-        return to_categorical(y)
+        if self.multi_class:
+            return to_categorical(y)
+        else:
+            return y
 
 
 class KerasBaseRegressor(KerasBaseEstimator, RegressorMixin):
@@ -143,12 +148,12 @@ class KerasDnnBaseModel(KerasBaseEstimator):
             if len(self.activations) != layer_count:
                 raise ValueError("activations length missmatched layer length.")
         else:
-            self.activations = [self.activations]*layer_count
+            self._activations = [self.activations] * layer_count
         if isinstance(self.dropout_rate, list):
             if len(self.dropout_rate) != layer_count:
                 raise ValueError("dropout_rate length missmatched layer length.")
         else:
-            self.dropout_rate = [self.dropout_rate]*layer_count
+            self._dropout_rate = [self.dropout_rate] * layer_count
 
     @property
     def dropout_rate(self):
