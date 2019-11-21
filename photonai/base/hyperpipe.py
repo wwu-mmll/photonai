@@ -1299,7 +1299,7 @@ class PhotonModelPersistor:
             if isinstance(element, (Stack, Branch, Preprocessing)):
                 filename = '_' + str(i) + '_' + element.name
                 new_folder = os.path.join(folder, filename)
-                element_identifier.append({'element_name': element.name, 'filename': filename, 'folder': new_folder})
+                element_identifier.append({'element_name': element.name, 'filename': filename})
                 elements = element.elements
                 PhotonModelPersistor.save_elements(elements=elements, folder=new_folder)
                 element.elements = []
@@ -1348,7 +1348,7 @@ class PhotonModelPersistor:
 
         """
         folder = os.path.splitext(zip_file)[0]
-        zip_file = os.path.splitext(zip_file)[0] + '.photon'
+        zip_file = folder + '.photon'
 
         if os.path.exists(folder):
             logger.warn('The file you specified already exists as a folder.')
@@ -1389,7 +1389,7 @@ class PhotonModelPersistor:
             for element_info in setup_info:
                 if element_info['mode'] == 'PhotonBuildingBlock':
                     photon_building_block = joblib.load(os.path.join(folder, element_info['filename'] + '.pkl'))
-                    base_elements = PhotonModelPersistor.load_elements(element_info['folder'])
+                    base_elements = PhotonModelPersistor.load_elements(os.path.join(folder, element_info['filename']))
                     for _, element in base_elements:
                         photon_building_block += element
                     element_list.append((element_info['element_name'], photon_building_block))

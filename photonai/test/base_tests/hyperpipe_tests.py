@@ -212,9 +212,15 @@ class HyperpipeTests(PhotonBaseTest):
         model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
         self.assertTrue(os.path.exists(model_path))
 
+        # now move optimum pipe to new folder
+        test_folder = os.path.join(my_pipe.output_settings.results_folder, 'new_test_folder')
+        new_model_path = os.path.join(test_folder, 'photon_best_model.photon')
+        os.makedirs(test_folder)
+        shutil.copyfile(model_path, new_model_path)
+
         # check if load_optimum_pipe also works
         # check if we have the meta information recovered
-        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(model_path)
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(new_model_path)
         self.assertIsNotNone(loaded_optimum_pipe._meta_information)
         self.assertIsNotNone(loaded_optimum_pipe._meta_information['photon_version'])
 
