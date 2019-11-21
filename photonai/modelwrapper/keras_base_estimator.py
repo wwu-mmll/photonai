@@ -1,4 +1,6 @@
-from keras.models import model_from_json
+import keras
+from keras import backend as K
+from keras.models import model_from_json, Sequential
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.logger import logger
 from sklearn.model_selection import ShuffleSplit
@@ -18,9 +20,12 @@ class KerasBaseEstimator(BaseEstimator):
         self.batch_size = batch_size
         self.verbosity = verbosity
 
-    def fit(self, X, y):
+    def fit(self, X, y, reload_weights: bool=True):
         # prepare target values
         # Todo: early stopping
+
+        if reload_weights:
+            self.reset_weights(self.model)
 
         y = self.encode_targets(y)
 
@@ -91,3 +96,10 @@ class KerasBaseEstimator(BaseEstimator):
         loaded_model.load_weights(loaded_weights)
 
         self.model = loaded_model
+
+    @staticmethod
+    def reset_weights(model):
+        session = K.get_session()
+        for layer in model.layers:
+            if hasattr(layer, 'kernel_initializer'):
+                layer.kernel.initializer.run(session=session)
