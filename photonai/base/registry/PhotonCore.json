@@ -391,6 +391,10 @@
     "sklearn.ensemble.RandomForestClassifier",
     "Estimator"
   ],
+  "RandomTreesEmbedding": [
+    "sklearn.ensemble.RandomTreesEmbedding",
+    "Transformer"
+  ],
   "DummyClassifier":[
     "sklearn.dummy.DummyClassifier",
     "Estimator"
