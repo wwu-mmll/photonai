@@ -20,31 +20,43 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
                  activations='tanh',  # list or str
                  optimizer="adam"):  # list or keras.optimizer
 
-        self.multi_class = multi_class
+        self._multi_class = None
+        self._loss = ""
 
-        if not loss:
-            if self.multi_class:
-                loss = "categorical_crossentropy"
-            else:
-                loss = "binary_crossentropy"
+        KerasBaseClassifier.__init__(self,
+                                     model=None,
+                                     epochs=epochs,
+                                     multi_class=multi_class,
+                                     batch_size=batch_size,
+                                     verbosity=verbosity)
 
-        super(KerasDnnClassifier, self).__init__(hidden_layer_sizes=hidden_layer_sizes,
-                                                target_activation="softmax",
-                                                learning_rate=learning_rate,
-                                                loss=loss,
-                                                metrics=metrics,
-                                                early_stopping=early_stopping,
-                                                eaSt_patience=eaSt_patience,
-                                                batch_normalization=batch_normalization,
-                                                dropout_rate=dropout_rate,  # list or float
-                                                activations=activations,  # list or str
-                                                optimizer=optimizer)  # list or keras.optimizer)
+        KerasDnnBaseModel.__init__(self,
+                                   hidden_layer_sizes=hidden_layer_sizes,
+                                   target_activation="softmax",
+                                   learning_rate=learning_rate,
+                                   loss=loss,
+                                   metrics=metrics,
+                                   early_stopping=early_stopping,
+                                   eaSt_patience=eaSt_patience,
+                                   batch_normalization=batch_normalization,
+                                   dropout_rate=dropout_rate,  # list or float
+                                   activations=activations,  # list or str
+                                   optimizer=optimizer)  # list or keras.optimizer)
 
-        super(KerasBaseClassifier, self).__init__(model=None,
-                                                  epochs=epochs,
-                                                  multi_class=self.multi_class,
-                                                  batch_size=batch_size,
-                                                  verbosity=verbosity)
+        #self.multi_class = multi_class  # nötig?
+
+
+    @property
+    def multi_class(self):
+        return self._multi_class
+
+    @multi_class.setter
+    def multi_class(self, value):
+        self._multi_class = value
+
+        if not self._loss or self._loss in ["categorical_crossentropy", "binary_crossentropy"]:
+            self.loss = ""
+
     @property
     def target_activation(self):
         return self._target_activation
@@ -67,6 +79,11 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
             self._loss = value
         elif (not self.multi_class) and value in keras_dnn_base_model.get_loss_allocation()["binary_classification"]:
             self._loss = value
+        elif value == "":
+            if self._multi_class:
+                self._loss = "categorical_crossentropy"
+            else:
+                self._loss = "binary_crossentropy"
         else:
             raise ValueError("Loss function is not supported. Feel free to use upperclass without restrictions.")
 
