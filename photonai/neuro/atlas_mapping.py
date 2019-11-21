@@ -102,7 +102,7 @@ class AtlasMapper:
             hyperpipe.verbosity = self.verbosity
             hyperpipe.fit(X_extracted[self.roi_indices[roi_name]], y, **kwargs)
             hyperpipe_infos[roi_name] = {'hyperpipe_name': hyperpipe.name,
-                                         'model_filename': os.path.join(hyperpipe.output_settings.results_folder,
+                                         'model_filename': os.path.join(os.path.basename(hyperpipe.output_settings.results_folder),
                                                                         'photon_best_model.photon'),
                                          'roi_index': self.roi_indices[roi_name]}
             hyperpipe_results[roi_name] = ResultsHandler(hyperpipe.results).get_performance_outer_folds()
@@ -207,5 +207,6 @@ class AtlasMapper:
 
         roi_models = dict()
         for roi_name, infos in self.hyperpipe_infos.items():
-            roi_models[roi_name] = Hyperpipe.load_optimum_pipe(infos['model_filename'])
+            model_path = os.path.join(os.path.join(self.folder, infos['hyperpipe_name'] + "_results"), os.path.basename(infos['model_filename']))
+            roi_models[roi_name] = Hyperpipe.load_optimum_pipe(model_path)
             self.hyperpipes_to_fit = roi_models
