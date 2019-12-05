@@ -295,6 +295,7 @@ class NeuroTest(PhotonBaseTest):
 
     def test_all_atlases(self):
         for atlas in AtlasLibrary().ATLAS_DICTIONARY.keys():
+            print("Running tests for atlas {}".format(atlas))
             brain_atlas = PipelineElement('BrainAtlas', atlas_name=atlas, extract_mode='vec')
             brain_atlas.transform(self.X)
 
@@ -305,6 +306,7 @@ class NeuroTest(PhotonBaseTest):
 
     def test_validity_check_roi_extraction(self):
         for atlas in AtlasLibrary().ATLAS_DICTIONARY.keys():
+            print("Checking atlas {}".format(atlas))
             rois = AtlasLibrary().get_atlas(atlas).roi_list[1:3]
             rois = [roi.label for roi in rois]
             brain_atlas = BrainAtlas(atlas_name=atlas)

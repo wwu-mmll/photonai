@@ -6,6 +6,7 @@ from pathlib import Path
 
 import nibabel as nib
 import numpy as np
+import pandas as pd
 from nilearn import image, masking, _utils
 from nilearn._utils.niimg import _safe_get_data
 from nilearn.image import math_img
@@ -14,7 +15,6 @@ from sklearn.base import BaseEstimator
 
 from photonai.helper.helper import Singleton
 from photonai.photonlogger.logger import logger
-
 
 
 class RoiObject:
@@ -62,7 +62,26 @@ class AtlasLibrary:
                         'Yeo_7_Liberal': 'Yeo2011_7Networks_MNI152_FreeSurferConformed1mm_LiberalMask.nii.gz',
                         'Yeo_17': 'Yeo2011_17Networks_MNI152_FreeSurferConformed1mm.nii.gz',
                         'Yeo_17_Liberal': 'Yeo2011_17Networks_MNI152_FreeSurferConformed1mm_LiberalMask.nii.gz',
-                        }
+                        'Schaefer2018_100Parcels_7Networks': 'Schaefer2018_100Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_200Parcels_7Networks': 'Schaefer2018_200Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_300Parcels_7Networks': 'Schaefer2018_300Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_400Parcels_7Networks': 'Schaefer2018_400Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_500Parcels_7Networks': 'Schaefer2018_500Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_600Parcels_7Networks': 'Schaefer2018_600Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_700Parcels_7Networks': 'Schaefer2018_700Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_800Parcels_7Networks': 'Schaefer2018_800Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_900Parcels_7Networks': 'Schaefer2018_900Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_1000Parcels_7Networks': 'Schaefer2018_1000Parcels_7Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_100Parcels_17Networks': 'Schaefer2018_100Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_200Parcels_17Networks': 'Schaefer2018_200Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_300Parcels_17Networks': 'Schaefer2018_300Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_400Parcels_17Networks': 'Schaefer2018_400Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_500Parcels_17Networks': 'Schaefer2018_500Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_600Parcels_17Networks': 'Schaefer2018_600Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_700Parcels_17Networks': 'Schaefer2018_700Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_800Parcels_17Networks': 'Schaefer2018_800Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_900Parcels_17Networks': 'Schaefer2018_900Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',
+                        'Schaefer2018_1000Parcels_17Networks': 'Schaefer2018_1000Parcels_17Networks_order_FSLMNI152_1mm.nii.gz',}
 
     MASK_DICTIONARY = {'MNI_ICBM152_GrayMatter': 'mni_icbm152_gm_tal_nlin_sym_09a.nii.gz',
                        'MNI_ICBM152_WhiteMatter': 'mni_icbm152_wm_tal_nlin_sym_09a.nii.gz',
@@ -75,7 +94,7 @@ class AtlasLibrary:
         self.library = dict()
 
     def _load_photon_atlases(self):
-        dir_atlases = path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'atlases/'
+        dir_atlases = path.join(path.dirname(inspect.getfile(BrainAtlas)), 'atlases')
         photon_atlases = dict()
         for atlas_id, atlas_info in self.ATLAS_DICTIONARY.items():
             atlas_file = glob.glob(path.join(dir_atlases, path.join('*', atlas_info)))[0]
@@ -86,7 +105,7 @@ class AtlasLibrary:
         return photon_atlases
 
     def _load_photon_masks(self):
-        dir_atlases = path.dirname(inspect.getfile(BrainAtlas)) + '/' + 'atlases/'
+        dir_atlases = path.join(path.dirname(inspect.getfile(BrainAtlas)), 'atlases')
         photon_masks = dict()
         for mask_id, mask_info in self.MASK_DICTIONARY.items():
             mask_file = glob.glob(path.join(dir_atlases, path.join('*', mask_info)))[0]
@@ -141,12 +160,13 @@ class AtlasLibrary:
 
         # check labels
         if Path(atlas_object.labels_file).is_file():  # if we have a file with indices and labels
-            labels_dict = dict()
+            labels = pd.read_table(atlas_object.labels_file, header=None)
+            labels_dict = pd.Series(labels.iloc[:, 1].values, index=labels.iloc[:, 0]).to_dict()
 
-            with open(atlas_object.labels_file) as f:
-                for line in f:
-                    (key, val) = line.split("\t")
-                    labels_dict[int(key)] = val
+            # check if background has been defined in labels.txt
+            if 0 not in labels_dict.keys() and 0 in atlas_object.indices:
+                # add 0 as background
+                labels_dict[0] = 'Background'
 
             # check if map indices correspond with indices in the labels file
             if not sorted(atlas_object.indices) == sorted(list(labels_dict.keys())):
