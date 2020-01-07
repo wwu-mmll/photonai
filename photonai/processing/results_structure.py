@@ -90,7 +90,6 @@ class MDBConfig(EmbeddedMongoModel):
             fold.validation.y_pred = []
             fold.validation.indices = []
             fold.feature_importances = []
-        self.save()
 
 
 class MDBOuterFold(EmbeddedMongoModel):

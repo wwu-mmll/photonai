@@ -5,7 +5,6 @@ from photonai.processing.metrics import Scorer
 from photonai.photonlogger.logger import logger
 
 
-
 class PhotonBaseConstraint:
     """
     The PHOTON base interface for any performance constraints that could speed up hyperparameter search.
@@ -84,11 +83,11 @@ class PhotonBaseConstraint:
         """
         if self.metric == "unknown":
             logger.warn("The metric is not known. Please check the metric: " + self.metric + ". " +
-                          "Performance constraints are constantly True.")
+                        "Performance constraints are constantly True.")
             return True
         if self.metric not in config_item.inner_folds[0].validation.metrics:
             logger.warn("The metric is not calculated. Please insert " + self.metric + " to Hyperpipe.metrics. " +
-                          "Performance constraints are constantly False.")
+                        "Performance constraints are constantly False.")
             return False
         if self._greater_is_better:
             if self.strategy.name == 'first':
@@ -165,7 +164,7 @@ class DummyPerformance(PhotonBaseConstraint):
         :param dummy_result: MDBScoreInformation type
         :return:
         """
-        self.threshold = dummy_result.validation.metrics[self.metric]+self.margin
+        self.threshold = dummy_result.validation.metrics[self.metric] + self.margin
 
     def copy_me(self):
         """
@@ -176,3 +175,79 @@ class DummyPerformance(PhotonBaseConstraint):
         if "threshold" in self.__dict__.keys():
             new_me.threshold = self.threshold
         return new_me
+
+
+class BestPerformance(PhotonBaseConstraint):
+    """
+    BestPerformance decides in every fold: challenger works better than incumbent
+    true: eval next fold, false: eval next config
+    better in all inner_folds: incumbent = challenger.
+    """
+
+    def __init__(self, metric: str = '', strategy: str = 'mean'):
+        """
+        :param metric:
+        :param strategy:
+        :param fold_start:
+        """
+        super(BestPerformance, self).__init__(strategy=strategy, metric=metric)
+        self.threshold = None
+        self.config_items = {}
+        self.required_folds = 0
+        self.run = 0
+
+    def shall_continue(self, config_item):
+        """
+        Function to evaluate if the constraint is reached.
+        If it returns True, the testing of the configuration is continued.
+        If it returns False, further testing of the configuration is skipped
+        to increase speed of the hyperparameter search.
+
+        Parameters
+        ----------
+        * 'config_item' [MDBConfig]:
+            All performance metrics and other scoring information for all configuration's performance.
+            Can be used to evaluate if the configuration has any potential to serve the model's learning task.
+        """
+        self.required_folds = max(self.required_folds, len(self.eval_config_entries(config_item)))
+        self.config_items[str(config_item.config_dict)] = self.eval_config_entries(config_item)
+
+        # first run default 10 configs
+        if self.run < 10 * self.required_folds -1:
+            self.run += 1
+            return True
+
+        # calc threshold for the first time over all available configs.
+        if self.threshold is None:
+            if self._greater_is_better:
+                self.threshold = max([np.mean(x) for x in self.config_items.values()])
+            else:
+                self.threshold = min([np.mean(x) for x in self.config_items.values()])
+
+        # calc std between inner_folds and average it over all configs [std only for multiple-run-configs]
+        std = np.mean([np.std(x) for x in self.config_items.values() if len(self.config_items.values())>1])
+        challenger = self.eval_config_entries(config_item)
+        if self._greater_is_better:
+            if np.mean(challenger) > self.threshold - std:
+                if np.mean(challenger) > self.threshold and len(challenger) == self.required_folds:
+                    self.threshold = np.mean(challenger)
+                return True
+        else:
+            if np.mean(challenger) < self.threshold + std:
+                if np.mean(challenger) < self.threshold and len(challenger) == self.required_folds:
+                    self.threshold = np.mean(challenger)
+                return True
+        return False
+
+    def copy_me(self):
+        """
+        Copy self object. Appending threshold to super.copy_me().
+        :return: BestPerformance
+        """
+        new_me = super(BestPerformance, self).copy_me()
+        if "threshold" in self.__dict__.keys():
+            new_me.threshold = self.threshold
+        return new_me
+
+    def eval_config_entries(self, config_item):
+        return [x.validation.metrics[self.metric] for x in config_item.inner_folds]
