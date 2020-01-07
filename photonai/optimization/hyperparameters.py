@@ -3,11 +3,10 @@ import random
 from photonai.photonlogger.logger import logger
 
 
-
 class PhotonHyperparam(object):
 
-    def __init__(self, value):
-        self.value = value
+    def __init__(self, values):
+        self.values = values
 
     def get_random_value(self, definite_list:bool=True):
         if definite_list:
@@ -16,6 +15,9 @@ class PhotonHyperparam(object):
             msg = "The PhotonHyperparam has no own random function."
             logger.error(msg)
             raise ValueError(msg)
+
+    def __str__(self):
+        return str(self.__class__) + str(self.values)
 
 
 
