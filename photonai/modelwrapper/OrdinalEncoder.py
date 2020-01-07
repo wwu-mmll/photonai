@@ -35,3 +35,20 @@ class FeatureEncoder(BaseEstimator):
                 trans_X = feature
             new_X = PhotonDataHelper.stack_data_horizontally(new_X, trans_X)
         return new_X
+
+    def fit_transform(self, X, y=None, **kwargs):
+        self.fit(X, y)
+        return self.transform(X, y)
+
+    def inverse_transform(self, X, y=None, **kwargs):
+        new_X = None
+        for i in range(X.shape[1]):
+            feature = X[:, i]
+            transformer = self.encoder_list[i]
+            if transformer is not None:
+                feature = np.reshape(feature, (-1, 1))
+                trans_X = transformer.inverse_transform(feature)
+            else:
+                trans_X = feature
+            new_X = PhotonDataHelper.stack_data_horizontally(new_X, trans_X)
+        return new_X
