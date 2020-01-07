@@ -19,3 +19,6 @@ class SourceSplitter(BaseEstimator):
     def predict(self, X):
         return self.transform(X)
 
+    def fit_transform(self, X):
+        return self.transform(X)
+

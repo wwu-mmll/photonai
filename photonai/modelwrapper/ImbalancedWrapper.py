@@ -1,5 +1,5 @@
 from sklearn.base import BaseEstimator, TransformerMixin
-
+from photonai.photonlogger.logger import logger
 
 class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
     """
@@ -67,13 +67,14 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
             home = "over_sampling"
         elif imbalance_type == "undersampling":
             home = "under_sampling"
-        elif imbalance_type =="combine" or imbalance_type =="combination":
+        elif imbalance_type == "combine" or imbalance_type == "combination":
             home = "combine"
         else:
-            raise Exception("Imbalance Type not found. Can be oversampling, undersampling or combine")
+            msg = "Imbalance Type not found. Can be oversampling, undersampling or combine."
+            logger.error(msg)
+            raise ValueError(msg)
 
         # Todo: Try Catch Class Not Found Exception
-
         desired_class_home = "imblearn." + home
         desired_class_name = method_name
 
