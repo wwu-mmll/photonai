@@ -1,26 +1,41 @@
 from sklearn.base import BaseEstimator, TransformerMixin
 from photonai.photonlogger.logger import logger
 
+try:
+    from imblearn import over_sampling, under_sampling, combine
+    __found__ = True
+except ModuleNotFoundError:
+    __found__ = False
+
 class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
     """
     Applies the chosen strategy to the data in order to handle the imbalance in the data.
     Instantiates the strategy filter object according to the name given as string.
+    Underlying architecture: Imbalanced-Learning
+    More infomration on: https://imbalanced-learn.readthedocs.io/en/stable/api.html
     """
     _estimator_type = "transformer"
 
     IMBALANCED_DICT = {
-        'oversampling': ["RandomOverSampler", "SMOTE", "ADASYN"],
-        'undersampling': ["ClusterCentroids",
-                          "RandomUnderSampler",
-                          "NearMiss",
-                          "InstanceHardnessThreshold",
+        'oversampling': ["ADASYN",
+                         "BorderlineSMOTE",
+                         "KMeansSMOTE",
+                         "RandomOverSampler",
+                         "SMOTE",
+                         "SMOTENC",
+                         "SVMSMOTE"],
+        'undersampling': ["AllKNN",
+                          "ClusterCentroids",
                           "CondensedNearestNeighbour",
                           "EditedNearestNeighbours",
-                          "RepeatedEditedNearestNeighbours",
-                          "AllKNN",
+                          "InstanceHardnessThreshold",
+                          "NearMiss",
                           "NeighbourhoodCleaningRule",
-                          "OneSidedSelection"],
-        'combine': ["SMOTEENN", "SMOTETomek"]
+                          "OneSidedSelection",
+                          "TomekLinks",
+                          "RandomUnderSampler",
+                          "RepeatedEditedNearestNeighbours"],
+        'combine': ["SMOTEENN", "SMOTETomek"],
     }
 
     def __init__(self, method_name: str='RandomUnderSampler', **kwargs):
@@ -29,9 +44,13 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
 
         Possible values for method_name:
         imbalance_type = OVERSAMPLING:
+            - ADASYN
+            - BorderlineSMOTE
+            - KMeansSMOTE
             - RandomOverSampler
             - SMOTE
-            - ADASYN
+            - SMOTENC
+            - SVMSMOTE
 
         imbalance_type = UNDERSAMPLING:
             - ClusterCentroids,
@@ -55,50 +74,52 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
         :type kwargs:  dict
         """
 
+        if not __found__:
+            raise ModuleNotFoundError("Module imblearn not found or not installed as expected. "
+                                      "Please install the requirements.txt in PHOTON main folder.")
+
         self.method_name = method_name
         self.needs_y = True
 
         imbalance_type = ''
         for group, possible_strategies in ImbalancedDataTransform.IMBALANCED_DICT.items():
-            if method_name in possible_strategies:
+            if self.method_name in possible_strategies:
                 imbalance_type = group
 
         if imbalance_type == "oversampling":
-            home = "over_sampling"
+            home = over_sampling
         elif imbalance_type == "undersampling":
-            home = "under_sampling"
+            home = under_sampling
         elif imbalance_type == "combine" or imbalance_type == "combination":
-            home = "combine"
+            home = combine
         else:
             msg = "Imbalance Type not found. Can be oversampling, undersampling or combine."
+            msg += "oversampling: method_name one of "+str(self.IMBALANCED_DICT["oversampling"])
+            msg += "undersampling: method_name one of "+str(self.IMBALANCED_DICT["undersampling"])
+            msg += "combine: method_name one of " + str(self.IMBALANCED_DICT["combine"])
             logger.error(msg)
             raise ValueError(msg)
 
-        # Todo: Try Catch Class Not Found Exception
-        desired_class_home = "imblearn." + home
-        desired_class_name = method_name
-
-        try:
-            imported_module = __import__(desired_class_home, globals(), locals(), desired_class_name, 0)
-            desired_class = getattr(imported_module, desired_class_name)
-        except Exception as e:
-            if isinstance(e, ModuleNotFoundError):
-                raise e
-            else:
-                raise Exception("Imbalance Type not found. Can be oversampling, undersampling or combine")
-
+        desired_class = getattr(home, method_name)
         self.method = desired_class(**kwargs)
 
         self.x_transformed = None
         self.y_transformed = None
 
-    def fit_sample(self, X, y):
+    def fit_transform(self, X, y):
         self.x_transformed, self.y_transformed = self.method.fit_sample(X, y)
         return self.x_transformed, self.y_transformed
 
+    #  define an alias for imblearn consistency
+    fit_sample = fit_transform
+    fit_resample = fit_transform
+
     def fit(self, X, y, **kwargs):
-        return self
+        logger.warn("Please use 'fit_transform' in all cases. Store results in x_transformed and y_transformed.")
+        self.x_transformed, self.y_transformed = self.method.fit_sample(X, y)
+        return
 
     def transform(self, X, y=None, **kwargs):
-        return self.fit_sample(X, y)
+        logger.warn("Please use 'fit_transform' in all cases.")
+        return
 
