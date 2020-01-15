@@ -7,7 +7,7 @@ try:
 except ModuleNotFoundError:
     __found__ = False
 
-class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
+class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
     """
     Applies the chosen strategy to the data in order to handle the imbalance in the data.
     Instantiates the strategy filter object according to the name given as string.
@@ -82,7 +82,7 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
         self.needs_y = True
 
         imbalance_type = ''
-        for group, possible_strategies in ImbalancedDataTransform.IMBALANCED_DICT.items():
+        for group, possible_strategies in ImbalancedDataTransformer.IMBALANCED_DICT.items():
             if self.method_name in possible_strategies:
                 imbalance_type = group
 
@@ -103,23 +103,24 @@ class ImbalancedDataTransform(BaseEstimator, TransformerMixin):
         desired_class = getattr(home, method_name)
         self.method = desired_class(**kwargs)
 
-        self.x_transformed = None
-        self.y_transformed = None
 
     def fit_transform(self, X, y):
-        self.x_transformed, self.y_transformed = self.method.fit_sample(X, y)
-        return self.x_transformed, self.y_transformed
+        return self.method.fit_sample(X, y)
 
     #  define an alias for imblearn consistency
     fit_sample = fit_transform
     fit_resample = fit_transform
 
     def fit(self, X, y, **kwargs):
-        logger.warn("Please use 'fit_transform' in all cases. Store results in x_transformed and y_transformed.")
-        self.x_transformed, self.y_transformed = self.method.fit_sample(X, y)
+        """
+        Required method for PHOTON. imblearn can't fit a model. Strategy is unique on every dataset.
+        These method is empty.
+        """
         return
 
     def transform(self, X, y=None, **kwargs):
-        logger.warn("Please use 'fit_transform' in all cases.")
-        return
+        """
+        Cause fit is empty transform is the same as fit_transform.
+        """
+        return self.fit_transform(X,y)
 

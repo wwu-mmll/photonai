@@ -1,8 +1,7 @@
 import unittest
 import numpy as np
 
-from sklearn.utils.testing import assert_array_equal
-from photonai.modelwrapper.imbalanced_data_transformer import ImbalancedDataTransform
+from photonai.modelwrapper.imbalanced_data_transformer import ImbalancedDataTransformer
 
 from imblearn.over_sampling.tests import test_smote
 from imblearn.combine.tests import test_smote_tomek
@@ -17,11 +16,11 @@ class ImbalancedDataTransformTest(unittest.TestCase):
     """
 
     def setUp(self):
-        self.imbalanced_data_transformer = ImbalancedDataTransform()
+        self.imbalanced_data_transformer = ImbalancedDataTransformer()
 
     def test_strategy(self):
         with self.assertRaises(ValueError):
-            ImbalancedDataTransform(method_name="something")
+            ImbalancedDataTransformer(method_name="something")
 
 
     def test_strategy_oversampling(self):
@@ -29,7 +28,7 @@ class ImbalancedDataTransformTest(unittest.TestCase):
         sample test of different functions based on imblearn implementation for oversampling methods.
         """
         sampling_strategy = {0: 9, 1: 12}
-        imbalanced_data_transformer = ImbalancedDataTransform(method_name='SMOTE',
+        imbalanced_data_transformer = ImbalancedDataTransformer(method_name='SMOTE',
                                                               sampling_strategy = {0: 9, 1: 12},
                                                               random_state = test_smote.RND_SEED)
 
@@ -51,13 +50,13 @@ class ImbalancedDataTransformTest(unittest.TestCase):
         y_gt = np.array(
             [0, 1, 0, 0, 0, 1, 1, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 0, 1, 0, 0])
         test_smote.assert_allclose(X_resampled, X_gt, rtol=test_smote.R_TOL)
-        assert_array_equal(y_resampled, y_gt)
+        test_smote.assert_array_equal(y_resampled, y_gt)
 
     def test_strategy_undersampling(self):
         """
         sample test of different functions based on imblearn implementation for undersampling methods.
         """
-        imbalanced_data_transformer = ImbalancedDataTransform(method_name = 'InstanceHardnessThreshold',
+        imbalanced_data_transformer = ImbalancedDataTransformer(method_name = 'InstanceHardnessThreshold',
                                                               estimator = test_instance_hardness_threshold.ESTIMATOR,
                                                               sampling_strategy = {0: 6, 1: 8},
                                                               random_state = test_instance_hardness_threshold.RND_SEED)
@@ -72,7 +71,7 @@ class ImbalancedDataTransformTest(unittest.TestCase):
         """
         sample test of different functions based on imblearn implementation for oversampling methods.
         """
-        imbalanced_data_transformer = ImbalancedDataTransform(method_name='SMOTETomek',
+        imbalanced_data_transformer = ImbalancedDataTransformer(method_name='SMOTETomek',
                                                               random_state=test_smote_tomek.RND_SEED)
         X_resampled, y_resampled = imbalanced_data_transformer.fit_resample(test_smote_tomek.X, test_smote_tomek.Y)
         X_gt = np.array(
@@ -97,4 +96,4 @@ class ImbalancedDataTransformTest(unittest.TestCase):
         )
         y_gt = np.array([1, 0, 0, 0, 1, 1, 1, 1, 0, 1, 1, 1, 0, 0, 0, 0])
         test_smote_tomek.assert_allclose(X_resampled, X_gt, rtol=test_smote_tomek.R_TOL)
-        assert_array_equal(y_resampled, y_gt)
+        test_smote_tomek.assert_array_equal(y_resampled, y_gt)
