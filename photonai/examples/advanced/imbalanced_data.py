@@ -11,9 +11,9 @@ X, y = dataset.data, dataset.target
 
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='random_grid_search',
-                    optimizer_params={'n_configurations': 5},
+                    optimizer_params={'n_configurations': 10},
                     metrics=['accuracy', 'precision', 'recall'],
-                    best_config_metric='accuracy',
+                    best_config_metric='recall',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=5),
                     verbosity=1,
@@ -27,9 +27,9 @@ my_pipe += PipelineElement('PCA',
                            hyperparameters={'n_components': IntegerRange(5, 20)},
                            test_disabled=True)
 
-my_pipe += PipelineElement('ImbalancedDataTransform',
-                           hyperparameters={'method_name': Categorical(['RandomUnderSampler',
-                                                                        'SMOTE'])})
+my_pipe += PipelineElement('ImbalancedDataTransformer',
+                           hyperparameters={'method_name': Categorical(['RandomUnderSampler','SMOTE'])},
+                           test_disabled=True)
 
 my_pipe += PipelineElement('SVC',
                            hyperparameters={'kernel': Categorical(['rbf', 'linear']),
@@ -39,23 +39,28 @@ my_pipe += PipelineElement('SVC',
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
+# Possible values for method_name:
 # imbalance_type = OVERSAMPLING:
-#     - RandomOverSampler
-#     - SMOTE
-#     - ADASYN
+#        - ADASYN
+#        - BorderlineSMOTE
+#        - KMeansSMOTE
+#        - RandomOverSampler
+#        - SMOTE
+#        - SMOTENC
+#        - SVMSMOTE
 #
-# imbalance_type = UNDERSAMPLING:
-#     - ClusterCentroids,
-#     - RandomUnderSampler,
-#     - NearMiss,
-#     - InstanceHardnessThreshold,
-#     - CondensedNearestNeighbour,
-#     - EditedNearestNeighbours,
-#     - RepeatedEditedNearestNeighbours,
-#     - AllKNN,
-#     - NeighbourhoodCleaningRule,
-#     - OneSidedSelection
+#    imbalance_type = UNDERSAMPLING:
+#        - ClusterCentroids,
+#        - RandomUnderSampler,
+#        - NearMiss,
+#        - InstanceHardnessThreshold,
+#        - CondensedNearestNeighbour,
+#        - EditedNearestNeighbours,
+#        - RepeatedEditedNearestNeighbours,
+#        - AllKNN,
+#        - NeighbourhoodCleaningRule,
+#        - OneSidedSelection
 #
-# imbalance_type = COMBINE:
-#     - SMOTEENN,
-#     - SMOTETomek
+#    imbalance_type = COMBINE:
+#        - SMOTEENN,
+#        - SMOTETomek

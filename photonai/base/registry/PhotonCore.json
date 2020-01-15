@@ -443,8 +443,8 @@
     "photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM",
     "Estimator"
   ],
-  "ImbalancedDataTransform":[
-    "photonai.modelwrapper.ImbalancedWrapper.ImbalancedDataTransform",
+  "ImbalancedDataTransformer":[
+    "photonai.modelwrapper.imbalanced_data_transformer.ImbalancedDataTransformer",
     "Transformer"
   ],
   "SamplePairingRegression": [
