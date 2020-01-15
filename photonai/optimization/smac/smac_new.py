@@ -28,37 +28,35 @@ class SMACOptimizer(PhotonBaseOptimizer):
                  max_r=1,
                  run_limit=5,
                  smac_helper=None):  # optimizer only for test and developing settings yet.
-        if __found__:
-            self.wallclock_limit = wallclock_limit
-            self.minR = min_r
-            self.maxR = max_r
-            if self.minR != 1 or self.maxR != 1:
-                raise NotImplementedError("PHOTONs seed management is not implemented yet. "
-                                          "At this juncture we can not run a config multiple times correctly.")
-
-            self.cspace = ConfigurationSpace()  # Hyperparameter space for smac
-            self.runtime = 0
-            self.run_start = 0
-            self.run_obj = run_obj
-            self.run_limit = run_limit
-
-            self.challengers = []
-            self.old_challengers = None
-            self.ask_list = []
-
-            self.switch_optiones = {}
-            self.hyperparameters = []
-
-            self.budget_exhausted = False
-            self.constant_dictionary = {}
-
-            self.smac_helper = smac_helper
-
-            self.maximize_metric = False
-
-        else:
+        if not __found__:
             raise ModuleNotFoundError("Module smac not found or not installed as expected. "
                                       "Please install the smac_requirements.txt PHOTON provides.")
+
+        self.wallclock_limit = wallclock_limit
+        self.minR = min_r
+        self.maxR = max_r
+        if self.minR != 1 or self.maxR != 1:
+            raise NotImplementedError("PHOTONs seed management is not implemented yet. "
+                                      "At this juncture we can not run a config multiple times correctly.")
+
+        self.cspace = ConfigurationSpace()  # Hyperparameter space for smac
+        self.runtime = 0
+        self.run_start = 0
+        self.run_obj = run_obj
+        self.run_limit = run_limit
+
+        self.challengers = []
+        self.old_challengers = None
+        self.ask_list = []
+
+        self.switch_optiones = {}
+        self.hyperparameters = []
+
+        self.budget_exhausted = False
+        self.constant_dictionary = {}
+
+        self.smac_helper = smac_helper
+        self.maximize_metric = False
 
     @staticmethod
     def _convert_photon_to_smac_space(hyperparam: object, name: str):

@@ -24,6 +24,7 @@ dask
 distributed
 scikit-optimize
 scikit-image
+pytest
 
 # bcolz
 # fabolas
