@@ -85,6 +85,7 @@ class SMACOptimizer(PhotonBaseOptimizer):
         """
         for pipe_element in pipeline_elements:
             # build conditions for switch elements
+            # maybe this creepy condition is so that we avoid circular imports!
             if pipe_element.__class__.__name__ == 'Switch':
                 algorithm_options = {}
                 for algo in pipe_element.elements:
@@ -128,7 +129,6 @@ class SMACOptimizer(PhotonBaseOptimizer):
         self.build_smac_space(pipeline_elements)
 
         self.maximize_metric = maximize_metric
-
 
         self.scenario = Scenario({"run_obj": self.run_obj,
                                   "cs": self.cspace,
