@@ -411,20 +411,8 @@
     "photonai.modelwrapper.ConfounderRemoval.ConfounderRemoval",
     "Transformer"
   ],
-  "KerasDNNClassifier":[
-    "photonai.modelwrapper.KerasDNNClassifier.KerasDNNClassifier",
-    "Estimator"
-  ],
-  "KerasDNNRegressor":[
-    "photonai.modelwrapper.KerasDNNRegressor.KerasDNNRegressor",
-    "Estimator"
-  ],
-  "KerasDNNMultiOutput":[
-    "photonai.modelwrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
-    "Estimator"
-  ],
   "SourceSplitter":[
-    "photonai.modelwrapper.SourceSplitter.SourceSplitter",
+    "photonai.modelwrapper.source_splitter.SourceSplitter",
     "Transformer"
   ],
   "FClassifSelectPercentile":[

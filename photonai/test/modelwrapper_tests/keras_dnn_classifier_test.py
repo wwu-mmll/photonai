@@ -1,11 +1,13 @@
 import unittest
 from photonai.modelwrapper.keras_dnn_classifier import KerasDnnClassifier
+from photonai.test.modelwrapper_tests.base_model_wrapper_test import BaseModelWrapperTest
 
 
-class KerasDnnClassifierTest(unittest.TestCase):
+class KerasDnnClassifierTest(BaseModelWrapperTest):
 
     def setUp(self):
-        self.dnn = KerasDnnClassifier()
+        self.model_wrapper = KerasDnnClassifier()
+        self.dnn = self.model_wrapper
 
     def test_multi_class(self):
 

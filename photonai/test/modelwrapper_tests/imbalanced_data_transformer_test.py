@@ -2,13 +2,14 @@ import unittest
 import numpy as np
 
 from photonai.modelwrapper.imbalanced_data_transformer import ImbalancedDataTransformer
+from photonai.test.modelwrapper_tests.base_model_wrapper_test import BaseModelWrapperTest
 
 from imblearn.over_sampling.tests import test_smote
 from imblearn.combine.tests import test_smote_tomek
 from imblearn.under_sampling._prototype_selection.tests import test_instance_hardness_threshold
 
 
-class ImbalancedDataTransformTest(unittest.TestCase):
+class ImbalancedDataTransformTest(BaseModelWrapperTest):
     """
     Tests based on implemented version by imblearn.
     For original implementation see:
@@ -16,7 +17,7 @@ class ImbalancedDataTransformTest(unittest.TestCase):
     """
 
     def setUp(self):
-        self.imbalanced_data_transformer = ImbalancedDataTransformer()
+        self.model_wrapper = ImbalancedDataTransformer()
 
     def test_strategy(self):
         with self.assertRaises(ValueError):
