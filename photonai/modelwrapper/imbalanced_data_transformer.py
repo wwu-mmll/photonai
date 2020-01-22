@@ -7,6 +7,7 @@ try:
 except ModuleNotFoundError:
     __found__ = False
 
+
 class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
     """
     Applies the chosen strategy to the data in order to handle the imbalance in the data.
@@ -14,7 +15,6 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
     Underlying architecture: Imbalanced-Learning
     More infomration on: https://imbalanced-learn.readthedocs.io/en/stable/api.html
     """
-    _estimator_type = "transformer"
 
     IMBALANCED_DICT = {
         'oversampling': ["ADASYN",
@@ -38,7 +38,7 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         'combine': ["SMOTEENN", "SMOTETomek"],
     }
 
-    def __init__(self, method_name: str='RandomUnderSampler', **kwargs):
+    def __init__(self, method_name: str = 'RandomUnderSampler', **kwargs):
         """
         Instantiates an object that transforms the data into balanced groups according to the given method
 
@@ -102,7 +102,6 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
 
         desired_class = getattr(home, method_name)
         self.method = desired_class(**kwargs)
-
 
     def fit_transform(self, X, y):
         return self.method.fit_sample(X, y)

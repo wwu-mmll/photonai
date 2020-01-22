@@ -5,7 +5,6 @@ import numpy as np
 
 
 class PhotonOneClassSVM(BaseEstimator, ClassifierMixin):
-    _estimator_type = "estimator"
 
     def __init__(self, kernel='rbf', nu=0.5):
         self.kernel = kernel

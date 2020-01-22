@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from sklearn.utils.testing import assert_array_equal
-from photonai.modelwrapper.SourceSplitter import SourceSplitter
+from photonai.modelwrapper.source_splitter import SourceSplitter
 
 class FeatureEncoderTests(unittest.TestCase):
 
