@@ -50,15 +50,18 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
     def __init__(self,
                  model=None,
                  epochs: int = 10,
-                 batch_size: int = 64,
+                 nn_batch_size: int = 33,
                  multi_class: bool = True,
                  verbosity: int = 0):
-        super(KerasBaseClassifier, self).__init__(model=model, epochs=epochs, batch_size=batch_size, verbosity=verbosity)
+        super(KerasBaseClassifier, self).__init__(model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity)
         self.multi_class = multi_class
 
     def predict(self, X):
-        predict_result = self.model.predict(X, batch_size=self.batch_size)
-        max_index = np.argmax(predict_result, axis=1)
+        predict_result = self.model.predict(X, batch_size=self.nn_batch_size)
+        if self.multi_class:
+            max_index = np.argmax(predict_result, axis=1)
+        else:
+            max_index = np.array([val>0.5 for val in predict_result])
         return max_index
 
     def encode_targets(self, y):
@@ -73,9 +76,9 @@ class KerasBaseRegressor(KerasBaseEstimator, RegressorMixin):
     def __init__(self,
                  model=None,
                  epochs: int = 10,
-                 batch_size: int = 64,
+                 nn_batch_size: int = 64,
                  verbosity: int = 0):
-        super(KerasBaseRegressor, self).__init__(model=model, epochs=epochs, batch_size=batch_size, verbosity=verbosity)
+        super(KerasBaseRegressor, self).__init__(model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity)
 
     def predict(self, X):
         return np.array([val[0] for val in self.predict_proba(X)])
@@ -83,7 +86,7 @@ class KerasBaseRegressor(KerasBaseEstimator, RegressorMixin):
 
 class KerasDnnBaseModel(KerasBaseEstimator):
 
-    def __init__(self, hidden_layer_sizes: list =[],
+    def __init__(self, hidden_layer_sizes: list = [],
                  target_dimension: int = 2,
                  target_activation: str = "softmax",
                  learning_rate: float = 0.1,
@@ -94,12 +97,10 @@ class KerasDnnBaseModel(KerasBaseEstimator):
                  eaSt_patience=20,
                  batch_normalization: bool = True,
                  verbosity=0,
-
                  dropout_rate=0.2,  # list or float
                  activations='relu',  # list or str
                  optimizer="adam",  # list or keras.optimizer
                  ):
-        super(KerasBaseEstimator, self).__init__()  # why?
 
         self._hidden_layer_sizes = None
         self._dropout_rate = None
@@ -123,7 +124,7 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         self.eaSt_patience = eaSt_patience
         self.verbosity = verbosity
 
-        self.model = Sequential()
+        self.model = None
 
     @property
     def hidden_layer_sizes(self):
@@ -270,27 +271,26 @@ class KerasDnnBaseModel(KerasBaseEstimator):
 
     def create_model(self, input_size):
 
-        model = Sequential()
+        self.model = Sequential()
         for i, size in enumerate(self.hidden_layer_sizes):
             if i == 0:
-                model.add(Dense(size,
+                self.model.add(Dense(size,
                                 input_dim=input_size,
                                 activation=self.activations[i]))
             else:
-                model.add(Dense(size,
+                self.model.add(Dense(size,
                                 activation=self.activations[i]))
-
-            model.add(Dropout(rate=self.dropout_rate[i]))
+            self.model.add(Dropout(rate=self.dropout_rate[i]))
 
             if self.batch_normalization == 1:
-                model.add(BatchNormalization())
+                self.model.add(BatchNormalization())
 
-        model.add(Dense(self.target_dimension, activation=self.target_activation))
+        self.model.add(Dense(self.target_dimension, activation=self.target_activation))
 
         # Compile model
-        model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
+        self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
 
-        return model
+        return self
 
 
 def get_loss_allocation():
