@@ -8,8 +8,6 @@ from photonai.optimization import Categorical
 X, y = load_boston(return_X_y=True)
 
 
-settings =
-
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_keras_regression_pipe',
                     optimizer='grid_search',
@@ -31,10 +29,10 @@ my_pipe.add(PipelineElement('StandardScaler'))
 # USE KERASDNNCLASSIFIER FOR CLASSIFICATION
 my_pipe += PipelineElement('KerasDnnRegressor',
                            hyperparameters={'hidden_layer_sizes': Categorical([[10, 8, 4], [20, 5]]),
-                                            'dropout_rate': Categorical([0.5, [0.5, 0.2]])
+                                            'dropout_rate': Categorical([0.5, 0.2])
                                             },
                            activations='relu',
-                           epochs=5,
+                           epochs=50,
                            batch_size=32,
                            verbosity=1)
 

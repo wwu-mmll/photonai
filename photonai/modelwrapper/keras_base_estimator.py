@@ -1,9 +1,8 @@
 import keras
 from keras import backend as K
-from keras.models import model_from_json, Sequential
+from keras.models import model_from_json
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.logger import logger
-from sklearn.model_selection import ShuffleSplit
 
 class KerasBaseEstimator(BaseEstimator):
     """
@@ -13,42 +12,35 @@ class KerasBaseEstimator(BaseEstimator):
     def __init__(self,
                  model=None,
                  epochs: int = 10,
-                 batch_size: int = 64,
+                 nn_batch_size: int = 32,
                  verbosity: int = 0):
         self.model = model
         self.epochs = epochs
-        self.batch_size = batch_size
+        self.nn_batch_size = nn_batch_size
         self.verbosity = verbosity
 
-    def fit(self, X, y, reload_weights: bool=True):
+    def fit(self, X, y, reload_weights: bool=False):
         # prepare target values
         # Todo: early stopping
 
         if reload_weights:
             self.reset_weights(self.model)
 
-        y = self.encode_targets(y)
+        #y = self.encode_targets(y)
 
         # use callbacks only when size of training set is above 100
         if X.shape[0] > 100:
             # get pseudo validation set for keras callbacks
-            splitter = ShuffleSplit(n_splits=1, test_size=0.2)
-            for train_index, val_index in splitter.split(X):
-                X_train = X[train_index]
-                X_val = X[val_index]
-                y_train = y[train_index]
-                y_val = y[val_index]
-
             # fit the model
-            results = self.model.fit(X_train, y_train,
-                                     validation_data=(X_val, y_val),
-                                     batch_size=self.batch_size,
-                                     epochs=self.epochs,
-                                     verbose=self.verbosity)
+            self.model.fit(X, y,
+                           batch_size=self.nn_batch_size,
+                           validation_split=0.1,
+                           epochs=self.epochs,
+                           verbose=self.verbosity)
         else:
             # fit the model
             logger.warn('Cannot use Keras Callbacks because of small sample size.')
-            results = self.model.fit(X, y, batch_size=self.batch_size,
+            self.model.fit(X, y, batch_size=self.nn_batch_size,
                                      epochs=self.epochs,
                                      verbose=self.verbosity)
 
@@ -61,7 +53,7 @@ class KerasBaseEstimator(BaseEstimator):
         :type data: float
         :return: predicted values, array
         """
-        return self.model.predict(X, batch_size=self.batch_size)
+        return self.model.predict(X, batch_size=self.nn_batch_size)
 
     def encode_targets(self, y):
         return y
