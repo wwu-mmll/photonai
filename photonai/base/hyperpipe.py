@@ -727,7 +727,7 @@ class Hyperpipe(BaseEstimator):
         if self.output_settings.save_output:
             try:
                 pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
-                PhotonModelPersistor.save_optimum_pipe(self, pretrained_model_filename)
+                PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
                 logger.info("Saved best model to file.")
             except FileNotFoundError as e:
                 logger.info("Could not save best model to file")
@@ -1355,7 +1355,8 @@ class PhotonModelPersistor:
         else:
             os.makedirs(folder)
 
-        PhotonModelPersistor.save_elements(optimum_pipe.elements, folder)
+        # only save elements without name. Structure of optimum_pipe.elements: [('name', element),...]
+        PhotonModelPersistor.save_elements([val[1] for val in optimum_pipe.elements], folder)
 
         # write meta infos from pipeline
         with open(os.path.join(folder, '_optimum_pipe_meta.pkl'), 'wb') as f:

@@ -2,7 +2,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.preprocessing import LabelEncoder as SKLabelEncoder
 
 
-class LabelEncoder(SKLabelEncoder, BaseEstimator, TransformerMixin):
+class LabelEncoder(SKLabelEncoder, TransformerMixin, BaseEstimator):
 
     def __init__(self):
         super(LabelEncoder, self).__init__()

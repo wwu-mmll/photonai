@@ -185,7 +185,7 @@ class HyperpipeTests(PhotonBaseTest):
                             output_settings=settings)
 
         preproc = Preprocessing()
-        preproc += PipelineElement('LabelEncoder')
+        preproc += PipelineElement('StandardScaler')
 
         # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
         tree_qua_branch = Branch('tree_branch')
@@ -203,6 +203,7 @@ class HyperpipeTests(PhotonBaseTest):
         knn_sta_branch += PipelineElement.create("dummy", DummyTransformer(), {})
         knn_sta_branch += PipelineElement('KNeighborsClassifier')
 
+        my_pipe += preproc
         # voting = True to mean the result of every branch
         my_pipe += Stack('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch])
 
@@ -402,10 +403,10 @@ class HyperpipeTests(PhotonBaseTest):
         # because the pca is test disabled, we expect the number of features
         self.assertEqual(len(self.hyperpipe.results.best_config_feature_importances[0]), self.__X.shape[1])
         backmapped_feature_importances = os.path.join(self.hyperpipe.output_settings.results_folder,
-                                                      'optimum_pipe_feature_importances_backmapped.npz')
+                                                      'optimum_pipe_feature_importances_backmapped.csv')
         self.assertTrue(os.path.isfile(backmapped_feature_importances))
-        loaded_array = np.load(backmapped_feature_importances)['arr_0']
-        self.assertEqual(loaded_array.shape[1], self.__X.shape[1])
+        loaded_array = np.loadtxt(open(backmapped_feature_importances, 'rb'), delimiter=",")
+        self.assertEqual(loaded_array.shape[0], self.__X.shape[1])
 
     def test_optimum_pipe_predict_and_predict_proba_and_transform(self):
         # find best config and test against sklearn
