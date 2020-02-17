@@ -27,7 +27,7 @@ my_pipe += PipelineElement('LassoFeatureSelection',
                            test_disabled=True)
 
 # add imbalanced group handling
-my_pipe += PipelineElement('ImbalancedDataTransform', method_name='SMOTE', test_disabled=False)
+my_pipe += PipelineElement('ImbalancedDataTransformer', method_name='SMOTE', test_disabled=False)
 
 # setup estimator stack
 est_stack = Stack(name='classifier_stack')
