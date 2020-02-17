@@ -426,7 +426,7 @@ class Hyperpipe(BaseEstimator):
         def optimizer_input_str(self, value):
             if isinstance(value, str):
                 if value not in Hyperpipe.Optimization.OPTIMIZER_DICTIONARY:
-                    raise ValueError("Optimizer " + value + "not supported right now.")
+                    raise ValueError("Optimizer " + value + " not supported right now.")
             self._optimizer_input = value
 
         def sanity_check_metrics(self):
