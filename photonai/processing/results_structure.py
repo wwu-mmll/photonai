@@ -1,4 +1,5 @@
 import pickle
+import pickle
 import uuid
 from enum import Enum
 
@@ -137,6 +138,9 @@ class MDBDummyResults(EmbeddedMongoModel):
     strategy = fields.CharField(blank=True)
     train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+
+    def get_test_metrics(self):
+        return {m.metric_name: m.value for m in self.test if m.operation == "FoldOperations.MEAN"}
 
 
 class MDBHyperpipeInfo(EmbeddedMongoModel):
