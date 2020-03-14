@@ -11,6 +11,7 @@ from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
+from photonai.optimization.base_optimizer import PhotonSlaveOptimizer, PhotonMasterOptimizer
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
@@ -114,102 +115,36 @@ class OuterFoldManager:
         self._prepare_optimization()
 
         outer_fold_fit_start_time = datetime.datetime.now()
-        best_metric_yet = None
-        tested_config_counter = 0
+        self.best_metric_yet = None
+        self.tested_config_counter = 0
 
         # distribute number of folds to encapsulated child hyperpipes
         # self.__distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
         #                                                 outer_fold_counter=outer_fold_counter)
 
         if self.cross_validaton_info.calculate_metrics_per_fold:
-            fold_operation = FoldOperations.MEAN
+            self.fold_operation = FoldOperations.MEAN
         else:
-            fold_operation = FoldOperations.RAW
+            self.fold_operation = FoldOperations.RAW
 
-        max_nr_of_configs = ''
+        self.max_nr_of_configs = ''
         if hasattr(self.optimizer, 'n_configurations'):
-            max_nr_of_configs = str(self.optimizer.n_configurations)
+            self.max_nr_of_configs = str(self.optimizer.n_configurations)
 
-        # do the optimizing1
-        for current_config in self.optimizer.ask:
-            if current_config is None:
-                continue
-            logger.clean_info('---------------------------------------------------------------------------------------------------------------')
-            tested_config_counter += 1
+        if isinstance(self.optimizer, PhotonMasterOptimizer):
+            self.optimizer.optimize()
+        else:
+            # do the optimizing1
+            for current_config in self.optimizer.ask:
+                self.objectiv_function(current_config)
 
-            if hasattr(self.optimizer, 'ask_for_pipe'):
-                pipe_ctor = self.optimizer.ask_for_pipe()
-            else:
-                pipe_ctor = self.copy_pipe_fnc
-
-            # self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-
-            hp = InnerFoldManager(pipe_ctor, current_config,
-                                  self.optimization_info,
-                                  self.cross_validaton_info, self.outer_fold_id, self.constraint_objects,
-                                  cache_folder=self.cache_folder,
-                                  cache_updater=self.cache_updater)
-
-            # Test the configuration cross validated by inner_cv object
-            current_config_mdb = hp.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
-            current_config_mdb.config_nr = tested_config_counter
-
-            if not current_config_mdb.config_failed:
-                metric_train = MDBHelper.get_metric(current_config_mdb, fold_operation,
-                                                    self.optimization_info.best_config_metric)
-                metric_test = MDBHelper.get_metric(current_config_mdb, fold_operation,
-                                                   self.optimization_info.best_config_metric, train=False)
-
-                if metric_train is None or metric_test is None:
-                    raise Exception("Config did not fail, but did not get any metrics either....!!?")
-                config_performance = (metric_train, metric_test)
-                if best_metric_yet is None:
-                    best_metric_yet = config_performance
-                    self.current_best_config = current_config_mdb
-                else:
-                    # check if we have the next superstar around that exceeds any old performance
-                    if self.optimization_info.maximize_metric:
-                        if metric_test > best_metric_yet[1]:
-                            best_metric_yet = config_performance
-                            self.current_best_config.save_memory()
-                            self.current_best_config = current_config_mdb
-                        else:
-                            current_config_mdb.save_memory()
-                    else:
-                        if metric_test < best_metric_yet[1]:
-                            best_metric_yet = config_performance
-                            self.current_best_config.save_memory()
-                            self.current_best_config = current_config_mdb
-                        else:
-                            current_config_mdb.save_memory()
-
-                # Print Result for config
-                computation_duration = current_config_mdb.computation_end_time - current_config_mdb.computation_start_time
-                logger.info('Computed configuration ' + str(tested_config_counter) + "/" + max_nr_of_configs +
-                            " in " + str(computation_duration))
-                logger.info("Performance:             " + self.optimization_info.best_config_metric
-                            + " - Train: " + "%.4f" % config_performance[0] + ", Validation: " + "%.4f" % config_performance[1])
-                logger.info("Best Performance So Far: " + self.optimization_info.best_config_metric
-                            + " - Train: " + "%.4f" % best_metric_yet[0] + ", Validation: " + "%.4f" % best_metric_yet[1])
-            else:
-                config_performance = (-1, -1)
-                # Print Result for config
-                logger.debug('...failed:')
-                logger.error(current_config_mdb.config_error)
-
-            # add config to result tree
-            self.result_object.tested_config_list.append(current_config_mdb)
-
-            # 3. inform optimizer about performance
-            logger.debug("Telling hyperparameter optimizer about recent performance.")
-            self.optimizer.tell(current_config, config_performance)
-            logger.debug("Asking hyperparameter optimizer for new config.")
         logger.clean_info('---------------------------------------------------------------------------------------------------------------')
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
+        print(self.tested_config_counter)
         # now go on with the best config found
-        if tested_config_counter > 0:
+        if self.tested_config_counter > 0:
             best_config_outer_fold = self.optimization_info.get_optimum_config(self.result_object.tested_config_list,
-                                                                               fold_operation)
+                                                                               self.fold_operation)
 
             if not best_config_outer_fold:
                 raise Exception("No best config was found!")
@@ -278,7 +213,7 @@ class OuterFoldManager:
                     # training
                     train_item_metrics = {}
                     for m in metric_dict:
-                        if m.operation == str(fold_operation):
+                        if m.operation == str(self.fold_operation):
                             train_item_metrics[m.metric_name] = m.value
                     train_item = MDBScoreInformation()
                     train_item.metrics_copied_from_inner = True
@@ -295,6 +230,94 @@ class OuterFoldManager:
 
         logger.info('Computations in outer fold {} took {} minutes.'.format(self.cross_validaton_info.outer_folds[self.outer_fold_id].fold_nr,
                                                                             (datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
+
+
+    def objectiv_function(self, current_config):
+        if isinstance(self.optimizer, PhotonMasterOptimizer):
+            #current_config = [{key: x.get_dictionary()[key] for key in x.get_dictionary().keys()
+            #                  if 'algos' not in key} for x in [current_config]][0]
+            current_config = {k: current_config[k] for k in current_config if (current_config[k] and 'algos' not in k)}
+
+        if current_config is None:
+            return
+        logger.clean_info(
+            '---------------------------------------------------------------------------------------------------------------')
+        self.tested_config_counter += 1
+
+        if hasattr(self.optimizer, 'ask_for_pipe'):
+            pipe_ctor = self.optimizer.ask_for_pipe()
+        else:
+            pipe_ctor = self.copy_pipe_fnc
+
+        # self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
+
+        hp = InnerFoldManager(pipe_ctor, current_config,
+                              self.optimization_info,
+                              self.cross_validaton_info, self.outer_fold_id, self.constraint_objects,
+                              cache_folder=self.cache_folder,
+                              cache_updater=self.cache_updater)
+
+        # Test the configuration cross validated by inner_cv object
+        current_config_mdb = hp.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
+        current_config_mdb.config_nr = self.tested_config_counter
+
+        if not current_config_mdb.config_failed:
+            metric_train = MDBHelper.get_metric(current_config_mdb, self.fold_operation,
+                                                self.optimization_info.best_config_metric)
+            metric_test = MDBHelper.get_metric(current_config_mdb, self.fold_operation,
+                                               self.optimization_info.best_config_metric, train=False)
+
+            if metric_train is None or metric_test is None:
+                raise Exception("Config did not fail, but did not get any metrics either....!!?")
+            config_performance = (metric_train, metric_test)
+            if self.best_metric_yet is None:
+                best_metric_yet = config_performance
+                self.current_best_config = current_config_mdb
+            else:
+                # check if we have the next superstar around that exceeds any old performance
+                if self.optimization_info.maximize_metric:
+                    if metric_test > self.best_metric_yet[1]:
+                        best_metric_yet = config_performance
+                        self.current_best_config.save_memory()
+                        self.current_best_config = current_config_mdb
+                    else:
+                        current_config_mdb.save_memory()
+                else:
+                    if metric_test < self.best_metric_yet[1]:
+                        best_metric_yet = config_performance
+                        self.current_best_config.save_memory()
+                        self.current_best_config = current_config_mdb
+                    else:
+                        current_config_mdb.save_memory()
+
+            # Print Result for config
+            computation_duration = current_config_mdb.computation_end_time - current_config_mdb.computation_start_time
+            logger.info('Computed configuration ' + str(self.tested_config_counter) + "/" + self.max_nr_of_configs +
+                        " in " + str(computation_duration))
+            logger.info("Performance:             " + self.optimization_info.best_config_metric
+                        + " - Train: " + "%.4f" % config_performance[0] + ", Validation: " + "%.4f" %
+                        config_performance[1])
+            logger.info("Best Performance So Far: " + self.optimization_info.best_config_metric
+                        + " - Train: " + "%.4f" % best_metric_yet[0] + ", Validation: " + "%.4f" % best_metric_yet[1])
+        else:
+            config_performance = (-1, -1)
+            # Print Result for config
+            logger.debug('...failed:')
+            logger.error(current_config_mdb.config_error)
+
+        # add config to result tree
+        self.result_object.tested_config_list.append(current_config_mdb)
+
+        # 3. inform optimizer about performance
+        logger.debug("Telling hyperparameter optimizer about recent performance.")
+        if isinstance(self.optimizer, PhotonSlaveOptimizer):
+            self.optimizer.tell(current_config, config_performance)
+        logger.debug("Asking hyperparameter optimizer for new config.")
+
+        if self.optimization_info.maximize_metric:
+            return 1 - config_performance[1]
+        else:
+            return config_performance[1]
 
     def _fit_dummy(self):
         if self.dummy_estimator is not None:

@@ -6,6 +6,7 @@ from .performance_constraints import DummyPerformance, MinimumPerformance, BestP
 from .grid_search.grid_search import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer
 from .scikit_optimize.sk_opt import SkOptOptimizer
 from .random_search.random_search import RandomSearchOptimizer
+from .smac.smac import SMACOptimizer
 # from .smac.smac3 import SMACOptimizer
 
 #
