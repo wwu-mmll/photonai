@@ -1,10 +1,10 @@
 import datetime
 import random
 
-from photonai.optimization.base_optimizer import PhotonBaseOptimizer
+from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.photonlogger.logger import logger
 
-class RandomSearchOptimizer(PhotonBaseOptimizer):
+class RandomSearchOptimizer(PhotonSlaveOptimizer):
     """
      Searches for the best configuration by randomly testing k possible hyperparameter combinations without grid.
     """

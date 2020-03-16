@@ -2,12 +2,12 @@ import datetime
 
 import numpy as np
 
-from photonai.optimization.base_optimizer import PhotonBaseOptimizer
+from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.optimization.config_grid import create_global_config_grid
 from photonai.photonlogger.logger import logger
 
 
-class GridSearchOptimizer(PhotonBaseOptimizer):
+class GridSearchOptimizer(PhotonSlaveOptimizer):
     """
     Searches for the best configuration by iteratively testing all possible hyperparameter combinations.
     """

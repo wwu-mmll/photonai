@@ -61,7 +61,10 @@ class OuterFoldManager:
         pipeline_elements = [e for name, e in self._pipe.elements]
 
         self.optimizer = self.optimization_info.get_optimizer()
-        self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
+        if isinstance(self.optimizer, PhotonMasterOptimizer):
+            self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric, self.objectiv_function)
+        else:
+            self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
 
         # we've got some super strange pymodm problems here
         # somehow some information from the previous outer fold lingers on and can be found within a completely new

@@ -1,19 +1,15 @@
 from photonai.optimization import Categorical as PhotonCategorical
 from photonai.optimization import FloatRange, IntegerRange
 from photonai.optimization.base_optimizer import PhotonMasterOptimizer
+from photonai.photonlogger import logger
 
 try:
     from smac.configspace import UniformFloatHyperparameter, UniformIntegerHyperparameter, CategoricalHyperparameter, \
         ConfigurationSpace, Configuration, InCondition, Constant
     from smac.scenario.scenario import Scenario
-    from smac.tae.execute_ta_run import StatusType
     from smac.facade.smac_bo_facade import SMAC4BO
     from smac.facade.smac_hpo_facade import SMAC4HPO
     from smac.facade.smac_ac_facade import SMAC4AC
-    from smac.intensification.intensification import Intensifier
-    from smac.tae.execute_ta_run import FirstRunCrashedException
-    from smac.tae.execute_func import ExecuteTAFuncDict
-    from smac.stats.stats import Stats
     __found__ = True
 except ModuleNotFoundError:
     __found__ = False
@@ -21,16 +17,28 @@ except ModuleNotFoundError:
 
 class SMACOptimizer(PhotonMasterOptimizer):
 
-    def __init__(self,
-                 scenario_dict,
-                 rng = 42,
-                 smac_helper = None):
+    def __init__(self, scenario_dict, rng = 42, smac_helper = None):
+        """
+        SMAC Wrapper for PHOTON.
+        SMAC usage and implementation details:
+        https://automl.github.io/SMAC3/master/quickstart.html
+
+        :param scenario_dict: dict for scenario settings
+        :param rng: INT for random seed
+        :param smac_helper: currently help object for test cases.
+        """
+
         if not __found__:
+            msg = "Module smac not found or not installed as expected. " \
+                  "Please install the smac_requirements.txt PHOTON provides."
+            logger.error(msg)
             raise ModuleNotFoundError("Module smac not found or not installed as expected. "
                                       "Please install the smac_requirements.txt PHOTON provides.")
 
         if not scenario_dict:
-            raise ValueError("Please enter scenario_dict for smac intern information.")
+            msg = "Please enter scenario_dict for smac intern informations."
+            logger.error(msg)
+            raise ValueError(msg)
 
         self.rng = rng
 
@@ -41,7 +49,11 @@ class SMACOptimizer(PhotonMasterOptimizer):
         self.switch_optiones = {}
         self.hyperparameters = []
 
-        self.smac_helper = smac_helper
+        if smac_helper:
+            self.smac_helper = smac_helper
+            self.debug = True
+        else:
+            self.debug = False
 
         self.maximize_metric = False
 
@@ -110,11 +122,17 @@ class SMACOptimizer(PhotonMasterOptimizer):
                         self.cspace.add_hyperparameter(smac_param)
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool, objectiv_function):
-        # build space
-        self.space = ConfigurationSpace()
+        """
+        Initializes SMAC Optimizer.
+        :param pipeline_elements: PHOTON Elments to cast
+        :param maximize_metric: error or score distinction
+        :param objectiv_function: function cfg -> cost
+        :return:
+        """
+        self.space = ConfigurationSpace()  # build space
         self.build_smac_space(pipeline_elements)
         self.maximize_metric = maximize_metric
-        #self.scenario_dict["cs"] = self.cspace
+        self.scenario_dict["cs"] = self.cspace
         self.scenario_dict["limit_resources"] = False
 
         self.scenario = Scenario(self.scenario_dict)
@@ -123,9 +141,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
                              rng = self.rng,
                              tae_runner = objectiv_function)
 
-        if self.smac_helper:
+        if  self.debug:
             self.smac_helper['data'] = self.smac
 
 
     def optimize(self):
+        """
+        Start optimization process
+        """
         self.smac.optimize()

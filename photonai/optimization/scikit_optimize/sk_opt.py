@@ -7,13 +7,13 @@ import numpy as np
 import matplotlib.pylab as plt
 
 from photonai.optimization import FloatRange, IntegerRange
-from photonai.optimization.base_optimizer import PhotonBaseOptimizer
+from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.optimization import Categorical as PhotonCategorical
 from photonai.photonlogger.logger import logger
 
 
 
-class SkOptOptimizer(PhotonBaseOptimizer):
+class SkOptOptimizer(PhotonSlaveOptimizer):
 
     def __init__(self, n_configurations: int=20, acq_func: str = 'gp_hedge', acq_func_kwargs: dict = None):
         self.optimizer = None

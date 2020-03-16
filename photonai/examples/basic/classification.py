@@ -21,7 +21,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',
 my_pipe.add(PipelineElement('StandardScaler'))
 
 my_pipe += PipelineElement('PCA',
-                           hyperparameters={'n_components': IntegerRange(10, 50)},
+                           hyperparameters={'n_components': IntegerRange(10, 30)},
                            test_disabled=True)
 
 my_pipe += PipelineElement('SVC',
