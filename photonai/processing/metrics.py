@@ -14,33 +14,90 @@ from sklearn.metrics import accuracy_score
 class Scorer(object):
     """
     Transforms a string literal into an callable instance of a particular metric
+    BHC 0.1 - support cluster scoring by add clustering scores and type
+            - added ELEMENT_TYPES
+            - added SCORE_TYPES
+            note: really ELEMENT_SCORE
     """
+    ELEMENT_TYPES = ['Classification', 'Regression', 'Clustering']
+    CLSFID = 0
+    REGRID = 1
+    CLSTID = 2
 
-    ELEMENT_DICTIONARY = {
-        # Classification
-        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', 'score'),
-        'accuracy': ('sklearn.metrics', 'accuracy_score', 'score'),
-        'f1_score': ('sklearn.metrics', 'f1_score', 'score'),
-        'hamming_loss': ('sklearn.metrics', 'hamming_loss', 'error'),
-        'log_loss': ('sklearn.metrics', 'log_loss', 'error'),
-        'precision': ('sklearn.metrics', 'precision_score', 'score'),
-        'recall': ('sklearn.metrics', 'recall_score', 'score'),
-        'auc': ('sklearn.metrics', 'roc_auc_score', 'score'),
-        'sensitivity': ('photonai.processing.metrics', 'sensitivity', 'score'),
-        'specificity': ('photonai.processing.metrics', 'specificity', 'score'),
-        'balanced_accuracy': ('photonai.processing.metrics', 'balanced_accuracy', 'score'),
-        'categorical_accuracy': ('photonai.processing.metrics', 'categorical_accuracy_score', 'score'),
-
-        # Regression
-        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error'),
-        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
-        'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
-        'r2': ('sklearn.metrics', 'r2_score', 'score'),
-        'pearson_correlation': ('photonai.processing.metrics', 'pearson_correlation', 'score'),
-        'spearman_correlation': ('photonai.processing.metrics', 'spearman_correlation', 'score'),
-        'variance_explained':  ('photonai.processing.metrics', 'variance_explained_score', 'score')
-
+    SCORE_TYPES = ['score', 'error', 'un-supervised']
+    SCOREID = 0
+    ERRORID = 1
+    UNSUPID = 2
+    ELEMENT_SCORES = {
+        ELEMENT_TYPES[CLSFID] : {     # Classification
+            'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', SCORE_TYPES[SCOREID]),
+            'accuracy': ('sklearn.metrics', 'accuracy_score', SCORE_TYPES[SCOREID]),
+            'f1_score': ('sklearn.metrics', 'f1_score', SCORE_TYPES[SCOREID]),
+            'hamming_loss': ('sklearn.metrics', 'hamming_loss', SCORE_TYPES[ERRORID]),
+            'log_loss': ('sklearn.metrics', 'log_loss', SCORE_TYPES[ERRORID]),
+            'precision': ('sklearn.metrics', 'precision_score', SCORE_TYPES[SCOREID]),
+            'recall': ('sklearn.metrics', 'recall_score', SCORE_TYPES[SCOREID]),
+            'auc': ('sklearn.metrics', 'roc_auc_score', SCORE_TYPES[SCOREID]),
+            'sensitivity': ('photonai.processing.metrics', 'sensitivity', SCORE_TYPES[SCOREID]),
+            'specificity': ('photonai.processing.metrics', 'specificity', SCORE_TYPES[SCOREID]),
+            'balanced_accuracy': ('photonai.processing.metrics', 'balanced_accuracy', SCORE_TYPES[SCOREID]),
+            'categorical_accuracy': ('photonai.processing.metrics', 'categorical_accuracy_score', SCORE_TYPES[SCOREID]),
+            },
+        ELEMENT_TYPES[REGRID] :{     # Regression
+            'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', SCORE_TYPES[ERRORID]),
+            'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', SCORE_TYPES[ERRORID]),
+            'explained_variance': ('sklearn.metrics', 'explained_variance_score', SCORE_TYPES[SCOREID]),
+            'r2': ('sklearn.metrics', 'r2_score', SCORE_TYPES[SCOREID]),
+            'pearson_correlation': ('photonai.processing.metrics', 'pearson_correlation', SCORE_TYPES[SCOREID]),
+            'spearman_correlation': ('photonai.processing.metrics', 'spearman_correlation', SCORE_TYPES[SCOREID]),
+            'variance_explained':  ('photonai.processing.metrics', 'variance_explained_score', SCORE_TYPES[SCOREID])
+            },
+        ELEMENT_TYPES[CLSTID]: {  # Clustering
+            ### supervised clustering metrics from sklearn.metrics
+            # ['ARI'] = metrics.adjusted_rand_score(y, labels)
+            'ARI': ('sklearn.metrics', 'adjusted_rand_score', SCORE_TYPES[SCOREID]),
+            # ['MI'] = metrics.adjusted_mutual_info_score(y, labels)
+            'MI': ('sklearn.metrics', 'adjusted_mutual_info_score', SCORE_TYPES[SCOREID]),
+            # ['HCV'] = metrics.homogeneity_score(y, labels)
+            'HCV': ('sklearn.metrics', 'homogeneity_score', SCORE_TYPES[SCOREID]),
+            # ['FM'] = metrics.fowlkes_mallows_score(y, labels)
+            'FM': ('sklearn.metrics', 'fowlkes_mallows_score', SCORE_TYPES[SCOREID]),
+            ### un-supervised clustering metrics from sklearn.metrics
+            # ['SC'] = metrics.silhouette_score(X, labels, metric='euclidean')
+            'SC': ('sklearn.metrics', 'silhouette_score', SCORE_TYPES[CLSTID]),
+            # ['CH'] = metrics.calinski_harabaz_score(X, labels)
+            'CH': ('sklearn.metrics', 'calinski_harabaz_score', SCORE_TYPES[CLSTID]),
+            # ['DB'] = metrics.davies_bouldin_score(X, labels)
+            'DB': ('sklearn.metrics', 'davies_bouldin_score', SCORE_TYPES[CLSTID]),
+        },
     }
+
+
+    # ELEMENT_DICTIONARY = {
+    #     # Classification
+    #     'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', 'score'),
+    #     'accuracy': ('sklearn.metrics', 'accuracy_score', 'score'),
+    #     'f1_score': ('sklearn.metrics', 'f1_score', 'score'),
+    #     'hamming_loss': ('sklearn.metrics', 'hamming_loss', 'error'),
+    #     'log_loss': ('sklearn.metrics', 'log_loss', 'error'),
+    #     'precision': ('sklearn.metrics', 'precision_score', 'score'),
+    #     'recall': ('sklearn.metrics', 'recall_score', 'score'),
+    #     'auc': ('sklearn.metrics', 'roc_auc_score', 'score'),
+    #     'sensitivity': ('photonai.processing.metrics', 'sensitivity', 'score'),
+    #     'specificity': ('photonai.processing.metrics', 'specificity', 'score'),
+    #     'balanced_accuracy': ('photonai.processing.metrics', 'balanced_accuracy', 'score'),
+    #     'categorical_accuracy': ('photonai.processing.metrics', 'categorical_accuracy_score', 'score'),
+    #
+    #     # Regression
+    #     'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error'),
+    #     'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
+    #     'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
+    #     'r2': ('sklearn.metrics', 'r2_score', 'score'),
+    #     'pearson_correlation': ('photonai.processing.metrics', 'pearson_correlation', 'score'),
+    #     'spearman_correlation': ('photonai.processing.metrics', 'spearman_correlation', 'score'),
+    #     'variance_explained':  ('photonai.processing.metrics', 'variance_explained_score', 'score')
+    #
+    # }
 
     @classmethod
     def create(cls, metric):

@@ -36,7 +36,7 @@
     "Transformer"
   ],
   "NMF":[
-    "sklearn.decomposition.NMF",
+    "sklearn.decompositcion.NMF",
     "Transformer"
   ],
   "PCA":[

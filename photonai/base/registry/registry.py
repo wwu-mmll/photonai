@@ -43,7 +43,7 @@ class PhotonRegistry:
         PhotonRegister.delete("ABC1")
 
     """
-
+    base_PHOTON_REGISTRIES = ['PhotonCore', 'PhotonNeuro']
     PHOTON_REGISTRIES = ['PhotonCore', 'PhotonNeuro']
 
     def __init__(self, custom_elements_folder: str = None):
@@ -53,6 +53,14 @@ class PhotonRegistry:
             self.custom_elements = None
             self.custom_elements_folder = None
             self.custom_elements_file = None
+
+    def reset(self):
+        #
+        """
+        start over to initial state,
+        Set instance variable to class global variable
+        """
+        self.PHOTON_REGISTRIES = PhotonRegistry.base_PHOTON_REGISTRIES
 
     def _load_custom_folder(self, custom_elements_folder):
         self.custom_elements_folder, self.custom_elements_file = self._check_custom_folder(custom_elements_folder)
