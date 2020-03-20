@@ -1,10 +1,10 @@
 import numpy as np
 import keras
 from keras.utils import to_categorical
-from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.layers import Dropout, Dense
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
+from keras.callbacks.callbacks import EarlyStopping
 from keras.optimizers import Optimizer, Adam, RMSprop, Adadelta, Adagrad, Adamax, Nadam, TFOptimizer, SGD
 from keras.activations import softmax, softplus, selu, sigmoid, softsign, hard_sigmoid, elu, relu, tanh, \
     linear, exponential
@@ -53,7 +53,10 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
                  nn_batch_size: int = 33,
                  multi_class: bool = True,
                  verbosity: int = 0):
-        super(KerasBaseClassifier, self).__init__(model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity)
+        super(KerasBaseClassifier, self).__init__(model=model,
+                                                  epochs=epochs,
+                                                  nn_batch_size=nn_batch_size,
+                                                  verbosity=verbosity)
         self.multi_class = multi_class
 
     def predict(self, X):
@@ -77,8 +80,13 @@ class KerasBaseRegressor(KerasBaseEstimator, RegressorMixin):
                  model=None,
                  epochs: int = 10,
                  nn_batch_size: int = 64,
+                 callbacks: list = None,
                  verbosity: int = 0):
-        super(KerasBaseRegressor, self).__init__(model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity)
+        super(KerasBaseRegressor, self).__init__(model=model,
+                                                 epochs=epochs,
+                                                 nn_batch_size=nn_batch_size,
+                                                 callbacks=callbacks,
+                                                 verbosity=verbosity)
 
     def predict(self, X):
         return np.array([val[0] for val in self.predict_proba(X)])
@@ -86,20 +94,17 @@ class KerasBaseRegressor(KerasBaseEstimator, RegressorMixin):
 
 class KerasDnnBaseModel(KerasBaseEstimator):
 
-    def __init__(self, hidden_layer_sizes: list = [],
+    def __init__(self, hidden_layer_sizes: list = None,
                  target_dimension: int = 2,
                  target_activation: str = "softmax",
                  learning_rate: float = 0.1,
                  loss: str = "categorical_crossentropy",
-                 metrics: list = ['accuracy'],
-                 # early stopping parameter
-                 early_stopping: bool = True,
-                 eaSt_patience=20,
+                 metrics: list = None,
                  batch_normalization: bool = True,
-                 verbosity=0,
-                 dropout_rate=0.2,  # list or float
-                 activations='relu',  # list or str
-                 optimizer="adam",  # list or keras.optimizer
+                 verbosity = 0,
+                 dropout_rate = 0.2,  # list or float
+                 activations = 'relu',  # list or str
+                 optimizer = "adam",  # list or keras.optimizer
                  ):
 
         self._hidden_layer_sizes = None
@@ -120,8 +125,7 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         self.loss = loss
         self.batch_normalization = batch_normalization
         self.metrics = metrics
-        self.early_stopping = early_stopping
-        self.eaSt_patience = eaSt_patience
+
         self.verbosity = verbosity
 
         self.model = None

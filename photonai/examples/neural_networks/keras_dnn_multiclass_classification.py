@@ -29,7 +29,7 @@ my_pipe += PipelineElement('KerasDnnClassifier',
                                             'dropout_rate': Categorical([0.5, [0.5, 0.2]])
                                             },
                            activations='relu',
-                           batch_size=32,
+                           nn_batch_size=32,
                            multi_class=True,
                            verbosity=1)
 

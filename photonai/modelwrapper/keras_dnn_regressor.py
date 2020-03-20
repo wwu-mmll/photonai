@@ -5,14 +5,13 @@ import photonai.modelwrapper.keras_base_models as keras_dnn_base_model
 class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
 
     def __init__(self,
-                 hidden_layer_sizes: int = [],
+                 hidden_layer_sizes: int = None,
                  learning_rate: float = 0.01,
                  loss: str = "mean_squared_error",
                  epochs: int = 10,
                  nn_batch_size: int = 64,
-                 metrics: list = ['mean_squared_error'],
-                 early_stopping: bool = True,
-                 eaSt_patience=20,
+                 metrics: list = None,
+                 callbacks: list = None,
                  batch_normalization: bool = True,
                  verbosity=0,
                  dropout_rate=0.2,  # list or float
@@ -25,14 +24,20 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
         self.epochs =epochs
         self.nn_batch_size = nn_batch_size
 
+        if callbacks:
+            self.callbacks = callbacks
+        else:
+            self.callbacks = []
+
+        if not metrics:
+            metrics = ['mean_squared_error']
+
         super(KerasDnnRegressor, self).__init__(hidden_layer_sizes=hidden_layer_sizes,
                                                 target_activation="linear",
                                                 target_dimension=1,
                                                 learning_rate=learning_rate,
                                                 loss=loss,
                                                 metrics=metrics,
-                                                early_stopping=early_stopping,
-                                                eaSt_patience=eaSt_patience,
                                                 batch_normalization=batch_normalization,
                                                 verbosity=verbosity,
                                                 dropout_rate=dropout_rate,  # list or float

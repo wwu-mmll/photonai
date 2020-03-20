@@ -13,15 +13,18 @@ class KerasBaseEstimator(BaseEstimator):
                  model=None,
                  epochs: int = 10,
                  nn_batch_size: int = 32,
+                 callbacks: list = None,
                  verbosity: int = 0):
         self.model = model
         self.epochs = epochs
         self.nn_batch_size = nn_batch_size
         self.verbosity = verbosity
+        if callbacks:
+            self.callbacks = callbacks
+        else:
+            self.callbacks = []
 
     def fit(self, X, y, reload_weights: bool=False):
-        # prepare target values
-        # Todo: early stopping
 
         if reload_weights:
             self.reset_weights(self.model)
@@ -36,13 +39,16 @@ class KerasBaseEstimator(BaseEstimator):
                            batch_size=self.nn_batch_size,
                            validation_split=0.1,
                            epochs=self.epochs,
+                           callbacks=self.callbacks,
                            verbose=self.verbosity)
         else:
             # fit the model
             logger.warn('Cannot use Keras Callbacks because of small sample size.')
-            self.model.fit(X, y, batch_size=self.nn_batch_size,
-                                     epochs=self.epochs,
-                                     verbose=self.verbosity)
+            self.model.fit(X, y,
+                           batch_size=self.nn_batch_size,
+                           epochs=self.epochs,
+                           callbacks=self.callbacks,
+                           verbose=self.verbosity)
 
         return self
 

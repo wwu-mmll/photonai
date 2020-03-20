@@ -1,4 +1,6 @@
 import numpy as np
+from keras.callbacks.callbacks import EarlyStopping
+
 from photonai.modelwrapper.keras_base_models import KerasDnnBaseModel, KerasBaseClassifier
 import photonai.modelwrapper.keras_base_models as keras_dnn_base_model
 
@@ -6,15 +8,13 @@ import photonai.modelwrapper.keras_base_models as keras_dnn_base_model
 class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
 
     def __init__(self, multi_class: bool = True,
-                 hidden_layer_sizes: int =[],
+                 hidden_layer_sizes: list = None,
                  learning_rate: float = 0.01,
                  loss: str = "",
                  epochs: int = 100,
                  nn_batch_size: int =64,
-                 metrics: list = ['accuracy'],
-                 early_stopping: bool = False,
-                 eaSt_patience=20,
-                 batch_normalization: bool = True,
+                 metrics: list = None,
+                 callbacks: list = None,
                  verbosity=1,
                  dropout_rate=0.2,  # list or float
                  activations='relu',  # list or str
@@ -27,18 +27,23 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
         self.epochs =epochs
         self.nn_batch_size = nn_batch_size
 
+        if callbacks:
+            self.callbacks = callbacks
+        else:
+            self.callbacks = []
+
+        if not metrics:
+            metrics = ['accuracy']
+
         super(KerasDnnClassifier, self).__init__(hidden_layer_sizes=hidden_layer_sizes,
-                                   target_activation="sigmoid",
-                                   learning_rate=learning_rate,
-                                   loss=loss,
-                                   metrics=metrics,
-                                   early_stopping=early_stopping,
-                                   eaSt_patience=eaSt_patience,
-                                   batch_normalization=batch_normalization,
-                                   dropout_rate=dropout_rate,  # list or float
-                                   activations=activations,  # list or str
-                                   optimizer=optimizer,
-                                   verbosity=verbosity)  # list or keras.optimizer)
+                                                 target_activation="softmax",
+                                                 learning_rate=learning_rate,
+                                                 loss=loss,
+                                                 metrics=metrics,
+                                                 dropout_rate=dropout_rate,  # list or float
+                                                 activations=activations,  # list or str
+                                                 optimizer=optimizer,
+                                                 verbosity=verbosity)  # list or keras.optimizer)
 
 
     @property
@@ -61,11 +66,11 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
 
     @target_activation.setter
     def target_activation(self, value):
-        if value == "sigmoid":
+        if value == "softmax":
             self._target_activation = value
         else:
             raise ValueError("The Classifcation subclass of KerasDnnBaseModel does not allow to use another "
-                             "target_activation. Please use 'sigmoid' like default.")
+                             "target_activation. Please use 'softmax' like default.")
 
     @property
     def loss(self):
@@ -96,8 +101,8 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
 
         return super(KerasDnnClassifier, self).encode_targets(y)
 
-    def fit(self,X, y):
+    def fit(self, X, y):
         y = self.encode_targets(y)
         self.create_model(X.shape[1])
-        super(KerasDnnClassifier, self).fit(X,y, reload_weights=True)
+        super(KerasDnnClassifier, self).fit(X, y, reload_weights=True)
 
