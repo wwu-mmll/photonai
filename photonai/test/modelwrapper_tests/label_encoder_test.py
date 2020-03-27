@@ -2,7 +2,7 @@ import unittest
 import numpy as np
 
 from sklearn.utils.testing import assert_array_equal
-from photonai.modelwrapper.LabelEncoder import LabelEncoder
+from photonai.modelwrapper.label_encoder import LabelEncoder
 
 class LabelEncoderTests(unittest.TestCase):
 

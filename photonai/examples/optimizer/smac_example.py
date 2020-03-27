@@ -1,9 +1,6 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
 
-import sys
-sys.path.append("/home/lplagwitz/tmp/")
-
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Switch
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 

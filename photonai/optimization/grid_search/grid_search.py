@@ -60,8 +60,8 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
     Iteratively tests k possible hyperparameter configurations until a certain time limit is reached.
     """
 
-    def __init__(self, limit_in_minutes=60):
-        super(TimeBoxedRandomGridSearchOptimizer, self).__init__()
+    def __init__(self, limit_in_minutes=60, n_configurations=None):
+        super(TimeBoxedRandomGridSearchOptimizer, self).__init__(n_configurations)
         self.limit_in_minutes = limit_in_minutes
         self.start_time = None
         self.end_time = None

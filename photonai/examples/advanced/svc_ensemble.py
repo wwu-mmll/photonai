@@ -8,7 +8,7 @@ from photonai.optimization import FloatRange, Categorical, IntegerRange
 X, y = load_breast_cancer(True)
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('basic_svm_pipe',
+my_pipe = Hyperpipe('svm_ensemble_pipe',
                     optimizer='sk_opt',
                     optimizer_params={'n_configurations': 10},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],

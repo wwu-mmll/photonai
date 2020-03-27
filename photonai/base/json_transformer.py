@@ -1,22 +1,31 @@
 import json
 import sys
 import inspect
+import numpy as np
 
 from sklearn.model_selection import *
+from photonai.optimization.hyperparameters import *
+from photonai.base.photon_elements import *
 
-from photonai.base import *
-from photonai.optimization import *
+try:
+    from photonai.base.hyperpipe import Hyperpipe, OutputSettings
+except:
+    pass
 
 
 class JsonTransformer(object):
 
-    def __init__(self, black_list= ["base_element"]):
+    def __init__(self, black_list: list = None):
+        if black_list is None:
+            self.black_list = ["base_element"]
+        else:
+            self.black_list = black_list
         self.json = {}
-        self.black_list = black_list
         self.attribute_allocator = {"PipelineElement": ["initial_name", "initial_hyperparameters", "test_disabled", "kwargs"],
                                     "Branch": ["initial_name", "elements"],
                                     "Stack": ["initial_name", "elements"],
                                     "Switch": ["initial_name", "elements"],
+                                    "NeuroBranch": ["initial_name", "elements"]
                                     }
         # "FloatRange": ["start", "stop", "range_type", "step", "num"]
     @staticmethod
@@ -49,9 +58,18 @@ class JsonTransformer(object):
         :param classname: String-name of class
         :return: class
         """
-        return getattr(sys.modules[__name__], classname)
 
-    def to_json_file(self, pipe: Hyperpipe, path: str):
+        if classname in [x[0] for x in inspect.getmembers(sys.modules[__name__])]:
+            obj = getattr(sys.modules[__name__], classname)
+        elif classname in [x[0] for x in inspect.getmembers(sys.modules["photonai.base"])]:
+            obj = getattr(sys.modules["photonai.base"], classname)
+        else:
+            msg = "Json Transformer is not able to initialize the hyperpipe. Class: "+ classname + " is not defined."
+            logger.error(msg)
+            raise ValueError(msg)
+        return obj
+
+    def to_json_file(self, pipe, path: str):
         """
         main function for saving PHOTON.Hyperpipe -> file.json
         :param pipe:
@@ -60,7 +78,7 @@ class JsonTransformer(object):
         self.json = self.create_json(pipe)
         self.write_json_file(self.json, path)
 
-    def create_json(self, pipe: Hyperpipe):
+    def create_json(self, pipe):
         """
         function for saving a PHOTON.Hyperpipe to json
         :param pipe: Hyperpipe to transform
@@ -96,7 +114,13 @@ class JsonTransformer(object):
                                             "wizard_project_name" : pipe.output_settings.wizard_project_name,
                                             "__photon_type" : "OutputSettings"}
 
+        if pipe.preprocessing:
+            self.json["preprocessing"] = {"elements" : self.transform_elements_recursive(pipe.preprocessing.elements),
+                                         "__photon_type": "Preprocessing"
+                                          }
+
         self.json["elements"] = self.transform_elements_recursive(pipe.elements)
+
         return self.json
 
     def transform_elements_recursive(self, element):
@@ -109,7 +133,7 @@ class JsonTransformer(object):
         if element is None:
             return d
         # main dtype
-        if any(isinstance(element, t) for t in [int, bool, str, float]):
+        if any(isinstance(element, t) for t in [int, bool, str, float, np.float]):
             return element
         # dtype == list or dtype == tuple
         if isinstance(element, list) or isinstance(element, tuple):
@@ -155,7 +179,7 @@ class JsonTransformer(object):
         :return: json value
         """
         self.json = self.read_json_file(path)
-        return self.json
+        return self.from_json(self.json)
 
     def from_json(self, json):
         """
@@ -166,9 +190,15 @@ class JsonTransformer(object):
         self.json = json
         for key in ['inner_cv', 'outer_cv', 'output_settings']:
             self.json[key] = self.load_elements_recursive(self.json[key])
-        init = {key:value for key, value in self.json.items() if key not in ["elements"]}
-        pipe = Hyperpipe(**init)
+        init = {key:value for key, value in self.json.items() if key not in ["elements", "preprocessing"]}
+        pipe = self.str_to_class("Hyperpipe")(**init)
         elements = self.load_elements_recursive(self.json["elements"])
+        if "preprocessing" in json:
+            pre_elements = self.load_elements_recursive(self.json["preprocessing"]["elements"])
+            pre = Preprocessing()
+            for pre_element in pre_elements:
+                pre += pre_element
+            pipe += pre
         for element in elements:
             pipe += element
         return pipe
@@ -182,7 +212,7 @@ class JsonTransformer(object):
         a = {}
         b = []
         if json is None:
-            return a
+            return None
         # main dtypes
         if any(isinstance(json, t) for t in [int, bool, str, float]):
             return json

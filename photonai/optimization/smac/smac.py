@@ -3,6 +3,10 @@ from photonai.optimization import FloatRange, IntegerRange
 from photonai.optimization.base_optimizer import PhotonMasterOptimizer
 from photonai.photonlogger import logger
 
+import logging
+
+#logging.basicConfig(level=logging.DEBUG)
+
 try:
     from smac.configspace import UniformFloatHyperparameter, UniformIntegerHyperparameter, CategoricalHyperparameter, \
         ConfigurationSpace, Configuration, InCondition, Constant
@@ -17,7 +21,7 @@ except ModuleNotFoundError:
 
 class SMACOptimizer(PhotonMasterOptimizer):
 
-    def __init__(self, scenario_dict, rng = 42, smac_helper = None):
+    def __init__(self, scenario_dict, intensifier_kwargs = None, rng = 42, smac_helper = None):
         """
         SMAC Wrapper for PHOTON.
         SMAC usage and implementation details:
@@ -41,6 +45,10 @@ class SMACOptimizer(PhotonMasterOptimizer):
             raise ValueError(msg)
 
         self.rng = rng
+        if not intensifier_kwargs:
+            self.intensifier_kwargs = {}
+        else:
+            self.intensifier_kwargs = intensifier_kwargs
 
         self.cspace = ConfigurationSpace()  # Hyperparameter space for smac
 
@@ -137,9 +145,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.scenario = Scenario(self.scenario_dict)
 
-        self.smac = SMAC4AC(scenario = self.scenario,
+        self.smac = SMAC4BO(scenario = self.scenario,
+                            intensifier_kwargs = self.intensifier_kwargs,
                              rng = self.rng,
                              tae_runner = objectiv_function)
+
+        #self.smac.logger.basicConfig(level=logging.DEBUG)
 
         if  self.debug:
             self.smac_helper['data'] = self.smac

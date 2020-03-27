@@ -973,6 +973,7 @@ class Switch(PipelineElement):
 
         """
         self._name = name
+        self.initial_name = self._name
         self.sklearn_name = self.name + "__current_element"
         self._hyperparameters = {}
         self._current_element = (1, 1)

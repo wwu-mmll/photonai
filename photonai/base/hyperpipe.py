@@ -10,7 +10,6 @@ import shutil
 import traceback
 import zipfile
 import json
-import time
 from copy import deepcopy
 
 import dask
@@ -29,6 +28,7 @@ from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
+from photonai.base.json_transformer import JsonTransformer
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, IntegerRange, FloatRange, Categorical
 from photonai.photonlogger.logger import logger
@@ -662,6 +662,13 @@ class Hyperpipe(BaseEstimator):
         self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input_str,
                                                         'OptimizerParams': str(self.optimization.optimizer_params),
                                                         'BestConfigMetric': self.optimization.best_config_metric}
+
+        # add json file of hyperpipe attributes
+        try:
+            json_transformer = JsonTransformer()
+            json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
+        except:
+            logger.warn("JsonTransformer was unable to create the .json file.")
 
         # add flowchart to results
         try:

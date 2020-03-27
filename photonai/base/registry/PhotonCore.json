@@ -404,7 +404,7 @@
     "Estimator"
   ],
   "LabelEncoder": [
-    "photonai.modelwrapper.LabelEncoder.LabelEncoder",
+    "photonai.modelwrapper.label_encoder.LabelEncoder",
     "Transformer"
   ],
   "ConfounderRemoval":[

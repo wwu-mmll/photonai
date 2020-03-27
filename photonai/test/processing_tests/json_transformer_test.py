@@ -1,14 +1,13 @@
 import unittest
-import types
-import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold, StratifiedKFold
 
-from photonai.processing.json_transformer import JsonTransformer
-from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, OutputSettings, Preprocessing
-from photonai.optimization import IntegerRange, Categorical
+from photonai.base.json_transformer import JsonTransformer
+from photonai.base import Hyperpipe, OutputSettings, Preprocessing
+from photonai.optimization import Categorical
 from photonai.optimization.hyperparameters import IntegerRange, FloatRange
 from photonai.base import Stack, Switch, Branch, PipelineElement
+from photonai.test.base_tests.photon_elements_tests import elements_to_dict
 
 class JsonTransformerTest(unittest.TestCase):
 
@@ -16,7 +15,7 @@ class JsonTransformerTest(unittest.TestCase):
         """
         Set up for Scorer Tests.
         """
-        pass
+        self.maxDiff = None
 
     def test_branch_in_branch(self):
         """
@@ -63,7 +62,7 @@ class JsonTransformerTest(unittest.TestCase):
         pipe_json_reload = pipe_json = json_transformer.create_json(my_pipe_reload)
         self.assertEqual(pipe_json, pipe_json_reload)
 
-    def test_class_with_data_01(self):
+    def test_class_with_data_preproc(self):
         """
         Test for simple pipeline with data.
         """
@@ -105,14 +104,18 @@ class JsonTransformerTest(unittest.TestCase):
         my_pipe.fit(X, y)
 
         json_transformer = JsonTransformer()
+
         pipe_json = json_transformer.create_json(my_pipe)
+        a = elements_to_dict(my_pipe.copy_me())
         my_pipe_reload = json_transformer.from_json(pipe_json)
         pipe_json_reload = pipe_json = json_transformer.create_json(my_pipe_reload)
 
         self.assertEqual(pipe_json, pipe_json_reload)
-
         my_pipe_reload.fit(X, y)
+
         self.assertDictEqual(my_pipe.best_config, my_pipe_reload.best_config)
+
+        self.assertDictEqual(elements_to_dict(my_pipe.copy_me()), elements_to_dict(my_pipe_reload.copy_me()))
 
     def test_class_with_data_02(self):
         """
@@ -158,17 +161,55 @@ class JsonTransformerTest(unittest.TestCase):
 
         my_pipe += PipelineElement('PhotonVotingClassifier')
 
-        my_pipe.fit(X, y)
 
         json_transformer = JsonTransformer()
         pipe_json = json_transformer.create_json(my_pipe)
         my_pipe_reload = json_transformer.from_json(pipe_json)
-        pipe_json_reload = pipe_json = json_transformer.create_json(my_pipe_reload)
 
-        self.assertEqual(pipe_json, pipe_json_reload)
+        self.assertDictEqual(elements_to_dict(my_pipe.copy_me()), elements_to_dict(my_pipe_reload.copy_me()))
 
-        my_pipe_reload.fit(X, y)
-        self.assertDictEqual(my_pipe.best_config, my_pipe_reload.best_config)
+
+
+    def test_class_switch(self):
+        """
+        Test for Pipeline with data.
+        """
+
+        X, y = load_breast_cancer(True)
+
+        my_pipe = Hyperpipe('basic_switch_pipe',
+                            optimizer='random_grid_search',
+                            optimizer_params={'n_configurations': 15},
+                            metrics=['accuracy', 'precision', 'recall'],
+                            best_config_metric='accuracy',
+                            outer_cv=KFold(n_splits=3),
+                            inner_cv=KFold(n_splits=5),
+                            verbosity=1,
+                            output_settings=OutputSettings(project_folder='./tmp/'))
+
+        # Transformer Switch
+        my_pipe += Switch('TransformerSwitch',
+                          [PipelineElement('StandardScaler'),
+                           PipelineElement('PCA', test_disabled=True)])
+
+        # Estimator Switch
+        svm = PipelineElement('SVC',
+                              hyperparameters={'kernel': ['rbf', 'linear']})
+
+        tree = PipelineElement('DecisionTreeClassifier',
+                               hyperparameters={'min_samples_split': IntegerRange(2, 5),
+                                                'min_samples_leaf': IntegerRange(1, 5),
+                                                'criterion': ['gini', 'entropy']})
+
+        my_pipe += Switch('EstimatorSwitch', [svm, tree])
+
+
+        json_transformer = JsonTransformer()
+
+        pipe_json = json_transformer.create_json(my_pipe)
+        my_pipe_reload = json_transformer.from_json(pipe_json)
+
+        self.assertDictEqual(elements_to_dict(my_pipe.copy_me()), elements_to_dict(my_pipe_reload.copy_me()))
 
 
 
