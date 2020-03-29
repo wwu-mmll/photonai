@@ -324,7 +324,16 @@ class InnerFoldManager(object):
         # InnerFoldManager.plot_some_data(y_true, y_pred)
 
         if calculate_metrics:
-            score_metrics = Scorer.calculate_metrics(y_true, y_pred, non_default_score_metrics)
+            if isinstance(y_pred, np.ndarray) and y_pred.dtype.names:
+                y_pred_names = [y_pred.dtype.names]
+                if "y_pred" not in y_pred_names[0]:
+                    msg = "If scorer object does not return 1d array or list, PHOTON expected name 'y_pred' in nd array."
+                    logger.error(msg)
+                    raise KeyError(msg)
+                score_metrics = Scorer.calculate_metrics(y_true, y_pred["y_pred"], non_default_score_metrics)
+            else:
+                y_pred_names = []
+                score_metrics = Scorer.calculate_metrics(y_true, y_pred, non_default_score_metrics)
 
             # add default metric
             if output_metrics:
@@ -349,7 +358,8 @@ class InnerFoldManager(object):
                     warnings.warn('No probabilities available.')
 
         if not isinstance(y_pred, list):
-            y_pred = np.asarray(y_pred).tolist()
+            y_pred = y_pred_names + np.asarray(y_pred).tolist()
+
         if not isinstance(y_true, list):
             y_true = np.asarray(y_true).tolist()
 

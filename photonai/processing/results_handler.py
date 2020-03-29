@@ -353,6 +353,13 @@ class ResultsHandler:
                         collectables[collectable_key].extend(list(np.full((len(score_info.y_true)), np.nan)))
                 fold_nr_array.extend(list(np.ones((len(score_info.y_true),)) * fold_nr[i]))
 
+            # enable nd y_pred support
+            if len(collectables["y_pred"]) -1 == len(collectables["y_true"]):
+                tmp_collectables_y_pred = collectables["y_pred"]
+                headers = collectables["y_pred"][0]
+                for i, header in enumerate(list(headers)):
+                    collectables[header] = [x[i] for x in tmp_collectables_y_pred][1:]
+
             collectables["fold"] = fold_nr_array
             # convert to pandas dataframe to use their sorting algorithm
             save_df = pd.DataFrame(collectables)
