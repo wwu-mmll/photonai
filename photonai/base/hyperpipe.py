@@ -240,6 +240,8 @@ class Hyperpipe(BaseEstimator):
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
                  random_seed = False,
                  verbosity=0,
+                 learning_curves: bool = False,
+                 learning_curves_cut: FloatRange = None,
                  output_settings=None,
                  performance_constraints=None,
                  permutation_id: str=None,
@@ -277,6 +279,11 @@ class Hyperpipe(BaseEstimator):
         self.results_handler = None
         self.results = None
         self.best_config = None
+
+        # ====================== Learning Curves ===========================
+
+        self.learning_curves = learning_curves
+        self.learning_curves_cut = learning_curves_cut
 
         # ====================== Pipeline ===========================
         self.elements = []
@@ -582,6 +589,7 @@ class Hyperpipe(BaseEstimator):
         self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
+        self.results.hyperpipe_info.learning_curves_cut = self.learning_curves_cut
 
         # optimization
         def _format_cross_validation(cv):
@@ -646,6 +654,12 @@ class Hyperpipe(BaseEstimator):
 
         # write all convenience files (summary, predictions_file and plots)
         self.results_handler.write_convenience_files()
+
+        # save learning curves
+        if self.learning_curves:
+            for outer_fold_nr in range(1, len(self.results.outer_folds) + 1):
+                for config_nr in range(1, len(self.results.outer_folds[0].tested_config_list) + 1):
+                    self.results_handler.plot_learning_curves_config(config_nr, outer_fold_nr, save=True)
 
         # set self to best config
         self.optimum_pipe = self._pipe
@@ -910,6 +924,8 @@ class Hyperpipe(BaseEstimator):
                                                            self.optimization,
                                                            outer_f.fold_id,
                                                            self.cross_validation,
+                                                           self.learning_curves,
+                                                           self.learning_curves_cut,
                                                            cache_folder=self.cache_folder,
                                                            cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,

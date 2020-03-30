@@ -11,6 +11,8 @@ X, y = load_boston(True)
 settings = OutputSettings(project_folder='./tmp/')
 
 my_pipe = Hyperpipe('results_example',
+                    learning_curves=True,
+                    learning_curves_cut=FloatRange(0, 1, 'range', 0.2),
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
                     optimizer_params={'num_iterations': 20, 'acq_func_kwargs': {'kappa': 1}},
                     metrics=['mean_squared_error'],
@@ -57,5 +59,8 @@ handler.plot_optimizer_history(metric='mean_squared_error',
                                type='scatter',
                                reduce_scatter_by=1,
                                file='./tmp/optimizer_history_scikit_optimize_20_scatter.png')
+
+# plot learning curves of all configs of the first outer fold
+handler.plot_learning_curves_outer_fold(outer_fold_nr=1, config_nr_list=None, save=False, show=True)
 
 debug = True

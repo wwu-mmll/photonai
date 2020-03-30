@@ -52,6 +52,7 @@ class MDBInnerFold(EmbeddedMongoModel):
     number_samples_validation = fields.IntegerField(blank=True)
     time_monitor = fields.DictField(blank=True)
     feature_importances = fields.ListField(blank=True)
+    learning_curves = fields.ListField(blank=True)
 
 
 class MDBConfig(EmbeddedMongoModel):

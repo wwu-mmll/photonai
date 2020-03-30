@@ -20,6 +20,8 @@ class OuterFoldManager:
                  optimization_info,
                  outer_fold_id,
                  cross_validation_info,
+                 learning_curves,
+                 learning_curves_cut,
                  cache_folder=None,
                  cache_updater=None,
                  dummy_estimator=None,
@@ -39,6 +41,10 @@ class OuterFoldManager:
         self.current_best_config = None
         self.optimizer = None
         self.constraint_objects = None
+
+        # Information about learning curves
+        self.learning_curves = learning_curves
+        self.learning_curves_cut = learning_curves_cut
 
         # data
         self.result_object = result_obj
@@ -131,7 +137,8 @@ class OuterFoldManager:
 
             hp = InnerFoldManager(pipe_ctor, current_config,
                                   self.optimization_info,
-                                  self.cross_validaton_info, self.outer_fold_id, self.constraint_objects,
+                                  self.cross_validaton_info, self.outer_fold_id, self.learning_curves,
+                                  self.learning_curves_cut, self.constraint_objects,
                                   cache_folder=self.cache_folder,
                                   cache_updater=self.cache_updater)
 
