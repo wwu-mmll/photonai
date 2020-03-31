@@ -10,7 +10,8 @@ import shutil
 import traceback
 import zipfile
 import json
-import time
+from dataclasses import dataclass
+from typing import Any, Dict, List, Callable
 from copy import deepcopy
 
 import dask
@@ -44,7 +45,7 @@ from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo
 class OutputSettings:
     """
     Configuration class that specifies the format in which the results are saved. Results can be saved to a MongoDB
-    or a simple son-file. You can also choose whether to save predictions and/or feature importances.
+    or a simple json-file. You can also choose whether to save predictions and/or feature importances.
 
     Parameters
     ----------
@@ -358,31 +359,28 @@ class Hyperpipe(BaseEstimator):
     #
     #
     # ============= Cross Validation ==================================================================
+    @dataclass
     class CrossValidation:
+        inner_cv: int
+        outer_cv: int
+        eval_final_performance: bool = True
+        test_size: float = 0.2
+        calculate_metrics_per_fold: bool = True
+        calculate_metrics_across_folds: bool = False
 
-        def __init__(self, inner_cv, outer_cv,
-                     eval_final_performance, test_size,
-                     calculate_metrics_per_fold,
-                     calculate_metrics_across_folds):
-            self.inner_cv = inner_cv
-            self.outer_cv = outer_cv
-            self.eval_final_performance = eval_final_performance
-            self.test_size = test_size
-            self.calculate_metrics_per_fold = calculate_metrics_per_fold
-            # Todo: if self.outer_cv is LeaveOneOut: Set calculate metrics across folds to True -> Print
-            self.calculate_metrics_across_folds = calculate_metrics_across_folds
-
+        def __post_init__(self):
             self.outer_folds = None
             self.inner_folds = dict()
 
-
     # ============= Data ==================================================================
-    class Data:
 
-        def __init__(self, X=None, y=None, kwargs=None):
-            self.X = X
-            self.y = y
-            self.kwargs = kwargs
+
+
+    @dataclass
+    class Data:
+        X: np.ndarray = None
+        y: np.array = None
+        kwargs: Dict = None
 
     # ============= Performance Optimization ==================================================================
     class Optimization:
