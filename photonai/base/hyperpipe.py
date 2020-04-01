@@ -293,7 +293,7 @@ class Hyperpipe(BaseEstimator):
                             verbose=2)
 
    """
-    def __init__(self, name, inner_cv: BaseCrossValidator = KFold(n_splits=3), outer_cv=None,
+    def __init__(self, name, inner_cv: BaseCrossValidator = None, outer_cv=None,
                  optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
                  best_config_metric=None, eval_final_performance=True, test_size: float = 0.2,
                  calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
@@ -317,6 +317,12 @@ class Hyperpipe(BaseEstimator):
             raise NotImplementedError("Apparently, you've set calculate_metrics_across_folds=False and "
                                       "calculate_metrics_per_fold=False. In this case PHOTON does not calculate "
                                       "any metrics which doesn't make any sense. Set at least one to True.")
+        if inner_cv is None:
+            msg = "PHOTON requires an inner_cv split. Please enable inner cross-validation. As exmaple: Hyperpipe(..." \
+                  " inner_cv = KFold(n_splits = 3), ...). Ensure you import the cross_validation object first."
+            logger.error(msg)
+            raise AttributeError(msg)
+
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
                                                           outer_cv=outer_cv,
                                                           eval_final_performance=eval_final_performance,

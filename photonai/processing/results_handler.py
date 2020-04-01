@@ -354,7 +354,7 @@ class ResultsHandler:
                 fold_nr_array.extend(list(np.ones((len(score_info.y_true),)) * fold_nr[i]))
 
             # enable nd y_pred support
-            if len(collectables["y_pred"]) >= len(collectables["y_true"]):
+            if len(collectables["y_pred"]) > len(collectables["y_true"]):
                 tmp_collectables_y_pred = collectables["y_pred"]
                 headers = collectables["y_pred"][0]
                 for i, header in enumerate(list(headers)):
