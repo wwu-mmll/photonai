@@ -1,10 +1,24 @@
 import numpy as np
+import random
 from photonai.photonlogger.logger import logger
 
 
+class PhotonHyperparam(object):
 
-class PhotonHyperparam:
-    pass
+    def __init__(self, values):
+        self.values = values
+
+    def get_random_value(self, definite_list:bool=True):
+        if definite_list:
+            return random.choice(self.values)
+        else:
+            msg = "The PhotonHyperparam has no own random function."
+            logger.error(msg)
+            raise ValueError(msg)
+
+    def __str__(self):
+        return str(self.__class__) + str(self.values)
+
 
 
 class Categorical(PhotonHyperparam):
@@ -131,6 +145,8 @@ class NumberRange(PhotonHyperparam):
             else:
                 values = np.linspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         elif self.range_type == "logspace":
+            if self.num_type == np.int32:
+                raise ValueError("Cannot use logspace for integer,  use geomspace instead.")
             if self.num:
                 values = np.logspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
             else:
@@ -142,7 +158,7 @@ class NumberRange(PhotonHyperparam):
                 values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
         # convert to python datatype because mongodb needs it
         if self.num_type == np.int32:
-            self.values = sorted(list(set([int(i) for i in values])))
+            self.values = [int(i) for i in values]
         elif self.num_type == np.float32:
             self.values = [float(i) for i in values]
 
@@ -203,6 +219,15 @@ class IntegerRange(NumberRange):
     def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
         super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
 
+    def get_random_value(self, definite_list: bool = False):
+        if definite_list:
+            if not self.values:
+                msg = "No values were set. Please use transform method."
+                logger.error(msg)
+                raise ValueError(msg)
+            return random.choice(self.values)
+        else:
+            return random.randint(self.start, self.stop-1)
 
 class FloatRange(NumberRange):
     """
@@ -246,3 +271,13 @@ class FloatRange(NumberRange):
 
     def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
             super().__init__(start, stop, range_type, step, num, np.float32, **kwargs)
+
+    def get_random_value(self, definite_list: bool = False):
+        if definite_list:
+            if not self.values:
+                msg = "No values were set. Please use transform method."
+                logger.error(msg)
+                raise ValueError(msg)
+            return random.choice(self.values)
+        else:
+            return random.uniform(self.start, self.stop)

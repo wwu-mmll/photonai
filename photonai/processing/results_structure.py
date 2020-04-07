@@ -1,4 +1,5 @@
 import pickle
+import pickle
 import uuid
 from enum import Enum
 
@@ -63,6 +64,8 @@ class MDBConfig(EmbeddedMongoModel):
     photon_config_id = fields.CharField(blank=True)
     inner_folds = fields.EmbeddedDocumentListField(MDBInnerFold, default=[], blank=True)
     best_config_score = fields.EmbeddedDocumentField(MDBInnerFold, blank=True)
+    computation_start_time = fields.DateTimeField(blank=True)
+    computation_end_time = fields.DateTimeField(blank=True)
     fit_duration_minutes = fields.IntegerField(blank=True)
     pipe_name = fields.CharField(blank=True)
     config_dict = fields.DictField(blank=True)
@@ -137,6 +140,9 @@ class MDBDummyResults(EmbeddedMongoModel):
     train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
 
+    def get_test_metrics(self):
+        return {m.metric_name: m.value for m in self.test if m.operation == "FoldOperations.MEAN"}
+
 
 class MDBHyperpipeInfo(EmbeddedMongoModel):
     class Meta:
@@ -149,6 +155,7 @@ class MDBHyperpipeInfo(EmbeddedMongoModel):
     flowchart = fields.CharField(blank=True)
     metrics = fields.ListField(blank=True)
     best_config_metric = fields.CharField(blank=True)
+    maximize_best_config_metric = fields.BooleanField(blank=True)
     estimation_type = fields.CharField(blank=True)
     eval_final_performance = fields.BooleanField(blank=True)
 
@@ -159,14 +166,16 @@ class MDBHyperpipe(MongoModel):
         connection_alias = 'photon_core'
 
     name = fields.CharField()
+    version = fields.CharField()
+    output_folder = fields.CharField(blank=True)
 
-    permutation_id = fields.CharField()
+    permutation_id = fields.CharField(blank=True)
     permutation_failed = fields.CharField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
 
     computation_completed = fields.BooleanField(default=False)
     computation_start_time = fields.DateTimeField(blank=True)
-    time_of_results = fields.DateTimeField(blank=True)
+    computation_end_time = fields.DateTimeField(blank=True)
 
     outer_folds = fields.EmbeddedDocumentListField(MDBOuterFold, default=[], blank=True)
     best_config = fields.EmbeddedDocumentField(MDBConfig, blank=True)

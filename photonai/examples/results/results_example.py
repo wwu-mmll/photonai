@@ -14,7 +14,7 @@ my_pipe = Hyperpipe('results_example',
                     learning_curves=True,
                     learning_curves_cut=FloatRange(0, 1, 'range', 0.2),
                     optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
-                    optimizer_params={'num_iterations': 20, 'acq_func_kwargs': {'kappa': 1}},
+                    optimizer_params={'n_configurations': 20, 'acq_func_kwargs': {'kappa': 1}},
                     metrics=['mean_squared_error'],
                     best_config_metric='mean_squared_error',
                     outer_cv=KFold(n_splits=3),

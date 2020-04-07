@@ -15,27 +15,6 @@ class PhotonBaseOptimizer:
         """
         pass
 
-    def ask(self):
-        """
-        When called, returns the next configuration that should be tested.
-
-        Returns
-        -------
-        next config to test
-        """
-        pass
-
-    def tell(self, config, performance):
-        """
-        Parameters
-        ----------
-        * 'config' [dict]:
-            The configuration that has been trained and tested
-        * 'performance' [dict]:
-            Metrics about the configuration's generalization capabilities.
-        """
-        pass
-
     def plot(self, results_folder):
         """
         Plot optimizer specific visualizations
@@ -63,3 +42,41 @@ class PhotonBaseOptimizer:
                                   'skopt.')
 
 
+class PhotonSlaveOptimizer(PhotonBaseOptimizer):
+
+    def __init__(self, *kwargs):
+        super(PhotonSlaveOptimizer, self).__init__(kwargs)
+
+    def ask(self):
+        """
+        When called, returns the next configuration that should be tested.
+
+        Returns
+        -------
+        next config to test
+        """
+        pass
+
+    def tell(self, config, performance):
+        """
+        Parameters
+        ----------
+        * 'config' [dict]:
+            The configuration that has been trained and tested
+        * 'performance' [dict]:
+            Metrics about the configuration's generalization capabilities.
+        """
+        pass
+
+
+class PhotonMasterOptimizer(PhotonBaseOptimizer):
+
+    def __init__(self, *kwargs):
+        super(PhotonSlaveOptimizer, self).__init__(kwargs)
+
+    def optimize(self):
+        """
+
+        :return:
+        """
+        pass

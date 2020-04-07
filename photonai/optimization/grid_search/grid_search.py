@@ -2,13 +2,12 @@ import datetime
 
 import numpy as np
 
-from photonai.optimization.base_optimizer import PhotonBaseOptimizer
+from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.optimization.config_grid import create_global_config_grid
 from photonai.photonlogger.logger import logger
 
 
-
-class GridSearchOptimizer(PhotonBaseOptimizer):
+class GridSearchOptimizer(PhotonSlaveOptimizer):
     """
     Searches for the best configuration by iteratively testing all possible hyperparameter combinations.
     """
@@ -38,20 +37,22 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
      Searches for the best configuration by randomly testing k possible hyperparameter combinations.
     """
 
-    def __init__(self, k=25):
+    def __init__(self, n_configurations=25):
         super(RandomGridSearchOptimizer, self).__init__()
-        self.k = k
+        self._k = n_configurations
+        self.n_configurations = self._k
 
     def prepare(self, pipeline_elements, maximize_metric):
         super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
+        self.n_configurations = self._k
         self.param_grid = list(self.param_grid)
         # create random chaos in list
         np.random.shuffle(self.param_grid)
-        if self.k is not None:
+        if self.n_configurations is not None:
             # k is maximal all grid items
-            if self.k > len(self.param_grid):
-                self.k = len(self.param_grid)
-            self.param_grid = self.param_grid[0:self.k]
+            if self.n_configurations > len(self.param_grid):
+                self.n_configurations = len(self.param_grid)
+            self.param_grid = self.param_grid[0:self.n_configurations]
 
 
 class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
@@ -59,8 +60,8 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
     Iteratively tests k possible hyperparameter configurations until a certain time limit is reached.
     """
 
-    def __init__(self, limit_in_minutes=60):
-        super(TimeBoxedRandomGridSearchOptimizer, self).__init__()
+    def __init__(self, limit_in_minutes=60, n_configurations=None):
+        super(TimeBoxedRandomGridSearchOptimizer, self).__init__(n_configurations)
         self.limit_in_minutes = limit_in_minutes
         self.start_time = None
         self.end_time = None

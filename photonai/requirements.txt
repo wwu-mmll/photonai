@@ -8,7 +8,6 @@ keras
 nilearn
 pandas
 nibabel
-pandas
 six
 h5py
 xlrd
@@ -23,9 +22,9 @@ seaborn
 joblib
 dask
 distributed
-# sk optimize
 scikit-optimize
 scikit-image
+pytest
 
 # bcolz
 # fabolas

@@ -391,6 +391,10 @@
     "sklearn.ensemble.RandomForestClassifier",
     "Estimator"
   ],
+  "RandomTreesEmbedding": [
+    "sklearn.ensemble.RandomTreesEmbedding",
+    "Transformer"
+  ],
   "DummyClassifier":[
     "sklearn.dummy.DummyClassifier",
     "Estimator"
@@ -400,39 +404,19 @@
     "Estimator"
   ],
   "LabelEncoder": [
-    "photonai.modelwrapper.LabelEncoder.LabelEncoder",
+    "photonai.modelwrapper.label_encoder.LabelEncoder",
     "Transformer"
   ],
   "ConfounderRemoval":[
     "photonai.modelwrapper.ConfounderRemoval.ConfounderRemoval",
     "Transformer"
   ],
-  "KerasDNNClassifier":[
-    "photonai.modelwrapper.KerasDNNClassifier.KerasDNNClassifier",
-    "Estimator"
-  ],
-  "KerasDNNRegressor":[
-    "photonai.modelwrapper.KerasDNNRegressor.KerasDNNRegressor",
-    "Estimator"
-  ],
-  "KerasDNNMultiOutput":[
-    "photonai.modelwrapper.KerasDNNMultiOutput.KerasDNNMultiOutput",
-    "Estimator"
-  ],
   "SourceSplitter":[
-    "photonai.modelwrapper.SourceSplitter.SourceSplitter",
-    "Transformer"
-  ],
-  "CategorialANOVASelectPercentile":[
-    "photonai.modelwrapper.FeatureSelection.AnovaSelectPercentile",
+    "photonai.modelwrapper.source_splitter.SourceSplitter",
     "Transformer"
   ],
   "FClassifSelectPercentile":[
     "photonai.modelwrapper.FeatureSelection.FClassifSelectPercentile",
-    "Transformer"
-  ],
-  "PearsonFeatureSelector":[
-    "photonai.modelwrapper.FeatureSelection.PearsonFeatureSelector",
     "Transformer"
   ],
   "FRegressionFilterPValue":[
@@ -443,25 +427,13 @@
     "photonai.modelwrapper.FeatureSelection.FRegressionSelectPercentile",
     "Transformer"
   ],
-  "PhotonPCA":[
-    "photonai.modelwrapper.PhotonPCA.PhotonPCA",
-    "Transformer"
-  ],
   "PhotonOneClassSVM":[
     "photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM",
     "Estimator"
   ],
-  "ImbalancedDataTransform":[
-    "photonai.modelwrapper.ImbalancedWrapper.ImbalancedDataTransform",
+  "ImbalancedDataTransformer":[
+    "photonai.modelwrapper.imbalanced_data_transformer.ImbalancedDataTransformer",
     "Transformer"
-  ],
-  "AnomalyDetectorWrapper":[
-    "photonai.modelwrapper.AnomalyDetectorWrapper.AnomalyDetectorWrapper",
-    "Estimator"
-  ],
-  "AutoSklearnRegressor":[
-    "photonai.modelwrapper.AutoSklearnRegressor.AutoSklearnRegressor",
-    "Estimator"
   ],
   "SamplePairingRegression": [
     "photonai.modelwrapper.SamplePairing.SamplePairingRegression",
@@ -492,11 +464,27 @@
     "Estimator"
   ],
   "PhotonTestXPredictor":[
-    "photonai.test.processing.results_tests.XPredictor",
+    "photonai.test.processing_tests.results_tests.XPredictor",
     "Estimator"
   ],
   "PhotonMLPClassifier":[
     "photonai.modelwrapper.PhotonMLPClassifier.PhotonMLPClassifier",
+    "Estimator"
+  ],
+  "KerasDnnClassifier":[
+    "photonai.modelwrapper.keras_dnn_classifier.KerasDnnClassifier",
+    "Estimator"
+  ],
+  "KerasDnnRegressor":[
+    "photonai.modelwrapper.keras_dnn_regressor.KerasDnnRegressor",
+    "Estimator"
+  ],
+    "KerasBaseClassifier":[
+    "photonai.modelwrapper.keras_base_models.KerasBaseClassifier",
+    "Estimator"
+  ],
+    "KerasBaseRegression":[
+    "photonai.modelwrapper.keras_base_models.KerasBaseRegression",
     "Estimator"
   ]
 }

@@ -2,31 +2,32 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
 
 from photonai.base import Hyperpipe, PipelineElement, Stack, OutputSettings
-from photonai.optimization import IntegerRange
+from photonai.optimization import FloatRange
 
 X, y = load_breast_cancer(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe(name='Estimator_pipe',
                     optimizer='grid_search',
                     metrics=['balanced_accuracy'],
                     best_config_metric='balanced_accuracy',
                     outer_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                     inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
-                    output_settings=settings)
+                    output_settings=OutputSettings(project_folder='./tmp/'))
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
 my_pipe += PipelineElement('StandardScaler')
 
 # some feature selection
-my_pipe += PipelineElement('CategorialANOVASelectPercentile',
-                           hyperparameters={'percentile': IntegerRange(start=5, step=2, stop=20, range_type='range')},
+my_pipe += PipelineElement('LassoFeatureSelection',
+                           hyperparameters={'percentile_to_keep': FloatRange(start=0.1, step=0.1, stop=0.7,
+                                                                             range_type='range'),
+                                            'alpha': FloatRange(0.5, 1)},
                            test_disabled=True)
 
 # add imbalanced group handling
-my_pipe += PipelineElement('ImbalancedDataTransform', method_name='SMOTE', test_disabled=False)
+my_pipe += PipelineElement('ImbalancedDataTransformer', method_name='SMOTE', test_disabled=False)
 
 # setup estimator stack
 est_stack = Stack(name='classifier_stack')
@@ -40,5 +41,5 @@ for clf in clf_list:
 my_pipe += est_stack
 
 my_pipe += PipelineElement('PhotonVotingClassifier')
-# my_pipe += PipelineElement("RandomForestClassifier")
+
 my_pipe.fit(X, y)

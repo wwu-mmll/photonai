@@ -6,6 +6,7 @@ from sklearn.utils.metaestimators import _BaseComposition
 
 from photonai.base.cache_manager import CacheManager
 from photonai.helper.helper import PhotonDataHelper
+from photonai.photonlogger.logger import logger
 
 
 class PhotonPipeline(_BaseComposition):
@@ -26,6 +27,9 @@ class PhotonPipeline(_BaseComposition):
         self._fix_fold_id = False
         self._do_not_delete_cache_folder = False
         self._parallel_use = False
+
+        # helper for optimum pipe
+        self._meta_information = None
 
         # used in parallelization
         self.skip_loading = False
@@ -65,7 +69,8 @@ class PhotonPipeline(_BaseComposition):
             else:
                 self._fold_id = str(value)
             self.caching = True
-            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use)
+            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use,
+                                          self._single_subject_caching)
 
     @property
     def cache_folder(self):
@@ -86,7 +91,7 @@ class PhotonPipeline(_BaseComposition):
             self.caching = True
             if not os.path.isdir(self._cache_folder):
                 os.makedirs(self._cache_folder)
-            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use)
+            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use, self._single_subject_caching)
         else:
             self.caching = False
 
@@ -149,6 +154,7 @@ class PhotonPipeline(_BaseComposition):
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs, fit=True)
 
         if self._final_estimator is not None:
+            logger.debug('PhotonPipeline: Fitting ' + self._final_estimator.name)
             fit_start_time = datetime.datetime.now()
             if self.random_state:
                 self._final_estimator.random_state = self.random_state
@@ -182,11 +188,12 @@ class PhotonPipeline(_BaseComposition):
 
         if self._final_estimator is not None:
             if self._estimator_type is None:
-                if self.caching and self.current_config is not None:
+                if self.caching:
                     X, y, kwargs = self.load_or_save_cached_data(self._final_estimator.name, X, y, kwargs,
                                                                  self._final_estimator,
                                                                  initial_X=initial_X)
                 else:
+                    logger.debug('PhotonPipeline: Transforming data with ' + self._final_estimator.name)
                     X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
 
         return X, y, kwargs
@@ -292,6 +299,9 @@ class PhotonPipeline(_BaseComposition):
                         processed_X, processed_y, processed_kwargs = PhotonDataHelper.join_data(processed_X, transformed_X,
                                                                                                 processed_y, transformed_y,
                                                                                                 processed_kwargs, transformed_kwargs)
+
+            logger.debug(name + " loaded " + str(len(list_of_idx_cached)) + " items from cache and computed "
+                         + str(len(list_of_idx_non_cached)))
             if not self.skip_loading or needed_for_further_computation:
                 # now sort the data in the correct order again
                 processed_X, processed_y, processed_kwargs = PhotonDataHelper.resort_splitted_data(processed_X,
@@ -310,11 +320,13 @@ class PhotonPipeline(_BaseComposition):
             transformer.random_state = self.random_state
 
         if fit:
+            logger.debug('PhotonPipeline: Fitting ' + transformer.name)
             fit_start_time = datetime.datetime.now()
             transformer.fit(X, y, **kwargs)
             fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
             self.time_monitor['fit'].append((name, fit_duration, n))
 
+        logger.debug('PhotonPipeline: Transforming data with ' + transformer.name)
         transform_start_time = datetime.datetime.now()
         X, y, kwargs = transformer.transform(X, y, **kwargs)
         transform_duration = (datetime.datetime.now() - transform_start_time).total_seconds()
@@ -385,6 +397,7 @@ class PhotonPipeline(_BaseComposition):
         # then call predict on final estimator
         if self._final_estimator is not None:
             if self._final_estimator.is_estimator:
+                logger.debug('PhotonPipeline: Predicting with ' + self._final_estimator.name + ' ...')
                 predict_start_time = datetime.datetime.now()
                 y_pred = self._final_estimator.predict(X, **kwargs)
                 predict_duration = (datetime.datetime.now() - predict_start_time).total_seconds()

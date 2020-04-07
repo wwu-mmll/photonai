@@ -2,7 +2,7 @@ import importlib
 import importlib.util
 import inspect
 from copy import deepcopy
-
+import os
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
@@ -80,30 +80,29 @@ class PipelineElement(BaseEstimator):
 
         self.is_transformer = hasattr(self.base_element, "transform")
         self.is_estimator = hasattr(self.base_element, "predict")
-
+        self._name = name
+        self.initial_name = str(name)
         self.kwargs = kwargs
         self.current_config = None
         self.batch_size = batch_size
-
-        # Todo: write method that returns any hyperparameter that could be optimized --> sklearn: get_params.keys
-        # Todo: map any hyperparameter to a possible default list of values to try
-        self.name = name
         self.test_disabled = test_disabled
+        self.initial_hyperparameters = dict(hyperparameters)
+
         self._sklearn_disabled = self.name + '__disabled'
         self._hyperparameters = hyperparameters
-
-        # check if hyperparameters are members of the class
-        if self.is_transformer or self.is_estimator:
-            self._check_hyperparameters(BaseEstimator)
-
-        # self.initalize_hyperparameters = hyperparameters
-        # check if hyperparameters are already in sklearn style
         if len(hyperparameters) > 0:
             key_0 = next(iter(hyperparameters))
             if self.name not in key_0:
                 self.hyperparameters = hyperparameters
         else:
             self.hyperparameters = hyperparameters
+        # self.initalize_hyperparameters = hyperparameters
+        # check if hyperparameters are already in sklearn style
+
+        # check if hyperparameters are members of the class
+        if self.is_transformer or self.is_estimator:
+            self._check_hyperparameters(BaseEstimator)
+
         self.disabled = disabled
 
         # check if self.base element needs y for fitting and transforming
@@ -118,6 +117,44 @@ class PipelineElement(BaseEstimator):
             self.needs_covariates = False
 
         self._random_state = False
+
+    @property
+    def name(self):
+        return self._name
+
+    @name.setter
+    def name(self, value):
+        self._name = value
+        self.generate_sklearn_hyperparameters(self.initial_hyperparameters)
+
+    @property
+    def hyperparameters(self):
+        return self._hyperparameters
+
+    @hyperparameters.setter
+    def hyperparameters(self, value: dict):
+        self.generate_sklearn_hyperparameters(value)
+
+    def _check_hyperparameters(self, BaseEstimator):
+        # check if hyperparameters are members of the class
+        not_supported_hyperparameters = list(
+            set([key.split("__")[-1] for key in self._hyperparameters.keys() if key.split("__")[-1] != "disabled"]) -
+            set(BaseEstimator.get_params(self.base_element).keys()))
+        if not_supported_hyperparameters:
+            error_message = 'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + \
+                            str(not_supported_hyperparameters)
+            logger.error(error_message)
+            raise ValueError(error_message)
+
+    def generate_sklearn_hyperparameters(self, value: dict):
+        """
+        Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
+        """
+        self._hyperparameters = {}
+        for attribute, value_list in value.items():
+            self._hyperparameters[self.name + '__' + attribute] = value_list
+        if self.test_disabled:
+            self._hyperparameters[self._sklearn_disabled] = [False, True]
 
     @property
     def random_state(self):
@@ -149,24 +186,69 @@ class PipelineElement(BaseEstimator):
             else:
                 return None
 
-    def _check_hyperparameters(self, BaseEstimator):
-        # check if hyperparameters are members of the class
-        not_supported_hyperparameters = list(
-            set([key.split("__")[-1] for key in self._hyperparameters.keys() if key.split("__")[-1] != "disabled"]) -
-            set(BaseEstimator.get_params(self.base_element).keys()))
-        if not_supported_hyperparameters:
-            error_message = 'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + \
-                            str(not_supported_hyperparameters)
-            logger.error(error_message)
-            raise ValueError(error_message)
+    # this is only here because everything inherits from PipelineElement.
+    def __iadd__(self, pipe_element):
+        """
+        Add an element to the element list
+        Returns self
+
+        Parameters
+        ----------
+        * `pipe_element` [PipelineElement or Hyperpipe]:
+            The object to add, being either a transformer or an estimator.
+
+        """
+        PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipe_element, type(self))
+
+        # check if that exact instance has been added before
+        already_added_objects = len([i for i in self.elements if i is pipe_element])
+        if already_added_objects > 0:
+            error_msg = "Cannot add the same instance twice to " + self.name + " - " + str(type(self))
+            logger.error(error_msg)
+            raise ValueError(error_msg)
+
+        # check for doubled names:
+        already_existing_element_with_that_name = len([i for i in self.elements if i.name == pipe_element.name])
+
+        if already_existing_element_with_that_name > 0:
+            error_msg = "Already added a pipeline element with the name " + pipe_element.name + " to " + self.name
+            logger.warn(error_msg)
+
+            # check for other items that have been renamed
+            nr_of_existing_elements_with_that_name = len([i for i in self.elements if i.name.startswith(pipe_element.name)])
+            new_name = pipe_element.name + str(nr_of_existing_elements_with_that_name + 1)
+            while len([i for i in self.elements if i.name == new_name]) > 0:
+                nr_of_existing_elements_with_that_name += 1
+                new_name = pipe_element.name + str(nr_of_existing_elements_with_that_name + 1)
+
+            logger.warn("Renaming " + pipe_element.name + " in " + self.name + " to " + new_name + " in " + self.name)
+            pipe_element.name = new_name
+
+        self.elements.append(pipe_element)
+        return self
 
     def copy_me(self):
         if self.name in self.ELEMENT_DICTIONARY:
-            copy = PipelineElement(self.name, self.hyperparameters, test_disabled=self.test_disabled,
+            # we need initial name to refer to the class to be instantiated  (SVC) even though the name might be SVC2
+            copy = PipelineElement(self.initial_name, {}, test_disabled=self.test_disabled,
                                    disabled=self.disabled, batch_size=self.batch_size, **self.kwargs)
+            copy.initial_hyperparameters = self.initial_hyperparameters
+            # in the setter of the name, we use initial hyperparameters to adjust the hyperparameters to the name
+            copy.name = self.name
         else:
+            if hasattr(self.base_element, 'copy_me'):
+                new_base_element = self.base_element.copy_me()
+            else:
+                try:
+                    new_base_element = deepcopy(self.base_element)
+                except Exception as e:
+                    error_msg = "Cannot copy custom element " + self.name + ". Please specify a copy_me() method " \
+                                                                        "returning a copy of the object"
+                    logger.error(error_msg)
+                    raise e
+
             # handle custom elements
-            copy = PipelineElement.create(self.name, self.base_element, hyperparameters=self.hyperparameters,
+            copy = PipelineElement.create(self.name, new_base_element, hyperparameters=self.hyperparameters,
                                           test_disabled=self.test_disabled,
                                           disabled=self.disabled, batch_size=self.batch_size,
                                           **self.kwargs)
@@ -184,14 +266,6 @@ class PipelineElement(BaseEstimator):
         if isinstance(base_element, type):
             raise ValueError("Base element should be an instance but is a class.")
         return PipelineElement(name, hyperparameters, test_disabled, disabled, base_element=base_element, **kwargs)
-
-    @property
-    def hyperparameters(self):
-        return self._hyperparameters
-
-    @hyperparameters.setter
-    def hyperparameters(self, value: dict):
-        self.generate_sklearn_hyperparameters(value)
 
     @property
     def feature_importances_(self):
@@ -217,22 +291,14 @@ class PipelineElement(BaseEstimator):
         else:
             return []
 
-    def generate_sklearn_hyperparameters(self, value: dict):
-        """
-        Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
-        """
-        self._hyperparameters = {}
-        for attribute, value_list in value.items():
-            self._hyperparameters[self.name + '__' + attribute] = value_list
-        if self.test_disabled:
-            self._hyperparameters[self._sklearn_disabled] = [False, True]
-
     def get_params(self, deep: bool=True):
         """
         Forwards the get_params request to the wrapped base element
         """
         if hasattr(self.base_element, 'get_params'):
-            return self.base_element.get_params(deep)
+            params = self.base_element.get_params(deep)
+            params["name"] = self.name
+            return params
         else:
             return None
 
@@ -285,7 +351,7 @@ class PipelineElement(BaseEstimator):
         batch_idx = 0
         for start, stop in PhotonDataHelper.chunker(nr, self.batch_size):
             batch_idx += 1
-            logger.debug(self.name + " is predicting batch nr " + str(batch_idx))
+            logger.debug(self.name + " is predicting batch " + str(batch_idx))
 
             # split data in batches
             X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, None, kwargs, start, stop)
@@ -390,10 +456,13 @@ class PipelineElement(BaseEstimator):
         batch_idx = 0
         for start, stop in PhotonDataHelper.chunker(nr, self.batch_size):
             batch_idx += 1
-            logger.debug(self.name + " is transforming batch nr " + str(batch_idx))
 
             # split data in batches
             X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, y, kwargs, start, stop)
+
+            actual_batch_size = PhotonDataHelper.find_n(X_batched)
+            logger.debug(self.name + " is transforming batch " + str(batch_idx) + " with " + str(actual_batch_size)
+                         + " items.")
 
             # call transform
             X_new, y_new, kwargs_new = self.adjusted_delegate_call(self.base_element.transform, X_batched, y_batched,
@@ -531,8 +600,7 @@ class Branch(PipelineElement):
             The object to add, being either a transformer or an estimator.
 
         """
-        PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipe_element, Branch)
-        self.elements.append(pipe_element)
+        super(Branch, self).__iadd__(pipe_element)
         self._prepare_pipeline()
         return self
 
@@ -642,7 +710,7 @@ class Preprocessing(Branch):
         self.has_hyperparameters = False
         self.needs_y = True
         self.needs_covariates = True
-        self.name = 'Preprocessing'
+        self._name = 'Preprocessing'
         self.is_transformer = True
         self.is_estimator = False
 
@@ -658,12 +726,11 @@ class Preprocessing(Branch):
 
         """
         if hasattr(pipe_element, "transform"):
-            PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipe_element, Preprocessing)
+            super(Preprocessing, self).__iadd__(pipe_element)
             if len(pipe_element.hyperparameters) > 0:
                 raise ValueError("A preprocessing transformer must not have any hyperparameter "
                                  "because it is not part of the optimization and cross validation procedure")
-            self.elements.append(pipe_element)
-            self._prepare_pipeline()
+
         else:
             raise ValueError("Pipeline Element must have transform function")
         return self
@@ -724,8 +791,7 @@ class Stack(PipelineElement):
             The Element that should be stacked and will run in a vertical parallelization in the original pipe.
         """
         self.check_if_needs_y(item)
-        PipelineElement.sanity_check_element_type_for_building_photon_pipes(item, Stack)
-        self.elements.append(item)
+        super(Stack, self).__iadd__(item)
 
         # for each configuration
         tmp_dict = dict(item.hyperparameters)
@@ -906,7 +972,8 @@ class Switch(PipelineElement):
             Used for validation purposes, either classifier or regressor
 
         """
-        self.name = name
+        self._name = name
+        self.initial_name = self._name
         self.sklearn_name = self.name + "__current_element"
         self._hyperparameters = {}
         self._current_element = (1, 1)
@@ -942,14 +1009,8 @@ class Switch(PipelineElement):
         * `pipeline_element` [PipelineElement]:
             Item that should be tested against other competing elements at that position in the pipeline.
         """
-        PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipeline_element, Switch)
-        self.elements.append(pipeline_element)
-        if not pipeline_element.name in self.elements_dict:
-            self.elements_dict[pipeline_element.name] = pipeline_element
-        else:
-            error_msg = "Already added a pipeline element with that name to the pipeline switch " + self.name
-            logger.error(error_msg)
-            raise Exception(error_msg)
+        super(Switch, self).__iadd__(pipeline_element)
+        self.elements_dict[pipeline_element.name] = pipeline_element
         self.generate_private_config_grid()
         return self
 
@@ -1069,11 +1130,11 @@ class Switch(PipelineElement):
     def copy_me(self):
 
         ps = Switch(self.name)
+        ps._random_state = self._random_state
         for element in self.elements:
             new_element = element.copy_me()
             ps += new_element
-        ps.base_element = self.base_element
-        ps._random_state = self._random_state
+        ps._current_element = self._current_element
         return ps
 
     def prettify_config_output(self, config_name, config_value, return_dict=False):
@@ -1091,7 +1152,7 @@ class Switch(PipelineElement):
             output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
             if not output:
                 if return_dict:
-                    return {self.elements[config_value[0]].name:None}
+                    return {self.elements[config_value[0]].name: None}
                 else:
                     return self.elements[config_value[0]].name
             else:

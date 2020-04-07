@@ -2,10 +2,10 @@ import json
 import time
 import traceback
 import warnings
-
+import datetime
 import numpy as np
 
-from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper
+from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper, print_double_metrics
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
 from photonai.optimization import FloatRange
@@ -67,6 +67,7 @@ class InnerFoldManager(object):
         config_item.inner_folds = []
         config_item.metrics_test = []
         config_item.metrics_train = []
+        config_item.computation_start_time = datetime.datetime.now()
 
         learning_curves = []
 
@@ -87,6 +88,7 @@ class InnerFoldManager(object):
                 if not config_item.human_readable_config:
                     config_item.human_readable_config = PhotonPrintHelper.config_to_human_readable_dict(new_pipe,
                                                                                                         self.params)
+                    logger.clean_info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
                 job_data = InnerFoldManager.InnerCVJob(pipe=new_pipe,
                                                        config=dict(self.params),
@@ -103,20 +105,23 @@ class InnerFoldManager(object):
                 # self.mother_inner_fold_handle(fold_cnt)
 
                 # --> write that output in InnerFoldManager!
-                logger.debug(config_item.human_readable_config)
-                logger.debug('calculating...')
+                # logger.debug(config_item.human_readable_config)
+                fold_nr = idx + 1
+                logger.debug('calculating inner fold ' + str(fold_nr) + '...')
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
-
                 if self.learning_curves:
                     learning_curves = self.build_curves(new_pipe, train_X, train_y, train, kwargs_cv_train,
                                                         test_X, test_y, test, kwargs_cv_test)
                     learning_curves.append([1., curr_test_fold.metrics, curr_train_fold.metrics])
 
+                logger.debug('Performance inner fold ' + str(fold_nr))
+                print_double_metrics(curr_train_fold.metrics, curr_test_fold.metrics, photon_system_log=False)
+
                 durations = job_data.pipe.time_monitor
 
                 self.update_config_item_with_inner_fold(config_item=config_item,
-                                                        fold_cnt=idx+1,
+                                                        fold_cnt=fold_nr,
                                                         curr_train_fold=curr_train_fold,
                                                         curr_test_fold=curr_test_fold,
                                                         time_monitor=durations,
@@ -127,16 +132,16 @@ class InnerFoldManager(object):
                     break_cv = 0
                     for cf in self.optimization_constraints:
                         if not cf.shall_continue(config_item):
-                            logger.debug(
-                                'Skip further cross validation of config because of performance constraints')
+                            logger.info(
+                                'Skipped further cross validation after fold ' + str(fold_nr) + ' due to performance constraints in ' + cf.metric)
                             break_cv += 1
                             break
                     if break_cv > 0:
                         break
                 elif self.optimization_constraints is not None:
                     if not self.optimization_constraints.shall_continue(config_item):
-                        logger.debug(
-                            'Skip further cross validation of config because of performance constraints')
+                        logger.info(
+                            'Skipped further cross validation after fold ' + str(fold_nr) + ' due to performance constraints in ' + cf.metric)
                         break
 
             InnerFoldManager.process_fit_results(config_item,
@@ -156,8 +161,9 @@ class InnerFoldManager(object):
             warnings.warn('One test iteration of pipeline failed with error')
 
         logger.debug('...done with')
-        logger.info(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
+        logger.debug(json.dumps(config_item.human_readable_config, indent=4, sort_keys=True))
 
+        config_item.computation_end_time = datetime.datetime.now()
         return config_item
 
     def build_curves(self, new_pipe, train_X, train_y, train, kwargs_cv_train, test_X, test_y, test, kwargs_cv_test):
@@ -290,11 +296,14 @@ class InnerFoldManager(object):
         # start fitting
         pipe.fit(job.train_data.X, job.train_data.y, **job.train_data.cv_kwargs)
 
+        logger.debug('Scoring Training Data')
+
         # score test data
         curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics,
                                                 indices=job.test_data.indices,
                                                 **job.test_data.cv_kwargs)
 
+        logger.debug('Scoring Test Data')
         # score train data
         curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
                                                  indices=job.train_data.indices,
@@ -347,7 +356,16 @@ class InnerFoldManager(object):
         # InnerFoldManager.plot_some_data(y_true, y_pred)
 
         if calculate_metrics:
-            score_metrics = Scorer.calculate_metrics(y_true, y_pred, non_default_score_metrics)
+            if isinstance(y_pred, np.ndarray) and y_pred.dtype.names:
+                y_pred_names = [y_pred.dtype.names]
+                if "y_pred" not in y_pred_names[0]:
+                    msg = "If scorer object does not return 1d array or list, PHOTON expected name 'y_pred' in nd array."
+                    logger.error(msg)
+                    raise KeyError(msg)
+                score_metrics = Scorer.calculate_metrics(y_true, y_pred["y_pred"], non_default_score_metrics)
+            else:
+                y_pred_names = []
+                score_metrics = Scorer.calculate_metrics(y_true, y_pred, non_default_score_metrics)
 
             # add default metric
             if output_metrics:
@@ -372,7 +390,8 @@ class InnerFoldManager(object):
                     warnings.warn('No probabilities available.')
 
         if not isinstance(y_pred, list):
-            y_pred = np.asarray(y_pred).tolist()
+            y_pred = y_pred_names + np.asarray(y_pred).tolist()
+
         if not isinstance(y_true, list):
             y_true = np.asarray(y_true).tolist()
 
