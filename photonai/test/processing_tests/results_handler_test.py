@@ -25,7 +25,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.files = ['best_config_predictions.csv',
                       'time_monitor.csv',
                       'time_monitor_pie.png',
-                      'photon_result_file.p',
+                      'photon_result_file.json',
                       'photon_summary.txt',
                       'photon_best_model.photon',
                       'optimum_pipe_feature_importances_backmapped.npz',
@@ -213,7 +213,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         my_pipe += PipelineElement("SVC")
         my_pipe.fit(X, y)
 
-        results_file = os.path.join(my_pipe.output_settings.results_folder, "photon_result_file.p")
+        results_file = os.path.join(my_pipe.output_settings.results_folder, "photon_result_file.json")
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)

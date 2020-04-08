@@ -23,8 +23,6 @@ class OuterFoldManager:
                  optimization_info,
                  outer_fold_id,
                  cross_validation_info,
-                 learning_curves,
-                 learning_curves_cut,
                  cache_folder=None,
                  cache_updater=None,
                  dummy_estimator=None,
@@ -45,10 +43,6 @@ class OuterFoldManager:
         self.optimizer = None
         self.constraint_objects = None
 
-        # Information about learning curves
-        self.learning_curves = learning_curves
-        self.learning_curves_cut = learning_curves_cut
-
         # data
         self.result_object = result_obj
         self.inner_folds = None
@@ -68,7 +62,7 @@ class OuterFoldManager:
 
         self.optimizer = self.optimization_info.get_optimizer()
         if isinstance(self.optimizer, PhotonMasterOptimizer):
-            self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric, self.objectiv_function)
+            self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric, self.objective_function)
         else:
             self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
 
@@ -145,7 +139,7 @@ class OuterFoldManager:
         else:
             # do the optimizing
             for current_config in self.optimizer.ask:
-                self.objectiv_function(current_config)
+                self.objective_function(current_config)
 
         logger.clean_info('---------------------------------------------------------------------------------------------------------------')
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
@@ -240,10 +234,11 @@ class OuterFoldManager:
         logger.info('Computations in outer fold {} took {} minutes.'.format(self.cross_validaton_info.outer_folds[self.outer_fold_id].fold_nr,
                                                                             (datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
-    def objectiv_function(self, current_config):
+    def objective_function(self, current_config):
         if isinstance(self.optimizer, PhotonMasterOptimizer):
             #current_config = [{key: x.get_dictionary()[key] for key in x.get_dictionary().keys()
             #                  if 'algos' not in key} for x in [current_config]][0]
+            # Todo: @lucas was is das? -> das muss smac selber regeln .
             current_config = {k: current_config[k] for k in current_config if (current_config[k] and 'algos' not in k)}
 
         if current_config is None:

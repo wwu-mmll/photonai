@@ -23,9 +23,12 @@ class InnerFoldManager(object):
     """
 
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
-                 cross_validation_infos, outer_fold_id, learning_curves: bool, learning_curves_cut: FloatRange,
-                 optimization_constraints: list=None, raise_error: bool = False, training: bool = False,
-                 cache_folder=None, cache_updater=None):
+                 cross_validation_infos, outer_fold_id,
+                 optimization_constraints: list = None,
+                 raise_error: bool = False,
+                 training: bool = False,
+                 cache_folder=None,
+                 cache_updater=None):
         """
         Creates a new InnerFoldManager object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -40,9 +43,6 @@ class InnerFoldManager(object):
         self.optimization_constraints = optimization_constraints
         self.outer_fold_id = outer_fold_id
         self.cross_validation_infos = cross_validation_infos
-
-        self.learning_curves = learning_curves
-        self.learning_curves_cut = learning_curves_cut
 
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
@@ -110,9 +110,9 @@ class InnerFoldManager(object):
                 logger.debug('calculating inner fold ' + str(fold_nr) + '...')
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
-                if self.learning_curves:
-                    learning_curves = self.build_curves(new_pipe, train_X, train_y, train, kwargs_cv_train,
-                                                        test_X, test_y, test, kwargs_cv_test)
+                if self.cross_validation_infos.learning_curves:
+                    learning_curves = self.compute_learning_curves(new_pipe, train_X, train_y, train, kwargs_cv_train,
+                                                                   test_X, test_y, test, kwargs_cv_test)
                     learning_curves.append([1., curr_test_fold.metrics, curr_train_fold.metrics])
 
                 logger.debug('Performance inner fold ' + str(fold_nr))
@@ -166,19 +166,21 @@ class InnerFoldManager(object):
         config_item.computation_end_time = datetime.datetime.now()
         return config_item
 
-    def build_curves(self, new_pipe, train_X, train_y, train, kwargs_cv_train, test_X, test_y, test, kwargs_cv_test):
-        self.learning_curves_cut.transform()
-        cut_range = [round(cut * train_X.shape[0]) for cut in self.learning_curves_cut.values]
+    def compute_learning_curves(self, new_pipe, train_X, train_y, train, kwargs_cv_train,
+                                test_X, test_y, test, kwargs_cv_test):
+        self.cross_validation_infos.learning_curves_cut.transform()
+        cut_range = [round(cut * train_X.shape[0]) for cut in self.cross_validation_infos.learning_curves_cut.values]
         learning_curves = []
         for i, cut in enumerate(cut_range[1:]):
-            train_cut_X = train_X[:cut, :]
-            train_cut_y = train_y[:cut]
+            cut_indices = np.arange(cut)
+            train_cut_X, train_cut_y, train_cut_kwargs = PhotonDataHelper.split(train_X, train_y, kwargs_cv_train,
+                                                                                indices=cut_indices)
             train_cut = train[:cut]
             job_data = self.InnerCVJob(pipe=new_pipe,
                                        config=dict(self.params),
                                        metrics=self.optimization_infos.metrics,
                                        callbacks=self.optimization_constraints,
-                                       train_data=self.JobData(train_cut_X, train_cut_y, train_cut, kwargs_cv_train),
+                                       train_data=self.JobData(train_cut_X, train_cut_y, train_cut, train_cut_kwargs),
                                        test_data=self.JobData(test_X, test_y, test, kwargs_cv_test))
             curr_test_cut, curr_train_cut = InnerFoldManager.fit_and_score(job_data)
             learning_curves.append([self.learning_curves_cut.values[i], curr_test_cut.metrics, curr_train_cut.metrics])

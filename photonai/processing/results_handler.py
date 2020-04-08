@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import json
+from bson import json_util
+
 from nibabel.nifti1 import Nifti1Image
 from prettytable import PrettyTable
 from pymodm import connect
@@ -29,7 +32,7 @@ class ResultsHandler:
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
-        self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
+        self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         connect(mongodb_connect_url)
@@ -776,10 +779,10 @@ class ResultsHandler:
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.p')
-            file_opened = open(local_file, 'wb')
-            pickle.dump(self.results.to_son(), file_opened)
-            file_opened.close()
+            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
+            # file_opened = open(local_file, 'wb')
+            with open(local_file, 'w') as outfile:
+                json.dump(self.results.to_son(), outfile, default=json_util.default)
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))

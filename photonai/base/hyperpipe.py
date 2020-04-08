@@ -293,11 +293,18 @@ class Hyperpipe(BaseEstimator):
                             verbose=2)
 
    """
-    def __init__(self, name, inner_cv: BaseCrossValidator = None, outer_cv=None,
-                 optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
-                 best_config_metric=None, eval_final_performance=True, test_size: float = 0.2,
-                 calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
-                 random_seed = False,
+    def __init__(self, name,
+                 inner_cv: BaseCrossValidator = None,
+                 outer_cv=None,
+                 optimizer='grid_search',
+                 optimizer_params: dict = {},
+                 metrics=None,
+                 best_config_metric=None,
+                 eval_final_performance=True,
+                 test_size: float = 0.2,
+                 calculate_metrics_per_fold: bool = True,
+                 calculate_metrics_across_folds: bool = False,
+                 random_seed=False,
                  verbosity=0,
                  learning_curves: bool = False,
                  learning_curves_cut: FloatRange = None,
@@ -330,7 +337,9 @@ class Hyperpipe(BaseEstimator):
                                                           eval_final_performance=eval_final_performance,
                                                           test_size=test_size,
                                                           calculate_metrics_per_fold=calculate_metrics_per_fold,
-                                                          calculate_metrics_across_folds=calculate_metrics_across_folds)
+                                                          calculate_metrics_across_folds=calculate_metrics_across_folds,
+                                                          learning_curves=learning_curves,
+                                                          learning_curves_cut=learning_curves_cut)
 
         # ====================== Data ===========================
         self.data = Hyperpipe.Data()
@@ -343,11 +352,6 @@ class Hyperpipe(BaseEstimator):
         self.results_handler = None
         self.results = None
         self.best_config = None
-
-        # ====================== Learning Curves ===========================
-
-        self.learning_curves = learning_curves
-        self.learning_curves_cut = learning_curves_cut
 
         # ====================== Pipeline ===========================
         self.elements = []
@@ -391,11 +395,17 @@ class Hyperpipe(BaseEstimator):
         def __init__(self, inner_cv, outer_cv,
                      eval_final_performance, test_size,
                      calculate_metrics_per_fold,
-                     calculate_metrics_across_folds):
+                     calculate_metrics_across_folds,
+                     learning_curves,
+                     learning_curves_cut):
             self.inner_cv = inner_cv
             self.outer_cv = outer_cv
             self.eval_final_performance = eval_final_performance
             self.test_size = test_size
+
+            self.learning_curves = learning_curves
+            self.learning_curves_cut = learning_curves_cut
+
             self.calculate_metrics_per_fold = calculate_metrics_per_fold
             # Todo: if self.outer_cv is LeaveOneOut: Set calculate metrics across folds to True -> Print
             self.calculate_metrics_across_folds = calculate_metrics_across_folds
@@ -657,9 +667,8 @@ class Hyperpipe(BaseEstimator):
         self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
-        self.results.hyperpipe_info.learning_curves_cut = self.learning_curves_cut
+        self.results.hyperpipe_info.learning_curves_cut = self.cross_validation.learning_curves_cut
         self.results.hyperpipe_info.maximize_best_config_metric = self.optimization.maximize_metric
-
 
         # optimization
         def _format_cross_validation(cv):
@@ -741,7 +750,7 @@ class Hyperpipe(BaseEstimator):
 
         # save learning curves
         # todo:  move for loops to result handler
-        if self.learning_curves:
+        if self.cross_validation.learning_curves:
             for outer_fold_nr in range(1, len(self.results.outer_folds) + 1):
                 for config_nr in range(1, len(self.results.outer_folds[0].tested_config_list) + 1):
                     self.results_handler.plot_learning_curves_config(config_nr, outer_fold_nr, save=True)
@@ -1026,8 +1035,6 @@ class Hyperpipe(BaseEstimator):
                                                            self.optimization,
                                                            outer_f.fold_id,
                                                            self.cross_validation,
-                                                           self.learning_curves,
-                                                           self.learning_curves_cut,
                                                            cache_folder=self.cache_folder,
                                                            cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,
