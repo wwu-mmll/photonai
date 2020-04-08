@@ -69,8 +69,6 @@ class InnerFoldManager(object):
         config_item.metrics_train = []
         config_item.computation_start_time = datetime.datetime.now()
 
-        learning_curves = []
-
         try:
             # do inner cv
             for idx, (inner_fold_id, inner_fold) in enumerate(self.cross_validation_infos.inner_folds[self.outer_fold_id].items()):
@@ -114,6 +112,8 @@ class InnerFoldManager(object):
                     learning_curves = self.compute_learning_curves(new_pipe, train_X, train_y, train, kwargs_cv_train,
                                                                    test_X, test_y, test, kwargs_cv_test)
                     learning_curves.append([1., curr_test_fold.metrics, curr_train_fold.metrics])
+                else:
+                    learning_curves = list()
 
                 logger.debug('Performance inner fold ' + str(fold_nr))
                 print_double_metrics(curr_train_fold.metrics, curr_test_fold.metrics, photon_system_log=False)

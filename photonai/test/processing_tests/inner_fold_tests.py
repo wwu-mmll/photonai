@@ -31,7 +31,7 @@ class InnerFoldTests(PhotonBaseTest):
         self.outer_fold_id = 'TestID'
         self.inner_cv = KFold(n_splits=4)
         self.X, self.y = load_breast_cancer(True)
-        self.cross_validation = Hyperpipe.CrossValidation(self.inner_cv, None, True, 0.2, True, False)
+        self.cross_validation = Hyperpipe.CrossValidation(self.inner_cv, None, True, 0.2, True, False, False, None)
         self.cross_validation.inner_folds = {self. outer_fold_id: {i: FoldInfo(i, i+1, train, test) for i, (train, test) in
                                                                    enumerate(self.inner_cv.split(self.X, self.y))}}
         self.optimization = Hyperpipe.Optimization('grid_search', {}, ['accuracy', 'recall', 'specificity'],
