@@ -29,6 +29,7 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
+from photonai.helper.helper import print_double_metrics
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, IntegerRange, FloatRange, Categorical
 from photonai.photonlogger.logger import logger
@@ -739,6 +740,9 @@ class Hyperpipe(BaseEstimator):
         logger.photon_system_log(
             '===============================================================================================================')
         logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
+        print_double_metrics(self.results.best_config.best_config_score.training.metrics,
+                             self.results.best_config.best_config_score.validation.metrics,
+                             photon_system_log=True)
 
         # save results again
         self.results.computation_end_time = datetime.datetime.now()
