@@ -267,6 +267,11 @@ class ResultsHandler:
             os.makedirs(path)
         return os.path.join(path, file_name)
 
+    def save_all_learning_curves(self):
+        for outer_fold_nr in range(1, len(self.results.outer_folds) + 1):
+            for config_nr in range(1, len(self.results.outer_folds[0].tested_config_list) + 1):
+                self.plot_learning_curves_config(config_nr, outer_fold_nr, save=True)
+
     def plot_optimizer_history(self, metric,
                                title: str = 'Optimizer History',
                                type: str = 'plot',

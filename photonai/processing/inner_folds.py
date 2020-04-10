@@ -173,8 +173,8 @@ class InnerFoldManager(object):
         learning_curves = []
         for i, cut in enumerate(cut_range[1:]):
             cut_indices = np.arange(cut)
-            train_cut_X, train_cut_y, train_cut_kwargs = PhotonDataHelper.split(train_X, train_y, kwargs_cv_train,
-                                                                                indices=cut_indices)
+            train_cut_X, train_cut_y, train_cut_kwargs = PhotonDataHelper.split_data(train_X, train_y, kwargs_cv_train,
+                                                                                     indices=cut_indices)
             train_cut = train[:cut]
             job_data = self.InnerCVJob(pipe=new_pipe,
                                        config=dict(self.params),
@@ -183,7 +183,8 @@ class InnerFoldManager(object):
                                        train_data=self.JobData(train_cut_X, train_cut_y, train_cut, train_cut_kwargs),
                                        test_data=self.JobData(test_X, test_y, test, kwargs_cv_test))
             curr_test_cut, curr_train_cut = InnerFoldManager.fit_and_score(job_data)
-            learning_curves.append([self.learning_curves_cut.values[i], curr_test_cut.metrics, curr_train_cut.metrics])
+            learning_curves.append([self.cross_validation_infos.learning_curves_cut.values[i], curr_test_cut.metrics,
+                                    curr_train_cut.metrics])
         return learning_curves
 
     class JobData:

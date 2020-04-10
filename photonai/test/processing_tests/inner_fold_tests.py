@@ -8,9 +8,9 @@ from sklearn.pipeline import Pipeline
 # stuff for simultaneously training and testing with sklearn
 from sklearn.preprocessing import StandardScaler
 
-from photonai.base import PipelineElement, Hyperpipe
+from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.optimization import MinimumPerformance
+from photonai.optimization import MinimumPerformance, FloatRange
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import FoldOperations
@@ -215,4 +215,46 @@ class InnerFoldTests(PhotonBaseTest):
         no_f_imps = no_f_imp_pipe.feature_importances_
         self.assertTrue(no_f_imps is None )
 
+    def test_learning_curves(self):
+        def test_one_hyperpipe(learning_curves, learning_curves_cut):
+            if learning_curves and learning_curves_cut is None:
+                learning_curves_cut = FloatRange(0, 1, 'range', 0.2)
+            output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=False)
+            test_hyperpipe = Hyperpipe('test_pipe',
+                                       learning_curves=learning_curves,
+                                       learning_curves_cut=learning_curves_cut,
+                                       metrics=['accuracy', 'recall', 'specificity'],
+                                       best_config_metric='accuracy',
+                                       inner_cv=self.inner_cv,
+                                       output_settings=output_settings)
 
+            self.assertEqual(test_hyperpipe.cross_validation.learning_curves, learning_curves)
+            if learning_curves:
+                self.assertEqual(test_hyperpipe.cross_validation.learning_curves_cut, learning_curves_cut)
+            else:
+                self.assertIsNone(test_hyperpipe.cross_validation.learning_curves_cut)
+
+            test_hyperpipe += PipelineElement('StandardScaler')
+            test_hyperpipe += PipelineElement('PCA', {'n_components': [1, 2]}, random_state=42)
+            test_hyperpipe += PipelineElement('SVC', {'C': [0.1], 'kernel': ['linear']}, random_state=42)
+            test_hyperpipe.fit(self.X, self.y)
+            config_results = test_hyperpipe.results_handler.results.outer_folds[0].tested_config_list
+            config_num = len(config_results)
+            for config_nr in range(config_num):
+                for inner_fold_nr in range(self.inner_cv.n_splits):
+                    curves = config_results[config_nr].inner_folds[inner_fold_nr].learning_curves
+                    if learning_curves:
+                        self.assertEqual(len(curves), len(learning_curves_cut.values))
+                        for learning_point_nr in range(len(learning_curves_cut.values)):
+                            test_metrics = list(curves[learning_point_nr][1].keys())
+                            train_metrics = list(curves[learning_point_nr][2].keys())
+                            self.assertEqual(test_hyperpipe.optimization.metrics, test_metrics)
+                            self.assertEqual(test_hyperpipe.optimization.metrics, train_metrics)
+                    else:
+                        self.assertEqual(curves, [])
+        # hyperpipe with properly set learning curves
+        test_one_hyperpipe(learning_curves=True, learning_curves_cut=FloatRange(0, 1, 'range', 0.5))
+        # hyperpipe without cut (default cut should be used here)
+        test_one_hyperpipe(learning_curves=True, learning_curves_cut=None)
+        # hyperpipe with cut despite learning_curves being False
+        test_one_hyperpipe(learning_curves=False, learning_curves_cut=FloatRange(0, 1, 'range', 0.5))

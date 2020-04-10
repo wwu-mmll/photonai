@@ -333,6 +333,12 @@ class Hyperpipe(BaseEstimator):
             logger.error(msg)
             raise AttributeError(msg)
 
+        # use default cut 'FloatRange(0, 1, 'range', 0.2)' if learning_curves = True but learning_curves_cut is None
+        if learning_curves and learning_curves_cut is None:
+            learning_curves_cut = FloatRange(0, 1, 'range', 0.2)
+        elif not learning_curves and learning_curves_cut is not None:
+            learning_curves_cut = None
+
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
                                                           outer_cv=outer_cv,
                                                           eval_final_performance=eval_final_performance,
@@ -752,13 +758,6 @@ class Hyperpipe(BaseEstimator):
         # write all convenience files (summary, predictions_file and plots)
         self.results_handler.write_convenience_files()
 
-        # save learning curves
-        # todo:  move for loops to result handler
-        if self.cross_validation.learning_curves:
-            for outer_fold_nr in range(1, len(self.results.outer_folds) + 1):
-                for config_nr in range(1, len(self.results.outer_folds[0].tested_config_list) + 1):
-                    self.results_handler.plot_learning_curves_config(config_nr, outer_fold_nr, save=True)
-
         # set self to best config
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config)
@@ -810,6 +809,10 @@ class Hyperpipe(BaseEstimator):
                     # save backmapping
                     self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
                                                           backmapping=backmapping)
+
+                # save learning curves
+                if self.cross_validation.learning_curves:
+                    self.results_handler.save_all_learning_curves()
 
         elapsed_time = self.results.computation_end_time - self.results.computation_start_time
         logger.photon_system_log('')
