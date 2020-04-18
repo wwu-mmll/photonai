@@ -4,6 +4,7 @@ import random
 from photonai.optimization.base_optimizer import PhotonBaseOptimizer
 from photonai.photonlogger.logger import logger
 
+
 class RandomSearchOptimizer(PhotonBaseOptimizer):
     """
      Searches for the best configuration by randomly testing k possible hyperparameter combinations without grid.
@@ -32,7 +33,6 @@ class RandomSearchOptimizer(PhotonBaseOptimizer):
             msg = "No stopping criteria for RandomSearchOptimizer."
             logger.warn(msg)
 
-
     def prepare(self, pipeline_elements, maximize_metric):
         self.pipeline_elements = pipeline_elements
         self.ask = self.next_config_generator()
@@ -45,7 +45,9 @@ class RandomSearchOptimizer(PhotonBaseOptimizer):
             if self.limit_in_minutes:
                 if self.start_time is None:
                     self.start_time = datetime.datetime.now()
-                    self.end_time = self.start_time + datetime.timedelta(minutes=self.limit_in_minutes)
+                    self.end_time = self.start_time + datetime.timedelta(
+                        minutes=self.limit_in_minutes
+                    )
 
                 if datetime.datetime.now() >= self.end_time:
                     return
@@ -67,6 +69,3 @@ class RandomSearchOptimizer(PhotonBaseOptimizer):
                 else:
                     config[h_key] = h_value.get_random_value()
         return config
-
-
-

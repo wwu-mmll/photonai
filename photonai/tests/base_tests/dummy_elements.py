@@ -2,7 +2,6 @@ from sklearn.base import BaseEstimator, RegressorMixin, TransformerMixin
 
 
 class DummyYAndCovariatesTransformer(BaseEstimator):
-
     def __init__(self):
         self.needs_y = True
         self.needs_covariates = True
@@ -14,7 +13,7 @@ class DummyYAndCovariatesTransformer(BaseEstimator):
 
         self.X = X
         self.y = y
-        self.kwargs =kwargs
+        self.kwargs = kwargs
 
         if y is not None:
             y = y + 1
@@ -65,7 +64,7 @@ class DummyNeedsCovariatesTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, **kwargs):
-        return X + 1, {'covariates': kwargs['covariates'] + 1}
+        return X + 1, {"covariates": kwargs["covariates"] + 1}
 
 
 class DummyNeedsYTransformer(BaseEstimator, TransformerMixin):
@@ -88,11 +87,11 @@ class DummyNeedsCovariatesAndYTransformer(BaseEstimator, TransformerMixin):
         return self
 
     def transform(self, X, y, **kwargs):
-        return X + 1, y + 1, {'covariates': kwargs['covariates'] + 1}
+        return X + 1, y + 1, {"covariates": kwargs["covariates"] + 1}
 
 
 class DummyEstimatorWrongType(BaseEstimator):
-    _estimator_type = 'clusterer'
+    _estimator_type = "clusterer"
 
     def __init__(self):
         pass
@@ -121,5 +120,3 @@ class DummyEstimatorNoPredict(BaseEstimator, RegressorMixin):
 
     def fit(self, X, y, **kwargs):
         return self
-
-

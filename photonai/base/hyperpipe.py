@@ -26,20 +26,43 @@ from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.model_selection import KFold
 
 from photonai.__init__ import __version__
+from photonai.errors import raise_PhotoaiNotImplementedError, raise_PhotoaiError
 from photonai.base.cache_manager import CacheManager
-from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
-    PhotonNative
+from photonai.base.photon_elements import (
+    Stack,
+    Switch,
+    Preprocessing,
+    CallbackElement,
+    Branch,
+    PipelineElement,
+    PhotonNative,
+)
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
-    SkOptOptimizer, RandomSearchOptimizer, IntegerRange, FloatRange, Categorical
+from photonai.optimization import (
+    GridSearchOptimizer,
+    TimeBoxedRandomGridSearchOptimizer,
+    RandomGridSearchOptimizer,
+    SkOptOptimizer,
+    RandomSearchOptimizer,
+    IntegerRange,
+    FloatRange,
+    Categorical,
+)
 from photonai.optimization.smac.smac_new import SMACOptimizer
 from photonai.photonlogger.logger import logger
 from photonai.processing import ResultsHandler
 from photonai.processing.metrics import Scorer
 from photonai.processing.outer_folds import OuterFoldManager
 from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo, MDBDummyResults, MDBHelper, \
-    FoldOperations, MDBConfig, MDBOuterFold
+from photonai.processing.results_structure import (
+    MDBHyperpipe,
+    MDBHyperpipeInfo,
+    MDBDummyResults,
+    MDBHelper,
+    FoldOperations,
+    MDBConfig,
+    MDBOuterFold,
+)
 
 
 class OutputSettings:
@@ -77,20 +100,23 @@ class OutputSettings:
     * `wizard_project_name` [str]:
        How the project is titled in the PHOTON Wizard
     """
-    def __init__(self,
-                 mongodb_connect_url: str = None,
-                 save_output: bool = True,
-                 plots: bool = True,
-                 overwrite_results: bool = False,
-                 project_folder: str = '',
-                 user_id: str = '',
-                 wizard_object_id: str = '',
-                 wizard_project_name: str = ''):
+
+    def __init__(
+        self,
+        mongodb_connect_url: str = None,
+        save_output: bool = True,
+        plots: bool = True,
+        overwrite_results: bool = False,
+        project_folder: str = "",
+        user_id: str = "",
+        wizard_object_id: str = "",
+        wizard_project_name: str = "",
+    ):
 
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
 
-        if project_folder == '':
+        if project_folder == "":
             self.project_folder = os.getcwd()
         else:
             self.project_folder = project_folder
@@ -111,7 +137,7 @@ class OutputSettings:
         self.wizard_project_name = wizard_project_name
 
     def initialize_log_file(self):
-        self.log_file = os.path.join(self.project_folder, 'photon_setup_errors.log')
+        self.log_file = os.path.join(self.project_folder, "photon_setup_errors.log")
 
     def _update_settings(self, name, timestamp):
 
@@ -121,9 +147,13 @@ class OutputSettings:
         if self.save_output:
             # Todo: give rights to user if this is done by docker container
             if self.overwrite_results:
-                self.results_folder = os.path.join(self.project_folder, name + '_results')
+                self.results_folder = os.path.join(
+                    self.project_folder, name + "_results"
+                )
             else:
-                self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
+                self.results_folder = os.path.join(
+                    self.project_folder, name + "_results_" + timestamp
+                )
 
             logger.info("Output Folder: " + self.results_folder)
 
@@ -131,11 +161,22 @@ class OutputSettings:
                 os.makedirs(self.results_folder)
 
             if os.path.basename(self.log_file) == "photon_setup_errors.log":
-                self.log_file = 'photon_output.log'
+                self.log_file = "photon_output.log"
             self.log_file = self._add_timestamp(self.log_file)
             self.set_log_file()
 
-    def _add_timestamp(self, file):
+    def _add_timestamp(self, file: str) -> str:
+        """
+
+        Parameters
+        ----------
+        file: filename only as results_folder put in front
+
+        Returns
+        -------
+        full file path
+
+        """
         return os.path.join(self.results_folder, os.path.basename(file))
 
     def _get_log_level(self):
@@ -279,19 +320,32 @@ class Hyperpipe(BaseEstimator):
                             verbose=2)
 
    """
-    def __init__(self, name, inner_cv: BaseCrossValidator = KFold(n_splits=3), outer_cv=None,
-                 optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
-                 best_config_metric=None, eval_final_performance=True, test_size: float = 0.2,
-                 calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
-                 random_seed=False,
-                 verbosity=1,
-                 output_settings=None,
-                 performance_constraints=None,
-                 permutation_id: str=None,
-                 cache_folder: str=None,
-                 nr_of_processes: int = 1):
 
-        self.name = re.sub(r'\W+', '', name)
+
+
+    def __init__(
+        self,
+        name,
+        inner_cv: BaseCrossValidator = KFold(n_splits=3),
+        outer_cv=None,
+        optimizer="grid_search",
+        optimizer_params: dict = {},
+        metrics=None,
+        best_config_metric=None,
+        eval_final_performance=True,
+        test_size: float = 0.2,
+        calculate_metrics_per_fold: bool = True,
+        calculate_metrics_across_folds: bool = False,
+        random_seed=False,
+        verbosity=1,
+        output_settings=None,
+        performance_constraints=None,
+        permutation_id: str = None,
+        cache_folder: str = None,
+        nr_of_processes: int = 1,
+    ):
+
+        self.name = re.sub(r"\W+", "", name)
         self.permutation_id = permutation_id
         if cache_folder:
             self.cache_folder = os.path.join(cache_folder, self.name)
@@ -300,15 +354,19 @@ class Hyperpipe(BaseEstimator):
         # ====================== Cross Validation ===========================
         # check if both calculate_metrics_per_folds and calculate_metrics_across_folds is False
         if not calculate_metrics_across_folds and not calculate_metrics_per_fold:
-            raise NotImplementedError("Apparently, you've set calculate_metrics_across_folds=False and "
-                                      "calculate_metrics_per_fold=False. In this case PHOTON does not calculate "
-                                      "any metrics which doesn't make any sense. Set at least one to True.")
-        self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
-                                                          outer_cv=outer_cv,
-                                                          eval_final_performance=eval_final_performance,
-                                                          test_size=test_size,
-                                                          calculate_metrics_per_fold=calculate_metrics_per_fold,
-                                                          calculate_metrics_across_folds=calculate_metrics_across_folds)
+            raise_PhotoaiError(
+                "Apparently, you've set calculate_metrics_across_folds=False and "
+                "calculate_metrics_per_fold=False. In this case PHOTON does not calculate "
+                "any metrics which doesn't make any sense. Set at least one to True."
+            )
+        self.cross_validation = Hyperpipe.CrossValidation(
+            inner_cv=inner_cv,
+            outer_cv=outer_cv,
+            eval_final_performance=eval_final_performance,
+            test_size=test_size,
+            calculate_metrics_per_fold=calculate_metrics_per_fold,
+            calculate_metrics_across_folds=calculate_metrics_across_folds,
+        )
 
         # ====================== Data ===========================
         self.data = Hyperpipe.Data()
@@ -330,11 +388,13 @@ class Hyperpipe(BaseEstimator):
 
         # ====================== Perfomance Optimization ===========================
 
-        self.optimization = Hyperpipe.Optimization(metrics=metrics,
-                                                   best_config_metric=best_config_metric,
-                                                   optimizer_input=optimizer,
-                                                   optimizer_params=optimizer_params,
-                                                   performance_constraints=performance_constraints)
+        self.optimization = Hyperpipe.Optimization(
+            metrics=metrics,
+            best_config_metric=best_config_metric,
+            optimizer_input=optimizer,
+            optimizer_params=optimizer_params,
+            performance_constraints=performance_constraints,
+        )
 
         self.optimization.sanity_check_metrics()
 
@@ -345,6 +405,7 @@ class Hyperpipe(BaseEstimator):
         self.random_state = random_seed
         if random_seed:
             import random
+
             random.seed(random_seed)
 
         # initialize logging
@@ -369,12 +430,11 @@ class Hyperpipe(BaseEstimator):
         calculate_metrics_across_folds: bool = False
 
         def __post_init__(self):
+
             self.outer_folds = None
             self.inner_folds = dict()
 
     # ============= Data ==================================================================
-
-
 
     @dataclass
     class Data:
@@ -385,23 +445,31 @@ class Hyperpipe(BaseEstimator):
     # ============= Performance Optimization ==================================================================
     class Optimization:
 
-        OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
-                                'random_grid_search': RandomGridSearchOptimizer,
-                                'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
-                                'sk_opt': SkOptOptimizer,
-                                'smac' : SMACOptimizer,
-                                'random_search': RandomSearchOptimizer}
+        OPTIMIZER_DICTIONARY = {
+            "grid_search": GridSearchOptimizer,
+            "random_grid_search": RandomGridSearchOptimizer,
+            "timeboxed_random_grid_search": TimeBoxedRandomGridSearchOptimizer,
+            "sk_opt": SkOptOptimizer,
+            "smac": SMACOptimizer,
+            "random_search": RandomSearchOptimizer,
+        }
 
         # 'fabolas': FabolasOptimizer}
 
-        def __init__(self, optimizer_input, optimizer_params,
-                     metrics, best_config_metric, performance_constraints):
+        def __init__(
+            self,
+            optimizer_input,
+            optimizer_params,
+            metrics,
+            best_config_metric,
+            performance_constraints,
+        ):
 
-            self._optimizer_input = ''
+            self._optimizer_input = ""
             self.optimizer_input_str = optimizer_input
             self.optimizer_params = optimizer_params
             self.metrics = metrics
-            self._best_config_metric = ''
+            self._best_config_metric = ""
             self.maximize_metric = True
             self.best_config_metric = best_config_metric
             self.performance_constraints = performance_constraints
@@ -414,7 +482,9 @@ class Hyperpipe(BaseEstimator):
         def best_config_metric(self, value):
             self._best_config_metric = value
             if isinstance(self.best_config_metric, str):
-                self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
+                self.maximize_metric = Scorer.greater_is_better_distinction(
+                    self.best_config_metric
+                )
 
         @property
         def optimizer_input_str(self):
@@ -430,18 +500,24 @@ class Hyperpipe(BaseEstimator):
         def sanity_check_metrics(self):
 
             # --------------------- Validity of metrics ----------------
-            if isinstance(self.best_config_metric, list) or not isinstance(self.best_config_metric, str):
+            if isinstance(self.best_config_metric, list) or not isinstance(
+                self.best_config_metric, str
+            ):
 
                 if self.metrics is not None:
-                    warning_text = "Best Config Metric must be a single metric given as string, no list. " \
-                                   "PHOTON chose the first one from the list of metrics to calculate."
+                    warning_text = (
+                        "Best Config Metric must be a single metric given as string, no list. "
+                        "PHOTON chose the first one from the list of metrics to calculate."
+                    )
 
                     self.best_config_metric = self.metrics[0]
                     logger.warn(warning_text)
                     raise Warning(warning_text)
                 else:
-                    error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
-                                "the best_config_metric so that PHOTON which optimizes for"
+                    error_msg = (
+                        "No metrics were chosen. Please choose metrics to quantify your performance and set "
+                        "the best_config_metric so that PHOTON which optimizes for"
+                    )
                     logger.error(error_msg)
                     raise ValueError(error_msg)
 
@@ -454,13 +530,17 @@ class Hyperpipe(BaseEstimator):
 
             if self.best_config_metric is None and len(self.metrics) > 0:
                 self.best_config_metric = self.metrics[0]
-                warning_text = "No best config metric was given, so PHOTON chose the first in the list of metrics as " \
-                               "criteria for choosing the best configuration."
+                warning_text = (
+                    "No best config metric was given, so PHOTON chose the first in the list of metrics as "
+                    "criteria for choosing the best configuration."
+                )
                 logger.warn(warning_text)
                 raise Warning(warning_text)
             else:
                 if self.metrics is None or len(self.metrics) == 0:
-                    metric_error_text = "List of Metrics to calculate should not be empty"
+                    metric_error_text = (
+                        "List of Metrics to calculate should not be empty"
+                    )
                     logger.error(metric_error_text)
                     raise ValueError(metric_error_text)
 
@@ -474,7 +554,9 @@ class Hyperpipe(BaseEstimator):
                 # Todo: check if object has the right interface
                 return self.optimizer_input_str
 
-        def get_optimum_config(self, tested_configs, fold_operation=FoldOperations.MEAN):
+        def get_optimum_config(
+            self, tested_configs, fold_operation=FoldOperations.MEAN
+        ):
             """
             Looks for the best configuration according to the metric with which the configurations are compared -> best config metric
             :param tested_configs: the list of tested configurations and their performances
@@ -482,7 +564,9 @@ class Hyperpipe(BaseEstimator):
             """
 
             list_of_config_vals = []
-            list_of_non_failed_configs = [conf for conf in tested_configs if not conf.config_failed]
+            list_of_non_failed_configs = [
+                conf for conf in tested_configs if not conf.config_failed
+            ]
 
             if len(list_of_non_failed_configs) == 0:
                 raise Warning("No Configs found which did not fail.")
@@ -493,7 +577,13 @@ class Hyperpipe(BaseEstimator):
                 else:
                     for config in list_of_non_failed_configs:
                         list_of_config_vals.append(
-                            MDBHelper.get_metric(config, fold_operation, self.best_config_metric, train=False))
+                            MDBHelper.get_metric(
+                                config,
+                                fold_operation,
+                                self.best_config_metric,
+                                train=False,
+                            )
+                        )
 
                     if self.maximize_metric:
                         # max metric
@@ -502,18 +592,36 @@ class Hyperpipe(BaseEstimator):
                         # min metric
                         best_config_metric_nr = np.argmin(list_of_config_vals)
 
-                    best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
+                    best_config_outer_fold = list_of_non_failed_configs[
+                        best_config_metric_nr
+                    ]
 
                 # inform user
-                logger.debug('Optimizer metric: ' + self.best_config_metric + '\n' +
-                             '   --> Maximize metric: ' + str(self.maximize_metric))
+                logger.debug(
+                    "Optimizer metric: "
+                    + self.best_config_metric
+                    + "\n"
+                    + "   --> Maximize metric: "
+                    + str(self.maximize_metric)
+                )
 
-                logger.info('Number of tested configurations: ' + str(len(tested_configs)))
-                logger.photon_system_log('---------------------------------------------------------------------------------------------------------------')
-                logger.photon_system_log('BEST_CONFIG ')
-                logger.photon_system_log('---------------------------------------------------------------------------------------------------------------')
-                logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
-                                                    sort_keys=True))
+                logger.info(
+                    "Number of tested configurations: " + str(len(tested_configs))
+                )
+                logger.photon_system_log(
+                    "---------------------------------------------------------------------------------------------------------------"
+                )
+                logger.photon_system_log("BEST_CONFIG ")
+                logger.photon_system_log(
+                    "---------------------------------------------------------------------------------------------------------------"
+                )
+                logger.photon_system_log(
+                    json.dumps(
+                        best_config_outer_fold.human_readable_config,
+                        indent=4,
+                        sort_keys=True,
+                    )
+                )
 
                 return best_config_outer_fold
             except BaseException as e:
@@ -565,7 +673,9 @@ class Hyperpipe(BaseEstimator):
             pipe_element.needs_y = True
             self.elements.append(pipe_element)
         else:
-            if isinstance(pipe_element, PipelineElement) or issubclass(type(pipe_element), PhotonNative):
+            if isinstance(pipe_element, PipelineElement) or issubclass(
+                type(pipe_element), PhotonNative
+            ):
                 self.elements.append(pipe_element)
             else:
                 raise TypeError("Element must be of type Pipeline Element")
@@ -587,15 +697,17 @@ class Hyperpipe(BaseEstimator):
     def _prepare_dummy_estimator(self):
         self.results.dummy_estimator = MDBDummyResults()
 
-        if self.estimation_type == 'regressor':
-            self.results.dummy_estimator.strategy = 'mean'
+        if self.estimation_type == "regressor":
+            self.results.dummy_estimator.strategy = "mean"
             return DummyRegressor(strategy=self.results.dummy_estimator.strategy)
-        elif self.estimation_type == 'classifier':
-            self.results.dummy_estimator.strategy = 'most_frequent'
+        elif self.estimation_type == "classifier":
+            self.results.dummy_estimator.strategy = "most_frequent"
             return DummyClassifier(strategy=self.results.dummy_estimator.strategy)
         else:
-            logger.info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
-                          'step skipped.')
+            logger.info(
+                "Estimator does not specify whether it is a regressor or classifier. DummyEstimator "
+                "step skipped."
+            )
             return
 
     def _prepare_result_logging(self, start_time):
@@ -616,18 +728,28 @@ class Hyperpipe(BaseEstimator):
             self.results.permutation_id = self.permutation_id
 
         # save wizard information to photon db in order to map results to the wizard design object
-        if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
+        if self.output_settings and hasattr(self.output_settings, "wizard_object_id"):
             if self.output_settings.wizard_object_id:
                 self.name = self.output_settings.wizard_object_id
                 self.results.name = self.output_settings.wizard_object_id
-                self.results.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
-                self.results.wizard_system_name = self.output_settings.wizard_project_name
+                self.results.wizard_object_id = ObjectId(
+                    self.output_settings.wizard_object_id
+                )
+                self.results.wizard_system_name = (
+                    self.output_settings.wizard_project_name
+                )
                 self.results.user_id = self.output_settings.user_id
         self.results.outer_folds = []
-        self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
-        self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
+        self.results.hyperpipe_info.eval_final_performance = (
+            self.cross_validation.eval_final_performance
+        )
+        self.results.hyperpipe_info.best_config_metric = (
+            self.optimization.best_config_metric
+        )
         self.results.hyperpipe_info.metrics = self.optimization.metrics
-        self.results.hyperpipe_info.maximize_best_config_metric = self.optimization.maximize_metric
+        self.results.hyperpipe_info.maximize_best_config_metric = (
+            self.optimization.maximize_metric
+        )
 
         # optimization
         def _format_cross_validation(cv):
@@ -639,12 +761,19 @@ class Hyperpipe(BaseEstimator):
             else:
                 return "None"
 
-        self.results.hyperpipe_info.cross_validation = {'OuterCV': _format_cross_validation(self.cross_validation.outer_cv),
-                                                        'InnerCV': _format_cross_validation(self.cross_validation.inner_cv)}
-        self.results.hyperpipe_info.data = {'X_shape': self.data.X.shape, 'y_shape': self.data.y.shape}
-        self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input_str,
-                                                        'OptimizerParams': str(self.optimization.optimizer_params),
-                                                        'BestConfigMetric': self.optimization.best_config_metric}
+        self.results.hyperpipe_info.cross_validation = {
+            "OuterCV": _format_cross_validation(self.cross_validation.outer_cv),
+            "InnerCV": _format_cross_validation(self.cross_validation.inner_cv),
+        }
+        self.results.hyperpipe_info.data = {
+            "X_shape": self.data.X.shape,
+            "y_shape": self.data.y.shape,
+        }
+        self.results.hyperpipe_info.optimization = {
+            "Optimizer": self.optimization.optimizer_input_str,
+            "OptimizerParams": str(self.optimization.optimizer_params),
+            "BestConfigMetric": self.optimization.best_config_metric,
+        }
 
         # add flowchart to results
         try:
@@ -660,37 +789,49 @@ class Hyperpipe(BaseEstimator):
         # 2. finding overall best config
         # 3. training model with best config
         # 4. persisting best model
-        logger.clean_info('')
+        logger.clean_info("")
         logger.clean_info(
-            '***************************************************************************************************************')
+            "***************************************************************************************************************"
+        )
         logger.info("Finished all outer fold hyperparameter optimizations.")
         logger.info("Now analysing the results...")
 
         # computer dummy metrics
         config_item = MDBConfig()
-        dummy_results = [outer_fold.dummy_results for outer_fold in self.results.outer_folds]
+        dummy_results = [
+            outer_fold.dummy_results for outer_fold in self.results.outer_folds
+        ]
         config_item.inner_folds = [f for f in dummy_results if f is not None]
         if len(config_item.inner_folds) > 0:
             self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics_for_inner_folds(
-                config_item.inner_folds,
-                self.optimization.metrics)
+                config_item.inner_folds, self.optimization.metrics
+            )
 
         # Compute all final metrics
-        self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
-                                                                                                            self.optimization.metrics)
+        self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(
+            self.results.outer_folds, self.optimization.metrics
+        )
 
         # Find best config across outer folds
-        best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
+        best_config = self.optimization.get_optimum_config_outer_folds(
+            self.results.outer_folds
+        )
         self.best_config = best_config.config_dict
         self.results.best_config = best_config
 
-        logger.photon_system_log('')
+        logger.photon_system_log("")
         logger.photon_system_log(
-            '===============================================================================================================')
-        logger.photon_system_log('OVERALL BEST CONFIGURATION')
+            "==============================================================================================================="
+        )
+        logger.photon_system_log("OVERALL BEST CONFIGURATION")
         logger.photon_system_log(
-            '===============================================================================================================')
-        logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
+            "==============================================================================================================="
+        )
+        logger.photon_system_log(
+            json.dumps(
+                self.results.best_config.human_readable_config, indent=4, sort_keys=True
+            )
+        )
 
         # save results again
         self.results.computation_end_time = datetime.datetime.now()
@@ -707,7 +848,9 @@ class Hyperpipe(BaseEstimator):
 
         # set caching
         # we want caching disabled in general but still want to do single subject caching
-        self.recursive_cache_folder_propagation(self.optimum_pipe, self.cache_folder, 'fixed_fold_id')
+        self.recursive_cache_folder_propagation(
+            self.optimum_pipe, self.cache_folder, "fixed_fold_id"
+        )
         self.optimum_pipe.caching = False
 
         # disable multiprocessing when fitting optimum pipe
@@ -724,8 +867,12 @@ class Hyperpipe(BaseEstimator):
 
         if self.output_settings.save_output:
             try:
-                pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
-                PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
+                pretrained_model_filename = os.path.join(
+                    self.output_settings.results_folder, "photon_best_model.photon"
+                )
+                PhotonModelPersistor.save_optimum_pipe(
+                    self.optimum_pipe, pretrained_model_filename
+                )
                 logger.info("Saved best model to file.")
             except FileNotFoundError as e:
                 logger.info("Could not save best model to file")
@@ -736,39 +883,54 @@ class Hyperpipe(BaseEstimator):
             feature_importances = self.optimum_pipe.feature_importances_
 
             if not feature_importances:
-                logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
+                logger.info(
+                    "No feature importances available for {}!".format(
+                        self.optimum_pipe.elements[-1][0]
+                    )
+                )
             else:
                 self.results.best_config_feature_importances = feature_importances
 
                 # get backmapping
-                backmapping, _, _ = self.optimum_pipe.inverse_transform(feature_importances, None)
+                backmapping, _, _ = self.optimum_pipe.inverse_transform(
+                    feature_importances, None
+                )
 
                 # save backmapping
-                self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
-                                                      backmapping=backmapping)
+                self.results_handler.save_backmapping(
+                    filename="optimum_pipe_feature_importances_backmapped",
+                    backmapping=backmapping,
+                )
 
-        elapsed_time = self.results.computation_end_time - self.results.computation_start_time
-        logger.photon_system_log('')
+        elapsed_time = (
+            self.results.computation_end_time - self.results.computation_start_time
+        )
+        logger.photon_system_log("")
         logger.photon_system_log(
-            'Analysis ' + self.name + " done in " + str(elapsed_time))
+            "Analysis " + self.name + " done in " + str(elapsed_time)
+        )
         if self.output_settings.results_folder is not None:
-            logger.photon_system_log('Your results are stored in ' + self.output_settings.results_folder)
-        logger.photon_system_log('***************************************************************************************************************')
-        logger.photon_system_log('PHOTON ' + str(__version__) + ' - www.photon-ai.com ')
+            logger.photon_system_log(
+                "Your results are stored in " + self.output_settings.results_folder
+            )
+        logger.photon_system_log(
+            "***************************************************************************************************************"
+        )
+        logger.photon_system_log("PHOTON " + str(__version__) + " - www.photon-ai.com ")
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):
         if isinstance(pipe, (Stack, Branch, Switch, Preprocessing)):
-            if hasattr(pipe, 'nr_of_processes'):
+            if hasattr(pipe, "nr_of_processes"):
                 pipe.nr_of_processes = 1
             for child in pipe.elements:
-                if hasattr(child, 'base_element'):
+                if hasattr(child, "base_element"):
                     Hyperpipe.disable_multiprocessing_recursively(child.base_element)
         elif isinstance(pipe, PhotonPipeline):
             for name, child in pipe.named_steps.items():
                 Hyperpipe.disable_multiprocessing_recursively(child)
         else:
-            if hasattr(pipe, 'nr_of_processes'):
+            if hasattr(pipe, "nr_of_processes"):
                 pipe.nr_of_processes = 1
 
     def _input_data_sanity_checks(self, data, targets, **kwargs):
@@ -798,7 +960,11 @@ class Hyperpipe(BaseEstimator):
                     raise ValueError("Target is not one-dimensional.")
             if not shape_x[0] == shape_y[0]:
                 raise IndexError(
-                    "Size of targets mismatch to size of the data: " + str(shape_x[0]) + " - " + str(shape_y[0]))
+                    "Size of targets mismatch to size of the data: "
+                    + str(shape_x[0])
+                    + " - "
+                    + str(shape_y[0])
+                )
         except IndexError as ie:
             logger.error("IndexError: " + str(ie))
             raise ie
@@ -816,7 +982,9 @@ class Hyperpipe(BaseEstimator):
             self.data.X = self.data.X.to_numpy()
         if isinstance(self.data.y, list):
             self.data.y = np.asarray(self.data.y)
-        elif isinstance(self.data.y, pd.Series) or isinstance(self.data.y, pd.DataFrame):
+        elif isinstance(self.data.y, pd.Series) or isinstance(
+            self.data.y, pd.DataFrame
+        ):
             self.data.y = self.data.y.to_numpy()
 
         # at first first, erase all rows where y is Nan if preprocessing has not done it already
@@ -824,8 +992,10 @@ class Hyperpipe(BaseEstimator):
             nans_in_y = np.isnan(self.data.y)
             nr_of_nans = len(np.where(nans_in_y == 1)[0])
             if nr_of_nans > 0:
-                logger.info("You have " + str(nr_of_nans) + " Nans in your target vector, "
-                                                              "PHOTON erases every data item that has a Nan Target")
+                logger.info(
+                    "You have " + str(nr_of_nans) + " Nans in your target vector, "
+                    "PHOTON erases every data item that has a Nan Target"
+                )
                 self.data.X = self.data.X[~nans_in_y]
                 self.data.y = self.data.y[~nans_in_y]
         except Exception as e:
@@ -844,13 +1014,17 @@ class Hyperpipe(BaseEstimator):
     def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
         if isinstance(element, (Switch, Stack, Preprocessing)):
             for child in element.elements:
-                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
+                Hyperpipe.recursive_cache_folder_propagation(
+                    child, cache_folder, inner_fold_id
+                )
 
         elif isinstance(element, Branch):
             # in case it's a Branch, we create a cache subfolder and propagate it to every child
             if cache_folder:
                 cache_folder = os.path.join(cache_folder, element.name)
-            Hyperpipe.recursive_cache_folder_propagation(element.base_element, cache_folder, inner_fold_id)
+            Hyperpipe.recursive_cache_folder_propagation(
+                element.base_element, cache_folder, inner_fold_id
+            )
             # Hyperpipe.prepare_caching(element.base_element.cache_folder)
 
         elif isinstance(element, PhotonPipeline):
@@ -861,7 +1035,9 @@ class Hyperpipe(BaseEstimator):
 
             for name, child in element.named_steps.items():
                 # we need to check if any element is Branch, Stack or Swtich
-                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
+                Hyperpipe.recursive_cache_folder_propagation(
+                    child, cache_folder, inner_fold_id
+                )
 
         # if it's a simple PipelineElement, then we just don't do anything
 
@@ -870,8 +1046,9 @@ class Hyperpipe(BaseEstimator):
         if self.preprocessing is not None:
             logger.info("Applying preprocessing steps...")
             self.preprocessing.fit(self.data.X, self.data.y, **self.data.kwargs)
-            self.data.X, self.data.y, self.data.kwargs = self.preprocessing.transform(self.data.X, self.data.y,
-                                                                                      **self.data.kwargs)
+            self.data.X, self.data.y, self.data.kwargs = self.preprocessing.transform(
+                self.data.X, self.data.y, **self.data.kwargs
+            )
 
     def _prepare_pipeline(self):
         self._pipe = Branch.prepare_photon_pipe(self.elements)
@@ -881,9 +1058,11 @@ class Hyperpipe(BaseEstimator):
 
     @property
     def estimation_type(self):
-        estimation_type = getattr(self.elements[-1], '_estimator_type')
+        estimation_type = getattr(self.elements[-1], "_estimator_type")
         if estimation_type is None:
-            raise NotImplementedError("Last element in Hyperpipe should be an estimator.")
+            raise_PhotoaiError(
+                "Last element in Hyperpipe should be an estimator, was".format(estimation_type)
+            )
         else:
             return estimation_type
 
@@ -927,16 +1106,24 @@ class Hyperpipe(BaseEstimator):
 
         # switch to result output folder
         start = datetime.datetime.now()
-        self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
+        self.output_settings._update_settings(
+            self.name, start.strftime("%Y-%m-%d_%H-%M-%S")
+        )
 
-        logger.photon_system_log('***************************************************************************************************************')
-        logger.photon_system_log('PHOTON ANALYSIS: ' + self.name)
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.photon_system_log(
+            "***************************************************************************************************************"
+        )
+        logger.photon_system_log("PHOTON ANALYSIS: " + self.name)
+        logger.photon_system_log(
+            "***************************************************************************************************************"
+        )
         logger.info("Preparing data and PHOTON objects for analysis...")
 
         # loop over outer cross validation
         if self.nr_of_processes > 1:
-            hyperpipe_client = Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
+            hyperpipe_client = Client(
+                threads_per_worker=1, n_workers=self.nr_of_processes, processes=False
+            )
 
         try:
             # check data
@@ -951,10 +1138,14 @@ class Hyperpipe(BaseEstimator):
             if not self.is_final_fit:
 
                 # Outer Folds
-                outer_folds = FoldInfo.generate_folds(self.cross_validation.outer_cv,
-                                                      self.data.X, self.data.y, self.data.kwargs,
-                                                      self.cross_validation.eval_final_performance,
-                                                      self.cross_validation.test_size)
+                outer_folds = FoldInfo.generate_folds(
+                    self.cross_validation.outer_cv,
+                    self.data.X,
+                    self.data.y,
+                    self.data.kwargs,
+                    self.cross_validation.eval_final_performance,
+                    self.cross_validation.test_size,
+                )
 
                 self.cross_validation.outer_folds = {f.fold_id: f for f in outer_folds}
                 delayed_jobs = []
@@ -971,28 +1162,34 @@ class Hyperpipe(BaseEstimator):
 
                     # 1. generate OuterFolds Object
                     outer_fold = MDBOuterFold(fold_nr=outer_f.fold_nr)
-                    outer_fold_computer = OuterFoldManager(self._pipe,
-                                                           self.optimization,
-                                                           outer_f.fold_id,
-                                                           self.cross_validation,
-                                                           cache_folder=self.cache_folder,
-                                                           cache_updater=self.recursive_cache_folder_propagation,
-                                                           dummy_estimator=dummy_estimator,
-                                                           result_obj=outer_fold)
+                    outer_fold_computer = OuterFoldManager(
+                        self._pipe,
+                        self.optimization,
+                        outer_f.fold_id,
+                        self.cross_validation,
+                        cache_folder=self.cache_folder,
+                        cache_updater=self.recursive_cache_folder_propagation,
+                        dummy_estimator=dummy_estimator,
+                        result_obj=outer_fold,
+                    )
                     # 2. monitor outputs
                     self.results.outer_folds.append(outer_fold)
 
                     if self.nr_of_processes > 1:
-                        result = dask.delayed(Hyperpipe.fit_outer_folds)(outer_fold_computer,
-                                                                         self.data.X,
-                                                                         self.data.y,
-                                                                         self.data.kwargs,
-                                                                         self.cache_folder)
+                        result = dask.delayed(Hyperpipe.fit_outer_folds)(
+                            outer_fold_computer,
+                            self.data.X,
+                            self.data.y,
+                            self.data.kwargs,
+                            self.cache_folder,
+                        )
                         delayed_jobs.append(result)
                     else:
                         try:
                             # 3. fit
-                            outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
+                            outer_fold_computer.fit(
+                                self.data.X, self.data.y, **self.data.kwargs
+                            )
                             # 4. save outer fold results
                             self.results_handler.save()
                         finally:
@@ -1069,26 +1266,28 @@ class Hyperpipe(BaseEstimator):
         settings.initialize_log_file()
 
         # create new Hyperpipe instance
-        pipe_copy = Hyperpipe(name=self.name,
-                              inner_cv=deepcopy(self.cross_validation.inner_cv),
-                              outer_cv=deepcopy(self.cross_validation.outer_cv),
-                              best_config_metric=self.optimization.best_config_metric,
-                              metrics=self.optimization.metrics,
-                              optimizer=self.optimization.optimizer_input_str,
-                              optimizer_params=self.optimization.optimizer_params,
-                              output_settings=settings)
+        pipe_copy = Hyperpipe(
+            name=self.name,
+            inner_cv=deepcopy(self.cross_validation.inner_cv),
+            outer_cv=deepcopy(self.cross_validation.outer_cv),
+            best_config_metric=self.optimization.best_config_metric,
+            metrics=self.optimization.metrics,
+            optimizer=self.optimization.optimizer_input_str,
+            optimizer_params=self.optimization.optimizer_params,
+            output_settings=settings,
+        )
 
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
-            if hasattr(self, attr) and attr != 'output_settings':
+            if hasattr(self, attr) and attr != "output_settings":
                 setattr(pipe_copy, attr, getattr(self, attr))
 
-        if hasattr(self, 'preprocessing') and self.preprocessing:
+        if hasattr(self, "preprocessing") and self.preprocessing:
             preprocessing = Preprocessing()
             for element in self.preprocessing.elements:
                 preprocessing += element.copy_me()
             pipe_copy += preprocessing
-        if hasattr(self, 'elements'):
+        if hasattr(self, "elements"):
             for element in self.elements:
                 pipe_copy += element.copy_me()
         return pipe_copy
@@ -1102,7 +1301,9 @@ class Hyperpipe(BaseEstimator):
     def load_optimum_pipe(file, password=None):
         return PhotonModelPersistor.load_optimum_pipe(file, password)
 
-    def inverse_transform_pipeline(self, hyperparameters: dict, data, targets, data_to_inverse):
+    def inverse_transform_pipeline(
+        self, hyperparameters: dict, data, targets, data_to_inverse
+    ):
         """
         Inverse transform data for a pipeline with specific hyperparameter configuration
 
@@ -1133,7 +1334,6 @@ class Hyperpipe(BaseEstimator):
 
 
 class FlowchartCreator(object):
-
     def __init__(self, pipeline_elements):
         self.pipeline_elements = pipeline_elements
         self.chart_str = ""
@@ -1145,13 +1345,26 @@ class FlowchartCreator(object):
         for pipeline_element in self.pipeline_elements:
             header_layout = header_layout + "[" + pipeline_element.name + "]"
             if old_element:
-                header_relate = header_relate + "[" + old_element + "]" + "->" + "[" + pipeline_element.name + "]\n"
+                header_relate = (
+                    header_relate
+                    + "["
+                    + old_element
+                    + "]"
+                    + "->"
+                    + "["
+                    + pipeline_element.name
+                    + "]\n"
+                )
             old_element = pipeline_element.name
 
-        self.chart_str = "Layout:\n" + header_layout + "\nRelate:\n" + header_relate + "\n"
+        self.chart_str = (
+            "Layout:\n" + header_layout + "\nRelate:\n" + header_relate + "\n"
+        )
 
         for pipeline_element in self.pipeline_elements:
-            self.chart_str = self.chart_str + self.recursive_element(pipeline_element, "")
+            self.chart_str = self.chart_str + self.recursive_element(
+                pipeline_element, ""
+            )
 
         return self.chart_str
 
@@ -1167,7 +1380,12 @@ class FlowchartCreator(object):
 
     @staticmethod
     def format_optimizer(optimizer):
-        return optimizer.optimizer_input_str, optimizer.optimizer_params, optimizer.metrics, optimizer.best_config_metric
+        return (
+            optimizer.optimizer_input_str,
+            optimizer.optimizer_params,
+            optimizer.metrics,
+            optimizer.best_config_metric,
+        )
 
     def format_kwargs(self, kwargs):
         pass
@@ -1178,16 +1396,22 @@ class FlowchartCreator(object):
             return """IntegerRange(start: {},
                                    stop: {}, 
                                    step: {}, 
-                                   range_type: {})""".format(hyperparameter.start, hyperparameter.stop,
-                                                                           hyperparameter.step, hyperparameter.range_type)
+                                   range_type: {})""".format(
+                hyperparameter.start,
+                hyperparameter.stop,
+                hyperparameter.step,
+                hyperparameter.range_type,
+            )
         elif isinstance(hyperparameter, FloatRange):
             return """FloatRange(start: {},
                                    stop: {}, 
                                    step: {}, 
-                                   range_type: {})""".format(hyperparameter.start,
-                                                               hyperparameter.stop,
-                                                               hyperparameter.step,
-                                                               hyperparameter.range_type)
+                                   range_type: {})""".format(
+                hyperparameter.start,
+                hyperparameter.stop,
+                hyperparameter.step,
+                hyperparameter.range_type,
+            )
         elif isinstance(hyperparameter, Categorical):
             return str(hyperparameter.values)
         else:
@@ -1203,22 +1427,31 @@ class FlowchartCreator(object):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
             else:
-                string = "["+parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
+                string = (
+                    "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
+                )
 
             # Layout
             for pelement in list(pipe_element.elements):
                 string = string + "[" + pelement.name + "]|\n"
-            string = string +"\n"
+            string = string + "\n"
             for pelement in list(pipe_element.elements):
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
+                string = (
+                    string
+                    + "\n"
+                    + self.recursive_element(
+                        pelement, parent=parent + "." + pipe_element.name
+                    )
+                )
 
         # Pipeline Switch
         elif isinstance(pipe_element, Switch):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
             else:
-                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
+                string = (
+                    "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
+                )
 
             # Layout
             for pelement in pipe_element.elements:
@@ -1230,20 +1463,36 @@ class FlowchartCreator(object):
             old_element = ""
             for pelement in pipe_element.elements:
                 if old_element:
-                    string = string + "[" + old_element + "]" + "<:-:>" + "[" + pelement.name + ']\n'
+                    string = (
+                        string
+                        + "["
+                        + old_element
+                        + "]"
+                        + "<:-:>"
+                        + "["
+                        + pelement.name
+                        + "]\n"
+                    )
                 old_element = pelement.name
                 string = string + "\n"
 
             for pelement in pipe_element.elements:
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
+                string = (
+                    string
+                    + "\n"
+                    + self.recursive_element(
+                        pelement, parent=parent + "." + pipe_element.name
+                    )
+                )
 
         # Pipeline Branch
         elif isinstance(pipe_element, Branch):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
             else:
-                string = "[" + parent[1:]+"."+pipe_element.name + "]:\n" + "Layout:\n"
+                string = (
+                    "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
+                )
 
             # Layout
             for pelement in pipe_element.elements:
@@ -1253,28 +1502,49 @@ class FlowchartCreator(object):
             old_element = ""
             for pelement in pipe_element.elements:
                 if old_element:
-                    string = string + "[" + old_element + "]" + "->" + "[" + pelement.name + ']\n'
+                    string = (
+                        string
+                        + "["
+                        + old_element
+                        + "]"
+                        + "->"
+                        + "["
+                        + pelement.name
+                        + "]\n"
+                    )
                 old_element = pelement.name
                 string = string + "\n"
 
             for pelement in pipe_element.elements:
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
+                string = (
+                    string
+                    + "\n"
+                    + self.recursive_element(
+                        pelement, parent=parent + "." + pipe_element.name
+                    )
+                )
 
         elif isinstance(pipe_element, PipelineElement):
             if parent == "":
                 string = "[" + pipe_element.name + "]:\n" + "Define:\n"
             else:
-                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Define:\n"
+                string = (
+                    "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Define:\n"
+                )
             hyperparameters = None
             kwargs = None
             if hasattr(pipe_element, "hyperparameters"):
                 hyperparameters = pipe_element.hyperparameters
                 for name, parameter in pipe_element.hyperparameters.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
+                    string += "{}: {}\n".format(
+                        name.split("__")[-1], self.format_hyperparameter(parameter)
+                    )
             if hasattr(pipe_element, "kwargs"):
                 kwargs = pipe_element.kwargs
                 for name, parameter in pipe_element.kwargs.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
+                    string += "{}: {}\n".format(
+                        name.split("__")[-1], self.format_hyperparameter(parameter)
+                    )
             if not kwargs and not hyperparameters:
                 string += "default\n"
 
@@ -1282,7 +1552,6 @@ class FlowchartCreator(object):
 
 
 class PhotonModelPersistor:
-
     @staticmethod
     def save_elements(elements, folder):
         if not os.path.exists(folder):
@@ -1290,46 +1559,61 @@ class PhotonModelPersistor:
         element_identifier = list()
 
         for i, element in enumerate(elements):
-            if hasattr(element, 'disabled'):
+            if hasattr(element, "disabled"):
                 if element.disabled:
                     continue
 
             if isinstance(element, (Stack, Branch, Preprocessing)):
-                filename = '_' + str(i) + '_' + element.name
+                filename = "_" + str(i) + "_" + element.name
                 new_folder = os.path.join(folder, filename)
-                element_identifier.append({'element_name': element.name, 'filename': filename})
+                element_identifier.append(
+                    {"element_name": element.name, "filename": filename}
+                )
                 elements = element.elements
                 PhotonModelPersistor.save_elements(elements=elements, folder=new_folder)
                 element.elements = []
-                joblib.dump(element, os.path.join(folder, filename) + '.pkl', compress=1)
-                element_identifier[-1]['mode'] = 'PhotonBuildingBlock'
+                joblib.dump(
+                    element, os.path.join(folder, filename) + ".pkl", compress=1
+                )
+                element_identifier[-1]["mode"] = "PhotonBuildingBlock"
                 element.elements = elements
             else:
-                if not hasattr(element, 'base_element'):
+                if not hasattr(element, "base_element"):
                     base_element = element
                 else:
                     base_element = element.base_element
-                filename = '_' + str(i) + '_' + element.name
-                element_identifier.append({'element_name': element.name, 'filename': filename})
-                if hasattr(base_element, 'save'):
+                filename = "_" + str(i) + "_" + element.name
+                element_identifier.append(
+                    {"element_name": element.name, "filename": filename}
+                )
+                if hasattr(base_element, "save"):
                     wrapper_file = inspect.getfile(base_element.__class__)
                     base_element.save(os.path.join(folder, filename))
-                    element_identifier[-1]['mode'] = 'custom'
-                    element_identifier[-1]['wrapper_script'] = os.path.basename(wrapper_file)
-                    element_identifier[-1]['test_disabled'] = element.test_disabled
-                    element_identifier[-1]['disabled'] = element.disabled
-                    element_identifier[-1]['hyperparameters'] = element.hyperparameters
-                    shutil.copy(wrapper_file, os.path.join(folder, os.path.basename(wrapper_file)))
+                    element_identifier[-1]["mode"] = "custom"
+                    element_identifier[-1]["wrapper_script"] = os.path.basename(
+                        wrapper_file
+                    )
+                    element_identifier[-1]["test_disabled"] = element.test_disabled
+                    element_identifier[-1]["disabled"] = element.disabled
+                    element_identifier[-1]["hyperparameters"] = element.hyperparameters
+                    shutil.copy(
+                        wrapper_file,
+                        os.path.join(folder, os.path.basename(wrapper_file)),
+                    )
                 else:
                     try:
-                        joblib.dump(element, os.path.join(folder, filename) + '.pkl', compress=1)
-                        element_identifier[-1]['mode'] = 'pickle'
+                        joblib.dump(
+                            element, os.path.join(folder, filename) + ".pkl", compress=1
+                        )
+                        element_identifier[-1]["mode"] = "pickle"
                     except:
-                        raise NotImplementedError("Custom pipeline element must implement .save() method or "
-                                                  "allow pickle.")
+                        raise_PhotoaiNotImplementedError(
+                            "Custom pipeline element must implement .save() method or "
+                            "allow pickle."
+                        )
 
         # save pipeline blueprint to make loading of pipeline easier
-        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'wb') as f:
+        with open(os.path.join(folder, "_optimum_pipe_blueprint.pkl"), "wb") as f:
             pickle.dump(element_identifier, f)
 
     @staticmethod
@@ -1346,19 +1630,21 @@ class PhotonModelPersistor:
 
         """
         folder = os.path.splitext(zip_file)[0]
-        zip_file = folder + '.photon'
+        zip_file = folder + ".photon"
 
         if os.path.exists(folder):
-            logger.warn('The file you specified already exists as a folder.')
+            logger.warn("The file you specified already exists as a folder.")
         else:
             os.makedirs(folder)
 
         # only save elements without name. Structure of optimum_pipe.elements: [('name', element),...]
-        PhotonModelPersistor.save_elements([val[1] for val in optimum_pipe.elements], folder)
+        PhotonModelPersistor.save_elements(
+            [val[1] for val in optimum_pipe.elements], folder
+        )
 
         # write meta infos from pipeline
-        with open(os.path.join(folder, '_optimum_pipe_meta.pkl'), 'wb') as f:
-            meta_infos = {'photon_version': __version__}
+        with open(os.path.join(folder, "_optimum_pipe_meta.pkl"), "wb") as f:
+            meta_infos = {"photon_version": __version__}
             pickle.dump(meta_infos, f)
 
         # get all files
@@ -1369,9 +1655,10 @@ class PhotonModelPersistor:
 
         if password is not None:
             import pyminizip
+
             pyminizip.compress(files, zip_file, password)
         else:
-            with zipfile.ZipFile(zip_file, 'w') as myzip:
+            with zipfile.ZipFile(zip_file, "w") as myzip:
                 root_len = len(os.path.dirname(zip_file)) + 1
                 for f in files:
                     # in order to work even with subdirectories, we need to substract the dirname from our file
@@ -1382,31 +1669,50 @@ class PhotonModelPersistor:
 
     @staticmethod
     def load_elements(folder):
-        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'rb') as f:
+        with open(os.path.join(folder, "_optimum_pipe_blueprint.pkl"), "rb") as f:
             setup_info = pickle.load(f)
             element_list = list()
             for element_info in setup_info:
-                if element_info['mode'] == 'PhotonBuildingBlock':
-                    photon_building_block = joblib.load(os.path.join(folder, element_info['filename'] + '.pkl'))
-                    base_elements = PhotonModelPersistor.load_elements(os.path.join(folder, element_info['filename']))
+                if element_info["mode"] == "PhotonBuildingBlock":
+                    photon_building_block = joblib.load(
+                        os.path.join(folder, element_info["filename"] + ".pkl")
+                    )
+                    base_elements = PhotonModelPersistor.load_elements(
+                        os.path.join(folder, element_info["filename"])
+                    )
                     for _, element in base_elements:
                         photon_building_block += element
-                    element_list.append((element_info['element_name'], photon_building_block))
-                elif element_info['mode'] == 'custom':
-                    spec = importlib.util.spec_from_file_location(element_info['element_name'],
-                                                                  os.path.join(folder, element_info['wrapper_script']))
+                    element_list.append(
+                        (element_info["element_name"], photon_building_block)
+                    )
+                elif element_info["mode"] == "custom":
+                    spec = importlib.util.spec_from_file_location(
+                        element_info["element_name"],
+                        os.path.join(folder, element_info["wrapper_script"]),
+                    )
                     imported_module = importlib.util.module_from_spec(spec)
                     spec.loader.exec_module(imported_module)
-                    base_element = getattr(imported_module, element_info['element_name'])
-                    custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
-                                                     hyperparameters=element_info['hyperparameters'],
-                                                     test_disabled=element_info['test_disabled'],
-                                                     disabled=element_info['disabled'])
-                    custom_element.base_element.load(os.path.join(folder, element_info['filename']))
-                    element_list.append((element_info['element_name'], custom_element))
+                    base_element = getattr(
+                        imported_module, element_info["element_name"]
+                    )
+                    custom_element = PipelineElement(
+                        name=element_info["element_name"],
+                        base_element=base_element(),
+                        hyperparameters=element_info["hyperparameters"],
+                        test_disabled=element_info["test_disabled"],
+                        disabled=element_info["disabled"],
+                    )
+                    custom_element.base_element.load(
+                        os.path.join(folder, element_info["filename"])
+                    )
+                    element_list.append((element_info["element_name"], custom_element))
                 else:
-                    loaded_pipeline_element = joblib.load(os.path.join(folder, element_info['filename'] + '.pkl'))
-                    element_list.append((element_info['element_name'], loaded_pipeline_element))
+                    loaded_pipeline_element = joblib.load(
+                        os.path.join(folder, element_info["filename"] + ".pkl")
+                    )
+                    element_list.append(
+                        (element_info["element_name"], loaded_pipeline_element)
+                    )
         return element_list
 
     @staticmethod
@@ -1424,17 +1730,19 @@ class PhotonModelPersistor:
         -------
         sklearn Pipeline with all trained photon_pipelines
         """
-        if file.endswith('.photon'):
+        if file.endswith(".photon"):
             folder = os.path.dirname(file)
             zf = zipfile.ZipFile(file)
             zf.extractall(folder, pwd=password)
         else:
-            raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
+            raise FileNotFoundError(
+                "Specify .photon file that holds PHOTON optimum pipe."
+            )
 
-        load_folder = os.path.join(folder, 'photon_best_model')
+        load_folder = os.path.join(folder, "photon_best_model")
         meta_infos = {}
         try:
-            with open(os.path.join(load_folder, '_optimum_pipe_meta.pkl'), 'rb') as f:
+            with open(os.path.join(load_folder, "_optimum_pipe_meta.pkl"), "rb") as f:
                 meta_infos = pickle.load(f)
         except:
             print("Could not load meta information for optimum pipe")
@@ -1444,7 +1752,8 @@ class PhotonModelPersistor:
         # delete unpacked folder to clean up
         # ToDo: Don't unpack at all, but use PHOTON file directly
         from shutil import rmtree
-        rmtree(os.path.join(folder, 'photon_best_model'), ignore_errors=True)
+
+        rmtree(os.path.join(folder, "photon_best_model"), ignore_errors=True)
 
         photon_pipe = PhotonPipeline(element_list)
         photon_pipe._meta_information = meta_infos

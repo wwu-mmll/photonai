@@ -3,7 +3,6 @@ import numpy as np
 
 
 class CustomEstimator(BaseEstimator, ClassifierMixin):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -28,7 +27,6 @@ class CustomEstimator(BaseEstimator, ClassifierMixin):
 
 
 class CustomEstimatorNoFit(BaseEstimator, ClassifierMixin):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -43,7 +41,6 @@ class CustomEstimatorNoFit(BaseEstimator, ClassifierMixin):
 
 
 class CustomEstimatorNoPredict(BaseEstimator, ClassifierMixin):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -62,7 +59,6 @@ class CustomEstimatorNoPredict(BaseEstimator, ClassifierMixin):
 
 
 class CustomEstimatorNoEstimatorType(BaseEstimator):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -87,7 +83,6 @@ class CustomEstimatorNoEstimatorType(BaseEstimator):
 
 
 class CustomEstimatorNotWorking(BaseEstimator, ClassifierMixin):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -112,7 +107,6 @@ class CustomEstimatorNotWorking(BaseEstimator, ClassifierMixin):
 
 
 class CustomEstimatorNotReturningSelf(BaseEstimator, ClassifierMixin):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -137,7 +131,6 @@ class CustomEstimatorNotReturningSelf(BaseEstimator, ClassifierMixin):
 
 
 class CustomEstimatorReturningFalsePredictions(BaseEstimator, ClassifierMixin):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -162,7 +155,6 @@ class CustomEstimatorReturningFalsePredictions(BaseEstimator, ClassifierMixin):
 
 
 class CustomEstimatorNeedsCovariates(BaseEstimator, ClassifierMixin):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -186,4 +178,3 @@ class CustomEstimatorNeedsCovariates(BaseEstimator, ClassifierMixin):
         Use the learned model to make predictions.
         """
         return X, kwargs
-

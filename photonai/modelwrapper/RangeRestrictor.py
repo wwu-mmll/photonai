@@ -3,7 +3,6 @@ from typing import Union
 
 
 class RangeRestrictor(BaseEstimator, RegressorMixin):
-
     def __init__(self, low: Union[int, float] = 0, high: Union[int, float] = 100):
         self.low = low
         self.high = high

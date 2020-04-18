@@ -3,6 +3,7 @@ from photonai.photonlogger.logger import logger
 
 try:
     from imblearn import over_sampling, under_sampling, combine
+
     __found__ = True
 except ModuleNotFoundError:
     __found__ = False
@@ -17,28 +18,32 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
     """
 
     IMBALANCED_DICT = {
-        'oversampling': ["ADASYN",
-                         "BorderlineSMOTE",
-                         "KMeansSMOTE",
-                         "RandomOverSampler",
-                         "SMOTE",
-                         "SMOTENC",
-                         "SVMSMOTE"],
-        'undersampling': ["AllKNN",
-                          "ClusterCentroids",
-                          "CondensedNearestNeighbour",
-                          "EditedNearestNeighbours",
-                          "InstanceHardnessThreshold",
-                          "NearMiss",
-                          "NeighbourhoodCleaningRule",
-                          "OneSidedSelection",
-                          "TomekLinks",
-                          "RandomUnderSampler",
-                          "RepeatedEditedNearestNeighbours"],
-        'combine': ["SMOTEENN", "SMOTETomek"],
+        "oversampling": [
+            "ADASYN",
+            "BorderlineSMOTE",
+            "KMeansSMOTE",
+            "RandomOverSampler",
+            "SMOTE",
+            "SMOTENC",
+            "SVMSMOTE",
+        ],
+        "undersampling": [
+            "AllKNN",
+            "ClusterCentroids",
+            "CondensedNearestNeighbour",
+            "EditedNearestNeighbours",
+            "InstanceHardnessThreshold",
+            "NearMiss",
+            "NeighbourhoodCleaningRule",
+            "OneSidedSelection",
+            "TomekLinks",
+            "RandomUnderSampler",
+            "RepeatedEditedNearestNeighbours",
+        ],
+        "combine": ["SMOTEENN", "SMOTETomek"],
     }
 
-    def __init__(self, method_name: str = 'RandomUnderSampler', **kwargs):
+    def __init__(self, method_name: str = "RandomUnderSampler", **kwargs):
         """
         Instantiates an object that transforms the data into balanced groups according to the given method
 
@@ -75,14 +80,19 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         """
 
         if not __found__:
-            raise ModuleNotFoundError("Module imblearn not found or not installed as expected. "
-                                      "Please install the requirements.txt in PHOTON main folder.")
+            raise ModuleNotFoundError(
+                "Module imblearn not found or not installed as expected. "
+                "Please install the requirements.txt in PHOTON main folder."
+            )
 
         self.method_name = method_name
         self.needs_y = True
 
-        imbalance_type = ''
-        for group, possible_strategies in ImbalancedDataTransformer.IMBALANCED_DICT.items():
+        imbalance_type = ""
+        for (
+            group,
+            possible_strategies,
+        ) in ImbalancedDataTransformer.IMBALANCED_DICT.items():
             if self.method_name in possible_strategies:
                 imbalance_type = group
 
@@ -94,8 +104,12 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
             home = combine
         else:
             msg = "Imbalance Type not found. Can be oversampling, undersampling or combine."
-            msg += "oversampling: method_name one of "+str(self.IMBALANCED_DICT["oversampling"])
-            msg += "undersampling: method_name one of "+str(self.IMBALANCED_DICT["undersampling"])
+            msg += "oversampling: method_name one of " + str(
+                self.IMBALANCED_DICT["oversampling"]
+            )
+            msg += "undersampling: method_name one of " + str(
+                self.IMBALANCED_DICT["undersampling"]
+            )
             msg += "combine: method_name one of " + str(self.IMBALANCED_DICT["combine"])
             logger.error(msg)
             raise ValueError(msg)
@@ -121,5 +135,4 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         """
         Cause fit is empty transform is the same as fit_transform.
         """
-        return self.fit_transform(X,y)
-
+        return self.fit_transform(X, y)

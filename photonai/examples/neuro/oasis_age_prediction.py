@@ -13,7 +13,7 @@ warnings.filterwarnings("ignore", category=DeprecationWarning)
 # GET DATA FROM OASIS
 n_subjects = 100
 dataset_files = fetch_oasis_vbm(n_subjects=n_subjects)
-age = dataset_files.ext_vars['age'].astype(float)
+age = dataset_files.ext_vars["age"].astype(float)
 y = np.array(age)
 X = np.array(dataset_files.gray_matter_maps)
 
@@ -31,29 +31,39 @@ tmp_folder_path = os.path.join(base_folder, "tmp")
 settings = OutputSettings(project_folder=tmp_folder_path)
 
 # DESIGN YOUR PIPELINE
-pipe = Hyperpipe('Limbic_System',
-                 optimizer='grid_search',
-                 metrics=['mean_absolute_error'],
-                 best_config_metric='mean_absolute_error',
-                 outer_cv=KFold(n_splits=2),
-                 inner_cv=KFold(n_splits=3, shuffle=True),
-                 output_settings=settings,
-                 verbosity=1,
-                 cache_folder=cache_folder_path,
-                 eval_final_performance=True)
+pipe = Hyperpipe(
+    "Limbic_System",
+    optimizer="grid_search",
+    metrics=["mean_absolute_error"],
+    best_config_metric="mean_absolute_error",
+    outer_cv=KFold(n_splits=2),
+    inner_cv=KFold(n_splits=3, shuffle=True),
+    output_settings=settings,
+    verbosity=1,
+    cache_folder=cache_folder_path,
+    eval_final_performance=True,
+)
 
 batch_size = 25
-neuro_branch = NeuroBranch('NeuroBranch', nr_of_processes=4)
-neuro_branch += PipelineElement('ResampleImages', hyperparameters={'voxel_size': Categorical([3, 5])},
-                                batch_size=batch_size)
-neuro_branch += PipelineElement('SmoothImages', {'fwhm': Categorical([6, 12])},
-                                batch_size=batch_size)
-neuro_branch += PipelineElement('BrainMask', mask_image='MNI_ICBM152_GrayMatter', extract_mode='vec',
-                                batch_size=batch_size)
+neuro_branch = NeuroBranch("NeuroBranch", nr_of_processes=4)
+neuro_branch += PipelineElement(
+    "ResampleImages",
+    hyperparameters={"voxel_size": Categorical([3, 5])},
+    batch_size=batch_size,
+)
+neuro_branch += PipelineElement(
+    "SmoothImages", {"fwhm": Categorical([6, 12])}, batch_size=batch_size
+)
+neuro_branch += PipelineElement(
+    "BrainMask",
+    mask_image="MNI_ICBM152_GrayMatter",
+    extract_mode="vec",
+    batch_size=batch_size,
+)
 
 pipe += neuro_branch
 
-pipe += PipelineElement('PCA', n_components=20, test_disabled=False)
-pipe += PipelineElement('SVR', kernel='linear')
+pipe += PipelineElement("PCA", n_components=20, test_disabled=False)
+pipe += PipelineElement("SVR", kernel="linear")
 
 pipe.fit(X, y)

@@ -2,7 +2,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 
 class InvertTargets(BaseEstimator, TransformerMixin):
-
     def fit(self, X, y):
         pass
 
@@ -11,4 +10,3 @@ class InvertTargets(BaseEstimator, TransformerMixin):
 
     def fit_transform(self, X, y):
         return self.transform(X, y)
-

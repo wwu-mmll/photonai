@@ -7,9 +7,7 @@ from nibabel.nifti1 import Nifti1Image
 from photonai.photonlogger.logger import logger
 
 
-
 class NeuroTransformerMixin:
-
     def __init__(self):
         self.output_img = False
 
@@ -37,7 +35,9 @@ class SmoothImages(BaseEstimator, NeuroTransformerMixin):
             self._fwhm = [fwhm, fwhm, fwhm]
         elif isinstance(fwhm, list):
             if len(fwhm) != 3:
-                raise Exception("fwhm parameter should be either an integer (3) or a in the form of [3, 3, 3]")
+                raise Exception(
+                    "fwhm parameter should be either an integer (3) or a in the form of [3, 3, 3]"
+                )
             else:
                 self._fwhm = fwhm
 
@@ -62,6 +62,7 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
     """
      Resampling voxel size
     """
+
     def __init__(self, voxel_size=[3, 3, 3]):
         super(ResampleImages, self).__init__()
         self._voxel_size = None
@@ -80,7 +81,9 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
             self._voxel_size = [voxel_size, voxel_size, voxel_size]
         elif isinstance(voxel_size, list):
             if len(voxel_size) != 3:
-                raise Exception("voxel_size parameter should be either an integer (3) or a in the form of [3, 3, 3]")
+                raise Exception(
+                    "voxel_size parameter should be either an integer (3) or a in the form of [3, 3, 3]"
+                )
             else:
                 self._voxel_size = voxel_size
 
@@ -88,11 +91,17 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
         target_affine = np.diag(self.voxel_size)
 
         if isinstance(X, list) and len(X) == 1:
-            resampled_img = resample_img(X[0], target_affine=target_affine, interpolation='nearest')
+            resampled_img = resample_img(
+                X[0], target_affine=target_affine, interpolation="nearest"
+            )
         elif isinstance(X, str):
-            resampled_img = resample_img(X, target_affine=target_affine, interpolation='nearest')
+            resampled_img = resample_img(
+                X, target_affine=target_affine, interpolation="nearest"
+            )
         else:
-            resampled_img = resample_img(X, target_affine=target_affine, interpolation='nearest')
+            resampled_img = resample_img(
+                X, target_affine=target_affine, interpolation="nearest"
+            )
 
         if self.output_img:
             if len(resampled_img.shape) == 3:
@@ -101,7 +110,9 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
                 else:
                     return [resampled_img]
             else:
-                resampled_img = [index_img(resampled_img, i) for i in range(resampled_img.shape[-1])]
+                resampled_img = [
+                    index_img(resampled_img, i) for i in range(resampled_img.shape[-1])
+                ]
         else:
             if len(resampled_img.shape) == 3:
                 return resampled_img.dataobj
@@ -112,10 +123,11 @@ class ResampleImages(BaseEstimator, NeuroTransformerMixin):
 
 
 class PatchImages(BaseEstimator):
-
     def __init__(self, patch_size=25, random_state=42, nr_of_processes=3):
         logger.info("Nr or processes: " + str(nr_of_processes))
-        super(PatchImages, self).__init__(output_img=True, nr_of_processes=nr_of_processes)
+        super(PatchImages, self).__init__(
+            output_img=True, nr_of_processes=nr_of_processes
+        )
         # Todo: give cache folder to mother class
 
         self.patch_size = patch_size
@@ -127,7 +139,6 @@ class PatchImages(BaseEstimator):
     def transform(self, X, y=None, **kwargs):
         logger.info("Drawing patches")
         return self.draw_patches(X, self.patch_size)
-
 
     @staticmethod
     def draw_patches(patch_x, patch_size):
@@ -145,6 +156,7 @@ class PatchImages(BaseEstimator):
         # logger.info("drawing patch..")
         if isinstance(patch_x, str):
             from nilearn import image
+
             patch_x = np.ascontiguousarray(image.load_img(patch_x).get_data())
 
         if isinstance(patch_x, Nifti1Image):
@@ -152,15 +164,20 @@ class PatchImages(BaseEstimator):
 
         # Todo: import is failing; why?
         from skimage.util.shape import view_as_windows
+
         patches_drawn = view_as_windows(patch_x, (patch_size, patch_size, 1), step=1)
 
         patch_list_length = patches_drawn.shape[0]
         patch_list_width = patches_drawn.shape[1]
 
-        output_matrix = patches_drawn[0:patch_list_length:patch_size, 0:patch_list_width:patch_size, :, :]
+        output_matrix = patches_drawn[
+            0:patch_list_length:patch_size, 0:patch_list_width:patch_size, :, :
+        ]
 
         # TODO: Reshape First 3 Matrix Dimensions into 1, which will give 900 images
-        output_matrix = output_matrix.reshape((-1, output_matrix.shape[3], output_matrix.shape[4], output_matrix.shape[5]))
+        output_matrix = output_matrix.reshape(
+            (-1, output_matrix.shape[3], output_matrix.shape[4], output_matrix.shape[5])
+        )
         output_matrix = np.squeeze(output_matrix)
 
         return output_matrix

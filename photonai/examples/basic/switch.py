@@ -8,30 +8,36 @@ from photonai.optimization import IntegerRange
 X, y = load_breast_cancer(True)
 
 # CREATE HYPERPIPE
-my_pipe = Hyperpipe('basic_switch_pipe',
-                    optimizer='random_grid_search',
-                    optimizer_params={'n_configurations': 15},
-                    metrics=['accuracy', 'precision', 'recall'],
-                    best_config_metric='accuracy',
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=5),
-                    verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+my_pipe = Hyperpipe(
+    "basic_switch_pipe",
+    optimizer="random_grid_search",
+    optimizer_params={"n_configurations": 15},
+    metrics=["accuracy", "precision", "recall"],
+    best_config_metric="accuracy",
+    outer_cv=KFold(n_splits=3),
+    inner_cv=KFold(n_splits=5),
+    verbosity=1,
+    output_settings=OutputSettings(project_folder="./tmp/"),
+)
 
 # Transformer Switch
-my_pipe += Switch('TransformerSwitch',
-                  [PipelineElement('StandardScaler'),
-                   PipelineElement('PCA', test_disabled=True)])
+my_pipe += Switch(
+    "TransformerSwitch",
+    [PipelineElement("StandardScaler"), PipelineElement("PCA", test_disabled=True)],
+)
 
 # Estimator Switch
-svm = PipelineElement('SVC',
-                      hyperparameters={'kernel': ['rbf', 'linear']})
+svm = PipelineElement("SVC", hyperparameters={"kernel": ["rbf", "linear"]})
 
-tree = PipelineElement('DecisionTreeClassifier',
-                       hyperparameters={'min_samples_split': IntegerRange(2, 5),
-                                        'min_samples_leaf': IntegerRange(1, 5),
-                                        'criterion': ['gini', 'entropy']})
+tree = PipelineElement(
+    "DecisionTreeClassifier",
+    hyperparameters={
+        "min_samples_split": IntegerRange(2, 5),
+        "min_samples_leaf": IntegerRange(1, 5),
+        "criterion": ["gini", "entropy"],
+    },
+)
 
-my_pipe += Switch('EstimatorSwitch', [svm, tree])
+my_pipe += Switch("EstimatorSwitch", [svm, tree])
 
 my_pipe.fit(X, y)

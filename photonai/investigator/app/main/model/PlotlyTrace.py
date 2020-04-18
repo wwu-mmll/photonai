@@ -6,6 +6,7 @@ class PlotlyTrace:
     author: Julian Gebker
     version: 1.0.0
     """
+
     COLOR_PALETTE = {
         # "train_color": "#379683",
         # "train_color_bold": "#00624E",
@@ -24,12 +25,23 @@ class PlotlyTrace:
         "dummy_color": "#DEDEDE",
         "dummy_color_bold": "#BCBCBC",
         "alternative_test_color": "#FF5930",
-        "alternative_test_color_bold": "#E22D00"
+        "alternative_test_color_bold": "#E22D00",
     }
 
-    def __init__(self, variable_name: str, mode: str="markers", trace_type: str="scatter", trace_size: int=0,
-                 trace_color: str="", with_error: bool=False, colorscale: list=None, marker_line_width: int=None,
-                 marker_line_color: str = None, width=None, opacity: float = 1.):
+    def __init__(
+        self,
+        variable_name: str,
+        mode: str = "markers",
+        trace_type: str = "scatter",
+        trace_size: int = 0,
+        trace_color: str = "",
+        with_error: bool = False,
+        colorscale: list = None,
+        marker_line_width: int = None,
+        marker_line_color: str = None,
+        width=None,
+        opacity: float = 1.0,
+    ):
         """ Constructor
         :param variable_name: Variable name in javascript
         :param mode: Trace's mode (default: 'markers')

@@ -17,7 +17,9 @@ from photonai.photonlogger.logger import logger
 try:
     import DIRECT
 except ModuleNotFoundError:
-    raise ModuleNotFoundError("Module DIRECT not found. Please install the fabolas_requirements PHOTON provides.")
+    raise ModuleNotFoundError(
+        "Module DIRECT not found. Please install the fabolas_requirements PHOTON provides."
+    )
 
 
 class BaseMaximizer(object):
@@ -48,8 +50,16 @@ class BaseMaximizer(object):
 
 
 class Direct(BaseMaximizer):
-    def __init__(self, objective_function, lower, upper, logfilename="maximizer_log.txt",
-                 n_func_evals=400, n_iters=200, verbose=False):
+    def __init__(
+        self,
+        objective_function,
+        lower,
+        upper,
+        logfilename="maximizer_log.txt",
+        n_func_evals=400,
+        n_iters=200,
+        verbose=False,
+    ):
         """
         Interface for the DIRECT algorithm by D. R. Jones, C. D. Perttunen
         and B. E. Stuckmann
@@ -90,25 +100,29 @@ class Direct(BaseMaximizer):
         :rtype: np.ndarray(N,D)
         """
         if self.verbose:
-            x, _, _ = DIRECT.solve(self._direct_acquisition_fkt_wrapper(self.objective_func),
-                                   l=[self.lower],
-                                   u=[self.upper],
-                                   maxT=self.n_iters,
-                                   maxf=self.n_func_evals,
-                                   logfilename=self.logfilename)
+            x, _, _ = DIRECT.solve(
+                self._direct_acquisition_fkt_wrapper(self.objective_func),
+                l=[self.lower],
+                u=[self.upper],
+                maxT=self.n_iters,
+                maxf=self.n_func_evals,
+                logfilename=self.logfilename,
+            )
         else:
             fileno = sys.stdout.fileno()
-            with os.fdopen(os.dup(fileno), 'wb') as stdout:
-                with os.fdopen(os.open(os.devnull, os.O_WRONLY), 'wb') as devnull:
-                    sys.stdout.flush();
+            with os.fdopen(os.dup(fileno), "wb") as stdout:
+                with os.fdopen(os.open(os.devnull, os.O_WRONLY), "wb") as devnull:
+                    sys.stdout.flush()
                     os.dup2(devnull.fileno(), fileno)  # redirect
-                    x, _, _ = DIRECT.solve(self._direct_acquisition_fkt_wrapper(self.objective_func),
-                                           l=[self.lower],
-                                           u=[self.upper],
-                                           maxT=self.n_iters,
-                                           maxf=self.n_func_evals,
-                                           logfilename=self.logfilename)
-                sys.stdout.flush();
+                    x, _, _ = DIRECT.solve(
+                        self._direct_acquisition_fkt_wrapper(self.objective_func),
+                        l=[self.lower],
+                        u=[self.upper],
+                        maxT=self.n_iters,
+                        maxf=self.n_func_evals,
+                        logfilename=self.logfilename,
+                    )
+                sys.stdout.flush()
                 os.dup2(stdout.fileno(), fileno)  # restore
         return x
 
@@ -218,8 +232,10 @@ class LogEI(BaseAcquisitionFunction):
         :rtype: np.ndarray(1,1), np.ndarray(1,D)
         """
         if derivative:
-            raise Exception("LogEI does not support derivative \
-                calculation until now")
+            raise Exception(
+                "LogEI does not support derivative \
+                calculation until now"
+            )
             return
 
         m, v = self.model.predict(X)
@@ -280,10 +296,19 @@ class LogEI(BaseAcquisitionFunction):
 
 
 class InformationGain(BaseAcquisitionFunction):
-    def __init__(self, model, lower, upper,
-                 Nb=50, Np=400, sampling_acquisition=None,
-                 sampling_acquisition_kw={"par": 0.0},
-                 rng=None, verbose=False, **kwargs):
+    def __init__(
+        self,
+        model,
+        lower,
+        upper,
+        Nb=50,
+        Np=400,
+        sampling_acquisition=None,
+        sampling_acquisition_kw={"par": 0.0},
+        rng=None,
+        verbose=False,
+        **kwargs
+    ):
 
         """
         The Information Gain acquisition_functions function for Entropy Search [1].
@@ -329,7 +354,8 @@ class InformationGain(BaseAcquisitionFunction):
         if sampling_acquisition is None:
             sampling_acquisition = LogEI
         self.sampling_acquisition = sampling_acquisition(
-            model, **sampling_acquisition_kw)
+            model, **sampling_acquisition_kw
+        )
 
         self.Np = Np
 
@@ -341,8 +367,7 @@ class InformationGain(BaseAcquisitionFunction):
     def loss_function(self, logP, lmb, lPred, *args):
 
         H = -np.sum(np.multiply(np.exp(logP), (logP + lmb)))  # current entropy
-        dHp = - np.sum(np.multiply(np.exp(lPred),
-                                   np.add(lPred, lmb)), axis=0) - H
+        dHp = -np.sum(np.multiply(np.exp(lPred), np.add(lPred, lmb)), axis=0) - H
         return np.array([dHp])
 
     def compute(self, X_test, derivative=False, **kwargs):
@@ -388,10 +413,12 @@ class InformationGain(BaseAcquisitionFunction):
 
         for i in range(5):
             restarts = np.zeros((self.Nb, self.D))
-            restarts[0:self.Nb, ] = self.lower + (self.upper - self.lower) \
-                                                 * self.rng.uniform(size=(self.Nb, self.D))
+            restarts[0 : self.Nb,] = self.lower + (
+                self.upper - self.lower
+            ) * self.rng.uniform(size=(self.Nb, self.D))
             sampler = emcee.EnsembleSampler(
-                self.Nb, self.D, self.sampling_acquisition_wrapper)
+                self.Nb, self.D, self.sampling_acquisition_wrapper
+            )
             # zb are the representer points and lmb are their log EI values
             self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 50)
             if not np.any(np.isinf(self.lmb)):
@@ -412,12 +439,13 @@ class InformationGain(BaseAcquisitionFunction):
         self.sample_representer_points()
         mu, var = self.model.predict(np.array(self.zb), full_cov=True)
 
-        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = \
-            epmgp.joint_min(mu, var, with_derivatives=True)
+        self.logP, self.dlogPdMu, self.dlogPdSigma, self.dlogPdMudMu = epmgp.joint_min(
+            mu, var, with_derivatives=True
+        )
 
-        self.W = scipy.stats.norm.ppf(np.linspace(1. / (self.Np + 1),
-                                                  1 - 1. / (self.Np + 1),
-                                                  self.Np))[np.newaxis, :]
+        self.W = scipy.stats.norm.ppf(
+            np.linspace(1.0 / (self.Np + 1), 1 - 1.0 / (self.Np + 1), self.Np)
+        )[np.newaxis, :]
 
         self.logP = np.reshape(self.logP, (self.logP.shape[0], 1))
 
@@ -432,9 +460,15 @@ class InformationGain(BaseAcquisitionFunction):
         dVdx = dVdx[np.triu(np.ones((N, N))).T.astype(bool), np.newaxis]
 
         dMM = dMdx.dot(dMdx.T)
-        trterm = np.sum(np.sum(np.multiply(self.dlogPdMudMu, np.reshape(
-            dMM, (1, dMM.shape[0], dMM.shape[1]))), 2), 1)[
-                 :, np.newaxis]
+        trterm = np.sum(
+            np.sum(
+                np.multiply(
+                    self.dlogPdMudMu, np.reshape(dMM, (1, dMM.shape[0], dMM.shape[1]))
+                ),
+                2,
+            ),
+            1,
+        )[:, np.newaxis]
 
         # add a second dimension to the arrays if necessary:
         logP = np.reshape(self.logP, (self.logP.shape[0], 1))
@@ -525,11 +559,16 @@ class InformationGain(BaseAcquisitionFunction):
 
 
 class InformationGainPerUnitCost(InformationGain):
-    def __init__(self, model, cost_model,
-                 lower, upper,
-                 is_env_variable,
-                 n_representer=50,
-                 verbose=False):
+    def __init__(
+        self,
+        model,
+        cost_model,
+        lower,
+        upper,
+        is_env_variable,
+        n_representer=50,
+        verbose=False,
+    ):
         """
         Information gain per unit cost as described in Swersky et al. [1] which
         computes the information gain of a configuration divided by it's cost.
@@ -566,14 +605,13 @@ class InformationGainPerUnitCost(InformationGain):
         """
         self.cost_model = cost_model
         self.n_dims = lower.shape[0]
-        self.verbose=verbose
+        self.verbose = verbose
 
         self.is_env = is_env_variable
 
-        super(InformationGainPerUnitCost, self).__init__(model,
-                                                         lower,
-                                                         upper,
-                                                         Nb=n_representer)
+        super(InformationGainPerUnitCost, self).__init__(
+            model, lower, upper, Nb=n_representer
+        )
 
     def update(self, model, cost_model, overhead=None):
         self.cost_model = cost_model
@@ -609,8 +647,9 @@ class InformationGainPerUnitCost(InformationGain):
         if derivative:
             raise "Not implemented"
         else:
-            dh = super(InformationGainPerUnitCost, self).compute(X,
-                                                                 derivative=derivative)
+            dh = super(InformationGainPerUnitCost, self).compute(
+                X, derivative=derivative
+            )
             # We model the log cost, but we compute
             # the information gain per unit cost
 
@@ -645,11 +684,10 @@ class InformationGainPerUnitCost(InformationGain):
         self.sampling_acquisition.update(self.model)
 
         for i in range(5):
-            restarts = np.random.uniform(low=lower,
-                                         high=upper,
-                                         size=(self.Nb, D))
-            sampler = emcee.EnsembleSampler(self.Nb, D,
-                                            self.sampling_acquisition_wrapper)
+            restarts = np.random.uniform(low=lower, high=upper, size=(self.Nb, D))
+            sampler = emcee.EnsembleSampler(
+                self.Nb, D, self.sampling_acquisition_wrapper
+            )
 
             self.zb, self.lmb, _ = sampler.run_mcmc(restarts, 50)
             if not np.any(np.isinf(self.lmb)):
@@ -658,15 +696,16 @@ class InformationGainPerUnitCost(InformationGain):
                 if self.verbose:
                     logger.debug("Fabolas.InformationGainPerUnitCost: Infinity")
         if np.any(np.isinf(self.lmb)):
-            raise ValueError("Could not sample valid representer points! LogEI is -infinity")
+            raise ValueError(
+                "Could not sample valid representer points! LogEI is -infinity"
+            )
         if len(self.zb.shape) == 1:
             self.zb = self.zb[:, None]
         if len(self.lmb.shape) == 1:
             self.lmb = self.lmb[:, None]
 
         # Project representer points to subspace
-        proj = np.ones([self.zb.shape[0],
-                        self.upper[self.is_env == 1].shape[0]])
+        proj = np.ones([self.zb.shape[0], self.upper[self.is_env == 1].shape[0]])
         proj *= self.upper[self.is_env == 1].shape[0]
         self.zb = np.concatenate((self.zb, proj), axis=1)
 
@@ -740,7 +779,7 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
 
         return self.pool.map(
             partial(self.generate_estimator, acquisition_func=acquisition_func),
-            model_args
+            model_args,
         )
 
     @staticmethod
@@ -774,9 +813,10 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
             zip(
                 self.estimators,
                 self.model.models,
-                self.cost_model.models if cost_model is not None\
-                    else [None]*len(self.model.models)
-            )
+                self.cost_model.models
+                if cost_model is not None
+                else [None] * len(self.model.models),
+            ),
         )
 
     @staticmethod
@@ -808,9 +848,11 @@ class MarginalizationGPMCMC(BaseAcquisitionFunction):
         acquisition_values = np.zeros([len(self.model.models), X_test.shape[0]])
 
         # Integrate over the acquisition_functions values
-        acquisition_values[:len(self.model.models)] = self.pool.map(
-            partial(self._integrate_acquisition_values, derivative=derivative, x=X_test),
-            self.estimators[:len(self.model.models)]
+        acquisition_values[: len(self.model.models)] = self.pool.map(
+            partial(
+                self._integrate_acquisition_values, derivative=derivative, x=X_test
+            ),
+            self.estimators[: len(self.model.models)],
         )
 
         return acquisition_values.mean(axis=0)

@@ -6,17 +6,16 @@ from photonai.modelwrapper.Voting import PhotonVotingRegressor
 
 
 class VotingTests(unittest.TestCase):
-
     def setUp(self):
         self.voter = PhotonVotingRegressor()
 
     def test_wrong_strategy(self):
         with self.assertRaises(ValueError):
-            self.voter.strategy = 'random'
+            self.voter.strategy = "random"
 
     def test_set_params(self):
-        self.voter.set_params(**{'strategy': 'mean'})
-        self.assertTrue(self.voter.strategy == 'mean')
+        self.voter.set_params(**{"strategy": "mean"})
+        self.assertTrue(self.voter.strategy == "mean")
 
     def test_method_application(self):
         for strategy_name, _ in self.voter.STRATEGY_DICT.items():
@@ -28,4 +27,3 @@ class VotingTests(unittest.TestCase):
                 numpy_method = getattr(np, strategy_name)
                 numpy_X = numpy_method(X, axis=1)
                 self.assertTrue(np.array_equal(numpy_X, predicted_X))
-

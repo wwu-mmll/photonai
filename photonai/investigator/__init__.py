@@ -4,4 +4,4 @@ PHOTON Investigator delivers a web-based tool for exploring the hyperparameter s
 
 from .Investigator import Investigator
 
-__all__ = ("Investigator")
+__all__ = "Investigator"

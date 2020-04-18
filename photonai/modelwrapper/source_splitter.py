@@ -13,8 +13,7 @@ class SourceSplitter(BaseEstimator, TransformerMixin):
         return
 
     def transform(self, X):
-        return X[:,self.column_indices]
+        return X[:, self.column_indices]
 
     def fit_transform(self, X):
         return self.transform(X)
-

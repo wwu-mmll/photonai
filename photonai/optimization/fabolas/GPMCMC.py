@@ -13,7 +13,6 @@ from . import normalization
 from photonai.photonlogger.logger import logger
 
 
-
 class BaseModel(object):
     __metaclass__ = abc.ABCMeta
 
@@ -92,9 +91,11 @@ class BaseModel(object):
         :return:
         :rtype: dictionary
         """
-        json_data = {'X': self.X if self.X is None else self.X.tolist(),
-                     'y': self.y if self.y is None else self.y.tolist(),
-                     'hyperparameters': ""}
+        json_data = {
+            "X": self.X if self.X is None else self.X.tolist(),
+            "y": self.y if self.y is None else self.y.tolist(),
+            "hyperparameters": "",
+        }
         return json_data
 
     def get_incumbent(self):
@@ -116,9 +117,22 @@ class GaussianProcessMCMC(BaseModel):
     _pool = None
     _pool_use_count = 0
 
-    def __init__(self, kernel, prior=None, n_hypers=20, chain_length=2000, burnin_steps=2000,
-                 normalize_output=False, normalize_input=True, pool_size=-1,
-                 rng=None, lower=None, upper=None, noise=-8, verbose_gp=False):
+    def __init__(
+        self,
+        kernel,
+        prior=None,
+        n_hypers=20,
+        chain_length=2000,
+        burnin_steps=2000,
+        normalize_output=False,
+        normalize_input=True,
+        pool_size=-1,
+        rng=None,
+        lower=None,
+        upper=None,
+        noise=-8,
+        verbose_gp=False,
+    ):
         """
         GaussianProcess model based on the george GP library that uses MCMC
         sampling to marginalise over the hyperparmeters. If you use this class
@@ -221,16 +235,22 @@ class GaussianProcessMCMC(BaseModel):
 
         if self.normalize_input:
             # Normalize input to be in [0, 1]
-            self.X, self.lower, self.upper = normalization.zero_one_normalization(X, self.lower, self.upper)
+            self.X, self.lower, self.upper = normalization.zero_one_normalization(
+                X, self.lower, self.upper
+            )
 
         else:
             self.X = X
 
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
-            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(
+                y
+            )
             if self.y_std == 0:
-                raise ValueError("Cannot normalize output. All targets have the same value")
+                raise ValueError(
+                    "Cannot normalize output. All targets have the same value"
+                )
         else:
             self.y = y
 
@@ -240,9 +260,9 @@ class GaussianProcessMCMC(BaseModel):
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
-            sampler = emcee.EnsembleSampler(self.n_hypers,
-                                            len(self.kernel.pars) + 1,
-                                            self.loglikelihood)
+            sampler = emcee.EnsembleSampler(
+                self.n_hypers, len(self.kernel.pars) + 1, self.loglikelihood
+            )
 
             # Do a burn-in in the first iteration
             if not self.burned:
@@ -252,16 +272,14 @@ class GaussianProcessMCMC(BaseModel):
                 else:
                     self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
-                self.p0, _, _ = sampler.run_mcmc(self.p0,
-                                                 self.burnin_steps,
-                                                 rstate0=self.rng)
+                self.p0, _, _ = sampler.run_mcmc(
+                    self.p0, self.burnin_steps, rstate0=self.rng
+                )
 
                 self.burned = True
 
             # Start sampling
-            pos, _, _ = sampler.run_mcmc(self.p0,
-                                         self.chain_length,
-                                         rstate0=self.rng)
+            pos, _, _ = sampler.run_mcmc(self.p0, self.chain_length, rstate0=self.rng)
 
             # Save the current position, it will be the start point in
             # the next iteration
@@ -276,16 +294,21 @@ class GaussianProcessMCMC(BaseModel):
             self.hypers = [self.hypers]
 
         self.models = self.pool.map(
-            partial(self._instantiate_GP, X=X, y=y, kernel=self.kernel,
+            partial(
+                self._instantiate_GP,
+                X=X,
+                y=y,
+                kernel=self.kernel,
                 kwargs={
-                    'normalize_output': self.normalize_output,
-                    'normalize_input': self.normalize_input,
-                    'lower': self.lower,
-                    'upper': self.upper,
-                    'rng': self.rng,
-                    'verbose': self.verbose_gp
-                }),
-            self.hypers
+                    "normalize_output": self.normalize_output,
+                    "normalize_input": self.normalize_input,
+                    "lower": self.lower,
+                    "upper": self.upper,
+                    "rng": self.rng,
+                    "verbose": self.verbose_gp,
+                },
+            ),
+            self.hypers,
         )
 
         self.is_trained = True
@@ -350,7 +373,7 @@ class GaussianProcessMCMC(BaseModel):
 
         """
         if not self.is_trained:
-            raise Exception('Model has to be trained first!')
+            raise Exception("Model has to be trained first!")
         #
         # if self.normalize_input:
         #     X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
@@ -404,17 +427,27 @@ class GaussianProcessMCMC(BaseModel):
             inc = normalization.zero_one_unnormalization(inc, self.lower, self.upper)
 
         if self.normalize_output:
-            inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
+            inc_value = normalization.zero_mean_unit_var_unnormalization(
+                inc_value, self.y_mean, self.y_std
+            )
 
         return inc, inc_value
 
 
 class GaussianProcess(BaseModel):
-    def __init__(self, kernel, prior=None,
-                 noise=1e-3, use_gradients=False,
-                 normalize_output=False,
-                 normalize_input=True,
-                 lower=None, upper=None, rng=None, verbose=False):
+    def __init__(
+        self,
+        kernel,
+        prior=None,
+        noise=1e-3,
+        use_gradients=False,
+        normalize_output=False,
+        normalize_input=True,
+        lower=None,
+        upper=None,
+        rng=None,
+        verbose=False,
+    ):
         """
         Interface to the george GP library. The GP hyperparameter are obtained
         by optimizing the marginal log likelihood.
@@ -482,15 +515,21 @@ class GaussianProcess(BaseModel):
 
         if self.normalize_input:
             # Normalize input to be in [0, 1]
-            self.X, self.lower, self.upper = normalization.zero_one_normalization(X, self.lower, self.upper)
+            self.X, self.lower, self.upper = normalization.zero_one_normalization(
+                X, self.lower, self.upper
+            )
         else:
             self.X = X
 
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
-            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(
+                y
+            )
             if self.y_std == 0:
-                raise ValueError("Cannot normalize output. All targets have the same value")
+                raise ValueError(
+                    "Cannot normalize output. All targets have the same value"
+                )
         else:
             self.y = y
 
@@ -508,7 +547,9 @@ class GaussianProcess(BaseModel):
             self.hypers = np.append(self.hypers, np.log(self.noise))
 
         if self.verbose:
-            logger.debug("Fabolas.GaussianProcess: GP Hyperparameters: " + str(self.hypers))
+            logger.debug(
+                "Fabolas.GaussianProcess: GP Hyperparameters: " + str(self.hypers)
+            )
 
         self.gp.compute(self.X, yerr=np.sqrt(self.noise))
 
@@ -560,8 +601,7 @@ class GaussianProcess(BaseModel):
         self.gp.compute(self.X, yerr=np.sqrt(noise))
 
         self.gp._compute_alpha(self.y)
-        K_inv = self.gp.solver.apply_inverse(np.eye(self.gp._alpha.size),
-                                             in_place=True)
+        K_inv = self.gp.solver.apply_inverse(np.eye(self.gp._alpha.size), in_place=True)
 
         # The gradients of the Gram matrix, for the noise this is just
         # the identity matrix
@@ -570,7 +610,7 @@ class GaussianProcess(BaseModel):
 
         # Calculate the gradient.
         A = np.outer(self.gp._alpha, self.gp._alpha) - K_inv
-        g = 0.5 * np.einsum('ijk,ij', Kg, A)
+        g = 0.5 * np.einsum("ijk,ij", Kg, A)
 
         if self.prior is not None:
             g += self.prior.gradient(theta)
@@ -591,15 +631,17 @@ class GaussianProcess(BaseModel):
 
         if self.use_gradients:
             bounds = [(-10, 10)] * (len(self.kernel) + 1)
-            theta, _, _ = optimize.fmin_l_bfgs_b(self.nll, p0,
-                                                 fprime=self.grad_nll,
-                                                 bounds=bounds)
+            theta, _, _ = optimize.fmin_l_bfgs_b(
+                self.nll, p0, fprime=self.grad_nll, bounds=bounds
+            )
         else:
             try:
                 results = optimize.minimize(self.nll, p0)
                 theta = results.x
             except ValueError:
-                logger.error("Fabolas.GaussianProcess: Could not find a valid hyperparameter configuration! Use initial configuration")
+                logger.error(
+                    "Fabolas.GaussianProcess: Could not find a valid hyperparameter configuration! Use initial configuration"
+                )
                 theta = p0
 
         return theta
@@ -620,7 +662,7 @@ class GaussianProcess(BaseModel):
         """
 
         if not self.is_trained:
-            raise Exception('Model has to be trained first!')
+            raise Exception("Model has to be trained first!")
 
         # if self.normalize_input:
         #     x1_norm, _, _ = normalization.zero_one_normalization(x1, self.lower, self.upper)
@@ -653,17 +695,21 @@ class GaussianProcess(BaseModel):
         """
 
         if not self.is_trained:
-            raise Exception('Model has to be trained first!')
+            raise Exception("Model has to be trained first!")
 
         if self.normalize_input:
-            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+            X_test_norm, _, _ = normalization.zero_one_normalization(
+                X_test, self.lower, self.upper
+            )
         else:
             X_test_norm = X_test
 
         mu, var = self.gp.predict(self.y, X_test_norm)
 
         if self.normalize_output:
-            mu = normalization.zero_mean_unit_var_unnormalization(mu, self.y_mean, self.y_std)
+            mu = normalization.zero_mean_unit_var_unnormalization(
+                mu, self.y_mean, self.y_std
+            )
             var *= self.y_std ** 2
         if not full_cov:
             var = np.diag(var)
@@ -674,7 +720,11 @@ class GaussianProcess(BaseModel):
             var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
         else:
             var = np.clip(var, np.finfo(var.dtype).eps, np.inf)
-            var[np.where((var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps))] = 0
+            var[
+                np.where(
+                    (var < np.finfo(var.dtype).eps) & (var > -np.finfo(var.dtype).eps)
+                )
+            ] = 0
 
         return mu, var
 
@@ -693,17 +743,21 @@ class GaussianProcess(BaseModel):
         """
 
         if self.normalize_input:
-            X_test_norm, _, _ = normalization.zero_one_normalization(X_test, self.lower, self.upper)
+            X_test_norm, _, _ = normalization.zero_one_normalization(
+                X_test, self.lower, self.upper
+            )
         else:
             X_test_norm = X_test
 
         if not self.is_trained:
-            raise Exception('Model has to be trained first!')
+            raise Exception("Model has to be trained first!")
 
         funcs = self.gp.sample_conditional(self.y, X_test_norm, n_funcs)
 
         if self.normalize_output:
-            funcs = normalization.zero_mean_unit_var_unnormalization(funcs, self.y_mean, self.y_std)
+            funcs = normalization.zero_mean_unit_var_unnormalization(
+                funcs, self.y_mean, self.y_std
+            )
 
         if len(funcs.shape) == 1:
             return funcs[None, :]
@@ -722,43 +776,61 @@ class GaussianProcess(BaseModel):
             inc = normalization.zero_one_unnormalization(inc, self.lower, self.upper)
 
         if self.normalize_output:
-            inc_value = normalization.zero_mean_unit_var_unnormalization(inc_value, self.y_mean, self.y_std)
+            inc_value = normalization.zero_mean_unit_var_unnormalization(
+                inc_value, self.y_mean, self.y_std
+            )
 
         return inc, inc_value
 
 
 class FabolasGPMCMC(GaussianProcessMCMC):
-    def __init__(self, kernel, basis_func,
-                 prior=None, n_hypers=20,
-                 chain_length=2000, burnin_steps=2000,
-                 normalize_output=False,
-                 rng=None,
-                 lower=None,
-                 upper=None,
-                 noise=-8,
-                 pool_size=-1,
-                 verbose_gp=False):
+    def __init__(
+        self,
+        kernel,
+        basis_func,
+        prior=None,
+        n_hypers=20,
+        chain_length=2000,
+        burnin_steps=2000,
+        normalize_output=False,
+        rng=None,
+        lower=None,
+        upper=None,
+        noise=-8,
+        pool_size=-1,
+        verbose_gp=False,
+    ):
 
         self.basis_func = basis_func
         self.hypers = None
-        super(FabolasGPMCMC, self).__init__(kernel, prior,
-                                            n_hypers, chain_length,
-                                            burnin_steps,
-                                            normalize_output=normalize_output,
-                                            normalize_input=False,
-                                            rng=rng, lower=lower,
-                                            upper=upper, noise=noise,
-                                            pool_size=pool_size,
-                                            verbose_gp=verbose_gp)
+        super(FabolasGPMCMC, self).__init__(
+            kernel,
+            prior,
+            n_hypers,
+            chain_length,
+            burnin_steps,
+            normalize_output=normalize_output,
+            normalize_input=False,
+            rng=rng,
+            lower=lower,
+            upper=upper,
+            noise=noise,
+            pool_size=pool_size,
+            verbose_gp=verbose_gp,
+        )
 
     def train(self, X, y, do_optimize=True, **kwargs):
-        X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
+        X_norm, _, _ = normalization.zero_one_normalization(
+            X[:, :-1], self.lower, self.upper
+        )
         s_ = self.basis_func(X[:, -1])[:, None]
         self.X = np.concatenate((X_norm, s_), axis=1)
 
         if self.normalize_output:
             # Normalize output to have zero mean and unit standard deviation
-            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(y)
+            self.y, self.y_mean, self.y_std = normalization.zero_mean_unit_var_normalization(
+                y
+            )
         else:
             self.y = y
 
@@ -768,9 +840,9 @@ class FabolasGPMCMC(GaussianProcessMCMC):
 
         if do_optimize:
             # We have one walker for each hyperparameter configuration
-            sampler = emcee.EnsembleSampler(self.n_hypers,
-                                            len(self.kernel) + 1,
-                                            self.loglikelihood)
+            sampler = emcee.EnsembleSampler(
+                self.n_hypers, len(self.kernel) + 1, self.loglikelihood
+            )
 
             # Do a burn-in in the first iteration
             if not self.burned:
@@ -780,16 +852,14 @@ class FabolasGPMCMC(GaussianProcessMCMC):
                 else:
                     self.p0 = self.prior.sample_from_prior(self.n_hypers)
                 # Run MCMC sampling
-                self.p0, _, _ = sampler.run_mcmc(self.p0,
-                                                 self.burnin_steps,
-                                                 rstate0=self.rng)
+                self.p0, _, _ = sampler.run_mcmc(
+                    self.p0, self.burnin_steps, rstate0=self.rng
+                )
 
                 self.burned = True
 
             # Start sampling
-            pos, _, _ = sampler.run_mcmc(self.p0,
-                                         self.chain_length,
-                                         rstate0=self.rng)
+            pos, _, _ = sampler.run_mcmc(self.p0, self.chain_length, rstate0=self.rng)
 
             # Save the current position, it will be the start point in
             # the next iteration
@@ -805,15 +875,20 @@ class FabolasGPMCMC(GaussianProcessMCMC):
                 self.hypers = [self.hypers]
 
         self.models = self.pool.map(
-            partial(self._instantiate_GP, X=X, y=y, kernel=self.kernel,
+            partial(
+                self._instantiate_GP,
+                X=X,
+                y=y,
+                kernel=self.kernel,
                 kw={
-                    'basis_function': self.basis_func,
-                    'normalize_output': self.normalize_output,
-                    'lower': self.lower,
-                    'upper': self.upper,
-                    'rng': self.rng
-                }),
-            self.hypers
+                    "basis_function": self.basis_func,
+                    "normalize_output": self.normalize_output,
+                    "lower": self.lower,
+                    "upper": self.upper,
+                    "rng": self.rng,
+                },
+            ),
+            self.hypers,
         )
 
         self.is_trained = True
@@ -829,23 +904,35 @@ class FabolasGPMCMC(GaussianProcessMCMC):
 
 
 class FabolasGP(GaussianProcess):
-    def __init__(self, kernel, basis_function, prior=None,
-                 noise=1e-3, use_gradients=False,
-                 normalize_output=False,
-                 lower=None, upper=None, rng=None):
+    def __init__(
+        self,
+        kernel,
+        basis_function,
+        prior=None,
+        noise=1e-3,
+        use_gradients=False,
+        normalize_output=False,
+        lower=None,
+        upper=None,
+        rng=None,
+    ):
         self.basis_function = basis_function
-        super(FabolasGP, self).__init__(kernel=kernel,
-                                        prior=prior,
-                                        noise=noise,
-                                        use_gradients=use_gradients,
-                                        normalize_output=normalize_output,
-                                        normalize_input=False,
-                                        lower=lower,
-                                        upper=upper,
-                                        rng=rng)
+        super(FabolasGP, self).__init__(
+            kernel=kernel,
+            prior=prior,
+            noise=noise,
+            use_gradients=use_gradients,
+            normalize_output=normalize_output,
+            normalize_input=False,
+            lower=lower,
+            upper=upper,
+            rng=rng,
+        )
 
     def normalize(self, X):
-        X_norm, _, _ = normalization.zero_one_normalization(X[:, :-1], self.lower, self.upper)
+        X_norm, _, _ = normalization.zero_one_normalization(
+            X[:, :-1], self.lower, self.upper
+        )
         s_ = self.basis_function(X[:, -1])[:, None]
         X_norm = np.concatenate((X_norm, s_), axis=1)
         return X_norm

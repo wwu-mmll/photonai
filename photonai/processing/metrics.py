@@ -3,187 +3,202 @@ Define custom metrics here
 The method stub of all metrics is
 function_name(y_true, y_pred)
 """
-from typing import List, Callable, Union, Dict  # Hashable
+from typing import List, Callable, Dict, Union, Any  # Hashable
 import numpy as np
 from scipy.stats import spearmanr
 from photonai.photonlogger.logger import logger
 
 from sklearn.metrics import accuracy_score
+from photonai.errors import raise_PhotoaiError
 
 
 class Scorer(object):
     """
     Transforms a string literal into an callable instance of a particular metric
     BHC 0.1 - support cluster scoring by add clustering scores and type
-            - added ELEMENT_TYPES
+            - added METRIC_METADATA dictionary
+            - added ML_TYPES = ["Classification", "Regression", "Clustering"]
+            - added METRIC_<>ID Postion index of metric metadata list
             - added SCORE_TYPES
-            note: really ELEMENT_SCORE
+            - added SCORE_SIGN
+
     """
 
-    ELEMENT_TYPES = ["Classification", "Regression", "Clustering"]
+    ELEMENT_TYPES = ["Transformer", "Estimator"]
+
+    ML_TYPES = ["Classification", "Regression", "Clustering"]
     CLSFID = 0
     REGRID = 1
     CLSTID = 2
+    ML_TYPES_OUT_OF_BOUNDS = 3
 
     METRIC_PKGID = 0
     METRIC_NAMEID = 1
     METRIC_SCORE_TYPEID = 2
     METRIC_SIGNID = 3
+    METRIC_METADATA_OUT_OF_BOUNDS = 4
 
     SCORE_TYPES = ["score", "error", "unsupervised"]
     SCOREID = 0
     ERRORID = 1
     UNSUPERID = 2
+    SCORE_TYPES_OUT_OF_BOUNDS = 3
 
     SCORE_SIGN = [1, 0, -1, np.nan]
     SCORE_POSID = 0  # FOR OPTIMIXATION , GREATER IS BETTER
     SCORE_ZEROID = 1  # NO PREDICTION. no y_pred ,
     SCORE_NEGID = 2  # FOR OPTIMIXATION , GREATER IS BETTER
-    SCORE_NF = 3  # scores (metrics( not found
+    SCORE_NF = 3  # scores metrics( not found
+    SCORE_SIGN_OUT_OF_BOUNDS = 4
 
-    ELEMENT_SCORES = {
-        ELEMENT_TYPES[CLSFID]: {  # Classification
+    ML_METRIC_METADATA = {
+        ML_TYPES[CLSFID]: {  # Classification
             "matthews_corrcoef": (
                 "sklearn.metrics",
                 "matthews_corrcoef",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "accuracy": (
                 "sklearn.metrics",
                 "accuracy_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "f1_score": (
                 "sklearn.metrics",
                 "f1_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "hamming_loss": (
                 "sklearn.metrics",
                 "hamming_loss",
                 SCORE_TYPES[ERRORID],
-                SCORE_NEGID,
+                SCORE_SIGN[SCORE_NEGID],
             ),
             "log_loss": (
                 "sklearn.metrics",
                 "log_loss",
                 SCORE_TYPES[ERRORID],
-                SCORE_NEGID,
+                SCORE_SIGN[SCORE_NEGID],
             ),
             "precision": (
                 "sklearn.metrics",
                 "precision_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "recall": (
                 "sklearn.metrics",
                 "recall_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "auc": (
                 "sklearn.metrics",
                 "roc_auc_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "sensitivity": (
                 "photonai.processing.metrics",
                 "sensitivity",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "specificity": (
                 "photonai.processing.metrics",
                 "specificity",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "balanced_accuracy": (
                 "photonai.processing.metrics",
                 "balanced_accuracy",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "categorical_accuracy": (
                 "photonai.processing.metrics",
                 "categorical_accuracy_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
         },
-        ELEMENT_TYPES[REGRID]: {  # Regression
+        ML_TYPES[REGRID]: {  # Regression
             "mean_squared_error": (
                 "sklearn.metrics",
                 "mean_squared_error",
                 SCORE_TYPES[ERRORID],
-                SCORE_NEGID,
+                SCORE_SIGN[SCORE_NEGID],
             ),
             "mean_absolute_error": (
                 "sklearn.metrics",
                 "mean_absolute_error",
                 SCORE_TYPES[ERRORID],
-                SCORE_NEGID,
+                SCORE_SIGN[SCORE_NEGID],
             ),
             "explained_variance": (
                 "sklearn.metrics",
                 "explained_variance_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
-            "r2": ("sklearn.metrics", "r2_score", SCORE_TYPES[SCOREID], SCORE_POSID),
+            "r2": (
+                "sklearn.metrics",
+                "r2_score",
+                SCORE_TYPES[SCOREID],
+                SCORE_SIGN[SCORE_POSID],
+            ),
             "pearson_correlation": (
                 "photonai.processing.metrics",
                 "pearson_correlation",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "spearman_correlation": (
                 "photonai.processing.metrics",
                 "spearman_correlation",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             "variance_explained": (
                 "photonai.processing.metrics",
                 "variance_explained_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
         },
-        ELEMENT_TYPES[CLSTID]: {  # Clustering
+        ML_TYPES[CLSTID]: {  # Clustering
             ### supervised clustering metrics from sklearn.metrics
             # ['ARI'] = metrics.adjusted_rand_score(y, labels)
             "ARI": (
                 "sklearn.metrics",
                 "adjusted_rand_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             # ['MI'] = metrics.adjusted_mutual_info_score(y, labels)
             "MI": (
                 "sklearn.metrics",
                 "adjusted_mutual_info_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             # ['HCV'] = metrics.homogeneity_score(y, labels)
             "HCV": (
                 "sklearn.metrics",
                 "homogeneity_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             # ['FM'] = metrics.fowlkes_mallows_score(y, labels)
             "FM": (
                 "sklearn.metrics",
                 "fowlkes_mallows_score",
                 SCORE_TYPES[SCOREID],
-                SCORE_POSID,
+                SCORE_SIGN[SCORE_POSID],
             ),
             ### un-supervised clustering metrics from sklearn.metrics
             # ['SC'] = metrics.silhouette_score(X, labels, metric='euclidean')
@@ -191,35 +206,59 @@ class Scorer(object):
                 "sklearn.metrics",
                 "silhouette_score",
                 SCORE_TYPES[UNSUPERID],
-                SCORE_ZEROID,
+                SCORE_SIGN[SCORE_ZEROID],
             ),
             # ['CH'] = metrics.calinski_harabaz_score(X, labels)
             "CH": (
                 "sklearn.metrics",
                 "calinski_harabaz_score",
                 SCORE_TYPES[UNSUPERID],
-                SCORE_ZEROID,
+                SCORE_SIGN[SCORE_ZEROID],
             ),
             # ['DB'] = metrics.davies_bouldin_score(X, labels)
             "DB": (
                 "sklearn.metrics",
                 "davies_bouldin_score",
                 SCORE_TYPES[UNSUPERID],
-                SCORE_ZEROID,
+                SCORE_SIGN[SCORE_ZEROID],
             ),
         },
     }
 
     @staticmethod
-    def flatten(d):
+    def flatten(d: List[Any]):
+        """"
+        transform [ a [ b,c] d,e] -> [a, b, c, d, e]
+        ""
+        :param d:
+        :return:
+        """
         v = [[i] if not isinstance(i, list) else flatten(i) for i in d]
         return [i for b in v for i in b]
 
-    METRICS = {}
-    for m in ELEMENT_SCORES.keys():
-        METRICS.update(ELEMENT_SCORES[m])
+    METRIC_METADATA = {}
+    for m in ML_METRIC_METADATA.keys():
+        METRIC_METADATA.update(ML_METRIC_METADATA[m])
 
     # 1.1
+    @staticmethod
+    def is_element_type(element_type: str) -> bool:
+        """
+        :raises
+        if not known machine_learning_type
+
+        :param machine_learning_type
+        :return: True
+        """
+        if element_type in Scorer.ELEMENT_TYPES:
+            return True
+
+        raise_PhotoaiError(
+            "Specify valid element_type:{} of [{}]".format(
+                element_type, Scorer.ELEMENT_TYPES
+            )
+        )
+
     @staticmethod
     def is_metric(metric: str) -> bool:
         """
@@ -229,14 +268,59 @@ class Scorer(object):
         :param metric:
         :return: True
         """
-        if metric in Scorer.METRICS:
+        if metric in Scorer.METRIC_METADATA:
             return True
+
+        raise_PhotoaiError(
+            "Specify valid ml_type:{} of [{}]".format(metric, Scorer.METRIC_METADATA)
+        )
+
+    def metric_metadata(
+        m: str = "accuracy", metadata_id: int = METRIC_PKGID
+    ) -> Union[str, int]:
+        is_metric(m)
+        if metadata_id < METRIC_METADATA_OUT_OF_BOUNDS and metadata_id > -1:
+            return METRIC_METADATA[m][metadata_id]
         else:
-            logger.error(
-                "Specify valid metric to choose best config: {}".format(metric)
+            raise_PhotoaiError(
+                "METRIC_METADATA_index OUT_OF_BOUNDS bounds: {}, was index: {}".format(
+                    METRIC_METADATA_OUT_OF_BOUNDS, metadata_id
+                )
             )
-        raise NameError(
-            "Specify valid metric to choose best config:  {}".format(metric)
+
+    @staticmethod
+    def is_score_type(score_type: str) -> bool:
+        """
+
+        Parameters
+        ----------
+        score_type
+
+        Returns
+        -------
+
+        """
+        if score_type in Scorer.SCORE_TYPES:
+            return True
+
+        raise_PhotoaiError(
+            "Specify valid score_type:{} of [{}]".format(score_type, Scorer.SCORE_TYPES)
+        )
+
+    @staticmethod
+    def is_machine_learning_type(ml_type: str) -> bool:
+        """
+        :raises
+        if not known machine_learning_type
+
+        :param machine_learning_type
+        :return: True
+        """
+        if ml_type in Scorer.ML_TYPES:
+            return True
+
+        raise_PhotoaiError(
+            "Specify valid ml_type:{} of [{}]".format(ml_type, Scorer.ML_TYPES)
         )
 
     # 1.1
@@ -251,14 +335,14 @@ class Scorer(object):
         # create -> error  if not known error
         if Scorer.is_metric(metric):
             imported_module = __import__(
-                Scorer.METRICS[metric][Scorer.METRIC_PKGID],
+                Scorer.METRIC_METADATA[metric][Scorer.METRIC_PKGID],
                 globals(),
                 locals(),
-                Scorer.METRICS[metric][Scorer.METRIC_NAMEID],
+                Scorer.METRIC_METADATA[metric][Scorer.METRIC_NAMEID],
                 0,
             )
             return getattr(
-                imported_module, Scorer.METRICS[metric][Scorer.METRIC_NAMEID]
+                imported_module, Scorer.METRIC_METADATA[metric][Scorer.METRIC_NAMEID]
             )
 
     @staticmethod
@@ -270,7 +354,17 @@ class Scorer(object):
         :return:
         """
         Scorer.is_metric(metric)
-        return Scorer.SCORE_SIGN[Scorer.METRICS[metric][Scorer.METRIC_SIGNID]]
+        return Scorer.METRIC_METADATA[metric][Scorer.METRIC_SIGNID]
+
+    @staticmethod
+    def greater_is_better_distinction(metric):
+        sign = Scorer.metric_sign(metric)
+        if sign == 1:
+            return True
+        elif sign == -1:
+            return False
+        else:
+            raise_PhotoaiError("Metric can not be of sign: {}".format(sign))
 
     @staticmethod
     def calculate_metrics(

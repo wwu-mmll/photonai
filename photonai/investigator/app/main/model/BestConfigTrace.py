@@ -1,12 +1,16 @@
-
-
 class BestConfigTrace:
     """ Class stores metric lists to print them for plot traces
     author: Julian Gebker
     version: 1.0.0
     """
 
-    def __init__(self, trace_name: str, metric_list: list=None, trace_mode: str='markers', trace_type: str='scatter'):
+    def __init__(
+        self,
+        trace_name: str,
+        metric_list: list = None,
+        trace_mode: str = "markers",
+        trace_type: str = "scatter",
+    ):
         """
         Constructor
         :param trace_name: Variable name and displayed name

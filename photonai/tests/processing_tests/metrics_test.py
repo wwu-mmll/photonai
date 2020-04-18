@@ -6,12 +6,11 @@ from photonai.processing.metrics import Scorer
 
 
 class ScorerTest(unittest.TestCase):
-
     def setUp(self):
         """
         Set up for Scorer Tests.
         """
-        self.all_implemented_metrics = Scorer.ELEMENT_DICTIONARY.keys()
+        self.all_implemented_metrics = Scorer.ML_METRIC_METADATA.keys()
         self.some_not_implemented_metrics = ["abc_metric", "photon_metric"]
 
     def test_create(self):
@@ -31,7 +30,9 @@ class ScorerTest(unittest.TestCase):
         Should return Boolean or raise NotImplementedError.
         """
         for implemented_metric in self.all_implemented_metrics:
-            self.assertIn(Scorer.greater_is_better_distinction(implemented_metric), [True, False])
+            self.assertIn(
+                Scorer.greater_is_better_distinction(implemented_metric), [True, False]
+            )
 
         for not_implemented_metric in self.some_not_implemented_metrics:
             with self.assertRaises(NameError):
@@ -43,12 +44,17 @@ class ScorerTest(unittest.TestCase):
         Handle all given metrics with a scorer call.
         """
         for implemented_metric in self.all_implemented_metrics:
-            self.assertIsInstance(Scorer.calculate_metrics([1, 1, 0, 1],
-                                                           [0, 1, 0, 1],
-                                                           [implemented_metric])[implemented_metric], float)
+            self.assertIsInstance(
+                Scorer.calculate_metrics(
+                    [1, 1, 0, 1], [0, 1, 0, 1], [implemented_metric]
+                )[implemented_metric],
+                float,
+            )
 
         for not_implemented_metric in self.some_not_implemented_metrics:
-            np.testing.assert_equal(Scorer.calculate_metrics([1, 1, 0, 1],
-                                                             [0, 1, 0, 1],
-                                                             [not_implemented_metric])[not_implemented_metric], np.nan)
-
+            np.testing.assert_equal(
+                Scorer.calculate_metrics(
+                    [1, 1, 0, 1], [0, 1, 0, 1], [not_implemented_metric]
+                )[not_implemented_metric],
+                np.nan,
+            )

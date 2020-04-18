@@ -24,7 +24,8 @@ class NeuroBranch(Branch):
         Name of the NeuroModule pipeline branch
 
     """
-    NEURO_ELEMENTS = ElementDictionary.get_package_info(['PhotonNeuro'])
+
+    NEURO_ELEMENTS = ElementDictionary.get_package_info(["PhotonNeuro"])
 
     def __init__(self, name, nr_of_processes=1, output_img: bool = False):
         Branch.__init__(self, name)
@@ -51,6 +52,7 @@ class NeuroBranch(Branch):
     @property
     def nr_of_processes(self):
         return self._nr_of_processes
+
     # Todo : !
     # @classmethod
     # def set_local_cluster(cls, nr_of_processes):
@@ -61,9 +63,11 @@ class NeuroBranch(Branch):
         self._nr_of_processes = value
         if self._nr_of_processes > 1:
             if self.local_cluster is None:
-                self.local_cluster = Client(threads_per_worker=1,
-                                            n_workers=self.nr_of_processes,
-                                            processes=False)
+                self.local_cluster = Client(
+                    threads_per_worker=1,
+                    n_workers=self.nr_of_processes,
+                    processes=False,
+                )
             else:
                 self.local_cluster.n_workers = self.nr_of_processes
         else:
@@ -89,11 +93,15 @@ class NeuroBranch(Branch):
             self.elements.append(pipe_element)
             self._prepare_pipeline()
         else:
-            logger.error('PipelineElement {} is not part of the Neuro module:'.format(pipe_element.name))
+            logger.error(
+                "PipelineElement {} is not part of the Neuro module:".format(
+                    pipe_element.name
+                )
+            )
 
         return self
 
-    def test_transform(self, X, nr_of_tests=1, save_to_folder='.', **kwargs):
+    def test_transform(self, X, nr_of_tests=1, save_to_folder=".", **kwargs):
         nr_of_tested = 0
 
         if kwargs and len(kwargs) > 0:
@@ -104,7 +112,7 @@ class NeuroBranch(Branch):
         copy_of_me.output_img = True
         for p_element in copy_of_me.pipeline_elements:
             if isinstance(p_element.base_element, BrainAtlas):
-                p_element.base_element.extract_mode = 'list'
+                p_element.base_element.extract_mode = "list"
 
         filename = self.name + "_testcase_"
 
@@ -119,7 +127,9 @@ class NeuroBranch(Branch):
             if not isinstance(new_pic, Nifti1Image):
                 raise ValueError("last element of branch does not return a nifti image")
 
-            new_filename = os.path.join(save_to_folder, filename + str(nr_of_tested) + "_transformed.nii")
+            new_filename = os.path.join(
+                save_to_folder, filename + str(nr_of_tested) + "_transformed.nii"
+            )
             new_pic.to_filename(new_filename)
 
             nr_of_tested += 1
@@ -137,15 +147,24 @@ class NeuroBranch(Branch):
                 # so the next step only has to reload the data ...
                 self.apply_transform_parallelized(X)
             else:
-                logger.error("Cannot use parallelization without a cache folder specified in the hyperpipe."
-                               "Using single core instead")
+                logger.error(
+                    "Cannot use parallelization without a cache folder specified in the hyperpipe."
+                    "Using single core instead"
+                )
 
-            logger.debug('NeuroBranch ' + self.name + ' is collecting data from the different cores...')
+            logger.debug(
+                "NeuroBranch "
+                + self.name
+                + " is collecting data from the different cores..."
+            )
         X_new, _, _ = self.base_element.transform(X)
 
         # check if we have a list of niftis, should avoid this, except when output_image = True
         if not self.output_img:
-            if ((isinstance(X_new, list) and len(X_new) > 0) or (isinstance(X_new, np.ndarray) and len(X_new.shape) == 1)) and isinstance(X_new[0], Nifti1Image):
+            if (
+                (isinstance(X_new, list) and len(X_new) > 0)
+                or (isinstance(X_new, np.ndarray) and len(X_new.shape) == 1)
+            ) and isinstance(X_new[0], Nifti1Image):
                 X_new = np.asarray([i.dataobj for i in X_new])
         return X_new, y, kwargs
 
@@ -168,7 +187,7 @@ class NeuroBranch(Branch):
 
     def inverse_transform(self, X, y=None, **kwargs):
         for transform in self.elements[::-1]:
-            if hasattr(transform, 'inverse_transform'):
+            if hasattr(transform, "inverse_transform"):
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
             else:
                 return X, y, kwargs
@@ -191,11 +210,21 @@ class NeuroBranch(Branch):
 
             # distribute the data equally to all available cores
             number_of_items_to_process = PhotonDataHelper.find_n(X)
-            number_of_items_for_each_core = int(np.ceil(number_of_items_to_process / self.nr_of_processes))
-            logger.info('NeuroBranch ' + self.name +
-                         ': Using ' + str(self.nr_of_processes) + ' cores calculating ' + str(number_of_items_for_each_core)
-                         + ' items each')
-            for start, stop in PhotonDataHelper.chunker(number_of_items_to_process, number_of_items_for_each_core):
+            number_of_items_for_each_core = int(
+                np.ceil(number_of_items_to_process / self.nr_of_processes)
+            )
+            logger.info(
+                "NeuroBranch "
+                + self.name
+                + ": Using "
+                + str(self.nr_of_processes)
+                + " cores calculating "
+                + str(number_of_items_for_each_core)
+                + " items each"
+            )
+            for start, stop in PhotonDataHelper.chunker(
+                number_of_items_to_process, number_of_items_for_each_core
+            ):
                 X_batched, _, _ = PhotonDataHelper.split_data(X, None, {}, start, stop)
 
                 # copy my pipeline
@@ -205,11 +234,9 @@ class NeuroBranch(Branch):
                 new_pipe_copy.skip_loading = True
                 new_pipe_copy._parallel_use = True
 
-                del_job = dask.delayed(NeuroBranch.parallel_application)(new_pipe_copy, X_batched)
+                del_job = dask.delayed(NeuroBranch.parallel_application)(
+                    new_pipe_copy, X_batched
+                )
                 jobs_to_do.append(del_job)
 
             dask.compute(*jobs_to_do)
-
-
-
-

@@ -1,4 +1,10 @@
-from photonai.optimization import PhotonHyperparam, IntegerRange, FloatRange, Categorical, BooleanSwitch
+from photonai.optimization import (
+    PhotonHyperparam,
+    IntegerRange,
+    FloatRange,
+    Categorical,
+    BooleanSwitch,
+)
 from photonai.photonlogger import logger
 from itertools import product
 import numpy as np
@@ -17,17 +23,21 @@ def create_global_config_dict(pipeline_elements):
                     global_hyperparameter_dict[h_key] = h_value
                 elif isinstance(h_value, PhotonHyperparam):
                     # when we have a range we need to convert it to a definite list of values
-                    if isinstance(h_value, FloatRange) or isinstance(h_value, IntegerRange):
+                    if isinstance(h_value, FloatRange) or isinstance(
+                        h_value, IntegerRange
+                    ):
                         # build a definite list of values
                         h_value.transform()
                         # global_hyperparameter_dict[p_element.name][h_key] = h_value.values
                         global_hyperparameter_dict[h_key] = h_value.values
-                    elif isinstance(h_value, BooleanSwitch) or isinstance(h_value, Categorical):
+                    elif isinstance(h_value, BooleanSwitch) or isinstance(
+                        h_value, Categorical
+                    ):
                         global_hyperparameter_dict[h_key] = h_value.values
     return global_hyperparameter_dict
 
 
-def create_global_config_grid(pipeline_elements, add_name=''):
+def create_global_config_grid(pipeline_elements, add_name=""):
     global_hyperparameter_list = []
     for element in pipeline_elements:
         if hasattr(element, "generate_config_grid"):
@@ -35,9 +45,9 @@ def create_global_config_grid(pipeline_elements, add_name=''):
             if len(config_grid) > 0:
                 global_hyperparameter_list.append(config_grid)
 
-    praefix = ''
-    if add_name != '':
-        praefix = add_name + '__'
+    praefix = ""
+    if add_name != "":
+        praefix = add_name + "__"
 
     # if len(global_hyperparameter_list) == 1:
     #     return [dict((praefix + pair[0], pair[1]) for d in global_hyperparameter_list[0] for pair in d.items())]
@@ -47,15 +57,21 @@ def create_global_config_grid(pipeline_elements, add_name=''):
     for i in global_hyperparameter_list:
         total_product_num = total_product_num * len(i)
     if total_product_num > threshold:
-        warn_text = 'The entire configuration grid entails more than ' + str(threshold) + ' possible configurations. ' \
-                                                                                          'This might take veeeeeeery ' \
-                                                                                          'looooong to both compute ' \
-                                                                                          'and process.'
+        warn_text = (
+            "The entire configuration grid entails more than "
+            + str(threshold)
+            + " possible configurations. "
+            "This might take veeeeeeery "
+            "looooong to both compute "
+            "and process."
+        )
         logger.warn(warn_text)
         raise Warning(warn_text)
     config_list = list(product(*global_hyperparameter_list))
     config_dicts = []
     # get all configs in one
     for c in config_list:
-        config_dicts.append(dict((praefix + pair[0], pair[1]) for d in c for pair in d.items()))
+        config_dicts.append(
+            dict((praefix + pair[0], pair[1]) for d in c for pair in d.items())
+        )
     return config_dicts

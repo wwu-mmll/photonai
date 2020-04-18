@@ -10,10 +10,15 @@ from photonai.photonlogger.logger import logger
 
 class CacheManager:
 
-    __LOCK_STR = 'photon_cache_manager'
+    __LOCK_STR = "photon_cache_manager"
 
-    def __init__(self, _hash=None, cache_folder=None, parallel_use: bool = False,
-                 single_subject_caching: bool =False):
+    def __init__(
+        self,
+        _hash=None,
+        cache_folder=None,
+        parallel_use: bool = False,
+        single_subject_caching: bool = False,
+    ):
         self._hash = _hash
         self.cache_folder = cache_folder
 
@@ -36,8 +41,13 @@ class CacheManager:
             self._hash = value
 
     class State:
-        def __init__(self, config=None, nr_items=None,
-                     first_data_hash=None, first_data_str: str = ''):
+        def __init__(
+            self,
+            config=None,
+            nr_items=None,
+            first_data_hash=None,
+            first_data_str: str = "",
+        ):
             self.config = config
             self.nr_items = nr_items
             self.first_data_hash = first_data_hash
@@ -99,13 +109,20 @@ class CacheManager:
         cache_query = self.generate_cache_key(pipe_element_name)
         if cache_query in self.cache_index:
             if not self.single_subject_caching:
-                logger.debug("Loading data from cache for " + pipe_element_name + ": "
-                             + str(self.state.nr_items) + " items " + self.state.first_data_str
-                             + " - " + str(self.state.config))
+                logger.debug(
+                    "Loading data from cache for "
+                    + pipe_element_name
+                    + ": "
+                    + str(self.state.nr_items)
+                    + " items "
+                    + self.state.first_data_str
+                    + " - "
+                    + str(self.state.config)
+                )
             filename = self.cache_index[cache_query]
             # lock = Lock(filename)
             # lock.acquire()
-            with open(filename, 'rb') as f:
+            with open(filename, "rb") as f:
                 (X, y, kwargs) = joblib.load(f)
 
             return X, y, kwargs
@@ -113,7 +130,13 @@ class CacheManager:
 
     def generate_cache_key(self, pipe_element_name):
         config_hash = self._find_config_for_element(pipe_element_name)
-        cache_query = (pipe_element_name, self.hash, config_hash, self.state.nr_items, self.state.first_data_hash)
+        cache_query = (
+            pipe_element_name,
+            self.hash,
+            config_hash,
+            self.state.nr_items,
+            self.state.first_data_hash,
+        )
         return hash(cache_query)
 
     def check_cache(self, pipe_element_name):
@@ -129,16 +152,26 @@ class CacheManager:
         filename = os.path.join(self.cache_folder, str(cache_query) + ".p")
         self.cache_index[cache_query] = filename
         if not self.single_subject_caching:
-            logger.debug("Saving data to cache for " + pipe_element_name + ": " + str(self.state.nr_items) + " items "
-                         + self.state.first_data_str + " - " + str(self.state.config))
+            logger.debug(
+                "Saving data to cache for "
+                + pipe_element_name
+                + ": "
+                + str(self.state.nr_items)
+                + " items "
+                + self.state.first_data_str
+                + " - "
+                + str(self.state.config)
+            )
 
         # write cached data to filesystem
-        with open(filename, 'wb') as f:
+        with open(filename, "wb") as f:
             joblib.dump(data, f)
 
     def read_cache_index(self):
         cached_files = glob.glob(os.path.join(self.cache_folder, "*.p"))
-        self.cache_index = {int(os.path.splitext(os.path.basename(i))[0]): i for i in cached_files}
+        self.cache_index = {
+            int(os.path.splitext(os.path.basename(i))[0]): i for i in cached_files
+        }
 
     def clear_cache(self):
         CacheManager.clear_cache_files(self.cache_folder)

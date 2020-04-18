@@ -4,11 +4,10 @@ from photonai.photonlogger.logger import logger
 
 
 class PhotonHyperparam(object):
-
     def __init__(self, values):
         self.values = values
 
-    def get_random_value(self, definite_list:bool=True):
+    def get_random_value(self, definite_list: bool = True):
         if definite_list:
             return random.choice(self.values)
         else:
@@ -18,7 +17,6 @@ class PhotonHyperparam(object):
 
     def __str__(self):
         return str(self.__class__) + str(self.values)
-
 
 
 class Categorical(PhotonHyperparam):
@@ -109,7 +107,9 @@ class NumberRange(PhotonHyperparam):
         Further parameters that should be passed to the numpy function chosen with range_type.
     """
 
-    def __init__(self, start, stop, range_type, step=None, num=None, num_type=np.int64, **kwargs):
+    def __init__(
+        self, start, stop, range_type, step=None, num=None, num_type=np.int64, **kwargs
+    ):
 
         self.start = start
         self.stop = stop
@@ -128,34 +128,70 @@ class NumberRange(PhotonHyperparam):
             logger.error(error_message)
             raise ValueError(error_message)
         if self.range_type == "range" and self.start > self.stop:
-            warn_message = "NumberRange or one of its subclasses is empty cause np.arange " + \
-                           "does not deal with start greater than stop."
+            warn_message = (
+                "NumberRange or one of its subclasses is empty cause np.arange "
+                + "does not deal with start greater than stop."
+            )
             logger.warn(warn_message)
 
         values = []
 
         if self.range_type == "range":
             if not self.step:
-                values = np.arange(self.start, self.stop, dtype=self.num_type, **self.range_params)
+                values = np.arange(
+                    self.start, self.stop, dtype=self.num_type, **self.range_params
+                )
             else:
-                values = np.arange(self.start, self.stop, self.step, dtype=self.num_type, **self.range_params)
+                values = np.arange(
+                    self.start,
+                    self.stop,
+                    self.step,
+                    dtype=self.num_type,
+                    **self.range_params
+                )
         elif self.range_type == "linspace":
             if self.num:
-                values = np.linspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+                values = np.linspace(
+                    self.start,
+                    self.stop,
+                    num=self.num,
+                    dtype=self.num_type,
+                    **self.range_params
+                )
             else:
-                values = np.linspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+                values = np.linspace(
+                    self.start, self.stop, dtype=self.num_type, **self.range_params
+                )
         elif self.range_type == "logspace":
             if self.num_type == np.int32:
-                raise ValueError("Cannot use logspace for integer,  use geomspace instead.")
+                raise ValueError(
+                    "Cannot use logspace for integer,  use geomspace instead."
+                )
             if self.num:
-                values = np.logspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+                values = np.logspace(
+                    self.start,
+                    self.stop,
+                    num=self.num,
+                    dtype=self.num_type,
+                    **self.range_params
+                )
             else:
-                values = np.logspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+                values = np.logspace(
+                    self.start, self.stop, dtype=self.num_type, **self.range_params
+                )
         elif self.range_type == "geomspace":
             if self.num:
-                values = np.geomspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
+                values = np.geomspace(
+                    self.start,
+                    self.stop,
+                    num=self.num,
+                    dtype=self.num_type,
+                    **self.range_params
+                )
             else:
-                values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+                values = np.geomspace(
+                    self.start, self.stop, dtype=self.num_type, **self.range_params
+                )
         # convert to python datatype because mongodb needs it
         if self.num_type == np.int32:
             self.values = [int(i) for i in values]
@@ -172,8 +208,12 @@ class NumberRange(PhotonHyperparam):
         if value in range_types:
             self._range_type = value
         else:
-            raise ValueError("Subclass of NumberRange supports only "+str(range_types)+" as range_type, not " +
-                             repr(value))
+            raise ValueError(
+                "Subclass of NumberRange supports only "
+                + str(range_types)
+                + " as range_type, not "
+                + repr(value)
+            )
 
 
 class IntegerRange(NumberRange):
@@ -216,7 +256,7 @@ class IntegerRange(NumberRange):
            Further parameters that should be passed to the numpy function chosen with range_type.
        """
 
-    def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
+    def __init__(self, start, stop, range_type="range", step=None, num=None, **kwargs):
         super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
 
     def get_random_value(self, definite_list: bool = False):
@@ -227,7 +267,8 @@ class IntegerRange(NumberRange):
                 raise ValueError(msg)
             return random.choice(self.values)
         else:
-            return random.randint(self.start, self.stop-1)
+            return random.randint(self.start, self.stop - 1)
+
 
 class FloatRange(NumberRange):
     """
@@ -269,8 +310,8 @@ class FloatRange(NumberRange):
             Further parameters that should be passed to the numpy function chosen with range_type.
         """
 
-    def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
-            super().__init__(start, stop, range_type, step, num, np.float32, **kwargs)
+    def __init__(self, start, stop, range_type="range", step=None, num=None, **kwargs):
+        super().__init__(start, stop, range_type, step, num, np.float32, **kwargs)
 
     def get_random_value(self, definite_list: bool = False):
         if definite_list:

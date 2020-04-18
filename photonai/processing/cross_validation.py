@@ -54,7 +54,9 @@ class StratifiedKFoldRegression(_BaseKFold):
         n_splits = self.n_splits
         y = np.asarray(y)
         if y.ndim > 1:
-            raise ValueError('Target data has more than one dimension. Must be single vector of continuous values.')
+            raise ValueError(
+                "Target data has more than one dimension. Must be single vector of continuous values."
+            )
         n_samples = y.shape[0]
         self.n_samples = n_samples
         sort_indices = np.argsort(y)
@@ -64,7 +66,7 @@ class StratifiedKFoldRegression(_BaseKFold):
         current = 0
         for i in range(min_test_samples_per_fold):
             start, stop = current, current + n_splits
-            if i+1 < min_test_samples_per_fold:
+            if i + 1 < min_test_samples_per_fold:
                 subset = sort_indices[start:stop]
             else:
                 subset = sort_indices[start:]
@@ -75,7 +77,6 @@ class StratifiedKFoldRegression(_BaseKFold):
                 test_folds[k].append(subset[k])
             current = stop
         return test_folds
-
 
     def _iter_test_masks(self, X, y, groups=None):
         test_folds = self._make_test_folds(X, y)
@@ -88,9 +89,7 @@ class StratifiedKFoldRegression(_BaseKFold):
         return super(StratifiedKFoldRegression, self).split(X, y, groups)
 
 
-
 class OutlierKFold(_BaseKFold):
-
     def __init__(self, n_splits=3, shuffle=False, random_state=None):
         super(OutlierKFold, self).__init__(n_splits, shuffle, random_state)
 
@@ -100,7 +99,9 @@ class OutlierKFold(_BaseKFold):
         n_splits = self.n_splits
         y = np.asarray(y)
         if y.ndim > 1:
-            raise ValueError('Target data has more than one dimension. Must be single vector of continuous values.')
+            raise ValueError(
+                "Target data has more than one dimension. Must be single vector of continuous values."
+            )
         n_samples = y.shape[0]
         self.n_samples = n_samples
 
@@ -110,7 +111,9 @@ class OutlierKFold(_BaseKFold):
         one_class_chunks = self.chunk_array(one_class)
         outlier_chunks = self.chunk_array(outlier)
 
-        folds = [np.concatenate((i, j)) for i, j in zip(one_class_chunks, outlier_chunks)]
+        folds = [
+            np.concatenate((i, j)) for i, j in zip(one_class_chunks, outlier_chunks)
+        ]
 
         return folds
 
@@ -121,7 +124,7 @@ class OutlierKFold(_BaseKFold):
         test_folds = []
 
         for i in range(0, num_samples, test_samples_per_fold):
-            stop = i+test_samples_per_fold
+            stop = i + test_samples_per_fold
             if stop > num_samples:
                 stop = num_samples
             test_folds.append(index_list[i:stop])
@@ -136,7 +139,3 @@ class OutlierKFold(_BaseKFold):
 
     def split(self, X, y, groups=None):
         return super(OutlierKFold, self).split(X, y, groups)
-
-
-
-

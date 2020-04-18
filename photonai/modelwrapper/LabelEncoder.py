@@ -3,7 +3,6 @@ from sklearn.preprocessing import LabelEncoder as SKLabelEncoder
 
 
 class LabelEncoder(SKLabelEncoder, TransformerMixin, BaseEstimator):
-
     def __init__(self):
         super(LabelEncoder, self).__init__()
         self.needs_y = True

@@ -15,39 +15,50 @@ from photonai.processing.results_structure import MDBHyperpipe
 
 
 class ResultsHandlerTest(PhotonBaseTest):
-
     def setUp(self):
         """
         Set default start settings for all tests.
         """
         super(ResultsHandlerTest, self).setUp()
 
-        self.files = ['best_config_predictions.csv',
-                      'time_monitor.csv',
-                      'time_monitor_pie.png',
-                      'photon_result_file.p',
-                      'photon_summary.txt',
-                      'photon_best_model.photon',
-                      'optimum_pipe_feature_importances_backmapped.npz',
-                      'photon_code.py',
-                      'optimizer_history.png']
+        self.files = [
+            "best_config_predictions.csv",
+            "time_monitor.csv",
+            "time_monitor_pie.png",
+            "photon_result_file.p",
+            "photon_summary.txt",
+            "photon_best_model.photon",
+            "optimum_pipe_feature_importances_backmapped.npz",
+            "photon_code.py",
+            "optimizer_history.png",
+        ]
 
-        self.output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=True)
+        self.output_settings = OutputSettings(
+            project_folder=self.tmp_folder_path, save_output=True
+        )
 
-        self.ss_pipe_element = PipelineElement('StandardScaler')
-        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, random_state=42)
-        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1], 'kernel': ['linear']},  # 'rbf', 'sigmoid']
-                                                random_state=42)
+        self.ss_pipe_element = PipelineElement("StandardScaler")
+        self.pca_pipe_element = PipelineElement(
+            "PCA", {"n_components": [1, 2]}, random_state=42
+        )
+        self.svc_pipe_element = PipelineElement(
+            "SVC",
+            {"C": [0.1], "kernel": ["linear"]},  # 'rbf', 'sigmoid']
+            random_state=42,
+        )
 
         self.inner_cv_object = KFold(n_splits=3)
-        self.metrics = ["accuracy", 'recall', 'precision']
+        self.metrics = ["accuracy", "recall", "precision"]
         self.best_config_metric = "accuracy"
-        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
-                                   metrics=self.metrics,
-                                   best_config_metric=self.best_config_metric,
-                                   outer_cv=KFold(n_splits=2),
-                                   output_settings=self.output_settings,
-                                   verbosity=1)
+        self.hyperpipe = Hyperpipe(
+            "god",
+            inner_cv=self.inner_cv_object,
+            metrics=self.metrics,
+            best_config_metric=self.best_config_metric,
+            outer_cv=KFold(n_splits=2),
+            output_settings=self.output_settings,
+            verbosity=1,
+        )
         self.hyperpipe += self.ss_pipe_element
         self.hyperpipe += self.pca_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
@@ -63,16 +74,30 @@ class ResultsHandlerTest(PhotonBaseTest):
         Output creation testing. Only write if output_settings.save_output == True
         """
         for file in self.files:
-            self.assertTrue(os.path.isfile(os.path.join(self.output_settings.results_folder, file)))
+            self.assertTrue(
+                os.path.isfile(os.path.join(self.output_settings.results_folder, file))
+            )
 
         # correct rows
-        with open(os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')) as f:
-            self.assertEqual(sum([outer_fold.number_samples_test
-                                  for outer_fold in self.hyperpipe.results.outer_folds]),
-                             sum(1 for _ in f)-1)
+        with open(
+            os.path.join(
+                self.output_settings.results_folder, "best_config_predictions.csv"
+            )
+        ) as f:
+            self.assertEqual(
+                sum(
+                    [
+                        outer_fold.number_samples_test
+                        for outer_fold in self.hyperpipe.results.outer_folds
+                    ]
+                ),
+                sum(1 for _ in f) - 1,
+            )
 
         shutil.rmtree(self.tmp_folder_path, ignore_errors=True)
-        self.output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=False)
+        self.output_settings = OutputSettings(
+            project_folder=self.tmp_folder_path, save_output=False
+        )
         self.hyperpipe.fit(self.__X, self.__y)
         self.assertIsNone(self.output_settings.results_folder)
 
@@ -80,8 +105,10 @@ class ResultsHandlerTest(PhotonBaseTest):
         """
         Test for only readable time_moitor.csv (right count of columns and pandas import).
         """
-        time_monitor_df = pd.read_csv(os.path.join(self.output_settings.results_folder, 'time_monitor.csv'),
-                                      header=[0, 1])
+        time_monitor_df = pd.read_csv(
+            os.path.join(self.output_settings.results_folder, "time_monitor.csv"),
+            header=[0, 1],
+        )
         self.assertIsInstance(time_monitor_df, pd.DataFrame)
         self.assertEqual(len(time_monitor_df.columns), 10)
 
@@ -89,32 +116,44 @@ class ResultsHandlerTest(PhotonBaseTest):
         """
         Check content of photon_summary.txt. Adjustment with hyperpipe.result.
         """
-        with open(os.path.join(self.output_settings.results_folder, 'photon_summary.txt')) as file:
+        with open(
+            os.path.join(self.output_settings.results_folder, "photon_summary.txt")
+        ) as file:
             data = file.read()
 
-        areas = data.split("-------------------------------------------------------------------")
+        areas = data.split(
+            "-------------------------------------------------------------------"
+        )
 
         # first areas
         self.assertEqual(areas[0], "\nPHOTON RESULT SUMMARY\n")
 
-        result_dict = {"dummy_test": self.hyperpipe.results.dummy_estimator.test,
-                       "dummy_train": self.hyperpipe.results.dummy_estimator.train,
-                       "best_config_train": self.hyperpipe.results.metrics_train,
-                       "best_config_test": self.hyperpipe.results.metrics_test}
+        result_dict = {
+            "dummy_test": self.hyperpipe.results.dummy_estimator.test,
+            "dummy_train": self.hyperpipe.results.dummy_estimator.train,
+            "best_config_train": self.hyperpipe.results.metrics_train,
+            "best_config_test": self.hyperpipe.results.metrics_test,
+        }
 
         outer_fold_traintest = {}
 
         key_areas_outer_fold = []
         # all outerfold areas
         for i in range(len(self.hyperpipe.results.outer_folds)):
-            self.assertEqual(areas[4+i*2], '\nOUTER FOLD '+str(i+1)+'\n')
-            key_areas_outer_fold.append("outer_fold_"+str(i+1))
-            result_dict["outer_fold_"+str(i+1)+"_train"] = \
-                self.hyperpipe.results.outer_folds[i].best_config.best_config_score.training
-            outer_fold_traintest["outer_fold_"+str(i+1)+"_train"] = "TrainValue"
-            result_dict["outer_fold_" + str(i + 1) + "_test"] = \
-                self.hyperpipe.results.outer_folds[i].best_config.best_config_score.validation
-            outer_fold_traintest["outer_fold_"+str(i+1)+"_test"] = "TestValue"
+            self.assertEqual(areas[4 + i * 2], "\nOUTER FOLD " + str(i + 1) + "\n")
+            key_areas_outer_fold.append("outer_fold_" + str(i + 1))
+            result_dict[
+                "outer_fold_" + str(i + 1) + "_train"
+            ] = self.hyperpipe.results.outer_folds[
+                i
+            ].best_config.best_config_score.training
+            outer_fold_traintest["outer_fold_" + str(i + 1) + "_train"] = "TrainValue"
+            result_dict[
+                "outer_fold_" + str(i + 1) + "_test"
+            ] = self.hyperpipe.results.outer_folds[
+                i
+            ].best_config.best_config_score.validation
+            outer_fold_traintest["outer_fold_" + str(i + 1) + "_test"] = "TestValue"
 
         # check performance / test-train of dummy and best_config
         key_areas = ["entracee", "name", "dummy", "best_config"]
@@ -126,45 +165,80 @@ class ResultsHandlerTest(PhotonBaseTest):
         index_dict = {}
         for key in key_areas[2:]:
             if [perf for perf in splitted_areas[key] if perf == "TEST:"]:
-                index_dict[key+"_test"] = splitted_areas[key].index("TEST:")
-                index_dict[key+"_train"] = splitted_areas[key].index("TRAINING:")
+                index_dict[key + "_test"] = splitted_areas[key].index("TEST:")
+                index_dict[key + "_train"] = splitted_areas[key].index("TRAINING:")
             else:
                 self.assertTrue(False)
             for data_key in [k for k in list(result_dict.keys()) if key in k]:
-                table_str = "\n".join([splitted_areas[key][index_dict[data_key]+i] for i in [2, 4, 5, 6]])
-                table = pd.read_csv(StringIO(table_str.replace(" ", "")),
-                                    sep="|")[["MetricName", "MEAN", "STD"]].set_index("MetricName")
+                table_str = "\n".join(
+                    [
+                        splitted_areas[key][index_dict[data_key] + i]
+                        for i in [2, 4, 5, 6]
+                    ]
+                )
+                table = pd.read_csv(StringIO(table_str.replace(" ", "")), sep="|")[
+                    ["MetricName", "MEAN", "STD"]
+                ].set_index("MetricName")
                 for result_metric in result_dict[data_key]:
-                    self.assertAlmostEqual(result_metric.value,
-                                           table[result_metric.operation.split(".")[1]][result_metric.metric_name], 4)
+                    self.assertAlmostEqual(
+                        result_metric.value,
+                        table[result_metric.operation.split(".")[1]][
+                            result_metric.metric_name
+                        ],
+                        4,
+                    )
 
         splitted_areas = {}
         for num in range(len(key_areas_outer_fold)):
-            splitted_areas[key_areas_outer_fold[num]] = areas[len(key_areas)+1+num*2].split("\n")
+            splitted_areas[key_areas_outer_fold[num]] = areas[
+                len(key_areas) + 1 + num * 2
+            ].split("\n")
 
         # check all outer_folds
         for key_area_outer_fold in key_areas_outer_fold:
-            if [perf for perf in splitted_areas[key_area_outer_fold] if perf == "PERFORMANCE:"]:
-                index_dict[key_area_outer_fold+"_train"] = splitted_areas[key_area_outer_fold].index("PERFORMANCE:")
-                index_dict[key_area_outer_fold + "_test"] = index_dict[key_area_outer_fold+"_train"]
+            if [
+                perf
+                for perf in splitted_areas[key_area_outer_fold]
+                if perf == "PERFORMANCE:"
+            ]:
+                index_dict[key_area_outer_fold + "_train"] = splitted_areas[
+                    key_area_outer_fold
+                ].index("PERFORMANCE:")
+                index_dict[key_area_outer_fold + "_test"] = index_dict[
+                    key_area_outer_fold + "_train"
+                ]
             else:
                 self.assertTrue(False)
-            for data_key in [k for k in list(result_dict.keys()) if key_area_outer_fold in k]:
-                table_str = "\n".join([splitted_areas[key_area_outer_fold][index_dict[data_key] + i]
-                                       for i in [2, 4, 5, 6]])
+            for data_key in [
+                k for k in list(result_dict.keys()) if key_area_outer_fold in k
+            ]:
+                table_str = "\n".join(
+                    [
+                        splitted_areas[key_area_outer_fold][index_dict[data_key] + i]
+                        for i in [2, 4, 5, 6]
+                    ]
+                )
                 table = pd.read_csv(StringIO(table_str.replace(" ", "")), sep="|")[
-                        ["MetricName", "TrainValue", "TestValue"]].set_index("MetricName")
+                    ["MetricName", "TrainValue", "TestValue"]
+                ].set_index("MetricName")
 
                 for result_metric in result_dict[data_key].metrics.keys():
-                    self.assertAlmostEqual(result_dict[data_key].metrics[result_metric],
-                                           table[outer_fold_traintest[data_key]][result_metric], 4)
+                    self.assertAlmostEqual(
+                        result_dict[data_key].metrics[result_metric],
+                        table[outer_fold_traintest[data_key]][result_metric],
+                        4,
+                    )
 
     def test_save_backmapping(self):
         """
         Check dimension of feature backmapping equals input dimensions.
         """
-        npzfile = np.load(os.path.join(self.output_settings.results_folder,
-                                       'optimum_pipe_feature_importances_backmapped.npz'))
+        npzfile = np.load(
+            os.path.join(
+                self.output_settings.results_folder,
+                "optimum_pipe_feature_importances_backmapped.npz",
+            )
+        )
 
         self.assertEqual(len(npzfile.files), 1)
         result_data = []
@@ -205,15 +279,19 @@ class ResultsHandlerTest(PhotonBaseTest):
 
     def test_load_from_file(self):
         X, y = load_breast_cancer(True)
-        my_pipe = Hyperpipe('load_results_file_test',
-                            metrics=['accuracy'],
-                            best_config_metric='accuracy',
-                            output_settings=OutputSettings(project_folder='./tmp'))
+        my_pipe = Hyperpipe(
+            "load_results_file_test",
+            metrics=["accuracy"],
+            best_config_metric="accuracy",
+            output_settings=OutputSettings(project_folder="./tmp"),
+        )
         my_pipe += PipelineElement("StandardScaler")
         my_pipe += PipelineElement("SVC")
         my_pipe.fit(X, y)
 
-        results_file = os.path.join(my_pipe.output_settings.results_folder, "photon_result_file.p")
+        results_file = os.path.join(
+            my_pipe.output_settings.results_folder, "photon_result_file.p"
+        )
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)

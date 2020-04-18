@@ -5,55 +5,86 @@ from keras.callbacks import EarlyStopping, ReduceLROnPlateau
 from keras.layers import Dropout, Dense
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
-from keras.optimizers import Optimizer, Adam, RMSprop, Adadelta, Adagrad, Adamax, Nadam, TFOptimizer, SGD
-from keras.activations import softmax, softplus, selu, sigmoid, softsign, hard_sigmoid, elu, relu, tanh, \
-    linear, exponential
+from keras.optimizers import (
+    Optimizer,
+    Adam,
+    RMSprop,
+    Adadelta,
+    Adagrad,
+    Adamax,
+    Nadam,
+    TFOptimizer,
+    SGD,
+)
+from keras.activations import (
+    softmax,
+    softplus,
+    selu,
+    sigmoid,
+    softsign,
+    hard_sigmoid,
+    elu,
+    relu,
+    tanh,
+    linear,
+    exponential,
+)
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from photonai.photonlogger.logger import logger
 
 from photonai.modelwrapper.keras_base_estimator import KerasBaseEstimator
 
 __supported_optimizers__ = {
-    'sgd': SGD,
-    'rmsprop': RMSprop,
-    'adagrad': Adagrad,
-    'adadelta': Adadelta,
-    'adam': Adam,
-    'adamax': Adamax,
-    'nadam': Nadam,
-    'tfoptimizer': TFOptimizer,
+    "sgd": SGD,
+    "rmsprop": RMSprop,
+    "adagrad": Adagrad,
+    "adadelta": Adadelta,
+    "adam": Adam,
+    "adamax": Adamax,
+    "nadam": Nadam,
+    "tfoptimizer": TFOptimizer,
 }
 __supported_activations__ = {
-    'softmax': softmax,
-    'softplus': softplus,
-    'selu': selu,
-    'sigmoid': sigmoid,
-    'softsign': softsign,
-    'hard_sigmoid': hard_sigmoid,
-    'elu': elu,
-    'relu': relu,
-    'tanh': tanh,
-    'linear': linear,
-    'exponential': exponential
+    "softmax": softmax,
+    "softplus": softplus,
+    "selu": selu,
+    "sigmoid": sigmoid,
+    "softsign": softsign,
+    "hard_sigmoid": hard_sigmoid,
+    "elu": elu,
+    "relu": relu,
+    "tanh": tanh,
+    "linear": linear,
+    "exponential": exponential,
 }
 
 __allocation_loss_functions__ = {
-    'regression': ['mean_squared_error', 'mean_squared_logarithmic_error', 'mean_absolute_error'],
-    'binary_classification': ['binary_crossentropy', 'hinge', 'squared_hinge'],
-    'multi_classification': ['categorical_crossentropy', 'sparse_categorical_crossentropy',
-                             'kullback_leibler_divergence']
+    "regression": [
+        "mean_squared_error",
+        "mean_squared_logarithmic_error",
+        "mean_absolute_error",
+    ],
+    "binary_classification": ["binary_crossentropy", "hinge", "squared_hinge"],
+    "multi_classification": [
+        "categorical_crossentropy",
+        "sparse_categorical_crossentropy",
+        "kullback_leibler_divergence",
+    ],
 }
 
 
 class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
-
-    def __init__(self,
-                 model=None,
-                 epochs: int = 10,
-                 nn_batch_size: int = 33,
-                 multi_class: bool = True,
-                 verbosity: int = 0):
-        super(KerasBaseClassifier, self).__init__(model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity)
+    def __init__(
+        self,
+        model=None,
+        epochs: int = 10,
+        nn_batch_size: int = 33,
+        multi_class: bool = True,
+        verbosity: int = 0,
+    ):
+        super(KerasBaseClassifier, self).__init__(
+            model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity
+        )
         self.multi_class = multi_class
 
     def predict(self, X):
@@ -61,7 +92,7 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
         if self.multi_class:
             max_index = np.argmax(predict_result, axis=1)
         else:
-            max_index = np.array([val>0.5 for val in predict_result])
+            max_index = np.array([val > 0.5 for val in predict_result])
         return max_index
 
     def encode_targets(self, y):
@@ -72,35 +103,35 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
 
 
 class KerasBaseRegressor(KerasBaseEstimator, RegressorMixin):
-
-    def __init__(self,
-                 model=None,
-                 epochs: int = 10,
-                 nn_batch_size: int = 64,
-                 verbosity: int = 0):
-        super(KerasBaseRegressor, self).__init__(model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity)
+    def __init__(
+        self, model=None, epochs: int = 10, nn_batch_size: int = 64, verbosity: int = 0
+    ):
+        super(KerasBaseRegressor, self).__init__(
+            model=model, epochs=epochs, batch_size=nn_batch_size, verbosity=verbosity
+        )
 
     def predict(self, X):
         return np.array([val[0] for val in self.predict_proba(X)])
 
 
 class KerasDnnBaseModel(KerasBaseEstimator):
-
-    def __init__(self, hidden_layer_sizes: list = [],
-                 target_dimension: int = 2,
-                 target_activation: str = "softmax",
-                 learning_rate: float = 0.1,
-                 loss: str = "categorical_crossentropy",
-                 metrics: list = ['accuracy'],
-                 # early stopping parameter
-                 early_stopping: bool = True,
-                 eaSt_patience=20,
-                 batch_normalization: bool = True,
-                 verbosity=0,
-                 dropout_rate=0.2,  # list or float
-                 activations='relu',  # list or str
-                 optimizer="adam",  # list or keras.optimizer
-                 ):
+    def __init__(
+        self,
+        hidden_layer_sizes: list = [],
+        target_dimension: int = 2,
+        target_activation: str = "softmax",
+        learning_rate: float = 0.1,
+        loss: str = "categorical_crossentropy",
+        metrics: list = ["accuracy"],
+        # early stopping parameter
+        early_stopping: bool = True,
+        eaSt_patience=20,
+        batch_normalization: bool = True,
+        verbosity=0,
+        dropout_rate=0.2,  # list or float
+        activations="relu",  # list or str
+        optimizer="adam",  # list or keras.optimizer
+    ):
 
         self._hidden_layer_sizes = None
         self._dropout_rate = None
@@ -172,13 +203,15 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         :return:
         """
         if not type(value) in [list, float]:
-            raise ValueError("Dropout type is not supported. Please use one of [list, float]")
+            raise ValueError(
+                "Dropout type is not supported. Please use one of [list, float]"
+            )
         else:
             if not self._hidden_layer_sizes:
                 self._dropout_rate = value
             else:
                 if type(value) == float:
-                    self._dropout_rate = [value]*len(self.hidden_layer_sizes)
+                    self._dropout_rate = [value] * len(self.hidden_layer_sizes)
                     logger.warn("Dropout with type float converted to type list.")
                 elif len(value) != len(self.hidden_layer_sizes):
                     raise ValueError("Dropout length missmatched layer length.")
@@ -201,22 +234,29 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         :return:
         """
         if not type(value) in [list, str]:
-            raise ValueError("act_func type is not supported. Please use one of [list, float]")
+            raise ValueError(
+                "act_func type is not supported. Please use one of [list, float]"
+            )
         else:
             if not self._hidden_layer_sizes:
                 self._activations = value
             else:
                 if type(value) == str:
                     if value in __supported_activations__.keys():
-                        self._activations = [value]*len(self.hidden_layer_sizes)
+                        self._activations = [value] * len(self.hidden_layer_sizes)
                         logger.warn("activations with type str converted to type list.")
                     else:
                         raise ValueError(
-                            "activations not supported. Please use one of: " + str(__supported_activations__.keys()))
+                            "activations not supported. Please use one of: "
+                            + str(__supported_activations__.keys())
+                        )
                 elif len(value) != len(self.hidden_layer_sizes):
                     raise ValueError("activations length missmatched layer length.")
                 elif any(act not in __supported_activations__.keys() for act in value):
-                    raise ValueError("activations not supported. Please use one of: "+str(__supported_activations__.keys()))
+                    raise ValueError(
+                        "activations not supported. Please use one of: "
+                        + str(__supported_activations__.keys())
+                    )
                 else:
                     self._activations = value
 
@@ -229,9 +269,14 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         if isinstance(value, Optimizer):
             self._optimizer = value
         if value.lower() not in __supported_optimizers__.keys():
-            raise ValueError("Optimizer is not supported by keras. Please use one of: "+str(__supported_optimizers__))
+            raise ValueError(
+                "Optimizer is not supported by keras. Please use one of: "
+                + str(__supported_optimizers__)
+            )
         else:
-            self._optimizer = __supported_optimizers__[value.lower()](lr=self.learning_rate)
+            self._optimizer = __supported_optimizers__[value.lower()](
+                lr=self.learning_rate
+            )
 
     @property
     def target_activation(self):
@@ -242,7 +287,10 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         if value in __supported_activations__.keys():
             self._target_activation = value
         else:
-            raise ValueError("target_activation not supported. Please use one of: " + str(__supported_activations__.keys()))
+            raise ValueError(
+                "target_activation not supported. Please use one of: "
+                + str(__supported_activations__.keys())
+            )
 
     @property
     def loss(self):
@@ -263,23 +311,23 @@ class KerasDnnBaseModel(KerasBaseEstimator):
     @metrics.setter
     def metrics(self, value):
         # TODO: check metrics values!
-#        try:
-#            all(keras.metrics.get(metric) for metric in value)
-            self._metrics = value
-#        except ValueError:
-#            raise ValueError("Unknown metric function in:" + str(value))
+        #        try:
+        #            all(keras.metrics.get(metric) for metric in value)
+        self._metrics = value
+
+    #        except ValueError:
+    #            raise ValueError("Unknown metric function in:" + str(value))
 
     def create_model(self, input_size):
 
         self.model = Sequential()
         for i, size in enumerate(self.hidden_layer_sizes):
             if i == 0:
-                self.model.add(Dense(size,
-                                input_dim=input_size,
-                                activation=self.activations[i]))
+                self.model.add(
+                    Dense(size, input_dim=input_size, activation=self.activations[i])
+                )
             else:
-                self.model.add(Dense(size,
-                                activation=self.activations[i]))
+                self.model.add(Dense(size, activation=self.activations[i]))
             self.model.add(Dropout(rate=self.dropout_rate[i]))
 
             if self.batch_normalization == 1:
@@ -288,7 +336,9 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         self.model.add(Dense(self.target_dimension, activation=self.target_activation))
 
         # Compile model
-        self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
+        self.model.compile(
+            loss=self.loss, optimizer=self.optimizer, metrics=self.metrics
+        )
 
         return self
 

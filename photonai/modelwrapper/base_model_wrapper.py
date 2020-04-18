@@ -1,4 +1,3 @@
-
 class BaseModelWrapper:
     """
     The PHOTON interface for implementing custom pipeline elements.

@@ -14,7 +14,14 @@ class PhotonBaseConstraint:
 
     ENUM_STRATEGY = Enum("strategy", "first all mean")
 
-    def __init__(self, strategy='first', metric='', threshold: float = None, margin: float = 0, **kwargs):
+    def __init__(
+        self,
+        strategy="first",
+        metric="",
+        threshold: float = None,
+        margin: float = 0,
+        **kwargs
+    ):
         self._metric = None
         self._greater_is_better = None
         self._strategy = None
@@ -43,8 +50,12 @@ class PhotonBaseConstraint:
         try:
             self._strategy = PhotonBaseConstraint.ENUM_STRATEGY[value]
         except KeyError:
-            raise KeyError("Your strategy: " + str(value) + " is not supported yet. Please use one of " +
-                           str([x.name for x in PhotonBaseConstraint.ENUM_STRATEGY]))
+            raise KeyError(
+                "Your strategy: "
+                + str(value)
+                + " is not supported yet. Please use one of "
+                + str([x.name for x in PhotonBaseConstraint.ENUM_STRATEGY])
+            )
 
     @property
     def metric(self):
@@ -66,7 +77,9 @@ class PhotonBaseConstraint:
             self._greater_is_better = Scorer.greater_is_better_distinction(self._metric)
         except NameError:
             self._metric = "unknown"
-            logger.warn("Your metric is not supported. Performance constraints are constantly False.")
+            logger.warn(
+                "Your metric is not supported. Performance constraints are constantly False."
+            )
 
     def shall_continue(self, config_item):
         """
@@ -82,35 +95,75 @@ class PhotonBaseConstraint:
             Can be used to evaluate if the configuration has any potential to serve the model's learning task.
         """
         if self.metric == "unknown":
-            logger.warn("The metric is not known. Please check the metric: " + self.metric + ". " +
-                        "Performance constraints are constantly True.")
+            logger.warn(
+                "The metric is not known. Please check the metric: "
+                + self.metric
+                + ". "
+                + "Performance constraints are constantly True."
+            )
             return True
         if self.metric not in config_item.inner_folds[0].validation.metrics:
-            logger.warn("The metric is not calculated. Please insert " + self.metric + " to Hyperpipe.metrics. " +
-                        "Performance constraints are constantly False.")
+            logger.warn(
+                "The metric is not calculated. Please insert "
+                + self.metric
+                + " to Hyperpipe.metrics. "
+                + "Performance constraints are constantly False."
+            )
             return False
         if self._greater_is_better:
-            if self.strategy.name == 'first':
-                if config_item.inner_folds[0].validation.metrics[self.metric] < self.threshold:
+            if self.strategy.name == "first":
+                if (
+                    config_item.inner_folds[0].validation.metrics[self.metric]
+                    < self.threshold
+                ):
                     return False
-            elif self.strategy.name == 'all':
-                if any(item < self.threshold for item in [x.validation.metrics[self.metric]
-                                                          for x in config_item.inner_folds]):
+            elif self.strategy.name == "all":
+                if any(
+                    item < self.threshold
+                    for item in [
+                        x.validation.metrics[self.metric]
+                        for x in config_item.inner_folds
+                    ]
+                ):
                     return False
-            elif self.strategy.name == 'mean':
-                if np.mean([x.validation.metrics[self.metric] for x in config_item.inner_folds]) < self.threshold:
+            elif self.strategy.name == "mean":
+                if (
+                    np.mean(
+                        [
+                            x.validation.metrics[self.metric]
+                            for x in config_item.inner_folds
+                        ]
+                    )
+                    < self.threshold
+                ):
                     return False
             return True
         else:
-            if self.strategy.name == 'first':
-                if config_item.inner_folds[0].validation.metrics[self.metric] > self.threshold:
+            if self.strategy.name == "first":
+                if (
+                    config_item.inner_folds[0].validation.metrics[self.metric]
+                    > self.threshold
+                ):
                     return False
-            elif self.strategy.name == 'all':
-                if any(item > self.threshold for item in [x.validation.metrics[self.metric]
-                                                          for x in config_item.inner_folds]):
+            elif self.strategy.name == "all":
+                if any(
+                    item > self.threshold
+                    for item in [
+                        x.validation.metrics[self.metric]
+                        for x in config_item.inner_folds
+                    ]
+                ):
                     return False
-            elif self.strategy.name == 'mean':
-                if np.mean([x.validation.metrics[self.metric] for x in config_item.inner_folds]) > self.threshold:
+            elif self.strategy.name == "mean":
+                if (
+                    np.mean(
+                        [
+                            x.validation.metrics[self.metric]
+                            for x in config_item.inner_folds
+                        ]
+                    )
+                    > self.threshold
+                ):
                     return False
             return True
 
@@ -122,9 +175,9 @@ class PhotonBaseConstraint:
         new_me = type(self)(metric=self.metric)
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
-            if not attr == 'self' and hasattr(self, attr) and attr != 'strategy':
+            if not attr == "self" and hasattr(self, attr) and attr != "strategy":
                 setattr(new_me, attr, getattr(self, attr))
-            elif attr == 'strategy':
+            elif attr == "strategy":
                 setattr(new_me, attr, getattr(self, attr).name)
         return new_me
 
@@ -140,8 +193,10 @@ class MinimumPerformance(PhotonBaseConstraint):
     If not further testing of the configuration is skipped, as it is regarded as not promising enough.
     """
 
-    def __init__(self, metric: str = '', threshold: float = 1., strategy='first'):
-        super(MinimumPerformance, self).__init__(strategy=strategy, metric=metric, threshold=threshold)
+    def __init__(self, metric: str = "", threshold: float = 1.0, strategy="first"):
+        super(MinimumPerformance, self).__init__(
+            strategy=strategy, metric=metric, threshold=threshold
+        )
 
 
 class DummyPerformance(PhotonBaseConstraint):
@@ -155,8 +210,10 @@ class DummyPerformance(PhotonBaseConstraint):
     If not further testing of the configuration is skipped, as it is regarded as not promising enough.
     """
 
-    def __init__(self, metric: str = '', margin: float = 0, strategy='first'):
-        super(DummyPerformance, self).__init__(strategy=strategy, metric=metric, margin=margin)
+    def __init__(self, metric: str = "", margin: float = 0, strategy="first"):
+        super(DummyPerformance, self).__init__(
+            strategy=strategy, metric=metric, margin=margin
+        )
 
     def set_dummy_performance(self, dummy_result):
         """
@@ -184,7 +241,7 @@ class BestPerformance(PhotonBaseConstraint):
     better in all inner_folds: incumbent = challenger.
     """
 
-    def __init__(self, metric: str = '', strategy: str = 'mean'):
+    def __init__(self, metric: str = "", strategy: str = "mean"):
         """
         :param metric:
         :param strategy:
@@ -209,11 +266,15 @@ class BestPerformance(PhotonBaseConstraint):
             All performance metrics and other scoring information for all configuration's performance.
             Can be used to evaluate if the configuration has any potential to serve the model's learning task.
         """
-        self.required_folds = max(self.required_folds, len(self.eval_config_entries(config_item)))
-        self.config_items[str(config_item.config_dict)] = self.eval_config_entries(config_item)
+        self.required_folds = max(
+            self.required_folds, len(self.eval_config_entries(config_item))
+        )
+        self.config_items[str(config_item.config_dict)] = self.eval_config_entries(
+            config_item
+        )
 
         # first run default 10 configs
-        if self.run < 10 * self.required_folds -1:
+        if self.run < 10 * self.required_folds - 1:
             self.run += 1
             return True
 
@@ -225,16 +286,28 @@ class BestPerformance(PhotonBaseConstraint):
                 self.threshold = min([np.mean(x) for x in self.config_items.values()])
 
         # calc std between inner_folds and average it over all configs [std only for multiple-run-configs]
-        std = np.mean([np.std(x) for x in self.config_items.values() if len(self.config_items.values())>1])
+        std = np.mean(
+            [
+                np.std(x)
+                for x in self.config_items.values()
+                if len(self.config_items.values()) > 1
+            ]
+        )
         challenger = self.eval_config_entries(config_item)
         if self._greater_is_better:
             if np.mean(challenger) > self.threshold - std:
-                if np.mean(challenger) > self.threshold and len(challenger) == self.required_folds:
+                if (
+                    np.mean(challenger) > self.threshold
+                    and len(challenger) == self.required_folds
+                ):
                     self.threshold = np.mean(challenger)
                 return True
         else:
             if np.mean(challenger) < self.threshold + std:
-                if np.mean(challenger) < self.threshold and len(challenger) == self.required_folds:
+                if (
+                    np.mean(challenger) < self.threshold
+                    and len(challenger) == self.required_folds
+                ):
                     self.threshold = np.mean(challenger)
                 return True
         return False

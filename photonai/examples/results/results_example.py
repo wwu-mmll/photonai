@@ -8,26 +8,34 @@ from photonai.optimization import FloatRange
 X, y = load_boston(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
+settings = OutputSettings(project_folder="./tmp/")
 
-my_pipe = Hyperpipe('results_example',
-                    optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
-                    optimizer_params={'n_configurations': 20, 'acq_func_kwargs': {'kappa': 1}},
-                    metrics=['mean_squared_error'],
-                    best_config_metric='mean_squared_error',
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=3),
-                    verbosity=1,
-                    output_settings=settings)
+my_pipe = Hyperpipe(
+    "results_example",
+    optimizer="sk_opt",  # which optimizer PHOTON shall use, in this case sk_opt
+    optimizer_params={"n_configurations": 20, "acq_func_kwargs": {"kappa": 1}},
+    metrics=["mean_squared_error"],
+    best_config_metric="mean_squared_error",
+    outer_cv=KFold(n_splits=3),
+    inner_cv=KFold(n_splits=3),
+    verbosity=1,
+    output_settings=settings,
+)
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
-my_pipe += PipelineElement('StandardScaler')
+my_pipe += PipelineElement("StandardScaler")
 
 # engage and optimize SVR
-my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, range_type='geomspace', step=100),
-                                                   'epsilon': FloatRange(1e-3, 10),
-                                                   'tol': FloatRange(1e-4, 1e-2)}, kernel='linear')
+my_pipe += PipelineElement(
+    "SVR",
+    hyperparameters={
+        "C": FloatRange(1e-3, 100, range_type="geomspace", step=100),
+        "epsilon": FloatRange(1e-3, 10),
+        "tol": FloatRange(1e-4, 1e-2),
+    },
+    kernel="linear",
+)
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
@@ -35,9 +43,9 @@ handler = my_pipe.results_handler
 
 # get predictions for your best configuration (for all outer folds)
 best_config_preds = handler.get_test_predictions()
-y_pred = best_config_preds['y_pred']
-y_pred_probabilities = best_config_preds['probabilities']
-y_true = best_config_preds['y_true']
+y_pred = best_config_preds["y_pred"]
+y_pred_probabilities = best_config_preds["probabilities"]
+y_true = best_config_preds["y_true"]
 
 # get feature importances (training set) for your best configuration (for all outer folds)
 # this function returns the importance scores for the best configuration of each outer fold in a list
@@ -52,10 +60,12 @@ minimum_config_evaluations = handler.get_minimum_config_evaluations()
 
 # handler.plot_optimizer_history('mean_squared_error', 'RGS 40 Eval (Scatter)', 'scatter',
 #                                'optimizer_history_random_grid_search_40_scatter.png')
-handler.plot_optimizer_history(metric='mean_squared_error',
-                               title='Scikit Optimize 20 Eval (Scatter)',
-                               type='scatter',
-                               reduce_scatter_by=1,
-                               file='./tmp/optimizer_history_scikit_optimize_20_scatter.png')
+handler.plot_optimizer_history(
+    metric="mean_squared_error",
+    title="Scikit Optimize 20 Eval (Scatter)",
+    type="scatter",
+    reduce_scatter_by=1,
+    file="./tmp/optimizer_history_scikit_optimize_20_scatter.png",
+)
 
 debug = True

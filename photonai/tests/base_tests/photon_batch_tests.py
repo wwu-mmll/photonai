@@ -6,7 +6,6 @@ from photonai.base import PipelineElement
 
 
 class DummyBatchTransformer(BaseEstimator):
-
     def __init__(self):
         self.needs_y = True
         self.needs_covariates = True
@@ -35,7 +34,6 @@ class DummyBatchTransformer(BaseEstimator):
 
 
 class BatchingTests(unittest.TestCase):
-
     def setUp(self):
         self.batch_size = 10
         nr_features = 3
@@ -43,8 +41,11 @@ class BatchingTests(unittest.TestCase):
         self.data = None
         self.targets = None
 
-        self.neuro_batch = PipelineElement("dummy_batch", batch_size=self.batch_size,
-                                           base_element=DummyBatchTransformer())
+        self.neuro_batch = PipelineElement(
+            "dummy_batch",
+            batch_size=self.batch_size,
+            base_element=DummyBatchTransformer(),
+        )
 
         for element in origin_list:
             features = [element + str(i) for i in range(0, nr_features)]
@@ -55,16 +56,22 @@ class BatchingTests(unittest.TestCase):
             if self.targets is None:
                 self.targets = np.array([element] * self.batch_size)
             else:
-                self.targets = np.hstack((self.targets,  [element] * self.batch_size))
+                self.targets = np.hstack((self.targets, [element] * self.batch_size))
 
         self.data = np.array(self.data)
         self.targets = np.array(self.targets)
         self.kwargs = {"animals": self.targets}
 
     def test_transform(self):
-        X_new, y_new, kwargs_new = self.neuro_batch.transform(self.data, self.targets, **self.kwargs)
-        self.assertListEqual(X_new[0, :].tolist(), ["affe0affe", "affe1affe", "affe2affe"])
-        self.assertListEqual(X_new[49, :].tolist(), ["löwe0löwe", "löwe1löwe", "löwe2löwe"])
+        X_new, y_new, kwargs_new = self.neuro_batch.transform(
+            self.data, self.targets, **self.kwargs
+        )
+        self.assertListEqual(
+            X_new[0, :].tolist(), ["affe0affe", "affe1affe", "affe2affe"]
+        )
+        self.assertListEqual(
+            X_new[49, :].tolist(), ["löwe0löwe", "löwe1löwe", "löwe2löwe"]
+        )
         self.assertEqual(kwargs_new["animals"][0], "effa")
         self.assertEqual(kwargs_new["animals"][49], "ewöl")
 
@@ -72,4 +79,4 @@ class BatchingTests(unittest.TestCase):
         y_predicted = self.neuro_batch.predict(self.data, **self.kwargs)
         # assure that predict is batch wisely called
         self.assertEqual(y_predicted[0], 1)
-        self.assertEqual(y_predicted[-1], (self.data.shape[0]/self.batch_size))
+        self.assertEqual(y_predicted[-1], (self.data.shape[0] / self.batch_size))

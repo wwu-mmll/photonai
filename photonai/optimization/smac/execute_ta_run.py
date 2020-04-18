@@ -1,14 +1,15 @@
 try:
     from smac.tae.execute_ta_run import ExecuteTARun
     from smac.configspace import Configuration
+
     __found__ = True
 except:
     ExecuteTARun = object
     Configuration = object
     __found__ = False
 
-class MyExecuteTARun(ExecuteTARun):
 
+class MyExecuteTARun(ExecuteTARun):
     def __init__(self, run_limit=100, ta=None, **kwargs):
         """Constructor
         Parameters
@@ -34,15 +35,20 @@ class MyExecuteTARun(ExecuteTARun):
 
             self.run_limit = run_limit
         else:
-            raise ModuleNotFoundError("Module smac not found or not installed as expected. "
-                                      "Please install the smac_requirements.txt PHOTON provides.")
+            raise ModuleNotFoundError(
+                "Module smac not found or not installed as expected. "
+                "Please install the smac_requirements.txt PHOTON provides."
+            )
 
-    def start(self, config: Configuration,
-              instance: str,
-              cutoff: float = None,
-              seed: int = 12345,
-              instance_specific: str = "0",
-              capped: bool = False):
+    def start(
+        self,
+        config: Configuration,
+        instance: str,
+        cutoff: float = None,
+        seed: int = 12345,
+        instance_specific: str = "0",
+        capped: bool = False,
+    ):
         """Wrapper function for ExecuteTARun.run() to check configuration
         budget before the runs and to update stats after run
         Parameters
@@ -72,10 +78,14 @@ class MyExecuteTARun(ExecuteTARun):
                 all further additional run information
         """
 
-        if self.runhistory.config_ids.get(config) and self.runhistory.get_runs_for_config(config):
+        if self.runhistory.config_ids.get(
+            config
+        ) and self.runhistory.get_runs_for_config(config):
             return None, None, 1, None
         else:
-            raise NotImplementedError("PHOTONs seed management is not implemented yet. "
-                                      "At this juncture we can not run a config multiple times correctly."
-                                      "If your minR=maxR==1 and this error occurred some other things went wrong."
-                                      "Please contact us.")
+            raise NotImplementedError(
+                "PHOTONs seed management is not implemented yet. "
+                "At this juncture we can not run a config multiple times correctly."
+                "If your minR=maxR==1 and this error occurred some other things went wrong."
+                "Please contact us."
+            )

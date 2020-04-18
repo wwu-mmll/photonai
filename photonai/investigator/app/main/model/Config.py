@@ -7,7 +7,7 @@ class Config:
     version: 1.0.0
     """
 
-    def __init__(self, name: str, config_nr: int=None, items: list=None):
+    def __init__(self, name: str, config_nr: int = None, items: list = None):
         """ Constructor
         :param name: Config name
         :param config_nr: Config number

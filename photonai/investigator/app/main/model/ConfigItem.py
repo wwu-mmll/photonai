@@ -1,5 +1,3 @@
-
-
 class ConfigItem:
     """ Representing a Config Dict Item with name and value
     author: Julian Gebker

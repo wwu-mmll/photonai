@@ -3,12 +3,13 @@ from ..main import application
 from .helper import shutdown_server, load_available_pipes
 
 
-@application.route('/')
+@application.route("/")
 def index():
     available_pipes = load_available_pipes()
-    return render_template('default/index.html', available_pipes=available_pipes)
+    return render_template("default/index.html", available_pipes=available_pipes)
 
-@application.route('/investigator_error')
+
+@application.route("/investigator_error")
 @application.errorhandler(500)
 @application.errorhandler(404)
 @application.errorhandler(502)
@@ -23,12 +24,11 @@ def investigator_error(e):
         success = session[error_key]
 
     session[error_key] = ""
-    return render_template('error_page.html', error_msg=success)
+    return render_template("error_page.html", error_msg=success)
 
 
-@application.route('/shutdown', methods=['GET'])
+@application.route("/shutdown", methods=["GET"])
 def shutdown():
-    if not application.config['wizard']:
+    if not application.config["wizard"]:
         shutdown_server()
-    return render_template('default/shutdown.html')
-
+    return render_template("default/shutdown.html")

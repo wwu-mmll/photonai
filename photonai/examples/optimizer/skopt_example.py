@@ -8,27 +8,38 @@ from photonai.optimization import FloatRange, Categorical
 X, y = load_boston(True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
-my_pipe = Hyperpipe('skopt_example',
-                    optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
-                    optimizer_params={'n_configurations': 25, 'acq_func': 'LCB', 'acq_func_kwargs': {'kappa': 1.96}},
-                    metrics=['mean_squared_error', 'pearson_correlation'],
-                    best_config_metric='mean_squared_error',
-                    outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
-                    inner_cv=KFold(n_splits=3),
-                    verbosity=1,
-                    output_settings=settings)
+settings = OutputSettings(project_folder="./tmp/")
+my_pipe = Hyperpipe(
+    "skopt_example",
+    optimizer="sk_opt",  # which optimizer PHOTON shall use, in this case sk_opt
+    optimizer_params={
+        "n_configurations": 25,
+        "acq_func": "LCB",
+        "acq_func_kwargs": {"kappa": 1.96},
+    },
+    metrics=["mean_squared_error", "pearson_correlation"],
+    best_config_metric="mean_squared_error",
+    outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
+    inner_cv=KFold(n_splits=3),
+    verbosity=1,
+    output_settings=settings,
+)
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
-my_pipe += PipelineElement('StandardScaler')
+my_pipe += PipelineElement("StandardScaler")
 
 # engage and optimize SVR
 # linspace and logspace is converted to uniform and log-uniform priors in skopt
-my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, range_type='logspace'),
-                                                   'epsilon': FloatRange(1e-3, 10, range_type='logspace'),
-                                                   'tol': FloatRange(1e-4, 1e-2, range_type='linspace'),
-                                                   'kernel': Categorical(['linear', 'rbf', 'poly'])})
+my_pipe += PipelineElement(
+    "SVR",
+    hyperparameters={
+        "C": FloatRange(1e-3, 100, range_type="logspace"),
+        "epsilon": FloatRange(1e-3, 10, range_type="logspace"),
+        "tol": FloatRange(1e-4, 1e-2, range_type="linspace"),
+        "kernel": Categorical(["linear", "rbf", "poly"]),
+    },
+)
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)

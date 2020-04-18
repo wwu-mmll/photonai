@@ -29,25 +29,31 @@ class ResultsHandler:
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
-        self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
+        self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, "rb")))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         connect(mongodb_connect_url)
-        results = list(MDBHyperpipe.objects.raw({'name': pipe_name}))
+        results = list(MDBHyperpipe.objects.raw({"name": pipe_name}))
         if len(results) == 1:
             self.results = results[0]
         elif len(results) > 1:
-            self.results = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': pipe_name}).first()
-            logger.warn('Found multiple hyperpipes with that name. Returning most recent one.')
+            self.results = (
+                MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)])
+                .raw({"name": pipe_name})
+                .first()
+            )
+            logger.warn(
+                "Found multiple hyperpipes with that name. Returning most recent one."
+            )
         else:
-            raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
+            raise FileNotFoundError("Could not load hyperpipe from MongoDB.")
 
     @staticmethod
     def get_methods():
         """
         This function returns a list of all methods available for ResultsHandler.
         """
-        methods_list = [s for s in dir(ResultsHandler) if not '__' in s]
+        methods_list = [s for s in dir(ResultsHandler) if not "__" in s]
         return methods_list
 
     def get_performance_table(self):
@@ -60,16 +66,22 @@ class ResultsHandler:
         for i, folds in enumerate(self.results.outer_folds):
             # add best config infos
             try:
-                res_tab.loc[i, 'best_config'] = folds.best_config.human_readable_config
+                res_tab.loc[i, "best_config"] = folds.best_config.human_readable_config
             except:
-                res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
+                res_tab.loc[i, "best_config"] = str(
+                    folds.best_config.human_readable_config
+                )
 
             # add fold index
-            res_tab.loc[i, 'fold'] = folds.fold_nr
+            res_tab.loc[i, "fold"] = folds.fold_nr
 
             # add sample size infos
-            res_tab.loc[i, 'n_train'] = folds.best_config.best_config_score.number_samples_training
-            res_tab.loc[i, 'n_validation'] = folds.best_config.best_config_score.number_samples_validation
+            res_tab.loc[
+                i, "n_train"
+            ] = folds.best_config.best_config_score.number_samples_training
+            res_tab.loc[
+                i, "n_validation"
+            ] = folds.best_config.best_config_score.number_samples_validation
 
             # add performance metrics
             d = folds.best_config.best_config_score.validation.metrics
@@ -77,20 +89,25 @@ class ResultsHandler:
                 res_tab.loc[i, key] = value
 
         # add row with overall info
-        res_tab.loc[i + 1, 'n_validation'] = np.sum(res_tab['n_validation'])
+        res_tab.loc[i + 1, "n_validation"] = np.sum(res_tab["n_validation"])
         for key, value in d.items():
             m = res_tab.loc[:, key]
-            res_tab.loc[i+1, key] = np.mean(m)
-            res_tab.loc[i + 1, key + '_sem'] = sem(m)   # standard error of the mean
-        res_tab.loc[i + 1, 'best_config'] = 'Overall'
+            res_tab.loc[i + 1, key] = np.mean(m)
+            res_tab.loc[i + 1, key + "_sem"] = sem(m)  # standard error of the mean
+        res_tab.loc[i + 1, "best_config"] = "Overall"
         return res_tab
 
     def get_performance_outer_folds(self):
         performances = dict()
-        for metric in self.results.outer_folds[0].best_config.best_config_score.validation.metrics.keys():
+        for metric in self.results.outer_folds[
+            0
+        ].best_config.best_config_score.validation.metrics.keys():
             performances[metric] = list()
         for i, fold in enumerate(self.results.outer_folds):
-            for metric, value in fold.best_config.best_config_score.validation.metrics.items():
+            for (
+                metric,
+                value,
+            ) in fold.best_config.best_config_score.validation.metrics.items():
                 performances[metric].append(value)
         return performances
 
@@ -102,7 +119,10 @@ class ResultsHandler:
         config_performances = list()
         maximum_fold = None
         for outer_fold in self.results.outer_folds:
-            if maximum_fold is None or len(outer_fold.tested_config_list) > maximum_fold:
+            if (
+                maximum_fold is None
+                or len(outer_fold.tested_config_list) > maximum_fold
+            ):
                 maximum_fold = len(outer_fold.tested_config_list)
 
         for outer_fold in self.results.outer_folds:
@@ -121,7 +141,9 @@ class ResultsHandler:
                         performance[metric].append(np.nan)
                     else:
                         for item in config.metrics_test:
-                            if (item.operation == 'FoldOperations.MEAN') and (item.metric_name == metric):
+                            if (item.operation == "FoldOperations.MEAN") and (
+                                item.metric_name == metric
+                            ):
                                 performance[metric].append(item.value)
             config_performances.append(performance)
 
@@ -165,11 +187,14 @@ class ResultsHandler:
 
         return minimum_config_evaluations
 
-    def plot_optimizer_history(self, metric,
-                               title: str = 'Optimizer History',
-                               type: str = 'plot',
-                               reduce_scatter_by: Union[int, str] = 'auto',
-                               file: str = None):
+    def plot_optimizer_history(
+        self,
+        metric,
+        title: str = "Optimizer History",
+        type: str = "plot",
+        reduce_scatter_by: Union[int, str] = "auto",
+        file: str = None,
+    ):
         """
         :param metric: specify metric that has been stored within the PHOTON results tree
         :param type: 'plot' or 'scatter'
@@ -186,36 +211,56 @@ class ResultsHandler:
 
         # handle different lengths
         min_corresponding = len(min(config_evaluations[metric], key=len))
-        config_evaluations_corres = [configs[:min_corresponding] for configs in config_evaluations[metric]]
-        minimum_config_evaluations_corres = [configs[:min_corresponding]
-                                             for configs in minimum_config_evaluations[metric]]
+        config_evaluations_corres = [
+            configs[:min_corresponding] for configs in config_evaluations[metric]
+        ]
+        minimum_config_evaluations_corres = [
+            configs[:min_corresponding]
+            for configs in minimum_config_evaluations[metric]
+        ]
 
         mean = np.nanmean(np.asarray(config_evaluations_corres), axis=0)
         mean_min = np.nanmean(np.asarray(minimum_config_evaluations_corres), axis=0)
 
         greater_is_better = Scorer.greater_is_better_distinction(metric)
         if greater_is_better:
-            caption = 'Maximum'
+            caption = "Maximum"
         else:
-            caption = 'Minimum'
+            caption = "Minimum"
 
         plt.figure()
-        if type == 'plot':
-            plt.plot(np.arange(0, len(mean)), mean, '-', color='gray', label='Mean Performance')
+        if type == "plot":
+            plt.plot(
+                np.arange(0, len(mean)),
+                mean,
+                "-",
+                color="gray",
+                label="Mean Performance",
+            )
 
-        elif type == 'scatter':
+        elif type == "scatter":
             # now do smoothing
             if isinstance(reduce_scatter_by, str):
-                if reduce_scatter_by != 'auto':
-                    logger.warn('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
-                        reduce_scatter_by))
+                if reduce_scatter_by != "auto":
+                    logger.warn(
+                        '{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
+                            reduce_scatter_by
+                        )
+                    )
 
                 # if auto, then calculate size of reduce_scatter_by so that 75 points on x remain
                 # smallest reduce_scatter_by should be 1
-                reduce_scatter_by = max([np.floor(min_corresponding / 75).astype(int), 1])
+                reduce_scatter_by = max(
+                    [np.floor(min_corresponding / 75).astype(int), 1]
+                )
 
             if reduce_scatter_by > 1:
-                plt.plot([], [], ' ', label="scatter reduced by factor {}".format(reduce_scatter_by))
+                plt.plot(
+                    [],
+                    [],
+                    " ",
+                    label="scatter reduced by factor {}".format(reduce_scatter_by),
+                )
 
             for i, fold in enumerate(config_evaluations[metric]):
                 # add a few None so that list can be divided by smoothing_kernel
@@ -223,23 +268,46 @@ class ResultsHandler:
                 if remaining:
                     fold.extend([np.nan] * (reduce_scatter_by - remaining))
                 # calculate mean over every n named_steps so that plot is less cluttered
-                reduced_fold = np.nanmean(np.asarray(fold).reshape(-1, reduce_scatter_by), axis=1)
-                reduced_xfit = np.arange(reduce_scatter_by / 2, len(fold), step=reduce_scatter_by)
-                if i == len(config_evaluations[metric])-1:
-                    plt.scatter(reduced_xfit, np.asarray(reduced_fold), color='gray', alpha=0.5, label='Performance', marker='.')
+                reduced_fold = np.nanmean(
+                    np.asarray(fold).reshape(-1, reduce_scatter_by), axis=1
+                )
+                reduced_xfit = np.arange(
+                    reduce_scatter_by / 2, len(fold), step=reduce_scatter_by
+                )
+                if i == len(config_evaluations[metric]) - 1:
+                    plt.scatter(
+                        reduced_xfit,
+                        np.asarray(reduced_fold),
+                        color="gray",
+                        alpha=0.5,
+                        label="Performance",
+                        marker=".",
+                    )
                 else:
-                    plt.scatter(reduced_xfit, np.asarray(reduced_fold), color='gray', alpha=0.5, marker='.')
+                    plt.scatter(
+                        reduced_xfit,
+                        np.asarray(reduced_fold),
+                        color="gray",
+                        alpha=0.5,
+                        marker=".",
+                    )
         else:
             raise ValueError('Please specify either "plot" or "scatter".')
 
-        plt.plot(np.arange(0, len(mean_min)), mean_min, '-', color='black', label='Mean {} Performance'.format(caption))
+        plt.plot(
+            np.arange(0, len(mean_min)),
+            mean_min,
+            "-",
+            color="black",
+            label="Mean {} Performance".format(caption),
+        )
 
         for i, fold in enumerate(minimum_config_evaluations[metric]):
             xfit = np.arange(0, len(fold))
-            plt.plot(xfit, fold, '-', color='black', alpha=0.5)
+            plt.plot(xfit, fold, "-", color="black", alpha=0.5)
 
-        plt.ylabel(metric.replace('_', ' '))
-        plt.xlabel('No of Evaluations')
+        plt.ylabel(metric.replace("_", " "))
+        plt.xlabel("No of Evaluations")
 
         plt.legend()
         plt.title(title)
@@ -247,7 +315,9 @@ class ResultsHandler:
             plt.savefig(file)
         else:
             if self.output_settings:
-                file = os.path.join(self.output_settings.results_folder, "optimizer_history.png")
+                file = os.path.join(
+                    self.output_settings.results_folder, "optimizer_history.png"
+                )
                 plt.savefig(file)
         plt.close()
 
@@ -266,48 +336,54 @@ class ResultsHandler:
         with confidence interval.
         """
         preds = ResultsHandler.get_test_predictions(self)
-        ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=confidence_interval)
-        ax.set(xlabel='Predicted Values', ylabel='True Values')
+        ax = sns.regplot(x=preds["y_pred"], y=preds["y_true"], ci=confidence_interval)
+        ax.set(xlabel="Predicted Values", ylabel="True Values")
         plt.show()
 
-    def plot_confusion_matrix(self, classes=None, normalize=False, title='Confusion matrix'):
+    def plot_confusion_matrix(
+        self, classes=None, normalize=False, title="Confusion matrix"
+    ):
         """
         This function prints and plots the confusion matrix.
         Normalization can be applied by setting `normalize=True`.
         """
 
         preds = ResultsHandler.get_test_predictions(self)
-        cm = confusion_matrix(preds['y_true'], preds['y_pred'])
+        cm = confusion_matrix(preds["y_true"], preds["y_pred"])
         np.set_printoptions(precision=2)
         if normalize:
-            cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
+            cm = cm.astype("float") / cm.sum(axis=1)[:, np.newaxis]
             logger.info("Normalized confusion matrix")
         else:
-            logger.info('Confusion matrix')
+            logger.info("Confusion matrix")
         logger.info(cm)
 
         plt.figure()
         cmap = plt.cm.Blues
-        plt.imshow(cm, interpolation='nearest', cmap=cmap)
+        plt.imshow(cm, interpolation="nearest", cmap=cmap)
         plt.title(title)
         plt.colorbar()
 
         if classes is None:
-            classes = ['class ' + str(c + 1) for c in np.unique(preds['y_true'])]
+            classes = ["class " + str(c + 1) for c in np.unique(preds["y_true"])]
         tick_marks = np.arange(len(classes))
         plt.xticks(tick_marks, classes, rotation=45)
         plt.yticks(tick_marks, classes)
 
-        fmt = '.2f' if normalize else 'd'
-        thresh = cm.max() / 2.
+        fmt = ".2f" if normalize else "d"
+        thresh = cm.max() / 2.0
         for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            plt.text(j, i, format(cm[i, j], fmt),
-                     horizontalalignment="center",
-                     color="white" if cm[i, j] > thresh else "black")
+            plt.text(
+                j,
+                i,
+                format(cm[i, j], fmt),
+                horizontalalignment="center",
+                color="white" if cm[i, j] > thresh else "black",
+            )
 
         plt.tight_layout()
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
+        plt.ylabel("True label")
+        plt.xlabel("Predicted label")
         # plotlyFig = ResultsHandler.__plotlyfy(plt)
         plt.show()
 
@@ -320,56 +396,72 @@ class ResultsHandler:
         :return: None
         """
 
-
         # get predictive probabilities
         preds = ResultsHandler.get_test_predictions(self)
 
         # get ROC infos
-        fpr, tpr, _ = roc_curve(y_true=preds['y_true'],
-                                y_score=preds['y_pred_probabilities'][:, y_score_col],
-                                pos_label=pos_label)
+        fpr, tpr, _ = roc_curve(
+            y_true=preds["y_true"],
+            y_score=preds["y_pred_probabilities"][:, y_score_col],
+            pos_label=pos_label,
+        )
 
         # plot ROC curve
         plt.figure()
-        plt.plot([0, 1], [0, 1], 'k--')
+        plt.plot([0, 1], [0, 1], "k--")
         plt.plot(fpr, tpr)
-        plt.xlabel('False positive rate')
-        plt.ylabel('True positive rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
-        plt.legend(loc='best')
+        plt.xlabel("False positive rate")
+        plt.ylabel("True positive rate")
+        plt.title("Receiver Operating Characteristic (ROC) Curve")
+        plt.legend(loc="best")
         plt.show()
 
-    def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=''):
+    def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=""):
         if len(score_info_list) > 0:
             fold_nr_array = []
-            collectables = {'y_pred': [], 'y_true': [], 'indices': [], 'probabilities': []}
+            collectables = {
+                "y_pred": [],
+                "y_true": [],
+                "indices": [],
+                "probabilities": [],
+            }
 
             for i, score_info in enumerate(score_info_list):
                 for collectable_key, collectable_list in collectables.items():
-                    if getattr(score_info, collectable_key) is not None and len(
-                            getattr(score_info, collectable_key)) > 0:
-                        collectables[collectable_key].extend(list(getattr(score_info, collectable_key)))
+                    if (
+                        getattr(score_info, collectable_key) is not None
+                        and len(getattr(score_info, collectable_key)) > 0
+                    ):
+                        collectables[collectable_key].extend(
+                            list(getattr(score_info, collectable_key))
+                        )
                     else:
-                        collectables[collectable_key].extend(list(np.full((len(score_info.y_true)), np.nan)))
-                fold_nr_array.extend(list(np.ones((len(score_info.y_true),)) * fold_nr[i]))
+                        collectables[collectable_key].extend(
+                            list(np.full((len(score_info.y_true)), np.nan))
+                        )
+                fold_nr_array.extend(
+                    list(np.ones((len(score_info.y_true),)) * fold_nr[i])
+                )
 
             collectables["fold"] = fold_nr_array
             # convert to pandas dataframe to use their sorting algorithm
             save_df = pd.DataFrame(collectables)
-            sorted_df = save_df.sort_values(by='indices')
+            sorted_df = save_df.sort_values(by="indices")
 
-            if predictions_filename != '':
+            if predictions_filename != "":
                 sorted_df.to_csv(predictions_filename, index=None)
 
-            return sorted_df.to_dict('list')
+            return sorted_df.to_dict("list")
 
-    def get_test_predictions(self, filename=''):
+    def get_test_predictions(self, filename=""):
         """
         This function returns the predictions, true targets, and fold index
         for the best configuration of each outer fold.
         """
         if self.results is None:
-            raise ValueError("Result tree information is needed but results attribute of object is None.")
+            raise ValueError(
+                "Result tree information is needed but results attribute of object is None."
+            )
 
         score_info_list = list()
         fold_nr_list = list()
@@ -378,7 +470,9 @@ class ResultsHandler:
             fold_nr_list.append(outer_fold.fold_nr)
         return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
 
-    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, config_id=None, filename=''):
+    def get_validation_predictions(
+        self, outer_fold_nr=0, config_no=0, config_id=None, filename=""
+    ):
         """
         This function returns the predictions, probabilities, true targets, fold and index
         for the config_nr of the given outer_fold
@@ -387,10 +481,16 @@ class ResultsHandler:
         fold_nr_list = list()
 
         if self.results is None:
-            raise ValueError("Result tree information is needed but results attribute of object is None.")
+            raise ValueError(
+                "Result tree information is needed but results attribute of object is None."
+            )
 
         # Todo: find config by config_id
-        for inner_fold in self.results.outer_folds[outer_fold_nr].tested_config_list[config_no].inner_folds:
+        for inner_fold in (
+            self.results.outer_folds[outer_fold_nr]
+            .tested_config_list[config_no]
+            .inner_folds
+        ):
             score_info_list.append(inner_fold.validation)
             fold_nr_list.append(inner_fold.fold_nr)
 
@@ -402,10 +502,12 @@ class ResultsHandler:
         """
         result_dict = {}
         caching = False
-        default_dict = {'total_seconds': 0,
-                        'total_items_processed': 0,
-                        'mean_seconds_per_config': 0,
-                        'mean_seconds_per_item': 0}
+        default_dict = {
+            "total_seconds": 0,
+            "total_items_processed": 0,
+            "mean_seconds_per_config": 0,
+            "mean_seconds_per_item": 0,
+        }
 
         # sum up times per element, 1. per config, and 2. in total
         for outer_fold in self.results.outer_folds:
@@ -416,7 +518,11 @@ class ResultsHandler:
                 for inner_fold in config.inner_folds:
                     for time_key, time_values in inner_fold.time_monitor.items():
                         for value_item in time_values:
-                            name, time, nr_items = value_item[0], value_item[1], value_item[2]
+                            name, time, nr_items = (
+                                value_item[0],
+                                value_item[1],
+                                value_item[2],
+                            )
                             if name not in tmp_config_dict:
                                 tmp_config_dict[name] = {}
                             if time_key not in tmp_config_dict[name]:
@@ -425,28 +531,51 @@ class ResultsHandler:
 
                 # calculate mean time per config and absolute time
                 for element_name, element_time_dict in tmp_config_dict.items():
-                    for element_time_key, element_time_list in element_time_dict.items():
+                    for (
+                        element_time_key,
+                        element_time_list,
+                    ) in element_time_dict.items():
                         if element_time_key == "transform_cached":
                             caching = True
                         mean_time = np.mean([i[0] for i in element_time_list])
                         total_time = np.sum([i[0] for i in element_time_list])
-                        total_items_processed = np.sum([i[1] for i in element_time_list])
+                        total_items_processed = np.sum(
+                            [i[1] for i in element_time_list]
+                        )
 
                         if element_name not in result_dict:
                             result_dict[element_name] = {}
                         if element_time_key not in result_dict[element_name]:
-                            result_dict[element_name][element_time_key] = dict(default_dict)
+                            result_dict[element_name][element_time_key] = dict(
+                                default_dict
+                            )
 
-                        result_dict[element_name][element_time_key]['total_seconds'] += total_time
-                        result_dict[element_name][element_time_key]['total_items_processed'] += total_items_processed
-                        mean_time_per_config = result_dict[element_name][element_time_key]['mean_seconds_per_config']
-                        tmp_total_mean = ((mean_time_per_config * config_nr) + mean_time) / (config_nr + 1)
-                        result_dict[element_name][element_time_key]['mean_seconds_per_config'] = tmp_total_mean
-                        tmp_mean_per_item = result_dict[element_name][element_time_key]['total_seconds'] / \
-                                            result_dict[element_name][element_time_key]['total_items_processed']
-                        result_dict[element_name][element_time_key]['mean_seconds_per_item'] = tmp_mean_per_item
+                        result_dict[element_name][element_time_key][
+                            "total_seconds"
+                        ] += total_time
+                        result_dict[element_name][element_time_key][
+                            "total_items_processed"
+                        ] += total_items_processed
+                        mean_time_per_config = result_dict[element_name][
+                            element_time_key
+                        ]["mean_seconds_per_config"]
+                        tmp_total_mean = (
+                            (mean_time_per_config * config_nr) + mean_time
+                        ) / (config_nr + 1)
+                        result_dict[element_name][element_time_key][
+                            "mean_seconds_per_config"
+                        ] = tmp_total_mean
+                        tmp_mean_per_item = (
+                            result_dict[element_name][element_time_key]["total_seconds"]
+                            / result_dict[element_name][element_time_key][
+                                "total_items_processed"
+                            ]
+                        )
+                        result_dict[element_name][element_time_key][
+                            "mean_seconds_per_item"
+                        ] = tmp_mean_per_item
 
-        format_str = '{:06.6f}'
+        format_str = "{:06.6f}"
         if caching:
             # in case we used caching add transform_cached and transform_computed values to transform_total
             for name, sub_result_dict in result_dict.items():
@@ -454,17 +583,29 @@ class ResultsHandler:
                     result_dict[name]["transform"] = dict(default_dict)
                     for value_dict in sub_result_dict.values():
                         for info in value_dict.keys():
-                            result_dict[name]["transform"][info] = result_dict[name]["transform_cached"][info]
+                            result_dict[name]["transform"][info] = result_dict[name][
+                                "transform_cached"
+                            ][info]
                             # in case everything's been in the cache we have no computation
                             if "transform_computed" in sub_result_dict:
-                                result_dict[name]["transform"][info] += result_dict[name]["transform_computed"][info]
+                                result_dict[name]["transform"][info] += result_dict[
+                                    name
+                                ]["transform_computed"][info]
                     if "transform_computed" in sub_result_dict:
                         # calculate a ratio, if caching was helpful and how much of the time it saved
-                        result_dict[name]["cache_ratio"] = result_dict[name]["transform_cached"]["total_seconds"] / \
-                                                           result_dict[name]["transform_computed"]["total_seconds"]
+                        result_dict[name]["cache_ratio"] = (
+                            result_dict[name]["transform_cached"]["total_seconds"]
+                            / result_dict[name]["transform_computed"]["total_seconds"]
+                        )
 
             # in case of caching we have different plot plus a different csv file
-            csv_keys = ["fit", "transform", "transform_computed", "transform_cached", "predict"]
+            csv_keys = [
+                "fit",
+                "transform",
+                "transform_computed",
+                "transform_cached",
+                "predict",
+            ]
             csv_titles = csv_keys
             plot_list = ["fit", "transform", "transform_cached"]
             method_list = ["fit", "transform_computed", "transform_cached", "predict"]
@@ -476,9 +617,15 @@ class ResultsHandler:
 
         # write csv file with time analysis
         if write_results:
-            sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
-            csv_filename = os.path.join(self.output_settings.results_folder, 'time_monitor.csv')
-            with open(csv_filename, 'w') as csvfile:
+            sub_keys = [
+                "total_seconds",
+                "mean_seconds_per_config",
+                "mean_seconds_per_item",
+            ]
+            csv_filename = os.path.join(
+                self.output_settings.results_folder, "time_monitor.csv"
+            )
+            with open(csv_filename, "w") as csvfile:
                 writer = csv.writer(csvfile)
                 header1 = [""]
                 for k_name in csv_titles:
@@ -494,9 +641,11 @@ class ResultsHandler:
                     for time_key in csv_keys:
                         for sub_key in sub_keys:
                             if time_key in item_dict:
-                                row.append(format_str.format(item_dict[time_key][sub_key]))
+                                row.append(
+                                    format_str.format(item_dict[time_key][sub_key])
+                                )
                             else:
-                                row.append('')
+                                row.append("")
                     if caching:
                         if "cache_ratio" in item_dict:
                             row.append(item_dict["cache_ratio"])
@@ -504,44 +653,51 @@ class ResultsHandler:
 
         # plot figure
         # TODO! Use PiePlotlyPlot class without cricle imports
-        plotly_dict = {'layout': {'title': 'Time Monitor Pie Chart',
-                                  'showlegend': True,
-                                  'height': 600,
-                                  'annotations': []},
-                       'data': []
-                       }
+        plotly_dict = {
+            "layout": {
+                "title": "Time Monitor Pie Chart",
+                "showlegend": True,
+                "height": 600,
+                "annotations": [],
+            },
+            "data": [],
+        }
 
         def append_plotly(labels, values, name, colors, domain):
             """
             helper function (temporary -> to.do above)
             """
-            plotly_dict["data"].append({'labels': labels,
-                                        'values': values,
-                                        'type': 'pie',
-                                        'name': name,
-                                        'marker': {'colors': colors},
-                                        'domain': domain,
-                                        'hoverinfo': 'label+percent',
-                                        'textposition': 'inside'})
-            plotly_dict['layout']['annotations'].append({
-                "x": np.mean(domain["x"]),
-                "y": (domain["y"][1]),
-                "font": {
-                    "size": 16
-                },
-                "text": name,
-                "xref": "paper",
-                "yref": "paper",
-                "xanchor": "center",
-                "yanchor": "bottom",
-                "showarrow": False
-            })
+            plotly_dict["data"].append(
+                {
+                    "labels": labels,
+                    "values": values,
+                    "type": "pie",
+                    "name": name,
+                    "marker": {"colors": colors},
+                    "domain": domain,
+                    "hoverinfo": "label+percent",
+                    "textposition": "inside",
+                }
+            )
+            plotly_dict["layout"]["annotations"].append(
+                {
+                    "x": np.mean(domain["x"]),
+                    "y": (domain["y"][1]),
+                    "font": {"size": 16},
+                    "text": name,
+                    "xref": "paper",
+                    "yref": "paper",
+                    "xanchor": "center",
+                    "yanchor": "bottom",
+                    "showarrow": False,
+                }
+            )
 
         def eval_mean_time_autopct(values):
             def my_autopct(pct):
                 total = sum(values)
-                if pct/total >= 1:
-                    return str(round(pct,1))+"%"
+                if pct / total >= 1:
+                    return str(round(pct, 1)) + "%"
                 else:
                     return None
 
@@ -549,74 +705,105 @@ class ResultsHandler:
 
         # Create nxm sub plots
         cpl = len(plot_list)
-        gs = matplotlib.gridspec.GridSpec(int((cpl-1)/3)+2, min(cpl, 3))
-        legend_theme = plt.get_cmap('Set3')
-        legend_theme2 = plt.get_cmap('tab10')
+        gs = matplotlib.gridspec.GridSpec(int((cpl - 1) / 3) + 2, min(cpl, 3))
+        legend_theme = plt.get_cmap("Set3")
+        legend_theme2 = plt.get_cmap("tab10")
 
         element_names = [name for name, element in result_dict.items()]
 
         fig = plt.figure(figsize=(10, 7), dpi=160)
-        colors = [legend_theme(1. * i / len(element_names)) for i in range(len(element_names))]
+        colors = [
+            legend_theme(1.0 * i / len(element_names))
+            for i in range(len(element_names))
+        ]
         for i, k in enumerate(plot_list):
-            ax = plt.subplot(gs[int(i/3), i % 3])
+            ax = plt.subplot(gs[int(i / 3), i % 3])
             ax.set_prop_cycle("color", colors)
-            data = [element[k]["total_seconds"] if k in element else 0 for name, element in result_dict.items()]
+            data = [
+                element[k]["total_seconds"] if k in element else 0
+                for name, element in result_dict.items()
+            ]
             data_sum = sum(data)
             if data_sum == 0:
                 data_sum = 1
-            values = [val/data_sum for val in data]
-            patches, _, _ = plt.pie(values,
-                                    shadow=True,
-                                    startangle=90,
-                                    autopct=eval_mean_time_autopct(data),
-                                    pctdistance=0.7)
-            plt.axis('equal')
+            values = [val / data_sum for val in data]
+            patches, _, _ = plt.pie(
+                values,
+                shadow=True,
+                startangle=90,
+                autopct=eval_mean_time_autopct(data),
+                pctdistance=0.7,
+            )
+            plt.axis("equal")
             plt.title(k)
-            append_plotly(labels=[str(d) for d in element_names],
-                          values=values,
-                          name=k,
-                          colors=[(col) for col in colors],
-                          domain={'x': [i/len(plot_list), (i+1)/len(plot_list)], 'y': [0.55, 1]})
+            append_plotly(
+                labels=[str(d) for d in element_names],
+                values=values,
+                name=k,
+                colors=[(col) for col in colors],
+                domain={
+                    "x": [i / len(plot_list), (i + 1) / len(plot_list)],
+                    "y": [0.55, 1],
+                },
+            )
 
         plt.legend(
-            loc='upper left',
-            labels=['%s' % l for l in element_names],
-            prop={'size': 10},
+            loc="upper left",
+            labels=["%s" % l for l in element_names],
+            prop={"size": 10},
             bbox_to_anchor=(0.0, 1),
-            bbox_transform=fig.transFigure
+            bbox_transform=fig.transFigure,
         )
 
         # add another plot for the comparison of the fit/transform/predict methods
-        ax2 = plt.subplot(gs[int(i/3)+1, :])
-        colors = [legend_theme2(1. * i / len(data)) for i in range(len(method_list))]
+        ax2 = plt.subplot(gs[int(i / 3) + 1, :])
+        colors = [legend_theme2(1.0 * i / len(data)) for i in range(len(method_list))]
         ax2.set_prop_cycle("color", colors)
         data = []
         for k in method_list:
-            data.append(np.sum([element[k]["total_seconds"] for name, element in result_dict.items() if k in element]))
-        patches_an, _, _ = plt.pie([val/sum(data) for val in data],
-                                   shadow=True,
-                                   startangle=90,
-                                   pctdistance=0.7,
-                                   autopct=eval_mean_time_autopct(data))
+            data.append(
+                np.sum(
+                    [
+                        element[k]["total_seconds"]
+                        for name, element in result_dict.items()
+                        if k in element
+                    ]
+                )
+            )
+        patches_an, _, _ = plt.pie(
+            [val / sum(data) for val in data],
+            shadow=True,
+            startangle=90,
+            pctdistance=0.7,
+            autopct=eval_mean_time_autopct(data),
+        )
 
-        append_plotly(labels=method_list, values=[val / sum(data) for val in data], name="methods",
-                           colors=[(col) for col in colors],
-                           domain={'x': [0, 1], 'y': [0, 0.45]})
+        append_plotly(
+            labels=method_list,
+            values=[val / sum(data) for val in data],
+            name="methods",
+            colors=[(col) for col in colors],
+            domain={"x": [0, 1], "y": [0, 0.45]},
+        )
 
-        plt.axis('equal')
+        plt.axis("equal")
         plt.title("methods")
         plt.legend(
-            loc='lower left',
-            labels=['%s' % l for l in method_list],
-            prop={'size': 10},
-            bbox_transform=fig.transFigure
+            loc="lower left",
+            labels=["%s" % l for l in method_list],
+            prop={"size": 10},
+            bbox_transform=fig.transFigure,
         )
 
         # for only one legend
-        #fig.legend(patches+patches_an, element_names+method_list, prop={'size': 10}, loc='lower left')
+        # fig.legend(patches+patches_an, element_names+method_list, prop={'size': 10}, loc='lower left')
 
         if write_results:
-            plt.savefig(os.path.join(self.output_settings.results_folder, 'time_monitor_pie.png'))
+            plt.savefig(
+                os.path.join(
+                    self.output_settings.results_folder, "time_monitor_pie.png"
+                )
+            )
         plt.close()
         if plotly_return:
             str_fig = "var layout =" + str(plotly_dict["layout"]) + ";"
@@ -627,12 +814,12 @@ class ResultsHandler:
     def save(self):
 
         if self.output_settings.mongodb_connect_url:
-            connect(self.output_settings.mongodb_connect_url, alias='photon_core')
-            logger.debug('Write results to mongodb...')
+            connect(self.output_settings.mongodb_connect_url, alias="photon_core")
+            logger.debug("Write results to mongodb...")
             try:
                 self.results.save()
             except DocumentTooLarge as e:
-                logger.error('Could not save document into MongoDB: Document too large')
+                logger.error("Could not save document into MongoDB: Document too large")
                 # try to reduce the amount of configs saved
                 # if len(results_tree.outer_folds[0].tested_config_list) > 100:
                 #     for outer_fold in results_tree.outer_folds:
@@ -646,13 +833,31 @@ class ResultsHandler:
         try:
             if isinstance(backmapping, np.ndarray):
                 if len(backmapping) > 1000:
-                    np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+                    np.savez(
+                        os.path.join(
+                            self.output_settings.results_folder, filename + ".npz"
+                        ),
+                        backmapping,
+                    )
                 else:
-                    np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
+                    np.savetxt(
+                        os.path.join(
+                            self.output_settings.results_folder, filename + ".csv"
+                        ),
+                        backmapping,
+                        delimiter=",",
+                    )
             elif isinstance(backmapping, Nifti1Image):
-                backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+                backmapping.to_filename(
+                    os.path.join(
+                        self.output_settings.results_folder, filename + ".nii.gz"
+                    )
+                )
             else:
-                with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
+                with open(
+                    os.path.join(self.output_settings.results_folder, filename + ".p"),
+                    "wb",
+                ) as f:
                     pickle.dump(backmapping, f)
         except Exception as e:
             logger.error("Could not save backmapped feature importances")
@@ -660,25 +865,31 @@ class ResultsHandler:
 
     def write_convenience_files(self):
         if self.output_settings.save_output:
-            logger.info("Writing summary file, plots and prediction csv to result folder ...")
+            logger.info(
+                "Writing summary file, plots and prediction csv to result folder ..."
+            )
             self.write_summary()
             self.write_predictions_file()
 
             if self.output_settings.plots:
-                self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
+                self.plot_optimizer_history(
+                    self.results.hyperpipe_info.best_config_metric
+                )
                 self.eval_mean_time_components()
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.p')
-            file_opened = open(local_file, 'wb')
+            local_file = os.path.join(
+                self.output_settings.results_folder, "photon_result_file.p"
+            )
+            file_opened = open(local_file, "wb")
             pickle.dump(self.results.to_son(), file_opened)
             file_opened.close()
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))
 
-    def get_best_config_inner_fold_predictions(self, filename=''):
+    def get_best_config_inner_fold_predictions(self, filename=""):
         score_info_list = []
         fold_nr = []
         for inner_fold in self.results.best_config.inner_folds:
@@ -687,7 +898,9 @@ class ResultsHandler:
         return self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_predictions_file(self):
-        filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+        filename = os.path.join(
+            self.output_settings.results_folder, "best_config_predictions.csv"
+        )
 
         # usually we write the predictions for the outer fold
         if not self.output_settings.save_predictions_from_best_config_inner_folds:
@@ -711,8 +924,12 @@ BEST CONFIG METRIC: {}
 TIME OF RESULT: {}
 VERSION: {}
 
-        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.computation_end_time,
-                   result_tree.version)
+        """.format(
+            result_tree.name,
+            result_tree.hyperpipe_info.best_config_metric,
+            result_tree.computation_end_time,
+            result_tree.version,
+        )
         text_list.append(intro_text)
 
         if result_tree.dummy_estimator:
@@ -723,38 +940,65 @@ BASELINE - DUMMY ESTIMATOR
 
 strategy: {}     
 
-            """.format(result_tree.dummy_estimator.strategy)
+            """.format(
+                result_tree.dummy_estimator.strategy
+            )
             text_list.append(dummy_text)
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.test)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.train)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+            train_metrics = self.get_dict_from_metric_list(
+                result_tree.dummy_estimator.test
+            )
+            text_list.append(
+                self.print_table_for_performance_overview(train_metrics, "TEST")
+            )
+            train_metrics = self.get_dict_from_metric_list(
+                result_tree.dummy_estimator.train
+            )
+            text_list.append(
+                self.print_table_for_performance_overview(train_metrics, "TRAINING")
+            )
 
         if result_tree.best_config:
-            text_list.append("""
+            text_list.append(
+                """
 
 -------------------------------------------------------------------
 OVERALL BEST CONFIG: 
 {}            
-            """.format(pp.pformat(result_tree.best_config.human_readable_config)))
+            """.format(
+                    pp.pformat(result_tree.best_config.human_readable_config)
+                )
+            )
 
-        text_list.append("""
+        text_list.append(
+            """
 MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
-        """)
+        """
+        )
 
         train_metrics = self.get_dict_from_metric_list(result_tree.metrics_test)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
+        text_list.append(
+            self.print_table_for_performance_overview(train_metrics, "TEST")
+        )
         train_metrics = self.get_dict_from_metric_list(result_tree.metrics_train)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+        text_list.append(
+            self.print_table_for_performance_overview(train_metrics, "TRAINING")
+        )
 
         for outer_fold in result_tree.outer_folds:
-            text_list.append(self.print_outer_fold(outer_fold, result_tree.hyperpipe_info.estimation_type,
-                                                   result_tree.hyperpipe_info.eval_final_performance))
+            text_list.append(
+                self.print_outer_fold(
+                    outer_fold,
+                    result_tree.hyperpipe_info.estimation_type,
+                    result_tree.hyperpipe_info.eval_final_performance,
+                )
+            )
 
-        final_text = ''.join(text_list)
+        final_text = "".join(text_list)
 
         try:
-            summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
+            summary_filename = os.path.join(
+                self.output_settings.results_folder, "photon_summary.txt"
+            )
             text_file = open(summary_filename, "w")
             text_file.write(final_text)
             text_file.close()
@@ -768,7 +1012,9 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
             if not train_metric.metric_name in best_config_metrics:
                 best_config_metrics[train_metric.metric_name] = {}
             operation_strip = train_metric.operation.split(".")[1]
-            best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
+            best_config_metrics[train_metric.metric_name][operation_strip] = np.round(
+                train_metric.value, 6
+            )
         return best_config_metrics
 
     def print_table_for_performance_overview(self, metric_dict, header):
@@ -780,56 +1026,91 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
         text = """
 {}:
 {}
-                """.format(header, str(x))
+                """.format(
+            header, str(x)
+        )
 
         return text
 
-    def print_outer_fold(self, outer_fold, estimation_type="classifier", eval_final_performance=True):
+    def print_outer_fold(
+        self, outer_fold, estimation_type="classifier", eval_final_performance=True
+    ):
 
         pp = pprint.PrettyPrinter(indent=4)
         outer_fold_text = []
 
         if outer_fold.best_config is not None:
-            outer_fold_text.append("""
+            outer_fold_text.append(
+                """
 -------------------------------------------------------------------
 OUTER FOLD {}
 -------------------------------------------------------------------
 Best Config:
-{}""".format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config)))
+{}""".format(
+                    outer_fold.fold_nr,
+                    pp.pformat(outer_fold.best_config.human_readable_config),
+                )
+            )
         if eval_final_performance:
-            outer_fold_text.append("""
+            outer_fold_text.append(
+                """
             
 Number of samples training {}
 Number of samples test {}
-            """.format(outer_fold.best_config.best_config_score.number_samples_training,
-                       outer_fold.best_config.best_config_score.number_samples_validation))
+            """.format(
+                    outer_fold.best_config.best_config_score.number_samples_training,
+                    outer_fold.best_config.best_config_score.number_samples_validation,
+                )
+            )
 
             if estimation_type == "classifier":
-                outer_fold_text.append("""
+                outer_fold_text.append(
+                    """
 Class distribution training {}
 Class distribution test {}
 
-                """.format(outer_fold.class_distribution_validation,
-                           outer_fold.class_distribution_test))
+                """.format(
+                        outer_fold.class_distribution_validation,
+                        outer_fold.class_distribution_test,
+                    )
+                )
             if outer_fold.best_config.config_failed:
-                outer_fold_text.append("""
+                outer_fold_text.append(
+                    """
 Config Failed: {}            
-    """.format(outer_fold.best_config.config_error))
+    """.format(
+                        outer_fold.best_config.config_error
+                    )
+                )
 
             else:
                 x = PrettyTable()
                 x.field_names = ["Metric Name", "Train Value", "Test Value"]
-                metrics_train = outer_fold.best_config.best_config_score.training.metrics
-                metrics_test = outer_fold.best_config.best_config_score.validation.metrics
+                metrics_train = (
+                    outer_fold.best_config.best_config_score.training.metrics
+                )
+                metrics_test = (
+                    outer_fold.best_config.best_config_score.validation.metrics
+                )
 
                 for element_key, element_value in metrics_train.items():
-                    x.add_row([element_key, np.round(element_value, 6), np.round(metrics_test[element_key], 6)])
-                outer_fold_text.append("""
+                    x.add_row(
+                        [
+                            element_key,
+                            np.round(element_value, 6),
+                            np.round(metrics_test[element_key], 6),
+                        ]
+                    )
+                outer_fold_text.append(
+                    """
 PERFORMANCE:
 {}
 
 
 
-                """.format(str(x)))
+                """.format(
+                        str(x)
+                    )
+                )
 
-        return ''.join(outer_fold_text)
+        return "".join(outer_fold_text)

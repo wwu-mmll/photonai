@@ -2,7 +2,9 @@ import unittest
 
 from photonai.base import PipelineElement
 from photonai.optimization import IntegerRange
-from photonai.test.optimization.grid_search.grid_search_test import GridSearchOptimizerTest
+from photonai.test.optimization.grid_search.grid_search_test import (
+    GridSearchOptimizerTest,
+)
 from photonai.base.photon_pipeline import PhotonPipeline
 
 try:
@@ -13,16 +15,21 @@ except ModuleNotFoundError:
     found = False
 
 if found:
-    class SMACOptimizerWithRequirementsTest(GridSearchOptimizerTest):
 
+    class SMACOptimizerWithRequirementsTest(GridSearchOptimizerTest):
         def setUp(self):
             """
             Set up for SmacOptimizer.
             """
-            self.pipeline_elements = [PipelineElement("StandardScaler"),
-                                      PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
-                                                      test_disabled=True),
-                                      PipelineElement("SVC")]
+            self.pipeline_elements = [
+                PipelineElement("StandardScaler"),
+                PipelineElement(
+                    "PCA",
+                    hyperparameters={"n_components": IntegerRange(5, 20)},
+                    test_disabled=True,
+                ),
+                PipelineElement("SVC"),
+            ]
             self.optimizer = SMACOptimizer()
 
         def test_all_functions_available(self):
@@ -44,9 +51,10 @@ if found:
             """
             pass
 
-else:
-    class SMACOptimizerWithoutRequirementsTest(unittest.TestCase):
 
+else:
+
+    class SMACOptimizerWithoutRequirementsTest(unittest.TestCase):
         def test_imports(self):
             """
             Test for ModuleNotFoundError (requirements.txt).
@@ -55,17 +63,14 @@ else:
                 from photonai.optimization.smac.smac3 import SMACOptimizer
 
 
-
-
 class Smac3IntegrationTest(unittest.TestCase):
-
     def test_against_smac(self):
         pass
 
     @staticmethod
     def objective_function(cfg):
 
-        my_pipe = PhotonPipeline([('StandardScaler', StandardScaler()), ('SVC', SVC())])
+        my_pipe = PhotonPipeline([("StandardScaler", StandardScaler()), ("SVC", SVC())])
         my_pipe.random_state = seed
         my_pipe.set_params(**cfg)
         my_pipe.fit(X, y)

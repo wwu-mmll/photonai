@@ -11,7 +11,11 @@ from ..main import application
 
 def load_pipe_from_db(name):
     try:
-        pipe = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': name}).first()
+        pipe = (
+            MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)])
+            .raw({"name": name})
+            .first()
+        )
         return pipe
     except DoesNotExist as dne:
         # Todo: pretty error handling
@@ -20,8 +24,12 @@ def load_pipe_from_db(name):
 
 def load_pipe_from_wizard(obj_id):
     try:
-        connect('mongodb://trap-umbriel:27017/photon_results', alias='photon_core')
-        pipe = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'wizard_object_id': ObjectId(obj_id)}).first()
+        connect("mongodb://trap-umbriel:27017/photon_results", alias="photon_core")
+        pipe = (
+            MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)])
+            .raw({"wizard_object_id": ObjectId(obj_id)})
+            .first()
+        )
         return pipe
     except DoesNotExist as dne:
         # Todo: pretty error handling
@@ -35,7 +43,7 @@ def load_pipe(storage, name):
         try:
             pipe = load_pipe_from_db(name)
         except ValueError as exc:
-            connect(application.config['mongo_db_url'], alias='photon_core')
+            connect(application.config["mongo_db_url"], alias="photon_core")
             pipe = load_pipe_from_db(name)
 
     if storage == "w":
@@ -43,17 +51,17 @@ def load_pipe(storage, name):
 
     elif storage == "a":
         try:
-            pipe = application.config['pipe_objects'][name]
+            pipe = application.config["pipe_objects"][name]
         except KeyError as ke:
             # Todo pretty error handling
             error = ke
     elif storage == "f":
         try:
-            pipe_path = application.config['pipe_files'][name]
+            pipe_path = application.config["pipe_files"][name]
             pipe = MDBHelper.load_results(pipe_path)
         except KeyError as ke:
             # Todo File not Found
-            error= ke
+            error = ke
         except Exception as e:
             # Todo: handle file does not exist
             debug = True
@@ -63,18 +71,20 @@ def load_pipe(storage, name):
         abort(500)
     return pipe
 
+
 def shutdown_server():
-    func = request.environ.get('werkzeug.server.shutdown')
+    func = request.environ.get("werkzeug.server.shutdown")
     if func is None:
-        raise RuntimeError('Not running with the Werkzeug Server')
+        raise RuntimeError("Not running with the Werkzeug Server")
     func()
+
 
 def load_mongo_pipes(available_pipes):
     try:
         # Todo: load only name
         pipeline_list = list(MDBHyperpipe.objects.all())
         for item in pipeline_list:
-            available_pipes['MONGO'].append(item.pk)
+            available_pipes["MONGO"].append(item.pk)
     except ValidationError as exc:
         return exc
     except ConnectionError as exc:

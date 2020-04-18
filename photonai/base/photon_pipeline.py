@@ -10,7 +10,6 @@ from photonai.photonlogger.logger import logger
 
 
 class PhotonPipeline(_BaseComposition):
-
     def __init__(self, elements, random_state=False):
         self.elements = elements
         self.random_state = random_state
@@ -19,7 +18,12 @@ class PhotonPipeline(_BaseComposition):
         self.caching = False
         self._fold_id = None
         self._cache_folder = None
-        self.time_monitor = {'fit': [], 'transform_computed': [], 'transform_cached': [], 'predict': []}
+        self.time_monitor = {
+            "fit": [],
+            "transform_computed": [],
+            "transform_cached": [],
+            "predict": [],
+        }
         self.cache_man = None
 
         # helper for single subject caching
@@ -33,7 +37,6 @@ class PhotonPipeline(_BaseComposition):
 
         # used in parallelization
         self.skip_loading = False
-
 
     def set_lock(self, lock):
         self.cache_man.lock = lock
@@ -59,7 +62,7 @@ class PhotonPipeline(_BaseComposition):
     @fold_id.setter
     def fold_id(self, value):
         if value is None:
-            self._fold_id = ''
+            self._fold_id = ""
             # we dont need group-wise caching if we have no inner fold id
             self.caching = False
             self.cache_man = None
@@ -69,8 +72,12 @@ class PhotonPipeline(_BaseComposition):
             else:
                 self._fold_id = str(value)
             self.caching = True
-            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use,
-                                          self._single_subject_caching)
+            self.cache_man = CacheManager(
+                self._fold_id,
+                self.cache_folder,
+                self._parallel_use,
+                self._single_subject_caching,
+            )
 
     @property
     def cache_folder(self):
@@ -91,7 +98,12 @@ class PhotonPipeline(_BaseComposition):
             self.caching = True
             if not os.path.isdir(self._cache_folder):
                 os.makedirs(self._cache_folder)
-            self.cache_man = CacheManager(self._fold_id, self.cache_folder, self._parallel_use, self._single_subject_caching)
+            self.cache_man = CacheManager(
+                self._fold_id,
+                self.cache_folder,
+                self._parallel_use,
+                self._single_subject_caching,
+            )
         else:
             self.caching = False
 
@@ -107,7 +119,7 @@ class PhotonPipeline(_BaseComposition):
         params : mapping of string to any
             Parameter names mapped to their values.
         """
-        return self._get_params('elements', deep=deep)
+        return self._get_params("elements", deep=deep)
 
     def set_params(self, **kwargs):
         """Set the parameters of this estimator.
@@ -118,9 +130,11 @@ class PhotonPipeline(_BaseComposition):
         """
         if self.current_config is not None and len(self.current_config) > 0:
             if kwargs is not None and len(kwargs) == 0:
-                raise ValueError("Pipeline cannot set parameters to elements with an emtpy dictionary. Old values persist")
+                raise ValueError(
+                    "Pipeline cannot set parameters to elements with an emtpy dictionary. Old values persist"
+                )
         self.current_config = kwargs
-        self._set_params('elements', **kwargs)
+        self._set_params("elements", **kwargs)
 
         return self
 
@@ -138,15 +152,18 @@ class PhotonPipeline(_BaseComposition):
             if t is None:
                 continue
             if not (hasattr(t, "fit") or not hasattr(t, "transform")):
-                raise TypeError("All intermediate elements should be "
-                                "transformers and implement fit and transform."
-                                " '%s' (type %s) doesn't" % (t, type(t)))
+                raise TypeError(
+                    "All intermediate elements should be "
+                    "transformers and implement fit and transform."
+                    " '%s' (type %s) doesn't" % (t, type(t))
+                )
 
         # We allow last estimator to be None as an identity transformation
         if estimator is not None and not hasattr(estimator, "fit"):
-            raise TypeError("Last step of Pipeline should implement fit. "
-                            "'%s' (type %s) doesn't"
-                            % (estimator, type(estimator)))
+            raise TypeError(
+                "Last step of Pipeline should implement fit. "
+                "'%s' (type %s) doesn't" % (estimator, type(estimator))
+            )
 
     def fit(self, X, y=None, **kwargs):
 
@@ -154,14 +171,14 @@ class PhotonPipeline(_BaseComposition):
         X, y, kwargs = self._caching_fit_transform(X, y, kwargs, fit=True)
 
         if self._final_estimator is not None:
-            logger.debug('PhotonPipeline: Fitting ' + self._final_estimator.name)
+            logger.debug("PhotonPipeline: Fitting " + self._final_estimator.name)
             fit_start_time = datetime.datetime.now()
             if self.random_state:
                 self._final_estimator.random_state = self.random_state
             self._final_estimator.fit(X, y, **kwargs)
             n = PhotonDataHelper.find_n(X)
             fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
-            self.time_monitor['fit'].append((self.elements[-1][0], fit_duration, n))
+            self.time_monitor["fit"].append((self.elements[-1][0], fit_duration, n))
         return self
 
     def check_for_numpy_array(self, list_object):
@@ -189,17 +206,34 @@ class PhotonPipeline(_BaseComposition):
         if self._final_estimator is not None:
             if self._estimator_type is None:
                 if self.caching:
-                    X, y, kwargs = self.load_or_save_cached_data(self._final_estimator.name, X, y, kwargs,
-                                                                 self._final_estimator,
-                                                                 initial_X=initial_X)
+                    X, y, kwargs = self.load_or_save_cached_data(
+                        self._final_estimator.name,
+                        X,
+                        y,
+                        kwargs,
+                        self._final_estimator,
+                        initial_X=initial_X,
+                    )
                 else:
-                    logger.debug('PhotonPipeline: Transforming data with ' + self._final_estimator.name)
+                    logger.debug(
+                        "PhotonPipeline: Transforming data with "
+                        + self._final_estimator.name
+                    )
                     X, y, kwargs = self._final_estimator.transform(X, y, **kwargs)
 
         return X, y, kwargs
 
-    def load_or_save_cached_data(self, name, X, y, kwargs, transformer, fit=False,
-                                 needed_for_further_computation=False, initial_X=None):
+    def load_or_save_cached_data(
+        self,
+        name,
+        X,
+        y,
+        kwargs,
+        transformer,
+        fit=False,
+        needed_for_further_computation=False,
+        initial_X=None,
+    ):
         if not self.single_subject_caching:
             # if we do it group-wise then its easy
             if self.skip_loading and not needed_for_further_computation:
@@ -215,29 +249,46 @@ class PhotonPipeline(_BaseComposition):
                 cached_result = self.cache_man.load_cached_data(name)
 
             if cached_result is None:
-                X, y, kwargs = self._do_timed_fit_transform(name, transformer, fit, X, y, **kwargs)
+                X, y, kwargs = self._do_timed_fit_transform(
+                    name, transformer, fit, X, y, **kwargs
+                )
 
                 start_time_saving = datetime.datetime.now()
                 self.cache_man.save_data_to_cache(name, (X, y, kwargs))
-                saving_duration = (datetime.datetime.now() - start_time_saving).total_seconds()
-                self.time_monitor['transform_cached'].append((name, saving_duration, 1))
+                saving_duration = (
+                    datetime.datetime.now() - start_time_saving
+                ).total_seconds()
+                self.time_monitor["transform_cached"].append((name, saving_duration, 1))
             else:
                 X, y, kwargs = cached_result[0], cached_result[1], cached_result[2]
-                loading_duration = (datetime.datetime.now() - start_time_for_loading).total_seconds()
+                loading_duration = (
+                    datetime.datetime.now() - start_time_for_loading
+                ).total_seconds()
                 n = PhotonDataHelper.find_n(X)
-                self.time_monitor['transform_cached'].append((name, loading_duration, n))
+                self.time_monitor["transform_cached"].append(
+                    (name, loading_duration, n)
+                )
             return X, y, kwargs
         else:
             # if we do it subject-wise we need to iterate and collect the results
             processed_X, processed_y, processed_kwargs = list(), list(), dict()
-            X_uncached, y_uncached, kwargs_uncached, initial_X_uncached = list(), list(), dict(), list()
+            X_uncached, y_uncached, kwargs_uncached, initial_X_uncached = (
+                list(),
+                list(),
+                dict(),
+                list(),
+            )
             list_of_idx_cached, list_of_idx_non_cached = list(), list()
 
             nr = PhotonDataHelper.find_n(X)
             for start, stop in PhotonDataHelper.chunker(nr, 1):
                 # split data in single entities, find key from first element = PATH to file
-                X_key, _, _ = PhotonDataHelper.split_data(initial_X, None, {}, start, stop)
-                X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, y, kwargs, start, stop)
+                X_key, _, _ = PhotonDataHelper.split_data(
+                    initial_X, None, {}, start, stop
+                )
+                X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(
+                    X, y, kwargs, start, stop
+                )
                 self.cache_man.update_single_subject_state_info(X_key)
 
                 # check if item has been processed
@@ -245,71 +296,109 @@ class PhotonPipeline(_BaseComposition):
                     list_of_idx_cached.append(start)
                 else:
                     list_of_idx_non_cached.append(start)
-                    X_uncached = PhotonDataHelper.stack_data_vertically(X_uncached, X_batched)
-                    y_uncached = PhotonDataHelper.stack_data_vertically(y_uncached, y_batched)
-                    initial_X_uncached = PhotonDataHelper.stack_data_vertically(initial_X_uncached, X_key)
-                    kwargs_uncached = PhotonDataHelper.join_dictionaries(kwargs_uncached, kwargs_dict_batched)
+                    X_uncached = PhotonDataHelper.stack_data_vertically(
+                        X_uncached, X_batched
+                    )
+                    y_uncached = PhotonDataHelper.stack_data_vertically(
+                        y_uncached, y_batched
+                    )
+                    initial_X_uncached = PhotonDataHelper.stack_data_vertically(
+                        initial_X_uncached, X_key
+                    )
+                    kwargs_uncached = PhotonDataHelper.join_dictionaries(
+                        kwargs_uncached, kwargs_dict_batched
+                    )
 
             # now we know which part can be loaded and which part should be transformed
             # first apply the transformation to the group, then save it single-subject-wise
             if len(list_of_idx_non_cached) > 0:
 
                 # apply transformation groupwise
-                new_group_X, new_group_y, new_group_kwargs = self._do_timed_fit_transform(name, transformer, fit,
-                                                                                          X_uncached,
-                                                                                          y_uncached,
-                                                                                          **kwargs_uncached)
+                new_group_X, new_group_y, new_group_kwargs = self._do_timed_fit_transform(
+                    name, transformer, fit, X_uncached, y_uncached, **kwargs_uncached
+                )
 
                 # then save it single
                 nr = PhotonDataHelper.find_n(new_group_X)
                 for start in range(nr):
                     # split data in single entities
-                    X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(new_group_X,
-                                                                                            new_group_y,
-                                                                                            new_group_kwargs,
-                                                                                            start, start)
-                    X_key, _, _ = PhotonDataHelper.split_data(initial_X_uncached, None, {}, start, start)
+                    X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(
+                        new_group_X, new_group_y, new_group_kwargs, start, start
+                    )
+                    X_key, _, _ = PhotonDataHelper.split_data(
+                        initial_X_uncached, None, {}, start, start
+                    )
                     # we save the data in relation to the input path (X_key = hash(input X))
                     self.cache_man.update_single_subject_state_info(X_key)
 
                     start_time_saving = datetime.datetime.now()
-                    self.cache_man.save_data_to_cache(name, (X_batched, y_batched, kwargs_dict_batched))
-                    saving_duration = (datetime.datetime.now() - start_time_saving).total_seconds()
-                    self.time_monitor['transform_cached'].append((name, saving_duration, 1))
+                    self.cache_man.save_data_to_cache(
+                        name, (X_batched, y_batched, kwargs_dict_batched)
+                    )
+                    saving_duration = (
+                        datetime.datetime.now() - start_time_saving
+                    ).total_seconds()
+                    self.time_monitor["transform_cached"].append(
+                        (name, saving_duration, 1)
+                    )
 
                 # we need to collect the data only when we want to load them
                 # we can skip that process if we only want them to get into the cache (case: parallelisation)
                 if not self.skip_loading or needed_for_further_computation:
                     # stack results
-                    processed_X, processed_y, processed_kwargs = new_group_X, new_group_y, new_group_kwargs
+                    processed_X, processed_y, processed_kwargs = (
+                        new_group_X,
+                        new_group_y,
+                        new_group_kwargs,
+                    )
 
             # afterwards load everything that has been cached
             if len(list_of_idx_cached) > 0:
                 if not self.skip_loading or needed_for_further_computation:
                     for cache_idx in list_of_idx_cached:
                         # we identify the data according to the input path (X before any transformation)
-                        self.cache_man.update_single_subject_state_info([initial_X[cache_idx]])
+                        self.cache_man.update_single_subject_state_info(
+                            [initial_X[cache_idx]]
+                        )
 
                         # time the loading of the cached item
                         start_time_for_loading = datetime.datetime.now()
-                        transformed_X, transformed_y, transformed_kwargs = self.cache_man.load_cached_data(name)
-                        loading_duration = (datetime.datetime.now() - start_time_for_loading).total_seconds()
-                        self.time_monitor['transform_cached'].append((name, loading_duration, PhotonDataHelper.find_n(X)))
+                        transformed_X, transformed_y, transformed_kwargs = self.cache_man.load_cached_data(
+                            name
+                        )
+                        loading_duration = (
+                            datetime.datetime.now() - start_time_for_loading
+                        ).total_seconds()
+                        self.time_monitor["transform_cached"].append(
+                            (name, loading_duration, PhotonDataHelper.find_n(X))
+                        )
 
-                        processed_X, processed_y, processed_kwargs = PhotonDataHelper.join_data(processed_X, transformed_X,
-                                                                                                processed_y, transformed_y,
-                                                                                                processed_kwargs, transformed_kwargs)
+                        processed_X, processed_y, processed_kwargs = PhotonDataHelper.join_data(
+                            processed_X,
+                            transformed_X,
+                            processed_y,
+                            transformed_y,
+                            processed_kwargs,
+                            transformed_kwargs,
+                        )
 
-            logger.debug(name + " loaded " + str(len(list_of_idx_cached)) + " items from cache and computed "
-                         + str(len(list_of_idx_non_cached)))
+            logger.debug(
+                name
+                + " loaded "
+                + str(len(list_of_idx_cached))
+                + " items from cache and computed "
+                + str(len(list_of_idx_non_cached))
+            )
             if not self.skip_loading or needed_for_further_computation:
                 # now sort the data in the correct order again
-                processed_X, processed_y, processed_kwargs = PhotonDataHelper.resort_splitted_data(processed_X,
-                                                                                                   processed_y,
-                                                                                                   processed_kwargs,
-                                                                                                   PhotonDataHelper.stack_data_vertically(
-                                                                                                       list_of_idx_cached,
-                                                                                                       list_of_idx_non_cached))
+                processed_X, processed_y, processed_kwargs = PhotonDataHelper.resort_splitted_data(
+                    processed_X,
+                    processed_y,
+                    processed_kwargs,
+                    PhotonDataHelper.stack_data_vertically(
+                        list_of_idx_cached, list_of_idx_non_cached
+                    ),
+                )
 
             return processed_X, processed_y, processed_kwargs
 
@@ -320,17 +409,19 @@ class PhotonPipeline(_BaseComposition):
             transformer.random_state = self.random_state
 
         if fit:
-            logger.debug('PhotonPipeline: Fitting ' + transformer.name)
+            logger.debug("PhotonPipeline: Fitting " + transformer.name)
             fit_start_time = datetime.datetime.now()
             transformer.fit(X, y, **kwargs)
             fit_duration = (datetime.datetime.now() - fit_start_time).total_seconds()
-            self.time_monitor['fit'].append((name, fit_duration, n))
+            self.time_monitor["fit"].append((name, fit_duration, n))
 
-        logger.debug('PhotonPipeline: Transforming data with ' + transformer.name)
+        logger.debug("PhotonPipeline: Transforming data with " + transformer.name)
         transform_start_time = datetime.datetime.now()
         X, y, kwargs = transformer.transform(X, y, **kwargs)
-        transform_duration = (datetime.datetime.now() - transform_start_time).total_seconds()
-        self.time_monitor['transform_computed'].append((name, transform_duration, n))
+        transform_duration = (
+            datetime.datetime.now() - transform_start_time
+        ).total_seconds()
+        self.time_monitor["transform_computed"].append((name, transform_duration, n))
         return X, y, kwargs
 
     def _caching_fit_transform(self, X, y, kwargs, fit=False):
@@ -345,18 +436,29 @@ class PhotonPipeline(_BaseComposition):
             self.cache_man.hash = self._fold_id
             self.cache_man.cache_folder = self.cache_folder
             if not self.single_subject_caching:
-                self.cache_man.prepare([name for name, e in self.elements], self.current_config, X)
+                self.cache_man.prepare(
+                    [name for name, e in self.elements], self.current_config, X
+                )
             else:
-                self.cache_man.prepare([name for name, e in self.elements], self.current_config, single_subject_caching=True)
+                self.cache_man.prepare(
+                    [name for name, e in self.elements],
+                    self.current_config,
+                    single_subject_caching=True,
+                )
             last_cached_item = None
 
         # all elements except the last one
         num_steps = len(self.elements) - 1
 
         for num, (name, transformer) in enumerate(self.elements[:-1]):
-            if not self.caching or self.current_config is None or \
-                    (hasattr(transformer, 'skip_caching') and transformer.skip_caching):
-                X, y, kwargs = self._do_timed_fit_transform(name, transformer, fit, X, y, **kwargs)
+            if (
+                not self.caching
+                or self.current_config is None
+                or (hasattr(transformer, "skip_caching") and transformer.skip_caching)
+            ):
+                X, y, kwargs = self._do_timed_fit_transform(
+                    name, transformer, fit, X, y, **kwargs
+                )
             else:
                 # load data when the first item occurs that needs new calculation
                 if self.cache_man.check_cache(name):
@@ -364,16 +466,31 @@ class PhotonPipeline(_BaseComposition):
                     last_cached_item = name
                     # if it is the last step, we need to load the data now
                     if num + 1 == num_steps and not self.skip_loading:
-                        X, y, kwargs = self.load_or_save_cached_data(last_cached_item, X, y, kwargs, transformer, fit,
-                                                                     initial_X=initial_X)
+                        X, y, kwargs = self.load_or_save_cached_data(
+                            last_cached_item,
+                            X,
+                            y,
+                            kwargs,
+                            transformer,
+                            fit,
+                            initial_X=initial_X,
+                        )
                 else:
                     if last_cached_item is not None:
                         # we load the cached data when the first transformation on this data is upcoming
-                        X, y, kwargs = self.load_or_save_cached_data(last_cached_item, X, y, kwargs, transformer, fit,
-                                                                     needed_for_further_computation=True,
-                                                                     initial_X=initial_X)
-                    X, y, kwargs = self.load_or_save_cached_data(name, X, y, kwargs, transformer, fit,
-                                                                 initial_X=initial_X)
+                        X, y, kwargs = self.load_or_save_cached_data(
+                            last_cached_item,
+                            X,
+                            y,
+                            kwargs,
+                            transformer,
+                            fit,
+                            needed_for_further_computation=True,
+                            initial_X=initial_X,
+                        )
+                    X, y, kwargs = self.load_or_save_cached_data(
+                        name, X, y, kwargs, transformer, fit, initial_X=initial_X
+                    )
 
             # always work with numpy arrays to avoid checking for shape attribute
             X = self.check_for_numpy_array(X)
@@ -397,26 +514,34 @@ class PhotonPipeline(_BaseComposition):
         # then call predict on final estimator
         if self._final_estimator is not None:
             if self._final_estimator.is_estimator:
-                logger.debug('PhotonPipeline: Predicting with ' + self._final_estimator.name + ' ...')
+                logger.debug(
+                    "PhotonPipeline: Predicting with "
+                    + self._final_estimator.name
+                    + " ..."
+                )
                 predict_start_time = datetime.datetime.now()
                 y_pred = self._final_estimator.predict(X, **kwargs)
-                predict_duration = (datetime.datetime.now() - predict_start_time).total_seconds()
+                predict_duration = (
+                    datetime.datetime.now() - predict_start_time
+                ).total_seconds()
                 n = PhotonDataHelper.find_n(X)
-                self.time_monitor['predict'].append((self.elements[-1][0], predict_duration, n))
+                self.time_monitor["predict"].append(
+                    (self.elements[-1][0], predict_duration, n)
+                )
                 return y_pred
             else:
                 return X
         else:
             return None
 
-    def predict_proba(self, X, training: bool=False, **kwargs):
+    def predict_proba(self, X, training: bool = False, **kwargs):
         if not training:
             X, _, kwargs = self.transform(X, y=None, **kwargs)
 
         if self._final_estimator is not None:
             if self._final_estimator.is_estimator:
                 if hasattr(self._final_estimator, "predict_proba"):
-                    if hasattr(self._final_estimator, 'needs_covariates'):
+                    if hasattr(self._final_estimator, "needs_covariates"):
                         if self._final_estimator.needs_covariates:
                             return self._final_estimator.predict_proba(X, **kwargs)
                         else:
@@ -424,7 +549,9 @@ class PhotonPipeline(_BaseComposition):
                     else:
                         return self._final_estimator.predict_proba(X)
 
-        raise NotImplementedError("The final estimator does not have a predict_proba method")
+        raise NotImplementedError(
+            "The final estimator does not have a predict_proba method"
+        )
 
     def inverse_transform(self, X, y=None, **kwargs):
         # simply use X to apply inverse_transform
@@ -440,10 +567,12 @@ class PhotonPipeline(_BaseComposition):
 
     def fit_transform(self, X, y=None, **kwargs):
         # return self.fit(X, y, **kwargs).transform(X, y, **kwargs)
-        raise NotImplementedError('fit_transform not yet implemented in PHOTON Pipeline')
+        raise NotImplementedError(
+            "fit_transform not yet implemented in PHOTON Pipeline"
+        )
 
     def fit_predict(self, X, y=None, **kwargs):
-        raise NotImplementedError('fit_predict not yet implemented in PHOTON Pipeline')
+        raise NotImplementedError("fit_predict not yet implemented in PHOTON Pipeline")
 
     def copy_me(self):
         pipeline_steps = []
@@ -468,7 +597,7 @@ class PhotonPipeline(_BaseComposition):
 
     @property
     def _estimator_type(self):
-        return getattr(self._final_estimator, '_estimator_type')
+        return getattr(self._final_estimator, "_estimator_type")
 
     def clear_cache(self):
         if self.cache_man is not None:

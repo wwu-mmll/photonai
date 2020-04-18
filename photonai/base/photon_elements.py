@@ -3,19 +3,640 @@ import importlib.util
 import inspect
 from copy import deepcopy
 import os
+from os import path
+import json
+import sys
+
+from dataclasses import dataclass
+from typing import List, ClassVar, Callable, Union, Dict, Any  # Hashable
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
+from sklearn.datasets import load_breast_cancer, load_boston
 
+from photonai.errors import raise_PhotoaiError
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.base.registry.element_dictionary import ElementDictionary
 from photonai.helper.helper import PhotonDataHelper
-from photonai.optimization.config_grid import create_global_config_grid, create_global_config_dict
+from photonai.optimization.config_grid import (
+    create_global_config_grid,
+    create_global_config_dict,
+)
+from photonai.processing.metrics import Scorer
 from photonai.photonlogger.logger import logger
+
+# class ElementDictionary:
+#     """
+#     Attributes
+#     ----------
+#     """
+#    PHOTON_REGISTRIES = ["PhotonCore", "PhotonCluster", "PhotonNeuro"]
+EM_PKG_ID = 0
+EM_SK_TYPE_ID = 1
+EMD_OUT_OF_BOUNDS = 2
+
+@dataclass
+class PhotonRegistry:
+    """
+    Helper class to manage the PHOTON Element Register.
+
+    Use it to add and remove items into the register.
+    You can also retrieve information about items and its hyperparameters.
+
+    Every item in the register is encoded by a string literal that points to a python class and its namespace.
+    You can access the python class via the string literal.
+    The class PhotonElement imports and instantiates the class for you.
+
+    There is a distinct json file with the elements registered for each photon package (core, neuro, genetics, ..)
+    There is also a json file for the user's custom elements.
+
+    Example
+    -------
+        from photonai.configuration.Register import PhotonRegister
+
+        # get info about object, name, namespace and possible hyperparameters
+        PhotonRegister.info("SVC")
+
+        # show all items that are registered
+        PhotonRegister.list()
+
+        # register new object
+        PhotonRegister.register("ABC1", "namespace.filename.ABC1", "Transformer")
+
+        # delete it again.
+        PhotonRegister.delete("ABC1")
+
+    """
+
+    custom_elements_folder: str = None
+    custom_elements: str = None
+    custom_elements_file: str = None
+    base_PHOTON_REGISTRIES: ClassVar[List[str]] = ["PhotonCore", "PhotonCluster", "PhotonNeuro"]
+    PHOTON_REGISTRIES: ClassVar[List[str]] = ["PhotonCore", "PhotonCluster", "PhotonNeuro"]
+
+
+    def __post_init__(self):
+        if self.custom_elements_folder:
+            self._load_custom_folder(self.custom_elements_folder)
+
+    # # BHC 1.1
+    def reset(self):
+        #
+        """
+        start over to initial state,
+        Set instance variable to class global variable
+        """
+        PhotonRegistry.PHOTON_REGISTRIES = PhotonRegistry.base_PHOTON_REGISTRIES
+
+    @staticmethod
+    def load_json(photon_package: str) -> Any:
+        """
+        load_json Loads JSON file.
+
+        The class init PipelineElement('name',...)
+        stores the element metadata in a json file.
+
+        The JSON files are stored in the framework folder
+        by the name convention 'photon_<package>.json'.
+        (example:$HOME/PROJECTS/photon/photonai/base/registry/PhotonCore.json)
+
+        The file is of format
+        { name-1: ['import-pkg-class-path-1', class-path-1)],
+          name-2: ['import-pkg-class-path-2', class-path-2)],
+         ....}
+
+        Parameters
+        ----------
+            photon_package:  The name of the photonai package of element metadata
+        Returns
+        -------
+            [file_content, file_name]
+        Notes
+        -------
+            if  JSON file does not exist, then create blank one.
+        """
+
+        folder = os.path.dirname(
+            os.path.abspath(inspect.getfile(inspect.currentframe()))
+        ) + "/registry"
+
+        file_name = os.path.join(folder, photon_package + ".json")
+        if os.path.isfile(file_name):
+            # Reading json
+            with open(file_name, "r") as f:
+                file_content = json.load(f)
+        else:
+            file_content = dict()
+            with open(file_name, "w") as f:
+                json.dump(file_content, f)
+
+        return file_content, file_name
+#        return file_content
+
+
+    @staticmethod
+    def elements(element_metadata:Dict) -> List[]:
+        return element_metadata.keys()
+
+    @staticmethod
+    def get_element_metadata(name:str, element_metadata:Dict) -> List[str,str,str]:
+
+        """
+        Unstuture element metadata.
+        Current form
+
+        element-name: [class-path sklearn-api-type ('transformer' | 'estimator']
+
+        Parameters
+        ----------
+        name
+        element_metadata
+
+        Returns
+        -------
+
+        """
+        if name in element_metadata:
+            return name, element_metadata[name][EM_PKG_ID], element_metadata[name][EM_SK_TYPE_ID]
+        else:
+            raise_PhotoaiError("Element: {} of {} not found ".format(name,elements(element_metadata)) )
+
+
+
+    @staticmethod
+    def get_package_info(photon_package:list = []) -> dict:
+        """
+        Collect all registered elements from JSON file
+
+        Parameters:
+        -----------
+        * 'photon_package' [list]:
+          The names of the PHOTON submodules for which the elements should be retrieved
+
+        Returns
+        -------
+        Dict of registered elements
+        """
+        if photon_package == []: photon_package = PhotonRegistry.PHOTON_REGISTRIES
+        element_metadata = dict()
+        for package in photon_package:
+            #            element_metadata, _ = ElementDictionary.load_json(package)
+            element_metadata.update(PhotonRegistry.load_json(package))
+
+        return element_metadata
+
+        #     for key in element_metadata:
+        #         class_path, class_name = os.path.splitext(element_metadata[key][0])
+        #         class_info[key] = class_path, class_name[1:]
+        # return class_info
+
+    def _load_custom_folder(self, custom_elements_folder):
+        self.custom_elements_folder, self.custom_elements_file = self._check_custom_folder(
+            custom_elements_folder
+        )
+
+        # load custom elements from json
+        self.custom_elements = self._load_json("CustomElements")
+        PhotonRegistry.PHOTON_REGISTRIES.append("CustomElements")
+
+    @staticmethod
+    def _check_custom_folder(custom_folder):
+        if not path.exists(custom_folder):
+            logger.info("Creating folder {}".format(custom_folder))
+            os.makedirs(custom_folder)
+
+        custom_file = path.join(custom_folder, "CustomElements.json")
+        if not path.isfile(custom_file):
+            logger.info("Creating CustomElements.json")
+            with open(custom_file, "w") as f:
+                json.dump("", f)
+
+        return custom_folder, custom_file
+
+    def activate(self):
+        if not self.custom_elements_folder:
+            raise ValueError(
+                "To activate a custom elements folder, specify a folder when instantiating the registry "
+                "module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER) "
+                "In case you don't have any custom models, there is no need to activate the registry."
+            )
+        if not path.exists(self.custom_elements_folder):
+            raise FileNotFoundError(
+                "Couldn't find custom elements folder: {}".format(
+                    self.custom_elements_folder
+                )
+            )
+        if not path.isfile(
+            path.join(self.custom_elements_folder, "CustomElements.json")
+        ):
+            raise FileNotFoundError(
+                "Couldn't find CustomElements.json. Did you register your element first?"
+            )
+
+        # add folder to python path
+        logger.info("Adding custom elements folder to system path...")
+        sys.path.append(self.custom_elements_folder)
+
+        PipelineElement.ELEMENT_DICTIONARY.update(
+            self._get_package_info(["CustomElements"])
+        )
+        logger.info("Successfully activated custom elements!")
+
+    # 1.1 BHC register from call rather than file
+    def register(self, photon_name: str, class_str: str, element_type: str):
+        """
+        Save element information to the JSON file
+
+        Parameters:
+        -----------
+        * 'photon_name' [str]:
+          The string literal with which you want to access the class
+        * 'class_str' [str]:
+          The namespace of the class, like in the import statement
+        * 'ml_type' [str]:
+          Can be 'Estimator' or 'Transformer'
+        * 'custom_folder' [str]:
+          All registrations are saved to this folder
+        """
+
+        if not Scorer.is_element_type(element_type):
+            raise ValueError(
+                "Variable element_type must be {}, was: {}".format(Scorer.ELEMENT_TYPES,element_type)
+            )
+
+        # check if folder exists
+        if not self.custom_elements_folder:
+            raise ValueError(
+                "To register an element, specify a custom elements folder when instantiating the registry "
+                "module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER)"
+            )
+
+        duplicate = self._check_duplicate(
+            photon_name=photon_name, class_str=class_str, content=self.custom_elements
+        )
+
+        if not duplicate:
+            python_file = path.join(
+                self.custom_elements_folder, class_str.split(".")[0] + ".py"
+            )
+            if not path.isfile(python_file):
+                raise FileNotFoundError(
+                    "Couldn't find python file {} in your custom elements folder. "
+                    "Please copy your file into this folder first!".format(python_file)
+                )
+            # add new element
+            self.custom_elements[photon_name] = class_str, element_type
+
+            # write back to file
+            self._write2json(self.custom_elements)
+            logger.info(
+                "Adding PipelineElement "
+                + class_str
+                + ' to CustomElements.json as "'
+                + photon_name
+                + '".'
+            )
+
+            # activate custom elements
+            self.activate()
+
+            # check custom element
+            logger.info("Running tests on custom element...")
+            return self._run_tests(photon_name, element_type)
+        else:
+            logger.error("Could not register element!")
+
+    def _run_tests(self, photon_name, element_type):
+        # check import
+        custom_element = PipelineElement(photon_name)
+
+        # check if has fit, transform, predict
+        if not hasattr(custom_element.base_element, "fit"):
+            raise NotImplementedError("Custom element does not implement fit() method.")
+
+        if element_type == "Transformer" and not hasattr(
+            custom_element.base_element, "transform"
+        ):
+            raise NotImplementedError(
+                "Custom element does not implement transform() method."
+            )
+
+        if element_type == "Estimator" and not hasattr(
+            custom_element.base_element, "predict"
+        ):
+            raise NotImplementedError(
+                "Custom element does not implement predict() method."
+            )
+
+        # check if estimator is regressor or classifier
+        if element_type == "Estimator":
+            if hasattr(custom_element.base_element, "_estimator_type"):
+                est_type = getattr(custom_element.base_element, "_estimator_type")
+                if est_type == "regressor":
+                    X, y = load_boston(True)
+                elif est_type == "classifier":
+                    X, y = load_breast_cancer(True)
+                else:
+                    raise ValueError(
+                        "Custom element does not specify whether it is a regressor or classifier. "
+                        "Is {}".format(est_type)
+                    )
+            else:
+                raise NotImplementedError(
+                    "Custom element does not specify whether it is a regressor or classifier. "
+                    "Consider inheritance from ClassifierMixin or RegressorMixin or set "
+                    "_estimator_type manually."
+                )
+        else:
+            X, y = load_boston(True)
+
+        # try and test functionality
+        kwargs = {"covariates": np.random.randn(len(y))}
+
+        try:
+            # test fit
+            returned_element = custom_element.base_element.fit(X, y, **kwargs)
+        except Exception as e:
+            logger.info(
+                "Not able to run tests on fit() method. Test data not compatible."
+            )
+            return e
+
+        if not isinstance(returned_element, custom_element.base_element.__class__):
+            raise NotImplementedError("fit() method does not return self.")
+
+        try:
+            # test transform or predict (if base element does not implement transform method, predict should be called
+            # by PipelineElement -> so we only need to test transform()
+            if custom_element.needs_y:
+                if element_type == "Estimator":
+                    raise NotImplementedError("Estimator should not need y.")
+                Xt, yt, kwargst = custom_element.base_element.transform(X, y, **kwargs)
+                if "covariates" not in kwargst.keys():
+                    raise ValueError(
+                        "Custom element does not correctly transform kwargs although needs_y is True. "
+                        "If you change the number of samples in transform(), make sure to transform kwargs "
+                        "respectively."
+                    )
+                if not len(kwargst["covariates"]) == len(X):
+                    raise ValueError(
+                        "Custom element is not returning the correct number of samples!"
+                    )
+
+            elif custom_element.needs_covariates:
+                if element_type == "Estimator":
+                    yt, kwargst = custom_element.base_element.predict(X, **kwargs)
+                    if not len(yt) == len(y):
+                        raise ValueError(
+                            "Custom element is not returning the correct number of samples!"
+                        )
+                else:
+                    Xt, kwargst = custom_element.base_element.transform(X, **kwargs)
+
+                    if not len(Xt) == len(X) or not len(kwargst["covariates"]) == len(
+                        X
+                    ):
+                        raise ValueError(
+                            "Custom element is not returning the correct number of samples!"
+                        )
+
+            else:
+                if element_type == "Estimator":
+                    yt = custom_element.base_element.predict(X)
+                    if not len(yt) == len(y):
+                        raise ValueError(
+                            "Custom element is not returning the correct number of samples!"
+                        )
+                else:
+                    Xt = custom_element.base_element.transform(X)
+                    if not len(Xt) == len(X):
+                        raise ValueError(
+                            "Custom element is not returning the correct number of samples!"
+                        )
+
+        except ValueError as ve:
+            if "too many values to unpack" in ve.args[0]:
+                raise ValueError(
+                    "Custom element does not return X, y and kwargs the way it should "
+                    "according to needs_y and needs_covariates."
+                )
+            else:
+                logger.info(ve.args[0])
+                return ve
+        except Exception as e:
+            logger.info(e.args[0])
+            logger.info(
+                "Not able to run tests on transform() or predict() method. Test data probably not compatible."
+            )
+            return e
+
+        logger.info("All tests on custom element passed.")
+
+    def info(self, photon_name):
+        """
+        Show information for object that is encoded by this name.
+
+        Parameters:
+        -----------
+        * 'photon_name' [str]:
+          The string literal which accesses the class
+        """
+        content = self._get_package_info()  # load existing json
+
+        if photon_name in content:
+            element_namespace, element_name = content[photon_name]
+
+            print("----------------------------------")
+            print("Name: " + element_name)
+            print("Namespace: " + element_namespace)
+            print("----------------------------------")
+
+            try:
+                imported_module = __import__(
+                    element_namespace, globals(), locals(), element_name, 0
+                )
+                desired_class = getattr(imported_module, element_name)
+                base_element = desired_class()
+                print("Possible Hyperparameters as derived from constructor:")
+                class_args = inspect.signature(base_element.__init__)
+                for item, more_info in class_args.parameters.items():
+                    print("{:<35} {:<75}".format(item, str(more_info)))
+                print("----------------------------------")
+            except Exception as e:
+                logger.error(e)
+                logger.error(
+                    "Could not instantiate class "
+                    + element_namespace
+                    + "."
+                    + element_name
+                )
+        else:
+            logger.error("Could not find element " + photon_name)
+
+    def delete(self, photon_name):
+        """
+        Delete Element from JSON file
+
+        Parameters:
+        -----------
+        * 'photon_name' [str]:
+          The string literal encoding the class
+        """
+
+        if photon_name in self.custom_elements:
+            del self.custom_elements[photon_name]
+
+            self._write2json(self.custom_elements)
+            logger.info(
+                'Removing the PipelineElement named "{0}" from CustomElements.json.'.format(
+                    photon_name
+                )
+            )
+        else:
+            logger.info(
+                'Cannot remove "{0}" from CustomElements.json. Element has not been registered before.'.format(
+                    photon_name
+                )
+            )
+
+    @staticmethod
+    def _check_duplicate(photon_name, class_str, content):
+        """
+        Helper function to check if the entry is either registered by a different name or if the name is already given
+        to another class
+
+         Parameters:
+        -----------
+        * 'content':
+          The content of the CustomElements.json
+        * 'class_str' [str]:
+          The namespace.Classname, where the class lives, from where it should be imported.
+        * 'photon_name':
+          The name of the element with which it is called within PHOTON
+        Returns:
+        --------
+        Bool, False if there is no key with this name and the class is not already registered with another key
+        """
+
+        # check for duplicate name (dict key)
+        if photon_name in content:
+            logger.info(
+                "A PipelineElement named "
+                + photon_name
+                + " has already been registered."
+            )
+            return True
+
+        # check for duplicate class_str
+        if any(class_str in ".".join([s[0], s[1]]) for s in content.values()):
+            logger.info(
+                "The Class named " + class_str + " has already been registered."
+            )
+            return True
+        return False
+
+    def _load_json(self, photon_package: str):
+        """
+        Load JSON file in which the elements for the PHOTON submodule are stored.
+
+        The JSON files are stored in the framework folder by the name convention 'photon_package.json'
+
+        Parameters:
+        -----------
+        * 'photon_package' [str]:
+          The name of the photonai submodule
+
+        Returns:
+        --------
+        JSON file as dict, file path as str
+        """
+
+        if photon_package == "CustomElements":
+            folder = self.custom_elements_folder
+            if not folder:
+                return {}
+        else:
+            folder = os.path.dirname(
+                os.path.abspath(inspect.getfile(inspect.currentframe()))
+            ) + "/registry/"
+
+        file_name = path.join(folder, photon_package + ".json")
+        file_content = {}
+
+        # Reading json
+        with open(file_name, "r") as f:
+            try:
+                file_content = json.load(f)
+            except json.JSONDecodeError as jde:
+                # handle empty file
+                if jde.msg == "Expecting value":
+                    logger.error("Package File " + file_name + " was empty.")
+                else:
+                    raise jde
+        if not file_content:
+            file_content = dict()
+        return file_content
+
+    def _write2json(self, content2write: dict):
+        """
+        Write json content to file
+
+        Parameters:
+        -----------
+        * 'content2write' [dict]:
+          The new information to attach to the file
+        * 'photon_package' [str]:
+          The PHOTON submodule name to which the new class belongs, so it is written to the correct json file
+        """
+        # Writing JSON data
+        with open(self.custom_elements_file, "w") as f:
+            json.dump(content2write, f)
+
+    def _get_package_info(self, photon_package: list = PHOTON_REGISTRIES) -> dict:
+        """
+        Collect all registered elements from JSON file
+
+        Parameters:
+        -----------
+        * 'photon_package' [list]:
+          The names of the PHOTON submodules for which the elements should be retrieved
+
+        Returns
+        -------
+        Dict of registered elements
+        """
+        class_info = dict()
+        for package in photon_package:
+
+            content = self._load_json(package)
+
+            for key in content:
+                class_path, class_name = os.path.splitext(content[key][0])
+                class_info[key] = class_path, class_name[1:]
+        return class_info
+
+    def list_available_elements(self, photon_package=PHOTON_REGISTRIES):
+        """
+        Print info about all items that are registered for the PHOTON submodule to the console.
+
+        Parameters:
+        -----------
+        * 'photon_package' [list]:
+          The names of the PHOTON submodules for which the elements should be retrieved
+        """
+        if isinstance(photon_package, str):
+            photon_package = [photon_package]
+        for package in photon_package:
+            content = self._load_json(package)
+            if len(content) > 0:
+                print("\n" + package)
+                for k, v in sorted(content.items()):
+                    class_info, package_type = v
+                    print("{:<35} {:<75} {:<5}".format(k, class_info, package_type))
 
 
 class PhotonNative:
     """only for checking if code is meeting requirements"""
+
     pass
 
 
@@ -44,13 +665,23 @@ class PipelineElement(BaseEstimator):
         Any parameters that should be passed to the object to be instantiated, default parameters
 
     """
-    # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = ElementDictionary.get_package_info()
 
-    def __init__(self, name, hyperparameters: dict = None, test_disabled: bool = False,
-                 disabled: bool = False, base_element=None, batch_size=0, **kwargs):
+    # Registering Pipeline Elements
+    ELEMENT_DICTIONARY = PhotonRegistry.get_package_info()
+
+    def __init__(
+        self,
+        name,
+        hyperparameters: dict = None,
+        test_disabled: bool = False,
+        disabled: bool = False,
+        base_element=None,
+        batch_size=0,
+        **kwargs
+    ):
         """
-        Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
+        Takes a string literal and transforms it into an object
+        of the associated class (see PhotonCore.JSON)
 
         Returns
         -------
@@ -59,22 +690,38 @@ class PipelineElement(BaseEstimator):
         if hyperparameters is None:
             hyperparameters = {}
 
+
+
         if base_element is None:
             if name in PipelineElement.ELEMENT_DICTIONARY:
                 try:
+ #            desired_class_home. - = element_metadata(name)
+ #            desired_class_name = name
+ #            desired_class = getattr(imported_module, desired_class_name)
+ #            self.base_element = desired_class(**kwargs)
                     desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
                     desired_class_home = desired_class_info[0]
-                    desired_class_name = desired_class_info[1]
-                    imported_module = importlib.import_module(desired_class_home)
+                    desired_class_name = name
+
+
+                    imported_module = __import__(
+                        desired_class_home, globals(), locals(), desired_class_name, 0
+                    )
+#                    imported_module = importlib.import_module(desired_class_home)
                     desired_class = getattr(imported_module, desired_class_name)
                     self.base_element = desired_class(**kwargs)
                 except AttributeError as ae:
-                    logger.error('ValueError: Could not find according class:'
-                                   + str(PipelineElement.ELEMENT_DICTIONARY[name]))
-                    raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
+                    logger.error(
+                        "ValueError: Could not find according class:"
+                        + str(PipelineElement.ELEMENT_DICTIONARY[name])
+                    )
+                    raise ValueError(
+                        "Could not find according class:",
+                        PipelineElement.ELEMENT_DICTIONARY[name],
+                    )
             else:
-                logger.error('Element not supported right now:' + name)
-                raise NameError('Element not supported right now:', name)
+                logger.error("Element not supported right now:" + name)
+                raise NameError("Element not supported right now:", name)
         else:
             self.base_element = base_element
 
@@ -88,7 +735,7 @@ class PipelineElement(BaseEstimator):
         self.test_disabled = test_disabled
         self.initial_hyperparameters = dict(hyperparameters)
 
-        self._sklearn_disabled = self.name + '__disabled'
+        self._sklearn_disabled = self.name + "__disabled"
         self._hyperparameters = hyperparameters
         if len(hyperparameters) > 0:
             key_0 = next(iter(hyperparameters))
@@ -106,12 +753,12 @@ class PipelineElement(BaseEstimator):
         self.disabled = disabled
 
         # check if self.base element needs y for fitting and transforming
-        if hasattr(self.base_element, 'needs_y'):
+        if hasattr(self.base_element, "needs_y"):
             self.needs_y = self.base_element.needs_y
         else:
             self.needs_y = False
         # or if it maybe needs covariates for fitting and transforming
-        if hasattr(self.base_element, 'needs_covariates'):
+        if hasattr(self.base_element, "needs_covariates"):
             self.needs_covariates = self.base_element.needs_covariates
         else:
             self.needs_covariates = False
@@ -138,11 +785,20 @@ class PipelineElement(BaseEstimator):
     def _check_hyperparameters(self, BaseEstimator):
         # check if hyperparameters are members of the class
         not_supported_hyperparameters = list(
-            set([key.split("__")[-1] for key in self._hyperparameters.keys() if key.split("__")[-1] != "disabled"]) -
-            set(BaseEstimator.get_params(self.base_element).keys()))
+            set(
+                [
+                    key.split("__")[-1]
+                    for key in self._hyperparameters.keys()
+                    if key.split("__")[-1] != "disabled"
+                ]
+            )
+            - set(BaseEstimator.get_params(self.base_element).keys())
+        )
         if not_supported_hyperparameters:
-            error_message = 'ValueError: Set of hyperparameters are not valid, check hyperparameters:' + \
-                            str(not_supported_hyperparameters)
+            error_message = (
+                "ValueError: Set of hyperparameters are not valid, check hyperparameters:"
+                + str(not_supported_hyperparameters)
+            )
             logger.error(error_message)
             raise ValueError(error_message)
 
@@ -152,7 +808,7 @@ class PipelineElement(BaseEstimator):
         """
         self._hyperparameters = {}
         for attribute, value_list in value.items():
-            self._hyperparameters[self.name + '__' + attribute] = value_list
+            self._hyperparameters[self.name + "__" + attribute] = value_list
         if self.test_disabled:
             self._hyperparameters[self._sklearn_disabled] = [False, True]
 
@@ -163,26 +819,34 @@ class PipelineElement(BaseEstimator):
     @random_state.setter
     def random_state(self, random_state):
         self._random_state = random_state
-        if hasattr(self, 'elements'):
+        if hasattr(self, "elements"):
             for el in self.elements:
-                if hasattr(el, 'random_state'):
+                if hasattr(el, "random_state"):
                     el.random_state = self._random_state
         if hasattr(self, "base_element") and hasattr(self.base_element, "random_state"):
             self.base_element.random_state = random_state
 
     @property
     def _estimator_type(self):
-        if hasattr(self.base_element, '_estimator_type'):
-            est_type = getattr(self.base_element, '_estimator_type')
-            if est_type is not 'classifier' and est_type is not 'regressor':
-                raise NotImplementedError("Currently, we only support type classifier or regressor. Is {}.".format(est_type))
-            if not hasattr(self.base_element, 'predict'):
-                raise NotImplementedError("Estimator does not implement predict() method.")
+        if hasattr(self.base_element, "_estimator_type"):
+            est_type = getattr(self.base_element, "_estimator_type")
+            if est_type is not "classifier" and est_type is not "regressor":
+                raise NotImplementedError(
+                    "Currently, we only support type classifier or regressor. Is {}.".format(
+                        est_type
+                    )
+                )
+            if not hasattr(self.base_element, "predict"):
+                raise NotImplementedError(
+                    "Estimator does not implement predict() method."
+                )
             return est_type
         else:
-            if hasattr(self.base_element, 'predict'):
-                raise NotImplementedError("Element has predict() method but does not specify whether it is a regressor "
-                                          "or classifier. Remember to inherit from ClassifierMixin or RegressorMixin.")
+            if hasattr(self.base_element, "predict"):
+                raise NotImplementedError(
+                    "Element has predict() method but does not specify whether it is a regressor "
+                    "or classifier. Remember to inherit from ClassifierMixin or RegressorMixin."
+                )
             else:
                 return None
 
@@ -198,30 +862,59 @@ class PipelineElement(BaseEstimator):
             The object to add, being either a transformer or an estimator.
 
         """
-        PipelineElement.sanity_check_element_type_for_building_photon_pipes(pipe_element, type(self))
+        PipelineElement.sanity_check_element_type_for_building_photon_pipes(
+            pipe_element, type(self)
+        )
 
         # check if that exact instance has been added before
         already_added_objects = len([i for i in self.elements if i is pipe_element])
         if already_added_objects > 0:
-            error_msg = "Cannot add the same instance twice to " + self.name + " - " + str(type(self))
+            error_msg = (
+                "Cannot add the same instance twice to "
+                + self.name
+                + " - "
+                + str(type(self))
+            )
             logger.error(error_msg)
             raise ValueError(error_msg)
 
         # check for doubled names:
-        already_existing_element_with_that_name = len([i for i in self.elements if i.name == pipe_element.name])
+        already_existing_element_with_that_name = len(
+            [i for i in self.elements if i.name == pipe_element.name]
+        )
 
         if already_existing_element_with_that_name > 0:
-            error_msg = "Already added a pipeline element with the name " + pipe_element.name + " to " + self.name
+            error_msg = (
+                "Already added a pipeline element with the name "
+                + pipe_element.name
+                + " to "
+                + self.name
+            )
             logger.warn(error_msg)
 
             # check for other items that have been renamed
-            nr_of_existing_elements_with_that_name = len([i for i in self.elements if i.name.startswith(pipe_element.name)])
-            new_name = pipe_element.name + str(nr_of_existing_elements_with_that_name + 1)
+            nr_of_existing_elements_with_that_name = len(
+                [i for i in self.elements if i.name.startswith(pipe_element.name)]
+            )
+            new_name = pipe_element.name + str(
+                nr_of_existing_elements_with_that_name + 1
+            )
             while len([i for i in self.elements if i.name == new_name]) > 0:
                 nr_of_existing_elements_with_that_name += 1
-                new_name = pipe_element.name + str(nr_of_existing_elements_with_that_name + 1)
+                new_name = pipe_element.name + str(
+                    nr_of_existing_elements_with_that_name + 1
+                )
 
-            logger.warn("Renaming " + pipe_element.name + " in " + self.name + " to " + new_name + " in " + self.name)
+            logger.warn(
+                "Renaming "
+                + pipe_element.name
+                + " in "
+                + self.name
+                + " to "
+                + new_name
+                + " in "
+                + self.name
+            )
             pipe_element.name = new_name
 
         self.elements.append(pipe_element)
@@ -230,48 +923,78 @@ class PipelineElement(BaseEstimator):
     def copy_me(self):
         if self.name in self.ELEMENT_DICTIONARY:
             # we need initial name to refer to the class to be instantiated  (SVC) even though the name might be SVC2
-            copy = PipelineElement(self.initial_name, {}, test_disabled=self.test_disabled,
-                                   disabled=self.disabled, batch_size=self.batch_size, **self.kwargs)
+            copy = PipelineElement(
+                self.initial_name,
+                {},
+                test_disabled=self.test_disabled,
+                disabled=self.disabled,
+                batch_size=self.batch_size,
+                **self.kwargs
+            )
             copy.initial_hyperparameters = self.initial_hyperparameters
             # in the setter of the name, we use initial hyperparameters to adjust the hyperparameters to the name
             copy.name = self.name
         else:
-            if hasattr(self.base_element, 'copy_me'):
+            if hasattr(self.base_element, "copy_me"):
                 new_base_element = self.base_element.copy_me()
             else:
                 try:
                     new_base_element = deepcopy(self.base_element)
                 except Exception as e:
-                    error_msg = "Cannot copy custom element " + self.name + ". Please specify a copy_me() method " \
-                                                                        "returning a copy of the object"
+                    error_msg = (
+                        "Cannot copy custom element "
+                        + self.name
+                        + ". Please specify a copy_me() method "
+                        "returning a copy of the object"
+                    )
                     logger.error(error_msg)
                     raise e
 
             # handle custom elements
-            copy = PipelineElement.create(self.name, new_base_element, hyperparameters=self.hyperparameters,
-                                          test_disabled=self.test_disabled,
-                                          disabled=self.disabled, batch_size=self.batch_size,
-                                          **self.kwargs)
+            copy = PipelineElement.create(
+                self.name,
+                new_base_element,
+                hyperparameters=self.hyperparameters,
+                test_disabled=self.test_disabled,
+                disabled=self.disabled,
+                batch_size=self.batch_size,
+                **self.kwargs
+            )
         if self.current_config is not None:
             copy.set_params(**self.current_config)
         copy._random_state = self._random_state
         return copy
 
     @classmethod
-    def create(cls, name, base_element, hyperparameters: dict, test_disabled=False, disabled=False, **kwargs):
+    def create(
+        cls,
+        name,
+        base_element,
+        hyperparameters: dict,
+        test_disabled=False,
+        disabled=False,
+        **kwargs
+    ):
         """
         Takes an instantiated object and encapsulates it into the PHOTON structure,
         add the disabled function and attaches information about the hyperparameters that should be tested
         """
         if isinstance(base_element, type):
             raise ValueError("Base element should be an instance but is a class.")
-        return PipelineElement(name, hyperparameters, test_disabled, disabled, base_element=base_element, **kwargs)
+        return PipelineElement(
+            name,
+            hyperparameters,
+            test_disabled,
+            disabled,
+            base_element=base_element,
+            **kwargs
+        )
 
     @property
     def feature_importances_(self):
-        if hasattr(self.base_element, 'feature_importances_'):
+        if hasattr(self.base_element, "feature_importances_"):
             return self.base_element.feature_importances_.tolist()
-        elif hasattr(self.base_element, 'coef_'):
+        elif hasattr(self.base_element, "coef_"):
             return self.base_element.coef_.tolist()
 
     def generate_config_grid(self):
@@ -291,11 +1014,11 @@ class PipelineElement(BaseEstimator):
         else:
             return []
 
-    def get_params(self, deep: bool=True):
+    def get_params(self, deep: bool = True):
         """
         Forwards the get_params request to the wrapped base element
         """
-        if hasattr(self.base_element, 'get_params'):
+        if hasattr(self.base_element, "get_params"):
             params = self.base_element.get_params(deep)
             params["name"] = self.name
             return params
@@ -313,9 +1036,9 @@ class PipelineElement(BaseEstimator):
         if self._sklearn_disabled in kwargs:
             self.disabled = kwargs[self._sklearn_disabled]
             del kwargs[self._sklearn_disabled]
-        elif 'disabled' in kwargs:
-            self.disabled = kwargs['disabled']
-            del kwargs['disabled']
+        elif "disabled" in kwargs:
+            self.disabled = kwargs["disabled"]
+            del kwargs["disabled"]
         self.base_element.set_params(**kwargs)
         return self
 
@@ -354,7 +1077,9 @@ class PipelineElement(BaseEstimator):
             logger.debug(self.name + " is predicting batch " + str(batch_idx))
 
             # split data in batches
-            X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, None, kwargs, start, stop)
+            X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(
+                X, None, kwargs, start, stop
+            )
 
             # predict
             y_pred = delegate(X_batched, **kwargs_dict_batched)
@@ -364,15 +1089,18 @@ class PipelineElement(BaseEstimator):
 
     def __predict(self, X, **kwargs):
         if not self.disabled:
-            if hasattr(self.base_element, 'predict'):
+            if hasattr(self.base_element, "predict"):
                 # Todo: check if element has kwargs, and give it to them
                 # todo: so this todo above was old, here are my changes:
-                #return self.base_element.predict(X)
-                return self.adjusted_predict_call(self.base_element.predict, X, **kwargs)
+                # return self.base_element.predict(X)
+                return self.adjusted_predict_call(
+                    self.base_element.predict, X, **kwargs
+                )
             else:
-                logger.error('BaseException. base Element should have function ' +
-                               'predict.')
-                raise BaseException('base Element should have function predict.')
+                logger.error(
+                    "BaseException. base Element should have function " + "predict."
+                )
+                raise BaseException("base Element should have function predict.")
         else:
             return X
 
@@ -398,10 +1126,12 @@ class PipelineElement(BaseEstimator):
         base exception.
         """
         if not self.disabled:
-            if hasattr(self.base_element, 'predict_proba'):
+            if hasattr(self.base_element, "predict_proba"):
                 # todo: here, I used delegate call (same as below in predict within the transform call)
-                #return self.base_element.predict_proba(X)
-                return self.adjusted_predict_call(self.base_element.predict_proba, X, **kwargs)
+                # return self.base_element.predict_proba(X)
+                return self.adjusted_predict_call(
+                    self.base_element.predict_proba, X, **kwargs
+                )
             else:
 
                 # todo: in case _final_estimator is a Branch, we do not know beforehand it the base elements will
@@ -413,13 +1143,15 @@ class PipelineElement(BaseEstimator):
 
     def __transform(self, X, y=None, **kwargs):
         if not self.disabled:
-            if hasattr(self.base_element, 'transform'):
-                return self.adjusted_delegate_call(self.base_element.transform, X, y, **kwargs)
-            elif hasattr(self.base_element, 'predict'):
+            if hasattr(self.base_element, "transform"):
+                return self.adjusted_delegate_call(
+                    self.base_element.transform, X, y, **kwargs
+                )
+            elif hasattr(self.base_element, "predict"):
                 return self.predict(X, **kwargs), y, kwargs
             else:
-                logger.error('BaseException: transform-predict-mess')
-                raise BaseException('transform-predict-mess')
+                logger.error("BaseException: transform-predict-mess")
+                raise BaseException("transform-predict-mess")
         else:
             return X, y, kwargs
 
@@ -436,9 +1168,11 @@ class PipelineElement(BaseEstimator):
             return self.__batch_transform(X, y, **kwargs)
 
     def inverse_transform(self, X, y=None, **kwargs):
-        if hasattr(self.base_element, 'inverse_transform'):
+        if hasattr(self.base_element, "inverse_transform"):
             # todo: check this
-            X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
+            X, y, kwargs = self.adjusted_delegate_call(
+                self.base_element.inverse_transform, X, y, **kwargs
+            )
         return X, y, kwargs
 
     def __batch_transform(self, X, y=None, **kwargs):
@@ -458,20 +1192,29 @@ class PipelineElement(BaseEstimator):
             batch_idx += 1
 
             # split data in batches
-            X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(X, y, kwargs, start, stop)
+            X_batched, y_batched, kwargs_dict_batched = PhotonDataHelper.split_data(
+                X, y, kwargs, start, stop
+            )
 
             actual_batch_size = PhotonDataHelper.find_n(X_batched)
-            logger.debug(self.name + " is transforming batch " + str(batch_idx) + " with " + str(actual_batch_size)
-                         + " items.")
+            logger.debug(
+                self.name
+                + " is transforming batch "
+                + str(batch_idx)
+                + " with "
+                + str(actual_batch_size)
+                + " items."
+            )
 
             # call transform
-            X_new, y_new, kwargs_new = self.adjusted_delegate_call(self.base_element.transform, X_batched, y_batched,
-                                                                   **kwargs_dict_batched)
+            X_new, y_new, kwargs_new = self.adjusted_delegate_call(
+                self.base_element.transform, X_batched, y_batched, **kwargs_dict_batched
+            )
 
             # stack results
-            processed_X, processed_y, processed_kwargs = PhotonDataHelper.join_data(processed_X, X_new, processed_y,
-                                                                                    y_new,
-                                                                                    processed_kwargs, kwargs_new)
+            processed_X, processed_y, processed_kwargs = PhotonDataHelper.join_data(
+                processed_X, X_new, processed_y, y_new, processed_kwargs, kwargs_new
+            )
 
         return processed_X, processed_y, processed_kwargs
 
@@ -520,30 +1263,48 @@ class PipelineElement(BaseEstimator):
         else:
             return delegate(X)
 
-    def score(self, X_test, y_test):
+    def score(self, X_test:np.ndarray, y_test:np.ndarray) -> float:
         """
         Calls the score function on the base element:
         Returns a goodness of fit measure or a likelihood of unseen data:
+
+        Parameters
+        ----------
+        X_test
+        y_test
+
+        Returns
+        -------
+
         """
         return self.base_element.score(X_test, y_test)
 
-    def prettify_config_output(self, config_name: str, config_value, return_dict: bool = False):
+    def prettify_config_output(
+        self, config_name: str, config_value, return_dict: bool = False
+    ):
         """Make hyperparameter combinations human readable """
         if config_name == "disabled" and config_value is False:
             if return_dict:
-                return {'disabled': False}
+                return {"disabled": False}
             else:
                 return "disabled = False"
         else:
             if return_dict:
                 return {config_name: config_value}
             else:
-                return config_name + '=' + str(config_value)
+                return config_name + "=" + str(config_value)
 
     @staticmethod
     def sanity_check_element_type_for_building_photon_pipes(pipe_element, type_of_self):
-        if (not isinstance(pipe_element, PipelineElement) and not isinstance(pipe_element, PhotonNative)) or isinstance(pipe_element, Preprocessing):
-            raise TypeError(str(type_of_self) + " only accepts PHOTON elements. Cannot add element of type " + str(type(pipe_element)))
+        if (
+            not isinstance(pipe_element, PipelineElement)
+            and not isinstance(pipe_element, PhotonNative)
+        ) or isinstance(pipe_element, Preprocessing):
+            raise TypeError(
+                str(type_of_self)
+                + " only accepts PHOTON elements. Cannot add element of type "
+                + str(type(pipe_element))
+            )
 
 
 class Branch(PipelineElement):
@@ -559,7 +1320,9 @@ class Branch(PipelineElement):
 
     def __init__(self, name, elements=None):
 
-        super().__init__(name, {}, test_disabled=False, disabled=False, base_element=True)
+        super().__init__(
+            name, {}, test_disabled=False, disabled=False, base_element=True
+        )
 
         # in case any of the children needs y or covariates we need to request them
         self.needs_y = True
@@ -571,7 +1334,7 @@ class Branch(PipelineElement):
         # needed for caching on individual level
         self.fix_fold_id = False
         self.do_not_delete_cache_folder = False
-        
+
         # add elements
         if elements:
             for element in elements:
@@ -582,7 +1345,7 @@ class Branch(PipelineElement):
         return super().fit(X, y, **kwargs)
 
     def transform(self, X, y=None, **kwargs):
-        if self._estimator_type == 'classifier' or self._estimator_type == 'regressor':
+        if self._estimator_type == "classifier" or self._estimator_type == "regressor":
             return super().predict(X), y, kwargs
         return super().transform(X, y, **kwargs)
 
@@ -627,16 +1390,23 @@ class Branch(PipelineElement):
     @staticmethod
     def sanity_check_pipeline(pipe):
         if isinstance(pipe.elements[-1][1], CallbackElement):
-            raise Warning("Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it.")
-            Logger().warn("Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it.")
+            raise Warning(
+                "Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it."
+            )
+            Logger().warn(
+                "Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it."
+            )
             del pipeline_steps[-1]
         return pipe
 
     def _prepare_pipeline(self):
         """ Generates sklearn pipeline with all underlying elements """
 
-        self._hyperparameters = {item.name: item.hyperparameters for item in self.elements
-                                 if hasattr(item, 'hyperparameters')}
+        self._hyperparameters = {
+            item.name: item.hyperparameters
+            for item in self.elements
+            if hasattr(item, "hyperparameters")
+        }
 
         if self.has_hyperparameters:
             self.generate_sklearn_hyperparameters()
@@ -648,7 +1418,7 @@ class Branch(PipelineElement):
     def copy_me(self):
         new_copy_of_me = self.__class__(self.name)
         for item in self.elements:
-            if hasattr(item, 'copy_me'):
+            if hasattr(item, "copy_me"):
                 copy_item = item.copy_me()
             else:
                 copy_item = deepcopy(item)
@@ -671,7 +1441,7 @@ class Branch(PipelineElement):
 
     @property
     def _estimator_type(self):
-        return getattr(self.elements[-1], '_estimator_type')
+        return getattr(self.elements[-1], "_estimator_type")
 
     def generate_config_grid(self):
         if self.has_hyperparameters:
@@ -687,15 +1457,15 @@ class Branch(PipelineElement):
         self._hyperparameters = {}
         for element in self.elements:
             for attribute, value_list in element.hyperparameters.items():
-                self._hyperparameters[self.name + '__' + attribute] = value_list
+                self._hyperparameters[self.name + "__" + attribute] = value_list
 
     def _check_hyper(self, BaseEstimator):
         pass
 
     @property
     def feature_importances_(self):
-        if hasattr(self.elements[-1], 'feature_importances_'):
-            return getattr(self.elements[-1], 'feature_importances_')
+        if hasattr(self.elements[-1], "feature_importances_"):
+            return getattr(self.elements[-1], "feature_importances_")
 
 
 class Preprocessing(Branch):
@@ -706,11 +1476,11 @@ class Preprocessing(Branch):
     """
 
     def __init__(self):
-        super().__init__('Preprocessing')
+        super().__init__("Preprocessing")
         self.has_hyperparameters = False
         self.needs_y = True
         self.needs_covariates = True
-        self._name = 'Preprocessing'
+        self._name = "Preprocessing"
         self.is_transformer = True
         self.is_estimator = False
 
@@ -728,15 +1498,19 @@ class Preprocessing(Branch):
         if hasattr(pipe_element, "transform"):
             super(Preprocessing, self).__iadd__(pipe_element)
             if len(pipe_element.hyperparameters) > 0:
-                raise ValueError("A preprocessing transformer must not have any hyperparameter "
-                                 "because it is not part of the optimization and cross validation procedure")
+                raise ValueError(
+                    "A preprocessing transformer must not have any hyperparameter "
+                    "because it is not part of the optimization and cross validation procedure"
+                )
 
         else:
             raise ValueError("Pipeline Element must have transform function")
         return self
 
     def predict(self, data, **kwargs):
-        raise Warning("There is no predict function of the preprocessing pipe, it is a transformer only.")
+        raise Warning(
+            "There is no predict function of the preprocessing pipe, it is a transformer only."
+        )
         pass
 
     @property
@@ -768,8 +1542,13 @@ class Stack(PipelineElement):
         * `voting` [bool]:
             If true, the predictions of the encapsulated pipeline elements are joined to a single prediction
         """
-        super(Stack, self).__init__(name, hyperparameters={}, test_disabled=False, disabled=False,
-                                    base_element=True)
+        super(Stack, self).__init__(
+            name,
+            hyperparameters={},
+            test_disabled=False,
+            disabled=False,
+            base_element=True,
+        )
 
         self._hyperparameters = {}
         self.elements = list()
@@ -796,7 +1575,7 @@ class Stack(PipelineElement):
         # for each configuration
         tmp_dict = dict(item.hyperparameters)
         for key, element in tmp_dict.items():
-            self._hyperparameters[self.name + '__' + key] = tmp_dict[key]
+            self._hyperparameters[self.name + "__" + key] = tmp_dict[key]
 
         return self
 
@@ -806,10 +1585,12 @@ class Stack(PipelineElement):
                 self.check_if_needs_y(child_item)
         elif isinstance(item, PipelineElement):
             if item.needs_y:
-                raise NotImplementedError("Elements in Stack must not transform y because the number of samples in every "
-                                 "element of the stack might differ. Then, it will not be possible to concatenate those "
-                                 "data and target matrices. Please use the transformer that is using y before or after "
-                                 "the stack.")
+                raise NotImplementedError(
+                    "Elements in Stack must not transform y because the number of samples in every "
+                    "element of the stack might differ. Then, it will not be possible to concatenate those "
+                    "data and target matrices. Please use the transformer that is using y before or after "
+                    "the stack."
+                )
 
     def add(self, item):
         self.__iadd__(item)
@@ -841,11 +1622,11 @@ class Stack(PipelineElement):
         """
         spread_params_dict = {}
         for k, val in kwargs.items():
-            splitted_k = k.split('__')
+            splitted_k = k.split("__")
             item_name = splitted_k[0]
             if item_name not in spread_params_dict:
                 spread_params_dict[item_name] = {}
-            dict_entry = {'__'.join(splitted_k[1::]): val}
+            dict_entry = {"__".join(splitted_k[1::]): val}
             spread_params_dict[item_name].update(dict_entry)
 
         for name, params in spread_params_dict.items():
@@ -855,8 +1636,11 @@ class Stack(PipelineElement):
                     element.set_params(**params)
                     missing_element = None
             if missing_element:
-                raise ValueError("Couldn't set hyperparameter for element {} -> {}".format(missing_element[0],
-                                                                                           missing_element[1]))
+                raise ValueError(
+                    "Couldn't set hyperparameter for element {} -> {}".format(
+                        missing_element[0], missing_element[1]
+                    )
+                )
         return self
 
     def fit(self, X, y=None, **kwargs):
@@ -883,7 +1667,9 @@ class Stack(PipelineElement):
         predicted_data = np.array([])
         for element in self.elements:
             element_transform = element.predict(X, **kwargs)
-            predicted_data = PhotonDataHelper.stack_data_horizontally(predicted_data, element_transform)
+            predicted_data = PhotonDataHelper.stack_data_horizontally(
+                predicted_data, element_transform
+            )
         return predicted_data
 
     def predict_proba(self, X, y=None, **kwargs):
@@ -895,7 +1681,9 @@ class Stack(PipelineElement):
             element_transform = element.predict_proba(X)
             if element_transform is None:
                 element_transform = element.predict(X)
-            predicted_data = PhotonDataHelper.stack_data_horizontally(predicted_data, element_transform)
+            predicted_data = PhotonDataHelper.stack_data_horizontally(
+                predicted_data, element_transform
+            )
         return predicted_data
 
     def transform(self, X, y=None, **kwargs):
@@ -908,7 +1696,9 @@ class Stack(PipelineElement):
         for element in self.elements:
             # if it is a hyperpipe with a final estimator, we want to use predict:
             element_transform, _, _ = element.transform(X, y, **kwargs)
-            transformed_data = PhotonDataHelper.stack_data_horizontally(transformed_data, element_transform)
+            transformed_data = PhotonDataHelper.stack_data_horizontally(
+                transformed_data, element_transform
+            )
 
         return transformed_data, y, kwargs
 
@@ -922,13 +1712,15 @@ class Stack(PipelineElement):
         return ps
 
     def inverse_transform(self, X, y=None, **kwargs):
-        raise NotImplementedError("Inverse Transform is not yet implemented for a Stacking Element in PHOTON")
+        raise NotImplementedError(
+            "Inverse Transform is not yet implemented for a Stacking Element in PHOTON"
+        )
 
     @property
     def _estimator_type(self):
         return None
 
-    def _check_hyper(self,BaseEstimator):
+    def _check_hyper(self, BaseEstimator):
         pass
 
     @property
@@ -1048,7 +1840,7 @@ class Switch(PipelineElement):
             # for config_key, config_value in distinct_values_config.items():
             #     distinct_values_config_copy[self.name + "__" + config_key] = config_value
 
-            if hasattr(pipe_element, 'generate_config_grid'):
+            if hasattr(pipe_element, "generate_config_grid"):
                 element_configurations = pipe_element.generate_config_grid()
                 final_configuration_list = []
                 if len(element_configurations) == 0:
@@ -1074,7 +1866,7 @@ class Switch(PipelineElement):
         self._current_element = value
         self.base_element = self.elements[self.current_element[0]]
 
-    def get_params(self, deep: bool=True):
+    def get_params(self, deep: bool = True):
         if self.base_element:
             return self.base_element.get_params(deep)
         else:
@@ -1094,8 +1886,8 @@ class Switch(PipelineElement):
         # in case we are operating with grid search
         if self.sklearn_name in kwargs:
             config_nr = kwargs[self.sklearn_name]
-        elif 'current_element' in kwargs:
-            config_nr = kwargs['current_element']
+        elif "current_element" in kwargs:
+            config_nr = kwargs["current_element"]
 
         # in case we are operating with another optimizer
         if config_nr is None:
@@ -1110,8 +1902,8 @@ class Switch(PipelineElement):
                     break
         else:
             if not isinstance(config_nr, (tuple, list)):
-                logger.error('ValueError: current_element must be of type Tuple')
-                raise ValueError('current_element must be of type Tuple')
+                logger.error("ValueError: current_element must be of type Tuple")
+                raise ValueError("current_element must be of type Tuple")
 
             # grid search hack
             self.current_element = config_nr
@@ -1121,8 +1913,8 @@ class Switch(PipelineElement):
             # remove name
             unnamed_config = {}
             for config_key, config_value in config.items():
-                key_split = config_key.split('__')
-                unnamed_config['__'.join(key_split[1::])] = config_value
+                key_split = config_key.split("__")
+                unnamed_config["__".join(key_split[1::])] = config_value
             self.base_element.set_params(**unnamed_config)
         return self
 
@@ -1148,7 +1940,9 @@ class Switch(PipelineElement):
         """
 
         if isinstance(config_value, tuple):
-            output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
+            output = self.pipeline_element_configurations[config_value[0]][
+                config_value[1]
+            ]
             if not output:
                 if return_dict:
                     return {self.elements[config_value[0]].name: None}
@@ -1168,31 +1962,35 @@ class Switch(PipelineElement):
         base exception.
         """
         if not self.disabled:
-            if hasattr(self.base_element.base_element, 'predict_proba'):
+            if hasattr(self.base_element.base_element, "predict_proba"):
                 return self.base_element.predict_proba(X)
             else:
                 return None
         return X
 
-    def _check_hyper(self,BaseEstimator):
+    def _check_hyper(self, BaseEstimator):
         pass
 
     def inverse_transform(self, X, y=None, **kwargs):
-        if hasattr(self.base_element, 'inverse_transform'):
+        if hasattr(self.base_element, "inverse_transform"):
             # todo: check this
-            X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
+            X, y, kwargs = self.adjusted_delegate_call(
+                self.base_element.inverse_transform, X, y, **kwargs
+            )
         return X, y, kwargs
 
     @property
     def _estimator_type(self):
         estimator_types = list()
         for element in self.elements:
-            estimator_types.append(getattr(element, '_estimator_type'))
+            estimator_types.append(getattr(element, "_estimator_type"))
 
         unique_types = set(estimator_types)
         if len(unique_types) > 1:
-            raise NotImplementedError("Switch should only contain elements of a single type (transformer, classifier, "
-                                      "regressor). Found multiple types: {}".format(unique_types))
+            raise NotImplementedError(
+                "Switch should only contain elements of a single type (transformer, classifier, "
+                "regressor). Found multiple types: {}".format(unique_types)
+            )
         elif len(unique_types) == 1:
             return list(unique_types)[0]
         else:
@@ -1200,16 +1998,17 @@ class Switch(PipelineElement):
 
     @property
     def feature_importances_(self):
-        if hasattr(self.base_element, 'feature_importances_'):
-            return getattr(self.base_element, 'feature_importances_')
+        if hasattr(self.base_element, "feature_importances_"):
+            return getattr(self.base_element, "feature_importances_")
 
 
 class DataFilter(BaseEstimator, PhotonNative):
     """
     Helper Class to split the data e.g. for stacking.
     """
+
     def __init__(self, indices):
-        self.name = 'DataFilter'
+        self.name = "DataFilter"
         self.hyperparameters = {}
         self.indices = indices
         self.needs_covariates = False
@@ -1233,8 +2032,7 @@ class DataFilter(BaseEstimator, PhotonNative):
 
 
 class CallbackElement(PhotonNative):
-
-    def __init__(self, name, delegate_function, method_to_monitor='transform'):
+    def __init__(self, name, delegate_function, method_to_monitor="transform"):
 
         self.needs_covariates = True
         self.needs_y = True
@@ -1247,12 +2045,12 @@ class CallbackElement(PhotonNative):
         self.is_estimator = False
 
     def fit(self, X, y=None, **kwargs):
-        if self.method_to_monitor == 'fit':
+        if self.method_to_monitor == "fit":
             self.delegate_function(X, y, **kwargs)
         return self
 
     def transform(self, X, y=None, **kwargs):
-        if self.method_to_monitor == 'transform':
+        if self.method_to_monitor == "transform":
             self.delegate_function(X, y, **kwargs)
         return X, y, kwargs
 
@@ -1269,3 +2067,5 @@ class CallbackElement(PhotonNative):
     @property
     def feature_importances_(self):
         return
+
+

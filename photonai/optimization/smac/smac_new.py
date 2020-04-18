@@ -8,36 +8,49 @@ from photonai.optimization.base_optimizer import PhotonBaseOptimizer
 from photonai.optimization.smac.execute_ta_run import MyExecuteTARun
 
 try:
-    from smac.configspace import UniformFloatHyperparameter, UniformIntegerHyperparameter, CategoricalHyperparameter, \
-        ConfigurationSpace, Configuration, InCondition, Constant
+    from smac.configspace import (
+        UniformFloatHyperparameter,
+        UniformIntegerHyperparameter,
+        CategoricalHyperparameter,
+        ConfigurationSpace,
+        Configuration,
+        InCondition,
+        Constant,
+    )
     from smac.scenario.scenario import Scenario
     from smac.tae.execute_ta_run import StatusType
     from smac.facade.smac_bo_facade import SMAC4BO
     from smac.intensification.intensification import Intensifier
+
     __found__ = True
 except ModuleNotFoundError:
     __found__ = False
 
 
 class SMACOptimizer(PhotonBaseOptimizer):
-
-    def __init__(self,
-                 run_obj="quality",
-                 wallclock_limit: float = float("inf"),
-                 min_r=1,
-                 max_r=1,
-                 run_limit=5,
-                 smac_helper=None):  # optimizer only for test and developing settings yet.
+    def __init__(
+        self,
+        run_obj="quality",
+        wallclock_limit: float = float("inf"),
+        min_r=1,
+        max_r=1,
+        run_limit=5,
+        smac_helper=None,
+    ):  # optimizer only for test and developing settings yet.
         if not __found__:
-            raise ModuleNotFoundError("Module smac not found or not installed as expected. "
-                                      "Please install the smac_requirements.txt PHOTON provides.")
+            raise ModuleNotFoundError(
+                "Module smac not found or not installed as expected. "
+                "Please install the smac_requirements.txt PHOTON provides."
+            )
 
         self.wallclock_limit = wallclock_limit
         self.minR = min_r
         self.maxR = max_r
         if self.minR != 1 or self.maxR != 1:
-            raise NotImplementedError("PHOTONs seed management is not implemented yet. "
-                                      "At this juncture we can not run a config multiple times correctly.")
+            raise NotImplementedError(
+                "PHOTONs seed management is not implemented yet. "
+                "At this juncture we can not run a config multiple times correctly."
+            )
 
         self.cspace = ConfigurationSpace()  # Hyperparameter space for smac
         self.runtime = 0
@@ -70,12 +83,18 @@ class SMACOptimizer(PhotonBaseOptimizer):
         elif isinstance(hyperparam, list):
             return CategoricalHyperparameter(name, hyperparam)
         elif isinstance(hyperparam, FloatRange):
-            if hyperparam.range_type == 'linspace':
-                return UniformFloatHyperparameter(name, hyperparam.start, hyperparam.stop)
-            elif hyperparam.range_type == 'logspace':
-                raise NotImplementedError("Logspace in your float hyperparameter is not implemented in SMAC.")
+            if hyperparam.range_type == "linspace":
+                return UniformFloatHyperparameter(
+                    name, hyperparam.start, hyperparam.stop
+                )
+            elif hyperparam.range_type == "logspace":
+                raise NotImplementedError(
+                    "Logspace in your float hyperparameter is not implemented in SMAC."
+                )
             else:
-                return UniformFloatHyperparameter(name, hyperparam.start, hyperparam.stop)
+                return UniformFloatHyperparameter(
+                    name, hyperparam.start, hyperparam.stop
+                )
         elif isinstance(hyperparam, IntegerRange):
             return UniformIntegerHyperparameter(name, hyperparam.start, hyperparam.stop)
 
@@ -86,19 +105,26 @@ class SMACOptimizer(PhotonBaseOptimizer):
         for pipe_element in pipeline_elements:
             # build conditions for switch elements
             # maybe this creepy condition is so that we avoid circular imports!
-            if pipe_element.__class__.__name__ == 'Switch':
+            if pipe_element.__class__.__name__ == "Switch":
                 algorithm_options = {}
                 for algo in pipe_element.elements:
                     algo_params = []  # hyper params corresponding to "algo"
                     for name, value in algo.hyperparameters.items():
-                        smac_param = self._convert_photon_to_smac_space(value, (
-                                pipe_element.name + "__" + name))  # or element.name__algo.name__name ???
+                        smac_param = self._convert_photon_to_smac_space(
+                            value, (pipe_element.name + "__" + name)
+                        )  # or element.name__algo.name__name ???
                         algo_params.append(smac_param)
-                    algorithm_options[(pipe_element.name + "__" + algo.name)] = algo_params
+                    algorithm_options[
+                        (pipe_element.name + "__" + algo.name)
+                    ] = algo_params
 
-                algos = CategoricalHyperparameter(name=pipe_element.name + "__algos", choices=algorithm_options.keys())
+                algos = CategoricalHyperparameter(
+                    name=pipe_element.name + "__algos", choices=algorithm_options.keys()
+                )
 
-                self.switch_optiones[pipe_element.name + "__algos"] = algorithm_options.keys()
+                self.switch_optiones[
+                    pipe_element.name + "__algos"
+                ] = algorithm_options.keys()
 
                 self.cspace.add_hyperparameter(algos)
                 for algo, params in algorithm_options.items():
@@ -108,7 +134,7 @@ class SMACOptimizer(PhotonBaseOptimizer):
                         self.cspace.add_condition(cond)
                 continue
 
-            if hasattr(pipe_element, 'hyperparameters'):
+            if hasattr(pipe_element, "hyperparameters"):
                 for name, value in pipe_element.hyperparameters.items():
                     self.hyperparameters.append(name)
                     # if we only have one value we do not need to optimize
@@ -130,14 +156,20 @@ class SMACOptimizer(PhotonBaseOptimizer):
 
         self.maximize_metric = maximize_metric
 
-        self.scenario = Scenario({"run_obj": self.run_obj,
-                                  "cs": self.cspace,
-                                  "deterministic": "true",
-                                  "wallclock_limit": self.wallclock_limit})
+        self.scenario = Scenario(
+            {
+                "run_obj": self.run_obj,
+                "cs": self.cspace,
+                "deterministic": "true",
+                "wallclock_limit": self.wallclock_limit,
+            }
+        )
 
-        self.smac = SMAC4BO(scenario=self.scenario,
-                            rng=np.random.RandomState(42),
-                            tae_runner=MyExecuteTARun)
+        self.smac = SMAC4BO(
+            scenario=self.scenario,
+            rng=np.random.RandomState(42),
+            tae_runner=MyExecuteTARun,
+        )
 
         if self.smac_helper:
             self.smac_helper["data"] = self.smac
@@ -154,10 +186,14 @@ class SMACOptimizer(PhotonBaseOptimizer):
         config = copy.copy(config)
 
         for key in self.switch_optiones.keys():
-            config[key] = [x for x in self.switch_optiones[key] if any(x in val for val in config.keys())][0]
+            config[key] = [
+                x
+                for x in self.switch_optiones[key]
+                if any(x in val for val in config.keys())
+            ][0]
 
         if self.maximize_metric:
-            performance = 1-performance[1]
+            performance = 1 - performance[1]
 
         config = Configuration(self.cspace, values=config)
 
@@ -165,14 +201,17 @@ class SMACOptimizer(PhotonBaseOptimizer):
 
         # first incubment setting
         if self.runtime == 0:
-            self.optimizer.incumbent = Configuration(self.cspace, values=config)#self.challengers[0])
+            self.optimizer.incumbent = Configuration(
+                self.cspace, values=config
+            )  # self.challengers[0])
             self.optimizer.start()
         else:
             if self.optimizer.stats.is_budget_exhausted():
                 self.budget_exhausted = True
 
-        self.optimizer.runhistory.add(config=config, cost=performance, time=0, status=StatusType.SUCCESS,
-                                      seed=0)
+        self.optimizer.runhistory.add(
+            config=config, cost=performance, time=0, status=StatusType.SUCCESS, seed=0
+        )
 
         self.runtime += 1
 
@@ -180,23 +219,35 @@ class SMACOptimizer(PhotonBaseOptimizer):
         def init():
 
             if self.runtime == 0:
-                ta_run = MyExecuteTARun(run_limit=self.run_limit, runhistory=self.optimizer.runhistory)
-                self.optimizer.intensifier = Intensifier(tae_runner=ta_run,
-                                                         stats=self.optimizer.stats,
-                                                         traj_logger=None,
-                                                         rng=np.random.RandomState(42),
-                                                         instances=self.scenario.train_insts, #list(self.optimizer.runhistory.ids_config.keys()),
-                                                         minR=1, maxR=1,
-                                                         min_chall=self.scenario.intens_min_chall,
-                                                         instance_specifics=self.scenario.instance_specific)  # ,
+                ta_run = MyExecuteTARun(
+                    run_limit=self.run_limit, runhistory=self.optimizer.runhistory
+                )
+                self.optimizer.intensifier = Intensifier(
+                    tae_runner=ta_run,
+                    stats=self.optimizer.stats,
+                    traj_logger=None,
+                    rng=np.random.RandomState(42),
+                    instances=self.scenario.train_insts,  # list(self.optimizer.runhistory.ids_config.keys()),
+                    minR=1,
+                    maxR=1,
+                    min_chall=self.scenario.intens_min_chall,
+                    instance_specifics=self.scenario.instance_specific,
+                )  # ,
                 # run_limit=self.run_limit)
-                #self.optimizer.stats.start_timing()
-                self.old_challengers = self.optimizer.initial_design.select_configurations()
-                #a = self.optimizer.initial_design.select_configurations()[0].get_dictionary()
-                #tmp_dict = x.get_dictionary()
-                self.ask_list = [{key: x.get_dictionary()[key] for key in x.get_dictionary().keys()
-                                  if 'algos' not in key}
-                                 for x in self.optimizer.initial_design.select_configurations()]
+                # self.optimizer.stats.start_timing()
+                self.old_challengers = (
+                    self.optimizer.initial_design.select_configurations()
+                )
+                # a = self.optimizer.initial_design.select_configurations()[0].get_dictionary()
+                # tmp_dict = x.get_dictionary()
+                self.ask_list = [
+                    {
+                        key: x.get_dictionary()[key]
+                        for key in x.get_dictionary().keys()
+                        if "algos" not in key
+                    }
+                    for x in self.optimizer.initial_design.select_configurations()
+                ]
                 self.smac_helper = len(self.ask_list)
                 print("-----SMAC INIT READY----")
             else:
@@ -208,24 +259,33 @@ class SMACOptimizer(PhotonBaseOptimizer):
                 challengers = self.optimizer.choose_next(X, Y)
 
                 time_spent = time.time() - start_time
-                time_left = self.optimizer._get_timebound_for_intensification(time_spent)
+                time_left = self.optimizer._get_timebound_for_intensification(
+                    time_spent
+                )
 
                 # first run challenger vs. any other run
                 if isinstance(challengers, list):
-                    self.challengers = challengers[:self.run_limit]
+                    self.challengers = challengers[: self.run_limit]
                 else:
-                    self.challengers = challengers.challengers[:self.run_limit]
+                    self.challengers = challengers.challengers[: self.run_limit]
 
-                self.ask_list = [{key: x.get_dictionary()[key] for key in x.get_dictionary().keys()
-                                  if 'algos' not in key} for x in self.challengers]
+                self.ask_list = [
+                    {
+                        key: x.get_dictionary()[key]
+                        for key in x.get_dictionary().keys()
+                        if "algos" not in key
+                    }
+                    for x in self.challengers
+                ]
                 if self.old_challengers:
-                    self.incumbent, inc_perf = self.optimizer.intensifier.\
-                        intensify(challengers=self.old_challengers,
-                                  incumbent=self.optimizer.incumbent,
-                                  run_history=self.optimizer.runhistory,
-                                  aggregate_func=self.optimizer.aggregate_func,
-                                  log_traj=False,
-                                  time_bound=max(self.optimizer.intensifier._min_time, time_left))
+                    self.incumbent, inc_perf = self.optimizer.intensifier.intensify(
+                        challengers=self.old_challengers,
+                        incumbent=self.optimizer.incumbent,
+                        run_history=self.optimizer.runhistory,
+                        aggregate_func=self.optimizer.aggregate_func,
+                        log_traj=False,
+                        time_bound=max(self.optimizer.intensifier._min_time, time_left),
+                    )
                     self.optimizer.incumbent = self.incumbent
                 self.old_challengers = self.challengers
 

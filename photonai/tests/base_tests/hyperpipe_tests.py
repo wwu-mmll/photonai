@@ -13,28 +13,48 @@ from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline as SKLPipeline
 from sklearn.preprocessing import StandardScaler
 
-from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
-    Switch
+from photonai.base import (
+    PipelineElement,
+    Hyperpipe,
+    OutputSettings,
+    Preprocessing,
+    CallbackElement,
+    Branch,
+    Stack,
+    Switch,
+)
 from photonai.neuro import NeuroBranch
 from photonai.optimization import IntegerRange, Categorical
 from photonai.processing.results_handler import ResultsHandler
-from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, FoldOperations, \
-    MDBInnerFold, MDBOuterFold, MDBScoreInformation, MDBDummyResults, MDBHyperpipe
+from photonai.processing.results_structure import (
+    MDBConfig,
+    MDBFoldMetric,
+    FoldOperations,
+    MDBInnerFold,
+    MDBOuterFold,
+    MDBScoreInformation,
+    MDBDummyResults,
+    MDBHyperpipe,
+)
 from photonai.test.base_tests.dummy_elements import DummyTransformer
 from photonai.test.base_tests.photon_elements_tests import elements_to_dict
-from photonai.test.base_tests.photon_pipeline_tests import DummyYAndCovariatesTransformer
+from photonai.test.base_tests.photon_pipeline_tests import (
+    DummyYAndCovariatesTransformer,
+)
 from photonai.test.photon_base_test import PhotonBaseTest
 
 
 class HyperpipeTests(PhotonBaseTest):
-
     def setup_hyperpipe(self, output_settings=None):
         if output_settings is None:
             output_settings = OutputSettings(project_folder=self.tmp_folder_path)
-        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
-                                   metrics=self.metrics,
-                                   best_config_metric=self.best_config_metric,
-                                   output_settings=output_settings)
+        self.hyperpipe = Hyperpipe(
+            "god",
+            inner_cv=self.inner_cv_object,
+            metrics=self.metrics,
+            best_config_metric=self.best_config_metric,
+            output_settings=output_settings,
+        )
         self.hyperpipe += self.ss_pipe_element
         self.hyperpipe += self.pca_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
@@ -42,13 +62,18 @@ class HyperpipeTests(PhotonBaseTest):
     def setUp(self):
 
         super(HyperpipeTests, self).setUp()
-        self.ss_pipe_element = PipelineElement('StandardScaler')
-        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, random_state=42, test_disabled=True)
-        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['linear']}, # 'rbf', 'sigmoid']
-                                                random_state=42)
+        self.ss_pipe_element = PipelineElement("StandardScaler")
+        self.pca_pipe_element = PipelineElement(
+            "PCA", {"n_components": [1, 2]}, random_state=42, test_disabled=True
+        )
+        self.svc_pipe_element = PipelineElement(
+            "SVC",
+            {"C": [0.1, 1], "kernel": ["linear"]},  # 'rbf', 'sigmoid']
+            random_state=42,
+        )
 
         self.inner_cv_object = KFold(n_splits=3)
-        self.metrics = ["accuracy", 'recall', 'precision']
+        self.metrics = ["accuracy", "recall", "precision"]
         self.best_config_metric = "accuracy"
         self.setup_hyperpipe()
 
@@ -58,7 +83,7 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_init(self):
         # test that all init parameters can be retrieved via the cleaned up subclasses
-        self.assertEqual(self.hyperpipe.name, 'god')
+        self.assertEqual(self.hyperpipe.name, "god")
 
         # in case don't give information, check for the default parameters, otherwise for the infos given in setUp
         # Cross Validation
@@ -74,7 +99,9 @@ class HyperpipeTests(PhotonBaseTest):
         # Optimization
         self.assertIsNotNone(self.hyperpipe.optimization)
         self.assertListEqual(self.hyperpipe.optimization.metrics, self.metrics)
-        self.assertEqual(self.hyperpipe.optimization.best_config_metric, self.best_config_metric)
+        self.assertEqual(
+            self.hyperpipe.optimization.best_config_metric, self.best_config_metric
+        )
         self.assertEqual(self.hyperpipe.optimization.optimizer_input_str, "grid_search")
         self.assertTrue(self.hyperpipe.optimization.maximize_metric)
         self.assertIsNone(self.hyperpipe.optimization.performance_constraints)
@@ -101,8 +128,9 @@ class HyperpipeTests(PhotonBaseTest):
 
         def my_func(X, y, **kwargs):
             return True
+
         # test adding callback item
-        my_call_back_item = CallbackElement('test_element', my_func, 'predict')
+        my_call_back_item = CallbackElement("test_element", my_func, "predict")
         self.hyperpipe.add(my_call_back_item)
         self.assertIs(self.hyperpipe.elements[-1], my_call_back_item)
 
@@ -113,12 +141,18 @@ class HyperpipeTests(PhotonBaseTest):
 
         # make sure that if no best config metric is given, PHOTON raises a warning
         with self.assertRaises(Warning):
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
+            hyperpipe = Hyperpipe(
+                "hp_name",
+                inner_cv=self.inner_cv_object,
+                metrics=["accuracy", "f1_score"],
+            )
 
     def test_preprocessing(self):
 
         prepro_pipe = Preprocessing()
-        prepro_pipe += PipelineElement.create("dummy", DummyYAndCovariatesTransformer(), {})
+        prepro_pipe += PipelineElement.create(
+            "dummy", DummyYAndCovariatesTransformer(), {}
+        )
 
         self.hyperpipe += prepro_pipe
         self.hyperpipe.fit(self.__X, self.__y)
@@ -129,20 +163,22 @@ class HyperpipeTests(PhotonBaseTest):
         def callback(X, y=None, **kwargs):
             pass
 
-        pipe = Hyperpipe('name', inner_cv=KFold(n_splits=2), best_config_metric='mean_squared_error')
+        pipe = Hyperpipe(
+            "name", inner_cv=KFold(n_splits=2), best_config_metric="mean_squared_error"
+        )
 
         with self.assertRaises(NotImplementedError):
-            pipe += PipelineElement('PCA')
+            pipe += PipelineElement("PCA")
             est_type = pipe.estimation_type
 
-        pipe += PipelineElement('SVC')
-        self.assertEqual(pipe.estimation_type, 'classifier')
+        pipe += PipelineElement("SVC")
+        self.assertEqual(pipe.estimation_type, "classifier")
 
-        pipe.elements[-1] = PipelineElement('SVR')
-        self.assertEqual(pipe.estimation_type, 'regressor')
+        pipe.elements[-1] = PipelineElement("SVR")
+        self.assertEqual(pipe.estimation_type, "regressor")
 
         with self.assertRaises(NotImplementedError):
-            pipe.elements[-1] = CallbackElement('MyCallback', callback)
+            pipe.elements[-1] = CallbackElement("MyCallback", callback)
             est_type = pipe.estimation_type
 
     def test_copy_me(self):
@@ -157,11 +193,11 @@ class HyperpipeTests(PhotonBaseTest):
         # the current_configs of the elements are not None after calling fit() on a hyperpipe
         # when copying the respective PipelineElement, these current_configs are copied, too
         # this is why we need to delete _pipe and elements before asserting for equality
-        copy_after_fit['_pipe'] = None
-        copy_after_fit['elements'] = None
+        copy_after_fit["_pipe"] = None
+        copy_after_fit["elements"] = None
         copy = elements_to_dict(copy)
-        copy['_pipe'] = None
-        copy['elements'] = None
+        copy["_pipe"] = None
+        copy["elements"] = None
         self.assertDictEqual(copy, copy_after_fit)
 
         # check if deepcopy worked
@@ -171,51 +207,64 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_save_optimum_pipe(self):
         # todo: test .save() of custom model
-        tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
+        tmp_path = os.path.join(self.tmp_folder_path, "optimum_pipypipe")
         settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
 
-        my_pipe = Hyperpipe('hyperpipe',
-                            optimizer='random_grid_search',
-                            optimizer_params={'n_configurations': 3},
-                            metrics=['accuracy', 'precision', 'recall'],
-                            best_config_metric='f1_score',
-                            outer_cv=KFold(n_splits=2),
-                            inner_cv=KFold(n_splits=2),
-                            verbosity=1,
-                            output_settings=settings)
+        my_pipe = Hyperpipe(
+            "hyperpipe",
+            optimizer="random_grid_search",
+            optimizer_params={"n_configurations": 3},
+            metrics=["accuracy", "precision", "recall"],
+            best_config_metric="f1_score",
+            outer_cv=KFold(n_splits=2),
+            inner_cv=KFold(n_splits=2),
+            verbosity=1,
+            output_settings=settings,
+        )
 
         preproc = Preprocessing()
-        preproc += PipelineElement('StandardScaler')
+        preproc += PipelineElement("StandardScaler")
 
         # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
-        tree_qua_branch = Branch('tree_branch')
-        tree_qua_branch += PipelineElement('QuantileTransformer')
-        tree_qua_branch += PipelineElement('DecisionTreeClassifier', {'min_samples_split': IntegerRange(2, 4)},
-                                           criterion='gini')
+        tree_qua_branch = Branch("tree_branch")
+        tree_qua_branch += PipelineElement("QuantileTransformer")
+        tree_qua_branch += PipelineElement(
+            "DecisionTreeClassifier",
+            {"min_samples_split": IntegerRange(2, 4)},
+            criterion="gini",
+        )
 
         # BRANCH WITH MinMaxScaler AND DecisionTreeClassifier
-        svm_mima_branch = Branch('svm_branch')
-        svm_mima_branch += PipelineElement('MinMaxScaler')
-        svm_mima_branch += PipelineElement('SVC', {'kernel': Categorical(['rbf', 'linear']), 'C': 2.0}, gamma='auto')
+        svm_mima_branch = Branch("svm_branch")
+        svm_mima_branch += PipelineElement("MinMaxScaler")
+        svm_mima_branch += PipelineElement(
+            "SVC", {"kernel": Categorical(["rbf", "linear"]), "C": 2.0}, gamma="auto"
+        )
 
         # BRANCH WITH StandardScaler AND KNeighborsClassifier
-        knn_sta_branch = Branch('neighbour_branch')
+        knn_sta_branch = Branch("neighbour_branch")
         knn_sta_branch += PipelineElement.create("dummy", DummyTransformer(), {})
-        knn_sta_branch += PipelineElement('KNeighborsClassifier')
+        knn_sta_branch += PipelineElement("KNeighborsClassifier")
 
         my_pipe += preproc
         # voting = True to mean the result of every branch
-        my_pipe += Stack('final_stack', [tree_qua_branch, svm_mima_branch, knn_sta_branch])
+        my_pipe += Stack(
+            "final_stack", [tree_qua_branch, svm_mima_branch, knn_sta_branch]
+        )
 
-        my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
+        my_pipe += PipelineElement("LogisticRegression", solver="lbfgs")
 
         my_pipe.fit(self.__X, self.__y)
-        model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
+        model_path = os.path.join(
+            my_pipe.output_settings.results_folder, "photon_best_model.photon"
+        )
         self.assertTrue(os.path.exists(model_path))
 
         # now move optimum pipe to new folder
-        test_folder = os.path.join(my_pipe.output_settings.results_folder, 'new_test_folder')
-        new_model_path = os.path.join(test_folder, 'photon_best_model.photon')
+        test_folder = os.path.join(
+            my_pipe.output_settings.results_folder, "new_test_folder"
+        )
+        new_model_path = os.path.join(test_folder, "photon_best_model.photon")
         os.makedirs(test_folder)
         shutil.copyfile(model_path, new_model_path)
 
@@ -223,7 +272,7 @@ class HyperpipeTests(PhotonBaseTest):
         # check if we have the meta information recovered
         loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(new_model_path)
         self.assertIsNotNone(loaded_optimum_pipe._meta_information)
-        self.assertIsNotNone(loaded_optimum_pipe._meta_information['photon_version'])
+        self.assertIsNotNone(loaded_optimum_pipe._meta_information["photon_version"])
 
         # check if predictions stay realiably the same
         y_pred_loaded = loaded_optimum_pipe.predict(self.__X)
@@ -234,13 +283,18 @@ class HyperpipeTests(PhotonBaseTest):
         """
         Test for right handling of parameter output_settings.overwrite.
         """
+
         def get_summary_file():
-            return os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
+            return os.path.join(
+                self.hyperpipe.output_settings.results_folder, "photon_summary.txt"
+            )
 
         # Case 1: default
-        output_settings1 = OutputSettings(project_folder=self.tmp_folder_path,
-                                          save_output=True,
-                                          overwrite_results=False)
+        output_settings1 = OutputSettings(
+            project_folder=self.tmp_folder_path,
+            save_output=True,
+            overwrite_results=False,
+        )
         self.setup_hyperpipe(output_settings1)
         self.hyperpipe.fit(self.__X, self.__y)
         tmp_path = get_summary_file()
@@ -256,9 +310,11 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertNotEqual(tmp_path, tmp_path2)
 
         # Case 2 overwrite results: all in the same folder
-        output_settings2 = OutputSettings(project_folder=self.tmp_folder_path,
-                                          save_output=True,
-                                          overwrite_results=True)
+        output_settings2 = OutputSettings(
+            project_folder=self.tmp_folder_path,
+            save_output=True,
+            overwrite_results=True,
+        )
         self.setup_hyperpipe(output_settings2)
         self.hyperpipe.fit(self.__X, self.__y)
         tmp_path = get_summary_file()
@@ -287,7 +343,9 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(self.hyperpipe._pipe.random_state, 4567)
         self.assertEqual(self.hyperpipe.optimum_pipe.random_state, 4567)
         self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].random_state, 4567)
-        self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].base_element.random_state, 4567)
+        self.assertEqual(
+            self.hyperpipe._pipe.elements[-1][-1].base_element.random_state, 4567
+        )
 
     def test_dummy_estimator_preparation(self):
 
@@ -296,18 +354,18 @@ class HyperpipeTests(PhotonBaseTest):
 
         # one time regressor, one time classifier, one time strange object
         self.hyperpipe.elements = list()
-        self.hyperpipe.add(PipelineElement('SVC'))
+        self.hyperpipe.add(PipelineElement("SVC"))
         dummy_estimator = self.hyperpipe._prepare_dummy_estimator()
         self.assertTrue(isinstance(dummy_estimator, DummyClassifier))
 
         self.hyperpipe.elements = list()
-        self.hyperpipe.add(PipelineElement('SVR'))
+        self.hyperpipe.add(PipelineElement("SVR"))
         dummy_estimator = self.hyperpipe._prepare_dummy_estimator()
         self.assertTrue(isinstance(dummy_estimator, DummyRegressor))
 
         with self.assertRaises(NotImplementedError):
             self.hyperpipe.elements = list()
-            self.hyperpipe.add(PipelineElement('PCA'))
+            self.hyperpipe.add(PipelineElement("PCA"))
             dummy_estimator = self.hyperpipe._prepare_dummy_estimator()
             self.assertIsNone(dummy_estimator)
 
@@ -317,25 +375,25 @@ class HyperpipeTests(PhotonBaseTest):
 
         nmb_list = list()
         for i in range(5):
-            nmb = NeuroBranch(name=str(i), nr_of_processes=i+3)
-            nmb += PipelineElement('SmoothImages')
+            nmb = NeuroBranch(name=str(i), nr_of_processes=i + 3)
+            nmb += PipelineElement("SmoothImages")
             nmb_list.append(nmb)
 
-        my_switch = Switch('disabling_test_switch')
+        my_switch = Switch("disabling_test_switch")
         my_switch += nmb_list[0]
         my_switch += nmb_list[1]
 
-        my_stack = Stack('stack_of_branches')
+        my_stack = Stack("stack_of_branches")
         for i in range(3):
-            my_branch = Branch('branch_' + str(i+2))
-            my_branch += PipelineElement('StandardScaler')
-            my_branch += nmb_list[i+2]
+            my_branch = Branch("branch_" + str(i + 2))
+            my_branch += PipelineElement("StandardScaler")
+            my_branch += nmb_list[i + 2]
             my_stack += my_branch
 
         self.hyperpipe.add(my_stack)
-        self.hyperpipe.add(PipelineElement('StandardScaler'))
+        self.hyperpipe.add(PipelineElement("StandardScaler"))
         self.hyperpipe.add(my_switch)
-        self.hyperpipe.add(PipelineElement('SVC'))
+        self.hyperpipe.add(PipelineElement("SVC"))
         return nmb_list
 
     def test_recursive_disabling(self):
@@ -347,10 +405,14 @@ class HyperpipeTests(PhotonBaseTest):
     def test_recursive_cache_folder_propagation(self):
         list_of_elements = self.setup_crazy_pipe()
         self.hyperpipe._pipe = Branch.prepare_photon_pipe(self.hyperpipe.elements)
-        self.hyperpipe.recursive_cache_folder_propagation(self.hyperpipe._pipe, self.cache_folder_path, 'fold_id_123')
+        self.hyperpipe.recursive_cache_folder_propagation(
+            self.hyperpipe._pipe, self.cache_folder_path, "fold_id_123"
+        )
         for i, nmbranch in enumerate(list_of_elements):
             if i > 1:
-                start_folder = os.path.join(self.cache_folder_path, 'branch_' + nmbranch.name)
+                start_folder = os.path.join(
+                    self.cache_folder_path, "branch_" + nmbranch.name
+                )
             else:
                 start_folder = self.cache_folder_path
             expected_folder = os.path.join(start_folder, nmbranch.name)
@@ -383,36 +445,64 @@ class HyperpipeTests(PhotonBaseTest):
 
         expected_num_of_metrics = len(self.hyperpipe.optimization.metrics)
         # dummy average values
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train), expected_num_of_metrics)
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test), expected_num_of_metrics)
+        self.assertTrue(
+            len(self.hyperpipe.results.dummy_estimator.train), expected_num_of_metrics
+        )
+        self.assertTrue(
+            len(self.hyperpipe.results.dummy_estimator.test), expected_num_of_metrics
+        )
         # overall average values
-        self.assertTrue(len(self.hyperpipe.results.metrics_train), 2 * expected_num_of_metrics)
-        self.assertTrue(len(self.hyperpipe.results.metrics_test), 2 * expected_num_of_metrics)
+        self.assertTrue(
+            len(self.hyperpipe.results.metrics_train), 2 * expected_num_of_metrics
+        )
+        self.assertTrue(
+            len(self.hyperpipe.results.metrics_test), 2 * expected_num_of_metrics
+        )
         # find best config
         self.assertIsNotNone(self.hyperpipe.best_config)
         self.assertIsNotNone(self.hyperpipe.results.best_config)
-        self.assertEqual(self.hyperpipe.best_config, self.hyperpipe.results.best_config.config_dict)
+        self.assertEqual(
+            self.hyperpipe.best_config, self.hyperpipe.results.best_config.config_dict
+        )
         # set optimum pipe and params, # todo: test add preprocessing
         self.assertIsNotNone(self.hyperpipe.optimum_pipe)
-        self.assertEqual(self.hyperpipe.optimum_pipe.named_steps["SVC"].base_element.C, self.hyperpipe.best_config["SVC__C"])
+        self.assertEqual(
+            self.hyperpipe.optimum_pipe.named_steps["SVC"].base_element.C,
+            self.hyperpipe.best_config["SVC__C"],
+        )
         # save optimum model
-        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
-                                                    'photon_best_model.photon')))
+        self.assertTrue(
+            os.path.isfile(
+                os.path.join(
+                    self.hyperpipe.output_settings.results_folder,
+                    "photon_best_model.photon",
+                )
+            )
+        )
 
         # backmapping
         # because the pca is test disabled, we expect the number of features
-        self.assertEqual(len(self.hyperpipe.results.best_config_feature_importances[0]), self.__X.shape[1])
-        backmapped_feature_importances = os.path.join(self.hyperpipe.output_settings.results_folder,
-                                                      'optimum_pipe_feature_importances_backmapped.csv')
+        self.assertEqual(
+            len(self.hyperpipe.results.best_config_feature_importances[0]),
+            self.__X.shape[1],
+        )
+        backmapped_feature_importances = os.path.join(
+            self.hyperpipe.output_settings.results_folder,
+            "optimum_pipe_feature_importances_backmapped.csv",
+        )
         self.assertTrue(os.path.isfile(backmapped_feature_importances))
-        loaded_array = np.loadtxt(open(backmapped_feature_importances, 'rb'), delimiter=",")
+        loaded_array = np.loadtxt(
+            open(backmapped_feature_importances, "rb"), delimiter=","
+        )
         self.assertEqual(loaded_array.shape[0], self.__X.shape[1])
 
     def test_optimum_pipe_predict_and_predict_proba_and_transform(self):
         # find best config and test against sklearn
-        self.hyperpipe.elements[-1] = PipelineElement('RandomForestClassifier', {'n_estimators': IntegerRange(4, 20,
-                                                                                                              step=2)},
-                                                      random_state=42)
+        self.hyperpipe.elements[-1] = PipelineElement(
+            "RandomForestClassifier",
+            {"n_estimators": IntegerRange(4, 20, step=2)},
+            random_state=42,
+        )
         self.hyperpipe.fit(self.__X, self.__y)
 
         # the best config is without PCA so we test it
@@ -420,19 +510,31 @@ class HyperpipeTests(PhotonBaseTest):
         best_config_copy = dict(self.hyperpipe.best_config)
         del best_config_copy["PCA__disabled"]
         if self.hyperpipe.best_config["PCA__disabled"]:
-            sk_elements = [('StandardScaler', StandardScaler()),
-                           ('RandomForestClassifier', RandomForestClassifier(random_state=42))]
+            sk_elements = [
+                ("StandardScaler", StandardScaler()),
+                ("RandomForestClassifier", RandomForestClassifier(random_state=42)),
+            ]
         else:
-            sk_elements = [('StandardScaler', StandardScaler()),
-                           ('PCA', PCA(random_state=42)),
-                           ('RandomForestClassifier', RandomForestClassifier(random_state=42))]
+            sk_elements = [
+                ("StandardScaler", StandardScaler()),
+                ("PCA", PCA(random_state=42)),
+                ("RandomForestClassifier", RandomForestClassifier(random_state=42)),
+            ]
         self.sklearn_pipe = SKLPipeline(sk_elements)
         self.sklearn_pipe.set_params(**best_config_copy)
         self.sklearn_pipe.fit(self.__X, self.__y)
 
-        self.assertTrue(np.array_equal(self.sklearn_pipe.predict(self.__X), self.hyperpipe.predict(self.__X)))
-        self.assertTrue(np.array_equal(self.sklearn_pipe.predict_proba(self.__X),
-                                       self.hyperpipe.predict_proba(self.__X)))
+        self.assertTrue(
+            np.array_equal(
+                self.sklearn_pipe.predict(self.__X), self.hyperpipe.predict(self.__X)
+            )
+        )
+        self.assertTrue(
+            np.array_equal(
+                self.sklearn_pipe.predict_proba(self.__X),
+                self.hyperpipe.predict_proba(self.__X),
+            )
+        )
         # fake transform on sklearn pipe
         step1 = self.sklearn_pipe.named_steps["StandardScaler"].transform(self.__X)
         if "PCA" in self.sklearn_pipe.named_steps:
@@ -443,36 +545,47 @@ class HyperpipeTests(PhotonBaseTest):
 
 
 class HyperpipeOptimizationClassTests(unittest.TestCase):
-
     def test_best_config_metric(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Hyperpipe.Optimization(
+            "grid_search", {}, [], "balanced_accuracy", None
+        )
         self.assertTrue(my_pipe_optimizer.maximize_metric)
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'mean_squared_error', None)
+        my_pipe_optimizer = Hyperpipe.Optimization(
+            "grid_search", {}, [], "mean_squared_error", None
+        )
         self.assertFalse(my_pipe_optimizer.maximize_metric)
 
     def test_optmizer_input_str(self):
         with self.assertRaises(ValueError):
-            my_pipe_optimizer = Hyperpipe.Optimization('unknown_optimizer', {}, [], 'accuracy', None)
+            my_pipe_optimizer = Hyperpipe.Optimization(
+                "unknown_optimizer", {}, [], "accuracy", None
+            )
 
         for name, opt_class in Hyperpipe.Optimization.OPTIMIZER_DICTIONARY.items():
+
             def get_optimizer(name):
-                my_pipe_optimizer = Hyperpipe.Optimization(name, {}, [], 'accuracy', None)
+                my_pipe_optimizer = Hyperpipe.Optimization(
+                    name, {}, [], "accuracy", None
+                )
                 return my_pipe_optimizer.get_optimizer()
-            if name == 'smac':
+
+            if name == "smac":
                 with self.assertRaises(ModuleNotFoundError):
                     get_optimizer(name)
             else:
                 self.assertIsInstance(get_optimizer(name), opt_class)
 
     def test_get_optimum_config(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Hyperpipe.Optimization(
+            "grid_search", {}, [], "balanced_accuracy", None
+        )
         list_of_tested_configs = list()
-        metric_default = MDBFoldMetric(metric_name='balanced_accuracy',
-                                       operation=FoldOperations.MEAN,
-                                       value=0.5)
-        metric_best = MDBFoldMetric(metric_name='balanced_accuracy',
-                                    operation=FoldOperations.MEAN,
-                                    value=0.99)
+        metric_default = MDBFoldMetric(
+            metric_name="balanced_accuracy", operation=FoldOperations.MEAN, value=0.5
+        )
+        metric_best = MDBFoldMetric(
+            metric_name="balanced_accuracy", operation=FoldOperations.MEAN, value=0.99
+        )
         # we add looser configs, one good config, and one good config that failed
         # and check if the good non-failing config is chosen
         for i in range(10):
@@ -491,7 +604,9 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
         self.assertEqual(winner_config.metrics_test[0].value, 0.99)
 
     def test_get_optimum_config_outer_folds(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Hyperpipe.Optimization(
+            "grid_search", {}, [], "balanced_accuracy", None
+        )
 
         outer_fold_list = list()
         for i in range(10):
@@ -501,11 +616,22 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
             outer_fold.best_config.best_config_score.validation = MDBScoreInformation()
             # again fold 5 wins
             if i == 5:
-                outer_fold.best_config.best_config_score.validation.metrics = {'balanced_accuracy': 0.99}
+                outer_fold.best_config.best_config_score.validation.metrics = {
+                    "balanced_accuracy": 0.99
+                }
             else:
-                outer_fold.best_config.best_config_score.validation.metrics = {'balanced_accuracy': 0.5}
+                outer_fold.best_config.best_config_score.validation.metrics = {
+                    "balanced_accuracy": 0.5
+                }
             outer_fold_list.append(outer_fold)
 
-        best_config_outer_folds = my_pipe_optimizer.get_optimum_config_outer_folds(outer_fold_list)
-        self.assertEqual(best_config_outer_folds.best_config_score.validation.metrics['balanced_accuracy'], 0.99)
+        best_config_outer_folds = my_pipe_optimizer.get_optimum_config_outer_folds(
+            outer_fold_list
+        )
+        self.assertEqual(
+            best_config_outer_folds.best_config_score.validation.metrics[
+                "balanced_accuracy"
+            ],
+            0.99,
+        )
         self.assertIs(best_config_outer_folds, outer_fold_list[5].best_config)

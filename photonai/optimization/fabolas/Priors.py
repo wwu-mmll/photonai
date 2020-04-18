@@ -75,8 +75,10 @@ class TophatPrior(BasePrior):
         self.min = l_bound
         self.max = u_bound
         if not (self.max > self.min):
-            raise Exception("Upper bound of Tophat prior must be greater \
-            than the lower bound!")
+            raise Exception(
+                "Upper bound of Tophat prior must be greater \
+            than the lower bound!"
+            )
 
     def lnprob(self, theta):
         """
@@ -154,7 +156,7 @@ class HorseshoePrior(BasePrior):
         # We computed it exactly as in the original spearmint code
         if np.any(theta == 0.0):
             return np.inf
-        with np.errstate(divide='ignore'):
+        with np.errstate(divide="ignore"):
             return np.log(np.log(1 + 3.0 * (self.scale / np.exp(theta)) ** 2))
 
     def sample_from_prior(self, n_samples):
@@ -185,8 +187,8 @@ class HorseshoePrior(BasePrior):
         :rtype: np.array(D)
         """
         a = -(6 * self.scale ** 2)
-        b = (3 * self.scale ** 2 + np.exp(2 * theta))
-        b *= np.log(3 * self.scale ** 2 * np.exp(- 2 * theta) + 1)
+        b = 3 * self.scale ** 2 + np.exp(2 * theta)
+        b *= np.log(3 * self.scale ** 2 * np.exp(-2 * theta) + 1)
         return a / b
 
 
@@ -236,9 +238,7 @@ class LognormalPrior(BasePrior):
         :rtype: np.array(N, D)
         """
 
-        p0 = self.rng.lognormal(mean=self.mean,
-                                sigma=self.sigma,
-                                size=n_samples)
+        p0 = self.rng.lognormal(mean=self.mean, sigma=self.sigma, size=n_samples)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -301,9 +301,7 @@ class NormalPrior(BasePrior):
         :rtype: np.array(N, D)
         """
 
-        p0 = self.rng.normal(loc=self.mean,
-                             scale=self.sigma,
-                             size=n_samples)
+        p0 = self.rng.normal(loc=self.mean, scale=self.sigma, size=n_samples)
         return p0[:, np.newaxis]
 
     def gradient(self, theta):
@@ -317,9 +315,9 @@ class NormalPrior(BasePrior):
         :return: The gradient of the prior at theta.
         :rtype: np.array(D)
         """
-        return (1 / (self.sigma * np.sqrt(2 * np.pi))) * \
-               (- theta / (self.sigma ** 2) * np.exp(- (theta ** 2) /
-                                                     (2 * self.sigma ** 2)))
+        return (1 / (self.sigma * np.sqrt(2 * np.pi))) * (
+            -theta / (self.sigma ** 2) * np.exp(-(theta ** 2) / (2 * self.sigma ** 2))
+        )
 
 
 class EnvPrior(BasePrior):
@@ -357,11 +355,11 @@ class EnvPrior(BasePrior):
         lp += self.ln_prior.lnprob(theta[0])
 
         # Lengthscales
-        lp += self.tophat.lnprob(theta[1:self.n_ls + 1])
+        lp += self.tophat.lnprob(theta[1 : self.n_ls + 1])
 
         # Prior for the Bayesian regression kernel
-        pos = (self.n_ls + 1)
-        end = (self.n_ls + self.n_lr + 1)
+        pos = self.n_ls + 1
+        end = self.n_ls + self.n_lr + 1
 
         for t in theta[pos:end]:
             lp += self.bayes_lin_prior.lnprob(t)
@@ -378,16 +376,24 @@ class EnvPrior(BasePrior):
         p0[:, 0] = self.ln_prior.sample_from_prior(n_samples)[:, 0]
 
         # Lengthscales
-        ls_sample = np.array([self.tophat.sample_from_prior(n_samples)[:, 0]
-                              for _ in range(0, self.n_ls)]).T
-        p0[:, 1:(self.n_ls + 1)] = ls_sample
+        ls_sample = np.array(
+            [
+                self.tophat.sample_from_prior(n_samples)[:, 0]
+                for _ in range(0, self.n_ls)
+            ]
+        ).T
+        p0[:, 1 : (self.n_ls + 1)] = ls_sample
 
         # Bayesian linear regression
-        pos = (self.n_ls + 1)
-        end = (self.n_ls + self.n_lr + 1)
+        pos = self.n_ls + 1
+        end = self.n_ls + self.n_lr + 1
 
-        samples = np.array([self.bayes_lin_prior.sample_from_prior(n_samples)[:, 0]
-                            for _ in range(0, self.n_lr)]).T
+        samples = np.array(
+            [
+                self.bayes_lin_prior.sample_from_prior(n_samples)[:, 0]
+                for _ in range(0, self.n_lr)
+            ]
+        ).T
 
         p0[:, pos:end] = samples
         # Noise

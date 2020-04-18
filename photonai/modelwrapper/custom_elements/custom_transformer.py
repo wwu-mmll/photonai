@@ -2,7 +2,6 @@ from sklearn.base import BaseEstimator
 
 
 class CustomTransformer(BaseEstimator):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -27,7 +26,6 @@ class CustomTransformer(BaseEstimator):
 
 
 class CustomTransformerNeedsCovariates(BaseEstimator):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -54,7 +52,6 @@ class CustomTransformerNeedsCovariates(BaseEstimator):
 
 
 class CustomTransformerNeedsCovariatesWrongInterface(BaseEstimator):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -81,7 +78,6 @@ class CustomTransformerNeedsCovariatesWrongInterface(BaseEstimator):
 
 
 class CustomTransformerNeedsY(BaseEstimator):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
@@ -108,7 +104,6 @@ class CustomTransformerNeedsY(BaseEstimator):
 
 
 class CustomTransformerNeedsYWrongInterface(BaseEstimator):
-
     def __init__(self, param1=0, param2=None):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!

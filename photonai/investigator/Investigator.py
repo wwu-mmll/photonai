@@ -35,9 +35,15 @@ class Investigator:
 
         """
 
-        assert isinstance(pipe, Hyperpipe), "Investigator.show needs an object of type Hyperpipe"
-        assert pipe is not None, "Investigator.show needs an object of Hyperpipe, is None"
-        assert pipe.results is not None, "Investigator.show needs n Hyperpipe that is already optimized, so it can show the result tree"
+        assert isinstance(
+            pipe, Hyperpipe
+        ), "Investigator.show needs an object of type Hyperpipe"
+        assert (
+            pipe is not None
+        ), "Investigator.show needs an object of Hyperpipe, is None"
+        assert (
+            pipe.results is not None
+        ), "Investigator.show needs n Hyperpipe that is already optimized, so it can show the result tree"
 
         # make sure that Flask is running
         FlaskManager().set_pipe_object(pipe.name, pipe.results)
@@ -66,7 +72,6 @@ class Investigator:
         """
         FlaskManager().set_mongo_db_url(mongo_connect_url)
         Investigator.start_flask("m", pipe_name)
-
 
     @staticmethod
     def load_many_from_db(mongo_connect_url: str, pipe_names: list):
@@ -100,7 +105,11 @@ class Investigator:
         * 'file_url' [str]:
             The path to the file in which the hyperparameter search results are encoded.
         """
-        assert os.path.isfile(file_url), "File" + file_url + " does not exist or is not a file. Please give absolute path."
+        assert os.path.isfile(file_url), (
+            "File"
+            + file_url
+            + " does not exist or is not a file. Please give absolute path."
+        )
         FlaskManager().set_pipe_file(name, file_url)
         Investigator.start_flask("f", name)
 
@@ -126,29 +135,28 @@ class Investigator:
     @staticmethod
     def __delayed_browser(url):
         # Investigator.__open_browser(url)
-        thread = Thread(target=Investigator.__open_browser, args=(url, ))
+        thread = Thread(target=Investigator.__open_browser, args=(url,))
         thread.start()
         thread.join()
 
 
 @Singleton
 class FlaskManager:
-
     def __init__(self):
         self.app = application
 
     def set_mongo_db_url(self, mongo_url):
-        self.app.config['mongo_db_url'] = mongo_url
+        self.app.config["mongo_db_url"] = mongo_url
 
     def set_pipe_file(self, name, path):
-        self.app.config['pipe_files'][name] = path
+        self.app.config["pipe_files"][name] = path
 
     def set_pipe_object(self, name, obj):
-        self.app.config['pipe_objects'][name] = obj
+        self.app.config["pipe_objects"][name] = obj
 
     def run_app(self):
         try:
-            self.app = application.run(host='0.0.0.0', port=7275)
+            self.app = application.run(host="0.0.0.0", port=7275)
         except OSError as exc:
             if exc.errno == 98:
                 # app already running
@@ -165,6 +173,3 @@ class FlaskManager:
     #
     # def __exit__(self, exc_type, exc_value, traceback):
     #     shutdown_server()
-
-
-

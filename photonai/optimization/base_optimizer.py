@@ -1,4 +1,3 @@
-
 class PhotonBaseOptimizer:
     """
     The PHOTON interface for hyperparameter search optimization algorithms.
@@ -50,8 +49,10 @@ class PhotonBaseOptimizer:
         :return:
         matplotlib figure
         """
-        raise NotImplementedError('plot_objective is not yet available for this optimizer. Currently supported for'
-                                  'skopt.')
+        raise NotImplementedError(
+            "plot_objective is not yet available for this optimizer. Currently supported for"
+            "skopt."
+        )
 
     def plot_evaluations(self):
         """
@@ -59,7 +60,7 @@ class PhotonBaseOptimizer:
         :return:
         matplotlib figure
         """
-        raise NotImplementedError('plot_evaluations is not yet available for this optimizer. Currently supported for'
-                                  'skopt.')
-
-
+        raise NotImplementedError(
+            "plot_evaluations is not yet available for this optimizer. Currently supported for"
+            "skopt."
+        )

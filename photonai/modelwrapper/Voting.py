@@ -4,7 +4,6 @@ from scipy import stats
 
 
 class PhotonVotingClassifier(BaseEstimator, ClassifierMixin):
-
     def __init__(self):
 
         self.strategy = PhotonVotingClassifier._most_frequent
@@ -27,11 +26,9 @@ class PhotonVotingClassifier(BaseEstimator, ClassifierMixin):
 
 
 class PhotonVotingRegressor(BaseEstimator, RegressorMixin):
+    def __init__(self, strategy="mean"):
 
-    def __init__(self, strategy='mean'):
-
-        self.STRATEGY_DICT = {'mean': np.mean,
-                              'median': np.median}
+        self.STRATEGY_DICT = {"mean": np.mean, "median": np.median}
 
         self._strategy = None
         self.strategy = strategy
@@ -43,7 +40,9 @@ class PhotonVotingRegressor(BaseEstimator, RegressorMixin):
     @strategy.setter
     def strategy(self, strategy_val):
         if strategy_val not in self.STRATEGY_DICT:
-            raise ValueError("Strategy " + str(self.strategy) + " is not supported right now. ")
+            raise ValueError(
+                "Strategy " + str(self.strategy) + " is not supported right now. "
+            )
         else:
             self._strategy = strategy_val
 
@@ -57,7 +56,3 @@ class PhotonVotingRegressor(BaseEstimator, RegressorMixin):
                 return [np.round(output)]
             else:
                 return output
-
-
-
-

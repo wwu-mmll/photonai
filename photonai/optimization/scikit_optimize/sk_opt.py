@@ -12,13 +12,16 @@ from photonai.optimization import Categorical as PhotonCategorical
 from photonai.photonlogger.logger import logger
 
 
-
 class SkOptOptimizer(PhotonBaseOptimizer):
-
-    def __init__(self, n_configurations: int=20, acq_func: str = 'gp_hedge', acq_func_kwargs: dict = None):
+    def __init__(
+        self,
+        n_configurations: int = 20,
+        acq_func: str = "gp_hedge",
+        acq_func_kwargs: dict = None,
+    ):
         self.optimizer = None
         self.hyperparameter_list = []
-        self.metric_to_optimize = ''
+        self.metric_to_optimize = ""
         self.ask = self.ask_generator()
         self.n_configurations = n_configurations
         self.acq_func = acq_func
@@ -33,7 +36,7 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         # build space
         space = []
         for pipe_element in pipeline_elements:
-            if hasattr(pipe_element, 'hyperparameters'):
+            if hasattr(pipe_element, "hyperparameters"):
                 for name, value in pipe_element.hyperparameters.items():
                     # if we only have one value we do not need to optimize
                     if isinstance(value, list) and len(value) < 2:
@@ -49,7 +52,12 @@ class SkOptOptimizer(PhotonBaseOptimizer):
             logger.warn("Did not find any hyperparameters to convert into skopt space")
             self.optimizer = None
         else:
-            self.optimizer = Optimizer(space, "ET", acq_func=self.acq_func, acq_func_kwargs=self.acq_func_kwargs)
+            self.optimizer = Optimizer(
+                space,
+                "ET",
+                acq_func=self.acq_func,
+                acq_func_kwargs=self.acq_func_kwargs,
+            )
         self.ask = self.ask_generator()
 
     def _convert_PHOTON_to_skopt_space(self, hyperparam: object, name: str):
@@ -61,10 +69,14 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         elif isinstance(hyperparam, list):
             return skoptCategorical(hyperparam, name=name)
         elif isinstance(hyperparam, FloatRange):
-            if hyperparam.range_type == 'linspace':
-                return Real(hyperparam.start, hyperparam.stop, name=name, prior='uniform')
-            elif hyperparam.range_type == 'logspace':
-                return Real(hyperparam.start, hyperparam.stop, name=name, prior='log-uniform')
+            if hyperparam.range_type == "linspace":
+                return Real(
+                    hyperparam.start, hyperparam.stop, name=name, prior="uniform"
+                )
+            elif hyperparam.range_type == "logspace":
+                return Real(
+                    hyperparam.start, hyperparam.stop, name=name, prior="log-uniform"
+                )
             else:
                 return Real(hyperparam.start, hyperparam.stop, name=name)
         elif isinstance(hyperparam, IntegerRange):
@@ -76,7 +88,10 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         else:
             for i in range(self.n_configurations):
                 next_config_list = self.optimizer.ask()
-                next_config_dict = {self.hyperparameter_list[number]: self._convert_to_native(value) for number, value in enumerate(next_config_list)}
+                next_config_dict = {
+                    self.hyperparameter_list[number]: self._convert_to_native(value)
+                    for number, value in enumerate(next_config_list)
+                }
                 yield next_config_dict
 
     def _convert_to_native(self, obj):
@@ -93,7 +108,10 @@ class SkOptOptimizer(PhotonBaseOptimizer):
             best_config_metric_performance = performance[1]
             if self.maximize_metric:
                 if isinstance(best_config_metric_performance, list):
-                    print("BEST CONFIG METRIC PERFORMANCE: " + str(best_config_metric_performance))
+                    print(
+                        "BEST CONFIG METRIC PERFORMANCE: "
+                        + str(best_config_metric_performance)
+                    )
                     best_config_metric_performance = best_config_metric_performance[0]
                 best_config_metric_performance = -best_config_metric_performance
             # random_accuracy = np.random.randn(1)[0]
@@ -124,7 +142,9 @@ class SkOptOptimizer(PhotonBaseOptimizer):
         for i, dim in enumerate(results.space.dimensions):
             if isinstance(dim, skoptCategorical):
                 parameter_types.append(dim.transformer)
-                setattr(results.space.dimensions[i], 'categories', dim.transformed_bounds)
+                setattr(
+                    results.space.dimensions[i], "categories", dim.transformed_bounds
+                )
             else:
                 parameter_types.append(False)
 

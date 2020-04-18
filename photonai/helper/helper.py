@@ -50,18 +50,21 @@ class PhotonPrintHelper:
         if pipe is None:
             return str(config)
 
-        prettified_config = ["" + '\n']
+        prettified_config = ["" + "\n"]
         for el_key, el_value in config.items():
-            items = el_key.split('__')
+            items = el_key.split("__")
             name = items[0]
-            rest = '__'.join(items[1::])
+            rest = "__".join(items[1::])
             if name in pipe.named_steps:
-                new_pretty_key = '    ' + name + '->'
-                prettified_config.append(new_pretty_key +
-                                         pipe.named_steps[name].prettify_config_output(rest, el_value) + '\n')
+                new_pretty_key = "    " + name + "->"
+                prettified_config.append(
+                    new_pretty_key
+                    + pipe.named_steps[name].prettify_config_output(rest, el_value)
+                    + "\n"
+                )
             else:
-                raise ValueError('Item is not contained in pipeline:' + name)
-        return ''.join(prettified_config)
+                raise ValueError("Item is not contained in pipeline:" + name)
+        return "".join(prettified_config)
 
     @staticmethod
     def config_to_human_readable_dict(pipe, specific_config):
@@ -69,27 +72,28 @@ class PhotonPrintHelper:
         """
         prettified_config = {}
         for el_key, el_value in specific_config.items():
-            items = el_key.split('__')
+            items = el_key.split("__")
             name = items[0]
-            rest = '__'.join(items[1::])
+            rest = "__".join(items[1::])
             if name in pipe.named_steps:
                 if not name in prettified_config:
                     prettified_config[name] = list()
-                prettified_config[name].append(pipe.named_steps[name].prettify_config_output(rest, el_value))
+                prettified_config[name].append(
+                    pipe.named_steps[name].prettify_config_output(rest, el_value)
+                )
             else:
-                raise ValueError('Item is not contained in pipeline:' + name)
+                raise ValueError("Item is not contained in pipeline:" + name)
         return prettified_config
 
 
 class PhotonDataHelper:
-
     @staticmethod
     def chunker(nr_items, size):
         return [(pos, pos + size) for pos in range(0, nr_items, size)]
 
     @staticmethod
     def find_n(X):
-        if hasattr(X, 'shape'):
+        if hasattr(X, "shape"):
             n = X.shape[0]
         elif isinstance(X, Iterable):
             n = len(X)
@@ -168,7 +172,9 @@ class PhotonDataHelper:
                 if key not in dict_a:
                     new_dict[key] = dict_b[key]
                 else:
-                    new_dict[key] = PhotonDataHelper.stack_data_vertically(dict_a[key], value)
+                    new_dict[key] = PhotonDataHelper.stack_data_vertically(
+                        dict_a[key], value
+                    )
         return new_dict
 
     @staticmethod
@@ -210,7 +216,9 @@ class PhotonDataHelper:
         New matrix, that is a and b horizontally joined
 
         """
-        if existing_array is None or (isinstance(existing_array, np.ndarray) and existing_array.size == 0):
+        if existing_array is None or (
+            isinstance(existing_array, np.ndarray) and existing_array.size == 0
+        ):
             return new_array
         else:
             # Todo: check for right dimensions!
@@ -220,7 +228,9 @@ class PhotonDataHelper:
                 if new_array.ndim == 1:
                     new_array = np.reshape(new_array, (new_array.shape[0], 1))
                 if existing_array.ndim == 1:
-                    existing_array = np.reshape(existing_array, (existing_array.shape[0], 1))
+                    existing_array = np.reshape(
+                        existing_array, (existing_array.shape[0], 1)
+                    )
                 existing_array = np.concatenate((existing_array, new_array), axis=1)
         return existing_array
 
@@ -237,14 +247,14 @@ class PhotonDataHelper:
 
 
 def print_metrics(header, metric_dict):
-    t = PrettyTable(['PERFORMANCE ' + header, ''])
+    t = PrettyTable(["PERFORMANCE " + header, ""])
     for m_key, m_value in metric_dict.items():
         t.add_row([m_key, "%.4f" % m_value])
     logger.photon_system_log(t)
 
 
-def print_double_metrics(metric_dict_train, metric_dict_test, photon_system_log = True):
-    t = PrettyTable(['METRIC', 'PERFORMANCE TRAIN', 'PERFORMANCE TEST'])
+def print_double_metrics(metric_dict_train, metric_dict_test, photon_system_log=True):
+    t = PrettyTable(["METRIC", "PERFORMANCE TRAIN", "PERFORMANCE TEST"])
     for m_key, m_value in metric_dict_train.items():
         t.add_row([m_key, "%.4f" % m_value, "%.4f" % metric_dict_test[m_key]])
     if photon_system_log:

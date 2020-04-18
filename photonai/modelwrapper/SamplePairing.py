@@ -33,7 +33,6 @@ from photonai.photonlogger.logger import logger
 
 
 class SamplePairingBase(BaseEstimator, TransformerMixin):
-
     @staticmethod
     def _stirling(n):
         # http://en.wikipedia.org/wiki/Stirling%27s_approximation
@@ -94,10 +93,17 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
             if i > len(distance_indices) - 1:
                 break
             else:
-                pairs.append((triu_indices[0][distance_indices[i]], (triu_indices[1][distance_indices[i]])))
+                pairs.append(
+                    (
+                        triu_indices[0][distance_indices[i]],
+                        (triu_indices[1][distance_indices[i]]),
+                    )
+                )
         return pairs
 
-    def _get_pairs(self, X, draw_limit, rand_seed, distance_metric, generator='random_pair'):
+    def _get_pairs(
+        self, X, draw_limit, rand_seed, distance_metric, generator="random_pair"
+    ):
         """
         :param X: data array
         :param draw_limit: in case the full number of combinations is > 10k, how many to draw?
@@ -112,24 +118,32 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
         sample_indices = range(X.shape[0])
 
         # limit the number of new samples generated if all combinations > draw_limit
-        n_combinations = self._calculate_number_of_possible_combinations(n=len(sample_indices), r=2)
+        n_combinations = self._calculate_number_of_possible_combinations(
+            n=len(sample_indices), r=2
+        )
 
         if n_combinations > draw_limit or n_combinations == -1:
-            if generator == 'random_pair':
-                return self.random_pair_generator(sample_indices=sample_indices,
-                                                  rand_seed=rand_seed,
-                                                  draw_limit=draw_limit)
-            elif generator == 'nearest_pair':
-                return self.nearest_pair_generator(X=X,
-                                                   distance_metric=distance_metric,
-                                                   draw_limit=draw_limit)
+            if generator == "random_pair":
+                return self.random_pair_generator(
+                    sample_indices=sample_indices,
+                    rand_seed=rand_seed,
+                    draw_limit=draw_limit,
+                )
+            elif generator == "nearest_pair":
+                return self.nearest_pair_generator(
+                    X=X, distance_metric=distance_metric, draw_limit=draw_limit
+                )
             else:
-                raise NotImplementedError("{} is not supported. Possible options: 'random_pair', 'nearest_pair")
+                raise NotImplementedError(
+                    "{} is not supported. Possible options: 'random_pair', 'nearest_pair"
+                )
         else:
             # get all combinations of samples
             return list(itertools.combinations(sample_indices, 2))
 
-    def _return_samples(self, X, y, kwargs, generator, distance_metric, draw_limit, rand_seed):
+    def _return_samples(
+        self, X, y, kwargs, generator, distance_metric, draw_limit, rand_seed
+    ):
         """
                 Generates "new samples" by computing the mean between all or n_draws pairs of existing samples and appends them to X
                 The target for each new sample is computed as the mean between the constituent targets
@@ -140,11 +154,13 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
                 :return: X_new: X and X_augmented; (y_new: the correspoding targets)
                 """
         # generate combinations
-        pairs = self._get_pairs(X=X,
-                                generator=generator,
-                                distance_metric=distance_metric,
-                                draw_limit=draw_limit,
-                                rand_seed=rand_seed)
+        pairs = self._get_pairs(
+            X=X,
+            generator=generator,
+            distance_metric=distance_metric,
+            draw_limit=draw_limit,
+            rand_seed=rand_seed,
+        )
 
         # compute mean over sample pairs
         X_new = np.empty([len(pairs), X.shape[1]])
@@ -161,7 +177,9 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
             for name, kwarg in kwargs.items():
                 kwarg_new = np.empty(len(pairs))
                 for i, pair in enumerate(pairs):
-                    kwarg_new[i] = np.mean([kwargs[name][pair[0]], kwargs[name][pair[1]]])
+                    kwarg_new[i] = np.mean(
+                        [kwargs[name][pair[0]], kwargs[name][pair[1]]]
+                    )
                 kwargs[name] = np.concatenate((np.asarray(kwargs[name]), kwarg_new))
 
         if y is not None:
@@ -180,7 +198,13 @@ class SamplePairingBase(BaseEstimator, TransformerMixin):
 class SamplePairingRegression(SamplePairingBase):
     _estimator_type = "transformer"
 
-    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, random_state=45):
+    def __init__(
+        self,
+        generator="random_pair",
+        distance_metric="euclidean",
+        draw_limit=10000,
+        random_state=45,
+    ):
 
         self.needs_covariates = True
         self.needs_y = True
@@ -202,14 +226,28 @@ class SamplePairingRegression(SamplePairingBase):
         :param rand_seed: sets seed for random sampling of combinations (for reproducibility only)
         :return: X_new: X and X_augmented; (y_new: the correspoding targets)
         """
-        return self._return_samples(X, y, kwargs, self.generator, self.distance_metric, self.draw_limit, self.random_state)
+        return self._return_samples(
+            X,
+            y,
+            kwargs,
+            self.generator,
+            self.distance_metric,
+            self.draw_limit,
+            self.random_state,
+        )
 
 
 class SamplePairingClassification(SamplePairingBase):
     _estimator_type = "transformer"
 
-    def __init__(self, generator='random_pair', distance_metric='euclidean', draw_limit=10000, random_state=45,
-                 balance_classes=True):
+    def __init__(
+        self,
+        generator="random_pair",
+        distance_metric="euclidean",
+        draw_limit=10000,
+        random_state=45,
+        balance_classes=True,
+    ):
 
         self.needs_covariates = True
         self.needs_y = True
@@ -250,19 +288,23 @@ class SamplePairingClassification(SamplePairingBase):
         kwargs_extended = dict()
 
         for label, limit in zip(unique_classes, n_pairs):
-            X_new_class, y_new_class, kwargs_new_class = self._return_samples(X[y == label], y[y == label],
-                                                                              PhotonDataHelper.index_dict(kwargs,
-                                                                                                          y == label),
-                                                                              generator=self.generator,
-                                                                              distance_metric=self.distance_metric,
-                                                                              draw_limit=limit,
-                                                                              rand_seed=self.random_state)
+            X_new_class, y_new_class, kwargs_new_class = self._return_samples(
+                X[y == label],
+                y[y == label],
+                PhotonDataHelper.index_dict(kwargs, y == label),
+                generator=self.generator,
+                distance_metric=self.distance_metric,
+                draw_limit=limit,
+                rand_seed=self.random_state,
+            )
 
             X_extended.extend(X_new_class)
             y_extended.extend(y_new_class)
 
             # get the corresponding kwargs
             if kwargs:
-                kwargs_extended = PhotonDataHelper.join_dictionaries(kwargs_extended, kwargs_new_class)
+                kwargs_extended = PhotonDataHelper.join_dictionaries(
+                    kwargs_extended, kwargs_new_class
+                )
 
         return X_extended, y_extended, kwargs_extended

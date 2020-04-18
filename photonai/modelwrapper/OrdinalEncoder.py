@@ -5,7 +5,6 @@ import numpy as np
 
 
 class FeatureEncoder(BaseEstimator):
-
     def __init__(self):
         self.encoder_list = []
 

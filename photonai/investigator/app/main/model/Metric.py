@@ -1,5 +1,3 @@
-
-
 class Metric:
     """Representing a PHOTON metric with name and value
     author: Julian Gebker

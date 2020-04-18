@@ -6,7 +6,6 @@ import numpy as np
 
 
 class PhotonBaseTest(unittest.TestCase):
-
     @classmethod
     def setUpClass(cls) -> None:
         cls.base_folder = os.path.dirname(os.path.abspath(__file__))
@@ -40,7 +39,7 @@ def elements_to_dict(elements):
         for element in elements:
             new_list.append(elements_to_dict(element))
         elements = tuple(new_list)
-    elif hasattr(elements, '__dict__'):
+    elif hasattr(elements, "__dict__"):
         new_dict = dict()
         elements = elements.__dict__
         for name, element in elements.items():
