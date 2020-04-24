@@ -1354,6 +1354,8 @@ class PhotonModelPersistor:
                     element_identifier[-1]['test_disabled'] = element.test_disabled
                     element_identifier[-1]['disabled'] = element.disabled
                     element_identifier[-1]['hyperparameters'] = element.hyperparameters
+                    # (class_name != element_name) - possibility
+                    element_identifier[-1]['class_name'] = type(base_element).__name__
                     shutil.copy(wrapper_file, os.path.join(folder, os.path.basename(wrapper_file)))
                 else:
                     try:
@@ -1428,11 +1430,27 @@ class PhotonModelPersistor:
                         photon_building_block += element
                     element_list.append((element_info['element_name'], photon_building_block))
                 elif element_info['mode'] == 'custom':
-                    spec = importlib.util.spec_from_file_location(element_info['element_name'],
-                                                                  os.path.join(folder, element_info['wrapper_script']))
-                    imported_module = importlib.util.module_from_spec(spec)
-                    spec.loader.exec_module(imported_module)
-                    base_element = getattr(imported_module, element_info['element_name'])
+                    if 'class_name' in element_info: # (class_name != element_name) - possibility
+                        spec = importlib.util.spec_from_file_location(element_info['class_name'],
+                                                                          os.path.join(folder,
+                                                                          element_info['wrapper_script']))
+                        imported_module = importlib.util.module_from_spec(spec)
+                        spec.loader.exec_module(imported_module)
+                        base_element = getattr(imported_module, element_info['class_name'])
+                    else:
+                        # backward compatibility
+                        try:
+                            spec = importlib.util.spec_from_file_location(element_info['element_name'],
+                                                                          os.path.join(folder,
+                                                                          element_info['wrapper_script']))
+                            imported_module = importlib.util.module_from_spec(spec)
+                            spec.loader.exec_module(imported_module)
+                            base_element = getattr(imported_module, element_info['element_name'])
+                        except:
+                            msg = "Outdated version: The imported module was created by an older photon version. " \
+                                  "Please retrain your model with a newer version."
+                            logger.error(msg)
+                            raise RuntimeError(msg)
                     custom_element = PipelineElement(name=element_info['element_name'], base_element=base_element(),
                                                      hyperparameters=element_info['hyperparameters'],
                                                      test_disabled=element_info['test_disabled'],
