@@ -782,12 +782,18 @@ class ResultsHandler:
                 self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
                 self.eval_mean_time_components()
 
+    def convert_to_json_serializable(self, value):
+        if isinstance(value, np.int64):
+            return int(value)
+        else:
+            return json_util.default(value)
+
     def write_result_tree_to_file(self):
         try:
             local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
             # file_opened = open(local_file, 'wb')
             with open(local_file, 'w') as outfile:
-                json.dump(self.results.to_son(), outfile, default=json_util.default)
+                json.dump(self.results.to_son(), outfile, default=self.convert_to_json_serializable)
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))

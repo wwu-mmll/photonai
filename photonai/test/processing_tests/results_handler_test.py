@@ -28,9 +28,9 @@ class ResultsHandlerTest(PhotonBaseTest):
                       'photon_result_file.json',
                       'photon_summary.txt',
                       'photon_best_model.photon',
-                      'optimum_pipe_feature_importances_backmapped.npz',
-                      'photon_code.py',
                       'optimizer_history.png']
+                    # todo: 'optimum_pipe_feature_importances_backmapped.npz',
+                    # 'optimum_pipe_feature_importances_backmapped.npz',
 
         self.output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=True)
 
@@ -230,6 +230,7 @@ class ResultsHandlerTest(PhotonBaseTest):
     def test_load_from_file(self):
         X, y = load_breast_cancer(True)
         my_pipe = Hyperpipe('load_results_file_test',
+                            inner_cv=KFold(n_splits=3),
                             metrics=['accuracy'],
                             best_config_metric='accuracy',
                             output_settings=OutputSettings(project_folder='./tmp'))

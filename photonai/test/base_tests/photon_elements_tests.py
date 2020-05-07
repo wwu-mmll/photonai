@@ -20,8 +20,8 @@ from photonai.optimization import GridSearchOptimizer
 class PipelineElementTests(unittest.TestCase):
 
     def setUp(self):
-        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True)
-        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
+        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True, random_state=42)
+        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']}, random_state=42)
         self.X, self.y = load_breast_cancer(True)
         self.kwargs = {'covariates': self.y}
         self.Xt = self.X + 1
@@ -45,10 +45,10 @@ class PipelineElementTests(unittest.TestCase):
     def test_fit(self):
         self.pca_pipe_element.fit(self.X, self.y)
         self.assertEqual(self.pca_pipe_element.base_element.components_.shape, (30, 30))
-        self.assertEqual(self.pca_pipe_element.base_element.components_[0, 0], 0.005086232018734175)
+        self.assertAlmostEqual(self.pca_pipe_element.base_element.components_[0, 0], 0.005086232018734175)
 
         self.svc_pipe_element.fit(self.X, self.y)
-        self.assertEqual(self.svc_pipe_element.base_element._intercept_, -0.3753900173819406)
+        self.assertAlmostEqual(self.svc_pipe_element.base_element._intercept_[0], 0.73006587)
 
     def test_transform(self):
         self.pca_pipe_element.fit(self.X, self.y)

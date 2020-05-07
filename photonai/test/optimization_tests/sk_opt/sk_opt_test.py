@@ -1,6 +1,6 @@
 from photonai.base import PipelineElement
 from photonai.optimization import SkOptOptimizer, IntegerRange
-from photonai.test.optimization.grid_search.grid_search_test import GridSearchOptimizerTest
+from photonai.test.optimization_tests.grid_search.grid_search_test import GridSearchOptimizerTest
 
 
 class SkOptOptimizerTest(GridSearchOptimizerTest):

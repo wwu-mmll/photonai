@@ -25,7 +25,9 @@ class OuterFoldTests(PhotonBaseTest):
                                                  eval_final_performance=True,
                                                  test_size=0.2,
                                                  calculate_metrics_per_fold=True,
-                                                 calculate_metrics_across_folds=False)
+                                                 calculate_metrics_across_folds=False,
+                                                 learning_curves=False,
+                                                 learning_curves_cut=None)
 
         self.X, self.y = load_boston(True)
         self.outer_fold_id = "TestFoldOuter1"
@@ -175,6 +177,7 @@ class OuterFoldTests(PhotonBaseTest):
                     self.assertTrue(np.sum(len(fold.validation.y_pred) == 41))
                     self.assertTrue(np.sum(len(fold.feature_importances) == 7))
             else:
+                # todo: why is that not zero?
                 self.assertTrue(np.sum(len(fold.validation.y_pred) for fold in config.inner_folds) == 0)
                 self.assertTrue(np.sum(len(fold.feature_importances) for fold in config.inner_folds) == 0)
 

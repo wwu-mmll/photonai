@@ -78,8 +78,6 @@ else:
                 from photonai.optimization.smac.smac import SMACOptimizer
 
 
-
-
 class Smac3IntegrationTest(unittest.TestCase):
 
     def setUp(self):
