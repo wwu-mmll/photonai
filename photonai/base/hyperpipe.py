@@ -29,6 +29,7 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
+from photonai.helper.helper import print_double_metrics
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, IntegerRange, FloatRange, Categorical
 from photonai.photonlogger.logger import logger
@@ -293,12 +294,21 @@ class Hyperpipe(BaseEstimator):
                             verbose=2)
 
    """
-    def __init__(self, name, inner_cv: BaseCrossValidator = None, outer_cv=None,
-                 optimizer='grid_search', optimizer_params: dict = {}, metrics=None,
-                 best_config_metric=None, eval_final_performance=True, test_size: float = 0.2,
-                 calculate_metrics_per_fold: bool = True, calculate_metrics_across_folds: bool = False,
+    def __init__(self, name,
+                 inner_cv: BaseCrossValidator = None,
+                 outer_cv=None,
+                 optimizer='grid_search',
+                 optimizer_params: dict = {},
+                 metrics=None,
+                 best_config_metric=None,
+                 eval_final_performance=True,
+                 test_size: float = 0.2,
+                 calculate_metrics_per_fold: bool = True,
+                 calculate_metrics_across_folds: bool = False,
                  random_seed=False,
-                 verbosity=1,
+                 verbosity=0,
+                 learning_curves: bool = False,
+                 learning_curves_cut: FloatRange = None,
                  output_settings=None,
                  performance_constraints=None,
                  permutation_id: str=None,
@@ -323,12 +333,20 @@ class Hyperpipe(BaseEstimator):
             logger.error(msg)
             raise AttributeError(msg)
 
+        # use default cut 'FloatRange(0, 1, 'range', 0.2)' if learning_curves = True but learning_curves_cut is None
+        if learning_curves and learning_curves_cut is None:
+            learning_curves_cut = FloatRange(0, 1, 'range', 0.2)
+        elif not learning_curves and learning_curves_cut is not None:
+            learning_curves_cut = None
+
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
                                                           outer_cv=outer_cv,
                                                           eval_final_performance=eval_final_performance,
                                                           test_size=test_size,
                                                           calculate_metrics_per_fold=calculate_metrics_per_fold,
-                                                          calculate_metrics_across_folds=calculate_metrics_across_folds)
+                                                          calculate_metrics_across_folds=calculate_metrics_across_folds,
+                                                          learning_curves=learning_curves,
+                                                          learning_curves_cut=learning_curves_cut)
 
         # ====================== Data ===========================
         self.data = Hyperpipe.Data()
@@ -384,11 +402,17 @@ class Hyperpipe(BaseEstimator):
         def __init__(self, inner_cv, outer_cv,
                      eval_final_performance, test_size,
                      calculate_metrics_per_fold,
-                     calculate_metrics_across_folds):
+                     calculate_metrics_across_folds,
+                     learning_curves,
+                     learning_curves_cut):
             self.inner_cv = inner_cv
             self.outer_cv = outer_cv
             self.eval_final_performance = eval_final_performance
             self.test_size = test_size
+
+            self.learning_curves = learning_curves
+            self.learning_curves_cut = learning_curves_cut
+
             self.calculate_metrics_per_fold = calculate_metrics_per_fold
             # Todo: if self.outer_cv is LeaveOneOut: Set calculate metrics across folds to True -> Print
             self.calculate_metrics_across_folds = calculate_metrics_across_folds
@@ -650,6 +674,7 @@ class Hyperpipe(BaseEstimator):
         self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
+        self.results.hyperpipe_info.learning_curves_cut = self.cross_validation.learning_curves_cut
         self.results.hyperpipe_info.maximize_best_config_metric = self.optimization.maximize_metric
 
         # optimization
@@ -721,6 +746,9 @@ class Hyperpipe(BaseEstimator):
         logger.photon_system_log(
             '===============================================================================================================')
         logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
+        print_double_metrics(self.results.best_config.best_config_score.training.metrics,
+                             self.results.best_config.best_config_score.validation.metrics,
+                             photon_system_log=True)
 
         # save results again
         self.results.computation_end_time = datetime.datetime.now()
@@ -729,6 +757,10 @@ class Hyperpipe(BaseEstimator):
 
         # write all convenience files (summary, predictions_file and plots)
         self.results_handler.write_convenience_files()
+
+        # set self to best config
+        self.optimum_pipe = self._pipe
+        self.optimum_pipe.set_params(**self.best_config)
 
         if self.output_settings.result_file_mode == 'best':
             logger.info("Fitting best model...")
@@ -777,6 +809,10 @@ class Hyperpipe(BaseEstimator):
                     # save backmapping
                     self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
                                                           backmapping=backmapping)
+
+                # save learning curves
+                if self.cross_validation.learning_curves:
+                    self.results_handler.save_all_learning_curves()
 
         elapsed_time = self.results.computation_end_time - self.results.computation_start_time
         logger.photon_system_log('')

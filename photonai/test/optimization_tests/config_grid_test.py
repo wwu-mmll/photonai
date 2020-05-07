@@ -1,6 +1,7 @@
 import unittest
 
 from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
 from photonai.base import PipelineElement, Switch, Branch, Hyperpipe, OutputSettings, Stack
 from photonai.optimization import IntegerRange, FloatRange
 from photonai.optimization.config_grid import create_global_config_dict, create_global_config_grid
@@ -150,7 +151,7 @@ class CreateGlobalConfigAdvancedElements(PhotonBaseTest):
                                                                  {'Switch_in_switch__current_element': (1, 6)}])
 
     def test_huge_combinations(self):
-        hp = Hyperpipe('huge_combinations', metrics=['accuracy'], best_config_metric='accuracy',
+        hp = Hyperpipe('huge_combinations', inner_cv=KFold(n_splits=3), metrics=['accuracy'], best_config_metric='accuracy',
                        output_settings=OutputSettings(project_folder=self.tmp_folder_path))
 
         hp += PipelineElement("PCA", hyperparameters={'n_components': [5, 10]})

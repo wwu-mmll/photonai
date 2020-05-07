@@ -68,6 +68,7 @@ class PhotonSlaveOptimizer(PhotonBaseOptimizer):
         """
         pass
 
+
 class PhotonMasterOptimizer(PhotonBaseOptimizer):
 
     def __init__(self, *kwargs):

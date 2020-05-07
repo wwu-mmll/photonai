@@ -2,7 +2,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, OutputSettings
-from photonai.optimization import IntegerRange, Categorical
+from photonai.optimization import IntegerRange, Categorical, FloatRange
 
 X, y = load_breast_cancer(True)
 
@@ -17,7 +17,7 @@ my_pipe = Hyperpipe('basic_stacking',
 
 # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
 tree_qua_branch = Branch('tree_branch')
-tree_qua_branch += PipelineElement('QuantileTransformer')
+tree_qua_branch += PipelineElement('QuantileTransformer', n_quantiles=100)
 tree_qua_branch += PipelineElement('DecisionTreeClassifier',
                                    {'min_samples_split': IntegerRange(2, 4)},
                                    criterion='gini')
@@ -27,7 +27,7 @@ svm_mima_branch = Branch('svm_branch')
 svm_mima_branch += PipelineElement('MinMaxScaler')
 svm_mima_branch += PipelineElement('SVC',
                                    {'kernel': Categorical(['rbf', 'linear']),
-                                    'C': IntegerRange(0.01, 2.0)},
+                                    'C': FloatRange(0.01, 2.0)},
                                    gamma='auto')
 
 # BRANCH WITH StandardScaler AND KNeighborsClassifier

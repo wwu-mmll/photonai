@@ -10,6 +10,9 @@ import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import seaborn as sns
+import json
+from bson import json_util
+
 from nibabel.nifti1 import Nifti1Image
 from prettytable import PrettyTable
 from pymodm import connect
@@ -29,7 +32,7 @@ class ResultsHandler:
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
-        self.results = MDBHyperpipe.from_document(pickle.load(open(results_file, 'rb')))
+        self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         connect(mongodb_connect_url)
@@ -164,6 +167,110 @@ class ResultsHandler:
                 minimum_config_evaluations[metric].append(fold_evaluations)
 
         return minimum_config_evaluations
+
+    def get_learning_curves(self, config_nr, outer_fold_nr, save):
+        """
+        This function gets the learning curves out of the result tree.
+        It returns the learning curves as a pandas dataframe.
+        If save = True it saves the learning curves as a csv file.
+        """
+        cuts = self.results.hyperpipe_info.learning_curves_cut.values[1:] + [1.]
+        fold_num = len(self.results.outer_folds[0].tested_config_list[config_nr - 1].inner_folds)
+        idx = pd.MultiIndex.from_product([cuts, [i + 1 for i in range(fold_num)]], names=['Cut', 'Inner Fold Nr.'])
+        col = pd.MultiIndex.from_product([self.results.hyperpipe_info.metrics, ['test', 'train']])
+        data = {}
+        for metric in self.results.hyperpipe_info.metrics:
+            config = self.results.outer_folds[outer_fold_nr - 1].tested_config_list[config_nr - 1]
+            for t in [1, 2]:
+                curves = []
+                for cut_nr, cut in enumerate(cuts):
+                    curves += [config.inner_folds[fold].learning_curves[cut_nr][t][metric] for fold in range(fold_num)]
+                data.update({(metric, ['test', 'train'][t-1]): curves})
+        curves = pd.DataFrame(data, index=idx, columns=col)
+        if save:
+            curves.to_csv(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.csv' % (outer_fold_nr, config_nr)))
+        return curves
+
+    def plot_curves(self, curves, title='Learning Curves'):
+        """
+        This funtion plots the learning curves
+        """
+        metrics = self.results.hyperpipe_info.metrics
+        fig, axes = plt.subplots(1, len(metrics), figsize=(len(metrics) * 4., 4.))
+        if len(metrics) == 1:
+            axes = [axes]
+        for metric, ax in zip(metrics, axes):
+            cuts = curves.index.get_level_values(0)
+            y = list(curves.columns[0])
+            y[:2] = [metric, 'test']
+            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_test', data=curves, ax=ax)
+            y[1] = 'train'
+            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_train', data=curves, ax=ax)
+            ax.set(xlabel='Fraction of Train Data used', ylabel='Metric Value')
+            ax.legend(fontsize='small')
+        plt.suptitle(title)
+        plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+        return fig
+
+    def plot_learning_curves_config(self, config_nr, outer_fold_nr, save, show=False):
+        """
+        This function gets the learning curves for a specific config nr. and outer fold nr. and plots them
+        If config_nr = -1 it gets the best config of the outer fold
+        If save = True the plot is saved
+        If show = True the plot is shown
+        """
+        if config_nr == -1:
+            config_nr = self.results.best_config.config_nr
+        curves = self.get_learning_curves(config_nr, outer_fold_nr, save)
+        curves.columns = curves.columns.to_flat_index()
+        fig = self.plot_curves(curves, 'Learning Curves (Outer Fold Nr.%d Config Nr.%d)' % (outer_fold_nr, config_nr))
+        if save:
+            plt.savefig(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.png' % (outer_fold_nr, config_nr)))
+        if show:
+            plt.show()
+        plt.close()
+
+    def plot_learning_curves_outer_fold(self, outer_fold_nr, config_nr_list=None, save=True, show=False):
+        """
+        This function gets the learning curves for a list of configs in a specific outer fold and plots them
+        For each config the mean of the learning curves of all inner folds is used
+        If config_nr = -1 it gets the best config of the outer fold
+        If save = True the plot is saved
+        If show = True the plot is shown
+        """
+        if config_nr_list is None:
+            config_nr_list = np.arange(1, len(self.results.outer_folds[outer_fold_nr - 1].tested_config_list) + 1)
+        elif -1 in config_nr_list:
+            config_nr_list = [nr for nr in config_nr_list if nr is not self.results.best_config.config_nr]
+            config_nr_list[config_nr_list == -1] = self.results.best_config.config_nr
+        curves_list = []
+        for config_nr in config_nr_list:
+            curves = self.get_learning_curves(config_nr, outer_fold_nr, save)
+            curves_list.append(curves.groupby(level=0).agg(['mean']))
+        curves_configs = pd.concat(curves_list, axis=0, names=["Config Nr."], keys=config_nr_list)
+        curves_configs.columns = curves_configs.columns.to_flat_index()
+        curves_configs = curves_configs.swaplevel()
+        fig = self.plot_curves(curves_configs, 'Learning Curves (Outer Fold Nr.%d)' % outer_fold_nr)
+        if save:
+            curves_configs.to_csv(self.save_prep_learning_curves('lc_outer_fold_{}.csv'.format(outer_fold_nr)))
+            plt.savefig(self.save_prep_learning_curves('lc_outer_fold_{}.png'.format(outer_fold_nr)))
+        if show:
+            plt.show()
+        plt.close()
+
+    def save_prep_learning_curves(self, file_name):
+        """
+        Helper function to save learning curves
+        """
+        path = self.output_settings.results_folder + '/learning_curves/'
+        if not os.path.exists(path):
+            os.makedirs(path)
+        return os.path.join(path, file_name)
+
+    def save_all_learning_curves(self):
+        for outer_fold_nr in range(1, len(self.results.outer_folds) + 1):
+            for config_nr in range(1, len(self.results.outer_folds[0].tested_config_list) + 1):
+                self.plot_learning_curves_config(config_nr, outer_fold_nr, save=True)
 
     def plot_optimizer_history(self, metric,
                                title: str = 'Optimizer History',
@@ -675,12 +782,18 @@ class ResultsHandler:
                 self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
                 self.eval_mean_time_components()
 
+    def convert_to_json_serializable(self, value):
+        if isinstance(value, np.int64):
+            return int(value)
+        else:
+            return json_util.default(value)
+
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.p')
-            file_opened = open(local_file, 'wb')
-            pickle.dump(self.results.to_son(), file_opened)
-            file_opened.close()
+            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
+            # file_opened = open(local_file, 'wb')
+            with open(local_file, 'w') as outfile:
+                json.dump(self.results.to_son(), outfile, default=self.convert_to_json_serializable)
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))

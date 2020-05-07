@@ -25,12 +25,12 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.files = ['best_config_predictions.csv',
                       'time_monitor.csv',
                       'time_monitor_pie.png',
-                      'photon_result_file.p',
+                      'photon_result_file.json',
                       'photon_summary.txt',
                       'photon_best_model.photon',
-                      'optimum_pipe_feature_importances_backmapped.npz',
-                      'photon_code.py',
                       'optimizer_history.png']
+                    # todo: 'optimum_pipe_feature_importances_backmapped.npz',
+                    # 'optimum_pipe_feature_importances_backmapped.npz',
 
         self.output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=True)
 
@@ -203,9 +203,34 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.assertIsNone(self.hyperpipe.results.plot_confusion_matrix())
         self.assertIsNone(self.hyperpipe.results.plot_roc_curve())
 
+    def test_save_all_learning_curves(self):
+        """
+        Test number of saved learning curve files
+        """
+        hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
+                              learning_curves=True,
+                              metrics=self.metrics,
+                              best_config_metric=self.best_config_metric,
+                              outer_cv=KFold(n_splits=2),
+                              output_settings=self.output_settings,
+                              verbosity=1)
+        hyperpipe += self.ss_pipe_element
+        hyperpipe += self.pca_pipe_element
+        hyperpipe.add(self.svc_pipe_element)
+        hyperpipe.fit(self.__X, self.__y)
+        results_handler = hyperpipe.results_handler
+        results_handler.save_all_learning_curves()
+        config_num = len(hyperpipe.results.outer_folds[0].tested_config_list)
+        target_file_num = 2 * config_num * hyperpipe.cross_validation.outer_cv.n_splits
+        curves_folder = hyperpipe.output_settings.results_folder + '/learning_curves/'
+        true_file_num = len([name for name in os.listdir(curves_folder)
+                             if os.path.isfile(os.path.join(curves_folder, name))])
+        self.assertEqual(target_file_num, true_file_num)
+
     def test_load_from_file(self):
         X, y = load_breast_cancer(True)
         my_pipe = Hyperpipe('load_results_file_test',
+                            inner_cv=KFold(n_splits=3),
                             metrics=['accuracy'],
                             best_config_metric='accuracy',
                             output_settings=OutputSettings(project_folder='./tmp'))
@@ -213,7 +238,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         my_pipe += PipelineElement("SVC")
         my_pipe.fit(X, y)
 
-        results_file = os.path.join(my_pipe.output_settings.results_folder, "photon_result_file.p")
+        results_file = os.path.join(my_pipe.output_settings.results_folder, "photon_result_file.json")
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)

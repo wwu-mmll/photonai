@@ -8,6 +8,7 @@ import numpy as np
 from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper, print_double_metrics
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
+from photonai.optimization import FloatRange
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
     FoldOperations, MDBConfig
 
@@ -22,8 +23,12 @@ class InnerFoldManager(object):
     """
 
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
-                 cross_validation_infos, outer_fold_id, optimization_constraints: list=None,
-                 raise_error: bool = False, training: bool = False, cache_folder=None, cache_updater=None):
+                 cross_validation_infos, outer_fold_id,
+                 optimization_constraints: list = None,
+                 raise_error: bool = False,
+                 training: bool = False,
+                 cache_folder=None,
+                 cache_updater=None):
         """
         Creates a new InnerFoldManager object
         :param pipe: The sklearn pipeline instance that shall be trained and tested
@@ -103,6 +108,13 @@ class InnerFoldManager(object):
                 logger.debug('calculating inner fold ' + str(fold_nr) + '...')
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
+                if self.cross_validation_infos.learning_curves:
+                    learning_curves = self.compute_learning_curves(new_pipe, train_X, train_y, train, kwargs_cv_train,
+                                                                   test_X, test_y, test, kwargs_cv_test)
+                    learning_curves.append([1., curr_test_fold.metrics, curr_train_fold.metrics])
+                else:
+                    learning_curves = list()
+
                 logger.debug('Performance inner fold ' + str(fold_nr))
                 print_double_metrics(curr_train_fold.metrics, curr_test_fold.metrics, photon_system_log=False)
 
@@ -113,7 +125,8 @@ class InnerFoldManager(object):
                                                         curr_train_fold=curr_train_fold,
                                                         curr_test_fold=curr_test_fold,
                                                         time_monitor=durations,
-                                                        feature_importances=new_pipe.feature_importances_)
+                                                        feature_importances=new_pipe.feature_importances_,
+                                                        learning_curves=learning_curves)
 
                 if isinstance(self.optimization_constraints, list):
                     break_cv = 0
@@ -153,6 +166,27 @@ class InnerFoldManager(object):
         config_item.computation_end_time = datetime.datetime.now()
         return config_item
 
+    def compute_learning_curves(self, new_pipe, train_X, train_y, train, kwargs_cv_train,
+                                test_X, test_y, test, kwargs_cv_test):
+        self.cross_validation_infos.learning_curves_cut.transform()
+        cut_range = [round(cut * train_X.shape[0]) for cut in self.cross_validation_infos.learning_curves_cut.values]
+        learning_curves = []
+        for i, cut in enumerate(cut_range[1:]):
+            cut_indices = np.arange(cut)
+            train_cut_X, train_cut_y, train_cut_kwargs = PhotonDataHelper.split_data(train_X, train_y, kwargs_cv_train,
+                                                                                     indices=cut_indices)
+            train_cut = train[:cut]
+            job_data = self.InnerCVJob(pipe=new_pipe,
+                                       config=dict(self.params),
+                                       metrics=self.optimization_infos.metrics,
+                                       callbacks=self.optimization_constraints,
+                                       train_data=self.JobData(train_cut_X, train_cut_y, train_cut, train_cut_kwargs),
+                                       test_data=self.JobData(test_X, test_y, test, kwargs_cv_test))
+            curr_test_cut, curr_train_cut = InnerFoldManager.fit_and_score(job_data)
+            learning_curves.append([self.cross_validation_infos.learning_curves_cut.values[i], curr_test_cut.metrics,
+                                    curr_train_cut.metrics])
+        return learning_curves
+
     class JobData:
         def __init__(self, X, y, indices, cv_kwargs):
             self.X = X
@@ -172,7 +206,7 @@ class InnerFoldManager(object):
 
     @staticmethod
     def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor,
-                                           feature_importances):
+                                           feature_importances, learning_curves):
         # fill result tree with fold information
         inner_fold = MDBInnerFold()
         inner_fold.fold_nr = fold_cnt
@@ -183,6 +217,7 @@ class InnerFoldManager(object):
         inner_fold.number_samples_training = len(curr_train_fold.indices)
         inner_fold.time_monitor = time_monitor
         inner_fold.feature_importances = feature_importances
+        inner_fold.learning_curves = learning_curves
         # save all inner folds to the tree under the config item
         config_item.inner_folds.append(inner_fold)
 

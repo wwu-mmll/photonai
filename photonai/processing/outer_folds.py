@@ -62,7 +62,7 @@ class OuterFoldManager:
 
         self.optimizer = self.optimization_info.get_optimizer()
         if isinstance(self.optimizer, PhotonMasterOptimizer):
-            self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric, self.objectiv_function)
+            self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric, self.objective_function)
         else:
             self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
 
@@ -137,9 +137,9 @@ class OuterFoldManager:
         if isinstance(self.optimizer, PhotonMasterOptimizer):
             self.optimizer.optimize()
         else:
-            # do the optimizing1
+            # do the optimizing
             for current_config in self.optimizer.ask:
-                self.objectiv_function(current_config)
+                self.objective_function(current_config)
 
         logger.clean_info('---------------------------------------------------------------------------------------------------------------')
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
@@ -234,11 +234,11 @@ class OuterFoldManager:
         logger.info('Computations in outer fold {} took {} minutes.'.format(self.cross_validaton_info.outer_folds[self.outer_fold_id].fold_nr,
                                                                             (datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
-
-    def objectiv_function(self, current_config):
+    def objective_function(self, current_config):
         if isinstance(self.optimizer, PhotonMasterOptimizer):
             #current_config = [{key: x.get_dictionary()[key] for key in x.get_dictionary().keys()
             #                  if 'algos' not in key} for x in [current_config]][0]
+            # Todo: @lucas was is das? -> das muss smac selber regeln .
             current_config = {k: current_config[k] for k in current_config if (current_config[k] and 'algos' not in k)}
 
         if current_config is None:
@@ -274,20 +274,20 @@ class OuterFoldManager:
                 raise Exception("Config did not fail, but did not get any metrics either....!!?")
             config_performance = (metric_train, metric_test)
             if self.best_metric_yet is None:
-                best_metric_yet = config_performance
+                self.best_metric_yet = config_performance
                 self.current_best_config = current_config_mdb
             else:
                 # check if we have the next superstar around that exceeds any old performance
                 if self.optimization_info.maximize_metric:
                     if metric_test > self.best_metric_yet[1]:
-                        best_metric_yet = config_performance
+                        self.best_metric_yet = config_performance
                         self.current_best_config.save_memory()
                         self.current_best_config = current_config_mdb
                     else:
                         current_config_mdb.save_memory()
                 else:
                     if metric_test < self.best_metric_yet[1]:
-                        best_metric_yet = config_performance
+                        self.best_metric_yet = config_performance
                         self.current_best_config.save_memory()
                         self.current_best_config = current_config_mdb
                     else:
@@ -301,7 +301,8 @@ class OuterFoldManager:
                         + " - Train: " + "%.4f" % config_performance[0] + ", Validation: " + "%.4f" %
                         config_performance[1])
             logger.info("Best Performance So Far: " + self.optimization_info.best_config_metric
-                        + " - Train: " + "%.4f" % best_metric_yet[0] + ", Validation: " + "%.4f" % best_metric_yet[1])
+                        + " - Train: " + "%.4f" % self.best_metric_yet[0] + ", Validation: "
+                        + "%.4f" % self.best_metric_yet[1])
         else:
             config_performance = (-1, -1)
             # Print Result for config

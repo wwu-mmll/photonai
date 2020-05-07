@@ -21,7 +21,7 @@ except ModuleNotFoundError:
 
 class SMACOptimizer(PhotonMasterOptimizer):
 
-    def __init__(self, scenario_dict, intensifier_kwargs = None, rng = 42, smac_helper = None):
+    def __init__(self, scenario_dict=None, intensifier_kwargs=None, rng=42, smac_helper = None):
         """
         SMAC Wrapper for PHOTON.
         SMAC usage and implementation details:
@@ -40,9 +40,13 @@ class SMACOptimizer(PhotonMasterOptimizer):
                                       "Please install the smac_requirements.txt PHOTON provides.")
 
         if not scenario_dict:
-            msg = "Please enter scenario_dict for smac intern informations."
+            scenario_dict = {"run_obj": "quality",
+                             "deterministic": "true",
+                             "wallclock_limit": 60 * 40
+                             }
+            msg = "No scenario_dict for smac was given. Falling back to default values: {}.".format(self.scenario_dict)
             logger.error(msg)
-            raise ValueError(msg)
+            # raise ValueError(msg)
 
         self.rng = rng
         if not intensifier_kwargs:
