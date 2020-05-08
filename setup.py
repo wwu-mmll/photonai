@@ -5,7 +5,7 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-__version__ = '1.0.0b'
+__version__ = '1.1.0'
 
 setup(
     name='photonai',
@@ -29,7 +29,7 @@ It also enables you to persist and load your optimal model, including all prepro
     author='PHOTON Team',
     author_email='hahnt@wwu.de',
     url='https://github.com/photonai-team/photonai.git',
-    download_url='https://github.com/photonai-team/photonai/archive/' + __version__ + '.tar.gz',
+    download_url='https://github.com/photon-team/photonai/archive/' + __version__ + '.tar.gz',
     keywords=['machine learning', 'deep learning', 'neural networks', 'hyperparameter'],
     classifiers=[],
     install_requires=['numpy>=1.15.0',

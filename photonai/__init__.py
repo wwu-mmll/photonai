@@ -13,6 +13,6 @@ It also enables you to persist and load your optimal model, including all prepro
 
 """
 
-__version__ = '1.0.0b'
+__version__ = '1.1.0'
 
 # __all__ = ( )
