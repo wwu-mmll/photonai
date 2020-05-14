@@ -10,7 +10,7 @@ import pytest
 import numpy as np
 
 from photonai.base import PhotonRegistry
-from photonai.base.registry.element_dictionary import ElementDictionary
+from photonai.base.registry.x_element_dictionary import ElementDictionary
 
 
 #

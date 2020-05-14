@@ -8,13 +8,12 @@ import json
 import sys
 
 from dataclasses import dataclass
-from typing import List, ClassVar, Callable, Union, Dict, Any  # Hashable
+from typing import List, ClassVar, Union, Dict, Any  # Hashable, Callable,
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
 from sklearn.datasets import load_breast_cancer, load_boston
 
-from photonai.errors import raise_PhotoaiError
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.helper.helper import PhotonDataHelper
 from photonai.optimization.config_grid import (
@@ -23,6 +22,7 @@ from photonai.optimization.config_grid import (
 )
 from photonai.processing.metrics import Scorer
 from photonai.photonlogger.logger import logger
+from photonai.errors import raise_PhotonaiError
 
 # class ElementDictionary:
 #     """
@@ -30,9 +30,7 @@ from photonai.photonlogger.logger import logger
 #     ----------
 #     """
 #    PHOTON_REGISTRIES = ["PhotonCore", "PhotonCluster", "PhotonNeuro"]
-EM_PKG_ID = 0
-EM_SK_TYPE_ID = 1
-EMD_OUT_OF_BOUNDS = 2
+
 
 @dataclass
 class PhotonRegistry:
@@ -48,6 +46,10 @@ class PhotonRegistry:
 
     There is a distinct json file with the elements registered for each photon package (core, neuro, genetics, ..)
     There is also a json file for the user's custom elements.
+
+    element data structure
+    key   [  package, sklearn-pipeline-type]
+    "PCA": [ "sklearn.decomposition.PCA", "Transformer"]
 
     Example
     -------
@@ -70,9 +72,20 @@ class PhotonRegistry:
     custom_elements_folder: str = None
     custom_elements: str = None
     custom_elements_file: str = None
-    base_PHOTON_REGISTRIES: ClassVar[List[str]] = ["PhotonCore", "PhotonCluster", "PhotonNeuro"]
-    PHOTON_REGISTRIES: ClassVar[List[str]] = ["PhotonCore", "PhotonCluster", "PhotonNeuro"]
+    base_PHOTON_REGISTRIES: ClassVar[List[str]] = [
+        "PhotonCore",
+        "PhotonCluster",
+        "PhotonNeuro",
+    ]
+    PHOTON_REGISTRIES: ClassVar[List[str]] = [
+        "PhotonCore",
+        "PhotonCluster",
+        "PhotonNeuro",
+    ]
 
+    EM_PKG_ID: ClassVar[int] = 0
+    EM_SK_TYPE_ID: ClassVar[int] = 1
+    EMD_OUT_OF_BOUNDS: ClassVar[int] = 2
 
     def __post_init__(self):
         if self.custom_elements_folder:
@@ -115,9 +128,10 @@ class PhotonRegistry:
             if  JSON file does not exist, then create blank one.
         """
 
-        folder = os.path.dirname(
-            os.path.abspath(inspect.getfile(inspect.currentframe()))
-        ) + "/registry"
+        folder = (
+            os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+            + "/registry"
+        )
 
         file_name = os.path.join(folder, photon_package + ".json")
         if os.path.isfile(file_name):
@@ -129,16 +143,15 @@ class PhotonRegistry:
             with open(file_name, "w") as f:
                 json.dump(file_content, f)
 
-        return file_content, file_name
-#        return file_content
-
+        #        return file_content, file_name
+        return file_content
 
     @staticmethod
-    def elements(element_metadata:Dict) -> List[]:
+    def elements(element_metadata: Dict) -> List:
         return element_metadata.keys()
 
     @staticmethod
-    def get_element_metadata(name:str, element_metadata:Dict) -> List[str,str,str]:
+    def get_element_metadata(element_name: str, element_metadata: Dict) -> List:
 
         """
         Unstuture element metadata.
@@ -155,15 +168,31 @@ class PhotonRegistry:
         -------
 
         """
-        if name in element_metadata:
-            return name, element_metadata[name][EM_PKG_ID], element_metadata[name][EM_SK_TYPE_ID]
+        if element_name in element_metadata:
+            element_pkg = element_metadata[element_name][PhotonRegistry.EM_PKG_ID]
+            def strip_element_name(element_name: str, element_pkg: str) -> str:
+                return element_pkg.replace(('.' + element_name), '')
+
+            element_pkg = strip_element_name(element_name, element_pkg)
+
+            element_imported_module = __import__(
+                element_pkg, globals(), locals(), element_name, 0
+            )
+            return (
+                element_name,
+                element_pkg,
+                element_imported_module,
+                element_metadata[element_name][PhotonRegistry.EM_SK_TYPE_ID],
+            )
         else:
-            raise_PhotoaiError("Element: {} of {} not found ".format(name,elements(element_metadata)) )
-
-
+            raise_PhotonaiError(
+                "Element: {} of {} not found ".format(
+                    name, list(element_metadata.keys())
+                )
+            )
 
     @staticmethod
-    def get_package_info(photon_package:list = []) -> dict:
+    def get_package_info(photon_package: list = []) -> dict:
         """
         Collect all registered elements from JSON file
 
@@ -176,8 +205,10 @@ class PhotonRegistry:
         -------
         Dict of registered elements
         """
-        if photon_package == []: photon_package = PhotonRegistry.PHOTON_REGISTRIES
+        if photon_package == []:
+            photon_package = PhotonRegistry.PHOTON_REGISTRIES
         element_metadata = dict()
+
         for package in photon_package:
             #            element_metadata, _ = ElementDictionary.load_json(package)
             element_metadata.update(PhotonRegistry.load_json(package))
@@ -260,7 +291,9 @@ class PhotonRegistry:
 
         if not Scorer.is_element_type(element_type):
             raise ValueError(
-                "Variable element_type must be {}, was: {}".format(Scorer.ELEMENT_TYPES,element_type)
+                "Variable element_type must be {}, was: {}".format(
+                    Scorer.ELEMENT_TYPES, element_type
+                )
             )
 
         # check if folder exists
@@ -431,7 +464,7 @@ class PhotonRegistry:
 
         logger.info("All tests on custom element passed.")
 
-    def info(self, photon_name):
+    def info(self, photon_name: str, verbose: bool=1) -> Union[bool, List]:
         """
         Show information for object that is encoded by this name.
 
@@ -439,28 +472,37 @@ class PhotonRegistry:
         -----------
         * 'photon_name' [str]:
           The string literal which accesses the class
+        Returns
+        -------
+        (element_name, element_namespace, args_dict)
         """
-        content = self._get_package_info()  # load existing json
+        element_metadata = self._get_package_info()
+        element_name, element_pkg, element_imported_module, _ =\
+            PhotonRegistry.get_element_metadata(
+            photon_name, element_metadata
+        )
 
-        if photon_name in content:
-            element_namespace, element_name = content[photon_name]
+        if photon_name in element_metadata:
+            element_namespace, element_name = element_metadata[photon_name]
 
-            print("----------------------------------")
-            print("Name: " + element_name)
-            print("Namespace: " + element_namespace)
-            print("----------------------------------")
+            if verbose:
+                print("----------------------------------")
+                print("Name: " + element_name)
+                print("Namespace: " + element_pkg)
+                print("----------------------------------")
 
             try:
-                imported_module = __import__(
-                    element_namespace, globals(), locals(), element_name, 0
-                )
-                desired_class = getattr(imported_module, element_name)
+
+                desired_class = getattr(element_imported_module, element_name)
                 base_element = desired_class()
                 print("Possible Hyperparameters as derived from constructor:")
                 class_args = inspect.signature(base_element.__init__)
+                arg_d = {}
                 for item, more_info in class_args.parameters.items():
-                    print("{:<35} {:<75}".format(item, str(more_info)))
-                print("----------------------------------")
+                    arg_d[item] = item
+                    if verbose: print("{:<35} {:<75}".format(item, str(more_info)))
+                if verbose: print("----------------------------------")
+                return element_name, element_namespace, arg_d
             except Exception as e:
                 logger.error(e)
                 logger.error(
@@ -471,6 +513,7 @@ class PhotonRegistry:
                 )
         else:
             logger.error("Could not find element " + photon_name)
+        return False
 
     def delete(self, photon_name):
         """
@@ -555,9 +598,12 @@ class PhotonRegistry:
             if not folder:
                 return {}
         else:
-            folder = os.path.dirname(
-                os.path.abspath(inspect.getfile(inspect.currentframe()))
-            ) + "/registry/"
+            folder = (
+                os.path.dirname(
+                    os.path.abspath(inspect.getfile(inspect.currentframe()))
+                )
+                + "/registry/"
+            )
 
         file_name = path.join(folder, photon_package + ".json")
         file_content = {}
@@ -690,25 +736,28 @@ class PipelineElement(BaseEstimator):
         if hyperparameters is None:
             hyperparameters = {}
 
-
-
+        element_metadata =  PipelineElement.ELEMENT_DICTIONARY
         if base_element is None:
-            if name in PipelineElement.ELEMENT_DICTIONARY:
+            if name in element_metadata:
                 try:
- #            desired_class_home. - = element_metadata(name)
- #            desired_class_name = name
- #            desired_class = getattr(imported_module, desired_class_name)
- #            self.base_element = desired_class(**kwargs)
-                    desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
-                    desired_class_home = desired_class_info[0]
-                    desired_class_name = name
 
-
-                    imported_module = __import__(
-                        desired_class_home, globals(), locals(), desired_class_name, 0
-                    )
-#                    imported_module = importlib.import_module(desired_class_home)
-                    desired_class = getattr(imported_module, desired_class_name)
+                    #            desired_class_home. - = element_metadata(name)
+                    #            desired_class_name = name
+                    #            desired_class = getattr(imported_module, desired_class_name)
+                    #            self.base_element = desired_class(**kwargs)
+                    # desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
+                    # desired_class_home = desired_class_info[0]
+                    # desired_class_name = name
+                    #
+                    # imported_module = __import__(
+                    #     desired_class_home, globals(), locals(), desired_class_name, 0
+                    # )
+                    #                    imported_module = importlib.import_module(desired_class_home)
+                    element_name, element_pkg, element_imported_module, _ = \
+                        PhotonRegistry.get_element_metadata(
+                            name, element_metadata
+                        )
+                    desired_class = getattr(element_imported_module, name)
                     self.base_element = desired_class(**kwargs)
                 except AttributeError as ae:
                     logger.error(
@@ -830,10 +879,10 @@ class PipelineElement(BaseEstimator):
     def _estimator_type(self):
         if hasattr(self.base_element, "_estimator_type"):
             est_type = getattr(self.base_element, "_estimator_type")
-            if est_type is not "classifier" and est_type is not "regressor":
+            if est_type not in Scorer.ML_TYPES:
                 raise NotImplementedError(
-                    "Currently, we only support type classifier or regressor. Is {}.".format(
-                        est_type
+                    "Currently, we only support {}. Is {}.".format(
+                        Scorer.ML_TYPES, est_type
                     )
                 )
             if not hasattr(self.base_element, "predict"):
@@ -1263,7 +1312,7 @@ class PipelineElement(BaseEstimator):
         else:
             return delegate(X)
 
-    def score(self, X_test:np.ndarray, y_test:np.ndarray) -> float:
+    def score(self, X_test: np.ndarray, y_test: np.ndarray) -> float:
         """
         Calls the score function on the base element:
         Returns a goodness of fit measure or a likelihood of unseen data:
@@ -2067,5 +2116,3 @@ class CallbackElement(PhotonNative):
     @property
     def feature_importances_(self):
         return
-
-

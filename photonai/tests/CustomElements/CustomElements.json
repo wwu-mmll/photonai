@@ -1,0 +1,2 @@
+{"XGBoostClassifier": ["xgboost.XGBClassifier", "Estimator"],
+            "KMeans": ["sklearn.cluster.KMeans","Estimator"] }

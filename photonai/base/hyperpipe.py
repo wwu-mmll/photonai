@@ -26,7 +26,7 @@ from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.model_selection import KFold
 
 from photonai.__init__ import __version__
-from photonai.errors import raise_PhotoaiNotImplementedError, raise_PhotoaiError
+from photonai.errors import raise_PhotonaiNotImplementedError, raise_PhotonaiError
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import (
     Stack,
@@ -354,7 +354,7 @@ class Hyperpipe(BaseEstimator):
         # ====================== Cross Validation ===========================
         # check if both calculate_metrics_per_folds and calculate_metrics_across_folds is False
         if not calculate_metrics_across_folds and not calculate_metrics_per_fold:
-            raise_PhotoaiError(
+            raise_PhotonaiError(
                 "Apparently, you've set calculate_metrics_across_folds=False and "
                 "calculate_metrics_per_fold=False. In this case PHOTON does not calculate "
                 "any metrics which doesn't make any sense. Set at least one to True."
@@ -1060,7 +1060,7 @@ class Hyperpipe(BaseEstimator):
     def estimation_type(self):
         estimation_type = getattr(self.elements[-1], "_estimator_type")
         if estimation_type is None:
-            raise_PhotoaiError(
+            raise_PhotonaiError(
                 "Last element in Hyperpipe should be an estimator, was".format(estimation_type)
             )
         else:
@@ -1607,7 +1607,7 @@ class PhotonModelPersistor:
                         )
                         element_identifier[-1]["mode"] = "pickle"
                     except:
-                        raise_PhotoaiNotImplementedError(
+                        raise_PhotonaiNotImplementedError(
                             "Custom pipeline element must implement .save() method or "
                             "allow pickle."
                         )

@@ -9,7 +9,7 @@ from scipy.stats import spearmanr
 from photonai.photonlogger.logger import logger
 
 from sklearn.metrics import accuracy_score
-from photonai.errors import raise_PhotoaiError
+from photonai.errors import raise_PhotonaiError
 
 
 class Scorer(object):
@@ -25,8 +25,10 @@ class Scorer(object):
     """
 
     ELEMENT_TYPES = ["Transformer", "Estimator"]
+    TRANID = 0
+    ESTID = 1
 
-    ML_TYPES = ["Classification", "Regression", "Clustering"]
+    ML_TYPES = ["classifier", "Regression", "clusterer"]
     CLSFID = 0
     REGRID = 1
     CLSTID = 2
@@ -253,7 +255,8 @@ class Scorer(object):
         if element_type in Scorer.ELEMENT_TYPES:
             return True
 
-        raise_PhotoaiError(
+
+        raise_PhotonaiError(
             "Specify valid element_type:{} of [{}]".format(
                 element_type, Scorer.ELEMENT_TYPES
             )
@@ -262,27 +265,33 @@ class Scorer(object):
     @staticmethod
     def is_metric(metric: str) -> bool:
         """
-        :raises
+        Raises
+        --------
         if not known metric
 
-        :param metric:
-        :return: True
+        Parameters
+        ----------
+        metric
+
+        Returns
+        -------
+        True or PhotonaiError
         """
         if metric in Scorer.METRIC_METADATA:
             return True
 
-        raise_PhotoaiError(
+        raise_PhotonaiError(
             "Specify valid ml_type:{} of [{}]".format(metric, Scorer.METRIC_METADATA)
         )
 
     def metric_metadata(
         m: str = "accuracy", metadata_id: int = METRIC_PKGID
     ) -> Union[str, int]:
-        is_metric(m)
+        Scorer.is_metric(m)
         if metadata_id < METRIC_METADATA_OUT_OF_BOUNDS and metadata_id > -1:
             return METRIC_METADATA[m][metadata_id]
         else:
-            raise_PhotoaiError(
+            raise_PhotonaiError(
                 "METRIC_METADATA_index OUT_OF_BOUNDS bounds: {}, was index: {}".format(
                     METRIC_METADATA_OUT_OF_BOUNDS, metadata_id
                 )
@@ -298,12 +307,13 @@ class Scorer(object):
 
         Returns
         -------
+        True or PhotonaiError
 
         """
         if score_type in Scorer.SCORE_TYPES:
             return True
 
-        raise_PhotoaiError(
+        raise_PhotonaiError(
             "Specify valid score_type:{} of [{}]".format(score_type, Scorer.SCORE_TYPES)
         )
 
@@ -319,7 +329,7 @@ class Scorer(object):
         if ml_type in Scorer.ML_TYPES:
             return True
 
-        raise_PhotoaiError(
+        raise_PhotonaiError(
             "Specify valid ml_type:{} of [{}]".format(ml_type, Scorer.ML_TYPES)
         )
 
@@ -364,7 +374,7 @@ class Scorer(object):
         elif sign == -1:
             return False
         else:
-            raise_PhotoaiError("Metric can not be of sign: {}".format(sign))
+            raise_PhotonaiError("Metric can not be of sign: {}".format(sign))
 
     @staticmethod
     def calculate_metrics(
