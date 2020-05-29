@@ -32,7 +32,6 @@ class RegistryTest(PhotonBaseTest):
 
     def test_list_available_elements(self):
         self.registry.list_available_elements()
-        self.registry.list_available_elements('PhotonNeuro')
         self.registry.info('PCA')
         self.registry.info('NotExistingEstimator')
 

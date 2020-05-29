@@ -44,7 +44,7 @@ class PhotonRegistry:
 
     """
 
-    PHOTON_REGISTRIES = ['PhotonCore', 'PhotonNeuro']
+    PHOTON_REGISTRIES = ['PhotonCore']
 
     def __init__(self, custom_elements_folder: str = None):
         if custom_elements_folder:

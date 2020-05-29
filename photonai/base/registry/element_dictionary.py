@@ -4,7 +4,7 @@ import os
 
 
 class ElementDictionary:
-    PHOTON_REGISTRIES = ['PhotonCore', 'PhotonNeuro']
+    PHOTON_REGISTRIES = ['PhotonCore']
 
     @staticmethod
     def get_json(photon_package: str):
