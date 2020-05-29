@@ -59,9 +59,6 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 # train pipeline
 X, y = load_breast_cancer(True)
 my_pipe.fit(X, y)
-
-# visualize results
-Investigator.show(my_pipe)
 ```
 ---
 ## Features
