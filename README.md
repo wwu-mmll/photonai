@@ -23,7 +23,11 @@ pip install git+https://github.com/photon-team/photon
 You can setup a full stack machine learning pipeline in a few lines of code:
 
 ```python
-imports ...
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
+
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
