@@ -8,6 +8,8 @@ By treating each pipeline element as a building block, we create a system in whi
 
 PHOTON is designed to give any user easy access to state-of-the-art machine learning and integrates the power of various machine learning toolboxes and algorithms.
 
+### [Read our mission statement on Arxiv](https://arxiv.org/abs/2002.05426)
+
 [Read the Documentation](https://www.photon-ai.com)
 
 ---
