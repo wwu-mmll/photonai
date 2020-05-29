@@ -19,7 +19,7 @@ from bson.objectid import ObjectId
 from dask.distributed import Client
 from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier, DummyRegressor
-from sklearn.externals import joblib
+import joblib
 from sklearn.model_selection._split import BaseCrossValidator
 from sklearn.model_selection import KFold
 
