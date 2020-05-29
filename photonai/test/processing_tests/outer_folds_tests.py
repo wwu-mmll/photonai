@@ -177,7 +177,6 @@ class OuterFoldTests(PhotonBaseTest):
                     self.assertTrue(np.sum(len(fold.validation.y_pred) == 41))
                     self.assertTrue(np.sum(len(fold.feature_importances) == 7))
             else:
-                # todo: why is that not zero?
                 self.assertTrue(np.sum(len(fold.validation.y_pred) for fold in config.inner_folds) == 0)
                 self.assertTrue(np.sum(len(fold.feature_importances) for fold in config.inner_folds) == 0)
 
