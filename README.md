@@ -117,4 +117,4 @@ e.g. for confounder removal [(see Confounder Removal)](http://www.photon-ai.com/
 - convenient exploration of the hyperparameter search results and performance visualization
 [(see Investigator)](http://www.photon-ai.com/documentation/investigator)
 
-###[Read the Documentation and explore the Examples](https://www.photon-ai.com/documentation)
+### [Read the Documentation and explore the Examples](https://www.photon-ai.com/documentation)
