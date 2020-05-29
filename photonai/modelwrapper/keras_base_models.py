@@ -183,7 +183,7 @@ class KerasDnnBaseModel(KerasBaseEstimator):
             else:
                 if type(value) == float:
                     self._dropout_rate = [value]*len(self.hidden_layer_sizes)
-                    logger.warn("Dropout with type float converted to type list.")
+                    logger.warning("Dropout with type float converted to type list.")
                 elif len(value) != len(self.hidden_layer_sizes):
                     raise ValueError("Dropout length missmatched layer length.")
                 else:
@@ -213,7 +213,7 @@ class KerasDnnBaseModel(KerasBaseEstimator):
                 if type(value) == str:
                     if value in __supported_activations__.keys():
                         self._activations = [value]*len(self.hidden_layer_sizes)
-                        logger.warn("activations with type str converted to type list.")
+                        logger.warning("activations with type str converted to type list.")
                     else:
                         raise ValueError(
                             "activations not supported. Please use one of: " + str(__supported_activations__.keys()))

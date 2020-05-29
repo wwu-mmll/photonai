@@ -212,7 +212,7 @@ class PipelineElement(BaseEstimator):
 
         if already_existing_element_with_that_name > 0:
             error_msg = "Already added a pipeline element with the name " + pipe_element.name + " to " + self.name
-            logger.warn(error_msg)
+            logger.warning(error_msg)
 
             # check for other items that have been renamed
             nr_of_existing_elements_with_that_name = len([i for i in self.elements if i.name.startswith(pipe_element.name)])
@@ -221,7 +221,7 @@ class PipelineElement(BaseEstimator):
                 nr_of_existing_elements_with_that_name += 1
                 new_name = pipe_element.name + str(nr_of_existing_elements_with_that_name + 1)
 
-            logger.warn("Renaming " + pipe_element.name + " in " + self.name + " to " + new_name + " in " + self.name)
+            logger.warning("Renaming " + pipe_element.name + " in " + self.name + " to " + new_name + " in " + self.name)
             pipe_element.name = new_name
 
         self.elements.append(pipe_element)
@@ -341,7 +341,7 @@ class PipelineElement(BaseEstimator):
 
     def __batch_predict(self, delegate, X, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
-            logger.warn("Cannot do batching on a single entity.")
+            logger.warning("Cannot do batching on a single entity.")
             return delegate(X, **kwargs)
 
             # initialize return values
@@ -443,7 +443,7 @@ class PipelineElement(BaseEstimator):
 
     def __batch_transform(self, X, y=None, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
-            logger.warn("Cannot do batching on a single entity.")
+            logger.warning("Cannot do batching on a single entity.")
             return self.__transform(X, y, **kwargs)
 
             # initialize return values

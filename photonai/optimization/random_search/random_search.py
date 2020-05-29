@@ -30,7 +30,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
 
         if not n_configurations and limit_in_minutes <= 0:
             msg = "No stopping criteria for RandomSearchOptimizer."
-            logger.warn(msg)
+            logger.warning(msg)
 
 
     def prepare(self, pipeline_elements, maximize_metric):

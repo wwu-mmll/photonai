@@ -51,7 +51,7 @@ def create_global_config_grid(pipeline_elements, add_name=''):
                                                                                           'This might take veeeeeeery ' \
                                                                                           'looooong to both compute ' \
                                                                                           'and process.'
-        logger.warn(warn_text)
+        logger.warning(warn_text)
         raise Warning(warn_text)
     config_list = list(product(*global_hyperparameter_list))
     config_dicts = []

@@ -484,7 +484,7 @@ class Hyperpipe(BaseEstimator):
                                    "PHOTON chose the first one from the list of metrics to calculate."
 
                     self.best_config_metric = self.metrics[0]
-                    logger.warn(warning_text)
+                    logger.warning(warning_text)
                     raise Warning(warning_text)
                 else:
                     error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
@@ -503,7 +503,7 @@ class Hyperpipe(BaseEstimator):
                 self.best_config_metric = self.metrics[0]
                 warning_text = "No best config metric was given, so PHOTON chose the first in the list of metrics as " \
                                "criteria for choosing the best configuration."
-                logger.warn(warning_text)
+                logger.warning(warning_text)
                 raise Warning(warning_text)
             else:
                 if self.metrics is None or len(self.metrics) == 0:
@@ -699,7 +699,7 @@ class Hyperpipe(BaseEstimator):
             json_transformer = JsonTransformer()
             json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
         except:
-            logger.warn("JsonTransformer was unable to create the .json file.")
+            logger.warning("JsonTransformer was unable to create the .json file.")
 
         # add flowchart to results
         try:
@@ -1422,7 +1422,7 @@ class PhotonModelPersistor:
         zip_file = folder + '.photon'
 
         if os.path.exists(folder):
-            logger.warn('The file you specified already exists as a folder.')
+            logger.warning('The file you specified already exists as a folder.')
         else:
             os.makedirs(folder)
 

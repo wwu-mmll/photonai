@@ -46,7 +46,7 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
                     if skopt_param is not None:
                         space.append(skopt_param)
         if len(space) == 0:
-            logger.warn("Did not find any hyperparameters to convert into skopt space")
+            logger.warning("Did not find any hyperparameters to convert into skopt space")
             self.optimizer = None
         else:
             self.optimizer = Optimizer(space, "ET", acq_func=self.acq_func, acq_func_kwargs=self.acq_func_kwargs)
