@@ -548,7 +548,7 @@ class TestArchitectures(PhotonBaseTest):
             self.run_hyperpipe(pipe, self.classification)
 
     def test_classification_12(self):
-        X, y = load_iris(True)
+        X, y = load_iris(return_X_y=True)
         # multiclass classification
         for original_hyperpipe in self.hyperpipes:
             pipe = original_hyperpipe.copy_me()

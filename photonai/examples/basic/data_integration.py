@@ -6,7 +6,7 @@ from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, Switch, Dat
 from photonai.optimization import FloatRange, IntegerRange, Categorical
 
 # LOAD DATA FROM SKLEARN
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 my_pipe = Hyperpipe('data_integration',
                     optimizer='random_grid_search',

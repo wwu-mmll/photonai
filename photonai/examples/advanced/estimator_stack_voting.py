@@ -4,7 +4,7 @@ from photonai.optimization import IntegerRange
 from sklearn.model_selection import KFold
 from sklearn.datasets import load_breast_cancer
 
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 my_pipe = Hyperpipe('voting_example',
                     inner_cv=KFold(n_splits=10),

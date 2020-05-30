@@ -67,7 +67,7 @@ class JsonTransformerTest(unittest.TestCase):
         Test for simple pipeline with data.
         """
 
-        X, y = load_breast_cancer(True)
+        X, y = load_breast_cancer(return_X_y=True)
 
         # DESIGN YOUR PIPELINE
         my_pipe = Hyperpipe('basic_svm_pipe',
@@ -122,7 +122,7 @@ class JsonTransformerTest(unittest.TestCase):
         Test for Pipeline with data.
         """
 
-        X, y = load_breast_cancer(True)
+        X, y = load_breast_cancer(return_X_y=True)
 
         # DESIGN YOUR PIPELINE
         my_pipe = Hyperpipe(name='Estimator_pipe',
@@ -175,7 +175,7 @@ class JsonTransformerTest(unittest.TestCase):
         Test for Pipeline with data.
         """
 
-        X, y = load_breast_cancer(True)
+        X, y = load_breast_cancer(return_X_y=True)
 
         my_pipe = Hyperpipe('basic_switch_pipe',
                             optimizer='random_grid_search',

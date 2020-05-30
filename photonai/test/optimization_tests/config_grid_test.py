@@ -161,6 +161,6 @@ class CreateGlobalConfigAdvancedElements(PhotonBaseTest):
                                                              'kernel': ["linear", "rbf", "sigmoid", "polynomial"]})
         hp += stack
         hp += PipelineElement("SVC", hyperparameters={'kernel': ["linear", "rbf", "sigmoid"]})
-        X, y = load_breast_cancer(True)
+        X, y = load_breast_cancer(return_X_y=True)
         with self.assertRaises(Warning):
             hp.fit(X, y)

@@ -11,7 +11,7 @@ from photonai.base.hyperpipe import Hyperpipe, OutputSettings
 #
 #     def setUp(self):
 #         # set up all we need
-#         self.X, self.y = load_breast_cancer(True)
+#         self.X, self.y = load_breast_cancer(return_X_y=True)
 #         self.groups = np.random.randint(-10, 10, (self.y.shape[0]))
 #         self.outer_cv = StratifiedKFoldRegression(n_splits=2, random_state=15, shuffle=True)
 #         self.inner_cv = StratifiedKFoldRegression(n_splits=2, random_state=15, shuffle=True)

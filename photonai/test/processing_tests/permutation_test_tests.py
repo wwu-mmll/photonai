@@ -27,7 +27,7 @@ class PermutationTestTests(PhotonBaseTest):
                                    permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
         cls.hyperpipe += PipelineElement("SVC")
-        cls.X, cls.y = load_breast_cancer(True)
+        cls.X, cls.y = load_breast_cancer(return_X_y=True)
         cls.hyperpipe.fit(cls.X, cls.y)
 
     def test_get_duration_per_n(self):

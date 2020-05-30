@@ -9,7 +9,7 @@ from photonai.investigator import Investigator
 # Investigator.load_from_file("basic_svm_pipe_no_performance", "/home/rleenings/Git/photon_core/photonai/examples/basic/tmp/basic_svm_pipe_no_performance_results_2019-11-07_15-00-34/photon_result_file.p")
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_boston(True)
+X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',

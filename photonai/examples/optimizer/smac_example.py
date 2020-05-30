@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Switch
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # WE USE THE BOSTON HOUSING DATA FROM SKLEARN
-X, y = load_boston(True)
+X, y = load_boston(return_X_y=True)
 
 scenario_dict = {"run_obj": "quality",  # we optimize quality (alternatively runtime)
                              "runcount-limit": 30,  # maximum function evaluations

@@ -59,7 +59,7 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
                                                    'C': FloatRange(0.5, 2)}, gamma='scale')
 
 # train pipeline
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 my_pipe.fit(X, y)
 ```
 ---

@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import MinimumPerformance, IntegerRange
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_boston(True)
+X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe(name='basic_svm_pipe_no_performance',

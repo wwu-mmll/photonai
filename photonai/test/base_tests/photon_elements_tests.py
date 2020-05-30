@@ -22,7 +22,7 @@ class PipelineElementTests(unittest.TestCase):
     def setUp(self):
         self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True, random_state=42)
         self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']}, random_state=42)
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
         self.kwargs = {'covariates': self.y}
         self.Xt = self.X + 1
         self.yt = self.y + 1
@@ -283,7 +283,7 @@ class PipelineElementTests(unittest.TestCase):
 class SwitchTests(unittest.TestCase):
 
     def setUp(self):
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
         self.svc = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
         self.tree = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]})
         self.gpc = PipelineElement('GaussianProcessClassifier')
@@ -514,7 +514,7 @@ class SwitchTests(unittest.TestCase):
 class BranchTests(unittest.TestCase):
 
     def setUp(self):
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
         self.scaler = PipelineElement("StandardScaler", {'with_mean': True})
         self.pca = PipelineElement('PCA', {'n_components': [1, 2]}, test_disabled=True, random_state=3)
         self.tree = PipelineElement('DecisionTreeClassifier', {'min_samples_split': [2, 3, 4]}, random_state=3)
@@ -670,7 +670,7 @@ class BranchTests(unittest.TestCase):
 class StackTests(unittest.TestCase):
 
     def setUp(self):
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
 
         self.pca = PipelineElement('PCA', {'n_components': [5, 10]})
         self.scaler = PipelineElement('StandardScaler', {'with_mean': [True]})
@@ -868,7 +868,7 @@ class StackTests(unittest.TestCase):
 class DataFilterTests(unittest.TestCase):
 
     def setUp(self):
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
         self.filter_1 = DataFilter(indices=[0, 1, 2, 3, 4])
         self.filter_2 = DataFilter(indices=[5, 6, 7, 8, 9])
 
@@ -898,7 +898,7 @@ class CallbackElementTests(unittest.TestCase):
             if y is not None:
                 self.assertListEqual(self.y.tolist(), y.tolist())
 
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
 
         self.clean_pipeline = PhotonPipeline(elements=[('PCA', PipelineElement('PCA')),
                                                        ('LogisticRegression', PipelineElement('LogisticRegression'))])

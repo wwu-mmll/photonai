@@ -15,7 +15,7 @@ class ConfounderRemovalTests(PhotonBaseTest):
     def setUp(self):
 
         super(ConfounderRemovalTests, self).setUp()
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
         self.X_train = self.X[:100]
         self.y_train = self.y[:100]
         self.shuffle_split = ShuffleSplit(test_size=0.2, n_splits=1, random_state=15)

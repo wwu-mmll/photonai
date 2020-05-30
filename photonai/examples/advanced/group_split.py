@@ -6,7 +6,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import FloatRange, Categorical
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 groups = np.random.random_integers(0, 3, (len(y), ))
 

@@ -90,7 +90,7 @@ my_pipe = json_transformer.from_json(metadata_json)
 # my_pipe = json_transformer.read_json_file(filepath="./basic_svm_pipe_results_2020-03-27_09-13-56/hyperpipe_config.json")
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 my_pipe.fit(X, y)
 
