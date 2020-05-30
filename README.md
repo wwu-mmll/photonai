@@ -15,9 +15,11 @@ PHOTON is designed to give any user easy access to state-of-the-art machine lear
 ---
 ## Getting Started
 In order to use PHOTON you only need to have your favourite Python IDE ready.
-Then install it simply via pip
+Then install the latest stable version simply via pip
 ```
-pip install git+https://github.com/photon-team/photon
+pip install photonai
+# Or try out the latest features if you don't rely on a stable version, using:
+pip install --upgrade git+https://github.com/wwu-mmll/photonai.git@develop
 ```
 
 You can setup a full stack machine learning pipeline in a few lines of code:
