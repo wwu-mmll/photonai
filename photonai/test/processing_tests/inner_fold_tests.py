@@ -1,6 +1,6 @@
 import numpy as np
 from sklearn.datasets import load_breast_cancer
-from sklearn.decomposition.pca import PCA
+from sklearn.decomposition import PCA
 from sklearn.linear_model import RidgeClassifier
 from sklearn.metrics import recall_score, accuracy_score
 from sklearn.model_selection import KFold
