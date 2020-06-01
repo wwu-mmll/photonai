@@ -12,7 +12,7 @@ class PhotonHyperparam(object):
         if definite_list:
             return random.choice(self.values)
         else:
-            msg = "The PhotonHyperparam has no own random function."
+            msg = "The PHOTON hyperparam has no own random function."
             logger.error(msg)
             raise ValueError(msg)
 
@@ -156,11 +156,22 @@ class NumberRange(PhotonHyperparam):
                 values = np.geomspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
             else:
                 values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
+        else:
+            msg = "PHOTON can not create values of your NumberRange cause of unknowing range_type: {}. " \
+                  "Please use one of ['range', 'linspace', 'logspace', 'geomspace']."
+            logger.error(msg.format(self.range_type))
+            raise ValueError(msg.format(self.range_type))
+
         # convert to python datatype because mongodb needs it
-        if self.num_type == np.int32:
+        if np.issubdtype(self.num_type, np.integer):
             self.values = [int(i) for i in values]
-        elif self.num_type == np.float32:
+        elif np.issubdtype(self.num_type, np.floating):
             self.values = [float(i) for i in values]
+        else:
+            msg = "PHOTON can not guarantee full mongodb support since you chose a non [np.integer, np.floating] " \
+                  "subtype in NumberType.dtype."
+            logger.warn(msg)
+            self.values = values
 
     @property
     def range_type(self):
@@ -269,8 +280,8 @@ class FloatRange(NumberRange):
             Further parameters that should be passed to the numpy function chosen with range_type.
         """
 
-    def __init__(self, start, stop, range_type='range', step=None, num=None, **kwargs):
-            super().__init__(start, stop, range_type, step, num, np.float32, **kwargs)
+    def __init__(self, start, stop, range_type='linspace', step=None, num=None, **kwargs):
+            super().__init__(start, stop, range_type, step, num, np.float64, **kwargs)
 
     def get_random_value(self, definite_list: bool = False):
         if definite_list:

@@ -33,6 +33,20 @@ class BaseTest(unittest.TestCase):
             self.assertIn(self.intger_range.get_random_value(definite_list=True), self.intger_range.values)
             self.assertIn(self.float_range.get_random_value(definite_list=True), self.float_range.values)
 
+    def test_domain(self):
+
+        self.float_range.transform()
+        self.intger_range.transform()
+        self.assertListEqual(self.intger_range.values, list(np.arange(2,6)))
+        self.assertListEqual(self.float_range.values, list(np.linspace(0.1, 5.7, dtype=np.float64)))
+
+        big_float_range = FloatRange(-300.57, np.pi*4000)
+        big_float_range.transform()
+        self.assertListEqual(big_float_range.values, list(np.linspace(-300.57, np.pi*4000)))
+        self.assertListEqual(self.categorical.values, ["a","b","c","d","e","f","g","h"])
+        self.assertListEqual(self.bool.values, [True, False])
+
+
     def test_rand_error(self):
         with self.assertRaises(ValueError):
             self.intger_range.get_random_value(definite_list=True)
@@ -72,7 +86,7 @@ class NumberRangeTest(unittest.TestCase):
 
         number_range_logspace = FloatRange(-1, 1, num=50, range_type='logspace')
         number_range_logspace.transform()
-        np.testing.assert_array_almost_equal(number_range_logspace.values,  np.logspace(-1, 1, num=50).tolist())
+        np.testing.assert_array_almost_equal(number_range_logspace.values,  np.logspace(-1, 1, num=50))
 
         # error tests
         with self.assertRaises(ValueError):
@@ -86,6 +100,10 @@ class NumberRangeTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             IntegerRange(start=self.start, stop=self.end, range_type="ownspace")
 
+    def test_false_range_type(self):
+        with self.assertRaises(ValueError):
+            float_range = FloatRange(1.0, 5.2, range_type='normal_distributed')
+            float_range.transform()
 
 class HyperparameterOtherTest(unittest.TestCase):
 
