@@ -3,10 +3,6 @@ from photonai.optimization import FloatRange, IntegerRange
 from photonai.optimization.base_optimizer import PhotonMasterOptimizer
 from photonai.photonlogger import logger
 
-import logging
-
-#logging.basicConfig(level=logging.DEBUG)
-
 try:
     from smac.configspace import UniformFloatHyperparameter, UniformIntegerHyperparameter, CategoricalHyperparameter, \
         ConfigurationSpace, Configuration, InCondition, Constant
@@ -21,12 +17,13 @@ except ModuleNotFoundError:
 
 class SMACOptimizer(PhotonMasterOptimizer):
 
-    def __init__(self, scenario_dict=None, intensifier_kwargs=None, rng=42, smac_helper = None):
+    def __init__(self, facade=None, scenario_dict=None, intensifier_kwargs=None, rng=42, smac_helper = None):
         """
         SMAC Wrapper for PHOTON.
         SMAC usage and implementation details:
         https://automl.github.io/SMAC3/master/quickstart.html
 
+        :param facade: str or object for SMAC strategy
         :param scenario_dict: dict for scenario settings
         :param rng: INT for random seed
         :param smac_helper: currently help object for test cases.
@@ -40,13 +37,31 @@ class SMACOptimizer(PhotonMasterOptimizer):
                                       "Please install the smac_requirements.txt PHOTON provides.")
 
         if not scenario_dict:
-            scenario_dict = {"run_obj": "quality",
+            self.scenario_dict = {"run_obj": "quality",
                              "deterministic": "true",
                              "wallclock_limit": 60 * 40
                              }
             msg = "No scenario_dict for smac was given. Falling back to default values: {}.".format(self.scenario_dict)
-            logger.error(msg)
-            # raise ValueError(msg)
+            logger.warn(msg)
+        else:
+            self.scenario_dict = scenario_dict
+
+        if not facade:
+            self.facade = SMAC4HPO
+        else:
+            if type(facade) == str:
+                if facade in ["SMAC4BO", "SMAC4AC", "SMAC4HPO"]:
+                    self.facade = eval(facade)
+                else:
+                    msg = "Dont understand SMAC.facade {}. Please use one of ['SMAC4BO', 'SMAC4AC', 'SMAC4HPO']."
+                    logger.error(msg)
+                    raise ValueError(msg)
+            elif isinstance(facade, SMAC4BO) or isinstance(facade, SMAC4AC) or isinstance(facade, SMAC4HPO):
+                self.facade = facade
+            else:
+                msg = "Dont understand SMAC.facade. Please use one of ['SMAC4BO', 'SMAC4AC', 'SMAC4HPO']."
+                logger.error(msg)
+                raise ValueError(msg)
 
         self.rng = rng
         if not intensifier_kwargs:
@@ -56,7 +71,6 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.cspace = ConfigurationSpace()  # Hyperparameter space for smac
 
-        self.scenario_dict = scenario_dict
 
         self.switch_optiones = {}
         self.hyperparameters = []
@@ -149,12 +163,11 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.scenario = Scenario(self.scenario_dict)
 
-        self.smac = SMAC4BO(scenario = self.scenario,
-                            intensifier_kwargs = self.intensifier_kwargs,
-                             rng = self.rng,
-                             tae_runner = objectiv_function)
+        self.smac = self.facade(scenario = self.scenario,
+                                intensifier_kwargs = self.intensifier_kwargs,
+                                rng = self.rng,
+                                tae_runner = objectiv_function)
 
-        #self.smac.logger.basicConfig(level=logging.DEBUG)
 
         if  self.debug:
             self.smac_helper['data'] = self.smac
