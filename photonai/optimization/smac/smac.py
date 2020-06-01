@@ -33,8 +33,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
             msg = "Module smac not found or not installed as expected. " \
                   "Please install the smac_requirements.txt PHOTON provides."
             logger.error(msg)
-            raise ModuleNotFoundError("Module smac not found or not installed as expected. "
-                                      "Please install the smac_requirements.txt PHOTON provides.")
+            raise ModuleNotFoundError(msg)
 
         if not scenario_dict:
             self.scenario_dict = {"run_obj": "quality",
@@ -49,18 +48,14 @@ class SMACOptimizer(PhotonMasterOptimizer):
         if not facade:
             self.facade = SMAC4HPO
         else:
-            if type(facade) == str:
-                if facade in ["SMAC4BO", "SMAC4AC", "SMAC4HPO"]:
+            if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO]:
+                if type(facade) == str:
                     self.facade = eval(facade)
                 else:
-                    msg = "Dont understand SMAC.facade {}. Please use one of ['SMAC4BO', 'SMAC4AC', 'SMAC4HPO']."
-                    logger.error(msg)
-                    raise ValueError(msg)
-            elif isinstance(facade, SMAC4BO) or isinstance(facade, SMAC4AC) or isinstance(facade, SMAC4HPO):
-                self.facade = facade
+                    self.facade = facade
             else:
-                msg = "Dont understand SMAC.facade. Please use one of ['SMAC4BO', 'SMAC4AC', 'SMAC4HPO']."
-                logger.error(msg)
+                msg = "SMAC.facade {} not known. Please use one of ['SMAC4BO', 'SMAC4AC', 'SMAC4HPO']."
+                logger.error(msg.format(str(facade)))
                 raise ValueError(msg)
 
         self.rng = rng
