@@ -1,6 +1,5 @@
 from sklearn.datasets import fetch_california_housing
 from sklearn.model_selection import KFold
-from photonai.investigator import Investigator
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import Categorical
 
@@ -38,6 +37,3 @@ my_pipe += PipelineElement('KerasDnnRegressor',
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-debug = True
-Investigator.show(my_pipe)

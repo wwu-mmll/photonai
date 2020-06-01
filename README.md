@@ -112,8 +112,6 @@ e.g. for confounder removal [(see Confounder Removal)](http://www.photon-ai.com/
 - provides a module for model development specialized on neuroimaging data [(see Brain Age)](http://www.photon-ai.com/documentation/brain_age) 
 
 ### Visualization of model performance and the hyperparameter optimization process
-- web-based investigation tool based on microframework Flask
 - convenient exploration of the hyperparameter search results and performance visualization
-[(see Investigator)](http://www.photon-ai.com/documentation/investigator)
 
 ### [Read the Documentation and explore the Examples](https://www.photon-ai.com/documentation)

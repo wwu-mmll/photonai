@@ -1,6 +1,5 @@
 from sklearn.datasets import load_digits
 from sklearn.model_selection import KFold
-from photonai.investigator import Investigator
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import Categorical
 
@@ -35,5 +34,3 @@ my_pipe += PipelineElement('KerasDnnClassifier',
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-Investigator.show(my_pipe)

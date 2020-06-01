@@ -28,6 +28,3 @@ my_pipe += PipelineElement('PhotonMLPClassifier', hyperparameters={'layer_1': In
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-
-

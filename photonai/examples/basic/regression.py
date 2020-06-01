@@ -3,10 +3,7 @@ from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import IntegerRange
-from photonai.investigator import Investigator
 
-
-# Investigator.load_from_file("basic_svm_pipe_no_performance", "/home/rleenings/Git/photon_core/photonai/examples/basic/tmp/basic_svm_pipe_no_performance_results_2019-11-07_15-00-34/photon_result_file.p")
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_boston(return_X_y=True)
@@ -36,10 +33,3 @@ my_pipe += PipelineElement('RandomForestRegressor',
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-# AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
-Investigator.show(my_pipe)
-
-
-
-
