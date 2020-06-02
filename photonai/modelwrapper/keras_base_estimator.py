@@ -43,7 +43,7 @@ class KerasBaseEstimator(BaseEstimator):
                            verbose=self.verbosity)
         else:
             # fit the model
-            logger.warn('Cannot use Keras Callbacks because of small sample size.')
+            logger.warning('Cannot use Keras Callbacks because of small sample size.')
             self.model.fit(X, y,
                            batch_size=self.nn_batch_size,
                            epochs=self.epochs,

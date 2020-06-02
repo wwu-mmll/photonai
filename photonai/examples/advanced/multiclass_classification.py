@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import FloatRange, Categorical
 
 # loading the iris dataset
-X, y = load_iris(True)
+X, y = load_iris(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('multi_class_svm_pipe',

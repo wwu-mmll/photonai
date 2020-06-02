@@ -228,7 +228,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.assertEqual(target_file_num, true_file_num)
 
     def test_load_from_file(self):
-        X, y = load_breast_cancer(True)
+        X, y = load_breast_cancer(return_X_y=True)
         my_pipe = Hyperpipe('load_results_file_test',
                             inner_cv=KFold(n_splits=3),
                             metrics=['accuracy'],

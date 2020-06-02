@@ -4,7 +4,7 @@ from sklearn.model_selection import KFold
 from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, OutputSettings
 from photonai.optimization import IntegerRange, Categorical, FloatRange
 
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 my_pipe = Hyperpipe('basic_stacking',
                     optimizer='grid_search',

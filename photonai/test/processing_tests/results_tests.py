@@ -58,7 +58,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    output_settings=OutputSettings(project_folder=self.tmp_folder_path))
 
     def test_cv_config_and_dummy_nr(self):
-        X, y = load_boston(True)
+        X, y = load_boston(return_X_y=True)
         self.hyperpipe += PipelineElement('StandardScaler')
         self.hyperpipe += PipelineElement('PCA', {'n_components': IntegerRange(3, 7)})
         self.hyperpipe += PipelineElement('SVR', {'C': FloatRange(0.001, 10, num=10),
@@ -154,7 +154,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(csv_file.probabilities.values, values_to_expect / 10))
 
     def test_best_config_stays_the_same(self):
-        X, y = load_boston(True)
+        X, y = load_boston(return_X_y=True)
         self.hyperpipe += PipelineElement('StandardScaler')
         self.hyperpipe += PipelineElement('PCA', {'n_components': [4, 5]}, random_state=42)
         self.hyperpipe += PipelineElement('LinearRegression')
@@ -310,7 +310,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                               output_settings=OutputSettings(project_folder=self.tmp_folder_path))
         hyperpipe += PipelineElement('StandardScaler')
         hyperpipe += PipelineElement('DecisionTreeRegressor')
-        X, y = load_boston(True)
+        X, y = load_boston(return_X_y=True)
         hyperpipe.fit(X, y)
 
         exepcted_nr_of_feature_importances = X.shape[1]

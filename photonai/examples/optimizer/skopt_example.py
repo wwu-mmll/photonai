@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import FloatRange, Categorical
 
 # WE USE THE BOSTON HOUSING DATA FROM SKLEARN
-X, y = load_boston(True)
+X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 settings = OutputSettings(project_folder='./tmp/')

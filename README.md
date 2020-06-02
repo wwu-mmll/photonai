@@ -15,15 +15,21 @@ PHOTON is designed to give any user easy access to state-of-the-art machine lear
 ---
 ## Getting Started
 In order to use PHOTON you only need to have your favourite Python IDE ready.
-Then install it simply via pip
+Then install the latest stable version simply via pip
 ```
-pip install git+https://github.com/photon-team/photon
+pip install photonai
+# Or try out the latest features if you don't rely on a stable version, using:
+pip install --upgrade git+https://github.com/wwu-mmll/photonai.git@develop
 ```
 
 You can setup a full stack machine learning pipeline in a few lines of code:
 
 ```python
-imports ...
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold
+
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
@@ -53,11 +59,8 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
                                                    'C': FloatRange(0.5, 2)}, gamma='scale')
 
 # train pipeline
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 my_pipe.fit(X, y)
-
-# visualize results
-Investigator.show(my_pipe)
 ```
 ---
 ## Features
@@ -109,8 +112,6 @@ e.g. for confounder removal [(see Confounder Removal)](http://www.photon-ai.com/
 - provides a module for model development specialized on neuroimaging data [(see Brain Age)](http://www.photon-ai.com/documentation/brain_age) 
 
 ### Visualization of model performance and the hyperparameter optimization process
-- web-based investigation tool based on microframework Flask
 - convenient exploration of the hyperparameter search results and performance visualization
-[(see Investigator)](http://www.photon-ai.com/documentation/investigator)
 
-###[Read the Documentation and explore the Examples](https://www.photon-ai.com/documentation)
+### [Read the Documentation and explore the Examples](https://www.photon-ai.com/documentation)

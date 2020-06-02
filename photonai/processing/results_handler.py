@@ -41,7 +41,7 @@ class ResultsHandler:
             self.results = results[0]
         elif len(results) > 1:
             self.results = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': pipe_name}).first()
-            logger.warn('Found multiple hyperpipes with that name. Returning most recent one.')
+            logger.warning('Found multiple hyperpipes with that name. Returning most recent one.')
         else:
             raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
 
@@ -314,7 +314,7 @@ class ResultsHandler:
             # now do smoothing
             if isinstance(reduce_scatter_by, str):
                 if reduce_scatter_by != 'auto':
-                    logger.warn('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
+                    logger.warning('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
                         reduce_scatter_by))
 
                 # if auto, then calculate size of reduce_scatter_by so that 75 points on x remain

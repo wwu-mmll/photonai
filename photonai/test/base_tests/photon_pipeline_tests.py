@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
-from sklearn.decomposition.pca import PCA
+from sklearn.decomposition import PCA
 from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
@@ -38,7 +38,7 @@ class PipelineTests(PhotonBaseTest):
 
     def setUp(self):
 
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
 
         # Photon Version
         self.p_pca = PipelineElement("PCA", {}, random_state=3)
@@ -321,7 +321,7 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
                         'SVC__C': 1,
                         'SVC__kernel': 'linear'}
 
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
 
     def test_group_caching(self):
 

@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
 from photonai.optimization import IntegerRange
 
 # GET DATA
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 # CREATE HYPERPIPE
 my_pipe = Hyperpipe('basic_switch_pipe',

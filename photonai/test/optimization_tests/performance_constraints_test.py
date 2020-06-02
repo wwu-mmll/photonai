@@ -156,7 +156,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
         self.constraint_object = BestPerformance(strategy='mean', metric='mean_squared_error')
 
     def test_shall_continue(self):
-        X, y = load_boston(True)
+        X, y = load_boston(return_X_y=True)
 
         inner_fold_length = 7
         # DESIGN YOUR PIPELINE

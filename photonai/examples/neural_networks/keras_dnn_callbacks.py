@@ -1,8 +1,6 @@
 from sklearn.datasets import fetch_openml
 from sklearn.model_selection import KFold
-from photonai.investigator import Investigator
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization import Categorical
 from keras.callbacks import EarlyStopping
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN

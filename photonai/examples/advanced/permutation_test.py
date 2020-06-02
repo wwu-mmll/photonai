@@ -39,7 +39,7 @@ def create_hyperpipe():
     return my_pipe
 
 
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 my_perm_id = str(uuid.uuid4())
 groups = np.random.random_integers(0, 3, (len(y), ))
 

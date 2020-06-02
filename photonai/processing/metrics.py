@@ -105,11 +105,11 @@ class Scorer(object):
         # The following works only for classification
         # if np.ndim(y_pred) == 2:
         #     y_pred = one_hot_to_binary(y_pred)
-        #     logger.warn("test_predictions was one hot encoded => transformed to binary")
+        #     logger.warning("test_predictions was one hot encoded => transformed to binary")
         #
         # if np.ndim(y_true) == 2:
         #     y_true = one_hot_to_binary(y_true)
-        #     logger.warn("test_y was one hot encoded => transformed to binary")
+        #     logger.warning("test_y was one hot encoded => transformed to binary")
 
         output_metrics = {}
         if metrics:

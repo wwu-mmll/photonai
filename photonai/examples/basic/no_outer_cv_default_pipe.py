@@ -4,7 +4,7 @@ from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 
-X, y = load_boston(True)
+X, y = load_boston(return_X_y=True)
 
 my_pipe = Hyperpipe(name='default_pipe',
                     metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],  # the performance metrics of interest

@@ -11,7 +11,6 @@ from keras.layers import Flatten
 from keras.layers import Dropout
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
-from photonai.investigator import Investigator
 from sklearn.model_selection import KFold
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import Categorical
@@ -101,5 +100,3 @@ my_pipe += PipelineElement('KerasBaseClassifier',
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-Investigator.show(my_pipe)

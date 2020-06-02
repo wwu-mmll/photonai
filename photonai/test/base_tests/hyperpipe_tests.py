@@ -6,7 +6,7 @@ import unittest
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
-from sklearn.decomposition.pca import PCA
+from sklearn.decomposition import PCA
 from sklearn.dummy import DummyRegressor, DummyClassifier
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold

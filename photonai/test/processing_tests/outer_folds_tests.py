@@ -29,7 +29,7 @@ class OuterFoldTests(PhotonBaseTest):
                                                  learning_curves=False,
                                                  learning_curves_cut=None)
 
-        self.X, self.y = load_boston(True)
+        self.X, self.y = load_boston(return_X_y=True)
         self.outer_fold_id = "TestFoldOuter1"
         self.cv_info.outer_folds = {self.outer_fold_id: FoldInfo(0, 1, train, test) for train, test in
                                     self.outer_cv.split(self.X, self.y)}

@@ -130,7 +130,7 @@ class NumberRange(PhotonHyperparam):
         if self.range_type == "range" and self.start > self.stop:
             warn_message = "NumberRange or one of its subclasses is empty cause np.arange " + \
                            "does not deal with start greater than stop."
-            logger.warn(warn_message)
+            logger.warning(warn_message)
 
         values = []
 

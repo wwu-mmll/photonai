@@ -1,13 +1,12 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Preprocessing, OutputSettings
-from photonai.investigator import Investigator
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',
@@ -30,7 +29,3 @@ my_pipe += PipelineElement('SVC',
                            gamma='scale')
 
 my_pipe.fit(X, y)
-
-# Investigator.show(my_pipe)
-
-

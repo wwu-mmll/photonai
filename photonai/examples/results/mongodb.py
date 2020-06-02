@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_breast_cancer(True)
+X, y = load_breast_cancer(return_X_y=True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
 mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",

@@ -11,7 +11,7 @@ def my_monitor(X, y=None, **kwargs):
 
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_boston(True)
+X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 settings = OutputSettings(project_folder='./tmp/')
