@@ -8,4 +8,4 @@ install:
   - pip install tensorflow
 # command to run tests
 script:
-  - PYTHONPATH=./ pytest photonai/test/base_tests
+  - PYTHONPATH=./ pytest photonai/test/

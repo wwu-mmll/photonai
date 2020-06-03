@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.com/wwu-mmll/photonai.svg?branch=master)](https://travis-ci.com/wwu-mmll/photonai)
 ![PHOTON LOGO](http://www.photon-ai.com/static/img/PhotonLogo.jpg "PHOTON Logo")
 
 #### PHOTON is a high level python API for designing and optimizing machine learning pipelines.
