@@ -5,10 +5,12 @@ import warnings
 import datetime
 import numpy as np
 
+from typing import Union, List
+
 from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper, print_double_metrics
+from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
-from photonai.optimization import FloatRange
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
     FoldOperations, MDBConfig
 
@@ -24,7 +26,7 @@ class InnerFoldManager(object):
 
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
                  cross_validation_infos, outer_fold_id,
-                 optimization_constraints: list = None,
+                 optimization_constraints: Union[PhotonBaseConstraint, List[PhotonBaseConstraint]] = None,
                  raise_error: bool = False,
                  training: bool = False,
                  cache_folder=None,
@@ -132,16 +134,16 @@ class InnerFoldManager(object):
                     break_cv = 0
                     for cf in self.optimization_constraints:
                         if not cf.shall_continue(config_item):
-                            logger.info(
-                                'Skipped further cross validation after fold ' + str(fold_nr) + ' due to performance constraints in ' + cf.metric)
+                            logger.info('Skipped further cross validation after fold ' + str(fold_nr) +
+                                        ' due to performance constraints in ' + cf.metric)
                             break_cv += 1
                             break
                     if break_cv > 0:
                         break
-                elif self.optimization_constraints is not None:
+                elif isinstance(self.optimization_constraints, PhotonBaseConstraint):
                     if not self.optimization_constraints.shall_continue(config_item):
-                        logger.info(
-                            'Skipped further cross validation after fold ' + str(fold_nr) + ' due to performance constraints in ' + cf.metric)
+                        logger.info('Skipped further cross validation after fold ' + str(fold_nr) +
+                                    ' due to performance constraints in ' + self.optimization_constraints.metric)
                         break
 
             InnerFoldManager.process_fit_results(config_item,
