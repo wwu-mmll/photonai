@@ -7,14 +7,6 @@ class PhotonBaseOptimizer:
     def __init__(self, *kwargs):
         pass
 
-    def prepare(self, pipeline_elements: list, maximize_metric: bool):
-        """
-        Initializes hyperparameter search.
-        Assembles all hyperparameters of the pipeline_element list in order to prepare the hyperparameter search space.
-        Hyperparameters can be accessed via pipe_element.hyperparameters.
-        """
-        pass
-
     def plot(self, results_folder):
         """
         Plot optimizer specific visualizations
@@ -43,9 +35,28 @@ class PhotonBaseOptimizer:
 
 
 class PhotonSlaveOptimizer(PhotonBaseOptimizer):
+    """
+    The PhotonSlaveOptimizer is controlled by PHOTON. By ask-tell principle PHOTON get new configs.
+    It terminates by some specific criteria with an aks -> empty yield.
+    """
 
     def __init__(self, *kwargs):
         super(PhotonSlaveOptimizer, self).__init__(kwargs)
+
+    def prepare(self, pipeline_elements: list, maximize_metric: bool):
+        """
+        Initializes hyperparameter search.
+        Assembles all hyperparameters of the pipeline_element list in order to prepare the hyperparameter search space.
+        Hyperparameters can be accessed via pipe_element.hyperparameters.
+
+        Parameters
+        ----------
+        * `pipeline_elements` [list]:
+            List of all pipeline_elements to create hyperparameter_space.
+        * `maximize_metric` [bool]:
+            Boolean for distinguish between score and error.
+        """
+        pass
 
     def ask(self):
         """
@@ -70,13 +81,33 @@ class PhotonSlaveOptimizer(PhotonBaseOptimizer):
 
 
 class PhotonMasterOptimizer(PhotonBaseOptimizer):
+    """
+        The PhotonMasterOptimizer controls PHOTON. PHOTON provides an objective_function.
+        The runs and configs of the objective_function is up to PhotonMasterOptimizer.
+        """
 
     def __init__(self, *kwargs):
-        super(PhotonSlaveOptimizer, self).__init__(kwargs)
+        super(PhotonMasterOptimizer, self).__init__(kwargs)
+
+    def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function):
+        """
+        Initializes hyperparameter search.
+        Assembles all hyperparameters of the pipeline_element list in order to prepare the hyperparameter search space.
+        Hyperparameters can be accessed via pipe_element.hyperparameters.
+
+        Parameters
+        ----------
+        * `pipeline_elements` [list]:
+            List of all pipeline_elements to create hyperparameter_space.
+        * `maximize_metric` [bool]:
+            Boolean for distinguish between score and error.
+        * `objective_function` [callable]:
+            The cost or objective function.
+        """
+        pass
 
     def optimize(self):
         """
-
-        :return:
+        Start optimization over objective_function.
         """
         pass

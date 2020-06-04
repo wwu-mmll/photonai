@@ -8,7 +8,15 @@ class PhotonHyperparam(object):
     def __init__(self, values):
         self.values = values
 
-    def get_random_value(self, definite_list:bool=True):
+    def get_random_value(self, definite_list: bool = True):
+        """
+        Method for random search to get random parameter based on its domain.
+
+        Parameters
+        ----------
+        * `definite_list` [bool: True]:
+             Choice of transform param to discret list or not.
+        """
         if definite_list:
             return random.choice(self.values)
         else:
@@ -18,7 +26,6 @@ class PhotonHyperparam(object):
 
     def __str__(self):
         return str(self.__class__) + str(self.values)
-
 
 
 class Categorical(PhotonHyperparam):
@@ -34,7 +41,7 @@ class Categorical(PhotonHyperparam):
     """
 
     def __init__(self, values: list):
-        self.values = values
+        super(Categorical, self).__init__(values)
 
     def __getitem__(self, item):
         return self.values.__getitem__(item)
@@ -55,7 +62,7 @@ class BooleanSwitch(PhotonHyperparam):
     """
 
     def __init__(self):
-        self.values = [True, False]
+        super(BooleanSwitch, self).__init__([True, False])
 
 
 class NumberRange(PhotonHyperparam):
@@ -110,14 +117,13 @@ class NumberRange(PhotonHyperparam):
     """
 
     def __init__(self, start, stop, range_type, step=None, num=None, num_type=np.int64, **kwargs):
-
+        super(NumberRange, self).__init__(None)
         self.start = start
         self.stop = stop
         self._range_type = None
         self.range_type = range_type
         self.range_params = kwargs
         self.num_type = num_type
-        self.values = None
         self.step = step
         self.num = num
 
@@ -130,7 +136,7 @@ class NumberRange(PhotonHyperparam):
         if self.range_type == "range" and self.start > self.stop:
             warn_message = "NumberRange or one of its subclasses is empty cause np.arange " + \
                            "does not deal with start greater than stop."
-            logger.warn(warn_message)
+            logger.warning(warn_message)
 
         values = []
 
@@ -156,11 +162,6 @@ class NumberRange(PhotonHyperparam):
                 values = np.geomspace(self.start, self.stop, num=self.num, dtype=self.num_type, **self.range_params)
             else:
                 values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
-        else:
-            msg = "PHOTON can not create values of your NumberRange cause of unknowing range_type: {}. " \
-                  "Please use one of ['range', 'linspace', 'logspace', 'geomspace']."
-            logger.error(msg.format(self.range_type))
-            raise ValueError(msg.format(self.range_type))
 
         # convert to python datatype because mongodb needs it
         if np.issubdtype(self.num_type, np.integer):
@@ -240,6 +241,7 @@ class IntegerRange(NumberRange):
         else:
             return random.randint(self.start, self.stop-1)
 
+
 class FloatRange(NumberRange):
     """
           Class for easily creating a range of integer numbers to be tested in hyperparameter optimization.
@@ -281,7 +283,7 @@ class FloatRange(NumberRange):
         """
 
     def __init__(self, start, stop, range_type='linspace', step=None, num=None, **kwargs):
-            super().__init__(start, stop, range_type, step, num, np.float64, **kwargs)
+        super(FloatRange, self).__init__(start, stop, range_type, step, num, np.float64, **kwargs)
 
     def get_random_value(self, definite_list: bool = False):
         if definite_list:
