@@ -3,6 +3,7 @@ import unittest
 import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.decomposition import PCA
+from sklearn.svm import SVC
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
@@ -43,12 +44,14 @@ class PipelineElementTests(unittest.TestCase):
         self.assertEqual(self.pca_pipe_element.name, 'PCA')
 
     def test_fit(self):
+        tmp_pca = PCA().fit(self.X, self.y)
         self.pca_pipe_element.fit(self.X, self.y)
         self.assertEqual(self.pca_pipe_element.base_element.components_.shape, (30, 30))
-        self.assertAlmostEqual(self.pca_pipe_element.base_element.components_[0, 0], 0.005086232018734175)
+        self.assertAlmostEqual(self.pca_pipe_element.base_element.components_[0, 0], tmp_pca.components_[0, 0])
 
+        tmp_svc = SVC().fit(self.X, self.y)
         self.svc_pipe_element.fit(self.X, self.y)
-        self.assertAlmostEqual(self.svc_pipe_element.base_element._intercept_[0], 0.73006587)
+        self.assertAlmostEqual(self.svc_pipe_element.base_element._intercept_[0], tmp_svc._intercept_[0])
 
     def test_transform(self):
         self.pca_pipe_element.fit(self.X, self.y)

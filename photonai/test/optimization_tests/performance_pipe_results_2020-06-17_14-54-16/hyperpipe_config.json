@@ -1,0 +1,19 @@
+{
+    "name": "performance_pipe",
+    "verbosity": 0,
+    "permutation_id": null,
+    "cache_folder": null,
+    "nr_of_processes": 1,
+    "random_seed": false,
+    "inner_cv": {
+        "n_splits": 7,
+        "shuffle": false,
+        "__photon_type": "KFold"
+    },
+    "outer_cv": {},
+    "calculate_metrics_across_folds": false,
+    "eval_final_performance": true,
+    "test_size": 0.2,
+    "calculate_metrics_per_fold": true,
+    "performance_constraints": [
+        
