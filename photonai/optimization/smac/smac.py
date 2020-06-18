@@ -3,10 +3,6 @@ from photonai.optimization import FloatRange, IntegerRange
 from photonai.optimization.base_optimizer import PhotonMasterOptimizer
 from photonai.photonlogger import logger
 
-import logging
-
-#logging.basicConfig(level=logging.DEBUG)
-
 try:
     from smac.configspace import UniformFloatHyperparameter, UniformIntegerHyperparameter, CategoricalHyperparameter, \
         ConfigurationSpace, Configuration, InCondition, Constant
@@ -21,32 +17,53 @@ except ModuleNotFoundError:
 
 class SMACOptimizer(PhotonMasterOptimizer):
 
-    def __init__(self, scenario_dict=None, intensifier_kwargs=None, rng=42, smac_helper = None):
+    def __init__(self, facade='SMAC4HPO', scenario_dict=None, intensifier_kwargs=None, rng=42, smac_helper=None):
         """
         SMAC Wrapper for PHOTON.
         SMAC usage and implementation details:
         https://automl.github.io/SMAC3/master/quickstart.html
 
-        :param scenario_dict: dict for scenario settings
-        :param rng: INT for random seed
-        :param smac_helper: currently help object for test cases.
+        Parameters
+        ----------
+        * `facade` [str or smac.facade.class, default: 'SMAC4HPO']:
+             Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC].
+        * `scenario_dict` [dict, default: None (warning scenario with wallclock_limit = 60*40)]
+            Informations for scenario settings like run_limit or wallclock_limit.
+            Different to main SMAC cs (configspace) is not required or used cause PHOTON translate own param_space
+            to SMAC.configspace.
+        * `rng`: [int, default: 42]
+            random seed of SMAC.facade
+        * `smac_helper` [dict]
+            For testing this object give public access to SMAC.facade object.
+            Currently help object for test cases.
         """
+
+        super(SMACOptimizer, self).__init__()
 
         if not __found__:
             msg = "Module smac not found or not installed as expected. " \
                   "Please install the smac_requirements.txt PHOTON provides."
             logger.error(msg)
-            raise ModuleNotFoundError("Module smac not found or not installed as expected. "
-                                      "Please install the smac_requirements.txt PHOTON provides.")
+            raise ModuleNotFoundError(msg)
 
         if not scenario_dict:
-            scenario_dict = {"run_obj": "quality",
-                             "deterministic": "true",
-                             "wallclock_limit": 60 * 40
-                             }
+            self.scenario_dict = {"run_obj": "quality",
+                                  "deterministic": "true",
+                                  "wallclock_limit": 60 * 40}
             msg = "No scenario_dict for smac was given. Falling back to default values: {}.".format(self.scenario_dict)
-            logger.error(msg)
-            # raise ValueError(msg)
+            logger.warning(msg)
+        else:
+            self.scenario_dict = scenario_dict
+
+        if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO]:
+            if type(facade) == str:
+                self.facade = eval(facade)
+            else:
+                self.facade = facade
+        else:
+            msg = "SMAC.facade {} not known. Please use one of ['SMAC4BO', 'SMAC4AC', 'SMAC4HPO']."
+            logger.error(msg.format(str(facade)))
+            raise ValueError(msg)
 
         self.rng = rng
         if not intensifier_kwargs:
@@ -54,10 +71,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
         else:
             self.intensifier_kwargs = intensifier_kwargs
 
-        self.cspace = ConfigurationSpace()  # Hyperparameter space for smac
-
-        self.scenario_dict = scenario_dict
-
+        self.cspace = ConfigurationSpace()  # Hyperparameter space for SMAC
         self.switch_optiones = {}
         self.hyperparameters = []
 
@@ -69,11 +83,17 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.maximize_metric = False
 
-
     @staticmethod
-    def _convert_photon_to_smac_space(hyperparam: object, name: str):
+    def _convert_photon_to_smac_param(hyperparam: object, name: str):
         """
-        Helper function: Convert PHOTON hyperparams to smac params.
+        Helper function: Convert PHOTON hyperparameter to SMAC hyperparameter.
+
+        Parameters
+        ----------
+        * `hyperparam` [object]:
+             One of photonai.optimization.hyperparameters.
+        * `name` [str]
+            Name of hyperparameter.
         """
         if not hyperparam:
             return None
@@ -93,7 +113,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
     def build_smac_space(self, pipeline_elements):
         """
-        Build entire smac hyperparam space.
+        Build entire SMAC hyperparameter space.
+
+        Parameters
+        ----------
+        * `pipeline_elements` [list]:
+            List of all pipeline_elements to create hyperparameter_space.
         """
         for pipe_element in pipeline_elements:
             # build conditions for switch elements
@@ -102,12 +127,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
                 for algo in pipe_element.elements:
                     algo_params = []  # hyper params corresponding to "algo"
                     for name, value in algo.hyperparameters.items():
-                        smac_param = self._convert_photon_to_smac_space(value, (
+                        smac_param = self._convert_photon_to_smac_param(value, (
                                 pipe_element.name + "__" + name))  # or element.name__algo.name__name
                         algo_params.append(smac_param)
                     algorithm_options[(pipe_element.name + "__" + algo.name)] = algo_params
 
-                algos = CategoricalHyperparameter(name=pipe_element.name + "__algos", choices=algorithm_options.keys())
+                algos = CategoricalHyperparameter(pipe_element.name + "__algos", choices=algorithm_options.keys())
 
                 self.switch_optiones[pipe_element.name + "__algos"] = algorithm_options.keys()
 
@@ -129,17 +154,22 @@ class SMACOptimizer(PhotonMasterOptimizer):
                     if isinstance(value, PhotonCategorical) and len(value.values) < 2:
                         self.constant_dictionary[name] = value.values[0]
                         continue
-                    smac_param = self._convert_photon_to_smac_space(value, name)
+                    smac_param = self._convert_photon_to_smac_param(value, name)
                     if smac_param is not None:
                         self.cspace.add_hyperparameter(smac_param)
 
-    def prepare(self, pipeline_elements: list, maximize_metric: bool, objectiv_function):
+    def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function):
         """
         Initializes SMAC Optimizer.
-        :param pipeline_elements: PHOTON Elments to cast
-        :param maximize_metric: error or score distinction
-        :param objectiv_function: function cfg -> cost
-        :return:
+
+        Parameters
+        ----------
+        * `pipeline_elements` [list]:
+            List of all pipeline_elements to create hyperparameter_space.
+        * `maximize_metric` [bool]:
+            Boolean for distinguish between score and error.
+        * `objective_function` [callable]:
+            The cost or objective function.
         """
         self.space = ConfigurationSpace()  # build space
         self.build_smac_space(pipeline_elements)
@@ -149,12 +179,10 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.scenario = Scenario(self.scenario_dict)
 
-        self.smac = SMAC4BO(scenario = self.scenario,
-                            intensifier_kwargs = self.intensifier_kwargs,
-                             rng = self.rng,
-                             tae_runner = objectiv_function)
-
-        #self.smac.logger.basicConfig(level=logging.DEBUG)
+        self.smac = self.facade(scenario = self.scenario,
+                                intensifier_kwargs = self.intensifier_kwargs,
+                                rng = self.rng,
+                                tae_runner = objective_function)
 
         if  self.debug:
             self.smac_helper['data'] = self.smac
@@ -162,6 +190,6 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
     def optimize(self):
         """
-        Start optimization process
+        Start optimization process.
         """
         self.smac.optimize()
