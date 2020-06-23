@@ -167,7 +167,7 @@ def sensitivity(y_true, y_pred):  # = true positive rate, hit rate, recall
         return tp / (tp + fn)
     else:
         logger.info('Sensitivity (metric) is valid only for binary classification problems. You have ' +
-                      str(len(np.unique(y_true))) + ' classes.')
+                    str(len(np.unique(y_true))) + ' classes.')
         return np.nan
 
 
@@ -178,7 +178,7 @@ def specificity(y_true, y_pred):  # = true negative rate
         return tn / (tn + fp)
     else:
         logger.info('Specificity (metric) is valid only for binary classification problems. You have ' +
-                      str(len(np.unique(y_true))) + ' classes.')
+                    str(len(np.unique(y_true))) + ' classes.')
         return np.nan
 
 
@@ -187,5 +187,5 @@ def balanced_accuracy(y_true, y_pred):  # = true negative rate
         return (specificity(y_true, y_pred) + sensitivity(y_true, y_pred)) / 2
     else:
         logger.info('Specificity (metric) is valid only for binary classification problems. You have ' +
-                      str(len(np.unique(y_true))) + ' classes.')
+                    str(len(np.unique(y_true))) + ' classes.')
         return np.nan
