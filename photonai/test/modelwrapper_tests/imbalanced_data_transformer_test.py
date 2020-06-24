@@ -57,16 +57,15 @@ class ImbalancedDataTransformTest(BaseModelWrapperTest):
         """
         sample test of different functions based on imblearn implementation for undersampling methods.
         """
-        imbalanced_data_transformer = ImbalancedDataTransformer(method_name = 'InstanceHardnessThreshold',
-                                                              estimator = test_instance_hardness_threshold.ESTIMATOR,
-                                                              sampling_strategy = {0: 6, 1: 8},
-                                                              random_state = test_instance_hardness_threshold.RND_SEED)
+        imbalanced_data_transformer = ImbalancedDataTransformer(method_name='InstanceHardnessThreshold',
+                                                                estimator=test_instance_hardness_threshold.ESTIMATOR,
+                                                                sampling_strategy={0: 6, 1: 8},
+                                                                random_state=test_instance_hardness_threshold.RND_SEED)
 
         X_resampled, y_resampled = imbalanced_data_transformer.fit_resample(test_instance_hardness_threshold.X,
                                                                             test_instance_hardness_threshold.Y)
-        assert X_resampled.shape == (14, 2)
-        assert y_resampled.shape == (14,)
-
+        assert X_resampled.shape == (15, 2)
+        assert y_resampled.shape == (15,)
 
     def test_strategy_combine(self):
         """
