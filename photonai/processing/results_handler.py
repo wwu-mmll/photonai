@@ -783,8 +783,10 @@ class ResultsHandler:
                 self.eval_mean_time_components()
 
     def convert_to_json_serializable(self, value):
-        if isinstance(value, np.int64):
+        if isinstance(value, (np.int, np.int32, np.int64)):
             return int(value)
+        if isinstance(value, (np.float, np.float32, np.float64)):
+            return float(value)
         else:
             return json_util.default(value)
 
