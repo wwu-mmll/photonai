@@ -1,8 +1,8 @@
-import keras
-from keras import backend as K
-from keras.models import model_from_json
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.logger import logger
+import keras
+import tensorflow as tf
+
 
 class KerasBaseEstimator(BaseEstimator):
     """
@@ -77,7 +77,7 @@ class KerasBaseEstimator(BaseEstimator):
         json_file = open(filename + '.json', 'r')
         loaded_model_json = json_file.read()
         json_file.close()
-        loaded_model = model_from_json(loaded_model_json)
+        loaded_model = keras.models.model_from_json(loaded_model_json)
 
         # load weights into new model
         loaded_model.load_weights(filename + ".h5")
@@ -86,7 +86,7 @@ class KerasBaseEstimator(BaseEstimator):
     def load_nounzip(self, archive, element_info):
         # load json and create model
         loaded_model_json = archive.read(element_info['filename'] + '.json') #.decode("utf-8")
-        loaded_model = model_from_json(loaded_model_json)
+        loaded_model = keras.models.model_from_json(loaded_model_json)
 
         # load weights into new model
         # ToDo: fix loading hdf5 without unzipping first
@@ -95,9 +95,29 @@ class KerasBaseEstimator(BaseEstimator):
 
         self.model = loaded_model
 
-    @staticmethod
-    def reset_weights(model):
-        session = K.get_session()
+    @classmethod
+    def reset_weights(cls, model):
+        # By https://github.com/AZippelius from https://github.com/keras-team/keras/issues/341#issuecomment-547833394
         for layer in model.layers:
-            if hasattr(layer, 'kernel_initializer'):
-                layer.kernel.initializer.run(session=session)
+            if isinstance(layer, (tf.keras.Model, keras.Model)):  # if you're using a model as a layer
+                cls.reset_weights(layer)  # apply function recursively
+                continue
+
+            # where are the initializers?
+            if hasattr(layer, 'cell'):
+                init_container = layer.cell
+            else:
+                init_container = layer
+
+            for key, initializer in init_container.__dict__.items():
+                if "initializer" not in key:  # is this item an initializer?
+                    continue  # if no, skip it
+
+                # find the corresponding variable, like the kernel or the bias
+                if key == 'recurrent_initializer':  # special case check
+                    var = getattr(init_container, 'recurrent_kernel')
+                else:
+                    var = getattr(init_container, key.replace("_initializer", ""))
+
+                var.assign(initializer(var.shape, var.dtype))
+                # use the initializer
