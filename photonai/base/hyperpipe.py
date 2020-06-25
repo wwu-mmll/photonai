@@ -869,13 +869,18 @@ class Hyperpipe(BaseEstimator):
 
             shape_x = np.shape(self.data.X)
             shape_y = np.shape(self.data.y)
-            if len(shape_y) != 1:
-                if len(np.shape(np.squeeze(self.data.y))) == 1:
-                    # use np.squeeze for non 1D targets.
-                    self.data.y = np.squeeze(self.data.y)
-                    shape_y = np.shape(self.data.y)
-                else:
-                    raise ValueError("Target is not one-dimensional.")
+            if not self.allow_multidim_targets:
+                if len(shape_y) != 1:
+                    if len(np.shape(np.squeeze(self.data.y))) == 1:
+                        # use np.squeeze for non 1D targets.
+                        self.data.y = np.squeeze(self.data.y)
+                        shape_y = np.shape(self.data.y)
+                        logger.warning("y has been automatically squeezed. If this is not your intention, block this "
+                                       "with Hyperpipe(allow_multidim_targets = True)")
+                    else:
+                        raise ValueError("Target is not one-dimensional. Multidimensional targets can cause problems"
+                                         "with sklearn metrics. Please override with "
+                                         "Hyperpipe(allow_multidim_targets = True).")
             if not shape_x[0] == shape_y[0]:
                 raise IndexError(
                     "Size of targets mismatch to size of the data: " + str(shape_x[0]) + " - " + str(shape_y[0]))
