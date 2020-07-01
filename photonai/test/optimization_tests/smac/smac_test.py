@@ -8,6 +8,7 @@ from sklearn.metrics import accuracy_score, f1_score, make_scorer
 from sklearn.model_selection import train_test_split, cross_val_score, cross_validate, cross_val_predict
 import matplotlib.pyplot as plt
 
+from photonai.helper.helper import PhotonDataHelper
 from photonai.base import PipelineElement
 from photonai.test.optimization_tests.grid_search.grid_search_test import GridSearchOptimizerTest
 from photonai.base.photon_pipeline import PhotonPipeline
@@ -46,15 +47,15 @@ if not found:
             """
             with self.assertRaises(ModuleNotFoundError):
                 from photonai.optimization.smac.smac import SMACOptimizer
-                smac = SMACOptimizer()
+                _ = SMACOptimizer()
 
 else:
     class Smac3IntegrationTest(unittest.TestCase):
 
         def setUp(self):
-            self.s_split = ShuffleSplit(n_splits=5, test_size=0.2, random_state=42)
+            self.s_split = ShuffleSplit(n_splits=3, test_size=0.2, random_state=42)
 
-            self.time_limit = 60*2
+            self.time_limit = 60*5
 
             settings = OutputSettings(project_folder='./tmp/')
 
@@ -68,7 +69,7 @@ else:
 
             # DESIGN YOUR PIPELINE
             self.pipe = Hyperpipe('basic_svm_pipe',
-                                  optimizer='smac',  # which optimizer PHOTON shall use
+                                  optimizer='smac',
                                   optimizer_params={'facade': SMAC4BO,
                                                     'scenario_dict': scenario_dict,
                                                     'rng': 42,
@@ -76,7 +77,7 @@ else:
                                   metrics=['accuracy'],
                                   random_seed = 42,
                                   best_config_metric='accuracy',
-                                  inner_cv=ShuffleSplit(n_splits=5, test_size=0.2, random_state=42),
+                                  inner_cv=self.s_split,
                                   verbosity=0,
                                   output_settings=settings)
 
@@ -86,7 +87,7 @@ else:
             self.y = dataset["target"]
             return self.X, self.y
 
-        def test_against_smac_initial_design(self):
+        def test_photon_implementation_simple(self):
             # PHOTON implementation
             self.pipe.add(PipelineElement('StandardScaler'))
             self.pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})
@@ -112,24 +113,17 @@ else:
                                  "cs": cs,
                                  "deterministic": "true",
                                  "wallclock_limit": self.time_limit,
-                                 "limit_resources" : False
+                                 "limit_resources" : False,
+                                 'abort_on_first_run_crash': False
                                  })
 
-            # Optimize, using a SMAC-object
-            print("Optimizing! Depending on your machine, this might take a few minutes.")
+            # Optimize, using a SMAC directly
             smac = SMAC4BO(scenario=scenario, rng=42,
                            tae_runner=self.objective_function)
-
-            self.helper0 = smac
-
-            incumbent = smac.optimize()
-
-            inc_value = self.objective_function(incumbent)
-
+            _ = smac.optimize()
 
             runhistory_photon = self.smac_helper["data"].solver.runhistory
             runhistory_original = smac.solver.runhistory
-
 
             x_ax = range(1, min(len(runhistory_original._cost_per_config.keys()), len(runhistory_photon._cost_per_config.keys()))+1)
             y_ax_original = [runhistory_original._cost_per_config[tmp] for tmp in x_ax]
@@ -151,39 +145,33 @@ else:
                 plt.legend(loc='best')
                 plt.savefig("smac.png")
 
-
-            def neighbours(items, fill=None):
-                before = itertools.chain([fill], items)
-                after = itertools.chain(items, [fill])  # You could use itertools.zip_longest() later instead.
-                next(after)
-                for a, b, c in zip(before, items, after):
-                    yield [value for value in (a, b, c) if value is not fill]
-
-            original_pairing = [sum(values)/len(values) for values in neighbours(y_ax_original)]
-            bias_term = np.mean([abs(y_ax_original_inc[t]-y_ax_photon_inc[t]) for t in range(len(y_ax_photon_inc))])
-            photon_pairing = [sum(values)/len(values)-bias_term for values in neighbours(y_ax_photon)]
-            counter = 0
-            for i in range(24):
-                if abs(y_ax_original[i]-y_ax_photon[i]) > 0.1:
-                    counter +=1
-            self.assertLessEqual(counter/24, 0.05)
+            min_len = min(len(y_ax_original), len(y_ax_photon))
+            self.assertLessEqual(np.max(np.abs(np.array(y_ax_original[:min_len]) -
+                                               np.array(y_ax_photon[:min_len])
+                                        )), 0.01)
 
         def objective_function(self, cfg):
             cfg = {k: cfg[k] for k in cfg if cfg[k]}
-            sc = PipelineElement("StandardScaler", {})
-            pca = PipelineElement("PCA", {}, random_state=42)
-            svc = PipelineElement("SVC", {}, random_state=42, gamma='auto')
-            my_pipe = PhotonPipeline([('StandardScaler', sc), ('PCA', pca), ('SVC', svc)])
-            my_pipe.set_params(**cfg)
+            values = []
 
-            X, Xx, y, yy = train_test_split(self.X, self.y, test_size = 0.2, random_state = 42)
+            train_indices = list(self.pipe.cross_validation.outer_folds.values())[0].train_indices
+            test_indices = list(self.pipe.cross_validation.outer_folds.values())[0].test_indices
+            self._validation_X, self._validation_y, _ = PhotonDataHelper.split_data(self.X, self.y,
+                                                                                    kwargs=None, indices=train_indices)
 
-            metric = cross_validate(my_pipe,
-                                    X, y,
-                                    cv=ShuffleSplit(n_splits=5, test_size=0.2, random_state=42),
-                                    scoring=make_scorer(accuracy_score, greater_is_better=True)) #, scoring=my_pipe.predict)
-            print("run")
-            return 1-np.mean(metric["test_score"])
+            for inner_fold in list(list(self.pipe.cross_validation.inner_folds.values())[0].values()):
+                sc = PipelineElement("StandardScaler", {})
+                pca = PipelineElement("PCA", {}, random_state=42)
+                svc = PipelineElement("SVC", {}, random_state=42, gamma='auto')
+                my_pipe = PhotonPipeline([('StandardScaler', sc), ('PCA', pca), ('SVC', svc)])
+                my_pipe.set_params(**cfg)
+                my_pipe.fit(self._validation_X[inner_fold.train_indices, :],
+                            self._validation_y[inner_fold.train_indices])
+                values.append(accuracy_score(self._validation_y[inner_fold.test_indices],
+                                             my_pipe.predict(self._validation_X[inner_fold.test_indices, :])
+                                             )
+                              )
+            return 1-np.mean(values)
 
 
         def test_facade(self):

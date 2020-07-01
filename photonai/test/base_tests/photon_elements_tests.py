@@ -8,7 +8,8 @@ from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 
-from photonai.base import PipelineElement, Switch, Stack, Branch, DataFilter, CallbackElement, Preprocessing
+from photonai.base import PipelineElement, Switch, Stack, Branch, \
+    DataFilter, CallbackElement, Preprocessing, ParallelBranch
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.helper.helper import PhotonDataHelper
 from photonai.test.base_tests.dummy_elements import DummyEstimator, \
@@ -945,3 +946,47 @@ class CallbackElementTests(unittest.TestCase):
 
         with self.assertRaises(Warning):
             self.callback_branch_pipeline_error.fit(self.X, self.y).predict(self.X)
+
+
+class ParallelBranchTest(BranchTests):
+    
+    def setUp(self):
+        super(ParallelBranchTest, self).setUp()
+
+        self.transformer_branch = ParallelBranch('MyBranch', [self.scaler, self.pca])
+        self.transformer_branch_sklearn = SKPipeline([("SS", StandardScaler()),
+                                                      ("PCA", PCA(random_state=3))])
+        self.estimator_branch = ParallelBranch('MyBranch', [self.scaler, self.pca, self.tree])
+        self.estimator_branch_sklearn = SKPipeline([("SS", StandardScaler()),
+                                                    ("PCA", PCA(random_state=3)),
+                                                    ("Tree", DecisionTreeClassifier(random_state=3))])
+
+        self.cache_folder_path = ".cache/"
+
+    def create_instances_and_compare_transformation(self, class_str, param_dict, transformed_X):
+
+        raise NotImplementedError("not ready yet.")
+
+        for i in range(1, 4):
+            if i == 1 or i == 3:
+                obj = ParallelBranch(name="single core application", nr_of_processes=1)
+            else:
+                obj = ParallelBranch(name="multi core application", nr_of_processes=3)
+
+            if i < 3:
+                obj += PipelineElement(class_str, **param_dict)
+            if i >= 3:
+                obj += PipelineElement(class_str, batch_size=5, **param_dict)
+
+            # transform data
+            obj.base_element.cache_folder = self.cache_folder_path
+            obj.base_element.current_config = {'test_suite': 1}
+            new_X, _, _ = obj.transform(self.X)
+            obj.base_element.clear_cache()
+
+            # compare output ...
+            for index, real_batch in enumerate(transformed_X):
+                photon_batch = new_X[index]
+                self.assertTrue(np.array_equal(np.asarray(photon_batch), real_batch))
+
+            print("finished testing object: all batches are fine.")
