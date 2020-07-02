@@ -21,6 +21,9 @@ class AdditionalDataWrapper(BaseEstimator, ClassifierMixin):
         assert X.shape[0] == len(y_true)
         return y_true
 
+    def save(self):
+        return None
+
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(return_X_y=True)

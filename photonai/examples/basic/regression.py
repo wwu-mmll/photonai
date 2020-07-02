@@ -16,8 +16,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'),
-                    eval_final_performance=False)
+                    output_settings=OutputSettings(project_folder='./tmp/'))
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
