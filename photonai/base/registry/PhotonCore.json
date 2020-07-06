@@ -431,6 +431,10 @@
     "photonai.modelwrapper.SamplePairing.SamplePairingClassification",
     "Transformer"
   ],
+    "SourceSplitter":[
+    "photonai.modelwrapper.source_splitter.SourceSplitter",
+    "Transformer"
+  ],
   "FeatureEncoder":[
     "photonai.modelwrapper.OrdinalEncoder.FeatureEncoder",
     "Transformer"
