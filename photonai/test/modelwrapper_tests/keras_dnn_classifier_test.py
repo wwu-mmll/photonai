@@ -1,4 +1,3 @@
-import unittest
 from photonai.modelwrapper.keras_dnn_classifier import KerasDnnClassifier
 from photonai.test.modelwrapper_tests.base_model_wrapper_test import BaseModelWrapperTest
 

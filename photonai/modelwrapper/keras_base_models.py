@@ -4,11 +4,10 @@ from keras.utils import to_categorical
 from keras.layers import Dropout, Dense
 from keras.layers.normalization import BatchNormalization
 from keras.models import Sequential
-from keras.callbacks.callbacks import EarlyStopping
-from keras.optimizers import Optimizer, Adam, RMSprop, Adadelta, Adagrad, Adamax, Nadam, TFOptimizer, SGD
+from keras.optimizers import Optimizer, Adam, RMSprop, Adadelta, Adagrad, Adamax, Nadam, SGD
 from keras.activations import softmax, softplus, selu, sigmoid, softsign, hard_sigmoid, elu, relu, tanh, \
     linear, exponential
-from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
+from sklearn.base import ClassifierMixin, RegressorMixin
 from photonai.photonlogger.logger import logger
 
 from photonai.modelwrapper.keras_base_estimator import KerasBaseEstimator
@@ -20,8 +19,7 @@ __supported_optimizers__ = {
     'adadelta': Adadelta,
     'adam': Adam,
     'adamax': Adamax,
-    'nadam': Nadam,
-    'tfoptimizer': TFOptimizer,
+    'nadam': Nadam
 }
 __supported_activations__ = {
     'softmax': softmax,

@@ -1,5 +1,4 @@
 import numpy as np
-from keras.callbacks.callbacks import EarlyStopping
 
 from photonai.modelwrapper.keras_base_models import KerasDnnBaseModel, KerasBaseClassifier
 import photonai.modelwrapper.keras_base_models as keras_dnn_base_model
