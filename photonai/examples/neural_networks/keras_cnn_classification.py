@@ -66,6 +66,7 @@ def load_dataset(prefix=''):
     print(trainX.shape, trainy.shape, testX.shape, testy.shape)
     return np.concatenate((trainX, testX), axis=0), np.concatenate((trainy, testy), axis=0)
 
+
 dataset_path = data_utils.get_file(
     fname='UCI HAR Dataset.zip',
     origin='https://archive.ics.uci.edu/ml/machine-learning-databases/00240/UCI%20HAR%20Dataset.zip',
@@ -76,7 +77,7 @@ dataset_path = data_utils.get_file(
     archive_format='zip'
 )
 
-X, y = load_dataset(prefix=dataset_path.replace('.zip', ''))  # your path to your "HARDataset" folder (download required, link above)
+X, y = load_dataset(prefix=dataset_path.replace('.zip', ''))
 
 verbose, epochs, batch_size = 1, 10, 32
 n_timesteps, n_features, n_outputs = X.shape[1], X.shape[2], 6
