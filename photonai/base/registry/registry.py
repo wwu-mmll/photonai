@@ -2,17 +2,17 @@ import inspect
 import json
 import os
 import sys
-from os import path
+from glob import glob
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer, load_boston
+from shutil import copyfile
 
-from photonai.base.photon_elements import PipelineElement
 from photonai.photonlogger.logger import logger
+from photonai.helper.helper import Singleton
 
 
-
-class PhotonRegistry:
+class PhotonRegistry(Singleton):
     """
     Helper class to manage the PHOTON Element Register.
 
@@ -47,12 +47,98 @@ class PhotonRegistry:
     PHOTON_REGISTRIES = ['PhotonCore']
 
     def __init__(self, custom_elements_folder: str = None):
+
+        super(PhotonRegistry, self).__init__()
+
+        self.current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
+        self.module_path = os.path.join(self.current_folder, "modules")
+
+        # update list with available sub_elements
+        self._list_available_modules()
+
         if custom_elements_folder:
             self._load_custom_folder(custom_elements_folder)
         else:
             self.custom_elements = None
             self.custom_elements_folder = None
             self.custom_elements_file = None
+
+    def _list_available_modules(self):
+        for abs_filename in glob(os.path.join(self.module_path, "*.json")):
+            basename = os.path.basename(abs_filename)
+            file, ext = os.path.splitext(basename)
+            if file not in self.PHOTON_REGISTRIES:
+                self.PHOTON_REGISTRIES.append(file)
+
+    def add_module(self, path_to_file: str):
+        filename = os.path.basename(path_to_file)
+        copyfile(path_to_file, os.path.join(self.module_path, filename))
+
+    def delete_module(self, module_name: str):
+        os.remove(os.path.join(self.module_path, module_name + ".json"))
+
+    def _load_json(self, photon_package: str):
+        """
+        Load JSON file in which the elements for the PHOTON submodule are stored.
+
+        The JSON files are stored in the framework folder by the name convention 'photon_package.json'
+
+        Parameters:
+        -----------
+        * 'photon_package' [str]:
+          The name of the photonai submodule
+
+        Returns:
+        --------
+        JSON file as dict, file path as str
+        """
+
+        if photon_package == 'CustomElements':
+            folder = self.custom_elements_folder
+            if not folder:
+                return {}
+        else:
+            self.current_folder
+
+        file_name = os.path.join(folder, photon_package + '.json')
+        file_content = {}
+
+        # Reading json
+        with open(file_name, 'r') as f:
+            try:
+                file_content = json.load(f)
+            except json.JSONDecodeError as jde:
+                # handle empty file
+                if jde.msg == 'Expecting value':
+                    logger.error("Package File " + file_name + " was empty.")
+                else:
+                    raise jde
+        if not file_content:
+            file_content = dict()
+        return file_content
+
+    def get_package_info(self, photon_package: list = PHOTON_REGISTRIES) -> dict:
+        """
+        Collect all registered elements from JSON file
+
+        Parameters:
+        -----------
+        * 'photon_package' [list]:
+          The names of the PHOTONAI submodules for which the elements should be retrieved
+
+        Returns
+        -------
+        Dict of registered elements
+        """
+        class_info = dict()
+        for package in photon_package:
+
+            content = self._load_json(package)
+
+            for key in content:
+                class_path, class_name = os.path.splitext(content[key][0])
+                class_info[key] = class_path, class_name[1:]
+        return class_info
 
     def _load_custom_folder(self, custom_elements_folder):
         self.custom_elements_folder, self.custom_elements_file = self._check_custom_folder(custom_elements_folder)
@@ -63,12 +149,12 @@ class PhotonRegistry:
 
     @staticmethod
     def _check_custom_folder(custom_folder):
-        if not path.exists(custom_folder):
+        if not os.path.exists(custom_folder):
             logger.info('Creating folder {}'.format(custom_folder))
             os.makedirs(custom_folder)
 
-        custom_file = path.join(custom_folder, 'CustomElements.json')
-        if not path.isfile(custom_file):
+        custom_file = os.path.join(custom_folder, 'CustomElements.json')
+        if not os.path.isfile(custom_file):
             logger.info('Creating CustomElements.json')
             with open(custom_file, 'w') as f:
                 json.dump('', f)
@@ -80,16 +166,17 @@ class PhotonRegistry:
             raise ValueError("To activate a custom elements folder, specify a folder when instantiating the registry "
                              "module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER) "
                              "In case you don't have any custom models, there is no need to activate the registry.")
-        if not path.exists(self.custom_elements_folder):
+        if not os.path.exists(self.custom_elements_folder):
             raise FileNotFoundError("Couldn't find custom elements folder: {}".format(self.custom_elements_folder))
-        if not path.isfile(path.join(self.custom_elements_folder, 'CustomElements.json')):
+        if not os.path.isfile(os.path.join(self.custom_elements_folder, 'CustomElements.json')):
             raise FileNotFoundError("Couldn't find CustomElements.json. Did you register your element first?")
 
         # add folder to python path
         logger.info("Adding custom elements folder to system path...")
         sys.path.append(self.custom_elements_folder)
 
-        PipelineElement.ELEMENT_DICTIONARY.update(self._get_package_info(['CustomElements']))
+        # todo:
+        PipelineElement.ELEMENT_DICTIONARY.update(self.get_package_info(['CustomElements']))
         logger.info('Successfully activated custom elements!')
 
     def register(self, photon_name: str, class_str: str, element_type: str):
@@ -119,15 +206,15 @@ class PhotonRegistry:
         duplicate = self._check_duplicate(photon_name=photon_name, class_str=class_str, content=self.custom_elements)
 
         if not duplicate:
-            python_file = path.join(self.custom_elements_folder, class_str.split('.')[0] + '.py')
-            if not path.isfile(python_file):
+            python_file = os.path.join(self.custom_elements_folder, class_str.split('.')[0] + '.py')
+            if not os.path.isfile(python_file):
                 raise FileNotFoundError("Couldn't find python file {} in your custom elements folder. "
                                         "Please copy your file into this folder first!".format(python_file))
             # add new element
             self.custom_elements[photon_name] = class_str, element_type
 
             # write back to file
-            self._write2json(self.custom_elements)
+            self._write_to_json(self.custom_elements)
             logger.info('Adding PipelineElement ' + class_str + ' to CustomElements.json as "' + photon_name + '".')
 
             # activate custom elements
@@ -242,7 +329,7 @@ class PhotonRegistry:
         * 'photon_name' [str]:
           The string literal which accesses the class
         """
-        content = self._get_package_info()  # load existing json
+        content = self.get_package_info()  # load existing json
 
         if photon_name in content:
             element_namespace, element_name = content[photon_name]
@@ -280,7 +367,7 @@ class PhotonRegistry:
         if photon_name in self.custom_elements:
             del self.custom_elements[photon_name]
 
-            self._write2json(self.custom_elements)
+            self._write_to_json(self.custom_elements)
             logger.info('Removing the PipelineElement named "{0}" from CustomElements.json.'.format(photon_name))
         else:
             logger.info('Cannot remove "{0}" from CustomElements.json. Element has not been registered before.'.format(photon_name))
@@ -315,47 +402,7 @@ class PhotonRegistry:
             return True
         return False
 
-    def _load_json(self, photon_package: str):
-        """
-        Load JSON file in which the elements for the PHOTON submodule are stored.
-
-        The JSON files are stored in the framework folder by the name convention 'photon_package.json'
-
-        Parameters:
-        -----------
-        * 'photon_package' [str]:
-          The name of the photonai submodule
-
-        Returns:
-        --------
-        JSON file as dict, file path as str
-        """
-
-        if photon_package == 'CustomElements':
-            folder = self.custom_elements_folder
-            if not folder:
-                return {}
-        else:
-            folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
-
-        file_name = path.join(folder, photon_package + '.json')
-        file_content = {}
-
-        # Reading json
-        with open(file_name, 'r') as f:
-            try:
-                file_content = json.load(f)
-            except json.JSONDecodeError as jde:
-                # handle empty file
-                if jde.msg == 'Expecting value':
-                    logger.error("Package File " + file_name + " was empty.")
-                else:
-                    raise jde
-        if not file_content:
-            file_content = dict()
-        return file_content
-
-    def _write2json(self, content2write: dict):
+    def _write_to_json(self, content_to_write: dict):
         """
         Write json content to file
 
@@ -368,30 +415,9 @@ class PhotonRegistry:
         """
         # Writing JSON data
         with open(self.custom_elements_file, 'w') as f:
-            json.dump(content2write, f)
+            json.dump(content_to_write, f)
 
-    def _get_package_info(self, photon_package: list = PHOTON_REGISTRIES) -> dict:
-        """
-        Collect all registered elements from JSON file
 
-        Parameters:
-        -----------
-        * 'photon_package' [list]:
-          The names of the PHOTON submodules for which the elements should be retrieved
-
-        Returns
-        -------
-        Dict of registered elements
-        """
-        class_info = dict()
-        for package in photon_package:
-
-            content = self._load_json(package)
-
-            for key in content:
-                class_path, class_name = os.path.splitext(content[key][0])
-                class_info[key] = class_path, class_name[1:]
-        return class_info
 
     def list_available_elements(self, photon_package=PHOTON_REGISTRIES):
         """

@@ -8,7 +8,7 @@ from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
 
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.base.registry.element_dictionary import ElementDictionary
+from photonai.base.registry.registry import PhotonRegistry
 from photonai.helper.helper import PhotonDataHelper
 from photonai.optimization.config_grid import create_global_config_grid, create_global_config_dict
 from photonai.photonlogger.logger import logger
@@ -45,7 +45,7 @@ class PipelineElement(BaseEstimator):
 
     """
     # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = ElementDictionary.get_package_info()
+    ELEMENT_DICTIONARY = PhotonRegistry().get_package_info()
 
     def __init__(self, name, hyperparameters: dict = None, test_disabled: bool = False,
                  disabled: bool = False, base_element=None, batch_size=0, **kwargs):
@@ -60,6 +60,11 @@ class PipelineElement(BaseEstimator):
             hyperparameters = {}
 
         if base_element is None:
+            if name not in PipelineElement.ELEMENT_DICTIONARY:
+                PipelineElement.ELEMENT_DICTIONARY = PhotonRegistry
+                # try to reload
+                PipelineElement.ELEMENT_DICTIONARY = PhotonRegistry().get_package_info()
+
             if name in PipelineElement.ELEMENT_DICTIONARY:
                 try:
                     desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
@@ -73,6 +78,7 @@ class PipelineElement(BaseEstimator):
                                    + str(PipelineElement.ELEMENT_DICTIONARY[name]))
                     raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
             else:
+                # if even after reload the element does not appear, it is not supported
                 logger.error('Element not supported right now:' + name)
                 raise NameError('Element not supported right now:', name)
         else:

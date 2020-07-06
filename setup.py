@@ -5,6 +5,11 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
+# from setuptools.command.install import install
+#
+# class Modulenstalltio
+
+
 __version__ = '1.1.0'
 
 setup(
@@ -13,22 +18,21 @@ setup(
     include_package_data=True,
     version=__version__,
     description="""
-PHOTON
-is a rapid prototyping framework enabling (not so experienced) users to build, train, optimize, evaluate,
+PHOTONAI is a rapid prototyping framework enabling (not so experienced) users to build, train, optimize, evaluate,
 and share even complex machine learning pipelines with very high efficiency.
 
-PHOTON is an object-oriented python framework designed to leave you deciding the important things and automatizing the rest:
- By treating each pipeline element as a building block, we create a system in which the user can select and combine
- processing steps, adapt their arrangement or stack them in more advanced pipeline layouts.
-
-PHOTON gives you an easy way of setting up a full stack machine learning pipeline including nested cross-validation and hyperparameter search.
-After PHOTON has found the best configuration for your model, it offers a convenient possibility to explore the analyzed hyperparameter space.
-It also enables you to persist and load your optimal model, including all preprocessing elements, with only one line of code.
+By pre-registering state-of-the-art machine learning algorithms, we create a system in which the user can select and 
+ arrange processing steps into pipeline data streams. PHOTONAI automates the training and testing procedure for
+ each custom pipeline including nested cross-validation and hyperparameter optimization.
+ 
+After PHOTONAI has found the best configuration for your model, it offers a convenient possibility to explore the
+ analyzed hyperparameter space. It also enables you to persist and load your optimal model, 
+ including all preprocessing elements, with only one line of code.
 
 """,
-    author='PHOTON Team',
+    author='PHOTONAI Team',
     author_email='hahnt@wwu.de',
-    url='https://github.com/photonai-team/photonai.git',
+    url='https://github.com/wwu-mmll/photonai.git',
     download_url='https://github.com/photon-team/photonai/archive/' + __version__ + '.tar.gz',
     keywords=['machine learning', 'deep learning', 'neural networks', 'hyperparameter'],
     classifiers=[],

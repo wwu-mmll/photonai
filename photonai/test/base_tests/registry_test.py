@@ -112,5 +112,29 @@ class RegistryTest(PhotonBaseTest):
                                    'custom_transformer.CustomTransformerNeedsYWrongInterface',
                                    'Transformer')
 
+    def test_add_module(self):
+        json_module_file = os.path.join(self.custom_folder, "fake_module.json")
+
+        # first add module
+        self.registry.add_module(json_module_file)
+        self.assertTrue("fake_module" in self.registry.PHOTON_REGISTRIES)
+
+        # check if registered items are available
+        elements_to_choose_from = self.registry.get_package_info()
+        self.assertTrue("FakeElement1" in elements_to_choose_from)
+        fe = PipelineElement("FakeElement1")
+
+        # then delete the module
+        self.registry.delete_module("fake_module")
+        self.assertFalse(os.path.isfile(os.path.join(self.registry.module_path, "fake_module.json")))
+
+        elements_to_choose_from = self.registry.get_package_info()
+        self.assertFalse("FakeElement1" in elements_to_choose_from)
+        with self.assertRaises(NameError):
+            fe = PipelineElement("FakeElement1")
+
+
+        #
+
 
 
