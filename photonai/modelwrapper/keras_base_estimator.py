@@ -29,7 +29,6 @@ class KerasBaseEstimator(BaseEstimator):
         if reload_weights:
             self.reset_weights(self.model)
 
-        #y = self.encode_targets(y)
 
         # use callbacks only when size of training set is above 100
         if X.shape[0] > 100:
@@ -56,7 +55,6 @@ class KerasBaseEstimator(BaseEstimator):
         """
         Predict probabilities
         :param X: array-like
-        :type data: float
         :return: predicted values, array
         """
         return self.model.predict(X, batch_size=self.nn_batch_size)
@@ -85,7 +83,7 @@ class KerasBaseEstimator(BaseEstimator):
 
     def load_nounzip(self, archive, element_info):
         # load json and create model
-        loaded_model_json = archive.read(element_info['filename'] + '.json') #.decode("utf-8")
+        loaded_model_json = archive.read(element_info['filename'] + '.json')  # .decode("utf-8")
         loaded_model = keras.models.model_from_json(loaded_model_json)
 
         # load weights into new model
