@@ -292,6 +292,8 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         # Compile model
         self.model.compile(loss=self.loss, optimizer=self.optimizer, metrics=self.metrics)
 
+        self.init_weights = self.model.get_weights()
+
         return self
 
 
