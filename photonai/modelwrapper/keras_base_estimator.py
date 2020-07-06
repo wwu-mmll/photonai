@@ -1,6 +1,7 @@
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.logger import logger
 import keras
+import tensorflow
 
 
 class KerasBaseEstimator(BaseEstimator):
@@ -26,6 +27,16 @@ class KerasBaseEstimator(BaseEstimator):
         # saving initial weights in order to be able to reset the weights before each fit
         # with this approach pre-trained weights can be set
         self.init_weights = model.get_weights()
+
+        # if a non keras layer is in model, it needs to be registered with keras
+        if isinstance(self.model, keras.Model):
+            for layer in self.model.layers:
+                if not layer.__module__.startswith('keras'):
+                    keras.utils.get_custom_objects()[type(layer).__name__] = layer.__class__
+        elif isinstance(self.model, tensorflow.keras.Model):
+            for layer in self.model.layers:
+                if not layer.__module__.startswith('tensorflow'):
+                    tensorflow.keras.utils.get_custom_objects()[type(layer).__name__] = layer.__class__
 
     def fit(self, X, y, reload_weights: bool = False):
         # set weights to initial weights to achieve a weight reset
