@@ -42,6 +42,10 @@ class KerasBaseEstimator(BaseEstimator):
         # set weights to initial weights to achieve a weight reset
         self.model.set_weights(self.init_weights)
 
+        # allow labels to be encoded before being passed to the model
+        # by default self.encode_targets returns identity of y
+        y = self.encode_targets(y)
+
         # use callbacks only when size of training set is above 100
         if X.shape[0] > 100:
             # get pseudo validation set for keras callbacks
