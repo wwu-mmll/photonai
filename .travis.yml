@@ -6,6 +6,9 @@ install:
   - python setup.py egg_info
   - pip install -r photonai.egg-info/requires.txt
   - pip install tensorflow
+  - pip install coveralls
 # command to run tests
 script:
   - PYTHONPATH=./ pytest photonai/test/
+after_success:
+  - coveralls
