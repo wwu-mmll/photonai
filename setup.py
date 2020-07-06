@@ -45,7 +45,7 @@ It also enables you to persist and load your optimal model, including all prepro
                       'h5py',
                       'xlrd',
                       'plotly',
-                      'imblearn',
+                      'imbalanced-learn>=0.7.0',
                       'pymodm==0.4.1',
                       'scipy==1.2',
                       'statsmodels',

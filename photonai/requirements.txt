@@ -12,7 +12,7 @@ six
 h5py
 xlrd
 plotly
-imblearn
+imbalanced-learn
 pymodm
 scipy
 statsmodels
