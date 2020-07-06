@@ -22,7 +22,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',
 # ADD ELEMENTS TO YOUR PIPELINE
 my_pipe.add(PipelineElement('StandardScaler'))
 
-my_pipe += PipelineElement('PhotonMLPClassifier', hyperparameters={'layer_1': IntegerRange(0, 5),
+my_pipe += PipelineElement('PhotonMLPClassifier', hyperparameters={'layer_1': IntegerRange(1, 5),
                                                                    'layer_2': IntegerRange(0, 5),
                                                                    'layer_3': IntegerRange(0, 5)})
 
