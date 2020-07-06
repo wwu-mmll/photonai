@@ -1,7 +1,6 @@
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.logger import logger
 import keras
-import tensorflow as tf
 
 
 class KerasBaseEstimator(BaseEstimator):
@@ -24,11 +23,13 @@ class KerasBaseEstimator(BaseEstimator):
         else:
             self.callbacks = []
 
-    def fit(self, X, y, reload_weights: bool=False):
+        # saving initial weights in order to be able to reset the weights before each fit
+        # with this approach pre-trained weights can be set
+        self.init_weights = model.get_weights()
 
-        if reload_weights:
-            self.reset_weights(self.model)
-
+    def fit(self, X, y, reload_weights: bool = False):
+        # set weights to initial weights to achieve a weight reset
+        self.model.set_weights(self.init_weights)
 
         # use callbacks only when size of training set is above 100
         if X.shape[0] > 100:
@@ -92,30 +93,3 @@ class KerasBaseEstimator(BaseEstimator):
         loaded_model.load_weights(loaded_weights)
 
         self.model = loaded_model
-
-    @classmethod
-    def reset_weights(cls, model):
-        # By https://github.com/AZippelius from https://github.com/keras-team/keras/issues/341#issuecomment-547833394
-        for layer in model.layers:
-            if isinstance(layer, (tf.keras.Model, keras.Model)):  # if you're using a model as a layer
-                cls.reset_weights(layer)  # apply function recursively
-                continue
-
-            # where are the initializers?
-            if hasattr(layer, 'cell'):
-                init_container = layer.cell
-            else:
-                init_container = layer
-
-            for key, initializer in init_container.__dict__.items():
-                if "initializer" not in key:  # is this item an initializer?
-                    continue  # if no, skip it
-
-                # find the corresponding variable, like the kernel or the bias
-                if key == 'recurrent_initializer':  # special case check
-                    var = getattr(init_container, 'recurrent_kernel')
-                else:
-                    var = getattr(init_container, key.replace("_initializer", ""))
-
-                var.assign(initializer(var.shape, var.dtype))
-                # use the initializer
