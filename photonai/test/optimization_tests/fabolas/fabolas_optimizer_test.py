@@ -2,7 +2,7 @@ import unittest
 
 from photonai.base import PipelineElement
 from photonai.optimization import IntegerRange
-from photonai.test.optimization.grid_search.grid_search_test import GridSearchOptimizerTest
+from photonai.test.optimization_tests.grid_search.grid_search_test import GridSearchOptimizerTest
 
 try:
     from photonai.optimization.fabolas.fabolas_optimizer import FabolasOptimizer
