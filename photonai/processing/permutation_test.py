@@ -79,15 +79,16 @@ class PermutationTest:
                 self.pipe.permutation_id = self.mother_permutation_id
                 self.pipe.fit(X, y_true, **kwargs)
                 self.pipe.results.computation_completed = True
-
                 self.pipe.results.permutation_test = MDBPermutationResults(n_perms=self.n_perms)
+                self.pipe.results.outer_folds = list()
                 self.pipe.results.save()
                 existing_reference = self.pipe.results
 
             except Exception as e:
                 if self.pipe.results is not None:
                     self.pipe.results.permutation_failed = str(e)
-                    self.pipe.results.save()
+                    logger.error(e)
+                    PermutationTest.clear_data_and_save(self.pipe)
 
         # check for sanity
         if not self.__validate_usability(existing_reference):
@@ -147,6 +148,12 @@ class PermutationTest:
         return self
 
     @staticmethod
+    def clear_data_and_save(perm_pipe):
+        perm_pipe.results.outer_folds = list()
+        perm_pipe.results.best_config = None
+        perm_pipe.results.save()
+
+    @staticmethod
     def run_parallelized_permutation(hyperpipe_constructor, X, perm_run, y_perm, permutation_id, verbosity=-1,
                                      **kwargs):
         # Create new instance of hyperpipe and set all parameters
@@ -166,9 +173,7 @@ class PermutationTest:
             print('Fitting permutation ' + str(perm_run) + ' ...')
             perm_pipe.fit(X, y_perm, **kwargs)
             perm_pipe.results.computation_completed = True
-            perm_pipe.results.outer_folds = list()
-            perm_pipe.results.best_config = None
-            perm_pipe.results.save()
+            PermutationTest.clear_data_and_save(perm_pipe)
             print('Finished permutation ' + str(perm_run) + ' ...')
         except Exception as e:
             if perm_pipe.results is not None:
