@@ -758,8 +758,10 @@ class ResultsHandler:
 
     def save_backmapping(self, filename: str, backmapping):
         try:
+            if isinstance(backmapping, list):
+                backmapping = np.asarray(backmapping)
             if isinstance(backmapping, np.ndarray):
-                if len(backmapping) > 1000:
+                if backmapping.size > 1000:
                     np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
                 else:
                     np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
