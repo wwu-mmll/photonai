@@ -33,16 +33,9 @@ with only one line of code.
     install_requires=[
         'numpy',
         'matplotlib',
-        'progressbar2',
-        'Pillow',
         'scikit-learn',
         'keras',
-        'nilearn',
         'pandas',
-        'nibabel',
-        'six',
-        'h5py',
-        'xlrd',
         'plotly',
         'imblearn',
         'pymodm',
@@ -54,6 +47,5 @@ with only one line of code.
         'dask',
         'distributed',
         'scikit-optimize',
-        'scikit-image',
         'pytest']
 )
