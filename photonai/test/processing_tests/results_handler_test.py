@@ -1,6 +1,7 @@
 import os
 import shutil
 from io import StringIO
+import pickle
 
 import numpy as np
 import pandas as pd
@@ -8,7 +9,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, OutputSettings
-from photonai.base import PipelineElement
+from photonai.base import PipelineElement, Stack
 from photonai.processing import ResultsHandler
 from photonai.test.photon_base_test import PhotonBaseTest
 from photonai.processing.results_structure import MDBHyperpipe
@@ -159,41 +160,52 @@ class ResultsHandlerTest(PhotonBaseTest):
                     self.assertAlmostEqual(result_dict[data_key].metrics[result_metric],
                                            table[outer_fold_traintest[data_key]][result_metric], 4)
 
-    # todo: Nils
-    # def test_save_backmapping(self):
-    #     """
-    #     Check dimension of feature backmapping equals input dimensions.
-    #     """
-    #     npzfile = np.load(os.path.join(self.output_settings.results_folder,
-    #                                    'optimum_pipe_feature_importances_backmapped.npz'))
-    #
-    #     self.assertEqual(len(npzfile.files), 1)
-    #     result_data = []
-    #     for file in npzfile.files:
-    #         result_data.append(npzfile[file])
-    #
-    #     self.assertEqual(np.shape(self.__X)[1], result_data[0].size)
+    def test_save_backmapping_csv(self):
+        """
+        Check dimension of feature backmapping equals input dimensions for less than 1000 features.
+        """
+        backmapping = np.loadtxt(os.path.join(self.output_settings.results_folder,
+                                       'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
+        self.assertEqual(np.shape(self.__X)[1], backmapping.size)
 
-    #  def test_save_backmapping_stack(self):
-    #    self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
-    #                               metrics=self.metrics,
-    #                               best_config_metric=self.best_config_metric,
-    #                               outer_cv=KFold(n_splits=2),
-    #                               output_settings=self.output_settings,
-    #                               verbosity=1)
-    #    self.hyperpipe += self.ss_pipe_element
-    #    self.stack = Stack("myStack")
-    #    self.stack += PipelineElement("MinMaxScaler")
-    #    self.stack += self.pca_pipe_element
-    #    self.hyperpipe += self.stack
-    #    self.hyperpipe.add(self.svc_pipe_element)
+    def test_save_backmapping_npz(self):
+        """
+        Check dimension of feature backmapping equals input dimensions for more than 1000 features.
+        """
+        # run another hyperpipe with more than 1000 features
+        # use np.tile to copy features until at least 1000 features are reached
+        X = np.tile(self.__X, (1, 35))
+        self.hyperpipe.fit(X, self.__y)
+        npzfile = np.load(os.path.join(self.output_settings.results_folder,
+                                       'optimum_pipe_feature_importances_backmapped.npz'))
+        self.assertEqual(len(npzfile.files), 1)
+        backmapping = npzfile[npzfile.files[0]]
+        self.assertEqual(np.shape(X)[1], backmapping.size)
 
-    #    self.output_settings.save_output = True
-    #    self.hyperpipe.fit(self.__X, self.__y)
-    #    picklefile = pickle.load(open(
-    #        os.path.join(self.output_settings.results_folder, 'optimum_pipe_feature_importances_backmapped.p'),"rb"))
+    def test_save_backmapping_stack(self):
+        # build hyperpipe with stack first
+        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
+                                   metrics=self.metrics,
+                                   best_config_metric=self.best_config_metric,
+                                   outer_cv=KFold(n_splits=2),
+                                   output_settings=self.output_settings,
+                                   verbosity=1)
+        self.hyperpipe += self.ss_pipe_element
+        self.stack = Stack("myStack")
+        self.stack += PipelineElement("MinMaxScaler")
+        self.stack += self.pca_pipe_element
+        self.hyperpipe += self.stack
+        self.hyperpipe.add(self.svc_pipe_element)
 
-    #    self.assertEqual(np.shape(self.__X)[1], len(picklefile[0]))
+        self.output_settings.save_output = True
+        self.hyperpipe.fit(self.__X, self.__y)
+        backmapping = np.loadtxt(os.path.join(self.output_settings.results_folder,
+                                              'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
+
+        # since backmapping stops at a stack element, we will get the features that went into the SVC, that is the
+        # number of PCs from the PCA and the number of input features to the MinMaxScaler
+        n_stack_features = self.hyperpipe.best_config['myStack__PCA__n_components'] + np.shape(self.__X)[1]
+        self.assertEqual(n_stack_features, backmapping.size)
 
     def pass_through_plots(self):
         """
