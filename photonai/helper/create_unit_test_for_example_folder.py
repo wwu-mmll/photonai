@@ -19,7 +19,10 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 class TestRunExamples(PhotonBaseTest):
     
     def setUp(self):
-        self.examples_folder = "../examples"
+        path = Path(os.path.dirname(os.path.realpath(__file__))).parent.parent.joinpath('examples')
+        self.examples_folder = str(path)
+        if not isdir(self.examples_folder):
+            self.examples_folder = "../examples"
         if not isdir(self.examples_folder):
             self.examples_folder = "../../examples"
     """.format(examples_folder)
