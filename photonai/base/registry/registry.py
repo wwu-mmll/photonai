@@ -153,7 +153,7 @@ class PhotonRegistry:
                     # if that fails. drop this shit.
                     try:
                         imported_module = importlib.import_module(class_path)
-                        desired_class = getattr(imported_module, class_name)
+                        desired_class = getattr(imported_module, class_name[1:])
                         custom_element = desired_class()
                     except (AttributeError, ModuleNotFoundError) as e:
                         logger.error(e)
