@@ -82,7 +82,7 @@ class OutputSettings:
     def __init__(self,
                  mongodb_connect_url: str = None,
                  save_output: bool = True,
-                 plots: bool = True,
+                 plots: bool = False,
                  overwrite_results: bool = False,
                  project_folder: str = '',
                  result_file_mode: str = "best",

@@ -236,6 +236,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                               metrics=self.metrics,
                               best_config_metric=self.best_config_metric,
                               outer_cv=KFold(n_splits=2),
+                              output_settings=OutputSettings(project_folder='./tmp'),
                               verbosity=1)
         hyperpipe += self.ss_pipe_element
         hyperpipe += self.pca_pipe_element
