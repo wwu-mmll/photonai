@@ -2,12 +2,9 @@ import importlib
 import importlib.util
 import inspect
 from copy import deepcopy
-import os
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
-import dask
-from dask.distributed import Client
 
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.registry.element_dictionary import ElementDictionary

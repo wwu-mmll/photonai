@@ -23,12 +23,9 @@ class ResultsHandlerTest(PhotonBaseTest):
         super(ResultsHandlerTest, self).setUp()
 
         self.files = ['best_config_predictions.csv',
-                      'time_monitor.csv',
-                      'time_monitor_pie.png',
                       'photon_result_file.json',
                       'photon_summary.txt',
-                      'photon_best_model.photon',
-                      'optimizer_history.png']
+                      'photon_best_model.photon']
                     # todo: 'optimum_pipe_feature_importances_backmapped.npz',
                     # 'optimum_pipe_feature_importances_backmapped.npz',
 
@@ -75,15 +72,6 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=False)
         self.hyperpipe.fit(self.__X, self.__y)
         self.assertIsNone(self.output_settings.results_folder)
-
-    def test_readable_time_monitor_csv(self):
-        """
-        Test for only readable time_moitor.csv (right count of columns and pandas import).
-        """
-        time_monitor_df = pd.read_csv(os.path.join(self.output_settings.results_folder, 'time_monitor.csv'),
-                                      header=[0, 1])
-        self.assertIsInstance(time_monitor_df, pd.DataFrame)
-        self.assertEqual(len(time_monitor_df.columns), 10)
 
     def test_summary(self):
         """
@@ -244,7 +232,34 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)
 
     def test_get_performance_table(self):
-        pass
+        hyperpipe = Hyperpipe('pt', inner_cv=self.inner_cv_object,
+                              metrics=self.metrics,
+                              best_config_metric=self.best_config_metric,
+                              outer_cv=KFold(n_splits=2),
+                              verbosity=1)
+        hyperpipe += self.ss_pipe_element
+        hyperpipe += self.pca_pipe_element
+        hyperpipe.add(self.svc_pipe_element)
+        hyperpipe.fit(self.__X, self.__y)
+
+        performance_table = hyperpipe.results_handler.get_performance_table()
+
+        self.assertListEqual(list(performance_table.columns), ["best_config", "fold", "n_train", "n_validation"] +
+                             self.metrics +
+                             [x+"_sem" for x in self.metrics])
+
+        for i in range(2):
+            self.assertEqual(int(performance_table.iloc[i]["fold"]), i+1)
+            for key, value in hyperpipe.results_handler.results.outer_folds[i].\
+                    best_config.best_config_score.validation.metrics.items():
+                self.assertEqual(performance_table.iloc[i][key], value)
+            self.assertEqual(hyperpipe.results_handler.results.outer_folds[i].best_config.
+                             best_config_score.number_samples_training,
+                             performance_table.iloc[i]["n_train"])
+            self.assertEqual(hyperpipe.results_handler.results.outer_folds[i].best_config.\
+                             best_config_score.number_samples_validation,
+                             performance_table.iloc[i]["n_validation"])
+        self.assertEqual(performance_table.iloc[2].isnull().all(), False)
 
     def test_load_from_mongodb(self):
         pass

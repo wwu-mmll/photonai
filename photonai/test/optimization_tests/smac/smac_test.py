@@ -50,7 +50,7 @@ else:
         def setUp(self):
             self.s_split = ShuffleSplit(n_splits=3, test_size=0.2, random_state=42)
 
-            self.time_limit = 60*5
+            self.time_limit = 60*2
 
             settings = OutputSettings(project_folder='./tmp/')
 
