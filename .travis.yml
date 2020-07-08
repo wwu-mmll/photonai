@@ -6,7 +6,7 @@ python:
 # command to install dependencies
 install:
   - sudo apt-get update
-  - sudo apt-get -y install gfortran
+  - sudo apt-get -y install gfortran swig
   - python setup.py egg_info
   - pip install -r photonai.egg-info/requires.txt
   - pip install -r photonai/optimization/fabolas/fabolas_requirements.txt
