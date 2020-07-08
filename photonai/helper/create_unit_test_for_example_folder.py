@@ -1,7 +1,7 @@
 import os
 from glob import glob
 
-
+from photonai.test.photon_base_test import PhotonBaseTest
 def create_tests_example_script():
     examples_folder = os.path.join(os.path.dirname(os.path.abspath(__file__)).split('helper')[0], 'examples')
     files = [f for f in glob(examples_folder + "/**/*.py", recursive=True)]
@@ -9,7 +9,10 @@ def create_tests_example_script():
 import unittest
 import warnings
 
+import os
+from pathlib import Path
 from os.path import join, isdir
+import photonai
 from photonai.test.photon_base_test import PhotonBaseTest
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 warnings.filterwarnings("ignore", category=RuntimeWarning)
@@ -18,11 +21,10 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 class TestRunExamples(PhotonBaseTest):
     
-    def setUp(self):
-        self.examples_folder = "../examples"
-        if not isdir(self.examples_folder):
-            self.examples_folder = "../../examples"
-    """.format(examples_folder)
+    def setUp(self):     
+        self.examples_folder = Path(os.path.dirname(os.path.realpath(photonai.__file__))).joinpath(
+            'examples')        
+    """
 
     for file in files:
         if not "__init__" in file:
