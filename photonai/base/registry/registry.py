@@ -53,6 +53,8 @@ class PhotonRegistry:
 
         self.current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         self.module_path = os.path.join(self.current_folder, "modules")
+        if not os.path.isdir(self.module_path):
+            os.mkdir(self.module_path)
 
         # update list with available sub_elements
         self._list_available_modules()
@@ -109,15 +111,18 @@ class PhotonRegistry:
         file_content = {}
 
         # Reading json
-        with open(file_name, 'r') as f:
-            try:
-                file_content = json.load(f)
-            except json.JSONDecodeError as jde:
-                # handle empty file
-                if jde.msg == 'Expecting value':
-                    logger.error("Package File " + file_name + " was empty.")
-                else:
-                    raise jde
+        try:
+            with open(file_name, 'r') as f:
+                try:
+                    file_content = json.load(f)
+                except json.JSONDecodeError as jde:
+                    # handle empty file
+                    if jde.msg == 'Expecting value':
+                        logger.error("Package File " + file_name + " was empty.")
+                    else:
+                        raise jde
+        except FileNotFoundError:
+            logger.error("Could not find file for " + photon_package)
         if not file_content:
             file_content = dict()
         return file_content
@@ -140,8 +145,21 @@ class PhotonRegistry:
 
             content = self._load_json(package)
 
-            for key in content:
+            for idx, key in enumerate(content):
                 class_path, class_name = os.path.splitext(content[key][0])
+
+                if idx == 0 and package not in ["PhotonCore", "CustomElements"]:
+                    # try to import something from module.
+                    # if that fails. drop this shit.
+                    try:
+                        imported_module = importlib.import_module(class_path)
+                        desired_class = getattr(imported_module, "PipelineElement")
+                        custom_element = desired_class(class_name)
+                    except (AttributeError, ModuleNotFoundError) as e:
+                        logger.error(e)
+                        logger.error("Could not import from package {}. Deleting json.".format(package))
+                        self.delete_module(package)
+
                 class_info[key] = class_path, class_name[1:]
         return class_info
 

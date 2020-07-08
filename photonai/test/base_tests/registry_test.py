@@ -131,7 +131,15 @@ class RegistryTest(PhotonBaseTest):
         with self.assertRaises(NameError):
             fe = PipelineElement("FakeElement1")
 
+    def test_add_failing_module(self):
+        json_module_file = os.path.join(self.custom_folder, "not_working_fake_module.json")
 
+        # try to add module
+        self.registry.add_module(json_module_file)
+
+        # that should not have worked because we cant import first element
+        self.assertFalse("FakeElement2001" in self.registry.ELEMENT_DICTIONARY)
+        self.assertFalse(os.path.isfile(os.path.join(self.registry.module_path, "not_working_fake_module.json")))
 
 
 
