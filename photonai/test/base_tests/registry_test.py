@@ -120,21 +120,19 @@ class RegistryTest(PhotonBaseTest):
         self.assertTrue("fake_module" in self.registry.PHOTON_REGISTRIES)
 
         # check if registered items are available
-        elements_to_choose_from = self.registry.get_package_info()
-        self.assertTrue("FakeElement1" in elements_to_choose_from)
+        self.assertTrue("FakeElement1" in self.registry.ELEMENT_DICTIONARY)
         fe = PipelineElement("FakeElement1")
 
         # then delete the module
         self.registry.delete_module("fake_module")
         self.assertFalse(os.path.isfile(os.path.join(self.registry.module_path, "fake_module.json")))
 
-        elements_to_choose_from = self.registry.get_package_info()
-        self.assertFalse("FakeElement1" in elements_to_choose_from)
+        self.assertFalse("FakeElement1" in self.registry.ELEMENT_DICTIONARY)
         with self.assertRaises(NameError):
             fe = PipelineElement("FakeElement1")
 
 
-        #
+
 
 
 

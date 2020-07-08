@@ -44,8 +44,6 @@ class PipelineElement(BaseEstimator):
         Any parameters that should be passed to the object to be instantiated, default parameters
 
     """
-    # Registering Pipeline Elements
-    ELEMENT_DICTIONARY = PhotonRegistry().get_package_info()
 
     def __init__(self, name, hyperparameters: dict = None, test_disabled: bool = False,
                  disabled: bool = False, base_element=None, batch_size=0, **kwargs):
@@ -60,14 +58,18 @@ class PipelineElement(BaseEstimator):
             hyperparameters = {}
 
         if base_element is None:
-            if name not in PipelineElement.ELEMENT_DICTIONARY:
-                PipelineElement.ELEMENT_DICTIONARY = PhotonRegistry
-                # try to reload
-                PipelineElement.ELEMENT_DICTIONARY = PhotonRegistry().get_package_info()
 
-            if name in PipelineElement.ELEMENT_DICTIONARY:
+            # Registering Pipeline Elements
+            if len(PhotonRegistry.ELEMENT_DICTIONARY) == 0:
+                registry = PhotonRegistry
+
+            if name not in PhotonRegistry.ELEMENT_DICTIONARY:
+                # try to reload
+                PhotonRegistry.ELEMENT_DICTIONARY = PhotonRegistry().get_package_info()
+
+            if name in PhotonRegistry.ELEMENT_DICTIONARY:
                 try:
-                    desired_class_info = PipelineElement.ELEMENT_DICTIONARY[name]
+                    desired_class_info = PhotonRegistry.ELEMENT_DICTIONARY[name]
                     desired_class_home = desired_class_info[0]
                     desired_class_name = desired_class_info[1]
                     imported_module = importlib.import_module(desired_class_home)
@@ -75,8 +77,8 @@ class PipelineElement(BaseEstimator):
                     self.base_element = desired_class(**kwargs)
                 except AttributeError as ae:
                     logger.error('ValueError: Could not find according class:'
-                                   + str(PipelineElement.ELEMENT_DICTIONARY[name]))
-                    raise ValueError('Could not find according class:', PipelineElement.ELEMENT_DICTIONARY[name])
+                                   + str(PhotonRegistry.ELEMENT_DICTIONARY[name]))
+                    raise ValueError('Could not find according class:', PhotonRegistry.ELEMENT_DICTIONARY[name])
             else:
                 # if even after reload the element does not appear, it is not supported
                 logger.error('Element not supported right now:' + name)
@@ -234,7 +236,7 @@ class PipelineElement(BaseEstimator):
         return self
 
     def copy_me(self):
-        if self.name in self.ELEMENT_DICTIONARY:
+        if self.name in PhotonRegistry.ELEMENT_DICTIONARY:
             # we need initial name to refer to the class to be instantiated  (SVC) even though the name might be SVC2
             copy = PipelineElement(self.initial_name, {}, test_disabled=self.test_disabled,
                                    disabled=self.disabled, batch_size=self.batch_size, **self.kwargs)

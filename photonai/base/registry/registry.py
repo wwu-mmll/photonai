@@ -1,4 +1,5 @@
 import inspect
+import importlib
 import json
 import os
 import sys
@@ -9,10 +10,9 @@ from sklearn.datasets import load_breast_cancer, load_boston
 from shutil import copyfile
 
 from photonai.photonlogger.logger import logger
-from photonai.helper.helper import Singleton
 
 
-class PhotonRegistry(Singleton):
+class PhotonRegistry:
     """
     Helper class to manage the PHOTON Element Register.
 
@@ -44,24 +44,23 @@ class PhotonRegistry(Singleton):
 
     """
 
+    ELEMENT_DICTIONARY = dict()
     PHOTON_REGISTRIES = ['PhotonCore']
+    CUSTOM_ELEMENTS_FOLDER = None
+    CUSTOM_ELEMENTS = None
 
     def __init__(self, custom_elements_folder: str = None):
-
-        super(PhotonRegistry, self).__init__()
 
         self.current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         self.module_path = os.path.join(self.current_folder, "modules")
 
         # update list with available sub_elements
         self._list_available_modules()
+        PhotonRegistry.CUSTOM_ELEMENTS_FOLDER = custom_elements_folder
+        self._load_custom_folder(custom_elements_folder)
 
-        if custom_elements_folder:
-            self._load_custom_folder(custom_elements_folder)
-        else:
-            self.custom_elements = None
-            self.custom_elements_folder = None
-            self.custom_elements_file = None
+        if len(PhotonRegistry.ELEMENT_DICTIONARY) == 0:
+            PhotonRegistry.ELEMENT_DICTIONARY = self.get_package_info()
 
     def _list_available_modules(self):
         for abs_filename in glob(os.path.join(self.module_path, "*.json")):
@@ -73,9 +72,13 @@ class PhotonRegistry(Singleton):
     def add_module(self, path_to_file: str):
         filename = os.path.basename(path_to_file)
         copyfile(path_to_file, os.path.join(self.module_path, filename))
+        self._list_available_modules()
+        PhotonRegistry.ELEMENT_DICTIONARY = self.get_package_info()
 
     def delete_module(self, module_name: str):
+        self.PHOTON_REGISTRIES.remove(module_name)
         os.remove(os.path.join(self.module_path, module_name + ".json"))
+        PhotonRegistry.ELEMENT_DICTIONARY = self.get_package_info()
 
     def _load_json(self, photon_package: str):
         """
@@ -94,11 +97,13 @@ class PhotonRegistry(Singleton):
         """
 
         if photon_package == 'CustomElements':
-            folder = self.custom_elements_folder
+            folder = PhotonRegistry.CUSTOM_ELEMENTS_FOLDER
             if not folder:
                 return {}
+        elif photon_package == "PhotonCore":
+            folder = self.current_folder
         else:
-            self.current_folder
+            folder = self.module_path
 
         file_name = os.path.join(folder, photon_package + '.json')
         file_content = {}
@@ -141,11 +146,14 @@ class PhotonRegistry(Singleton):
         return class_info
 
     def _load_custom_folder(self, custom_elements_folder):
-        self.custom_elements_folder, self.custom_elements_file = self._check_custom_folder(custom_elements_folder)
 
-        # load custom elements from json
-        self.custom_elements = self._load_json('CustomElements')
-        self.PHOTON_REGISTRIES.append('CustomElements')
+        if PhotonRegistry.CUSTOM_ELEMENTS_FOLDER is not None:
+            PhotonRegistry.CUSTOM_ELEMENTS_FOLDER = self._check_custom_folder(custom_elements_folder)
+
+            # load custom elements from json
+            PhotonRegistry.CUSTOM_ELEMENTS = self._load_json('CustomElements')
+            PhotonRegistry.PHOTON_REGISTRIES.append('CustomElements')
+            PhotonRegistry.ELEMENT_DICTIONARY.update(PhotonRegistry.CUSTOM_ELEMENTS)
 
     @staticmethod
     def _check_custom_folder(custom_folder):
@@ -159,24 +167,23 @@ class PhotonRegistry(Singleton):
             with open(custom_file, 'w') as f:
                 json.dump('', f)
 
-        return custom_folder, custom_file
+        return custom_folder
 
     def activate(self):
-        if not self.custom_elements_folder:
+        if not PhotonRegistry.CUSTOM_ELEMENTS_FOLDER:
             raise ValueError("To activate a custom elements folder, specify a folder when instantiating the registry "
                              "module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER) "
                              "In case you don't have any custom models, there is no need to activate the registry.")
-        if not os.path.exists(self.custom_elements_folder):
-            raise FileNotFoundError("Couldn't find custom elements folder: {}".format(self.custom_elements_folder))
-        if not os.path.isfile(os.path.join(self.custom_elements_folder, 'CustomElements.json')):
+        if not os.path.exists(PhotonRegistry.CUSTOM_ELEMENTS_FOLDER):
+            raise FileNotFoundError("Couldn't find custom elements folder: {}".format(PhotonRegistry.CUSTOM_ELEMENTS_FOLDER))
+        if not os.path.isfile(os.path.join(PhotonRegistry.CUSTOM_ELEMENTS_FOLDER, 'CustomElements.json')):
             raise FileNotFoundError("Couldn't find CustomElements.json. Did you register your element first?")
 
         # add folder to python path
         logger.info("Adding custom elements folder to system path...")
-        sys.path.append(self.custom_elements_folder)
+        sys.path.append(PhotonRegistry.CUSTOM_ELEMENTS_FOLDER)
 
-        # todo:
-        PipelineElement.ELEMENT_DICTIONARY.update(self.get_package_info(['CustomElements']))
+        PhotonRegistry.ELEMENT_DICTIONARY.update(self.get_package_info(['CustomElements']))
         logger.info('Successfully activated custom elements!')
 
     def register(self, photon_name: str, class_str: str, element_type: str):
@@ -196,25 +203,25 @@ class PhotonRegistry(Singleton):
         """
 
         # check if folder exists
-        if not self.custom_elements_folder:
+        if not PhotonRegistry.CUSTOM_ELEMENTS_FOLDER:
             raise ValueError("To register an element, specify a custom elements folder when instantiating the registry "
                              "module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER)")
 
         if not element_type == "Estimator" and not element_type == "Transformer":
             raise ValueError("Variable element_type must be 'Estimator' or 'Transformer'")
 
-        duplicate = self._check_duplicate(photon_name=photon_name, class_str=class_str, content=self.custom_elements)
+        duplicate = self._check_duplicate(photon_name=photon_name, class_str=class_str, content=PhotonRegistry.CUSTOM_ELEMENTS)
 
         if not duplicate:
-            python_file = os.path.join(self.custom_elements_folder, class_str.split('.')[0] + '.py')
+            python_file = os.path.join(PhotonRegistry.CUSTOM_ELEMENTS_FOLDER, class_str.split('.')[0] + '.py')
             if not os.path.isfile(python_file):
                 raise FileNotFoundError("Couldn't find python file {} in your custom elements folder. "
                                         "Please copy your file into this folder first!".format(python_file))
             # add new element
-            self.custom_elements[photon_name] = class_str, element_type
+            PhotonRegistry.CUSTOM_ELEMENTS[photon_name] = class_str, element_type
 
             # write back to file
-            self._write_to_json(self.custom_elements)
+            self._write_to_json(PhotonRegistry.CUSTOM_ELEMENTS)
             logger.info('Adding PipelineElement ' + class_str + ' to CustomElements.json as "' + photon_name + '".')
 
             # activate custom elements
@@ -227,8 +234,11 @@ class PhotonRegistry(Singleton):
             logger.error('Could not register element!')
 
     def _run_tests(self, photon_name, element_type):
-        # check import
-        custom_element = PipelineElement(photon_name)
+
+        # this is a sneaky hack to avoid circular imports of PipelineElement
+        imported_module = importlib.import_module("photonai.base")
+        desired_class = getattr(imported_module, "PipelineElement")
+        custom_element = desired_class(photon_name)
 
         # check if has fit, transform, predict
         if not hasattr(custom_element.base_element, 'fit'):
@@ -242,8 +252,8 @@ class PhotonRegistry(Singleton):
 
         # check if estimator is regressor or classifier
         if element_type == 'Estimator':
-            if hasattr(custom_element.base_element, '_estimator_type'):
-                est_type = getattr(custom_element.base_element, '_estimator_type')
+            if hasattr(custom_element, '_estimator_type'):
+                est_type = getattr(custom_element, '_estimator_type')
                 if est_type == "regressor":
                     X, y = load_boston(return_X_y=True)
                 elif est_type == "classifier":
@@ -364,10 +374,10 @@ class PhotonRegistry(Singleton):
           The string literal encoding the class
         """
 
-        if photon_name in self.custom_elements:
-            del self.custom_elements[photon_name]
+        if photon_name in PhotonRegistry.CUSTOM_ELEMENTS:
+            del PhotonRegistry.CUSTOM_ELEMENTS[photon_name]
 
-            self._write_to_json(self.custom_elements)
+            self._write_to_json(PhotonRegistry.CUSTOM_ELEMENTS)
             logger.info('Removing the PipelineElement named "{0}" from CustomElements.json.'.format(photon_name))
         else:
             logger.info('Cannot remove "{0}" from CustomElements.json. Element has not been registered before.'.format(photon_name))
@@ -414,10 +424,8 @@ class PhotonRegistry(Singleton):
           The PHOTON submodule name to which the new class belongs, so it is written to the correct json file
         """
         # Writing JSON data
-        with open(self.custom_elements_file, 'w') as f:
+        with open(os.path.join(self.CUSTOM_ELEMENTS_FOLDER, "CustomElements.json"), 'w') as f:
             json.dump(content_to_write, f)
-
-
 
     def list_available_elements(self, photon_package=PHOTON_REGISTRIES):
         """

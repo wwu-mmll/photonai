@@ -4,12 +4,13 @@ import numpy as np
 from sklearn.utils.testing import assert_array_equal
 from photonai.modelwrapper.label_encoder import LabelEncoder
 
+
 class LabelEncoderTests(unittest.TestCase):
 
     def setUp(self):
         self.label_encoder = LabelEncoder()
         self.X = np.random.rand(5,5)
-        self.values = np.array(["a","b","a","a","a","c"])
+        self.values = np.array(["a", "b", "a", "a", "a", "c"])
         self.classes = np.unique(self.values)
 
     def test_fit(self):
