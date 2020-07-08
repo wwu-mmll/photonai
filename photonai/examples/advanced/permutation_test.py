@@ -49,5 +49,5 @@ perm_tester = PermutationTest(create_hyperpipe, n_perms=2, n_processes=1, random
                               permutation_id=my_perm_id)
 perm_tester.fit(X, y, groups=groups)
 
-results = PermutationTest._calculate_results(my_perm_id)
+results = PermutationTest._calculate_results(my_perm_id, mongodb_path='mongodb://localhost:27017/photon_results')
 print(results.p_values)

@@ -31,7 +31,8 @@ class PermutationTestTests(PhotonBaseTest):
         cls.hyperpipe.fit(cls.X, cls.y)
 
     def test_wizard_preparation(self):
-        result = PermutationTest.prepare_for_wizard(str(self.perm_id), self.wizard_obj_id)
+        result = PermutationTest.prepare_for_wizard(str(self.perm_id), self.wizard_obj_id,
+                                                    mongo_db_connect_url="mongodb://localhost:27017/photon_results")
         returned_duration = result["estimated_duration"]
         cached_duration = self.hyperpipe.results.computation_end_time - self.hyperpipe.results.computation_start_time
         self.assertAlmostEqual(round(returned_duration.total_seconds(), 2), round(cached_duration.total_seconds(), 2), 2)
