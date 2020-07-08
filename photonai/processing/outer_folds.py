@@ -235,12 +235,6 @@ class OuterFoldManager:
                                                                             (datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
     def objective_function(self, current_config):
-        if isinstance(self.optimizer, PhotonMasterOptimizer):
-            #current_config = [{key: x.get_dictionary()[key] for key in x.get_dictionary().keys()
-            #                  if 'algos' not in key} for x in [current_config]][0]
-            # Todo: @lucas was is das? -> das muss smac selber regeln .
-            current_config = {k: current_config[k] for k in current_config if (current_config[k] and 'algos' not in k)}
-
         if current_config is None:
             return
         logger.clean_info(

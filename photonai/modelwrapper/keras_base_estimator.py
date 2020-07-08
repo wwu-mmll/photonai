@@ -4,6 +4,7 @@ from keras.models import model_from_json
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.logger import logger
 
+
 class KerasBaseEstimator(BaseEstimator):
     """
     base class for all Keras wrappers
@@ -24,12 +25,10 @@ class KerasBaseEstimator(BaseEstimator):
         else:
             self.callbacks = []
 
-    def fit(self, X, y, reload_weights: bool=False):
+    def fit(self, X, y, reload_weights: bool = True):
 
         if reload_weights:
             self.reset_weights(self.model)
-
-        #y = self.encode_targets(y)
 
         # use callbacks only when size of training set is above 100
         if X.shape[0] > 100:

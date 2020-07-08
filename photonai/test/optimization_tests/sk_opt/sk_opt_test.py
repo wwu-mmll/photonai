@@ -14,3 +14,7 @@ class SkOptOptimizerTest(GridSearchOptimizerTest):
                                                   test_disabled=True),
                                   PipelineElement("SVC")]
         self.optimizer = SkOptOptimizer()
+
+    def test_ask_advanced(self):
+        with self.assertRaises(ValueError):
+            super(SkOptOptimizerTest, self).test_ask_advanced()

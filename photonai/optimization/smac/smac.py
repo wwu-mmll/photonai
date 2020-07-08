@@ -56,14 +56,14 @@ class SMACOptimizer(PhotonMasterOptimizer):
             self.scenario_dict = scenario_dict
 
         if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO]:
-            if type(facade) == str:
+            if isinstance(facade, str):
                 self.facade = eval(facade)
             else:
                 self.facade = facade
         else:
             msg = "SMAC.facade {} not known. Please use one of ['SMAC4BO', 'SMAC4AC', 'SMAC4HPO']."
             logger.error(msg.format(str(facade)))
-            raise ValueError(msg)
+            raise ValueError(msg.format(str(facade)))
 
         self.rng = rng
         if not intensifier_kwargs:
@@ -179,14 +179,17 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.scenario = Scenario(self.scenario_dict)
 
+        def smac_objective_function(current_config):
+            current_config = {k: current_config[k] for k in current_config if (current_config[k] and 'algos' not in k)}
+            return objective_function(current_config)
+
         self.smac = self.facade(scenario = self.scenario,
                                 intensifier_kwargs = self.intensifier_kwargs,
                                 rng = self.rng,
-                                tae_runner = objective_function)
+                                tae_runner = smac_objective_function)
 
-        if  self.debug:
+        if self.debug:
             self.smac_helper['data'] = self.smac
-
 
     def optimize(self):
         """

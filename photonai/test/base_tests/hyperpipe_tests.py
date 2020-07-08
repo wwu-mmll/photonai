@@ -463,11 +463,7 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
             def get_optimizer(name):
                 my_pipe_optimizer = Hyperpipe.Optimization(name, {}, [], 'accuracy', None)
                 return my_pipe_optimizer.get_optimizer()
-            if name == 'smac':
-                with self.assertRaises(ModuleNotFoundError):
-                    get_optimizer(name)
-            else:
-                self.assertIsInstance(get_optimizer(name), opt_class)
+            self.assertIsInstance(get_optimizer(name), opt_class)
 
     def test_get_optimum_config(self):
         my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
