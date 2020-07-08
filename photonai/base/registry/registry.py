@@ -154,7 +154,7 @@ class PhotonRegistry:
                     try:
                         imported_module = importlib.import_module(class_path)
                         desired_class = getattr(imported_module, class_name)
-                        custom_element = desired_class(class_name)
+                        custom_element = desired_class()
                     except (AttributeError, ModuleNotFoundError) as e:
                         logger.error(e)
                         logger.error("Could not import from package {}. Deleting json.".format(package))
