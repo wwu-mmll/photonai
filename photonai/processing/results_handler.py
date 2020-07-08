@@ -780,9 +780,9 @@ class ResultsHandler:
             self.write_summary()
             self.write_predictions_file()
 
-            if self.output_settings.plots:
-                self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
-                self.eval_mean_time_components()
+        if self.output_settings.plots:
+            self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
+            self.eval_mean_time_components()
 
     def convert_to_json_serializable(self, value):
         if isinstance(value, np.int64):

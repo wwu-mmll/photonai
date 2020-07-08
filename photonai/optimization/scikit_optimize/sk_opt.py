@@ -12,7 +12,6 @@ from photonai.optimization import Categorical as PhotonCategorical
 from photonai.photonlogger.logger import logger
 
 
-
 class SkOptOptimizer(PhotonSlaveOptimizer):
 
     def __init__(self, n_configurations: int=20, acq_func: str = 'gp_hedge', acq_func_kwargs: dict = None):
@@ -33,6 +32,11 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         # build space
         space = []
         for pipe_element in pipeline_elements:
+            if pipe_element.__class__.__name__ == 'Switch':
+                error_msg = 'Scikit-Optimize cannot operate in the specified hyperparameter space with a Switch ' \
+                            'element. We recommend the use of SMAC.'
+                logger.error(error_msg)
+                raise ValueError(error_msg)
             if hasattr(pipe_element, 'hyperparameters'):
                 for name, value in pipe_element.hyperparameters.items():
                     # if we only have one value we do not need to optimize

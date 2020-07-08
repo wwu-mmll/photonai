@@ -179,14 +179,6 @@
     "sklearn.tree.DecisionTreeClassifier",
     "Estimator"
   ],
-  "ExtraDecisionTreeRegressor":[
-    "sklearn.tree.ExtraDecisionTreeRegressor",
-    "Estimator"
-  ],
-  "ExtraDecisionTreeClassifier":[
-    "sklearn.tree.ExtraDecisionTreeClassifier",
-    "Estimator"
-  ],
   "LinearSVC":[
     "sklearn.svm.LinearSVC",
     "Estimator"
@@ -411,10 +403,6 @@
     "photonai.modelwrapper.ConfounderRemoval.ConfounderRemoval",
     "Transformer"
   ],
-  "SourceSplitter":[
-    "photonai.modelwrapper.source_splitter.SourceSplitter",
-    "Transformer"
-  ],
   "FClassifSelectPercentile":[
     "photonai.modelwrapper.FeatureSelection.FClassifSelectPercentile",
     "Transformer"
@@ -441,6 +429,10 @@
   ],
   "SamplePairingClassification": [
     "photonai.modelwrapper.SamplePairing.SamplePairingClassification",
+    "Transformer"
+  ],
+    "SourceSplitter":[
+    "photonai.modelwrapper.source_splitter.SourceSplitter",
     "Transformer"
   ],
   "FeatureEncoder":[

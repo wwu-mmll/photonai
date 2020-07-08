@@ -2,7 +2,6 @@ import importlib
 import importlib.util
 import inspect
 from copy import deepcopy
-import os
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid

@@ -4,6 +4,7 @@ import random
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.photonlogger.logger import logger
 
+
 class RandomSearchOptimizer(PhotonSlaveOptimizer):
     """
      Searches for the best configuration by randomly testing k possible hyperparameter combinations without grid.
@@ -31,7 +32,6 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
         if not n_configurations and limit_in_minutes <= 0:
             msg = "No stopping criteria for RandomSearchOptimizer."
             logger.warning(msg)
-
 
     def prepare(self, pipeline_elements, maximize_metric):
         self.pipeline_elements = pipeline_elements
