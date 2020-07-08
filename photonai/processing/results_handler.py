@@ -13,7 +13,6 @@ import seaborn as sns
 import json
 from bson import json_util
 
-from nibabel.nifti1 import Nifti1Image
 from prettytable import PrettyTable
 from pymodm import connect
 from pymongo import DESCENDING
@@ -760,16 +759,20 @@ class ResultsHandler:
         try:
             if isinstance(backmapping, list):
                 backmapping = np.asarray(backmapping)
-            if isinstance(backmapping, np.ndarray):
-                if backmapping.size > 1000:
-                    np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+
+            try:
+                from nibabel.nifti1 import Nifti1Image
+                if isinstance(backmapping, Nifti1Image):
+                    backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+            finally:
+                if isinstance(backmapping, np.ndarray):
+                    if backmapping.size > 1000:
+                        np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+                    else:
+                        np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
                 else:
-                    np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
-            elif isinstance(backmapping, Nifti1Image):
-                backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
-            else:
-                with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
-                    pickle.dump(backmapping, f)
+                    with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
+                        pickle.dump(backmapping, f)
         except Exception as e:
             logger.error("Could not save backmapped feature importances")
             logger.error(e)
