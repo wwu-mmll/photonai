@@ -183,7 +183,7 @@ class PermutationTest:
         return perm_run
 
     @staticmethod
-    def _calculate_results(permutation_id, save_to_db=True, mongodb_path="mongodb://trap-umbriel:27017/photon_results"):
+    def _calculate_results(permutation_id, save_to_db=True, mongodb_path="mongodb://localhost:27017/photon_results"):
 
         logger.info("Calculating permutation test results")
         try:
@@ -306,7 +306,7 @@ class PermutationTest:
         return mother_permutation
 
     @staticmethod
-    def prepare_for_wizard(permutation_id, wizard_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
+    def prepare_for_wizard(permutation_id, wizard_id, mongo_db_connect_url="mongodb://localhost:27017/photon_results"):
         mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id=wizard_id,
                                                             find_wizard_id=True)
         mother_permutation.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)

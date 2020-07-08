@@ -12,7 +12,7 @@ def create_hyperpipe():
     from sklearn.model_selection import GroupKFold
     from sklearn.model_selection import KFold
 
-    settings = OutputSettings(mongodb_connect_url='mongodb://trap-umbriel:27017/photon_results',
+    settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
                               project_folder='./tmp/')
     my_pipe = Hyperpipe('permutation_test_1',
                         optimizer='grid_search',

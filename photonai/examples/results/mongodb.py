@@ -8,7 +8,7 @@ from photonai.optimization import FloatRange, Categorical, IntegerRange
 X, y = load_breast_cancer(return_X_y=True)
 
 # YOU CAN SAVE THE TRAINING AND TEST RESULTS AND ALL THE PERFORMANCES IN THE MONGODB
-mongo_settings = OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
+mongo_settings = OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
                                 project_folder='./tmp/')
 
 # DESIGN YOUR PIPELINE

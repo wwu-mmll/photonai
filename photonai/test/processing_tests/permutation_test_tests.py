@@ -22,7 +22,7 @@ class PermutationTestTests(PhotonBaseTest):
                                    outer_cv = KFold(n_splits=3),
                                    metrics=["accuracy", "balanced_accuracy"],
                                    best_config_metric="balanced_accuracy",
-                                   output_settings=OutputSettings(mongodb_connect_url="mongodb://trap-umbriel:27017/photon_results",
+                                   output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
                                                                   wizard_object_id=str(cls.wizard_obj_id)),
                                    permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
