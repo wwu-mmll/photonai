@@ -7,8 +7,8 @@ python:
 serivces:
   - docker
 before_install:
-  - docker pull mongo:4.0.4
-  - docker run -d -p 27017-27019:27017-27019 --name mongodb mongo:4.0.4
+  - docker pull mongo:latest
+  - docker run -d -p 27017-27019:27017-27019 --name mongodb mongo
 install:
   - sudo apt-get update
   - sudo apt-get -y install gfortran swig
