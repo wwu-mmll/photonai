@@ -21,6 +21,7 @@ warnings.filterwarnings("ignore", category=FutureWarning)
 
 class TestRunExamples(PhotonBaseTest):
     
+
     def setUp(self):     
         self.examples_folder = Path(os.path.dirname(os.path.realpath(photonai.__file__))).joinpath(
             'examples')        

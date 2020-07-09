@@ -11,6 +11,7 @@ import traceback
 import zipfile
 import json
 from copy import deepcopy
+from typing import Optional, List, Union
 
 import dask
 import numpy as np
@@ -294,27 +295,32 @@ class Hyperpipe(BaseEstimator):
                             verbose=2)
 
    """
+
     def __init__(self, name,
                  inner_cv: BaseCrossValidator = None,
-                 outer_cv=None,
-                 optimizer='grid_search',
-                 optimizer_params: dict = {},
-                 metrics=None,
-                 best_config_metric=None,
-                 eval_final_performance=True,
+                 outer_cv = None,
+                 optimizer: str = 'grid_search',
+                 optimizer_params: dict = None,
+                 metrics: Optional[List[Union[Scorer.Metric_Type, str]]] = None,
+                 best_config_metric: Optional[Union[Scorer.Metric_Type, str]] = None,
+                 eval_final_performance: bool = True,
                  test_size: float = 0.2,
                  calculate_metrics_per_fold: bool = True,
                  calculate_metrics_across_folds: bool = False,
-                 random_seed=False,
-                 verbosity=0,
+                 random_seed: bool = False,
+                 verbosity: int = 0,
                  learning_curves: bool = False,
                  learning_curves_cut: FloatRange = None,
-                 output_settings=None,
-                 performance_constraints=None,
-                 permutation_id: str=None,
-                 cache_folder: str=None,
-                 nr_of_processes: int = 1):
+                 output_settings: OutputSettings = None,
+                 performance_constraints = None,
+                 permutation_id: str = None,
+                 cache_folder: str = None,
+                 nr_of_processes: int = 1,
+                 allow_multidim_targets: bool = False):
 
+        self.allow_multidim_targets = allow_multidim_targets
+        if optimizer_params is None:
+            optimizer_params = {}
         self.name = re.sub(r'\W+', '', name)
         self.permutation_id = permutation_id
         if cache_folder:
@@ -367,6 +373,13 @@ class Hyperpipe(BaseEstimator):
         self.preprocessing = None
 
         # ====================== Perfomance Optimization ===========================
+
+        if not isinstance(best_config_metric, str):
+            best_config_metric = Scorer.register_custom_metric(best_config_metric)
+        for i in range(len(metrics)):
+            if not isinstance(metrics[i], str):
+                metrics[i] = Scorer.register_custom_metric(metrics[i])
+        metrics = list(filter(None, metrics))
 
         self.optimization = Hyperpipe.Optimization(metrics=metrics,
                                                    best_config_metric=best_config_metric,
@@ -477,7 +490,7 @@ class Hyperpipe(BaseEstimator):
         def sanity_check_metrics(self):
 
             # --------------------- Validity of metrics ----------------
-            if isinstance(self.best_config_metric, list) or not isinstance(self.best_config_metric, str):
+            if not isinstance(self.best_config_metric, str):
 
                 if self.metrics is not None:
                     warning_text = "Best Config Metric must be a single metric given as string, no list. " \
@@ -856,13 +869,18 @@ class Hyperpipe(BaseEstimator):
 
             shape_x = np.shape(self.data.X)
             shape_y = np.shape(self.data.y)
-            if len(shape_y) != 1:
-                if len(np.shape(np.squeeze(self.data.y))) == 1:
-                    # use np.squeeze for non 1D targets.
-                    self.data.y = np.squeeze(self.data.y)
-                    shape_y = np.shape(self.data.y)
-                else:
-                    raise ValueError("Target is not one-dimensional.")
+            if not self.allow_multidim_targets:
+                if len(shape_y) != 1:
+                    if len(np.shape(np.squeeze(self.data.y))) == 1:
+                        # use np.squeeze for non 1D targets.
+                        self.data.y = np.squeeze(self.data.y)
+                        shape_y = np.shape(self.data.y)
+                        logger.warning("y has been automatically squeezed. If this is not your intention, block this "
+                                       "with Hyperpipe(allow_multidim_targets = True)")
+                    else:
+                        raise ValueError("Target is not one-dimensional. Multidimensional targets can cause problems"
+                                         "with sklearn metrics. Please override with "
+                                         "Hyperpipe(allow_multidim_targets = True).")
             if not shape_x[0] == shape_y[0]:
                 raise IndexError(
                     "Size of targets mismatch to size of the data: " + str(shape_x[0]) + " - " + str(shape_y[0]))

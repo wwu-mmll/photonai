@@ -5,6 +5,7 @@
 from numpy import dstack
 from pandas import read_csv
 import numpy as np
+from keras.utils import data_utils
 from keras.models import Sequential
 from keras.layers import Dense
 from keras.layers import Flatten
@@ -54,10 +55,10 @@ def load_dataset_group(group, prefix=''):
 # load the dataset, returns train and test X and y elements
 def load_dataset(prefix=''):
     # load all train
-    trainX, trainy = load_dataset_group('train', prefix + 'HARDataset/')
+    trainX, trainy = load_dataset_group('train', prefix + '/')
     print(trainX.shape, trainy.shape)
     # load all test
-    testX, testy = load_dataset_group('test', prefix + 'HARDataset/')
+    testX, testy = load_dataset_group('test', prefix + '/')
     print(testX.shape, testy.shape)
     # zero-offset class values
     trainy = trainy - 1
@@ -66,7 +67,17 @@ def load_dataset(prefix=''):
     return np.concatenate((trainX, testX), axis=0), np.concatenate((trainy, testy), axis=0)
 
 
-X, y = load_dataset(prefix="./")  # your path to your "HARDataset" folder (download required, link above)
+dataset_path = data_utils.get_file(
+    fname='UCI HAR Dataset.zip',
+    origin='https://archive.ics.uci.edu/ml/machine-learning-databases/00240/UCI%20HAR%20Dataset.zip',
+    file_hash='53e099237392e0b9602f8c38f578bd8f',
+    hash_algorithm='md5',
+    cache_subdir='photonai_datasets',
+    extract=True,
+    archive_format='zip'
+)
+
+X, y = load_dataset(prefix=dataset_path.replace('.zip', ''))
 
 verbose, epochs, batch_size = 1, 10, 32
 n_timesteps, n_features, n_outputs = X.shape[1], X.shape[2], 6

@@ -1,8 +1,8 @@
-import keras
-from keras import backend as K
-from keras.models import model_from_json
 from sklearn.base import BaseEstimator
 from photonai.photonlogger.logger import logger
+import keras
+import tensorflow
+
 
 class KerasBaseEstimator(BaseEstimator):
     """
@@ -24,12 +24,27 @@ class KerasBaseEstimator(BaseEstimator):
         else:
             self.callbacks = []
 
-    def fit(self, X, y, reload_weights: bool=False):
+        # saving initial weights in order to be able to reset the weights before each fit
+        # with this approach pre-trained weights can be set
+        self.init_weights = model.get_weights()
 
-        if reload_weights:
-            self.reset_weights(self.model)
+        # if a non keras layer is in model, it needs to be registered with keras
+        if isinstance(self.model, keras.Model):
+            for layer in self.model.layers:
+                if not layer.__module__.startswith('keras'):
+                    keras.utils.get_custom_objects()[type(layer).__name__] = layer.__class__
+        elif isinstance(self.model, tensorflow.keras.Model):
+            for layer in self.model.layers:
+                if not layer.__module__.startswith('tensorflow'):
+                    tensorflow.keras.utils.get_custom_objects()[type(layer).__name__] = layer.__class__
 
-        #y = self.encode_targets(y)
+    def fit(self, X, y, reload_weights: bool = False):
+        # set weights to initial weights to achieve a weight reset
+        self.model.set_weights(self.init_weights)
+
+        # allow labels to be encoded before being passed to the model
+        # by default self.encode_targets returns identity of y
+        y = self.encode_targets(y)
 
         # use callbacks only when size of training set is above 100
         if X.shape[0] > 100:
@@ -56,7 +71,6 @@ class KerasBaseEstimator(BaseEstimator):
         """
         Predict probabilities
         :param X: array-like
-        :type data: float
         :return: predicted values, array
         """
         return self.model.predict(X, batch_size=self.nn_batch_size)
@@ -77,7 +91,7 @@ class KerasBaseEstimator(BaseEstimator):
         json_file = open(filename + '.json', 'r')
         loaded_model_json = json_file.read()
         json_file.close()
-        loaded_model = model_from_json(loaded_model_json)
+        loaded_model = keras.models.model_from_json(loaded_model_json)
 
         # load weights into new model
         loaded_model.load_weights(filename + ".h5")
@@ -85,8 +99,8 @@ class KerasBaseEstimator(BaseEstimator):
 
     def load_nounzip(self, archive, element_info):
         # load json and create model
-        loaded_model_json = archive.read(element_info['filename'] + '.json') #.decode("utf-8")
-        loaded_model = model_from_json(loaded_model_json)
+        loaded_model_json = archive.read(element_info['filename'] + '.json')  # .decode("utf-8")
+        loaded_model = keras.models.model_from_json(loaded_model_json)
 
         # load weights into new model
         # ToDo: fix loading hdf5 without unzipping first
@@ -94,10 +108,3 @@ class KerasBaseEstimator(BaseEstimator):
         loaded_model.load_weights(loaded_weights)
 
         self.model = loaded_model
-
-    @staticmethod
-    def reset_weights(model):
-        session = K.get_session()
-        for layer in model.layers:
-            if hasattr(layer, 'kernel_initializer'):
-                layer.kernel.initializer.run(session=session)

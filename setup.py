@@ -44,7 +44,7 @@ with only one line of code.
         'keras',
         'pandas',
         'plotly',
-        'imblearn',
+        'imbalanced-learn',
         'pymodm',
         'scipy',
         'statsmodels',
