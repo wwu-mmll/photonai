@@ -12,7 +12,6 @@ from photonai.optimization import Categorical as PhotonCategorical
 from photonai.photonlogger.logger import logger
 
 
-
 class SkOptOptimizer(PhotonSlaveOptimizer):
 
     def __init__(self, n_configurations: int=20, acq_func: str = 'gp_hedge', acq_func_kwargs: dict = None):
@@ -85,59 +84,3 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
             return np.asscalar(obj)
         else:
             return obj
-
-    def tell(self, config, performance):
-        # convert dictionary to list in correct order
-        if self.optimizer is not None:
-            config_values = [config[name] for name in self.hyperparameter_list]
-            best_config_metric_performance = performance[1]
-            if self.maximize_metric:
-                if isinstance(best_config_metric_performance, list):
-                    print("BEST CONFIG METRIC PERFORMANCE: " + str(best_config_metric_performance))
-                    best_config_metric_performance = best_config_metric_performance[0]
-                best_config_metric_performance = -best_config_metric_performance
-            # random_accuracy = np.random.randn(1)[0]
-            self.optimizer.tell(config_values, best_config_metric_performance)
-
-    def plot_evaluations(self):
-        results = SkoptResults()
-        results.space = self.optimizer.space
-        results.x_iters = self.optimizer.Xi
-        results = self._convert_categorical_hyperparameters(results)
-        results.x = results.x_iters[np.argmin(self.optimizer.yi)]
-        plt.figure(figsize=(10, 10))
-        return plot_evaluations(results)
-
-    def plot_objective(self):
-        results = SkoptResults()
-        results.space = self.optimizer.space
-        results.x_iters = self.optimizer.Xi
-        results = self._convert_categorical_hyperparameters(results)
-        results.x = results.x_iters[np.argmin(self.optimizer.yi)]
-        results.models = self.optimizer.models
-        plt.figure(figsize=(10, 10))
-        return plot_objective(results)
-
-    def _convert_categorical_hyperparameters(self, results):
-        parameter_types = list()
-
-        for i, dim in enumerate(results.space.dimensions):
-            if isinstance(dim, skoptCategorical):
-                parameter_types.append(dim.transformer)
-                setattr(results.space.dimensions[i], 'categories', dim.transformed_bounds)
-            else:
-                parameter_types.append(False)
-
-        for i, xs in enumerate(results.x_iters):
-            for k, xsk in enumerate(xs):
-                if parameter_types[k]:
-                    results.x_iters[i][k] = parameter_types[k].transform([xsk])
-        return results
-
-
-class SkoptResults:
-    def __init__(self):
-        self.space = None
-        self.x_iters = None
-        self.x = None
-        self.models = None

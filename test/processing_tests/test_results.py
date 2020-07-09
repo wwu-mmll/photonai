@@ -13,6 +13,7 @@ from photonai.processing.results_structure import MDBHelper, FoldOperations
 from photonai.helper.photon_base_test import PhotonBaseTest
 from photonai.helper.helper import XPredictor
 
+
 class ResultHandlerAndHelperTests(PhotonBaseTest):
 
     @classmethod
@@ -33,7 +34,8 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    outer_cv=KFold(n_splits=self.outer_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    best_config_metric='mean_absolute_error',
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path),
+                                   verbosity=2)
 
     def test_cv_config_and_dummy_nr(self):
         X, y = load_boston(return_X_y=True)

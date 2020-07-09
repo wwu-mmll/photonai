@@ -10,7 +10,9 @@ class SkOptOptimizerTest(GridSearchOptimizerTest):
         Set up for SkOptOptimizerTest.
         """
         self.pipeline_elements = [PipelineElement("StandardScaler"),
-                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
-                                                  test_disabled=True),
+                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   PipelineElement("SVC")]
         self.optimizer = SkOptOptimizer()
+        self.optimizer_name = "sk_opt"
+
+

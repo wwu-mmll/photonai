@@ -486,7 +486,7 @@ class Hyperpipe(BaseEstimator):
                     warning_text = "Best Config Metric must be a single metric given as string, no list. " \
                                    "PHOTON chose the first one from the list of metrics to calculate."
 
-                    self.best_config_metric = self.metrics[0]
+                    self.best_config_metric = self.best_config_metric[0]
                     logger.warning(warning_text)
                     raise Warning(warning_text)
                 elif not isinstance(self.best_config_metric, str):

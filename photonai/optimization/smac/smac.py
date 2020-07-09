@@ -179,12 +179,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.scenario = Scenario(self.scenario_dict)
 
-        self.smac = self.facade(scenario = self.scenario,
-                                intensifier_kwargs = self.intensifier_kwargs,
-                                rng = self.rng,
-                                tae_runner = objective_function)
+        self.smac = self.facade(scenario=self.scenario,
+                                intensifier_kwargs=self.intensifier_kwargs,
+                                rng=self.rng,
+                                tae_runner=objective_function)
 
-        if  self.debug:
+        if self.debug:
             self.smac_helper['data'] = self.smac
 
 
