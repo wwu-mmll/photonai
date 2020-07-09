@@ -4,9 +4,13 @@ from functools import reduce
 import operator
 from inspect import signature
 
-from photonai.base import PipelineElement, Switch, Branch
+from photonai.base import PipelineElement, Switch, Branch, Hyperpipe, OutputSettings
 from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, \
     IntegerRange
+from photonai.optimization.base_optimizer import PhotonBaseOptimizer, PhotonSlaveOptimizer, PhotonMasterOptimizer
+
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import KFold, ShuffleSplit
 
 
 class GridSearchOptimizerTest(unittest.TestCase):
@@ -19,6 +23,23 @@ class GridSearchOptimizerTest(unittest.TestCase):
                                   PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   PipelineElement("SVC")]
         self.optimizer = GridSearchOptimizer()
+        self.optimizer_name = 'grid_search'
+
+    def create_hyperpipe(self):
+        self.hyperpipe = Hyperpipe('optimizer_test',
+                                   output_settings=OutputSettings(project_folder='./tmp'),
+                                   metrics=['accuracy'],
+                                   best_config_metric='accuracy',
+                                   inner_cv=KFold(n_splits=3),
+                                   outer_cv=ShuffleSplit(n_splits=2),
+                                   optimizer=self.optimizer_name)
+
+    def test_run(self):
+        self.create_hyperpipe()
+        for p in self.pipeline_elements:
+            self.hyperpipe += p
+        X, y = load_breast_cancer(True)
+        self.hyperpipe.fit(X, y)
 
     def test_all_functions_available(self):
         """
@@ -79,10 +100,10 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
         Set up for RandomGridSearchOptimizer.
         """
         self.pipeline_elements = [PipelineElement("StandardScaler"),
-                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
-                                                  test_disabled=True),
+                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   PipelineElement("SVC")]
         self.optimizer = RandomGridSearchOptimizer()
+        self.optimizer_name = 'random_grid_search'
 
     def test_parameter_k(self):
         """
@@ -103,7 +124,29 @@ class TimeBoxedRandomGridSearchOptimizerTest(RandomGridSearchOptimizerTest):
         Set up for TimeBoxedRandomGridSearchOptimizer
         """
         self.pipeline_elements = [PipelineElement("StandardScaler"),
-                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
-                                                  test_disabled=True),
+                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   PipelineElement("SVC")]
         self.optimizer = TimeBoxedRandomGridSearchOptimizer()
+        self.optimizer_name = 'timeboxed_random_grid_search'
+
+
+class BaseOptimizerTests(unittest.TestCase):
+
+    def test_base_interface(self):
+        opt = PhotonBaseOptimizer()
+        opt.plot('/tmp')
+        with self.assertRaises(NotImplementedError):
+            opt.plot_objective()
+        with self.assertRaises(NotImplementedError):
+            opt.plot_evaluations()
+
+    def test_slave_interface(self):
+        opt = PhotonSlaveOptimizer()
+        opt.prepare(list(), True)
+        opt.ask()
+        opt.tell(dict(), dict())
+
+    def test_master_interface(self):
+        opt = PhotonMasterOptimizer()
+        opt.prepare(list(), True, None)
+        opt.optimize()

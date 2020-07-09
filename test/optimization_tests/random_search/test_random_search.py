@@ -10,10 +10,10 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
         Set up for RandomGridSearchOptimizer.
         """
         self.pipeline_elements = [PipelineElement("StandardScaler"),
-                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)},
-                                                  test_disabled=True),
+                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   PipelineElement("SVC")]
         self.optimizer = RandomSearchOptimizer(n_configurations=5)
+        self.optimizer_name = 'random_search'
 
     def test_parameter_k(self):
         """

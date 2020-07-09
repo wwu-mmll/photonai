@@ -117,6 +117,9 @@ class HyperpipeTests(PhotonBaseTest):
         with self.assertRaises(Warning):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
 
+        with self.assertRaises(Warning):
+            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
+
     def test_preprocessing(self):
 
         prepro_pipe = Preprocessing()
