@@ -67,14 +67,17 @@ class Scorer(object):
             return metric
 
         # derive name from metric class unless it is explicitly given with a tuple
-        if isinstance(metric, Tuple):
-            metric_name = metric[0]
-            metric = metric[1]
-        elif cls.dynamic_keras_import is not None and isinstance(metric, cls.dynamic_keras_import.metrics.Metric):
-            metric_name = "custom_" + str(metric.__module__) + '.' + str(type(metric).__name__)
+        if metric is not None:
+            if isinstance(metric, Tuple):
+                metric_name = metric[0]
+                metric = metric[1]
+            elif cls.dynamic_keras_import is not None and isinstance(metric, cls.dynamic_keras_import.metrics.Metric):
+                metric_name = "custom_" + str(metric.__module__) + '.' + str(type(metric).__name__)
+            else:
+                metric_name = "custom_" + str(metric.__module__) + '.' + str(metric.__name__)
+            metric_name = metric_name.lower()
         else:
-            metric_name = "custom_" + str(metric.__module__) + '.' + str(metric.__name__)
-        metric_name = metric_name.lower()
+            raise ValueError("Metric is None")
 
         # Check if metric_name is already registered
         if metric_name in Scorer.CUSTOM_ELEMENT_DICTIONARY:

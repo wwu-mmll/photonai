@@ -372,15 +372,7 @@ class Hyperpipe(BaseEstimator):
         self.optimum_pipe = None
         self.preprocessing = None
 
-        # ====================== Perfomance Optimization ===========================
-
-        if not isinstance(best_config_metric, str):
-            best_config_metric = Scorer.register_custom_metric(best_config_metric)
-        for i in range(len(metrics)):
-            if not isinstance(metrics[i], str):
-                metrics[i] = Scorer.register_custom_metric(metrics[i])
-        metrics = list(filter(None, metrics))
-
+        # ====================== Performance Optimization ===========================
         self.optimization = Hyperpipe.Optimization(metrics=metrics,
                                                    best_config_metric=best_config_metric,
                                                    optimizer_input=optimizer,
@@ -489,40 +481,42 @@ class Hyperpipe(BaseEstimator):
 
         def sanity_check_metrics(self):
 
-            # --------------------- Validity of metrics ----------------
-            if not isinstance(self.best_config_metric, str):
-
-                if self.metrics is not None:
+            if self.best_config_metric is not None:
+                if isinstance(self.best_config_metric, list):
                     warning_text = "Best Config Metric must be a single metric given as string, no list. " \
                                    "PHOTON chose the first one from the list of metrics to calculate."
 
                     self.best_config_metric = self.metrics[0]
                     logger.warning(warning_text)
                     raise Warning(warning_text)
-                else:
-                    error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
-                                "the best_config_metric so that PHOTON which optimizes for"
-                    logger.error(error_msg)
-                    raise ValueError(error_msg)
+                elif not isinstance(self.best_config_metric, str):
+                    self.best_config_metric = Scorer.register_custom_metric(self.best_config_metric)
 
-            if self.best_config_metric is not None:
                 if self.metrics is None:
+                    # if only best_config_metric is given, copy if to list of metrics
                     self.metrics = [self.best_config_metric]
                 else:
+                    # if best_config_metric is not given in metrics list, copy it to list
                     if self.best_config_metric not in self.metrics:
                         self.metrics.append(self.best_config_metric)
 
-            if self.best_config_metric is None and len(self.metrics) > 0:
+            if self.metrics is not None and len(self.metrics) > 0:
+                for i in range(len(self.metrics)):
+                    if not isinstance(self.metrics[i], str):
+                        self.metrics[i] = Scorer.register_custom_metric(self.metrics[i])
+                self.metrics = list(filter(None, self.metrics))
+            else:
+                error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
+                            "the best_config_metric so that PHOTON which optimizes for"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+
+            if self.best_config_metric is None and self.metrics is not None and len(self.metrics) > 0:
                 self.best_config_metric = self.metrics[0]
                 warning_text = "No best config metric was given, so PHOTON chose the first in the list of metrics as " \
                                "criteria for choosing the best configuration."
                 logger.warning(warning_text)
                 raise Warning(warning_text)
-            else:
-                if self.metrics is None or len(self.metrics) == 0:
-                    metric_error_text = "List of Metrics to calculate should not be empty"
-                    logger.error(metric_error_text)
-                    raise ValueError(metric_error_text)
 
         def get_optimizer(self):
             if isinstance(self.optimizer_input_str, str):

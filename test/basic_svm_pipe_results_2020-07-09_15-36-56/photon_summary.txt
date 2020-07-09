@@ -1,0 +1,146 @@
+
+PHOTON RESULT SUMMARY
+-------------------------------------------------------------------
+
+ANALYSIS NAME: basic_svm_pipe
+BEST CONFIG METRIC: accuracy
+TIME OF RESULT: 2020-07-09 15:37:22.089136
+VERSION: 1.1.0
+
+        
+-------------------------------------------------------------------
+BASELINE - DUMMY ESTIMATOR
+(always predict mean or most frequent target)
+
+strategy: most_frequent     
+
+            
+TEST:
++-------------------+----------+----------+
+|    Metric Name    |   MEAN   |   STD    |
++-------------------+----------+----------+
+|      accuracy     | 0.627671 | 0.115634 |
+|     precision     | 0.627671 | 0.115634 |
+|       recall      |   1.0    |   0.0    |
+| balanced_accuracy |   0.5    |   0.0    |
++-------------------+----------+----------+
+                
+TRAINING:
++-------------------+---------+----------+
+|    Metric Name    |   MEAN  |   STD    |
++-------------------+---------+----------+
+|      accuracy     | 0.62748 | 0.057731 |
+|     precision     | 0.62748 | 0.057731 |
+|       recall      |   1.0   |   0.0    |
+| balanced_accuracy |   0.5   |   0.0    |
++-------------------+---------+----------+
+                
+
+-------------------------------------------------------------------
+OVERALL BEST CONFIG: 
+{   'PCA': ['n_components=10', 'disabled = False'],
+    'SVC': ['kernel=rbf', 'C=4.376857177516146']}            
+            
+MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
+        
+TEST:
++-------------------+----------+----------+
+|    Metric Name    |   MEAN   |   STD    |
++-------------------+----------+----------+
+|      accuracy     | 0.964884 | 0.015056 |
+|     precision     | 0.965173 | 0.02619  |
+|       recall      | 0.973164 | 0.011531 |
+| balanced_accuracy | 0.964699 | 0.018094 |
++-------------------+----------+----------+
+                
+TRAINING:
++-------------------+----------+----------+
+|    Metric Name    |   MEAN   |   STD    |
++-------------------+----------+----------+
+|      accuracy     | 0.98858  | 0.004471 |
+|     precision     | 0.984232 | 0.006447 |
+|       recall      | 0.997026 | 0.002115 |
+| balanced_accuracy | 0.985921 | 0.00382  |
++-------------------+----------+----------+
+                
+-------------------------------------------------------------------
+OUTER FOLD 1
+-------------------------------------------------------------------
+Best Config:
+{   'PCA': ['n_components=16', 'disabled=True'],
+    'SVC': ['kernel=linear', 'C=2.7377646953805614']}
+            
+Number of samples training 379
+Number of samples test 190
+            
+Class distribution training {'0': 115, '1': 264}
+Class distribution test {'0': 97, '1': 93}
+
+                
+PERFORMANCE:
++-------------------+-------------+------------+
+|    Metric Name    | Train Value | Test Value |
++-------------------+-------------+------------+
+|      accuracy     |   0.994723  |  0.947368  |
+|     precision     |   0.992481  |  0.936842  |
+|       recall      |     1.0     |  0.956989  |
+| balanced_accuracy |   0.991304  |  0.947567  |
++-------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 2
+-------------------------------------------------------------------
+Best Config:
+{   'PCA': ['n_components=10', 'disabled = False'],
+    'SVC': ['kernel=linear', 'C=2.148565757736768']}
+            
+Number of samples training 379
+Number of samples test 190
+            
+Class distribution training {'0': 140, '1': 239}
+Class distribution test {'0': 72, '1': 118}
+
+                
+PERFORMANCE:
++-------------------+-------------+------------+
+|    Metric Name    | Train Value | Test Value |
++-------------------+-------------+------------+
+|      accuracy     |   0.986807  |  0.963158  |
+|     precision     |   0.983471  |  0.958678  |
+|       recall      |   0.995816  |  0.983051  |
+| balanced_accuracy |   0.983622  |  0.956803  |
++-------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 3
+-------------------------------------------------------------------
+Best Config:
+{   'PCA': ['n_components=10', 'disabled = False'],
+    'SVC': ['kernel=rbf', 'C=4.376857177516146']}
+            
+Number of samples training 380
+Number of samples test 189
+            
+Class distribution training {'0': 169, '1': 211}
+Class distribution test {'0': 43, '1': 146}
+
+                
+PERFORMANCE:
++-------------------+-------------+------------+
+|    Metric Name    | Train Value | Test Value |
++-------------------+-------------+------------+
+|      accuracy     |   0.984211  |  0.984127  |
+|     precision     |   0.976744  |    1.0     |
+|       recall      |   0.995261  |  0.979452  |
+| balanced_accuracy |   0.982837  |  0.989726  |
++-------------------+-------------+------------+
+
+
+
+                

@@ -1,6 +1,7 @@
 from collections.abc import Iterable
 from prettytable import PrettyTable
 from photonai.photonlogger.logger import logger
+from sklearn.base import BaseEstimator, ClassifierMixin
 import numpy as np
 
 
@@ -40,6 +41,32 @@ class Singleton:
     def __instancecheck__(self, inst):
         return isinstance(inst, self._decorated)
 
+
+class XPredictor(BaseEstimator, ClassifierMixin):
+
+    _estimator_type = 'classifier'
+
+    def __init__(self, change_predictions = False):
+        self.needs_y = False
+        self.needs_covariates = False
+        self.change_predictions = change_predictions
+        pass
+
+    def fit(self, X, y=None, **kwargs):
+        return self
+
+    def predict(self, X, **kwargs):
+        if self.change_predictions:
+            # change it relative to value so that it is fold-specific
+            return XPredictor.adapt_X(X)
+        return X
+
+    @staticmethod
+    def adapt_X(X):
+        return [i-(0.1*i) for i in X]
+
+    def predict_proba(self, X):
+        return X/10
 
 class PhotonPrintHelper:
     @staticmethod
