@@ -1,4 +1,4 @@
 ###### Requirements without Version Specifiers ######
 configspace
-smac
+smac==0.12.0
 emcee

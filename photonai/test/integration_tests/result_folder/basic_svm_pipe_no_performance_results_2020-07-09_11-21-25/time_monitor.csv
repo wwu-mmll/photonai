@@ -1,0 +1,4 @@
+,fit,,,transform,,,predict,,
+Element,total_seconds,mean_seconds_per_config,mean_seconds_per_item,total_seconds,mean_seconds_per_config,mean_seconds_per_item,total_seconds,mean_seconds_per_config,mean_seconds_per_item
+StandardScaler,0.083772,0.000367,0.000002,0.069101,0.000101,0.000001,,,
+RandomForestRegressor,9.632698,0.045068,0.000190,,,,0.942354,0.002173,0.000012

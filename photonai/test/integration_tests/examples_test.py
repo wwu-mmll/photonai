@@ -27,6 +27,20 @@ class TestRunExamples(PhotonBaseTest):
     def test_additional_data(self):
         exec(open(join(self.examples_folder, "advanced/additional_data.py")).read(), locals(), globals())
 
+    # def test_keras_dnn_callbacks(self):
+    #     exec(open(join(self.examples_folder, "neural_networks/keras_dnn_callbacks.py")).read(), locals(), globals())
+    #
+    # def test_keras_cnn_classification(self):
+    #     exec(open(join(self.examples_folder, "neural_networks/keras_cnn_classification.py")).read(), locals(),
+    #          globals())
+    #
+    # def test_keras_dnn_multiclass_classification(self):
+    #     exec(open(join(self.examples_folder, "neural_networks/keras_dnn_multiclass_classification.py")).read(),
+    #          locals(), globals())
+
+    def test_regression_with_constraints(self):
+        exec(open(join(self.examples_folder, "advanced/regression_with_constraints.py")).read(), locals(), globals())
+
     def test_feature_selection(self):
         exec(open(join(self.examples_folder, "advanced/feature_selection.py")).read(), locals(), globals())
 

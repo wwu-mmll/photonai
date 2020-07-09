@@ -1,0 +1,116 @@
+
+PHOTON RESULT SUMMARY
+-------------------------------------------------------------------
+
+ANALYSIS NAME: basic_svm_pipe_no_performance
+BEST CONFIG METRIC: mean_squared_error
+TIME OF RESULT: 2020-07-09 11:21:49.646565
+VERSION: 1.1.0
+
+        
+-------------------------------------------------------------------
+BASELINE - DUMMY ESTIMATOR
+(always predict mean or most frequent target)
+
+strategy: mean     
+
+            
+TEST:
++---------------------+----------+----------+
+|     Metric Name     |   MEAN   |   STD    |
++---------------------+----------+----------+
+|  mean_squared_error | 84.45285 | 5.781557 |
+| pearson_correlation |   nan    |   nan    |
++---------------------+----------+----------+
+                
+TRAINING:
++---------------------+-----------+---------+
+|     Metric Name     |    MEAN   |   STD   |
++---------------------+-----------+---------+
+|  mean_squared_error | 84.417513 | 2.89726 |
+| pearson_correlation |    nan    |   nan   |
++---------------------+-----------+---------+
+                
+
+-------------------------------------------------------------------
+OVERALL BEST CONFIG: 
+{'RandomForestRegressor': ['n_estimators=42']}            
+            
+MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
+        
+TEST:
++---------------------+-----------+----------+
+|     Metric Name     |    MEAN   |   STD    |
++---------------------+-----------+----------+
+|  mean_squared_error | 12.750843 | 4.816264 |
+| pearson_correlation |  0.923943 | 0.025635 |
++---------------------+-----------+----------+
+                
+TRAINING:
++---------------------+----------+----------+
+|     Metric Name     |   MEAN   |   STD    |
++---------------------+----------+----------+
+|  mean_squared_error | 2.13644  | 0.296699 |
+| pearson_correlation | 0.987812 | 0.002493 |
++---------------------+----------+----------+
+                
+-------------------------------------------------------------------
+OUTER FOLD 1
+-------------------------------------------------------------------
+Best Config:
+{'RandomForestRegressor': ['n_estimators=6']}
+            
+Number of samples training 337
+Number of samples test 169
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+|  mean_squared_error |   2.464228  | 12.901936  |
+| pearson_correlation |   0.985143  |  0.924248  |
++---------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 2
+-------------------------------------------------------------------
+Best Config:
+{'RandomForestRegressor': ['n_estimators=42']}
+            
+Number of samples training 337
+Number of samples test 169
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+|  mean_squared_error |   1.745694  |  6.778053  |
+| pearson_correlation |   0.99114   |  0.955186  |
++---------------------+-------------+------------+
+
+
+
+                
+-------------------------------------------------------------------
+OUTER FOLD 3
+-------------------------------------------------------------------
+Best Config:
+{'RandomForestRegressor': ['n_estimators=31']}
+            
+Number of samples training 338
+Number of samples test 168
+            
+PERFORMANCE:
++---------------------+-------------+------------+
+|     Metric Name     | Train Value | Test Value |
++---------------------+-------------+------------+
+|  mean_squared_error |   2.199397  |  18.57254  |
+| pearson_correlation |   0.987152  |  0.892395  |
++---------------------+-------------+------------+
+
+
+
+                
