@@ -3,7 +3,7 @@ from photonai.optimization import RandomSearchOptimizer, IntegerRange
 from ..grid_search.test_grid_search import GridSearchOptimizerTest
 
 
-class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
+class RandomSearchOptimizerTest(GridSearchOptimizerTest):
 
     def setUp(self):
         """
@@ -31,3 +31,6 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
         for config in self.optimizer.ask:
             configs.append(config)
         self.assertEqual(len(configs), 500)
+
+    def test_run(self):
+        pass

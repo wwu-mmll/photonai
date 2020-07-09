@@ -114,7 +114,7 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
         self.assertEqual(len(self.optimizer.param_grid), 3)
         self.optimizer = RandomGridSearchOptimizer(n_configurations=500)
         self.optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
-        self.assertEqual(len(self.optimizer.param_grid), 16)
+        self.assertEqual(len(self.optimizer.param_grid), 15)
 
 
 class TimeBoxedRandomGridSearchOptimizerTest(RandomGridSearchOptimizerTest):
