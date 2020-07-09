@@ -80,8 +80,7 @@ class PermutationTest:
                 self.pipe.fit(X, y_true, **kwargs)
                 self.pipe.results.computation_completed = True
                 self.pipe.results.permutation_test = MDBPermutationResults(n_perms=self.n_perms)
-                self.pipe.results.outer_folds = list()
-                self.pipe.results.save()
+                self.clear_data_and_save(self.pipe)
                 existing_reference = self.pipe.results
 
             except Exception as e:

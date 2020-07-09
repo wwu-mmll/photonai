@@ -85,87 +85,87 @@ else:
             self.y = dataset["target"]
             return self.X, self.y
 
-        def test_against_smac_initial_design(self):
-            # PHOTON implementation
-            self.pipe.add(PipelineElement('StandardScaler'))
-            self.pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})
-            self.pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly']),
-                                                                 'C': FloatRange(0.5, 200)}, gamma='auto')
-            self.X, self.y = self.simple_classification()
-            self.pipe.fit(self.X, self.y)
-
-
-            # direct AUTO ML implementation
-
-            # Build Configuration Space which defines all parameters and their ranges
-            cs = ConfigurationSpace()
-            n_components = UniformIntegerHyperparameter("PCA__n_components", 5, 30)
-            cs.add_hyperparameter(n_components)
-            kernel = CategoricalHyperparameter("SVC__kernel", ["rbf", 'poly'])
-            cs.add_hyperparameter(kernel)
-            c = UniformFloatHyperparameter("SVC__C", 0.5, 200)
-            cs.add_hyperparameter(c)
-
-            # Scenario object
-            scenario = Scenario({"run_obj": "quality",
-                                 "cs": cs,
-                                 "deterministic": "true",
-                                 "wallclock_limit": self.time_limit,
-                                 "limit_resources" : False
-                                 })
-
-            # Optimize, using a SMAC-object
-            print("Optimizing! Depending on your machine, this might take a few minutes.")
-            smac = SMAC4BO(scenario=scenario, rng=42,
-                           tae_runner=self.objective_function)
-
-            self.helper0 = smac
-
-            incumbent = smac.optimize()
-
-            inc_value = self.objective_function(incumbent)
-
-
-            runhistory_photon = self.smac_helper["data"].solver.runhistory
-            runhistory_original = smac.solver.runhistory
-
-
-            x_ax = range(1, min(len(runhistory_original._cost_per_config.keys()), len(runhistory_photon._cost_per_config.keys()))+1)
-            y_ax_original = [runhistory_original._cost_per_config[tmp] for tmp in x_ax]
-            y_ax_photon = [runhistory_photon._cost_per_config[tmp] for tmp in x_ax]
-
-            y_ax_original_inc = [min(y_ax_original[:tmp+1]) for tmp in x_ax]
-            y_ax_photon_inc = [min(y_ax_photon[:tmp+1]) for tmp in x_ax]
-
-            plot = False
-            if plot:
-                plt.figure(figsize=(10, 7))
-                plt.plot(x_ax, y_ax_original, 'g', label='Original')
-                plt.plot(x_ax, y_ax_photon, 'b', label='PHOTON')
-                plt.plot(x_ax, y_ax_photon_inc, 'r', label='PHOTON Incumbent')
-                plt.plot(x_ax, y_ax_original_inc, 'k', label='Original Incumbent')
-                plt.title('Photon Prove')
-                plt.xlabel('X')
-                plt.ylabel('Y')
-                plt.legend(loc='best')
-                plt.savefig("smac.png")
-
-
-            def neighbours(items, fill=None):
-                before = itertools.chain([fill], items)
-                after = itertools.chain(items, [fill])  # You could use itertools.zip_longest() later instead.
-                next(after)
-                for a, b, c in zip(before, items, after):
-                    yield [value for value in (a, b, c) if value is not fill]
-
-            original_pairing = [sum(values)/len(values) for values in neighbours(y_ax_original)]
-            bias_term = np.mean([abs(y_ax_original_inc[t]-y_ax_photon_inc[t]) for t in range(len(y_ax_photon_inc))])
-            photon_pairing = [sum(values)/len(values)-bias_term for values in neighbours(y_ax_photon)]
-            counter = 0
-            for i in range(24):
-                if abs(y_ax_original[i]-y_ax_photon[i]) > 0.1:
-                    counter +=1
-            # self.assertLessEqual(counter/24, 0.05)
+        # def test_against_smac_initial_design(self):
+        #     # PHOTON implementation
+        #     self.pipe.add(PipelineElement('StandardScaler'))
+        #     self.pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})
+        #     self.pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly']),
+        #                                                          'C': FloatRange(0.5, 200)}, gamma='auto')
+        #     self.X, self.y = self.simple_classification()
+        #     self.pipe.fit(self.X, self.y)
+        #
+        #
+        #     # direct AUTO ML implementation
+        #
+        #     # Build Configuration Space which defines all parameters and their ranges
+        #     cs = ConfigurationSpace()
+        #     n_components = UniformIntegerHyperparameter("PCA__n_components", 5, 30)
+        #     cs.add_hyperparameter(n_components)
+        #     kernel = CategoricalHyperparameter("SVC__kernel", ["rbf", 'poly'])
+        #     cs.add_hyperparameter(kernel)
+        #     c = UniformFloatHyperparameter("SVC__C", 0.5, 200)
+        #     cs.add_hyperparameter(c)
+        #
+        #     # Scenario object
+        #     scenario = Scenario({"run_obj": "quality",
+        #                          "cs": cs,
+        #                          "deterministic": "true",
+        #                          "wallclock_limit": self.time_limit,
+        #                          "limit_resources" : False
+        #                          })
+        #
+        #     # Optimize, using a SMAC-object
+        #     print("Optimizing! Depending on your machine, this might take a few minutes.")
+        #     smac = SMAC4BO(scenario=scenario, rng=42,
+        #                    tae_runner=self.objective_function)
+        #
+        #     self.helper0 = smac
+        #
+        #     incumbent = smac.optimize()
+        #
+        #     inc_value = self.objective_function(incumbent)
+        #
+        #
+        #     runhistory_photon = self.smac_helper["data"].solver.runhistory
+        #     runhistory_original = smac.solver.runhistory
+        #
+        #
+        #     x_ax = range(1, min(len(runhistory_original._cost_per_config.keys()), len(runhistory_photon._cost_per_config.keys()))+1)
+        #     y_ax_original = [runhistory_original._cost_per_config[tmp] for tmp in x_ax]
+        #     y_ax_photon = [runhistory_photon._cost_per_config[tmp] for tmp in x_ax]
+        #
+        #     y_ax_original_inc = [min(y_ax_original[:tmp+1]) for tmp in x_ax]
+        #     y_ax_photon_inc = [min(y_ax_photon[:tmp+1]) for tmp in x_ax]
+        #
+        #     plot = False
+        #     if plot:
+        #         plt.figure(figsize=(10, 7))
+        #         plt.plot(x_ax, y_ax_original, 'g', label='Original')
+        #         plt.plot(x_ax, y_ax_photon, 'b', label='PHOTON')
+        #         plt.plot(x_ax, y_ax_photon_inc, 'r', label='PHOTON Incumbent')
+        #         plt.plot(x_ax, y_ax_original_inc, 'k', label='Original Incumbent')
+        #         plt.title('Photon Prove')
+        #         plt.xlabel('X')
+        #         plt.ylabel('Y')
+        #         plt.legend(loc='best')
+        #         plt.savefig("smac.png")
+        #
+        #
+        #     def neighbours(items, fill=None):
+        #         before = itertools.chain([fill], items)
+        #         after = itertools.chain(items, [fill])  # You could use itertools.zip_longest() later instead.
+        #         next(after)
+        #         for a, b, c in zip(before, items, after):
+        #             yield [value for value in (a, b, c) if value is not fill]
+        #
+        #     original_pairing = [sum(values)/len(values) for values in neighbours(y_ax_original)]
+        #     bias_term = np.mean([abs(y_ax_original_inc[t]-y_ax_photon_inc[t]) for t in range(len(y_ax_photon_inc))])
+        #     photon_pairing = [sum(values)/len(values)-bias_term for values in neighbours(y_ax_photon)]
+        #     counter = 0
+        #     for i in range(24):
+        #         if abs(y_ax_original[i]-y_ax_photon[i]) > 0.1:
+        #             counter +=1
+        #     # self.assertLessEqual(counter/24, 0.05)
 
         def objective_function(self, cfg):
             cfg = {k: cfg[k] for k in cfg if cfg[k]}

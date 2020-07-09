@@ -14,6 +14,7 @@ class PermutationTestTests(PhotonBaseTest):
 
     @classmethod
     def setUpClass(cls) -> None:
+        cls.file = __file__
         super(PermutationTestTests, cls).setUpClass()
 
         cls.perm_id = uuid.uuid4()
@@ -100,7 +101,7 @@ class PermutationTestTests(PhotonBaseTest):
         results = PermutationTest._calculate_results(my_perm_id,
                                                      mongodb_path='mongodb://localhost:27017/photon_results')
 
-        self.assertAlmostEqual(results['accuracy'], 0)
+        self.assertAlmostEqual(results.p_values['accuracy'], 0)
 
 
 

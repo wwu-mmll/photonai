@@ -16,6 +16,11 @@ from photonai.processing.results_structure import MDBHyperpipe
 
 class ResultsHandlerTest(PhotonBaseTest):
 
+    @classmethod
+    def setUpClass(cls) -> None:
+        cls.file = __file__
+        super(ResultsHandlerTest, cls).setUpClass()
+
     def setUp(self):
         """
         Set default start settings for all tests.
