@@ -175,7 +175,6 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(self.hyperpipe.cross_validation.inner_cv.n_splits, 3)
 
     def test_save_optimum_pipe(self):
-        # todo: test .save() of custom model
         tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
         settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
 
@@ -234,6 +233,48 @@ class HyperpipeTests(PhotonBaseTest):
         y_pred_loaded = loaded_optimum_pipe.predict(self.__X)
         y_pred = my_pipe.optimum_pipe.predict(self.__X)
         np.testing.assert_array_equal(y_pred_loaded, y_pred)
+
+    def test_save_optimum_pipe_custom_element(self):
+        tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
+        settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
+
+        my_pipe = Hyperpipe('hyperpipe',
+                            optimizer='random_grid_search',
+                            optimizer_params={'n_configurations': 1},
+                            metrics=['accuracy', 'precision', 'recall'],
+                            best_config_metric='f1_score',
+                            outer_cv=KFold(n_splits=2),
+                            inner_cv=KFold(n_splits=2),
+                            verbosity=1,
+                            output_settings=settings)
+        my_pipe += PipelineElement('KerasDnnClassifier', {}, epochs=1, hidden_layer_sizes=[5])
+        my_pipe.fit(self.__X, self.__y)
+        model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
+        self.assertTrue(os.path.exists(model_path))
+
+        # check if load_optimum_pipe also works
+        # check if we have the meta information recovered
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(model_path)
+        self.assertIsNotNone(loaded_optimum_pipe._meta_information)
+
+    def test_failure_to_save_optimum_pipe(self):
+        tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
+        settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
+
+        my_pipe = Hyperpipe('hyperpipe',
+                            optimizer='random_grid_search',
+                            optimizer_params={'n_configurations': 1},
+                            metrics=['accuracy', 'precision', 'recall'],
+                            best_config_metric='f1_score',
+                            outer_cv=KFold(n_splits=2),
+                            inner_cv=KFold(n_splits=2),
+                            verbosity=1,
+                            output_settings=settings)
+        my_pipe += PipelineElement('KNeighborsClassifier')
+        my_pipe.fit(self.__X, self.__y)
+        model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model_wrong_path.photon')
+        with self.assertRaises(FileNotFoundError):
+            Hyperpipe.load_optimum_pipe(model_path)
 
     def test_overwrite_result_folder(self):
         """
