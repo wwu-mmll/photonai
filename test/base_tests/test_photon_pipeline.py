@@ -39,7 +39,7 @@ class PipelineTests(PhotonBaseTest):
         super(PipelineTests, cls).setUpClass()
 
     def setUp(self):
-
+        super(PipelineTests, self).setUp()
         self.X, self.y = load_breast_cancer(return_X_y=True)
 
         # Photon Version

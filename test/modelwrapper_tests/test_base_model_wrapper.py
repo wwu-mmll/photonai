@@ -2,6 +2,7 @@ import unittest
 
 from photonai.modelwrapper.base_model_wrapper import BaseModelWrapper
 
+
 class BaseModelWrapperTest(unittest.TestCase):
     """
     Simple testclass for abstract BaseModelWrapper.

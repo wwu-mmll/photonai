@@ -1,0 +1,16 @@
+{
+  "hyperparameters": [
+    {
+      "name": "PCA__n_components",
+      "type": "uniform_int",
+      "log": false,
+      "lower": 5,
+      "upper": 30,
+      "default": 18
+    }
+  ],
+  "conditions": [],
+  "forbiddens": [],
+  "python_module_version": "0.4.13",
+  "json_format_version": 0.2
+}

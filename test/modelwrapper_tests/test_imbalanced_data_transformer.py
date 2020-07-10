@@ -16,6 +16,7 @@ class ImbalancedDataTransformTest(BaseModelWrapperTest):
     """
 
     def setUp(self):
+        super(ImbalancedDataTransformTest, self).setUp()
         self.model_wrapper = ImbalancedDataTransformer()
 
     def test_strategy(self):
