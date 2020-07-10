@@ -4,7 +4,7 @@ language: python
 python:
   - "3.7"
 # command to install dependencies
-serivces:
+services:
   - docker
 before_install:
   - docker pull mongo:latest
