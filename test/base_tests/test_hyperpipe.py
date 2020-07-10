@@ -12,6 +12,8 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline as SKLPipeline
 from sklearn.preprocessing import StandardScaler
+from keras.metrics import Accuracy
+from sklearn.base import BaseEstimator
 
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
     Switch
@@ -108,7 +110,7 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.add(my_call_back_item)
         self.assertIs(self.hyperpipe.elements[-1], my_call_back_item)
 
-    def test_no_metrics(self):
+    def test_sanity(self):
         # make sure that no metrics means raising an error
         with self.assertRaises(ValueError):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
@@ -119,6 +121,50 @@ class HyperpipeTests(PhotonBaseTest):
 
         with self.assertRaises(Warning):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
+
+        with self.assertRaises(NotImplementedError):
+            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object,
+                                  best_config_metric='accuracy', metrics=["accuracy"],
+                                  calculate_metrics_across_folds=False,
+                                  calculate_metrics_per_fold=False)
+
+        with self.assertRaises(AttributeError):
+            hyperpipe = Hyperpipe("hp_name",
+                                  best_config_metric='accuracy', metrics=["accuracy"])
+
+        data = np.random.random((500, 50))
+
+        with self.assertRaises(ValueError):
+            targets = np.random.randint(0, 1, (500, 2))
+            self.hyperpipe.fit(data, targets)
+
+    def test_hyperpipe_with_custom_metric(self):
+
+        def custom_metric(y_true, y_pred):
+            return 99.9
+
+        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
+                                   metrics=[('custom_metric', custom_metric), 'accuracy'],
+                                   best_config_metric=Accuracy,
+                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+        self.hyperpipe += self.ss_pipe_element
+        self.hyperpipe.add(self.svc_pipe_element)
+        self.hyperpipe.fit(self.__X, self.__y)
+
+        self.assertTrue('custom_metric' in self.hyperpipe.results.best_config.best_config_score.validation.metrics)
+        self.assertEqual(self.hyperpipe.results.best_config.best_config_score.validation.metrics['custom_metric'], 99.9)
+
+        expected_num_of_metrics = len(self.hyperpipe.optimization.metrics)
+        # one: accuracy, two: custom metric registered as "custom_metric", three: keras Metric registered as function
+        self.assertEqual(expected_num_of_metrics, 3)
+
+        # dummy average values
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test), expected_num_of_metrics)
+
+        # overall average values
+        self.assertTrue(len(self.hyperpipe.results.metrics_train), 2 * expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.metrics_test), 2 * expected_num_of_metrics)
 
     def test_preprocessing(self):
 
@@ -334,6 +380,7 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(self.hyperpipe.optimum_pipe.random_state, 4567)
         self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].random_state, 4567)
         self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].base_element.random_state, 4567)
+
 
     def test_dummy_estimator_preparation(self):
 

@@ -25,7 +25,8 @@ class PermutationTestTests(PhotonBaseTest):
                                    metrics=["accuracy", "balanced_accuracy"],
                                    best_config_metric="balanced_accuracy",
                                    output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
-                                                                  wizard_object_id=str(cls.wizard_obj_id)),
+                                                                  wizard_object_id=str(cls.wizard_obj_id),
+                                                                  project_folder=cls.tmp_folder_path,),
                                    permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
         cls.hyperpipe += PipelineElement("SVC")

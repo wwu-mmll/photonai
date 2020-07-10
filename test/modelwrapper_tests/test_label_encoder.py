@@ -5,6 +5,7 @@ from sklearn.utils.testing import assert_array_equal
 from photonai.modelwrapper.label_encoder import LabelEncoder
 
 
+
 class LabelEncoderTests(unittest.TestCase):
 
     def setUp(self):
@@ -33,6 +34,12 @@ class LabelEncoderTests(unittest.TestCase):
     def test_fit_transform(self):
         ret = self.label_encoder.fit_transform(self.X, self.values)
         assert_array_equal(ret, [0, 1, 0, 0, 0, 2])
+
+
+
+
+
+
 
 
 

@@ -2,5 +2,5 @@
 
 from .hyperpipe import Hyperpipe, OutputSettings
 from .photon_elements import Stack, Switch, Branch, DataFilter, CallbackElement, PhotonNative, Preprocessing, \
-    PipelineElement
+    PipelineElement, ParallelBranch
 from .registry.registry import PhotonRegistry

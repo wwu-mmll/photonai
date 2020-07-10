@@ -2,7 +2,8 @@ import unittest
 import types
 import numpy as np
 
-from photonai.processing.metrics import Scorer
+from photonai.processing.metrics import Scorer, spearman_correlation, specificity, sensitivity, one_hot_to_binary, \
+    pearson_correlation, balanced_accuracy, categorical_accuracy_score, variance_explained_score
 
 
 class ScorerTest(unittest.TestCase):
@@ -51,4 +52,66 @@ class ScorerTest(unittest.TestCase):
             np.testing.assert_equal(Scorer.calculate_metrics([1, 1, 0, 1],
                                                              [0, 1, 0, 1],
                                                              [not_implemented_metric])[not_implemented_metric], np.nan)
+
+    def test_doubled_custom_metric(self):
+
+        def custom_metric(y_true, y_pred):
+            return 99.9
+
+        Scorer.register_custom_metric(('a_custom_metric', custom_metric))
+
+        with self.assertRaises(Warning):
+            Scorer.register_custom_metric(('a_custom_metric', custom_metric))
+
+        with self.assertRaises(ValueError):
+            Scorer.register_custom_metric(None)
+
+    def test_keras_metric(self):
+        try:
+            from keras.metrics import MeanAbsoluteError
+            Scorer.register_custom_metric(MeanAbsoluteError)
+        except ImportError:
+            pass
+
+    def test_photonai_metrics(self):
+        y_true = np.concatenate((np.ones((200,)), np.zeros((400,))))
+        y_pred = np.concatenate((np.ones((100,)), np.zeros((500,))))
+
+        pearson_corr = pearson_correlation(y_true, y_pred)
+        self.assertAlmostEqual(pearson_corr, 0.6324555320336789)
+        spearman_corr =spearman_correlation(y_true, y_pred)
+        self.assertAlmostEqual(spearman_corr, 0.632455532033676)
+        cat_acc = categorical_accuracy_score(y_true, y_pred)
+        self.assertAlmostEqual(cat_acc, 0.8333333333333334)
+        v_explained = variance_explained_score(y_true, y_pred)
+        self.assertAlmostEqual(v_explained, 0.4000000000000038)
+
+        sens = sensitivity(y_true, y_pred)
+        self.assertEqual(sens, 0.5)
+        spec = specificity(y_true, y_pred)
+        self.assertEqual(spec, 1.0)
+        b_acc = balanced_accuracy(y_true, y_pred)
+        self.assertEqual(b_acc, 0.75)
+
+        # get np.nan for multidim
+        y_multidim = np.stack((y_true, y_pred), axis=1)
+        with self.assertRaises(ValueError):
+            sens_md = sensitivity(y_multidim, y_multidim)
+        with self.assertRaises(ValueError):
+            spec_md = specificity(y_multidim, y_multidim)
+        with self.assertRaises(ValueError):
+            b_acc_md = balanced_accuracy(y_multidim, y_multidim)
+
+    def test_one_hot_decoding(self):
+        y_one_hot = np.stack((np.concatenate((np.ones((100,)), np.zeros((100,)))),
+                              np.concatenate((np.zeros((100,)), np.ones((100,))))), axis=1)
+        binarized_multidim = one_hot_to_binary(y_one_hot)
+        self.assertTrue(np.array_equal(binarized_multidim, np.concatenate((np.zeros((100,)), np.ones((100, ))))))
+
+
+
+
+
+
+
 

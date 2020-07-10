@@ -797,7 +797,7 @@ class Hyperpipe(BaseEstimator):
                     pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
                     PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
                     logger.info("Saved best model to file.")
-                except FileNotFoundError as e:
+                except Exception as e:
                     logger.info("Could not save best model to file")
                     logger.error(str(e))
 
@@ -826,6 +826,10 @@ class Hyperpipe(BaseEstimator):
         logger.photon_system_log(
             'Analysis ' + self.name + " done in " + str(elapsed_time))
         if self.output_settings.results_folder is not None:
+            logger.photon_system_log(
+                '***************************************************************************************************************')
+            logger.photon_system_log('Go to https://explorer.photon-ai.com and '
+                                     'upload your photon_result_file.json for convenient result visualization!')
             logger.photon_system_log('Your results are stored in ' + self.output_settings.results_folder)
         logger.photon_system_log('***************************************************************************************************************')
         logger.photon_system_log('PHOTON ' + str(__version__) + ' - www.photon-ai.com ')
@@ -869,8 +873,10 @@ class Hyperpipe(BaseEstimator):
                         # use np.squeeze for non 1D targets.
                         self.data.y = np.squeeze(self.data.y)
                         shape_y = np.shape(self.data.y)
-                        logger.warning("y has been automatically squeezed. If this is not your intention, block this "
-                                       "with Hyperpipe(allow_multidim_targets = True)")
+                        warning_text = "y has been automatically squeezed. If this is not your intention, block this " \
+                                       "with Hyperpipe(allow_multidim_targets = True"
+                        logger.warning(warning_text)
+                        raise Warning(warning_text)
                     else:
                         raise ValueError("Target is not one-dimensional. Multidimensional targets can cause problems"
                                          "with sklearn metrics. Please override with "

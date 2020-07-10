@@ -81,10 +81,12 @@ class Scorer(object):
 
         # Check if metric_name is already registered
         if metric_name in Scorer.CUSTOM_ELEMENT_DICTIONARY:
-            logger.warning('Custom metric name ' + metric_name + ' is ambiguous. Please specify metric as tuple with ' +
-                           'cooresponding name (e.g. instead of metrics=[keras.metrics.Accuracy] use '
-                           'metrics=[(\'MetricName1\', keras.metrics.Accuracy)]. Only the first occurance of this '
-                           'metric will be used!')
+            warn_text = 'Custom metric name ' + metric_name + ' is ambiguous. Please specify metric as tuple with ' + \
+                        'cooresponding name (e.g. instead of metrics=[keras.metrics.Accuracy] use ' \
+                        'metrics=[(\'MetricName1\', keras.metrics.Accuracy)]. Only the first occurance of this ' \
+                        'metric will be used!'
+            logger.warning(warn_text)
+            raise Warning(warn_text)
             return None
 
         # derive a metric function from the given object
@@ -197,18 +199,10 @@ class Scorer(object):
         return output_metrics
 
 
-def binary_to_one_hot(binary_vector):
-    classes = np.unique(binary_vector)
-    out = np.zeros((binary_vector.shape[0], len(classes)),  dtype=np.int)
-    for i, c in enumerate(classes):
-        out[binary_vector == c, i] = 1
-    return out
-
-
 def one_hot_to_binary(one_hot_matrix):
     out = np.zeros((one_hot_matrix.shape[0]))
     for i in range(one_hot_matrix.shape[0]):
-        out[i] = np.nonzero(one_hot_matrix[i, :])[0]
+        out[i] = np.nonzero(one_hot_matrix[i, :])[0][0]
     return out
 
 

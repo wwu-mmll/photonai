@@ -81,6 +81,6 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
     def _convert_to_native(self, obj):
         # check if we have a numpy object, if so convert it to python native
         if type(obj).__module__ == np.__name__:
-            return np.asscalar(obj)
+            return obj.item()
         else:
             return obj

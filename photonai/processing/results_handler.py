@@ -764,6 +764,8 @@ class ResultsHandler:
                 from nibabel.nifti1 import Nifti1Image
                 if isinstance(backmapping, Nifti1Image):
                     backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+            except ImportError:
+                pass
             finally:
                 if isinstance(backmapping, np.ndarray):
                     if backmapping.size > 1000:

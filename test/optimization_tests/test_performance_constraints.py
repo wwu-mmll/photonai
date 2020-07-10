@@ -7,7 +7,7 @@ from photonai.processing.results_structure import MDBConfig, MDBScoreInformation
 
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
-from photonai.base import Hyperpipe, PipelineElement
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 
 
 class PhotonBaseConstraintTest(unittest.TestCase):
@@ -166,9 +166,9 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
                             optimizer_params={'limit_in_minutes':2},
                             metrics=['mean_squared_error'],
                             best_config_metric='mean_squared_error',
-                            #outer_cv=KFold(n_splits=2, shuffle=True),
                             inner_cv=KFold(n_splits=inner_fold_length),
                             eval_final_performance=True,
+                            output_settings=OutputSettings(project_folder='./tmp'),
                             performance_constraints=[self.constraint_object])
 
         my_pipe += PipelineElement('StandardScaler')

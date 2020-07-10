@@ -1,5 +1,5 @@
 from photonai.modelwrapper.keras_dnn_regressor import KerasDnnRegressor
-from .test_keras_dnn_classifier import KerasDnnClassifierTest
+from ..modelwrapper_tests.test_keras_dnn_classifier import KerasDnnClassifierTest
 
 
 class KerasDnnClassifierTest(KerasDnnClassifierTest):
