@@ -10,6 +10,7 @@ try:
     from smac.facade.smac_bo_facade import SMAC4BO
     from smac.facade.smac_hpo_facade import SMAC4HPO
     from smac.facade.smac_ac_facade import SMAC4AC
+    from smac.facade.smac_bohb_facade import BOHB4HPO
     __found__ = True
 except ModuleNotFoundError:
     __found__ = False
@@ -55,7 +56,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
         else:
             self.scenario_dict = scenario_dict
 
-        if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO]:
+        if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO, "BOHB4HPO", BOHB4HPO]:
             if type(facade) == str:
                 self.facade = eval(facade)
             else:
