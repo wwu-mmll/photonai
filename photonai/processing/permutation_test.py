@@ -80,8 +80,7 @@ class PermutationTest:
                 self.pipe.fit(X, y_true, **kwargs)
                 self.pipe.results.computation_completed = True
                 self.pipe.results.permutation_test = MDBPermutationResults(n_perms=self.n_perms)
-                self.pipe.results.outer_folds = list()
-                self.pipe.results.save()
+                self.clear_data_and_save(self.pipe)
                 existing_reference = self.pipe.results
 
             except Exception as e:
@@ -141,7 +140,8 @@ class PermutationTest:
                                                                  self.permutations[perm_run],
                                                                  self.permutation_id, self.verbosity, **kwargs)
 
-        perm_result = self._calculate_results(self.permutation_id)
+        perm_result = self._calculate_results(self.permutation_id,
+                                              mongodb_path=self.pipe.output_settings.mongodb_connect_url)
 
         performance_df = pd.DataFrame(dict([(name, [i]) for name, i in perm_result.p_values.items()]))
         performance_df.to_csv(os.path.join(existing_reference.output_folder, 'permutation_test_results.csv'))
@@ -183,7 +183,7 @@ class PermutationTest:
         return perm_run
 
     @staticmethod
-    def _calculate_results(permutation_id, save_to_db=True, mongodb_path="mongodb://trap-umbriel:27017/photon_results"):
+    def _calculate_results(permutation_id, save_to_db=True, mongodb_path="mongodb://localhost:27017/photon_results"):
 
         logger.info("Calculating permutation test results")
         try:
@@ -306,7 +306,7 @@ class PermutationTest:
         return mother_permutation
 
     @staticmethod
-    def prepare_for_wizard(permutation_id, wizard_id, mongo_db_connect_url="mongodb://trap-umbriel:27017/photon_results"):
+    def prepare_for_wizard(permutation_id, wizard_id, mongo_db_connect_url="mongodb://localhost:27017/photon_results"):
         mother_permutation = PermutationTest.find_reference(mongo_db_connect_url, permutation_id=wizard_id,
                                                             find_wizard_id=True)
         mother_permutation.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
@@ -325,13 +325,17 @@ class PermutationTest:
                                            if i.metric_name == best_config_metric and i.operation == str(FoldOperations.MEAN)]
                 if len(dummy_threshold_to_beat) > 0:
                     dummy_threshold_to_beat = dummy_threshold_to_beat[0]
+                    mother_perm_threshold = [i.value for i in mother_permutation.metrics_test
+                                             if i.metric_name == best_config_metric and i.operation == str(FoldOperations.MEAN)]
+                    mother_perm_threshold = mother_perm_threshold[0]
                     if mother_permutation.hyperpipe_info.maximize_best_config_metric:
-                        if mother_permutation.best_config.best_config_score.validation.metrics[best_config_metric] > dummy_threshold_to_beat:
+
+                        if mother_perm_threshold > dummy_threshold_to_beat:
                             return True
                         else:
                             return False
                     else:
-                        if mother_permutation.best_config.best_config_score.validation.metrics[best_config_metric] < dummy_threshold_to_beat:
+                        if mother_perm_threshold < dummy_threshold_to_beat:
                             return True
                         else:
                             return False

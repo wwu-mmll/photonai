@@ -1,0 +1,10 @@
+{
+  "MyCustomEstimator": [
+    "custom_estimator.CustomEstimator",
+    "Estimator"
+  ],
+  "MyCustomTransformer": [
+    "custom_transformer.CustomTransformer",
+    "Transformer"
+  ]
+}

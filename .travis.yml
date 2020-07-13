@@ -3,18 +3,22 @@ dist: bionic
 language: python
 python:
   - "3.7"
-# command to install dependencies
+services:
+  - docker
+before_install:
+  - docker pull mongo:latest
+  - docker run -d -p 27017-27019:27017-27019 --name mongodb mongo
 install:
   - sudo apt-get update
   - sudo apt-get -y install gfortran swig
   - python setup.py egg_info
   - pip install -r photonai.egg-info/requires.txt
-  - pip install -r photonai/optimization/fabolas/fabolas_requirements.txt
   - pip install -r photonai/optimization/smac/smac_requirements.txt
   - pip install tensorflow
+  - pip install pytest
+  - pip install pytest-cov
   - pip install coveralls
-# command to run tests
 script:
-  - PYTHONPATH=./ pytest photonai/test/
+  - PYTHONPATH=./ pytest ./test --cov=./photonai
 after_success:
   - coveralls

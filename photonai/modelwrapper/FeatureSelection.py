@@ -3,15 +3,7 @@ import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
 from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, \
     VarianceThreshold, mutual_info_classif, mutual_info_regression, SelectKBest, chi2
-from scipy.stats import pearsonr, f_oneway
-from sklearn.decomposition import PCA, IncrementalPCA
 from sklearn.linear_model import Lasso
-from hashlib import sha1
-from pathlib import Path
-import statsmodels.api as sm
-import multiprocessing
-import os
-from photonai.photonlogger.logger import logger
 
 
 class FRegressionFilterPValue(BaseEstimator, TransformerMixin):
@@ -23,7 +15,7 @@ class FRegressionFilterPValue(BaseEstimator, TransformerMixin):
 
     def fit(self, X, y):
         f_values, p_values = f_regression(X, y)
-        self.selected_indices = np.where(p_values < self.p_threshold)
+        self.selected_indices = np.where(p_values < self.p_threshold)[0]
         return self
 
     def transform(self, X):
@@ -61,25 +53,6 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
         X = self.var_thres.fit_transform(X)
         self.my_fs = SelectPercentile(score_func=f_classif, percentile=self.percentile)
         self.my_fs.fit(X,y)
-        return self
-
-    def transform(self, X):
-        X = self.var_thres.transform(X)
-        return self.my_fs.transform(X)
-
-
-class Chi2KBest(BaseEstimator, TransformerMixin):
-    _estimator_type = 'transformer'
-
-    def __init__(self, k=10):
-        self.var_thres = VarianceThreshold()
-        self.k = k
-        self.my_fs = None
-
-    def fit(self, X, y):
-        X = self.var_thres.fit_transform(X)
-        self.my_fs = SelectKBest(score_func=chi2, k=self.k)
-        self.my_fs.fit(X, y)
         return self
 
     def transform(self, X):

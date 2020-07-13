@@ -2,7 +2,7 @@
 configuration.ini
 
 **/photon_setup_errors.log
-
+.pypirc
 **/tmp
 **/cache
 **/dask-worker-space

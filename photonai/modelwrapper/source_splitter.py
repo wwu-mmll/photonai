@@ -9,11 +9,8 @@ class SourceSplitter(BaseEstimator, TransformerMixin):
     def __init__(self, column_indices: list):
         self.column_indices = column_indices
 
-    def fit(self, X, y=None, **kwargs):
-        return
+    def fit(self, X, y):
+        return self
 
     def transform(self, X):
-        return X[:,self.column_indices]
-
-    def fit_transform(self, X, y=None, **kwargs):
-        return self.transform(X)
+        return X[:, self.column_indices]

@@ -34,7 +34,7 @@ class ResultsHandler:
         self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
-        connect(mongodb_connect_url)
+        connect(mongodb_connect_url, alias="photon_core")
         results = list(MDBHyperpipe.objects.raw({'name': pipe_name}))
         if len(results) == 1:
             self.results = results[0]
@@ -366,85 +366,6 @@ class ResultsHandler:
             imps.append(fold.best_config.best_config_score.feature_importances)
         return imps
 
-    def plot_true_pred(self, confidence_interval=95):
-        """
-        This function plots predictions vs. (true) targets and plots a regression line
-        with confidence interval.
-        """
-        preds = ResultsHandler.get_test_predictions(self)
-        ax = sns.regplot(x=preds['y_pred'], y=preds['y_true'], ci=confidence_interval)
-        ax.set(xlabel='Predicted Values', ylabel='True Values')
-        plt.show()
-
-    def plot_confusion_matrix(self, classes=None, normalize=False, title='Confusion matrix'):
-        """
-        This function prints and plots the confusion matrix.
-        Normalization can be applied by setting `normalize=True`.
-        """
-
-        preds = ResultsHandler.get_test_predictions(self)
-        cm = confusion_matrix(preds['y_true'], preds['y_pred'])
-        np.set_printoptions(precision=2)
-        if normalize:
-            cm = cm.astype('float') / cm.sum(axis=1)[:, np.newaxis]
-            logger.info("Normalized confusion matrix")
-        else:
-            logger.info('Confusion matrix')
-        logger.info(cm)
-
-        plt.figure()
-        cmap = plt.cm.Blues
-        plt.imshow(cm, interpolation='nearest', cmap=cmap)
-        plt.title(title)
-        plt.colorbar()
-
-        if classes is None:
-            classes = ['class ' + str(c + 1) for c in np.unique(preds['y_true'])]
-        tick_marks = np.arange(len(classes))
-        plt.xticks(tick_marks, classes, rotation=45)
-        plt.yticks(tick_marks, classes)
-
-        fmt = '.2f' if normalize else 'd'
-        thresh = cm.max() / 2.
-        for i, j in itertools.product(range(cm.shape[0]), range(cm.shape[1])):
-            plt.text(j, i, format(cm[i, j], fmt),
-                     horizontalalignment="center",
-                     color="white" if cm[i, j] > thresh else "black")
-
-        plt.tight_layout()
-        plt.ylabel('True label')
-        plt.xlabel('Predicted label')
-        # plotlyFig = ResultsHandler.__plotlyfy(plt)
-        plt.show()
-
-    def plot_roc_curve(self, pos_label=1, y_score_col=1):
-        """
-        This function plots the ROC curve.
-        :param pos_label: In binary classiciation, what is the positive class label?
-        :param y_score_col: In binary classiciation, which column of the probability matrix contains the positive
-        class probabilities?
-        :return: None
-        """
-
-
-        # get predictive probabilities
-        preds = ResultsHandler.get_test_predictions(self)
-
-        # get ROC infos
-        fpr, tpr, _ = roc_curve(y_true=preds['y_true'],
-                                y_score=preds['y_pred_probabilities'][:, y_score_col],
-                                pos_label=pos_label)
-
-        # plot ROC curve
-        plt.figure()
-        plt.plot([0, 1], [0, 1], 'k--')
-        plt.plot(fpr, tpr)
-        plt.xlabel('False positive rate')
-        plt.ylabel('True positive rate')
-        plt.title('Receiver Operating Characteristic (ROC) Curve')
-        plt.legend(loc='best')
-        plt.show()
-
     def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=''):
         if len(score_info_list) > 0:
             fold_nr_array = []
@@ -741,16 +662,11 @@ class ResultsHandler:
 
         if self.output_settings.mongodb_connect_url:
             connect(self.output_settings.mongodb_connect_url, alias='photon_core')
-            logger.debug('Write results to mongodb...')
+            logger.info('Write results to mongodb...')
             try:
                 self.results.save()
             except DocumentTooLarge as e:
                 logger.error('Could not save document into MongoDB: Document too large')
-                # try to reduce the amount of configs saved
-                # if len(results_tree.outer_folds[0].tested_config_list) > 100:
-                #     for outer_fold in results_tree.outer_folds:
-                #         metrics_configs = [outer_fold.tested_configlist
-
         if self.output_settings.save_output:
             logger.info("Writing results to project folder...")
             self.write_result_tree_to_file()
@@ -764,6 +680,8 @@ class ResultsHandler:
                 from nibabel.nifti1 import Nifti1Image
                 if isinstance(backmapping, Nifti1Image):
                     backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+            except ImportError:
+                pass
             finally:
                 if isinstance(backmapping, np.ndarray):
                     if backmapping.size > 1000:
@@ -788,8 +706,10 @@ class ResultsHandler:
             self.eval_mean_time_components()
 
     def convert_to_json_serializable(self, value):
-        if isinstance(value, np.int64):
+        if isinstance(value, (np.int, np.int32, np.int64)):
             return int(value)
+        if isinstance(value, (np.float, np.float32, np.float64)):
+            return float(value)
         else:
             return json_util.default(value)
 

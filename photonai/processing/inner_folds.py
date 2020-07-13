@@ -335,17 +335,6 @@ class InnerFoldManager(object):
         scoring_time_start = time.time()
 
         output_metrics = {}
-        non_default_score_metrics = list(metrics)
-        # that does not work because it is not an exact match and also reacts to e.g. f1_score
-        # if 'score' in metrics:
-        # so we use this:
-        checklist = ['score']
-        matches = set(checklist).intersection(set(non_default_score_metrics))
-        if len(matches) > 0:
-            # Todo: Here it is potentially slowing down!!!!!!!!!!!!!!!!
-            default_score = estimator.score(X, y_true)
-            output_metrics['score'] = default_score
-            non_default_score_metrics.remove('score')
 
         if not training:
             y_pred = estimator.predict(X, **kwargs)
@@ -367,10 +356,10 @@ class InnerFoldManager(object):
                     msg = "If scorer object does not return 1d array or list, PHOTON expected name 'y_pred' in nd array."
                     logger.error(msg)
                     raise KeyError(msg)
-                score_metrics = Scorer.calculate_metrics(y_true, y_pred["y_pred"], non_default_score_metrics)
+                score_metrics = Scorer.calculate_metrics(y_true, y_pred["y_pred"], metrics)
             else:
                 y_pred_names = []
-                score_metrics = Scorer.calculate_metrics(y_true, y_pred, non_default_score_metrics)
+                score_metrics = Scorer.calculate_metrics(y_true, y_pred, metrics)
 
             # add default metric
             if output_metrics:

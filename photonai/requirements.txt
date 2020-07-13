@@ -5,7 +5,7 @@ scikit-learn
 keras
 pandas
 plotly
-imblearn
+imbalanced-learn
 pymodm
 scipy
 statsmodels

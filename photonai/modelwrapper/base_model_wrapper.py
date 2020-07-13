@@ -60,11 +60,9 @@ class BaseModelWrapper:
         Get the models parameters.
         Automatically implemented when inheriting from sklearn.base.BaseEstimator
         """
-        pass
 
     def set_params(self, *kwargs):
         """
         Takes the given dictionary, with the keys being the variable name, and sets the object's parameters to the given values.
         Automatically implemented when inheriting from sklearn.base.BaseEstimator
         """
-        pass

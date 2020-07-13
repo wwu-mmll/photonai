@@ -1,5 +1,4 @@
 import numpy as np
-from keras.callbacks.callbacks import EarlyStopping
 
 from photonai.modelwrapper.keras_base_models import KerasDnnBaseModel, KerasBaseClassifier
 import photonai.modelwrapper.keras_base_models as keras_dnn_base_model
@@ -90,7 +89,7 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
         else:
             raise ValueError("Loss function is not supported. Feel free to use upperclass without restrictions.")
 
-    def encode_targets(self, y):
+    def _calc_target_dimension(self, y):
         class_nums = len(np.unique(y))
         if not self.multi_class:
             if class_nums != 2 and self.loss == 'binary_crossentropy':
@@ -99,10 +98,7 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
         else:
             self.target_dimension = len(np.unique(y))
 
-        return super(KerasDnnClassifier, self).encode_targets(y)
-
     def fit(self, X, y):
-        y = self.encode_targets(y)
+        self._calc_target_dimension(y)
         self.create_model(X.shape[1])
         super(KerasDnnClassifier, self).fit(X, y, reload_weights=True)
-

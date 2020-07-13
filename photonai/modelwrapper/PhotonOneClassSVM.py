@@ -16,9 +16,6 @@ class PhotonOneClassSVM(BaseEstimator, ClassifierMixin):
         self.my_svm.fit(X[y==1])
         return self
 
-    def transform(self, X):
-        return
-
     def predict(self, X):
         return self.my_svm.predict(X)
 

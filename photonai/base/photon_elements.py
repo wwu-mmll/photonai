@@ -2,6 +2,8 @@ import importlib
 import importlib.util
 import inspect
 from copy import deepcopy
+import dask
+from dask.distributed import Client
 import numpy as np
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
@@ -1277,3 +1279,158 @@ class CallbackElement(PhotonNative):
     @property
     def feature_importances_(self):
         return
+
+
+class ParallelBranch(Branch):
+    """
+    A substream of elements, that do not need fit() but can instantly use transform on a single subject level,
+    and therefore can be computed in parallel.
+
+    Parameters
+    ----------
+    * `name` [str]:
+        Name of the parallelizable pipeline branch
+
+    """
+
+    def __init__(self, name, nr_of_processes=1, output_img: bool = False):
+        Branch.__init__(self, name)
+
+        self._nr_of_processes = 1
+        self.local_cluster = None
+        self.client = None
+        self.nr_of_processes = nr_of_processes
+
+        self.has_hyperparameters = True
+        self.needs_y = False
+        self.needs_covariates = True
+        self.current_config = None
+
+    def __del__(self):
+        if self.local_cluster is not None:
+            self.local_cluster.close()
+
+    def fit(self, X, y=None, **kwargs):
+        # do nothing here!!
+        return self
+
+    @property
+    def nr_of_processes(self):
+        return self._nr_of_processes
+    # Todo : !
+    # @classmethod
+    # def set_local_cluster(cls, nr_of_processes):
+    #     cls.local_cluster =
+
+    @nr_of_processes.setter
+    def nr_of_processes(self, value):
+        self._nr_of_processes = value
+        if self._nr_of_processes > 1:
+            if self.local_cluster is None:
+                self.local_cluster = Client(threads_per_worker=1,
+                                            n_workers=self.nr_of_processes,
+                                            processes=False)
+            else:
+                self.local_cluster.n_workers = self.nr_of_processes
+        else:
+            self.local_cluster = None
+
+    def __iadd__(self, pipe_element):
+        """
+        Add an element to the neuro branch. Only neuro pipeline elements are allowed.
+        Returns self
+
+        Parameters
+        ----------
+        * `pipe_element` [PipelineElement]:
+            The transformer object to add. Should be registered in the Neuro module.
+        """
+
+        self.elements.append(pipe_element)
+        self._prepare_pipeline()
+
+        return self
+
+    def transform(self, X, y=None, **kwargs):
+
+        if self.base_element.cache_folder is not None:
+            # make sure we cache individually
+            self.base_element.single_subject_caching = True
+            self.base_element.caching = True
+        if self.nr_of_processes > 1:
+
+            if self.base_element.cache_folder is not None:
+                # at first apply the transformation on several cores, everything gets written to the cache,
+                # so the next step only has to reload the data ...
+                self.apply_transform_parallelized(X)
+            else:
+                logger.error("Cannot use parallelization without a cache folder specified in the hyperpipe."
+                               "Using single core instead")
+
+            logger.debug('ParallelBranch ' + self.name + ' is collecting data from the different cores...')
+        X_new, _, _ = self.base_element.transform(X)
+
+        return X_new, y, kwargs
+
+    def set_params(self, **kwargs):
+        self.current_config = kwargs
+        super(ParallelBranch, self).set_params(**kwargs)
+
+    def copy_me(self):
+        new_copy = super().copy_me()
+        new_copy.base_element.current_config = self.base_element.current_config
+        new_copy.base_element.single_subject_caching = True
+        new_copy.base_element.cache_folder = self.base_element.cache_folder
+        new_copy.local_cluster = self.local_cluster
+        new_copy.nr_of_processes = self.nr_of_processes
+
+        # todo: clarify this with Ramona
+        new_copy.do_not_delete_cache_folder = True
+
+        return new_copy
+
+    def inverse_transform(self, X, y=None, **kwargs):
+        for transform in self.elements[::-1]:
+            if hasattr(transform, 'inverse_transform'):
+                X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
+            else:
+                return X, y, kwargs
+        return X, y, kwargs
+
+    @staticmethod
+    def parallel_application(pipe_copy, data):
+        pipe_copy.transform(data)
+        return
+
+    def apply_transform_parallelized(self, X):
+        """
+
+        :param X: the data to which the delegate should be applied in parallel
+        """
+
+        if self.nr_of_processes > 1:
+
+            jobs_to_do = list()
+
+            # distribute the data equally to all available cores
+            number_of_items_to_process = PhotonDataHelper.find_n(X)
+            number_of_items_for_each_core = int(np.ceil(number_of_items_to_process / self.nr_of_processes))
+            logger.info('ParallelBranch ' + self.name +
+                         ': Using ' + str(self.nr_of_processes) + ' cores calculating ' + str(number_of_items_for_each_core)
+                         + ' items each')
+            for start, stop in PhotonDataHelper.chunker(number_of_items_to_process, number_of_items_for_each_core):
+                X_batched, _, _ = PhotonDataHelper.split_data(X, None, {}, start, stop)
+
+                # copy my pipeline
+                new_pipe_mr = self.copy_me()
+                new_pipe_copy = new_pipe_mr.base_element
+                new_pipe_copy.cache_folder = self.base_element.cache_folder
+                new_pipe_copy.skip_loading = True
+                new_pipe_copy._parallel_use = True
+
+                del_job = dask.delayed(ParallelBranch.parallel_application)(new_pipe_copy, X_batched)
+                jobs_to_do.append(del_job)
+
+            dask.compute(*jobs_to_do)
+
+

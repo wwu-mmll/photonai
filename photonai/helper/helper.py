@@ -1,67 +1,38 @@
 from collections.abc import Iterable
 from prettytable import PrettyTable
 from photonai.photonlogger.logger import logger
+from sklearn.base import BaseEstimator, ClassifierMixin
 import numpy as np
 
 
-class Singleton:
-    """
-    A non-thread-safe helper class to ease implementing singletons.
-    This should be used as a decorator -- not a metaclass -- to the
-    class that should be a singleton.
+class XPredictor(BaseEstimator, ClassifierMixin):
 
-    The decorated class can define one `__init__` function that
-    takes only the `self` argument. Also, the decorated class cannot be
-    inherited from. Other than that, there are no restrictions that apply
-    to the decorated class.
+    _estimator_type = 'classifier'
 
-    To get the singleton instance, use the `Instance` method. Trying
-    to use `__call__` will result in a `TypeError` being raised.
+    def __init__(self, change_predictions = False):
+        self.needs_y = False
+        self.needs_covariates = False
+        self.change_predictions = change_predictions
+        pass
 
-    from https://stackoverflow.com/questions/31875/is-there-a-simple-elegant-way-to-define-singletons
-    """
+    def fit(self, X, y=None, **kwargs):
+        return self
 
-    def __init__(self, decorated):
-        self._decorated = decorated
+    def predict(self, X, **kwargs):
+        if self.change_predictions:
+            # change it relative to value so that it is fold-specific
+            return XPredictor.adapt_X(X)
+        return X
 
-    def __call__(self):
-        """
-        Returns the singleton instance. Upon its first call, it creates a
-        new instance of the decorated class and calls its `__init__` method.
-        On all subsequent calls, the already created instance is returned.
+    @staticmethod
+    def adapt_X(X):
+        return [i-(0.1*i) for i in X]
 
-        """
-        try:
-            return self._instance
-        except AttributeError:
-            self._instance = self._decorated()
-            return self._instance
-
-    def __instancecheck__(self, inst):
-        return isinstance(inst, self._decorated)
+    def predict_proba(self, X):
+        return X/10
 
 
 class PhotonPrintHelper:
-    @staticmethod
-    def _optimize_printing(pipe, config: dict):
-        """
-        make the sklearn config syntax prettily readable for humans
-        """
-        if pipe is None:
-            return str(config)
-
-        prettified_config = ["" + '\n']
-        for el_key, el_value in config.items():
-            items = el_key.split('__')
-            name = items[0]
-            rest = '__'.join(items[1::])
-            if name in pipe.named_steps:
-                new_pretty_key = '    ' + name + '->'
-                prettified_config.append(new_pretty_key +
-                                         pipe.named_steps[name].prettify_config_output(rest, el_value) + '\n')
-            else:
-                raise ValueError('Item is not contained in pipeline:' + name)
-        return ''.join(prettified_config)
 
     @staticmethod
     def config_to_human_readable_dict(pipe, specific_config):

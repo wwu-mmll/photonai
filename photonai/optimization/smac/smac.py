@@ -10,6 +10,7 @@ try:
     from smac.facade.smac_bo_facade import SMAC4BO
     from smac.facade.smac_hpo_facade import SMAC4HPO
     from smac.facade.smac_ac_facade import SMAC4AC
+    from smac.facade.smac_bohb_facade import BOHB4HPO
     __found__ = True
 except ModuleNotFoundError:
     __found__ = False
@@ -55,8 +56,13 @@ class SMACOptimizer(PhotonMasterOptimizer):
         else:
             self.scenario_dict = scenario_dict
 
+<<<<<<< HEAD
         if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO]:
             if isinstance(facade, str):
+=======
+        if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO, "BOHB4HPO", BOHB4HPO]:
+            if type(facade) == str:
+>>>>>>> feature/add_mongodb_to_travis
                 self.facade = eval(facade)
             else:
                 self.facade = facade
@@ -179,6 +185,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         self.scenario = Scenario(self.scenario_dict)
 
+<<<<<<< HEAD
         def smac_objective_function(current_config):
             current_config = {k: current_config[k] for k in current_config if (current_config[k] and 'algos' not in k)}
             return objective_function(current_config)
@@ -187,6 +194,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
                                 intensifier_kwargs = self.intensifier_kwargs,
                                 rng = self.rng,
                                 tae_runner = smac_objective_function)
+=======
+        self.smac = self.facade(scenario=self.scenario,
+                                intensifier_kwargs=self.intensifier_kwargs,
+                                rng=self.rng,
+                                tae_runner=objective_function)
+>>>>>>> feature/add_mongodb_to_travis
 
         if self.debug:
             self.smac_helper['data'] = self.smac

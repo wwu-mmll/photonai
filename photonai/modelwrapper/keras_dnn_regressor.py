@@ -68,6 +68,5 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
             raise ValueError("Loss function is not supported. Feel free to use upperclass without restrictions.")
 
     def fit(self, X, y):
-        self.encode_targets(y)
         self.create_model(X.shape[1])
         super(KerasDnnBaseModel, self).fit(X, y, reload_weights=True)

@@ -456,7 +456,7 @@
     "Estimator"
   ],
   "PhotonTestXPredictor":[
-    "photonai.test.processing_tests.results_tests.XPredictor",
+    "photonai.helper.helper.XPredictor",
     "Estimator"
   ],
   "PhotonMLPClassifier":[

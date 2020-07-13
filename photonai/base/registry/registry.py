@@ -68,8 +68,8 @@ class PhotonRegistry:
         for abs_filename in glob(os.path.join(self.module_path, "*.json")):
             basename = os.path.basename(abs_filename)
             file, ext = os.path.splitext(basename)
-            if file not in self.PHOTON_REGISTRIES:
-                self.PHOTON_REGISTRIES.append(file)
+            if file not in PhotonRegistry.PHOTON_REGISTRIES:
+                PhotonRegistry.PHOTON_REGISTRIES.append(file)
 
     def add_module(self, path_to_file: str):
         filename = os.path.basename(path_to_file)
@@ -78,7 +78,7 @@ class PhotonRegistry:
         PhotonRegistry.ELEMENT_DICTIONARY = self.get_package_info()
 
     def delete_module(self, module_name: str):
-        self.PHOTON_REGISTRIES.remove(module_name)
+        PhotonRegistry.PHOTON_REGISTRIES.remove(module_name)
         os.remove(os.path.join(self.module_path, module_name + ".json"))
         PhotonRegistry.ELEMENT_DICTIONARY = self.get_package_info()
 
