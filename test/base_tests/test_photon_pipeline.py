@@ -323,6 +323,7 @@ class CachedPhotonPipelineTests(PhotonBaseTest):
 
         self.pipe.caching = True
         self.pipe.fold_id = "12345643463434"
+        CacheManager.clear_cache_files(self.cache_folder_path)
         self.pipe.cache_folder = self.cache_folder_path
 
         self.config1 = {'PCA__n_components': 4,

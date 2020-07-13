@@ -34,7 +34,7 @@ class ResultsHandler:
         self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
-        connect(mongodb_connect_url)
+        connect(mongodb_connect_url, alias="photon_core")
         results = list(MDBHyperpipe.objects.raw({'name': pipe_name}))
         if len(results) == 1:
             self.results = results[0]

@@ -94,7 +94,8 @@ class ResultsHandlerTest(PhotonBaseTest):
         """
         Check content of photon_summary.txt. Adjustment with hyperpipe.result.
         """
-        with open(os.path.join(self.output_settings.results_folder, 'photon_summary.txt')) as file:
+        self.hyperpipe.fit(self.__X, self.__y)
+        with open(os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')) as file:
             data = file.read()
 
         areas = data.split("-------------------------------------------------------------------")
@@ -148,14 +149,14 @@ class ResultsHandlerTest(PhotonBaseTest):
             splitted_areas[key_areas_outer_fold[num]] = areas[len(key_areas)+1+num*2].split("\n")
 
         # check all outer_folds
-        for key_area_outer_fold in key_areas_outer_fold:
-            if [perf for perf in splitted_areas[key_area_outer_fold] if perf == "PERFORMANCE:"]:
-                index_dict[key_area_outer_fold+"_train"] = splitted_areas[key_area_outer_fold].index("PERFORMANCE:")
-                index_dict[key_area_outer_fold + "_test"] = index_dict[key_area_outer_fold+"_train"]
+        for ka in key_areas_outer_fold:
+            if [perf for perf in splitted_areas[ka] if perf == "PERFORMANCE:"]:
+                index_dict[ka + "_train"] = splitted_areas[ka].index("PERFORMANCE:")
+                index_dict[ka + "_test"] = index_dict[ka+"_train"]
             else:
                 self.assertTrue(False)
-            for data_key in [k for k in list(result_dict.keys()) if key_area_outer_fold in k]:
-                table_str = "\n".join([splitted_areas[key_area_outer_fold][index_dict[data_key] + i]
+            for data_key in [k for k in list(result_dict.keys()) if ka in k]:
+                table_str = "\n".join([splitted_areas[ka][index_dict[data_key] + i]
                                        for i in [2, 4, 5, 6]])
                 table = pd.read_csv(StringIO(table_str.replace(" ", "")), sep="|")[
                         ["MetricName", "TrainValue", "TestValue"]].set_index("MetricName")
