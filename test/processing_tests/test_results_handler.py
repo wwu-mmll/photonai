@@ -251,17 +251,18 @@ class ResultsHandlerTest(PhotonBaseTest):
     def test_load_from_file_and_mongodb(self):
         hyperpipe = self.hyperpipe.copy_me()
         hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
-        self.hyperpipe.fit(self.__X, self.__y)
+        hyperpipe.fit(self.__X, self.__y)
 
-        results_file = os.path.join(self.hyperpipe.output_settings.results_folder, "photon_result_file.json")
+        results_file = os.path.join(hyperpipe.output_settings.results_folder, "photon_result_file.json")
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)
 
-        mongo_inst = my_result_handler.load_from_mongodb(pipe_name=self.pipe_name,
-                                                         mongodb_connect_url=self.mongodb_path)
-        self.assertIsInstance(mongo_inst, MDBHyperpipe)
-        self.assertTrue(mongo_inst.name == self.hyperpipe.name)
+        my_mongo_result_handler = ResultsHandler()
+        my_mongo_result_handler.load_from_mongodb(pipe_name=hyperpipe.name,
+                                                  mongodb_connect_url=self.mongodb_path)
+        self.assertIsInstance(my_mongo_result_handler.results, MDBHyperpipe)
+        self.assertTrue(my_mongo_result_handler.results.name == hyperpipe.name)
 
     def test_get_performance_table(self):
         pt = self.hyperpipe.results_handler.get_performance_table()
