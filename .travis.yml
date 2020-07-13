@@ -19,7 +19,6 @@ install:
   - pip install pytest
   - pip install pytest-cov
   - pip install coveralls
-
 # command to run tests
 script:
   - PYTHONPATH=./ pytest ./test --cov=./photonai
