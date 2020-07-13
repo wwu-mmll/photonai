@@ -1,7 +1,12 @@
 import unittest
 import types
+from itertools import chain
+
+import keras
 import numpy as np
 import math
+
+import tensorflow
 
 from photonai.processing.metrics import Scorer, spearman_correlation, specificity, sensitivity, one_hot_to_binary, \
     pearson_correlation, balanced_accuracy, categorical_accuracy_score, variance_explained_score
@@ -13,8 +18,28 @@ class ScorerTest(unittest.TestCase):
         """
         Set up for Scorer Tests.
         """
-        self.all_implemented_metrics = Scorer.ELEMENT_DICTIONARY.keys()
+        def custom_accuracy(y_true, y_pred):
+            return 2.4
+
+        self.custom_metrics = [
+            ('keras_accuracy1', tensorflow.keras.metrics.Accuracy),
+            ('keras_accuracy2', keras.metrics.Accuracy()),
+            ('tf_accuracy1', tensorflow.keras.metrics.Accuracy),
+            ('tf_accuracy2', tensorflow.keras.metrics.Accuracy()),
+            ('custom_accuracy', custom_accuracy)
+        ]
+        for custom_metric in self.custom_metrics:
+            Scorer.register_custom_metric(custom_metric)
+
+        self.all_implemented_metrics = chain(Scorer.ELEMENT_DICTIONARY.keys(), Scorer.CUSTOM_ELEMENT_DICTIONARY.keys())
         self.some_not_implemented_metrics = ["abc_metric", "photon_metric"]
+
+    def tearDown(self):
+        Scorer.CUSTOM_ELEMENT_DICTIONARY = {}
+
+    def test_custom_metrics_are_registered(self):
+        for custom_metric in self.custom_metrics:
+            self.assertIn(custom_metric[0], Scorer.CUSTOM_ELEMENT_DICTIONARY)
 
     def test_create(self):
         """
