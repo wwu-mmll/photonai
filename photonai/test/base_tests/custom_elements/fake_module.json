@@ -1,0 +1,9 @@
+{"FakeElement2":[
+  "sklearn.decomposition.IncrementalPCA",
+  "Transformer"
+  ],
+  "FakeElement1":[
+    "sklearn.decomposition.KernelPCA",
+    "Transformer"
+  ]
+}

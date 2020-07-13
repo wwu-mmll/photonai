@@ -1,7 +1,7 @@
 # Photon specific stuff
 configuration.ini
 
-photonai/photonai
+**/photon_setup_errors.log
 
 **/tmp
 **/cache

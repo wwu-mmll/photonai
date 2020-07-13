@@ -5,6 +5,11 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
+# from setuptools.command.install import install
+#
+# class Modulenstalltio
+
+
 __version__ = '1.1.0'
 
 setup(
@@ -18,10 +23,12 @@ is a rapid prototyping framework enabling (not so experienced) users to build, t
 and share even complex machine learning (ML) pipelines with very high efficiency.
 
 By pre-registering state-of-the-art ML implementations, we create a system in which the user can select 
-and arrange processing steps and learning algorithms in simple or parallel data streams. Importantly,
-PHOTONAI is capable to automatize the training and testing procedure including nested cross-validation and 
+and arrange processing steps and learning algorithms in simple or parallel pipeline data streams. 
+
+Importantly, PHOTONAI is capable to automatize the training and testing procedure including nested cross-validation and 
 hyperparameter search, calculates performance metrics and conveniently visualizes the analyzed hyperparameter space.
-It also enables you to persist and load your optimal model, including all preprocessing elements, 
+
+It also enables the user persist and load your optimal model, including all preprocessing elements, 
 with only one line of code.
 """,
     author='PHOTONAI Team',
