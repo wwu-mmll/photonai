@@ -50,7 +50,7 @@ class KerasDnnClassifierTest(BaseModelWrapperTest):
             self.dnn.dropout_rate = [0.2, 0.6]
 
 
-class KerasDnnClassifierTest(KerasDnnClassifierTest):
+class KerasDnnRegressorTest(KerasDnnClassifierTest):
 
     def setUp(self):
         self.model_wrapper = KerasDnnRegressor()
