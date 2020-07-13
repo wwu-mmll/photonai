@@ -16,10 +16,11 @@ install:
   - pip install -r photonai.egg-info/requires.txt
   - pip install -r photonai/optimization/smac/smac_requirements.txt
   - pip install tensorflow
+  - pip install pytest
+  - pip install pytest-cov
   - pip install coveralls
-  - coverage run --source=photonai pytest test/
-# command to run tests
+  
 script:
-  - PYTHONPATH=./ pytest test/
+  - pytest --cov=./photonai
 after_success:
   - coveralls
