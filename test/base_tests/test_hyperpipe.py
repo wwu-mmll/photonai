@@ -410,10 +410,7 @@ class HyperpipeTests(PhotonBaseTest):
         nmb_list = list()
         for i in range(5):
             nmb = ParallelBranch(name=str(i), nr_of_processes=i+3)
-            sp = PipelineElement('SamplePairingClassification',
-                                 hyperparameters={'draw_limit': [500, 1000, 10000]},
-                                 distance_metric='euclidean',
-                                 test_disabled=True)
+            sp = PipelineElement('PCA', hyperparameters= {'n_components': IntegerRange(1, 50)})
             nmb += sp
             nmb_list.append(nmb)
 

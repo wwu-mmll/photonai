@@ -89,3 +89,13 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
             return obj.item()
         else:
             return obj
+
+    def tell(self, config, performance):
+        # convert dictionary to list in correct order
+        if self.optimizer is not None:
+            config_values = [config[name] for name in self.hyperparameter_list]
+            best_config_metric_performance = performance[1]
+            if self.maximize_metric:
+                best_config_metric_performance = -best_config_metric_performance
+            # random_accuracy = np.random.randn(1)[0]
+            self.optimizer.tell(config_values, best_config_metric_performance)

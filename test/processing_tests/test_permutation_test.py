@@ -38,7 +38,8 @@ class PermutationTestTests(PhotonBaseTest):
                                                     mongo_db_connect_url="mongodb://localhost:27017/photon_results")
         returned_duration = result["estimated_duration"]
         cached_duration = self.hyperpipe.results.computation_end_time - self.hyperpipe.results.computation_start_time
-        self.assertAlmostEqual(round(returned_duration.total_seconds(), 2), round(cached_duration.total_seconds(), 2), 2)
+        self.assertAlmostEqual(round(returned_duration.total_seconds(), 2),
+                               round(cached_duration.total_seconds(), 2), 3)
         # Todo: setup case where it is false
         self.assertTrue(result["usability"])
 
