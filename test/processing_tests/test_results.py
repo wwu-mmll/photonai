@@ -23,8 +23,8 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
     def setUp(self):
         super(ResultHandlerAndHelperTests, self).setUp()
-        self.inner_fold_nr = 10
-        self.outer_fold_nr = 5
+        self.inner_fold_nr = 2
+        self.outer_fold_nr = 3
         
         self.y_true = np.linspace(1, 100, 100)
         self.X = self.y_true

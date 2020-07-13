@@ -1,6 +1,8 @@
 import os
 import shutil
 from io import StringIO
+import uuid
+import time
 
 import numpy as np
 import pandas as pd
@@ -21,48 +23,46 @@ class ResultsHandlerTest(PhotonBaseTest):
         cls.file = __file__
         super(ResultsHandlerTest, cls).setUpClass()
 
-    def setUp(self):
-        """
-        Set default start settings for all tests.
-        """
-        super(ResultsHandlerTest, self).setUp()
-
-        self.files = ['best_config_predictions.csv',
+        cls.files = ['best_config_predictions.csv',
                       'time_monitor.csv',
                       'time_monitor_pie.png',
                       'photon_result_file.json',
                       'photon_summary.txt',
                       'photon_best_model.photon',
                       'optimizer_history.png']
-                    # todo: 'optimum_pipe_feature_importances_backmapped.npz',
-                    # 'optimum_pipe_feature_importances_backmapped.npz',
+        # todo: 'optimum_pipe_feature_importances_backmapped.npz',
+        # 'optimum_pipe_feature_importances_backmapped.npz',
 
-        self.output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=True)
+        cls.output_settings = OutputSettings(project_folder=cls.tmp_folder_path,
+                                             save_output=True)
 
-        self.ss_pipe_element = PipelineElement('StandardScaler')
-        self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, random_state=42)
-        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1], 'kernel': ['linear']},  # 'rbf', 'sigmoid']
+        cls.mongodb_path = 'mongodb://localhost:27017/photon_results'
+
+        cls.ss_pipe_element = PipelineElement('StandardScaler')
+        cls.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, random_state=42)
+        cls.svc_pipe_element = PipelineElement('SVC', {'C': [0.1], 'kernel': ['linear']},  # 'rbf', 'sigmoid']
                                                 random_state=42)
 
-        self.inner_cv_object = KFold(n_splits=3)
-        self.metrics = ["accuracy", 'recall', 'precision']
-        self.best_config_metric = "accuracy"
-        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
-                                   metrics=self.metrics,
-                                   best_config_metric=self.best_config_metric,
-                                   outer_cv=KFold(n_splits=2),
-                                   output_settings=self.output_settings,
-                                   verbosity=1)
-        self.hyperpipe += self.ss_pipe_element
-        self.hyperpipe += self.pca_pipe_element
-        self.hyperpipe.add(self.svc_pipe_element)
+        cls.inner_cv_object = KFold(n_splits=3)
+        cls.metrics = ["accuracy", 'recall', 'precision']
+        cls.best_config_metric = "accuracy"
+        cls.pipe_name = str(uuid.uuid4())
+        cls.hyperpipe = Hyperpipe(cls.pipe_name, inner_cv=cls.inner_cv_object,
+                                  metrics=cls.metrics,
+                                  best_config_metric=cls.best_config_metric,
+                                  outer_cv=KFold(n_splits=2),
+                                  output_settings=cls.output_settings,
+                                  verbosity=1)
+        cls.hyperpipe += cls.ss_pipe_element
+        cls.hyperpipe += cls.pca_pipe_element
+        cls.hyperpipe.add(cls.svc_pipe_element)
 
         dataset = load_breast_cancer()
-        self.__X = dataset.data
-        self.__y = dataset.target
+        cls.__X = dataset.data
+        cls.__y = dataset.target
 
-        self.hyperpipe.fit(self.__X, self.__y)
-
+        cls.hyperpipe.fit(cls.__X, cls.__y)
+        
     def test_write_convenience_files(self):
         """
         Output creation testing. Only write if output_settings.save_output == True
@@ -141,7 +141,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                                     sep="|")[["MetricName", "MEAN", "STD"]].set_index("MetricName")
                 for result_metric in result_dict[data_key]:
                     self.assertAlmostEqual(result_metric.value,
-                                           table[result_metric.operation.split(".")[1]][result_metric.metric_name], 4)
+                                           table[result_metric.operation.split(".")[1]][result_metric.metric_name], 2)
 
         splitted_areas = {}
         for num in range(len(key_areas_outer_fold)):
@@ -169,7 +169,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         Check dimension of feature backmapping equals input dimensions for less than 1000 features.
         """
         backmapping = np.loadtxt(os.path.join(self.output_settings.results_folder,
-                                       'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
+                                 'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
         self.assertEqual(np.shape(self.__X)[1], backmapping.size)
 
     def test_save_backmapping_npz(self):
@@ -188,7 +188,7 @@ class ResultsHandlerTest(PhotonBaseTest):
 
     def test_save_backmapping_stack(self):
         # build hyperpipe with stack first
-        self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
+        self.hyperpipe = Hyperpipe(self.pipe_name, inner_cv=self.inner_cv_object,
                                    metrics=self.metrics,
                                    best_config_metric=self.best_config_metric,
                                    outer_cv=KFold(n_splits=2),
@@ -215,7 +215,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         """
         Test for plot functions. Only passing test, no quality testing.
         """
-        self.assertIsNone(self.hyperpipe.results.plot_optimizer_history())
+        self.assertIsNone(self.hyperpipe.results.plot_optimizer_history(type='scatter'))
         self.assertIsNone(self.hyperpipe.results.plot_true_pred())
         self.assertIsNone(self.hyperpipe.results.plot_confusion_matrix())
         self.assertIsNone(self.hyperpipe.results.plot_roc_curve())
@@ -224,7 +224,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         """
         Test number of saved learning curve files
         """
-        hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
+        hyperpipe = Hyperpipe(self.pipe_name, inner_cv=self.inner_cv_object,
                               learning_curves=True,
                               metrics=self.metrics,
                               best_config_metric=self.best_config_metric,
@@ -244,24 +244,27 @@ class ResultsHandlerTest(PhotonBaseTest):
                              if os.path.isfile(os.path.join(curves_folder, name))])
         self.assertEqual(target_file_num, true_file_num)
 
-    def test_load_from_file(self):
-        X, y = load_breast_cancer(return_X_y=True)
-        my_pipe = Hyperpipe('load_results_file_test',
-                            inner_cv=KFold(n_splits=3),
-                            metrics=['accuracy'],
-                            best_config_metric='accuracy',
-                            output_settings=OutputSettings(project_folder='./tmp'))
-        my_pipe += PipelineElement("StandardScaler")
-        my_pipe += PipelineElement("SVC")
-        my_pipe.fit(X, y)
+        # test outer fold plots
+        results_handler.plot_learning_curves_outer_fold(0)
 
-        results_file = os.path.join(my_pipe.output_settings.results_folder, "photon_result_file.json")
+    def test_load_from_file_and_mongodb(self):
+        hyperpipe = self.hyperpipe.copy_me()
+        hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
+        self.hyperpipe.fit(self.__X, self.__y)
+
+        results_file = os.path.join(self.hyperpipe.output_settings.results_folder, "photon_result_file.json")
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)
 
-    def test_get_performance_table(self):
-        pass
+        mongo_inst = my_result_handler.load_from_mongodb(pipe_name=self.pipe_name,
+                                                         mongodb_connect_url=self.mongodb_path)
+        self.assertIsInstance(mongo_inst, MDBHyperpipe)
+        self.assertTrue(mongo_inst.name == self.pipe_name)
 
-    def test_load_from_mongodb(self):
-        pass
+    def test_get_performance_table(self):
+        pt = self.hyperpipe.results_handler.get_performance_table()
+        self.assertIsInstance(pt, pd.DataFrame)
+
+    def test_get_methods(self):
+        self.hyperpipe.results_handler.get_methods()

@@ -1,6 +1,7 @@
 import unittest
 import types
 import numpy as np
+import math
 
 from photonai.processing.metrics import Scorer, spearman_correlation, specificity, sensitivity, one_hot_to_binary, \
     pearson_correlation, balanced_accuracy, categorical_accuracy_score, variance_explained_score
@@ -70,6 +71,8 @@ class ScorerTest(unittest.TestCase):
         try:
             from keras.metrics import MeanAbsoluteError
             Scorer.register_custom_metric(MeanAbsoluteError)
+
+            Scorer.register_custom_metric('any_weird_metric')
         except ImportError:
             pass
 
@@ -94,13 +97,12 @@ class ScorerTest(unittest.TestCase):
         self.assertEqual(b_acc, 0.75)
 
         # get np.nan for multidim
-        y_multidim = np.stack((y_true, y_pred), axis=1)
-        with self.assertRaises(ValueError):
-            sens_md = sensitivity(y_multidim, y_multidim)
-        with self.assertRaises(ValueError):
-            spec_md = specificity(y_multidim, y_multidim)
-        with self.assertRaises(ValueError):
-            b_acc_md = balanced_accuracy(y_multidim, y_multidim)
+        y_multiclass = np.concatenate((np.ones((200,)), np.zeros((400,)),
+                                       np.ones(100,)*3))
+
+        self.assertTrue(np.isnan(sensitivity(y_multiclass, y_multiclass)))
+        self.assertTrue(np.isnan(specificity(y_multiclass, y_multiclass)))
+        self.assertTrue(np.isnan(balanced_accuracy(y_multiclass, y_multiclass)))
 
     def test_one_hot_decoding(self):
         y_one_hot = np.stack((np.concatenate((np.ones((100,)), np.zeros((100,)))),

@@ -1,5 +1,0 @@
-,fit,,,transform,,,predict,,
-Element,total_seconds,mean_seconds_per_config,mean_seconds_per_item,total_seconds,mean_seconds_per_config,mean_seconds_per_item,total_seconds,mean_seconds_per_config,mean_seconds_per_item
-StandardScaler,0.035297,0.000990,0.000005,0.025206,0.000228,0.000001,,,
-PCA,0.032044,0.000877,0.000005,0.016565,0.000150,0.000001,,,
-SVC,0.079482,0.002236,0.000012,,,,0.034017,0.000490,0.000003

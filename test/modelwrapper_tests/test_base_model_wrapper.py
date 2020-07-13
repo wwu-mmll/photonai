@@ -15,12 +15,12 @@ class BaseModelWrapperTest(unittest.TestCase):
     def test_methods_available(self):
         if hasattr(self.model_wrapper, '_estimator_type'):
             if self.model_wrapper._estimator_type in ['classifiern', 'regressor']:
-                methods = ['fit', 'predict']
+                methods = ['fit', 'predict', 'get_params', 'set_params']
                 for method in methods:
                     self.assertTrue(
                         (hasattr(self.model_wrapper, method) and callable(getattr(self.model_wrapper, method))))
             elif self.model_wrapper._estimator_type == 'transformer':
-                methods = ['fit', 'transform']
+                methods = ['fit', 'transform', 'get_params', 'set_params']
                 for method in methods:
                     self.assertTrue(
                         (hasattr(self.model_wrapper, method) and callable(getattr(self.model_wrapper, method))))
