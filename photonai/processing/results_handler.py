@@ -662,7 +662,7 @@ class ResultsHandler:
 
         if self.output_settings.mongodb_connect_url:
             connect(self.output_settings.mongodb_connect_url, alias='photon_core')
-            logger.debug('Write results to mongodb...')
+            logger.info('Write results to mongodb...')
             try:
                 self.results.save()
             except DocumentTooLarge as e:
