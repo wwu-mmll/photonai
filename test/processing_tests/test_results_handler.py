@@ -261,7 +261,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         mongo_inst = my_result_handler.load_from_mongodb(pipe_name=self.pipe_name,
                                                          mongodb_connect_url=self.mongodb_path)
         self.assertIsInstance(mongo_inst, MDBHyperpipe)
-        self.assertTrue(mongo_inst.name == self.pipe_name)
+        self.assertTrue(mongo_inst.name == self.hyperpipe.name)
 
     def test_get_performance_table(self):
         pt = self.hyperpipe.results_handler.get_performance_table()
