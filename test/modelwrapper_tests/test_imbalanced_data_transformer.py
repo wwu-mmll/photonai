@@ -64,8 +64,8 @@ class ImbalancedDataTransformTest(BaseModelWrapperTest):
 
         X_resampled, y_resampled = imbalanced_data_transformer.fit_resample(test_instance_hardness_threshold.X,
                                                                             test_instance_hardness_threshold.Y)
-        assert X_resampled.shape == (15, 2)
-        assert y_resampled.shape == (15,)
+        assert X_resampled.shape == (14, 2)
+        assert y_resampled.shape == (14,)
 
     def test_strategy_combine(self):
         """

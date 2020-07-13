@@ -15,6 +15,7 @@ class ModelWrapperTests(unittest.TestCase):
         mlp = MLPClassifier()
         mlp.fit(self.X, self.y)
         mlp.predict(self.X)
+        mlp.predict_proba(self.X)
 
     def test_photon_one_class_svm(self):
         osvm = PhotonOneClassSVM()
