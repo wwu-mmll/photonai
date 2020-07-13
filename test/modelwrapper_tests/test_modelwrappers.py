@@ -3,7 +3,7 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from photonai.modelwrapper.PhotonOneClassSVM import PhotonOneClassSVM
 from photonai.modelwrapper.RangeRestrictor import RangeRestrictor
-from photonai.modelwrapper.PhotonMLPClassifier import MLPClassifier
+from photonai.modelwrapper.PhotonMLPClassifier import PhotonMLPClassifier
 
 
 class ModelWrapperTests(unittest.TestCase):
@@ -12,7 +12,7 @@ class ModelWrapperTests(unittest.TestCase):
         self.X, self.y = load_breast_cancer(True)
 
     def test_photon_mlp(self):
-        mlp = MLPClassifier()
+        mlp = PhotonMLPClassifier()
         mlp.fit(self.X, self.y)
         mlp.predict(self.X)
         mlp.predict_proba(self.X)
@@ -21,6 +21,9 @@ class ModelWrapperTests(unittest.TestCase):
         osvm = PhotonOneClassSVM()
         osvm.fit(self.X, self.y)
         osvm.predict(self.X)
+        osvm.score(self.X, self.y)
+        osvm.get_params()
+        osvm.set_params(**{'kernel': 'linear'})
 
     def test_range_restrictor(self):
         rr = RangeRestrictor()
