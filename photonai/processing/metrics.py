@@ -53,6 +53,10 @@ class Scorer(object):
 
     @classmethod
     def try_import_keras(cls):
+        """
+        Tries to import keras if available
+        :return:
+        """
         try:
             cls.dynamic_keras_import = __import__('keras')
         except ImportError:
@@ -60,6 +64,12 @@ class Scorer(object):
 
     @classmethod
     def register_custom_metric(cls, metric: Union[Metric_Type, Tuple[str, Metric_Type]]) -> Optional[str]:
+        """
+        Registers a custom metric with photonai. This can be be a function which accepts y_true and y_pred and returns
+        a float value or tensorflow or keras metric class or instance.
+        :param metric: custom metric
+        :return: string of the name under which the metric will be registered with photonai
+        """
         if cls.dynamic_keras_import is None:
             cls.try_import_keras()
         # if metric is already a string, don't do anything

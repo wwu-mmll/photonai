@@ -219,9 +219,12 @@ class Hyperpipe(BaseEstimator):
            - `evaluate_recent_performance`: gets a tested config and the respective performance in order to
               calculate a smart next configuration to process
 
-    * `metrics` [list of metric names as str]:
+    * `metrics` [list of metric names as str, as function or as tuple of str and function]:
         Metrics that should be calculated for both training, validation and test set
-        Use the preimported metrics from sklearn and photonai, or register your own
+        Use the preimported metrics from sklearn and photonai, register your own, use a keras metric or
+        provide as function.
+        If passed as function, the function should have the signature `def func(y_true, y_pred)`.
+
 
         - Metrics for `classification`:
             - `accuracy`: sklearn.metrics.accuracy_score
