@@ -88,14 +88,13 @@ class PermutationTest:
                     self.pipe.results.permutation_failed = str(e)
                     logger.error(e)
                     PermutationTest.clear_data_and_save(self.pipe)
+                raise e
 
         # check for sanity
         if not self.__validate_usability(existing_reference):
             raise RuntimeError("Permutation Test is not adviced because results are not better than dummy. Aborting.")
 
         # find how many permutations have been computed already:
-        # existing_permutations = MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
-        #                                                   'computation_completed': True}).count()
         existing_permutations = list(MDBHyperpipe.objects.raw({'permutation_id': self.permutation_id,
                                                                'computation_completed': True}).only('name'))
         existing_permutations = [int(perm_run.name.split('_')[-1]) for perm_run in existing_permutations]

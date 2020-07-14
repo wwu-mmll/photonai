@@ -4,7 +4,7 @@ import numpy as np
 from photonai.optimization import FloatRange, IntegerRange, Categorical, BooleanSwitch
 
 
-class BaseTest(unittest.TestCase):
+class HyperparameterBaseTest(unittest.TestCase):
 
     def setUp(self):
         """
@@ -12,7 +12,8 @@ class BaseTest(unittest.TestCase):
         """
         self.intger_range = IntegerRange(2,6)
         self.float_range = FloatRange(0.1, 5.7)
-        self.categorical = Categorical(["a","b","c","d","e","f","g","h"])
+        self.cateogrical_truth = ["a","b","c","d","e","f","g","h"]
+        self.categorical = Categorical(self.cateogrical_truth)
         self.bool = BooleanSwitch()
 
     def test_rand_success(self):
@@ -23,7 +24,7 @@ class BaseTest(unittest.TestCase):
             self.assertGreaterEqual(self.float_range.get_random_value(), 0.1)
             self.assertLess(self.float_range.get_random_value(), 5.7)
 
-            self.assertIn(self.categorical.get_random_value(), ["a","b","c","d","e","f","g","h"])
+            self.assertIn(self.categorical.get_random_value(), self.cateogrical_truth)
 
             self.assertIn(self.bool.get_random_value(), [True, False])
 
@@ -47,13 +48,18 @@ class BaseTest(unittest.TestCase):
         self.assertListEqual(self.categorical.values, ["a","b","c","d","e","f","g","h"])
         self.assertListEqual(self.bool.values, [True, False])
 
-
     def test_rand_error(self):
         with self.assertRaises(ValueError):
             self.intger_range.get_random_value(definite_list=True)
+        with self.assertRaises(ValueError):
             self.float_range.get_random_value(definite_list=True)
-            self.bool.get_random_value(definite_list=True)
-            self.categorical.get_random_value(definite_list=True)
+        with self.assertRaises(NotImplementedError):
+            self.categorical.get_random_value(definite_list=False)
+        with self.assertRaises(NotImplementedError):
+            self.categorical.get_random_value(definite_list=False)
+
+    def test_categorical(self):
+        self.assertEqual(self.categorical[2], self.cateogrical_truth[2])
 
 
 class NumberRangeTest(unittest.TestCase):

@@ -36,8 +36,6 @@ class PhotonPrintHelper:
 
     @staticmethod
     def config_to_human_readable_dict(pipe, specific_config):
-        """
-        """
         prettified_config = {}
         for el_key, el_value in specific_config.items():
             items = el_key.split('__')

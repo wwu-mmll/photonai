@@ -43,7 +43,15 @@ class PipelineElementTests(unittest.TestCase):
         # correct name
         self.assertEqual(self.pca_pipe_element.name, 'PCA')
 
-    def test_fit(self):
+    def test_create_from_object(self):
+        pca = PipelineElement.create('obj_name', PCA(), hyperparameters={'n_components': [1, 4]})
+        self.assertIsInstance(pca.base_element, PCA)
+        self.assertEqual(pca.name, 'obj_name')
+
+        with self.assertRaises(ValueError):
+            pca_2 = PipelineElement.create('obj_name', PCA, hyperparameters={'n_components': [1, 4]})
+
+    def test_fit_and_score(self):
         tmp_pca = PCA().fit(self.X, self.y)
         self.pca_pipe_element.fit(self.X, self.y)
         self.assertEqual(self.pca_pipe_element.base_element.components_.shape, (30, 30))
@@ -52,6 +60,10 @@ class PipelineElementTests(unittest.TestCase):
         tmp_svc = SVC().fit(self.X, self.y)
         self.svc_pipe_element.fit(self.X, self.y)
         self.assertAlmostEqual(self.svc_pipe_element.base_element._intercept_[0], tmp_svc._intercept_[0])
+
+        sk_score = tmp_svc.score(self.X, self.y)
+        p_score = self.svc_pipe_element.score(self.X, self.y)
+        self.assertTrue(np.array_equal(sk_score, p_score))
 
     def test_transform(self):
         self.pca_pipe_element.fit(self.X, self.y)
@@ -92,6 +104,10 @@ class PipelineElementTests(unittest.TestCase):
                                                                              'PCA__disabled': False},
                                                                             {'PCA__disabled': True}])
 
+    def test_hyperprameter_sanity_check(self):
+        with self.assertRaises(ValueError):
+            error_element = PipelineElement('PCA', hyperparameters={'kernel': ['rbf', 'linear']})
+
     def test_more_hyperparameters_setup(self):
         # sklearn attributes are generated
         self.assertDictEqual(self.svc_pipe_element.hyperparameters, {'SVC__C': [0.1, 1],
@@ -116,6 +132,13 @@ class PipelineElementTests(unittest.TestCase):
         self.assertEqual(self.pca_pipe_element.base_element.n_components, 3)
         with self.assertRaises(ValueError):
             self.pca_pipe_element.set_params(**{'any_weird_param': 1})
+
+    def test_get_params(self):
+        photon_params = PipelineElement('PCA').get_params()
+        del photon_params["name"]
+        sk_params = PCA().get_params()
+        self.assertDictEqual(photon_params, sk_params)
+        self.assertIsNone(PipelineElement.create('any_not_existing_object', object(), hyperparameters={}).get_params())
 
     def test_set_random_state(self):
         # we handle all elements in one method that is inherited so we capture them all in this test
@@ -199,6 +222,11 @@ class PipelineElementTests(unittest.TestCase):
         self.assertTrue(np.array_equal(X, self.Xt))  # DummyEstimator returns X as y predictions
         self.assertTrue(np.array_equal(kwargs['covariates'], self.kwargs['covariates']))
         self.assertEqual(y, None)
+
+    def test_predict_on_transformer(self):
+        est = PipelineElement.create('Estimator', base_element=DummyTransformer(), hyperparameters={})
+        with self.assertRaises(BaseException):
+            est.predict(self.X)
 
     def test_copy_me(self):
         svc = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['rbf', 'sigmoid']})
@@ -866,6 +894,20 @@ class StackTests(unittest.TestCase):
         self.assertEqual(preds.shape[1], 2)
         probas = self.estimator_stack.predict_proba(self.X)
         self.assertEqual(probas.shape[1], 3)
+
+
+class PreprocessingTests(unittest.TestCase):
+
+    def test_hyperparameter_add(self):
+        pe = Preprocessing()
+        with self.assertRaises(ValueError):
+            pe.add(PipelineElement('PCA', hyperparameters={'n_components': [1, 5]}))
+
+    def test_predict_warning(self):
+        pe = Preprocessing()
+        pe.add(PipelineElement('SVC'))
+        with self.assertRaises(Warning):
+            pe.predict([0, 1, 2])
 
 
 class DataFilterTests(unittest.TestCase):

@@ -20,9 +20,9 @@ class PhotonHyperparam(object):
         if definite_list:
             return random.choice(self.values)
         else:
-            msg = "The PHOTON hyperparam has no own random function."
+            msg = "The PHOTONAI hyperparam has no own random function."
             logger.error(msg)
-            raise ValueError(msg)
+            raise NotImplementedError(msg)
 
     def __str__(self):
         return str(self.__class__) + str(self.values)
@@ -46,8 +46,8 @@ class Categorical(PhotonHyperparam):
     def __getitem__(self, item):
         return self.values.__getitem__(item)
 
-    def index(self, obj):
-        return self.values.index(obj)
+    def __index__(self, obj):
+        return self.values.__index__(obj)
 
 
 class BooleanSwitch(PhotonHyperparam):
@@ -164,14 +164,13 @@ class NumberRange(PhotonHyperparam):
                 values = np.geomspace(self.start, self.stop, dtype=self.num_type, **self.range_params)
 
         # convert to python datatype because mongodb needs it
-        if np.issubdtype(self.num_type, np.integer):
-            self.values = [int(i) for i in values]
-        elif np.issubdtype(self.num_type, np.floating):
-            self.values = [float(i) for i in values]
-        else:
+        try:
+            self.values = [values[i].item() for i in range(len(values))]
+        except:
             msg = "PHOTON can not guarantee full mongodb support since you chose a non [np.integer, np.floating] " \
                   "subtype in NumberType.dtype."
             logger.warn(msg)
+            raise Warning(msg)
             self.values = values
 
     @property

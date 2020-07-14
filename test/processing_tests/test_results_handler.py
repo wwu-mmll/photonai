@@ -151,6 +151,14 @@ class ResultsHandlerTest(PhotonBaseTest):
                     self.assertAlmostEqual(result_dict[data_key].metrics[result_metric],
                                            table[outer_fold_traintest[data_key]][result_metric], 4)
 
+    def test_save_backmapping_weird_format(self):
+        self.hyperpipe.fit(self.__X, self.__y)
+        weird_format_fake = ('string', ['array'])
+        # should be saved as pickle
+        self.hyperpipe.results_handler.save_backmapping('weird_format', weird_format_fake)
+        expected_file = os.path.join(self.output_settings.results_folder, 'weird_format.p')
+        self.assertTrue(os.path.isfile(expected_file))
+
     def test_save_backmapping_csv(self):
         """
         Check dimension of feature backmapping equals input dimensions for less than 1000 features.
@@ -198,14 +206,25 @@ class ResultsHandlerTest(PhotonBaseTest):
         n_stack_features = self.hyperpipe.best_config['myStack__PCA__n_components'] + np.shape(self.__X)[1]
         self.assertEqual(n_stack_features, backmapping.size)
 
-    def pass_through_plots(self):
+    def test_get_feature_importances(self):
+        self.hyperpipe.elements[-1] = PipelineElement('LinearSVC')
+        self.hyperpipe.fit(self.__X, self.__y)
+        f_imps = self.hyperpipe.results_handler.get_importance_scores()
+        self.assertIsNotNone(f_imps)
+
+    def test_pass_through_plots(self):
         """
         Test for plot functions. Only passing test, no quality testing.
         """
-        self.assertIsNone(self.hyperpipe.results.plot_optimizer_history(type='scatter'))
-        self.assertIsNone(self.hyperpipe.results.plot_true_pred())
-        self.assertIsNone(self.hyperpipe.results.plot_confusion_matrix())
-        self.assertIsNone(self.hyperpipe.results.plot_roc_curve())
+        self.assertIsNone(self.hyperpipe.results_handler.plot_optimizer_history(metric='accuracy', type='scatter'))
+        self.assertIsNone(self.hyperpipe.results_handler.eval_mean_time_components())
+
+    def test_empty_results(self):
+        res_handler = ResultsHandler()
+        with self.assertRaises(ValueError):
+            res_handler.get_test_predictions('test_predictions')
+        with self.assertRaises(ValueError):
+            res_handler.get_validation_predictions('test_predictions')
 
     def test_save_all_learning_curves(self):
         """
@@ -249,6 +268,16 @@ class ResultsHandlerTest(PhotonBaseTest):
                                                   mongodb_connect_url=self.mongodb_path)
         self.assertIsInstance(my_mongo_result_handler.results, MDBHyperpipe)
         self.assertTrue(my_mongo_result_handler.results.name == hyperpipe.name)
+
+        # write again to mongodb
+        hyperpipe.fit(self.__X, self.__y)
+        with self.assertRaises(Warning):
+            my_mongo_result_handler.load_from_mongodb(pipe_name=hyperpipe.name,
+                                                      mongodb_connect_url=self.mongodb_path)
+
+        with self.assertRaises(FileNotFoundError):
+            my_result_handler.load_from_mongodb(pipe_name='any_weird_name_1238934384834234892384382',
+                                                mongodb_connect_url=self.mongodb_path)
 
     def test_get_performance_table(self):
 

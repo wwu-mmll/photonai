@@ -35,18 +35,18 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    best_config_metric='mean_absolute_error',
                                    output_settings=OutputSettings(project_folder=self.tmp_folder_path),
-                                   verbosity=2)
+                                   verbosity=0)
 
     def test_cv_config_and_dummy_nr(self):
         X, y = load_boston(return_X_y=True)
         self.hyperpipe += PipelineElement('StandardScaler')
-        self.hyperpipe += PipelineElement('PCA', {'n_components': IntegerRange(3, 7)})
-        self.hyperpipe += PipelineElement('SVR', {'C': FloatRange(0.001, 10, num=10),
+        self.hyperpipe += PipelineElement('PCA', {'n_components': IntegerRange(3, 5)})
+        self.hyperpipe += PipelineElement('SVR', {'C': FloatRange(0.001, 10, num=5),
                                                   'kernel': Categorical(['linear', 'rbf'])})
 
         self.hyperpipe.fit(X, y)
 
-        expected_configs = 4 * 10 * 2
+        expected_configs = 2 * 5 * 2
 
         # check version is present
         self.assertIsNotNone(self.hyperpipe.results.version)

@@ -16,22 +16,27 @@ class DummyBatchTransformer(BaseEstimator):
         pass
 
     def transform(self, X, y=None, **kwargs):
-        X_new = []
-        for i, x in enumerate(X):
-            X_new.append([str(sub_x) + str(y[i]) for sub_x in x])
+        if hasattr(X, '__iter__'):
+            X_new = []
+            for i, x in enumerate(X):
+                X_new.append([str(sub_x) + str(y[i]) for sub_x in x])
 
-        if not np.array_equal(y, kwargs["animals"]):
-            raise Exception("Batching y and kwargs delivery is strange")
+            if not np.array_equal(y, kwargs["animals"]):
+                raise Exception("Batching y and kwargs delivery is strange")
 
-        kwargs["animals"] = [i[::-1] for i in kwargs["animals"]]
+            kwargs["animals"] = [i[::-1] for i in kwargs["animals"]]
 
-        return np.asarray(X_new), np.asarray(y), kwargs
+            return np.asarray(X_new), np.asarray(y), kwargs
+        else:
+            return X, y, kwargs
 
     def predict(self, X, y=None, **kwargs):
-
-        self.predict_count += 1
-        predictions = np.ones((X.shape[0],)) * self.predict_count
-        return predictions
+        if hasattr(X, '__iter__'):
+            self.predict_count += 1
+            predictions = np.ones((X.shape[0],)) * self.predict_count
+            return predictions
+        else:
+            return y
 
 
 class BatchingTests(unittest.TestCase):
@@ -68,8 +73,13 @@ class BatchingTests(unittest.TestCase):
         self.assertEqual(kwargs_new["animals"][0], "effa")
         self.assertEqual(kwargs_new["animals"][49], "ewöl")
 
+        with self.assertRaises(Warning):
+            self.neuro_batch.transform('str', [0])
+
     def test_predict(self):
         y_predicted = self.neuro_batch.predict(self.data, **self.kwargs)
         # assure that predict is batch wisely called
         self.assertEqual(y_predicted[0], 1)
         self.assertEqual(y_predicted[-1], (self.data.shape[0]/self.batch_size))
+        with self.assertRaises(Warning):
+            self.neuro_batch.predict('str')

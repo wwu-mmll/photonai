@@ -61,6 +61,10 @@ class PhotonFoldsTests(unittest.TestCase):
         self.assertEqual(len(fold_list[0].train_indices), self.num_subjects)
         self.assertEqual(len(fold_list[0].test_indices), 0)
 
+        fold_list = FoldInfo.generate_folds(None, range(len(self.y)), self.y, self.kwargs, eval_final_performance=False)
+        self.assertEqual(len(fold_list), 1)
+        self.assertTrue(np.array_equal(range(len(self.y)), fold_list[0].train_indices))
+
     def test_k_fold_generation_eval_final_performance_false(self):
         # this should change nothing
         nr_of_folds = 10
@@ -71,3 +75,6 @@ class PhotonFoldsTests(unittest.TestCase):
         expected_outcome = {str(i): 10 for i in range(10)}
         data_count = FoldInfo.data_overview(self.kwargs['groups'].astype(int))
         self.assertDictEqual(expected_outcome, data_count)
+
+
+

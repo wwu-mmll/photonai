@@ -350,7 +350,9 @@ class PipelineElement(BaseEstimator):
 
     def __batch_predict(self, delegate, X, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
-            logger.warning("Cannot do batching on a single entity.")
+            warning = "Cannot do batching on a single entity."
+            logger.warning(warning)
+            raise Warning(warning)
             return delegate(X, **kwargs)
 
             # initialize return values
@@ -374,9 +376,6 @@ class PipelineElement(BaseEstimator):
     def __predict(self, X, **kwargs):
         if not self.disabled:
             if hasattr(self.base_element, 'predict'):
-                # Todo: check if element has kwargs, and give it to them
-                # todo: so this todo above was old, here are my changes:
-                #return self.base_element.predict(X)
                 return self.adjusted_predict_call(self.base_element.predict, X, **kwargs)
             else:
                 logger.error('BaseException. base Element should have function ' +
@@ -412,7 +411,6 @@ class PipelineElement(BaseEstimator):
                 #return self.base_element.predict_proba(X)
                 return self.adjusted_predict_call(self.base_element.predict_proba, X, **kwargs)
             else:
-
                 # todo: in case _final_estimator is a Branch, we do not know beforehand it the base elements will
                 #  have a predict_proba -> if not, just return None (@Ramona, does this make sense?)
                 # logger.error('BaseException. base Element should have "predict_proba" function.')
@@ -452,7 +450,9 @@ class PipelineElement(BaseEstimator):
 
     def __batch_transform(self, X, y=None, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
-            logger.warning("Cannot do batching on a single entity.")
+            warning = "Cannot do batching on a single entity."
+            logger.warning(warning)
+            raise Warning(warning)
             return self.__transform(X, y, **kwargs)
 
             # initialize return values

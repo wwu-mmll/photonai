@@ -38,8 +38,8 @@ class PermutationTestTests(PhotonBaseTest):
                                                     mongo_db_connect_url="mongodb://localhost:27017/photon_results")
         returned_duration = result["estimated_duration"]
         cached_duration = self.hyperpipe.results.computation_end_time - self.hyperpipe.results.computation_start_time
-        self.assertAlmostEqual(round(returned_duration.total_seconds(), 2),
-                               round(cached_duration.total_seconds(), 2), 3)
+        self.assertAlmostEqual(round(returned_duration.total_seconds(), 3),
+                               round(cached_duration.total_seconds(), 3), 2)
         # Todo: setup case where it is false
         self.assertTrue(result["usability"])
 
@@ -58,45 +58,118 @@ class PermutationTestTests(PhotonBaseTest):
                                                      ObjectId(wizard_obj_id), True)
         self.assertEqual(latest_item.name, wizard_obj_id)
 
-    def test_run_perm_test(self):
+    def create_hyperpipe(self):
+        # this is needed here for the parallelisation
+        from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+        from photonai.optimization import FloatRange, Categorical, IntegerRange
+        from sklearn.model_selection import GroupKFold
+        from sklearn.model_selection import KFold
 
-        def create_hyperpipe():
-            # this is needed here for the parallelisation
-            from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-            from photonai.optimization import FloatRange, Categorical, IntegerRange
-            from sklearn.model_selection import GroupKFold
-            from sklearn.model_selection import KFold
+        settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
+                                  project_folder=self.tmp_folder_path)
+        my_pipe = Hyperpipe('permutation_test_1',
+                            optimizer='grid_search',
+                            metrics=['accuracy', 'precision', 'recall'],
+                            best_config_metric='accuracy',
+                            outer_cv=GroupKFold(n_splits=2),
+                            inner_cv=KFold(n_splits=2),
+                            calculate_metrics_across_folds=True,
+                            eval_final_performance=True,
+                            verbosity=1,
+                            output_settings=settings)
 
-            settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
-                                      project_folder='./tmp/')
-            my_pipe = Hyperpipe('permutation_test_1',
-                                optimizer='grid_search',
-                                metrics=['accuracy', 'precision', 'recall'],
-                                best_config_metric='accuracy',
-                                outer_cv=GroupKFold(n_splits=2),
-                                inner_cv=KFold(n_splits=2),
-                                calculate_metrics_across_folds=True,
-                                eval_final_performance=True,
-                                verbosity=1,
-                                output_settings=settings)
+        # Add transformer elements
+        my_pipe += PipelineElement("StandardScaler", hyperparameters={},
+                                   test_disabled=False, with_mean=True, with_std=True)
 
-            # Add transformer elements
-            my_pipe += PipelineElement("StandardScaler", hyperparameters={},
-                                       test_disabled=False, with_mean=True, with_std=True)
+        my_pipe += PipelineElement("PCA", hyperparameters={'n_components': IntegerRange(3, 5)},
+                                   test_disabled=False)
 
-            my_pipe += PipelineElement("PCA",  hyperparameters={'n_components': IntegerRange(3, 5)},
-                                       test_disabled=False)
+        # Add estimator
+        my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']},  # C': FloatRange(0.1, 5),
+                                   gamma='scale', max_iter=1000000)
 
-            # Add estimator
-            my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']},  # C': FloatRange(0.1, 5),
-                                       gamma='scale', max_iter=1000000)
+        return my_pipe
 
-            return my_pipe
+    def create_hyperpipe(self):
+        # this is needed here for the parallelisation
+        from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+        from photonai.optimization import FloatRange, Categorical, IntegerRange
+        from sklearn.model_selection import GroupKFold
+        from sklearn.model_selection import KFold
 
+        settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
+                                  project_folder=self.tmp_folder_path)
+        my_pipe = Hyperpipe('permutation_test_1',
+                            optimizer='grid_search',
+                            metrics=['accuracy', 'precision', 'recall'],
+                            best_config_metric='accuracy',
+                            outer_cv=GroupKFold(n_splits=2),
+                            inner_cv=KFold(n_splits=2),
+                            calculate_metrics_across_folds=True,
+                            eval_final_performance=True,
+                            verbosity=1,
+                            output_settings=settings)
+
+        # Add transformer elements
+        my_pipe += PipelineElement("StandardScaler", hyperparameters={},
+                                   test_disabled=False, with_mean=True, with_std=True)
+
+        my_pipe += PipelineElement("PCA", hyperparameters={'n_components': IntegerRange(3, 5)},
+                                   test_disabled=False)
+
+        # Add estimator
+        my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']},  # C': FloatRange(0.1, 5),
+                                   gamma='scale', max_iter=1000000)
+
+        return my_pipe
+
+    def create_hyperpipe_no_mongo(self):
+        from photonai.base import Hyperpipe, OutputSettings
+        from sklearn.model_selection import KFold
+
+        settings = OutputSettings(project_folder=self.tmp_folder_path)
+        my_pipe = Hyperpipe('permutation_test_1',
+                            optimizer='grid_search',
+                            metrics=['accuracy', 'precision', 'recall'],
+                            best_config_metric='accuracy',
+                            outer_cv=KFold(n_splits=2),
+                            inner_cv=KFold(n_splits=2),
+                            calculate_metrics_across_folds=True,
+                            eval_final_performance=True,
+                            verbosity=1,
+                            output_settings=settings)
+        return my_pipe
+
+    def test_no_mongo_connection_string(self):
+        perm_tester = PermutationTest(self.create_hyperpipe_no_mongo, n_perms=2, n_processes=3, random_state=11,
+                                      permutation_id=str(uuid.uuid4()))
+        with self.assertRaises(ValueError):
+            perm_tester.fit(self.X, self.y)
+
+    def test_run_parallelized_perm_test(self):
         X, y = load_breast_cancer(return_X_y=True)
         my_perm_id = str(uuid.uuid4())
         groups = np.random.random_integers(0, 3, (len(y),))
-        perm_tester = PermutationTest(create_hyperpipe, n_perms=2, n_processes=1, random_state=11,
+        perm_tester = PermutationTest(self.create_hyperpipe, n_perms=2, n_processes=3, random_state=11,
+                                      permutation_id=my_perm_id)
+        perm_tester.fit(X, y, groups=groups)
+
+    def test_setup_non_useful_perm_test(self):
+        np.random.seed(1335)
+        X, y = np.random.random((200, 5)), np.random.randint(0, 2, size=(200, ))
+        my_perm_id = str(uuid.uuid4())
+        groups = np.random.random_integers(0, 3, (len(y),))
+        perm_tester = PermutationTest(self.create_hyperpipe, n_perms=2, n_processes=3, random_state=11,
+                                      permutation_id=my_perm_id)
+        with self.assertRaises(RuntimeError):
+            perm_tester.fit(X, y, groups=groups)
+
+    def test_run_perm_test(self):
+        X, y = load_breast_cancer(return_X_y=True)
+        my_perm_id = str(uuid.uuid4())
+        groups = np.random.random_integers(0, 3, (len(y),))
+        perm_tester = PermutationTest(self.create_hyperpipe, n_perms=2, n_processes=1, random_state=11,
                                       permutation_id=my_perm_id)
         perm_tester.fit(X, y, groups=groups)
 

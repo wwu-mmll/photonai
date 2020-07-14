@@ -32,7 +32,8 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
                                    metrics=self.metrics,
                                    best_config_metric=self.best_config_metric,
-                                   output_settings=output_settings)
+                                   output_settings=output_settings,
+                                   verbosity=2)
         self.hyperpipe += self.ss_pipe_element
         self.hyperpipe += self.pca_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
