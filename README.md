@@ -1,6 +1,12 @@
 ![PHOTON LOGO](http://www.photon-ai.com/static/img/photon/photon-logo-github.png "PHOTON Logo")
 
 [![Build Status](https://travis-ci.com/wwu-mmll/photonai.svg?branch=master)](https://travis-ci.com/wwu-mmll/photonai)
+[![Coverage Status](https://coveralls.io/repos/github/wwu-mmll/photonai/badge.svg?branch=develop)](https://coveralls.io/github/wwu-mmll/photonai?branch=develop)
+![Github Contributors](https://img.shields.io/github/contributors-anon/wwu-mmll/photonai?color=blue)
+![Github Commits](https://img.shields.io/github/commit-activity/m/wwu-mmll/photonai)
+![PyPI Version](https://img.shields.io/pypi/v/photonai?color=brightgreen)
+![License](https://img.shields.io/github/license/wwu-mmll/photonai)
+![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Fwwu_mmll)
 
 #### PHOTONAI is a high level python API for designing and optimizing machine learning pipelines.
 
