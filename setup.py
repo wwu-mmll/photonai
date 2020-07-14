@@ -10,7 +10,7 @@ except ImportError:
 # class Modulenstalltio
 
 
-__version__ = '1.1.0'
+__version__ = '2.0.0'
 
 setup(
     name='photonai',
@@ -53,6 +53,5 @@ with only one line of code.
         'joblib',
         'dask',
         'distributed',
-        'scikit-optimize',
-        'pytest']
+        'scikit-optimize']
 )
