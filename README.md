@@ -1,7 +1,7 @@
 ![PHOTON LOGO](http://www.photon-ai.com/static/img/photon/photon-logo-github.png "PHOTON Logo")
 
 [![Build Status](https://travis-ci.com/wwu-mmll/photonai.svg?branch=master)](https://travis-ci.com/wwu-mmll/photonai)
-[![Coverage Status](https://coveralls.io/repos/github/wwu-mmll/photonai/badge.svg?branch=develop)](https://coveralls.io/github/wwu-mmll/photonai?branch=develop)
+[![Coverage Status](https://coveralls.io/repos/github/wwu-mmll/photonai/badge.svg?branch=master)](https://coveralls.io/github/wwu-mmll/photonai?branch=master)
 ![Github Contributors](https://img.shields.io/github/contributors-anon/wwu-mmll/photonai?color=blue)
 ![Github Commits](https://img.shields.io/github/commit-activity/m/wwu-mmll/photonai)
 ![PyPI Version](https://img.shields.io/pypi/v/photonai?color=brightgreen)
