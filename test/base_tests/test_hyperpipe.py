@@ -533,7 +533,7 @@ class HyperpipeTests(PhotonBaseTest):
             step2 = self.sklearn_pipe.named_steps["PCA"].transform(self.__X)
         else:
             step2 = step1
-        self.assertTrue(np.array_equal(step2, self.hyperpipe.transform(self.__X)))
+        self.assertTrue(np.allclose(step2, self.hyperpipe.transform(self.__X)))
 
 
 class HyperpipeOptimizationClassTests(unittest.TestCase):
