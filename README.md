@@ -6,7 +6,7 @@
 [![Github Commits](https://img.shields.io/github/commit-activity/m/wwu-mmll/photonai)](https://github.com/wwu-mmll/photonai/commits/master)
 [![PyPI Version](https://img.shields.io/pypi/v/photonai?color=brightgreen)](https://pypi.org/project/photonai/)
 [![License](https://img.shields.io/github/license/wwu-mmll/photonai)](https://github.com/wwu-mmll/photonai/blob/master/LICENSE)
-![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Fwwu_mmll)
+[![Twitter URL](https://img.shields.io/twitter/url?style=social&url=https%3A%2F%2Ftwitter.com%2Fwwu_mmll)](https://twitter.com/wwu_mmll)
 
 #### PHOTONAI is a high level python API for designing and optimizing machine learning pipelines.
 
@@ -23,9 +23,9 @@ state-of-the-art machine learning toolboxes,
  hyperparameter optimization strategies.  
 
 For a detailed description, 
-###[Visit our Website and Read the Documentation](https://www.photon-ai.com) 
+__[visit our website and read the documentation](https://www.photon-ai.com)__
 
-or you can read a prolongued introduction on [Arxiv](https://arxiv.org/abs/2002.05426)
+or you can read a prolonged introduction on [Arxiv](https://arxiv.org/abs/2002.05426)
 
 
 
