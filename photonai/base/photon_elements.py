@@ -5,6 +5,7 @@ from copy import deepcopy
 import dask
 from dask.distributed import Client
 import numpy as np
+import warnings
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
 
@@ -222,6 +223,7 @@ class PipelineElement(BaseEstimator):
         if already_existing_element_with_that_name > 0:
             error_msg = "Already added a pipeline element with the name " + pipe_element.name + " to " + self.name
             logger.warning(error_msg)
+            warnings.warn(error_msg)
 
             # check for other items that have been renamed
             nr_of_existing_elements_with_that_name = len([i for i in self.elements if i.name.startswith(pipe_element.name)])
@@ -229,8 +231,9 @@ class PipelineElement(BaseEstimator):
             while len([i for i in self.elements if i.name == new_name]) > 0:
                 nr_of_existing_elements_with_that_name += 1
                 new_name = pipe_element.name + str(nr_of_existing_elements_with_that_name + 1)
-
-            logger.warning("Renaming " + pipe_element.name + " in " + self.name + " to " + new_name + " in " + self.name)
+            msg = "Renaming " + pipe_element.name + " in " + self.name + " to " + new_name + " in " + self.name
+            logger.warning(msg)
+            warnings.warn(msg)
             pipe_element.name = new_name
 
         self.elements.append(pipe_element)
@@ -350,9 +353,9 @@ class PipelineElement(BaseEstimator):
 
     def __batch_predict(self, delegate, X, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
-            warning = "Cannot do batching on a single entity."
-            logger.warning(warning)
-            raise Warning(warning)
+            msg = "Cannot do batching on a single entity."
+            logger.warning(msg)
+            warnings.warn(msg)
             return delegate(X, **kwargs)
 
             # initialize return values
@@ -452,7 +455,7 @@ class PipelineElement(BaseEstimator):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):
             warning = "Cannot do batching on a single entity."
             logger.warning(warning)
-            raise Warning(warning)
+            warnings.warn(warning)
             return self.__transform(X, y, **kwargs)
 
             # initialize return values
@@ -636,9 +639,10 @@ class Branch(PipelineElement):
     @staticmethod
     def sanity_check_pipeline(pipe):
         if isinstance(pipe.elements[-1][1], CallbackElement):
-            raise Warning("Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it.")
-            Logger().warn("Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it.")
-            del pipeline_steps[-1]
+            msg = "Last element of pipeline cannot be callback element, would be mistaken for estimator. Removing it."
+            logger.warning(msg)
+            warnings.warn(msg)
+            del pipe.elements[-1]
         return pipe
 
     def _prepare_pipeline(self):
@@ -745,7 +749,7 @@ class Preprocessing(Branch):
         return self
 
     def predict(self, data, **kwargs):
-        raise Warning("There is no predict function of the preprocessing pipe, it is a transformer only.")
+        warnings.warn("There is no predict function of the preprocessing pipe, it is a transformer only.")
         pass
 
     @property

@@ -3,6 +3,7 @@ import os
 import shutil
 import time
 import unittest
+import warnings
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
@@ -116,11 +117,13 @@ class HyperpipeTests(PhotonBaseTest):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
 
         # make sure that if no best config metric is given, PHOTON raises a warning
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
+            assert len(w) == 1
 
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
+            assert len(w) == 1
 
         with self.assertRaises(NotImplementedError):
             hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object,

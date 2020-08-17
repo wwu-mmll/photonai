@@ -1,7 +1,9 @@
 import unittest
 import numpy as np
+import warnings
 
 from photonai.optimization import FloatRange, IntegerRange, Categorical, BooleanSwitch
+from photonai.optimization.hyperparameters import NumberRange
 
 
 class HyperparameterBaseTest(unittest.TestCase):
@@ -100,9 +102,14 @@ class NumberRangeTest(unittest.TestCase):
             number_range = IntegerRange(start=0, stop=self.end, range_type="geomspace")
             number_range.transform()
 
+        number_range = FloatRange(start=0.1, stop=self.end, range_type="geomspace")
+        number_range.transform()
+
         with self.assertRaises(ValueError):
             number_range = IntegerRange(start=1, stop=15, range_type="logspace")
             number_range.transform()
+        number_range = FloatRange(start=0.1, stop=self.end, range_type="logspace")
+        number_range.transform()
 
         with self.assertRaises(ValueError):
             IntegerRange(start=self.start, stop=self.end, range_type="ownspace")
@@ -120,6 +127,8 @@ class HyperparameterOtherTest(unittest.TestCase):
         """
         items = "Lorem ipsum dolor sit amet consetetur sadipscing elitr".split(" ")
         categorical = Categorical(values=items)
+        self.assertEqual(categorical[2], "dolor")
+        self.assertListEqual(categorical[2:5], items[2:5])
         self.assertListEqual(categorical.values, items)
 
     def test_boolean_switch(self):
@@ -128,3 +137,18 @@ class HyperparameterOtherTest(unittest.TestCase):
         """
         boolean_switch = BooleanSwitch()
         self.assertListEqual(boolean_switch.values, [True, False])
+
+    def test_start_stop_problem(self):
+        with warnings.catch_warnings(record=True) as w:
+            integer_range = IntegerRange(2, 1)
+            integer_range.transform()
+            assert len(w) == 1
+
+    def test_dtypes(self):
+        with warnings.catch_warnings(record=True) as w:
+            complex_range = NumberRange(1, 5, num_type=complex, range_type="range")
+            complex_range.transform()
+            str_range = NumberRange(1, 2, num_type=np.bool_, range_type="range")
+            str_range.transform()
+            assert len(w) == 0
+

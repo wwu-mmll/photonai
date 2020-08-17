@@ -2,7 +2,7 @@ import os
 import shutil
 from io import StringIO
 import uuid
-import time
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -271,9 +271,10 @@ class ResultsHandlerTest(PhotonBaseTest):
 
         # write again to mongodb
         hyperpipe.fit(self.__X, self.__y)
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             my_mongo_result_handler.load_from_mongodb(pipe_name=hyperpipe.name,
                                                       mongodb_connect_url=self.mongodb_path)
+            assert len(w) == 1
 
         with self.assertRaises(FileNotFoundError):
             my_result_handler.load_from_mongodb(pipe_name='any_weird_name_1238934384834234892384382',

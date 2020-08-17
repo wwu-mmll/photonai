@@ -1,5 +1,7 @@
+import warnings
+
 from photonai.optimization import Categorical as PhotonCategorical
-from photonai.optimization import FloatRange, IntegerRange
+from photonai.optimization import FloatRange, IntegerRange, BooleanSwitch
 from photonai.optimization.base_optimizer import PhotonMasterOptimizer
 from photonai.photonlogger import logger
 
@@ -50,9 +52,10 @@ class SMACOptimizer(PhotonMasterOptimizer):
         if not scenario_dict:
             self.scenario_dict = {"run_obj": "quality",
                                   "deterministic": "true",
-                                  "wallclock_limit": 60 * 40}
+                                  "wallclock_limit": 60 * 5}
             msg = "No scenario_dict for smac was given. Falling back to default values: {}.".format(self.scenario_dict)
             logger.warning(msg)
+            warnings.warn(msg)
         else:
             self.scenario_dict = scenario_dict
 
@@ -84,6 +87,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
             self.debug = False
 
         self.maximize_metric = False
+        self.constant_dictionary = {}
 
     @staticmethod
     def _convert_photon_to_smac_param(hyperparam: object, name: str):
@@ -97,21 +101,23 @@ class SMACOptimizer(PhotonMasterOptimizer):
         * `name` [str]
             Name of hyperparameter.
         """
-        if not hyperparam:
-            return None
-        if isinstance(hyperparam, PhotonCategorical):
+        if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):
             return CategoricalHyperparameter(name, hyperparam.values)
         elif isinstance(hyperparam, list):
             return CategoricalHyperparameter(name, hyperparam)
         elif isinstance(hyperparam, FloatRange):
             if hyperparam.range_type == 'linspace':
                 return UniformFloatHyperparameter(name, hyperparam.start, hyperparam.stop)
-            elif hyperparam.range_type == 'logspace':
-                raise NotImplementedError("Logspace in your float hyperparameter is not implemented in SMAC.")
-            else:
-                return UniformFloatHyperparameter(name, hyperparam.start, hyperparam.stop)
+            msg = str(hyperparam.range_type) + "in your float hyperparameter is not implemented in SMAC."
+            logger.error(msg)
+            raise NotImplementedError("Logspace in your float hyperparameter is not implemented in SMAC.")
         elif isinstance(hyperparam, IntegerRange):
             return UniformIntegerHyperparameter(name, hyperparam.start, hyperparam.stop)
+
+        msg = "Cannot convert hyperparameter " + str(hyperparam) + ". Supported types: Categorical, IntegerRange," \
+                                                                   "FloatRange, list."
+        logger.error(msg)
+        raise ValueError(msg)
 
     def build_smac_space(self, pipeline_elements):
         """
@@ -175,6 +181,11 @@ class SMACOptimizer(PhotonMasterOptimizer):
         """
         self.space = ConfigurationSpace()  # build space
         self.build_smac_space(pipeline_elements)
+        if self.constant_dictionary:
+            msg = "PHOTONAI has detected some one-valued params in your hyperparameters. Pleas use the kwargs for " \
+                  "constant values. This run ignores following settings: " + str(self.constant_dictionary.keys())
+            logger.warning(msg)
+            warnings.warn(msg)
         self.maximize_metric = maximize_metric
         self.scenario_dict["cs"] = self.cspace
         self.scenario_dict["limit_resources"] = False

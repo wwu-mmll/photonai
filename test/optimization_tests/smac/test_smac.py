@@ -11,6 +11,7 @@ from photonai.base.photon_pipeline import PhotonPipeline
 from sklearn.datasets import fetch_olivetti_faces
 from sklearn.model_selection import ShuffleSplit
 from photonai.optimization import FloatRange, Categorical, IntegerRange
+from photonai.optimization.hyperparameters import NumberRange
 from photonai.optimization.smac.smac import SMACOptimizer
 
 try:
@@ -65,7 +66,7 @@ else:
             # DESIGN YOUR PIPELINE
             self.pipe = Hyperpipe('basic_svm_pipe',
                                   optimizer='smac',
-                                  optimizer_params={'facade': SMAC4HPO,
+                                  optimizer_params={'facade': SMAC4BO,
                                                     'scenario_dict': scenario_dict,
                                                     'rng': 42,
                                                     'smac_helper': self.smac_helper},
@@ -112,7 +113,7 @@ else:
                                  })
 
             # Optimize, using a SMAC directly
-            smac = SMAC4HPO(scenario=scenario, rng=42,
+            smac = SMAC4BO(scenario=scenario, rng=42,
                            tae_runner=self.objective_function_simple)
             _ = smac.optimize()
 
@@ -220,7 +221,7 @@ else:
                                  })
 
             # Optimize, using a SMAC directly
-            smac = SMAC4HPO(scenario=scenario, rng=42,
+            smac = SMAC4BO(scenario=scenario, rng=42,
                            tae_runner=self.objective_function_switch)
             _ = smac.optimize()
 
@@ -287,3 +288,31 @@ else:
             facades = ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO, "BOHB4HPO", BOHB4HPO]
             for facade in facades:
                 SMACOptimizer(facade=facade, scenario_dict=scenario_dict)
+
+        def test_other(self):
+            with warnings.catch_warnings(record=True) as w:
+                opt = SMACOptimizer(facade="SMAC4BO", intensifier_kwargs={'min_chall': 2})
+                assert len(w) == 1
+                self.assertIsNotNone(opt.intensifier_kwargs)
+
+            pipeline_elements = [PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly',
+                                                                                               "sigmoid"]),
+                                                                        'C': [0.6]})]
+            of = lambda x: x**2
+            with warnings.catch_warnings(record=True) as w:
+                opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
+                assert len(w) == 1
+
+            pipeline_elements = [PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 0.5,
+                                                                                         range_type='logspace')})]
+            opt = SMACOptimizer(facade="SMAC4BO")
+            with self.assertRaises(NotImplementedError):
+                opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
+
+            pipeline_elements = [PipelineElement("SVC", hyperparameters={'C': NumberRange(1, 3,
+                                                                                         range_type='range')})]
+            opt = SMACOptimizer(facade="SMAC4BO")
+            with self.assertRaises(ValueError):
+                opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
+
+

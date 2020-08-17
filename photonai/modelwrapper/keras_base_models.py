@@ -1,3 +1,4 @@
+import warnings
 import numpy as np
 import keras
 from keras.utils import to_categorical
@@ -8,8 +9,8 @@ from keras.optimizers import Optimizer, Adam, RMSprop, Adadelta, Adagrad, Adamax
 from keras.activations import softmax, softplus, selu, sigmoid, softsign, hard_sigmoid, elu, relu, tanh, \
     linear, exponential
 from sklearn.base import ClassifierMixin, RegressorMixin
-from photonai.photonlogger.logger import logger
 
+from photonai.photonlogger.logger import logger
 from photonai.modelwrapper.keras_base_estimator import KerasBaseEstimator
 
 __supported_optimizers__ = {
@@ -181,7 +182,9 @@ class KerasDnnBaseModel(KerasBaseEstimator):
             else:
                 if type(value) == float:
                     self._dropout_rate = [value]*len(self.hidden_layer_sizes)
-                    logger.warning("Dropout with type float converted to type list.")
+                    msg = "Dropout with type float converted to type list."
+                    logger.warning(msg)
+                    warnings.warn(msg)
                 elif len(value) != len(self.hidden_layer_sizes):
                     raise ValueError("Dropout length missmatched layer length.")
                 else:
@@ -211,7 +214,9 @@ class KerasDnnBaseModel(KerasBaseEstimator):
                 if type(value) == str:
                     if value in __supported_activations__.keys():
                         self._activations = [value]*len(self.hidden_layer_sizes)
-                        logger.warning("activations with type str converted to type list.")
+                        msg = "activations with type str converted to type list."
+                        logger.warning(msg)
+                        warnings.warn(msg)
                     else:
                         raise ValueError(
                             "activations not supported. Please use one of: " + str(__supported_activations__.keys()))

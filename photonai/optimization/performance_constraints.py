@@ -1,6 +1,8 @@
 from enum import Enum
 import numpy as np
 import inspect
+import warnings
+
 from photonai.processing.metrics import Scorer
 from photonai.photonlogger.logger import logger
 
@@ -82,12 +84,16 @@ class PhotonBaseConstraint:
             Can be used to evaluate if the configuration has any potential to serve the model's learning task.
         """
         if self.metric == "unknown":
-            logger.warning("The metric is not known. Please check the metric: " + self.metric + ". " +
-                        "Performance constraints are constantly True.")
+            msg = "The metric is not known. Please check the metric: " + self.metric + ". " +\
+                  "Performance constraints are constantly True."
+            logger.warning(msg)
+            warnings.warn(msg)
             return True
         if self.metric not in config_item.inner_folds[0].validation.metrics:
-            logger.warning("The metric is not calculated. Please insert " + self.metric + " to Hyperpipe.metrics. " +
-                        "Performance constraints are constantly False.")
+            msg = "The metric is not calculated. Please insert " + self.metric + " to Hyperpipe.metrics. " + \
+                  "Performance constraints are constantly False."
+            logger.warning(msg)
+            warnings.warn(msg)
             return False
         if self._greater_is_better:
             if self.strategy.name == 'first':

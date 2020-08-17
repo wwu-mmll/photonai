@@ -1,7 +1,7 @@
 from photonai.optimization import PhotonHyperparam, IntegerRange, FloatRange, Categorical, BooleanSwitch
 from photonai.photonlogger import logger
 from itertools import product
-import numpy as np
+import warnings
 
 
 def create_global_config_dict(pipeline_elements):
@@ -47,12 +47,12 @@ def create_global_config_grid(pipeline_elements, add_name=''):
     for i in global_hyperparameter_list:
         total_product_num = total_product_num * len(i)
     if total_product_num > threshold:
-        warn_text = 'The entire configuration grid entails more than ' + str(threshold) + ' possible configurations. ' \
-                                                                                          'This might take veeeeeeery ' \
-                                                                                          'looooong to both compute ' \
-                                                                                          'and process.'
-        logger.warning(warn_text)
-        raise Warning(warn_text)
+        msg = 'The entire configuration grid entails more than ' + str(threshold) + ' possible configurations. ' \
+                                                                                    'This might take very ' \
+                                                                                    'long to both compute ' \
+                                                                                    'and process.'
+        logger.error(msg)
+        raise ValueError(msg)
     config_list = list(product(*global_hyperparameter_list))
     config_dicts = []
     # get all configs in one

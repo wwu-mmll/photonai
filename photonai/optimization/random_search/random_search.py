@@ -11,6 +11,8 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
     """
 
     def __init__(self, n_configurations=None, limit_in_minutes=60):
+        super(RandomSearchOptimizer, self).__init__()
+
         self.pipeline_elements = None
         self.parameter_iterable = None
         self.ask = self.next_config_generator()
@@ -29,9 +31,10 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
             self.n_configurations = n_configurations
         self.k_configutration = 0  # use k++ until k==n: break
 
-        if not n_configurations and limit_in_minutes <= 0:
+        if self.n_configurations is None and self.limit_in_minutes is None:
             msg = "No stopping criteria for RandomSearchOptimizer."
-            logger.warning(msg)
+            logger.error(msg)
+            raise ValueError(msg)
 
     def prepare(self, pipeline_elements, maximize_metric):
         self.pipeline_elements = pipeline_elements
@@ -54,10 +57,6 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
                 if self.k_configutration >= self.n_configurations:
                     return
 
-    def tell(self, config, performance):
-        # influence return value of next_config
-        pass
-
     def generate_config(self):
         config = {}
         for p_element in self.pipeline_elements:
@@ -67,6 +66,3 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
                 else:
                     config[h_key] = h_value.get_random_value()
         return config
-
-
-

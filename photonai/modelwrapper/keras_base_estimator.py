@@ -1,7 +1,10 @@
-from sklearn.base import BaseEstimator
-from photonai.photonlogger.logger import logger
+import warnings
 import keras
 import tensorflow
+from sklearn.base import BaseEstimator
+
+
+from photonai.photonlogger.logger import logger
 
 
 class KerasBaseEstimator(BaseEstimator):
@@ -59,7 +62,9 @@ class KerasBaseEstimator(BaseEstimator):
                            verbose=self.verbosity)
         else:
             # fit the model
-            logger.warning('Cannot use Keras Callbacks because of small sample size.')
+            msg = 'Cannot use Keras Callbacks because of small sample size.'
+            logger.warning(msg)
+            warnings.warn(msg)
             self.model.fit(X, y,
                            batch_size=self.nn_batch_size,
                            epochs=self.epochs,
