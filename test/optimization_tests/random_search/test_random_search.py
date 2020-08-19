@@ -36,7 +36,7 @@ class RandomSearchOptimizerTest(GridSearchOptimizerTest):
 
     def test_constraint_obligation(self):
         with self.assertRaises(ValueError):
-            opt = RandomSearchOptimizer(n_configurations=-1, limit_in_minutes=-1)
+            RandomSearchOptimizer(n_configurations=-1, limit_in_minutes=-1)
 
     def test_time_limit(self):
         self.optimizer = RandomSearchOptimizer(limit_in_minutes=0.05)  # 3 seconds

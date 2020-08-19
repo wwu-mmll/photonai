@@ -22,8 +22,7 @@ from dask.distributed import Client
 from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
-from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.model_selection import KFold
+from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
 
 from photonai.__init__ import __version__
 from photonai.base.cache_manager import CacheManager
@@ -195,10 +194,10 @@ class Hyperpipe(BaseEstimator):
     * `name` [str]:
         Name of hyperpipe instance
 
-    * `inner_cv` [BaseCrossValidator]:
+    * `inner_cv` Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits]:
         Cross validation strategy to test hyperparameter configurations, generates the validation set
 
-    * `outer_cv` [BaseCrossValidator]:
+    * `outer_cv` Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits]:
         Cross validation strategy to use for the hyperparameter search itself, generates the test set
 
     * `optimizer` [str or object, default="grid_search"]:
@@ -298,7 +297,7 @@ class Hyperpipe(BaseEstimator):
    """
 
     def __init__(self, name,
-                 inner_cv: BaseCrossValidator = None,
+                 inner_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits] = None,
                  outer_cv = None,
                  optimizer: str = 'grid_search',
                  optimizer_params: dict = None,
