@@ -106,11 +106,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
         elif isinstance(hyperparam, list):
             return CategoricalHyperparameter(name, hyperparam)
         elif isinstance(hyperparam, FloatRange):
-            if hyperparam.range_type == 'linspace':
-                return UniformFloatHyperparameter(name, hyperparam.start, hyperparam.stop)
-            msg = str(hyperparam.range_type) + "in your float hyperparameter is not implemented in SMAC."
+            if hyperparam.range_type in ['linspace', 'logspace']:
+                return UniformFloatHyperparameter(name, hyperparam.start, hyperparam.stop,
+                                                  log=(hyperparam.range_type == 'logspace'))
+            msg = str(hyperparam.range_type) + "in your FloatRange is not implemented in SMAC."
             logger.error(msg)
-            raise NotImplementedError("Logspace in your float hyperparameter is not implemented in SMAC.")
+            raise NotImplementedError(msg)
         elif isinstance(hyperparam, IntegerRange):
             return UniformIntegerHyperparameter(name, hyperparam.start, hyperparam.stop)
 

@@ -89,7 +89,8 @@ else:
             self.pipe.add(PipelineElement('StandardScaler'))
             self.pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})
             self.pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly']),
-                                                                 'C': FloatRange(0.5, 200)}, gamma='auto')
+                                                                 'C': FloatRange(0.001, 2, range_type='logspace')},
+                                         gamma='auto')
             self.X, self.y = self.simple_classification()
             self.pipe.fit(self.X, self.y)
 
@@ -100,7 +101,7 @@ else:
             cs.add_hyperparameter(n_components)
             kernel = CategoricalHyperparameter("SVC__kernel", ["rbf", 'poly'])
             cs.add_hyperparameter(kernel)
-            c = UniformFloatHyperparameter("SVC__C", 0.5, 200)
+            c = UniformFloatHyperparameter("SVC__C", 0.001, 2, log=True)
             cs.add_hyperparameter(c)
 
             # Scenario object
@@ -304,7 +305,7 @@ else:
                 assert len(w) == 1
 
             pipeline_elements = [PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 0.5,
-                                                                                         range_type='logspace')})]
+                                                                                         range_type='geomspace')})]
             opt = SMACOptimizer(facade="SMAC4BO")
             with self.assertRaises(NotImplementedError):
                 opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
