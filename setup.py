@@ -40,7 +40,7 @@ with only one line of code.
     install_requires=[
         'numpy',
         'matplotlib',
-        'scikit-learn',
+        'scikit-learn==0.23.1',
         'keras',
         'pandas',
         'plotly',

@@ -1,12 +1,11 @@
 from skopt import Optimizer
 from skopt.space import Real, Integer
 from skopt.space import Categorical as skoptCategorical
-from skopt.plots import plot_evaluations, plot_objective
 
+import warnings
 import numpy as np
-import matplotlib.pylab as plt
 
-from photonai.optimization import FloatRange, IntegerRange
+from photonai.optimization import FloatRange, IntegerRange, BooleanSwitch
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.optimization import Categorical as PhotonCategorical
 from photonai.photonlogger.logger import logger
@@ -49,18 +48,23 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
                     skopt_param = self._convert_PHOTON_to_skopt_space(value, name)
                     if skopt_param is not None:
                         space.append(skopt_param)
+        if self.constant_dictionary:
+            msg = "PHOTONAI has detected some one-valued params in your hyperparameters. Pleas use the kwargs for " \
+                  "constant values. This run ignores following settings: " + str(self.constant_dictionary.keys())
+            logger.warning(msg)
+            warnings.warn(msg)
         if len(space) == 0:
-            logger.warning("Did not find any hyperparameters to convert into skopt space")
+            msg = "Did not find any hyperparameters to convert into skopt space"
+            logger.warning(msg)
+            warnings.warn(msg)
             self.optimizer = None
         else:
             self.optimizer = Optimizer(space, "ET", acq_func=self.acq_func, acq_func_kwargs=self.acq_func_kwargs)
         self.ask = self.ask_generator()
 
     def _convert_PHOTON_to_skopt_space(self, hyperparam: object, name: str):
-        if not hyperparam:
-            return None
         self.hyperparameter_list.append(name)
-        if isinstance(hyperparam, PhotonCategorical):
+        if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):
             return skoptCategorical(hyperparam.values, name=name)
         elif isinstance(hyperparam, list):
             return skoptCategorical(hyperparam, name=name)
@@ -70,9 +74,16 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
             elif hyperparam.range_type == 'logspace':
                 return Real(hyperparam.start, hyperparam.stop, name=name, prior='log-uniform')
             else:
-                return Real(hyperparam.start, hyperparam.stop, name=name)
+                msg = "The hyperparam.range_type "+hyperparam.range_type+" is not supported by scikit-optimize."
+                logger.error(msg)
+                raise ValueError(msg)
         elif isinstance(hyperparam, IntegerRange):
             return Integer(hyperparam.start, hyperparam.stop, name=name)
+
+        msg = "Cannot convert hyperparameter "+ str(hyperparam) +". Supported types: Categorical, IntegerRange," \
+                                                                "FloatRange, list."
+        logger.error(msg)
+        raise ValueError(msg)
 
     def ask_generator(self):
         if self.optimizer is None:

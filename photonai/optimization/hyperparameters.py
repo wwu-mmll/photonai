@@ -1,5 +1,7 @@
-import numpy as np
+import warnings
 import random
+import numpy as np
+
 from photonai.photonlogger.logger import logger
 
 
@@ -45,9 +47,6 @@ class Categorical(PhotonHyperparam):
 
     def __getitem__(self, item):
         return self.values.__getitem__(item)
-
-    def __index__(self, obj):
-        return self.values.__index__(obj)
 
 
 class BooleanSwitch(PhotonHyperparam):
@@ -137,6 +136,7 @@ class NumberRange(PhotonHyperparam):
             warn_message = "NumberRange or one of its subclasses is empty cause np.arange " + \
                            "does not deal with start greater than stop."
             logger.warning(warn_message)
+            warnings.warn(warn_message)
 
         values = []
 
@@ -169,8 +169,8 @@ class NumberRange(PhotonHyperparam):
         except:
             msg = "PHOTON can not guarantee full mongodb support since you chose a non [np.integer, np.floating] " \
                   "subtype in NumberType.dtype."
-            logger.warn(msg)
-            raise Warning(msg)
+            logger.warning(msg)
+            warnings.warn(msg)
             self.values = values
 
     @property

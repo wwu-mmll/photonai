@@ -7,9 +7,10 @@ from typing import Union, Type, Callable, Optional, Tuple, Dict
 
 import numpy as np
 from scipy.stats import spearmanr
-from photonai.photonlogger.logger import logger
+import warnings
 from sklearn.metrics import accuracy_score
 
+from photonai.photonlogger.logger import logger
 
 class Scorer(object):
     """
@@ -86,7 +87,7 @@ class Scorer(object):
                         'metrics=[(\'MetricName1\', keras.metrics.Accuracy)]. Only the first occurance of this ' \
                         'metric will be used!'
             logger.warning(warn_text)
-            raise Warning(warn_text)
+            warnings.warn(warn_text)
             return None
 
         # derive a metric function from the given object
@@ -128,13 +129,15 @@ class Scorer(object):
                 scoring_method = desired_class
                 return scoring_method
             except AttributeError as ae:
-                logger.error('ValueError: Could not find according class: '
-                               + Scorer.ELEMENT_DICTIONARY[metric])
+                msg = 'Could not find according class: ' + Scorer.ELEMENT_DICTIONARY[metric]
+                logger.error(msg)
+                raise AttributeError(msg)
         elif metric in Scorer.CUSTOM_ELEMENT_DICTIONARY:
             return Scorer.CUSTOM_ELEMENT_DICTIONARY[metric]
         else:
-            logger.error('NameError: Metric not supported right now:' + metric)
-            # raise Warning('Metric not supported right now:', metric)
+            msg = 'Metric not supported right now:' + metric
+            logger.error(msg)
+            raise NameError(msg)
             return None
 
     @staticmethod

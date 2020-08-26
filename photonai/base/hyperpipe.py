@@ -12,6 +12,7 @@ import zipfile
 import json
 from copy import deepcopy
 from typing import Optional, List, Union
+import warnings
 
 import dask
 import numpy as np
@@ -21,8 +22,7 @@ from dask.distributed import Client
 from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
-from sklearn.model_selection._split import BaseCrossValidator
-from sklearn.model_selection import KFold
+from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
 
 from photonai.__init__ import __version__
 from photonai.base.cache_manager import CacheManager
@@ -194,10 +194,10 @@ class Hyperpipe(BaseEstimator):
     * `name` [str]:
         Name of hyperpipe instance
 
-    * `inner_cv` [BaseCrossValidator]:
+    * `inner_cv` Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits]:
         Cross validation strategy to test hyperparameter configurations, generates the validation set
 
-    * `outer_cv` [BaseCrossValidator]:
+    * `outer_cv` Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits]:
         Cross validation strategy to use for the hyperparameter search itself, generates the test set
 
     * `optimizer` [str or object, default="grid_search"]:
@@ -297,7 +297,7 @@ class Hyperpipe(BaseEstimator):
    """
 
     def __init__(self, name,
-                 inner_cv: BaseCrossValidator = None,
+                 inner_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits] = None,
                  outer_cv = None,
                  optimizer: str = 'grid_search',
                  optimizer_params: dict = None,
@@ -488,7 +488,7 @@ class Hyperpipe(BaseEstimator):
 
                     self.best_config_metric = self.best_config_metric[0]
                     logger.warning(warning_text)
-                    raise Warning(warning_text)
+                    warnings.warn(warning_text)
                 elif not isinstance(self.best_config_metric, str):
                     self.best_config_metric = Scorer.register_custom_metric(self.best_config_metric)
 
@@ -516,7 +516,7 @@ class Hyperpipe(BaseEstimator):
                 warning_text = "No best config metric was given, so PHOTON chose the first in the list of metrics as " \
                                "criteria for choosing the best configuration."
                 logger.warning(warning_text)
-                raise Warning(warning_text)
+                warnings.warn(warning_text)
 
         def get_optimizer(self):
             if isinstance(self.optimizer_input_str, str):
@@ -539,7 +539,9 @@ class Hyperpipe(BaseEstimator):
             list_of_non_failed_configs = [conf for conf in tested_configs if not conf.config_failed]
 
             if len(list_of_non_failed_configs) == 0:
-                raise Warning("No Configs found which did not fail.")
+                msg = "No Configs found which did not fail."
+                logger.warning(msg)
+                warnings.warn(msg)
             try:
 
                 if len(list_of_non_failed_configs) == 1:
@@ -706,7 +708,9 @@ class Hyperpipe(BaseEstimator):
             json_transformer = JsonTransformer()
             json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
         except:
-            logger.warning("JsonTransformer was unable to create the .json file.")
+            msg = "JsonTransformer was unable to create the .json file."
+            logger.warning(msg)
+            warnings.warn(msg)
 
         # add flowchart to results
         try:
@@ -876,7 +880,7 @@ class Hyperpipe(BaseEstimator):
                         warning_text = "y has been automatically squeezed. If this is not your intention, block this " \
                                        "with Hyperpipe(allow_multidim_targets = True"
                         logger.warning(warning_text)
-                        raise Warning(warning_text)
+                        warnings.warn(warning_text)
                     else:
                         raise ValueError("Target is not one-dimensional. Multidimensional targets can cause problems"
                                          "with sklearn metrics. Please override with "
@@ -1440,7 +1444,9 @@ class PhotonModelPersistor:
         zip_file = folder + '.photon'
 
         if os.path.exists(folder):
-            logger.warning('The file you specified already exists as a folder.')
+            msg = 'The file you specified already exists as a folder.'
+            logger.warning(msg)
+            warnings.warn(msg)
         else:
             os.makedirs(folder)
 

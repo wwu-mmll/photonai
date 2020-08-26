@@ -1,3 +1,3 @@
 configspace
-smac==0.12.1
+smac
 emcee

@@ -3,6 +3,7 @@ import itertools
 import os
 import pickle
 import pprint
+import warnings
 from typing import Union
 
 import matplotlib
@@ -18,7 +19,6 @@ from pymodm import connect
 from pymongo import DESCENDING
 from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
-from sklearn.metrics import confusion_matrix, roc_curve
 
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
@@ -42,7 +42,7 @@ class ResultsHandler:
             self.results = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': pipe_name}).first()
             warn_text = 'Found multiple hyperpipes with that name. Returning most recent one.'
             logger.warning(warn_text)
-            raise Warning(warn_text)
+            warnings.warn(warn_text)
         else:
             raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
 
@@ -315,8 +315,10 @@ class ResultsHandler:
             # now do smoothing
             if isinstance(reduce_scatter_by, str):
                 if reduce_scatter_by != 'auto':
-                    logger.warning('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
-                        reduce_scatter_by))
+                    msg = '{} is not a valid smoothing_kernel specifier. ' \
+                          'Falling back to "auto".'.format(reduce_scatter_by)
+                    logger.warning(msg)
+                    warnings.warn(msg)
 
                 # if auto, then calculate size of reduce_scatter_by so that 75 points on x remain
                 # smallest reduce_scatter_by should be 1
