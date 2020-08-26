@@ -33,6 +33,7 @@ from photonai.base.json_transformer import JsonTransformer
 from photonai.helper.helper import print_double_metrics
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, IntegerRange, FloatRange, Categorical
+from photonai.optimization.nevergrad.nevergrad import NevergradOptimizer
 from photonai.photonlogger.logger import logger
 from photonai.processing import ResultsHandler
 from photonai.processing.metrics import Scorer
@@ -442,6 +443,7 @@ class Hyperpipe(BaseEstimator):
                                 'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
                                 'sk_opt': SkOptOptimizer,
                                 'smac' : SMACOptimizer,
+                                'nevergrad': NevergradOptimizer,
                                 'random_search': RandomSearchOptimizer}
 
         # 'fabolas': FabolasOptimizer}

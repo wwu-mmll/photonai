@@ -13,7 +13,8 @@ install:
   - sudo apt-get -y install gfortran swig
   - python setup.py egg_info
   - pip install -r photonai.egg-info/requires.txt
-  - pip install -r photonai/optimization/smac/smac_requirements.txt
+  - pip install -r photonai/optimization/smac/requirements.txt
+  - pip install -r photonai/optimization/nevergrad/requirements.txt
   - pip install tensorflow
   - pip install pytest
   - pip install pytest-cov
