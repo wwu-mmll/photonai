@@ -991,4 +991,4 @@ class CallbackElementTests(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             self.callback_branch_pipeline_error.fit(self.X, self.y).predict(self.X)
-            assert len(w) == 2
+            assert len(w) >= 2
