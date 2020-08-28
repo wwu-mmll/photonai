@@ -26,7 +26,7 @@ class SkOptOptimizerTest(GridSearchOptimizerTest):
         with warnings.catch_warnings(record=True) as w:
             self.optimizer.prepare([], True)
             self.assertIsNone(self.optimizer.optimizer)
-            assert len(w) == 1
+            assert any("Did not find any" in s for s in [e.message.args[0] for e in w])
 
     def test_eliminate_one_value_hyperparams(self):
         pipeline_elements = [PipelineElement('PCA', hyperparameters={'n_components': Categorical([5])}),
@@ -36,7 +36,7 @@ class SkOptOptimizerTest(GridSearchOptimizerTest):
                                                                      'tol': FloatRange(0.1, 1, range_type='logspace')})]
         with warnings.catch_warnings(record=True) as w:
             self.optimizer.prepare(pipeline_elements, True)
-            assert len(w) == 1
+            assert any("PHOTONAI has detected some" in s for s in [e.message.args[0] for e in w])
         self.assertIn('SVC__C', self.optimizer.hyperparameter_list)
         self.assertIn('SVC__shrinking', self.optimizer.hyperparameter_list)
         self.assertNotIn('PCA__n_components', self.optimizer.hyperparameter_list)

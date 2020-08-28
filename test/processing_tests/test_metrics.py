@@ -1,7 +1,6 @@
 import unittest
 import types
 import numpy as np
-import warnings
 
 from photonai.processing.metrics import Scorer, spearman_correlation, specificity, sensitivity, one_hot_to_binary, \
     pearson_correlation, balanced_accuracy, categorical_accuracy_score, variance_explained_score

@@ -1,6 +1,8 @@
 import unittest
 import numpy as np
 import warnings
+import glob
+from shutil import rmtree
 
 from sklearn.metrics import accuracy_score
 import matplotlib.pyplot as plt
@@ -293,7 +295,7 @@ else:
         def test_other(self):
             with warnings.catch_warnings(record=True) as w:
                 opt = SMACOptimizer(facade="SMAC4BO", intensifier_kwargs={'min_chall': 2})
-                assert len(w) == 1
+                assert any("No scenario_dict for smac" in s for s in [e.message.args[0] for e in w])
                 self.assertIsNotNone(opt.intensifier_kwargs)
 
             pipeline_elements = [PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly',
@@ -302,7 +304,7 @@ else:
             of = lambda x: x**2
             with warnings.catch_warnings(record=True) as w:
                 opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
-                assert len(w) == 1
+                assert any("PHOTONAI has detected some" in s for s in [e.message.args[0] for e in w])
 
             pipeline_elements = [PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 0.5,
                                                                                          range_type='geomspace')})]
@@ -316,4 +318,8 @@ else:
             with self.assertRaises(ValueError):
                 opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
 
-
+        @classmethod
+        def tearDownClass(cls) -> None:
+            dirs = glob.glob("smac*/")
+            for dir in dirs:
+                rmtree(dir, ignore_errors=True)

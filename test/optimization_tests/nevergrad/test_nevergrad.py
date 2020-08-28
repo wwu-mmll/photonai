@@ -141,7 +141,7 @@ else:
             of = lambda x: x ** 2
             with warnings.catch_warnings(record=True) as w:
                 opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
-                assert len(w) == 1
+                assert any("PHOTONAI has detected some" in s for s in [e.message.args[0] for e in w])
 
             pipeline_elements = [PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 0.5,
                                                                                          range_type='geomspace')})]

@@ -274,7 +274,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         with warnings.catch_warnings(record=True) as w:
             my_mongo_result_handler.load_from_mongodb(pipe_name=hyperpipe.name,
                                                       mongodb_connect_url=self.mongodb_path)
-            assert len(w) == 1
+            assert any("Found multiple hyperpipes with that name." in s for s in [e.message.args[0] for e in w])
 
         with self.assertRaises(FileNotFoundError):
             my_result_handler.load_from_mongodb(pipe_name='any_weird_name_1238934384834234892384382',

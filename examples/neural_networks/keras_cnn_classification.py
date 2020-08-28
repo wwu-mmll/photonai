@@ -1,6 +1,7 @@
 # cnn model with PHOTONAI
-# example: https://machinelearningmastery.com/cnn-models-for-human-activity-recognition-time-series-classification/
-# HARDataset: https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones
+# content by J. Brownlee:
+# https://machinelearningmastery.com/cnn-models-for-human-activity-recognition-time-series-classification/
+# HAR-Dataset: https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones
 # required file: data.py from examples/neural_network
 
 from keras.utils import data_utils
@@ -12,7 +13,7 @@ from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
 from sklearn.model_selection import KFold
 
-from examples.neural_networks.data import load_dataset
+from examples.neural_networks.dataset import load_har
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import Categorical
@@ -27,7 +28,7 @@ dataset_path = data_utils.get_file(
     archive_format='zip'
 )
 
-X, y = load_dataset(prefix=dataset_path.replace('.zip', ''))
+X, y = load_har(prefix=dataset_path.replace('.zip', ''))
 
 n_timesteps, n_features, n_outputs = X.shape[1], X.shape[2], 6
 model = Sequential()

@@ -114,26 +114,25 @@ class HyperpipeTests(PhotonBaseTest):
     def test_sanity(self):
         # make sure that no metrics means raising an error
         with self.assertRaises(ValueError):
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
 
         # make sure that if no best config metric is given, PHOTON raises a warning
         with warnings.catch_warnings(record=True) as w:
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
-            assert len(w) == 1
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
+            assert any("No best config metric was given" in s for s in [e.message.args[0] for e in w])
 
         with warnings.catch_warnings(record=True) as w:
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
-            assert len(w) == 1
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
+            assert any("Best Config Metric must be a single" in s for s in [e.message.args[0] for e in w])
 
         with self.assertRaises(NotImplementedError):
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object,
-                                  best_config_metric='accuracy', metrics=["accuracy"],
-                                  calculate_metrics_across_folds=False,
-                                  calculate_metrics_per_fold=False)
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object,
+                                 best_config_metric='accuracy', metrics=["accuracy"],
+                                 calculate_metrics_across_folds=False,
+                                 calculate_metrics_per_fold=False)
 
         with self.assertRaises(AttributeError):
-            hyperpipe = Hyperpipe("hp_name",
-                                  best_config_metric='accuracy', metrics=["accuracy"])
+            Hyperpipe("hp_name", best_config_metric='accuracy', metrics=["accuracy"])
 
         data = np.random.random((500, 50))
 

@@ -1,3 +1,7 @@
+# content by J. Brownlee:
+# https://machinelearningmastery.com/cnn-models-for-human-activity-recognition-time-series-classification/
+# HAR-Dataset: https://archive.ics.uci.edu/ml/datasets/human+activity+recognition+using+smartphones
+
 from numpy import dstack
 from pandas import read_csv
 import numpy as np
@@ -38,7 +42,7 @@ def load_dataset_group(group, prefix=''):
 
 
 # load the dataset, returns train and test X and y elements
-def load_dataset(prefix=''):
+def load_har(prefix=''):
     # load all train
     trainX, trainy = load_dataset_group('train', prefix + '/')
     print(trainX.shape, trainy.shape)

@@ -46,7 +46,7 @@ class RandomSearchOptimizerTest(GridSearchOptimizerTest):
         for config in self.optimizer.ask:
             configs.append(config)
         stop = time.time()
-        self.assertAlmostEqual(stop-start, 3, 2)
+        self.assertAlmostEqual(stop-start, 3, 1)
 
     def test_run(self):
         pass
