@@ -1,7 +1,7 @@
 ###### Requirements with temporary Version Specifiers ######
 numpy
 matplotlib
-scikit-learn==0.23.1
+scikit-learn
 keras
 pandas
 plotly

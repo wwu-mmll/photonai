@@ -9,7 +9,7 @@ from photonai.photonlogger.logger import logger
 
 class PhotonBaseConstraint:
     """
-    The PHOTON base interface for any performance constraints that could speed up hyperparameter search.
+    The PHOTONAI base interface for any performance constraints that could speed up hyperparameter search.
     After a particular configuration is tested in one fold, the performance constraint objects are called to
     evaluate if the configuration is promising. If not, further testing in other folds is skipped to increase speed.
     """

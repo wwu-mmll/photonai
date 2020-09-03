@@ -52,26 +52,28 @@ class MyCnnScaler(BaseEstimator):
         -------
         IMPORTANT: must return self!
         """
-        return self
-
-    def transform(self, X, targets=None, **kwargs):
-        """
-        Apply the method's logic to the data.
-        """
         # remove overlap
         cut = int(X.shape[1] / 2)
         longX = X[:, -cut:, :]
         # flatten windows
         longX = longX.reshape((longX.shape[0] * longX.shape[1], longX.shape[2]))
         # flatten train and test
+        if self.standardize:
+            self.s = StandardScaler()
+            # fit on training data
+            self.s.fit(longX)
+        return self
+
+    def transform(self, X, targets=None, **kwargs):
+        """
+        Apply the method's logic to the data.
+        """
+        # flatten train and test
         flatX = X.reshape((X.shape[0] * X.shape[1], X.shape[2]))
         # standardize
         if self.standardize:
-            s = StandardScaler()
-            # fit on training data
-            s.fit(longX)
             # apply to training and test data
-            flatX = s.transform(flatX)
+            flatX = self.s.transform(flatX)
         # reshape
         flatX = flatX.reshape((X.shape))
         return flatX
@@ -95,8 +97,9 @@ class MyOptimizedCnnEstimator(KerasBaseClassifier):
     @staticmethod
     def build_model(n_filters, kernel_size, n_timesteps, n_features, n_outputs):
         model = Sequential()
-        model.add(Conv1D(filters=n_filters, kernel_size=3, activation='relu', input_shape=(n_timesteps, n_features)))
-        model.add(Conv1D(filters=n_filters, kernel_size=3, activation='relu'))
+        model.add(Conv1D(filters=n_filters, kernel_size=kernel_size, activation='relu', input_shape=(n_timesteps,
+                                                                                                     n_features)))
+        model.add(Conv1D(filters=n_filters, kernel_size=kernel_size, activation='relu'))
         model.add(Dropout(0.5))
         model.add(MaxPooling1D(pool_size=2))
         model.add(Flatten())
@@ -123,24 +126,25 @@ registry.register(photon_name='MyOptimizedCnnEstimator',
 # This needs to be done every time you run the script
 registry.activate()
 
+if __name__ == "__main__":  # prevents double optimization, cause registry calls this file again
 
-# DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('cnn_keras_multiclass_pipe',
-                    optimizer='sk_opt',
-                    optimizer_params={'n_configurations': 30},
-                    metrics=['accuracy'],
-                    best_config_metric='accuracy',
-                    outer_cv=KFold(n_splits=5),
-                    inner_cv=KFold(n_splits=3),
-                    verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+    # DESIGN YOUR PIPELINE
+    my_pipe = Hyperpipe('cnn_keras_multiclass_pipe',
+                        optimizer='sk_opt',
+                        optimizer_params={'n_configurations': 25},
+                        metrics=['accuracy'],
+                        best_config_metric='accuracy',
+                        outer_cv=KFold(n_splits=5),
+                        inner_cv=KFold(n_splits=5),
+                        verbosity=1,
+                        output_settings=OutputSettings(project_folder='./tmp/'))
 
-my_pipe += PipelineElement('MyCnnScaler', hyperparameters={'standardize': BooleanSwitch()})
+    my_pipe += PipelineElement('MyCnnScaler', hyperparameters={'standardize': BooleanSwitch()})
 
-my_pipe += PipelineElement('MyOptimizedCnnEstimator',
-                           hyperparameters={'n_filters': IntegerRange(8, 256),
-                                            'kernel_size': IntegerRange(2, 11)},
-                           epochs=10, verbosity=0)
+    my_pipe += PipelineElement('MyOptimizedCnnEstimator',
+                               hyperparameters={'n_filters': IntegerRange(8, 256),
+                                                'kernel_size': IntegerRange(2, 11)},
+                               epochs=10, verbosity=0)
 
-# NOW TRAIN YOUR PIPELINE
-my_pipe.fit(X, y)
+    # NOW TRAIN YOUR PIPELINE
+    my_pipe.fit(X, y)

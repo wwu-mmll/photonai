@@ -1,4 +1,3 @@
-import warnings
 from typing import Union
 
 from photonai.optimization import Categorical as PhotonCategorical
@@ -37,23 +36,22 @@ class NevergradOptimizer(PhotonMasterOptimizer):
 
         if not __found__:
             msg = "Module nevergrad not found or not installed as expected. " \
-                  "Please install the nevergrad_requirements.txt PHOTON provides."
+                  "Please install the nevergrad/requirements.txt PHOTON provides."
             logger.error(msg)
             raise ModuleNotFoundError(msg)
 
         if facade in list(ng.optimizers.registry.values()):
             self.facade = facade
         elif facade in list(ng.optimizers.registry.keys()):
-            self.facade= ng.optimizers.registry[facade]
+            self.facade = ng.optimizers.registry[facade]
         else:
             msg = "nevergrad.optimizer {} not known. Check out all available nevergrad optimizers " \
                   "by nevergrad.optimizers.registry.keys()".format(str(facade))
             logger.error(msg.format(str(facade)))
             raise ValueError(msg.format(str(facade)))
 
-
         self.n_configurations = n_configurations
-        self.cspace = None  # Hyperparameter space for nevergrad
+        self.space = None  # Hyperparameter space for nevergrad
         self.switch_optiones = {}
         self.hyperparameters = []
         self.rng = rng
@@ -147,7 +145,6 @@ class NevergradOptimizer(PhotonMasterOptimizer):
             logger.warning(msg)
             warnings.warn(msg)
         self.maximize_metric = maximize_metric
-
 
         def nevergrad_objective_function(**current_config):
             return objective_function(current_config)

@@ -3,7 +3,6 @@ import numpy as np
 import warnings
 
 from sklearn.metrics import accuracy_score
-import matplotlib.pyplot as plt
 
 from photonai.helper.helper import PhotonDataHelper
 from photonai.base import PipelineElement, Switch, Hyperpipe, OutputSettings

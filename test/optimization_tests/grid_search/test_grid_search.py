@@ -7,7 +7,7 @@ from inspect import signature
 from photonai.base import PipelineElement, Switch, Branch, Hyperpipe, OutputSettings
 from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, \
     IntegerRange
-from photonai.optimization.base_optimizer import PhotonBaseOptimizer, PhotonSlaveOptimizer, PhotonMasterOptimizer
+from photonai.optimization.base_optimizer import PhotonSlaveOptimizer, PhotonMasterOptimizer
 
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold, ShuffleSplit
@@ -30,7 +30,7 @@ class GridSearchOptimizerTest(unittest.TestCase):
                                    output_settings=OutputSettings(project_folder='./tmp'),
                                    metrics=['accuracy'],
                                    best_config_metric='accuracy',
-                                   inner_cv=KFold(n_splits=3),
+                                   inner_cv=KFold(n_splits=2),
                                    outer_cv=ShuffleSplit(n_splits=2),
                                    optimizer=self.optimizer_name)
 
@@ -38,7 +38,7 @@ class GridSearchOptimizerTest(unittest.TestCase):
         self.create_hyperpipe()
         for p in self.pipeline_elements:
             self.hyperpipe += p
-        X, y = load_breast_cancer(True)
+        X, y = load_breast_cancer(return_X_y=True)
         self.hyperpipe.fit(X, y)
 
     def test_all_functions_available(self):
@@ -66,7 +66,7 @@ class GridSearchOptimizerTest(unittest.TestCase):
         self.optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
         ask_list = list(self.optimizer.ask)
         self.assertIsInstance(ask_list, list)
-        self.assertSetEqual(set([str(type(a)) for a in ask_list]), set(["<class 'dict'>"]))
+        self.assertSetEqual(set([str(type(a)) for a in ask_list]), {"<class 'dict'>"})
         generated_elements = reduce(operator.concat, [list(a.keys()) for a in ask_list])
         self.assertIn("PCA__n_components", generated_elements)
         return generated_elements
@@ -132,21 +132,15 @@ class TimeBoxedRandomGridSearchOptimizerTest(RandomGridSearchOptimizerTest):
 
 class BaseOptimizerTests(unittest.TestCase):
 
-    def test_base_interface(self):
-        opt = PhotonBaseOptimizer()
-        opt.plot('/tmp')
-        with self.assertRaises(NotImplementedError):
-            opt.plot_objective()
-        with self.assertRaises(NotImplementedError):
-            opt.plot_evaluations()
-
-    def test_slave_interface(self):
+    @staticmethod
+    def test_slave_interface():
         opt = PhotonSlaveOptimizer()
         opt.prepare(list(), True)
         opt.ask()
         opt.tell(dict(), dict())
 
-    def test_master_interface(self):
+    @staticmethod
+    def test_master_interface():
         opt = PhotonMasterOptimizer()
         opt.prepare(list(), True, None)
         opt.optimize()

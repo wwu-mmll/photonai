@@ -29,10 +29,10 @@ class SMACOptimizer(PhotonMasterOptimizer):
         Parameters
         ----------
         * `facade` [str or smac.facade.class, default: 'SMAC4HPO']:
-             Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC].
-        * `scenario_dict` [dict, default: None (warning scenario with wallclock_limit = 60*40)]
+             Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
+        * `scenario_dict` [dict, default: None (warning scenario with wallclock_limit = 60*5)]
             Informations for scenario settings like run_limit or wallclock_limit.
-            Different to main SMAC cs (configspace) is not required or used cause PHOTON translate own param_space
+            Different to main SMAC, cs (configspace) is not required or used cause PHOTONAI translate own param_space
             to SMAC.configspace.
         * `rng`: [int, default: 42]
             random seed of SMAC.facade
@@ -45,7 +45,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         if not __found__:
             msg = "Module smac not found or not installed as expected. " \
-                  "Please install the smac_requirements.txt PHOTON provides."
+                  "Please install the smac/requirements.txt PHOTON provides."
             logger.error(msg)
             raise ModuleNotFoundError(msg)
 
@@ -76,7 +76,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
         else:
             self.intensifier_kwargs = intensifier_kwargs
 
-        self.cspace = ConfigurationSpace()  # Hyperparameter space for SMAC
+        self.cspace = ConfigurationSpace()  # hyperparameter space for SMAC
         self.switch_optiones = {}
         self.hyperparameters = []
 
@@ -174,7 +174,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
         Parameters
         ----------
         * `pipeline_elements` [list]:
-            List of all pipeline_elements to create hyperparameter_space.
+            List of all pipeline_elements to create hyperparameter space.
         * `maximize_metric` [bool]:
             Boolean for distinguish between score and error.
         * `objective_function` [callable]:

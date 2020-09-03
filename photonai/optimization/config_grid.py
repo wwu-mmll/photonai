@@ -1,7 +1,6 @@
 from photonai.optimization import PhotonHyperparam, IntegerRange, FloatRange, Categorical, BooleanSwitch
 from photonai.photonlogger import logger
 from itertools import product
-import warnings
 
 
 def create_global_config_dict(pipeline_elements):

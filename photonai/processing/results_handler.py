@@ -279,7 +279,7 @@ class ResultsHandler:
                                reduce_scatter_by: Union[int, str] = 'auto',
                                file: str = None):
         """
-        :param metric: specify metric that has been stored within the PHOTON results tree
+        :param metric: specify metric that has been stored within the PHOTONAI results tree
         :param type: 'plot' or 'scatter'
         :param reduce_scatter_by: integer or string ('auto'), reduce the number of points plotted by scatter
         :param file: specify a filename if you want to save the plot
@@ -713,6 +713,8 @@ class ResultsHandler:
         if isinstance(value, (np.int, np.int32, np.int64)):
             return int(value)
         if isinstance(value, (np.float, np.float32, np.float64)):
+            if self.output_settings.reduce_space:
+                return round(float(value), 3)
             return float(value)
         else:
             return json_util.default(value)
@@ -720,12 +722,29 @@ class ResultsHandler:
     def write_result_tree_to_file(self):
         try:
             local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
-            # file_opened = open(local_file, 'wb')
+            result = self.round_floats(self.results.to_son().to_dict())
+
             with open(local_file, 'w') as outfile:
-                json.dump(self.results.to_son(), outfile, default=self.convert_to_json_serializable)
+                json.dump(result, outfile, default=self.convert_to_json_serializable)
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))
+
+    @classmethod
+    def round_floats(cls, d):
+        # recursive method for rounding all floats in result.json
+        result = {}
+        if isinstance(d, dict):
+            for key, value in d.items():
+                value = cls.round_floats(value)
+                result.update({key: value})
+            return result
+        elif isinstance(d, list):
+            return [cls.round_floats(val) for val in d]
+        elif isinstance(d, float):
+            return round(d, 6)
+        else:
+            return d
 
     def get_best_config_inner_fold_predictions(self, filename=''):
         score_info_list = []
@@ -752,7 +771,7 @@ class ResultsHandler:
 
         text_list = []
         intro_text = """
-PHOTON RESULT SUMMARY
+PHOTONAI RESULT SUMMARY
 -------------------------------------------------------------------
 
 ANALYSIS NAME: {}

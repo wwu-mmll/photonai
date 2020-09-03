@@ -12,6 +12,7 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
     Searches for the best configuration by iteratively testing all possible hyperparameter combinations.
     """
     def __init__(self):
+        super(GridSearchOptimizer, self).__init__()
         self.param_grid = []
         self.pipeline_elements = None
         self.parameter_iterable = None

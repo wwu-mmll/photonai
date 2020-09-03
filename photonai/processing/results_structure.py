@@ -1,5 +1,4 @@
 import pickle
-import pickle
 import uuid
 from enum import Enum
 
@@ -85,12 +84,11 @@ class MDBConfig(EmbeddedMongoModel):
 
     def save_memory(self):
         for fold in self.inner_folds:
-            fold.training.y_true = []
-            fold.training.y_pred = []
-            fold.training.indices = []
-            fold.validation.y_true = []
-            fold.validation.y_pred = []
-            fold.validation.indices = []
+            for fold_set in [fold.training, fold.validation]:
+                fold_set.y_true = []
+                fold_set.y_pred = []
+                fold_set.indices = []
+                fold_set.probabilities = []
             fold.feature_importances = []
 
 
@@ -262,7 +260,3 @@ class MDBHelper:
     @staticmethod
     def load_results(filename):
         return MDBHyperpipe.from_document(pickle.load(open(filename, 'rb')))
-
-
-
-

@@ -87,7 +87,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         areas = data.split("-------------------------------------------------------------------")
 
         # first areas
-        self.assertEqual(areas[0], "\nPHOTON RESULT SUMMARY\n")
+        self.assertEqual(areas[0], "\nPHOTONAI RESULT SUMMARY\n")
 
         result_dict = {"dummy_test": self.hyperpipe.results.dummy_estimator.test,
                        "dummy_train": self.hyperpipe.results.dummy_estimator.train,
