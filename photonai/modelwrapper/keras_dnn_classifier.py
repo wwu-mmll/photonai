@@ -14,6 +14,7 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
                  nn_batch_size: int =64,
                  metrics: list = None,
                  callbacks: list = None,
+                 validation_split: float = 0.1,
                  verbosity=1,
                  dropout_rate=0.2,  # list or float
                  activations='relu',  # list or str
@@ -25,6 +26,7 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
         self.multi_class = multi_class
         self.epochs =epochs
         self.nn_batch_size = nn_batch_size
+        self.validation_split = validation_split
 
         if callbacks:
             self.callbacks = callbacks

@@ -20,7 +20,7 @@ except ModuleNotFoundError:
 
 class SMACOptimizer(PhotonMasterOptimizer):
 
-    def __init__(self, facade='SMAC4HPO', scenario_dict=None, intensifier_kwargs=None, rng=42, smac_helper=None):
+    def __init__(self, facade='SMAC4HPO', scenario_dict=None, intensifier_kwargs=None, rng=42):
         """
         SMAC Wrapper for PHOTON.
         SMAC usage and implementation details:
@@ -36,9 +36,6 @@ class SMACOptimizer(PhotonMasterOptimizer):
             to SMAC.configspace.
         * `rng`: [int, default: 42]
             random seed of SMAC.facade
-        * `smac_helper` [dict]
-            For testing this object give public access to SMAC.facade object.
-            Currently help object for test cases.
         """
 
         super(SMACOptimizer, self).__init__()
@@ -79,12 +76,6 @@ class SMACOptimizer(PhotonMasterOptimizer):
         self.cspace = ConfigurationSpace()  # hyperparameter space for SMAC
         self.switch_optiones = {}
         self.hyperparameters = []
-
-        if smac_helper:
-            self.smac_helper = smac_helper
-            self.debug = True
-        else:
-            self.debug = False
 
         self.maximize_metric = False
         self.constant_dictionary = {}
@@ -180,7 +171,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
         * `objective_function` [callable]:
             The cost or objective function.
         """
-        self.space = ConfigurationSpace()  # build space
+        self.cspace = ConfigurationSpace()  # build space
         self.build_smac_space(pipeline_elements)
         if self.constant_dictionary:
             msg = "PHOTONAI has detected some one-valued params in your hyperparameters. Pleas use the kwargs for " \
@@ -201,9 +192,6 @@ class SMACOptimizer(PhotonMasterOptimizer):
                                 intensifier_kwargs=self.intensifier_kwargs,
                                 rng=self.rng,
                                 tae_runner=smac_objective_function)
-
-        if self.debug:
-            self.smac_helper['data'] = self.smac
 
     def optimize(self):
         """

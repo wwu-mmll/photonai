@@ -1,7 +1,7 @@
 from photonai.base import PipelineElement
 from photonai.optimization import SkOptOptimizer, IntegerRange, Categorical, FloatRange, BooleanSwitch
 from photonai.optimization.hyperparameters import NumberRange
-from ..grid_search.test_grid_search import GridSearchOptimizerTest
+from ..grid_search_tests.test_grid_search import GridSearchOptimizerTest
 
 import warnings
 

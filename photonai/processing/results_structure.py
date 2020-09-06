@@ -82,7 +82,7 @@ class MDBConfig(EmbeddedMongoModel):
     def set_photon_id(self):
         self.photon_config_id = str(uuid.uuid4())
 
-    def save_memory(self):
+    def decrease_memory(self):
         for fold in self.inner_folds:
             for fold_set in [fold.training, fold.validation]:
                 fold_set.y_true = []

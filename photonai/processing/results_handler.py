@@ -1,5 +1,4 @@
 import csv
-import itertools
 import os
 import pickle
 import pprint
@@ -51,7 +50,7 @@ class ResultsHandler:
         """
         This function returns a list of all methods available for ResultsHandler.
         """
-        methods_list = [s for s in dir(ResultsHandler) if not '__' in s]
+        methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
         return methods_list
 
     def get_performance_table(self):
@@ -370,7 +369,8 @@ class ResultsHandler:
             imps.append(fold.best_config.best_config_score.feature_importances)
         return imps
 
-    def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=''):
+    @staticmethod
+    def collect_fold_lists(score_info_list, fold_nr, predictions_filename=''):
         if len(score_info_list) > 0:
             fold_nr_array = []
             collectables = {'y_pred': [], 'y_true': [], 'indices': [], 'probabilities': []}
@@ -416,7 +416,7 @@ class ResultsHandler:
             fold_nr_list.append(outer_fold.fold_nr)
         return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
 
-    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, config_id=None, filename=''):
+    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, filename=''):
         """
         This function returns the predictions, probabilities, true targets, fold and index
         for the config_nr of the given outer_fold
@@ -669,7 +669,7 @@ class ResultsHandler:
             logger.info('Write results to mongodb...')
             try:
                 self.results.save()
-            except DocumentTooLarge as e:
+            except DocumentTooLarge:
                 logger.error('Could not save document into MongoDB: Document too large')
         if self.output_settings.save_output:
             logger.info("Writing results to project folder...")
@@ -830,7 +830,8 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
             logger.error("Could not write summary file")
             logger.error(str(e))
 
-    def get_dict_from_metric_list(self, metric_list):
+    @staticmethod
+    def get_dict_from_metric_list(metric_list):
         best_config_metrics = {}
         for train_metric in metric_list:
             if not train_metric.metric_name in best_config_metrics:
@@ -839,7 +840,8 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
             best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
         return best_config_metrics
 
-    def print_table_for_performance_overview(self, metric_dict, header):
+    @staticmethod
+    def print_table_for_performance_overview(metric_dict, header):
         x = PrettyTable()
         x.field_names = ["Metric Name", "MEAN", "STD"]
         for element_key, element_dict in metric_dict.items():

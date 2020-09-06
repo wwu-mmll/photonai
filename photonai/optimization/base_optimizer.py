@@ -1,21 +1,9 @@
 
-class PhotonBaseOptimizer:
-    """
-    The PHOTON interface for hyperparameter search optimization algorithms.
-    """
-
-    def __init__(self, *kwargs):
-        pass
-
-
-class PhotonSlaveOptimizer(PhotonBaseOptimizer):
+class PhotonSlaveOptimizer(object):
     """
     The PhotonSlaveOptimizer is controlled by PHOTON. By ask-tell principle PHOTON get new configs.
     It terminates by some specific criteria with an aks -> empty yield.
     """
-
-    def __init__(self, *kwargs):
-        super(PhotonSlaveOptimizer, self).__init__(kwargs)
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool):
         """
@@ -54,14 +42,11 @@ class PhotonSlaveOptimizer(PhotonBaseOptimizer):
         pass
 
 
-class PhotonMasterOptimizer(PhotonBaseOptimizer):
+class PhotonMasterOptimizer(object):
     """
         The PhotonMasterOptimizer controls PHOTON. PHOTON provides an objective_function.
         The runs and configs of the objective_function is up to PhotonMasterOptimizer.
         """
-
-    def __init__(self, *kwargs):
-        super(PhotonMasterOptimizer, self).__init__(kwargs)
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function):
         """

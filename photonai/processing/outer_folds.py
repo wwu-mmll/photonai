@@ -275,17 +275,17 @@ class OuterFoldManager:
                 if self.optimization_info.maximize_metric:
                     if metric_test > self.best_metric_yet[1]:
                         self.best_metric_yet = config_performance
-                        self.current_best_config.save_memory()
+                        self.current_best_config.decrease_memory()
                         self.current_best_config = current_config_mdb
                     else:
-                        current_config_mdb.save_memory()
+                        current_config_mdb.decrease_memory()
                 else:
                     if metric_test < self.best_metric_yet[1]:
                         self.best_metric_yet = config_performance
-                        self.current_best_config.save_memory()
+                        self.current_best_config.decrease_memory()
                         self.current_best_config = current_config_mdb
                     else:
-                        current_config_mdb.save_memory()
+                        current_config_mdb.decrease_memory()
 
             # Print Result for config
             computation_duration = current_config_mdb.computation_end_time - current_config_mdb.computation_start_time
