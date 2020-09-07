@@ -309,7 +309,7 @@ class OuterFoldManager:
         # 3. inform optimizer about performance
         logger.debug("Telling hyperparameter optimizer about recent performance.")
         if isinstance(self.optimizer, PhotonSlaveOptimizer):
-            self.optimizer.tell(current_config, config_performance)
+            self.optimizer.tell(current_config, config_performance[1])
         logger.debug("Asking hyperparameter optimizer for new config.")
 
         if self.optimization_info.maximize_metric:

@@ -13,7 +13,7 @@ from keras.layers import Flatten
 from keras.layers import Dropout
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator
 
@@ -134,8 +134,8 @@ if __name__ == "__main__":  # prevents double optimization, cause registry calls
                         optimizer_params={'n_configurations': 25},
                         metrics=['accuracy'],
                         best_config_metric='accuracy',
-                        outer_cv=KFold(n_splits=5),
-                        inner_cv=KFold(n_splits=5),
+                        outer_cv=StratifiedShuffleSplit(n_splits=5, test_size=0.2),
+                        inner_cv=StratifiedShuffleSplit(n_splits=5, test_size=0.2),
                         verbosity=1,
                         output_settings=OutputSettings(project_folder='./tmp/'))
 

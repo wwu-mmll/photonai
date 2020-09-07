@@ -1,7 +1,7 @@
-from typing import Union
+from typing import Union, Callable
 
 from photonai.optimization import Categorical as PhotonCategorical
-from photonai.optimization import FloatRange, IntegerRange, BooleanSwitch
+from photonai.optimization import FloatRange, IntegerRange, BooleanSwitch, PhotonHyperparam
 from photonai.optimization.base_optimizer import PhotonMasterOptimizer
 from photonai.photonlogger import logger
 
@@ -17,8 +17,8 @@ except ModuleNotFoundError:
 class NevergradOptimizer(PhotonMasterOptimizer):
 
     def __init__(self, facade: Union[Optimizer, str] = 'NGO', n_configurations: int = 100, rng: int = 42):
-        """
-        Nevergrad Wrapper for PHOTONAI.
+        """Nevergrad Wrapper for PHOTONAI.
+
         Nevergrad usage and implementation details:
         https://facebookresearch.github.io/nevergrad/
 
@@ -32,11 +32,9 @@ class NevergradOptimizer(PhotonMasterOptimizer):
             Random Seed
         """
 
-        super(NevergradOptimizer, self).__init__()
-
         if not __found__:
             msg = "Module nevergrad not found or not installed as expected. " \
-                  "Please install the nevergrad/requirements.txt PHOTON provides."
+                  "Please install the nevergrad/requirements.txt PHOTONAI provides."
             logger.error(msg)
             raise ModuleNotFoundError(msg)
 
@@ -62,39 +60,41 @@ class NevergradOptimizer(PhotonMasterOptimizer):
         self.objective = None
         self.optimizer = None
 
-    @staticmethod
-    def _convert_photon_to_nevergrad_param(hyperparam: object):
+    def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function: Callable) -> None:
         """
-        Helper function: Convert PHOTON hyperparameter to Nevergrad hyperparameter.
+        Initializes Nevergrad Optimizer.
 
         Parameters
         ----------
-        * `hyperparam` [object]:
-             One of photonai.optimization.hyperparameters.
-        * `name` [str]
-            Name of hyperparameter.
+        * `pipeline_elements` [list]:
+            List of all pipeline_elements to create hyperparameter_space.
+        * `maximize_metric` [bool]:
+            Boolean for distinguish between score and error.
+        * `objective_function` [Callable]:
+            The cost or objective function.
         """
-        if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):
-            return ng.p.Choice(hyperparam.values)
-        elif isinstance(hyperparam, list):
-            return ng.p.Choice(hyperparam)
-        elif isinstance(hyperparam, FloatRange):
-            if hyperparam.range_type == 'linspace':
-                return ng.p.Scalar(lower=hyperparam.start, upper=hyperparam.stop)
-            elif hyperparam.range_type == 'logspace':
-                return ng.p.Log(lower=hyperparam.start, upper=hyperparam.stop)
-            msg = str(hyperparam.range_type) + "in your float hyperparameter is not implemented yet."
-            logger.error(msg)
-            raise NotImplementedError(msg)
-        elif isinstance(hyperparam, IntegerRange):
-            return ng.p.Scalar(lower=hyperparam.start, upper=hyperparam.stop).set_integer_casting()
+        self.space = self._build_nevergrad_space(pipeline_elements)
+        self.space.random_state.seed(self.rng)
+        if self.constant_dictionary:
+            msg = "PHOTONAI has detected some one-valued params in your hyperparameters. Pleas use the kwargs for " \
+                  "constant values. This run ignores following settings: " + str(self.constant_dictionary.keys())
+            logger.warning(msg)
+            warnings.warn(msg)
+        self.maximize_metric = maximize_metric
 
-        msg = "Cannot convert hyperparameter " + str(hyperparam) + ". Supported types: Categorical, IntegerRange," \
-                                                                   "FloatRange, list."
-        logger.error(msg)
-        raise ValueError(msg)
+        def nevergrad_objective_function(**current_config):
+            return objective_function(current_config)
+        self.objective = nevergrad_objective_function
 
-    def build_nevergrad_space(self, pipeline_elements):
+        self.optimizer = self.facade(parametrization=self.space, budget=self.n_configurations)
+
+    def optimize(self) -> None:
+        """
+        Start optimization process.
+        """
+        self.optimizer.minimize(self.objective)
+
+    def _build_nevergrad_space(self, pipeline_elements: list):
         """
         Build entire Nevergrad hyperparameter space.
 
@@ -119,41 +119,37 @@ class NevergradOptimizer(PhotonMasterOptimizer):
                     if isinstance(value, PhotonCategorical) and len(value.values) < 2:
                         self.constant_dictionary[name] = value.values[0]
                         continue
-                    nevergrad_param = self._convert_photon_to_nevergrad_param(value)
+                    nevergrad_param = self._convert_photonai_to_nevergrad_param(value)
                     if nevergrad_param is not None:
                         param_dict[name] = nevergrad_param
         return ng.p.Instrumentation(**param_dict)
 
-    def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function):
+    @staticmethod
+    def _convert_photonai_to_nevergrad_param(hyperparam: PhotonHyperparam):
         """
-        Initializes Nevergrad Optimizer.
+        Helper function: Convert PHOTONAI hyperparameter to Nevergrad hyperparameter.
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
-            List of all pipeline_elements to create hyperparameter_space.
-        * `maximize_metric` [bool]:
-            Boolean for distinguish between score and error.
-        * `objective_function` [callable]:
-            The cost or objective function.
+        * `hyperparam` [object]:
+             One of photonai.optimization.hyperparameters.
         """
-        self.space = self.build_nevergrad_space(pipeline_elements)
-        self.space.random_state.seed(self.rng)
-        if self.constant_dictionary:
-            msg = "PHOTONAI has detected some one-valued params in your hyperparameters. Pleas use the kwargs for " \
-                  "constant values. This run ignores following settings: " + str(self.constant_dictionary.keys())
-            logger.warning(msg)
-            warnings.warn(msg)
-        self.maximize_metric = maximize_metric
+        if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):
+            return ng.p.Choice(hyperparam.values)
+        elif isinstance(hyperparam, list):
+            return ng.p.Choice(hyperparam)
+        elif isinstance(hyperparam, FloatRange):
+            if hyperparam.range_type == 'linspace':
+                return ng.p.Scalar(lower=hyperparam.start, upper=hyperparam.stop)
+            elif hyperparam.range_type == 'logspace':
+                return ng.p.Log(lower=hyperparam.start, upper=hyperparam.stop)
+            msg = str(hyperparam.range_type) + "in your float hyperparameter is not implemented yet."
+            logger.error(msg)
+            raise NotImplementedError(msg)
+        elif isinstance(hyperparam, IntegerRange):
+            return ng.p.Scalar(lower=hyperparam.start, upper=hyperparam.stop).set_integer_casting()
 
-        def nevergrad_objective_function(**current_config):
-            return objective_function(current_config)
-        self.objective = nevergrad_objective_function
-
-        self.optimizer = self.facade(parametrization=self.space, budget=self.n_configurations)
-
-    def optimize(self):
-        """
-        Start optimization process.
-        """
-        self.optimizer.minimize(self.objective)
+        msg = "Cannot convert hyperparameter " + str(hyperparam) + ". Supported types: Categorical, IntegerRange," \
+                                                                   "FloatRange, list."
+        logger.error(msg)
+        raise ValueError(msg)

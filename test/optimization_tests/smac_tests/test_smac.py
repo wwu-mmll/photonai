@@ -245,6 +245,7 @@ class Smac3IntegrationTest(unittest.TestCase):
 
         pipeline_elements = [PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly', "sigmoid"]),
                                                                      'C': [0.6]})]
+
         def of(x):
             return x ** 2
         with warnings.catch_warnings(record=True) as w:
@@ -264,6 +265,6 @@ class Smac3IntegrationTest(unittest.TestCase):
 
     @classmethod
     def tearDownClass(cls) -> None:
-        dirs = glob.glob("smac*/")
-        for dir in dirs:
-            rmtree(dir, ignore_errors=True)
+        dirs = glob.glob("./smac3-output*/")
+        for dir_name in dirs:
+            rmtree(dir_name, ignore_errors=True)

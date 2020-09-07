@@ -11,7 +11,7 @@ from keras.layers import Flatten
 from keras.layers import Dropout
 from keras.layers.convolutional import Conv1D
 from keras.layers.convolutional import MaxPooling1D
-from sklearn.model_selection import KFold
+from sklearn.model_selection import StratifiedShuffleSplit
 
 from examples.neural_networks.dataset import load_har
 
@@ -49,8 +49,8 @@ my_pipe = Hyperpipe('cnn_keras_multiclass_pipe',
                     optimizer_params={},
                     metrics=['accuracy'],
                     best_config_metric='accuracy',
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=2),
+                    outer_cv=StratifiedShuffleSplit(n_splits=3, test_size=0.2),
+                    inner_cv=StratifiedShuffleSplit(n_splits=2, test_size=0.2),
                     verbosity=1,
                     output_settings=settings)
 
