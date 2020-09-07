@@ -4,7 +4,6 @@ from sklearn.model_selection import KFold
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import MinimumPerformance, IntegerRange
 
-# WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE

@@ -31,7 +31,7 @@ or you can read a prolonged introduction on [Arxiv](https://arxiv.org/abs/2002.0
 
 ---
 ## Getting Started
-In order to use PHOTON you only need to have your favourite Python IDE ready.
+In order to use PHOTONAI you only need to have your favourite Python IDE ready.
 Then install the latest stable version simply via pip
 ```
 pip install photonai
@@ -52,7 +52,7 @@ from photonai.optimization import FloatRange, Categorical, IntegerRange
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     # which optimizer PHOTON shall use
                     optimizer='sk_opt',
-                    optimizer_params={'n_configurations': 10},
+                    optimizer_params={'n_configurations': 25},
                     # the performance metrics of your interest
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     # after hyperparameter optimization, this metric declares the winner config

@@ -10,7 +10,7 @@ X, y = load_breast_cancer(return_X_y=True)
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',
                     optimizer='sk_opt',
-                    optimizer_params={'n_configurations': 10},
+                    optimizer_params={'n_configurations': 25},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),

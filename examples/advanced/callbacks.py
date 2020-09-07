@@ -10,7 +10,6 @@ def my_monitor(X, y=None, **kwargs):
    debug = True
 
 
-# WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
