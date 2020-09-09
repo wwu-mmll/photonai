@@ -11,7 +11,7 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
                  learning_rate: float = 0.01,
                  loss: str = "",
                  epochs: int = 100,
-                 nn_batch_size: int =64,
+                 nn_batch_size: int = 64,
                  metrics: list = None,
                  callbacks: list = None,
                  validation_split: float = 0.1,
@@ -24,7 +24,7 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
         self._multi_class = None
         self.loss = loss
         self.multi_class = multi_class
-        self.epochs =epochs
+        self.epochs = epochs
         self.nn_batch_size = nn_batch_size
         self.validation_split = validation_split
 
@@ -45,7 +45,6 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
                                                  activations=activations,  # list or str
                                                  optimizer=optimizer,
                                                  verbosity=verbosity)  # list or keras.optimizer)
-
 
     @property
     def multi_class(self):
@@ -103,4 +102,4 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
     def fit(self, X, y):
         self._calc_target_dimension(y)
         self.create_model(X.shape[1])
-        super(KerasDnnClassifier, self).fit(X, y, reload_weights=True)
+        super(KerasDnnClassifier, self).fit(X, y)

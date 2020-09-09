@@ -121,5 +121,5 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         """
         Cause fit is empty transform is the same as fit_transform.
         """
-        return self.fit_transform(X,y)
+        return self.fit_transform(X, y)
 

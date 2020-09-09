@@ -24,7 +24,7 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
         self._loss = ""
         self._multi_class = None
         self.loss = loss
-        self.epochs =epochs
+        self.epochs = epochs
         self.nn_batch_size = nn_batch_size
         self.validation_split = validation_split
 
@@ -73,4 +73,4 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
 
     def fit(self, X, y):
         self.create_model(X.shape[1])
-        super(KerasDnnBaseModel, self).fit(X, y, reload_weights=True)
+        super(KerasDnnBaseModel, self).fit(X, y)

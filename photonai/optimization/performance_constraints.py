@@ -194,7 +194,6 @@ class BestPerformance(PhotonBaseConstraint):
         """
         :param metric:
         :param strategy:
-        :param fold_start:
         """
         super(BestPerformance, self).__init__(strategy=strategy, metric=metric)
         self.threshold = None
@@ -219,7 +218,7 @@ class BestPerformance(PhotonBaseConstraint):
         self.config_items[str(config_item.config_dict)] = self.eval_config_entries(config_item)
 
         # first run default 10 configs
-        if self.run < 10 * self.required_folds -1:
+        if self.run < 10 * self.required_folds - 1:
             self.run += 1
             return True
 
@@ -231,7 +230,7 @@ class BestPerformance(PhotonBaseConstraint):
                 self.threshold = min([np.mean(x) for x in self.config_items.values()])
 
         # calc std between inner_folds and average it over all configs [std only for multiple-run-configs]
-        std = np.mean([np.std(x) for x in self.config_items.values() if len(self.config_items.values())>1])
+        std = np.mean([np.std(x) for x in self.config_items.values() if len(self.config_items.values()) > 1])
         challenger = self.eval_config_entries(config_item)
         if self._greater_is_better:
             if np.mean(challenger) > self.threshold - std:
