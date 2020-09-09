@@ -87,12 +87,21 @@ class MyOptimizedCnnEstimator(KerasBaseClassifier):
                  verbosity: int = 1):
         # it is important that you name your params the same in the constructor
         #  stub as well as in your class variables!
-        model = self.build_model(n_filters, kernel_size, X.shape[1], X.shape[2], 6)
+        self.n_filters = n_filters
+        self.kernel_size = kernel_size
+        self.epochs = epochs
+        self.verbosity = verbosity
+
+    def fit(self, X, y):
+        # the optimized parameters are not given directly to the constructor.
+        # Therefore the model can only be created in fit.
+        model = self.build_model(self.n_filters, self.kernel_size, X.shape[1], X.shape[2], 6)
         super(MyOptimizedCnnEstimator, self).__init__(model=model,
-                                                      epochs=epochs,
+                                                      epochs=self.epochs,
                                                       nn_batch_size=32,
-                                                      multi_class=True,
-                                                      verbosity=verbosity)
+                                                      verbosity=self.verbosity,
+                                                      multi_class=True)
+        super(MyOptimizedCnnEstimator, self).fit(X, y)
 
     @staticmethod
     def build_model(n_filters, kernel_size, n_timesteps, n_features, n_outputs):

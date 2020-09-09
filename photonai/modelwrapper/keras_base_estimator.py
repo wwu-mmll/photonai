@@ -38,7 +38,7 @@ class KerasBaseEstimator(BaseEstimator):
                 if not layer.__module__.startswith('keras'):
                     keras.utils.get_custom_objects()[type(layer).__name__] = layer.__class__
 
-    def fit(self, X, y, reload_weights: bool = False):
+    def fit(self, X, y):
         # set weights to initial weights to achieve a weight reset
         self.model.set_weights(self.init_weights)
 

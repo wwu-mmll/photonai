@@ -50,7 +50,7 @@ from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
-                    # which optimizer PHOTON shall use
+                    # which optimizer PHOTONAI shall use
                     optimizer='sk_opt',
                     optimizer_params={'n_configurations': 25},
                     # the performance metrics of your interest
