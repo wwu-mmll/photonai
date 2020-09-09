@@ -191,25 +191,35 @@ class ResultsHandler:
             curves.to_csv(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.csv' % (outer_fold_nr, config_nr)))
         return curves
 
-    def plot_curves(self, curves, title='Learning Curves'):
+    def plot_curves(self, curves: pd.DataFrame, title: str = 'Learning Curves'):
         """
-        This funtion plots the learning curves
+        This function plots the learning curves.
+
+        Parameter
+        ---------
+        * curves: pd.DataFrame
+            Dataframe with multi-index: (run - fraction of data)
+                               columns: at least (metric, train/test) floats
+        * title [str, default: 'Learning Curves']:
+            Subtitle of plot.
+
         """
         metrics = self.results.hyperpipe_info.metrics
         fig, axes = plt.subplots(1, len(metrics), figsize=(len(metrics) * 4., 4.))
         if len(metrics) == 1:
             axes = [axes]
+        cuts = curves.index.get_level_values(0)
+        col_template = tuple(curves.columns[0])
+        # iterate only over first 2 entries [(metric, train/test)], example 'mean' as third
+
         for metric, ax in zip(metrics, axes):
-            cuts = curves.index.get_level_values(0)
-            y = list(curves.columns[0])
-            y[:2] = [metric, 'test']
-            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_test', data=curves, ax=ax)
-            y[1] = 'train'
-            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_train', data=curves, ax=ax)
+            for subset in ['test', 'train']:
+                sns.lineplot(x=cuts, y=curves[(metric, subset)+col_template[2:]], label=metric + '_' + subset, ax=ax)
             ax.set(xlabel='Fraction of Train Data used', ylabel='Metric Value')
             ax.legend(fontsize='small')
         plt.suptitle(title)
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
         return fig
 
     def plot_learning_curves_config(self, config_nr, outer_fold_nr, save, show=False):
@@ -613,7 +623,7 @@ class ResultsHandler:
             append_plotly(labels=[str(d) for d in element_names],
                           values=values,
                           name=k,
-                          colors=[(col) for col in colors],
+                          colors=colors,
                           domain={'x': [i/len(plot_list), (i+1)/len(plot_list)], 'y': [0.55, 1]})
 
         plt.legend(
@@ -638,8 +648,7 @@ class ResultsHandler:
                                    autopct=eval_mean_time_autopct(data))
 
         append_plotly(labels=method_list, values=[val / sum(data) for val in data], name="methods",
-                           colors=[(col) for col in colors],
-                           domain={'x': [0, 1], 'y': [0, 0.45]})
+                      colors=colors, domain={'x': [0, 1], 'y': [0, 0.45]})
 
         plt.axis('equal')
         plt.title("methods")
@@ -834,7 +843,7 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
     def get_dict_from_metric_list(metric_list):
         best_config_metrics = {}
         for train_metric in metric_list:
-            if not train_metric.metric_name in best_config_metrics:
+            if train_metric.metric_name not in best_config_metrics:
                 best_config_metrics[train_metric.metric_name] = {}
             operation_strip = train_metric.operation.split(".")[1]
             best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
@@ -854,7 +863,8 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
 
         return text
 
-    def print_outer_fold(self, outer_fold, estimation_type="classifier", eval_final_performance=True):
+    @staticmethod
+    def print_outer_fold(outer_fold, estimation_type="classifier", eval_final_performance=True):
 
         pp = pprint.PrettyPrinter(indent=4)
         outer_fold_text = []
