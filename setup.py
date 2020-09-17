@@ -53,5 +53,6 @@ with only one line of code.
         'joblib',
         'dask',
         'distributed',
-        'scikit-optimize']
+        'scikit-optimize',
+        'xlrd']
 )

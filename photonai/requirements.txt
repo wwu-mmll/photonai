@@ -16,3 +16,4 @@ dask
 distributed
 scikit-optimize
 pytest
+xlrd
