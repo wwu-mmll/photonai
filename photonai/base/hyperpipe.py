@@ -307,7 +307,7 @@ class Hyperpipe(BaseEstimator):
                  test_size: float = 0.2,
                  calculate_metrics_per_fold: bool = True,
                  calculate_metrics_across_folds: bool = False,
-                 random_seed: bool = False,
+                 random_seed: int = None,
                  verbosity: int = 0,
                  learning_curves: bool = False,
                  learning_curves_cut: FloatRange = None,
@@ -386,7 +386,7 @@ class Hyperpipe(BaseEstimator):
         self.is_final_fit = False
         self.nr_of_processes = nr_of_processes
         self.random_state = random_seed
-        if random_seed:
+        if random_seed is not None:
             import random
             random.seed(random_seed)
 
