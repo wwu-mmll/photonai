@@ -182,19 +182,21 @@ class PipelineElement(BaseEstimator):
 
     @property
     def _estimator_type(self):
-        if hasattr(self.base_element, '_estimator_type'):
-            est_type = getattr(self.base_element, '_estimator_type')
-            if est_type is not 'classifier' and est_type is not 'regressor':
-                raise NotImplementedError("Currently, we only support type classifier or regressor. Is {}.".format(est_type))
+        # estimator_type obligation for estimators, is ignored if a transformer is given
+        # prevention of misuse through predict test (predict method available <=> Estimator).
+        est_type = getattr(self.base_element, '_estimator_type', None)
+        if est_type in [None, 'transformer']:
+            if hasattr(self.base_element, 'predict'):
+                raise NotImplementedError("Element has predict() method but does not specify whether it is a regressor"
+                                          " or classifier. Remember to inherit from ClassifierMixin or RegressorMixin.")
+            return None
+        else:
+            if est_type not in ['classifier', 'regressor']:
+                raise NotImplementedError("Currently, we only support type classifier or regressor."
+                                          " Is {}.".format(est_type))
             if not hasattr(self.base_element, 'predict'):
                 raise NotImplementedError("Estimator does not implement predict() method.")
             return est_type
-        else:
-            if hasattr(self.base_element, 'predict'):
-                raise NotImplementedError("Element has predict() method but does not specify whether it is a regressor "
-                                          "or classifier. Remember to inherit from ClassifierMixin or RegressorMixin.")
-            else:
-                return None
 
     # this is only here because everything inherits from PipelineElement.
     def __iadd__(self, pipe_element):
