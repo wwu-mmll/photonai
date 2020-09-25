@@ -305,3 +305,11 @@ class ResultsHandlerTest(PhotonBaseTest):
 
     def test_get_methods(self):
         self.hyperpipe.results_handler.get_methods()
+
+    def test_float_labels_with_mongo(self):
+        """
+        This test was added for a bug with float labels and saving to mongoDB.
+        """
+        local_y = self.__y.astype(float)
+        self.hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
+        self.hyperpipe.fit(self.__X, local_y)

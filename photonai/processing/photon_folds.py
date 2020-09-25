@@ -26,7 +26,8 @@ class FoldInfo:
             return {}
         else:
             unique, counts = np.unique(y, return_counts=True)
-            unique = [str(u) for u in unique]
+            # replacing is necessary for float inputs, because mongoDB does not allow '.'-char
+            unique = [str(u).replace(".", "_") for u in unique]
             counts = [int(c) for c in counts]
             return dict(zip(unique, counts))
 
@@ -64,7 +65,7 @@ class FoldInfo:
                     data_test_cases = cv_strategy.split(X, groups)
                 except:
                     logger.error("Could not stratify data for outer cross validation according to "
-                                   "group variable")
+                                 "group variable")
             else:
                 data_test_cases = cv_strategy.split(X, y)
 
