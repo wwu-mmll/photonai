@@ -16,7 +16,7 @@ except ModuleNotFoundError:
 
 class NevergradOptimizer(PhotonMasterOptimizer):
 
-    def __init__(self, facade: Union[Optimizer, str] = 'NGO', n_configurations: int = 100, rng: int = 42):
+    def __init__(self, facade='NGO', n_configurations: int = 100, rng: int = 42):
         """Nevergrad Wrapper for PHOTONAI.
 
         Nevergrad usage and implementation details:
@@ -24,7 +24,7 @@ class NevergradOptimizer(PhotonMasterOptimizer):
 
         Parameters
         ----------
-        * `facade` [str or ng., default: 'NGO']:
+        * `facade` [str or ng.optimization.base.Optimizer, default: 'NGO']:
             Choice of Nevergrad backend strategy, [NGO, ...].
         * `n_configurations`: [int, default: 100]
             Number of runs
