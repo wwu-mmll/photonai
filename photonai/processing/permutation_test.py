@@ -311,7 +311,10 @@ class PermutationTest:
         mother_permutation.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
         mother_permutation.save()
         result = dict()
-        result["estimated_duration"] = mother_permutation.computation_end_time - mother_permutation.computation_start_time
+        if mother_permutation.computation_end_time and mother_permutation.computation_start_time:
+            result["estimated_duration"] = mother_permutation.computation_end_time - mother_permutation.computation_start_time
+        else:
+            result["estimated_duration"] = 0
         result["usability"] = PermutationTest.__validate_usability(mother_permutation)
         return result
 
