@@ -792,8 +792,8 @@ class Hyperpipe(BaseEstimator):
 
             self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
-            # Before saving the optimum pipe, add preprocessing
-            self.optimum_pipe._add_preprocessing(self.preprocessing)
+            # Before saving the optimum pipe, add preprocessing without multiprocessing
+            self.optimum_pipe._add_preprocessing(self.disable_multiprocessing_recursively(self.preprocessing))
 
             # Now truly set to no caching (including single_subject_caching)
             self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)

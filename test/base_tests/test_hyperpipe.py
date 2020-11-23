@@ -413,7 +413,7 @@ class HyperpipeTests(PhotonBaseTest):
         nmb_list = list()
         for i in range(5):
             nmb = ParallelBranch(name=str(i), nr_of_processes=i+3)
-            sp = PipelineElement('PCA', hyperparameters= {'n_components': IntegerRange(1, 50)})
+            sp = PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(1, 50)})
             nmb += sp
             nmb_list.append(nmb)
 
@@ -503,6 +503,32 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertTrue(os.path.isfile(backmapped_feature_importances))
         loaded_array = np.loadtxt(open(backmapped_feature_importances, 'rb'), delimiter=",")
         self.assertEqual(loaded_array.shape[0], self.__X.shape[1])
+
+    def test_finalize_optimization_preprocessing(self):
+        self.hyperpipe.elements = list()
+
+        pre_proc = Preprocessing()
+        pre_proc += PipelineElement('StandardScaler')
+        self.hyperpipe.add(pre_proc)
+        self.hyperpipe.add(PipelineElement('SVC'))
+        self.hyperpipe.fit(self.__X, self.__y)
+
+        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
+                                                    'photon_best_model.photon')))
+
+    def test_finalize_optimization_preprocessing_with_client(self):
+        self.hyperpipe.elements = list()
+
+        pb = ParallelBranch(name="ParallelBranch", nr_of_processes=2)
+        pb += PipelineElement('LabelEncoder')
+        pre_proc = Preprocessing()
+        pre_proc += pb
+        self.hyperpipe.add(pre_proc)
+        self.hyperpipe.add(PipelineElement('SVC'))
+        self.hyperpipe.fit(self.__X, self.__y)
+
+        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
+                                                    'photon_best_model.photon')))
 
     def test_optimum_pipe_predict_and_predict_proba_and_transform(self):
         # find best config and test against sklearn
