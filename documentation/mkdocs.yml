@@ -1,0 +1,29 @@
+site_name: ""
+nav:
+  - 'Getting Started':
+    - Introduction: index.md
+    - Classification: classification.md
+    - Regression: regression.md
+  - 'API':
+    - Architecture: architecture.md
+    - Hyperipipe: hyperpipe.md
+  - 'Features':
+      - 'Custom Metrics': custom_metrics.md
+      - 'Hyperparameter Optimization Shortcuts': performance_constraints.md
+  - 'Algorithms':
+      'Transformers': transformers.md
+      'Estimators': estimators.md
+  - 'Examples':
+      - 'Sample Pairing': sample_pairing.md
+      - 'Over- and Undersampling': over_undersampling.md
+  - 'About':
+      - 'Contributions': contribution.md
+extra_css:
+  - stylesheets/extra.css
+theme:
+  name: material
+  custom_dir: overrides
+  repo_url: https://github.com/wwu-mmll/photonai
+  features:
+    - navigation.tabs
+
