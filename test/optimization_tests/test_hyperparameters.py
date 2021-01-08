@@ -142,13 +142,12 @@ class HyperparameterOtherTest(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             integer_range = IntegerRange(2, 1)
             integer_range.transform()
-            assert len(w) == 1
+            assert any("NumberRange or one of its subclasses is empty" in s for s in [e.message.args[0] for e in w])
 
     def test_dtypes(self):
-        with warnings.catch_warnings(record=True) as w:
-            complex_range = NumberRange(1, 5, num_type=complex, range_type="range")
-            complex_range.transform()
-            str_range = NumberRange(1, 2, num_type=np.bool_, range_type="range")
-            str_range.transform()
-            assert len(w) == 0
+        complex_range = NumberRange(1, 5, num_type=complex, range_type="range")
+        complex_range.transform()
+        str_range = NumberRange(1, 2, num_type=np.bool_, range_type="range")
+        str_range.transform()
+
 

@@ -65,6 +65,10 @@ class ScorerTest(unittest.TestCase):
         with self.assertRaises(ValueError):
             Scorer.register_custom_metric(None)
 
+        with warnings.catch_warnings(record=True) as w:
+            Scorer.register_custom_metric(('a_custom_metric', custom_metric))
+            assert any("is ambiguous. Please specify metric" in s for s in [e.message.args[0] for e in w])
+
     def test_keras_metric(self):
         try:
             from keras.metrics import MeanAbsoluteError
@@ -107,11 +111,3 @@ class ScorerTest(unittest.TestCase):
                               np.concatenate((np.zeros((100,)), np.ones((100,))))), axis=1)
         binarized_multidim = one_hot_to_binary(y_one_hot)
         self.assertTrue(np.array_equal(binarized_multidim, np.concatenate((np.zeros((100,)), np.ones((100, ))))))
-
-
-
-
-
-
-
-

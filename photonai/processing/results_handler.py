@@ -1,5 +1,4 @@
 import csv
-import itertools
 import os
 import pickle
 import pprint
@@ -51,7 +50,7 @@ class ResultsHandler:
         """
         This function returns a list of all methods available for ResultsHandler.
         """
-        methods_list = [s for s in dir(ResultsHandler) if not '__' in s]
+        methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
         return methods_list
 
     def get_performance_table(self):
@@ -192,25 +191,35 @@ class ResultsHandler:
             curves.to_csv(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.csv' % (outer_fold_nr, config_nr)))
         return curves
 
-    def plot_curves(self, curves, title='Learning Curves'):
+    def plot_curves(self, curves: pd.DataFrame, title: str = 'Learning Curves'):
         """
-        This funtion plots the learning curves
+        This function plots the learning curves.
+
+        Parameter
+        ---------
+        * curves: pd.DataFrame
+            Dataframe with multi-index: (run - fraction of data)
+                               columns: at least (metric, train/test) floats
+        * title [str, default: 'Learning Curves']:
+            Subtitle of plot.
+
         """
         metrics = self.results.hyperpipe_info.metrics
         fig, axes = plt.subplots(1, len(metrics), figsize=(len(metrics) * 4., 4.))
         if len(metrics) == 1:
             axes = [axes]
+        cuts = curves.index.get_level_values(0)
+        col_template = tuple(curves.columns[0])
+        # iterate only over first 2 entries [(metric, train/test)], example 'mean' as third
+
         for metric, ax in zip(metrics, axes):
-            cuts = curves.index.get_level_values(0)
-            y = list(curves.columns[0])
-            y[:2] = [metric, 'test']
-            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_test', data=curves, ax=ax)
-            y[1] = 'train'
-            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_train', data=curves, ax=ax)
+            for subset in ['test', 'train']:
+                sns.lineplot(x=cuts, y=curves[(metric, subset)+col_template[2:]], label=metric + '_' + subset, ax=ax)
             ax.set(xlabel='Fraction of Train Data used', ylabel='Metric Value')
             ax.legend(fontsize='small')
         plt.suptitle(title)
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
         return fig
 
     def plot_learning_curves_config(self, config_nr, outer_fold_nr, save, show=False):
@@ -279,7 +288,7 @@ class ResultsHandler:
                                reduce_scatter_by: Union[int, str] = 'auto',
                                file: str = None):
         """
-        :param metric: specify metric that has been stored within the PHOTON results tree
+        :param metric: specify metric that has been stored within the PHOTONAI results tree
         :param type: 'plot' or 'scatter'
         :param reduce_scatter_by: integer or string ('auto'), reduce the number of points plotted by scatter
         :param file: specify a filename if you want to save the plot
@@ -370,7 +379,8 @@ class ResultsHandler:
             imps.append(fold.best_config.best_config_score.feature_importances)
         return imps
 
-    def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=''):
+    @staticmethod
+    def collect_fold_lists(score_info_list, fold_nr, predictions_filename=''):
         if len(score_info_list) > 0:
             fold_nr_array = []
             collectables = {'y_pred': [], 'y_true': [], 'indices': [], 'probabilities': []}
@@ -416,7 +426,7 @@ class ResultsHandler:
             fold_nr_list.append(outer_fold.fold_nr)
         return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
 
-    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, config_id=None, filename=''):
+    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, filename=''):
         """
         This function returns the predictions, probabilities, true targets, fold and index
         for the config_nr of the given outer_fold
@@ -613,7 +623,7 @@ class ResultsHandler:
             append_plotly(labels=[str(d) for d in element_names],
                           values=values,
                           name=k,
-                          colors=[(col) for col in colors],
+                          colors=colors,
                           domain={'x': [i/len(plot_list), (i+1)/len(plot_list)], 'y': [0.55, 1]})
 
         plt.legend(
@@ -638,8 +648,7 @@ class ResultsHandler:
                                    autopct=eval_mean_time_autopct(data))
 
         append_plotly(labels=method_list, values=[val / sum(data) for val in data], name="methods",
-                           colors=[(col) for col in colors],
-                           domain={'x': [0, 1], 'y': [0, 0.45]})
+                      colors=colors, domain={'x': [0, 1], 'y': [0, 0.45]})
 
         plt.axis('equal')
         plt.title("methods")
@@ -669,7 +678,7 @@ class ResultsHandler:
             logger.info('Write results to mongodb...')
             try:
                 self.results.save()
-            except DocumentTooLarge as e:
+            except DocumentTooLarge:
                 logger.error('Could not save document into MongoDB: Document too large')
         if self.output_settings.save_output:
             logger.info("Writing results to project folder...")
@@ -713,6 +722,8 @@ class ResultsHandler:
         if isinstance(value, (np.int, np.int32, np.int64)):
             return int(value)
         if isinstance(value, (np.float, np.float32, np.float64)):
+            if self.output_settings.reduce_space:
+                return round(float(value), 3)
             return float(value)
         else:
             return json_util.default(value)
@@ -720,12 +731,29 @@ class ResultsHandler:
     def write_result_tree_to_file(self):
         try:
             local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
-            # file_opened = open(local_file, 'wb')
+            result = self.round_floats(self.results.to_son().to_dict())
+
             with open(local_file, 'w') as outfile:
-                json.dump(self.results.to_son(), outfile, default=self.convert_to_json_serializable)
+                json.dump(result, outfile, default=self.convert_to_json_serializable)
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))
+
+    @classmethod
+    def round_floats(cls, d):
+        # recursive method for rounding all floats in result.json
+        result = {}
+        if isinstance(d, dict):
+            for key, value in d.items():
+                value = cls.round_floats(value)
+                result.update({key: value})
+            return result
+        elif isinstance(d, list):
+            return [cls.round_floats(val) for val in d]
+        elif isinstance(d, float):
+            return round(d, 6)
+        else:
+            return d
 
     def get_best_config_inner_fold_predictions(self, filename=''):
         score_info_list = []
@@ -752,7 +780,7 @@ class ResultsHandler:
 
         text_list = []
         intro_text = """
-PHOTON RESULT SUMMARY
+PHOTONAI RESULT SUMMARY
 -------------------------------------------------------------------
 
 ANALYSIS NAME: {}
@@ -811,16 +839,18 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
             logger.error("Could not write summary file")
             logger.error(str(e))
 
-    def get_dict_from_metric_list(self, metric_list):
+    @staticmethod
+    def get_dict_from_metric_list(metric_list):
         best_config_metrics = {}
         for train_metric in metric_list:
-            if not train_metric.metric_name in best_config_metrics:
+            if train_metric.metric_name not in best_config_metrics:
                 best_config_metrics[train_metric.metric_name] = {}
             operation_strip = train_metric.operation.split(".")[1]
             best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
         return best_config_metrics
 
-    def print_table_for_performance_overview(self, metric_dict, header):
+    @staticmethod
+    def print_table_for_performance_overview(metric_dict, header):
         x = PrettyTable()
         x.field_names = ["Metric Name", "MEAN", "STD"]
         for element_key, element_dict in metric_dict.items():
@@ -833,7 +863,8 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
 
         return text
 
-    def print_outer_fold(self, outer_fold, estimation_type="classifier", eval_final_performance=True):
+    @staticmethod
+    def print_outer_fold(outer_fold, estimation_type="classifier", eval_final_performance=True):
 
         pp = pprint.PrettyPrinter(indent=4)
         outer_fold_text = []

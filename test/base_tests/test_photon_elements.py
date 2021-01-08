@@ -638,7 +638,7 @@ class BranchTests(unittest.TestCase):
             self.assertTrue(no_callback_pipe.elements[-1][1] is my_callback)
             test_branch.sanity_check_pipeline(no_callback_pipe)
             self.assertFalse(no_callback_pipe.elements)
-            assert len(w) == 1
+            assert any("Last element of pipeline cannot be callback" in s for s in [e.message.args[0] for e in w])
 
     def test_prepare_pipeline(self):
         self.assertEqual(len(self.transformer_branch.elements), 2)
@@ -911,7 +911,7 @@ class PreprocessingTests(unittest.TestCase):
         pe.add(PipelineElement('SVC'))
         with warnings.catch_warnings(record=True) as w:
             pe.predict([0, 1, 2])
-            assert len(w) == 1
+            assert any("There is no predict function" in s for s in [e.message.args[0] for e in w])
 
 
 class DataFilterTests(unittest.TestCase):
@@ -991,4 +991,5 @@ class CallbackElementTests(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             self.callback_branch_pipeline_error.fit(self.X, self.y).predict(self.X)
-            assert len(w) >= 2
+            assert any("Last element of pipeline cannot be callback" in s for s in [e.message.args[0] for e in w])
+

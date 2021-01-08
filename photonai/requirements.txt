@@ -1,7 +1,7 @@
 ###### Requirements with temporary Version Specifiers ######
 numpy
 matplotlib
-scikit-learn==0.23.1
+scikit-learn
 keras
 pandas
 plotly
@@ -16,10 +16,4 @@ dask
 distributed
 scikit-optimize
 pytest
-
-# bcolz
-# fabolas
-# george
-# emcee
-# you need FORTRAN compiler for the DIRECT package: sudo apt-get install gfortran
-# DIRECT
+xlrd

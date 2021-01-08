@@ -12,6 +12,7 @@ from sklearn.metrics import accuracy_score
 
 from photonai.photonlogger.logger import logger
 
+
 class Scorer(object):
     """
     Transforms a string literal into an callable instance of a particular metric
@@ -138,7 +139,6 @@ class Scorer(object):
             msg = 'Metric not supported right now:' + metric
             logger.error(msg)
             raise NameError(msg)
-            return None
 
     @staticmethod
     def greater_is_better_distinction(metric: str) -> bool:

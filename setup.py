@@ -40,7 +40,7 @@ with only one line of code.
     install_requires=[
         'numpy',
         'matplotlib',
-        'scikit-learn==0.23.1',
+        'scikit-learn',
         'keras',
         'pandas',
         'plotly',
@@ -53,5 +53,6 @@ with only one line of code.
         'joblib',
         'dask',
         'distributed',
-        'scikit-optimize']
+        'scikit-optimize',
+        'xlrd']
 )

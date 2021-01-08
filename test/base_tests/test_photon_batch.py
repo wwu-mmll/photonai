@@ -78,7 +78,7 @@ class BatchingTests(unittest.TestCase):
 
         with warnings.catch_warnings(record=True) as w:
             self.neuro_batch.transform('str')
-            assert len(w) == 1
+            assert any("Cannot do batching" in s for s in [e.message.args[0] for e in w])
 
     def test_predict(self):
         y_predicted = self.neuro_batch.predict(self.data, **self.kwargs)
@@ -87,4 +87,4 @@ class BatchingTests(unittest.TestCase):
         self.assertEqual(y_predicted[-1], (self.data.shape[0]/self.batch_size))
         with warnings.catch_warnings(record=True) as w:
             self.neuro_batch.predict('str')
-            assert len(w) == 1
+            assert any("Cannot do batching" in s for s in [e.message.args[0] for e in w])

@@ -88,7 +88,7 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             self.constraint_object.metric = "own_metric"
             self.assertEqual(self.constraint_object.shall_continue(self.dummy_config_item), True)
-            assert len(w) == 1
+            assert any("The metric is not known." in s for s in [e.message.args[0] for e in w])
 
         # dummy_item with random values
         # score

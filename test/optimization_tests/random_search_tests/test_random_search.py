@@ -2,7 +2,7 @@ import time
 
 from photonai.base import PipelineElement
 from photonai.optimization import RandomSearchOptimizer, IntegerRange
-from ..grid_search.test_grid_search import GridSearchOptimizerTest
+from ..grid_search_tests.test_grid_search import GridSearchOptimizerTest
 
 
 class RandomSearchOptimizerTest(GridSearchOptimizerTest):
@@ -46,7 +46,7 @@ class RandomSearchOptimizerTest(GridSearchOptimizerTest):
         for config in self.optimizer.ask:
             configs.append(config)
         stop = time.time()
-        self.assertAlmostEqual(stop-start, 3, 2)
+        self.assertAlmostEqual(stop-start, 3, 1)
 
     def test_run(self):
         pass

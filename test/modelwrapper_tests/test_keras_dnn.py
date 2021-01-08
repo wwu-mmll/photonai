@@ -24,7 +24,6 @@ class KerasDnnClassifierTest(BaseModelWrapperTest):
         with self.assertRaises(ValueError):
             self.dnn = KerasDnnClassifier(multi_class=False, loss='kullback_leibler_divergence')
 
-
     def test_parameter_length(self):
 
         self.dnn = KerasDnnClassifier(hidden_layer_sizes=[1,2,3,4,5,6], dropout_rate=0.2, activations='tanh')
@@ -68,3 +67,7 @@ class KerasDnnRegressorTest(KerasDnnClassifierTest):
 
         with self.assertRaises(ValueError):
             self.dnn = KerasDnnRegressor(loss='kullback_leibler_divergence')
+
+        with self.assertRaises(ValueError):
+            self.dnn = KerasDnnRegressor()
+            self.dnn.target_activation = "relu"

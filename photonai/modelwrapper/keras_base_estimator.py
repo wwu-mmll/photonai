@@ -1,8 +1,6 @@
 import warnings
 import keras
-import tensorflow
 from sklearn.base import BaseEstimator
-
 
 from photonai.photonlogger.logger import logger
 
@@ -13,36 +11,34 @@ class KerasBaseEstimator(BaseEstimator):
     """
 
     def __init__(self,
-                 model=None,
+                 model: keras.Model = None,
                  epochs: int = 10,
                  nn_batch_size: int = 32,
                  callbacks: list = None,
+                 validation_split: float = 0.1,
                  verbosity: int = 0):
         self.model = model
         self.epochs = epochs
         self.nn_batch_size = nn_batch_size
         self.verbosity = verbosity
+        self.validation_split = validation_split
         if callbacks:
             self.callbacks = callbacks
         else:
             self.callbacks = []
 
-        # saving initial weights in order to be able to reset the weights before each fit
-        # with this approach pre-trained weights can be set
-        self.init_weights = model.get_weights()
+        # in reloading context self.model could be None
+        if self.model is not None:
+            # saving initial weights in order to be able to reset the weights before each fit
+            # with this approach pre-trained weights can be set
+            self.init_weights = model.get_weights()
 
-        # if a non keras layer is in model, it needs to be registered with keras
-        if isinstance(self.model, keras.Model):
+            # if a non keras layer is in model, it needs to be registered with keras
             for layer in self.model.layers:
                 if not layer.__module__.startswith('keras'):
                     keras.utils.get_custom_objects()[type(layer).__name__] = layer.__class__
-        elif isinstance(self.model, tensorflow.keras.Model):
-            for layer in self.model.layers:
-                if not layer.__module__.startswith('tensorflow'):
-                    tensorflow.keras.utils.get_custom_objects()[type(layer).__name__] = layer.__class__
 
-
-    def fit(self, X, y, reload_weights: bool = False):
+    def fit(self, X, y):
         # set weights to initial weights to achieve a weight reset
         self.model.set_weights(self.init_weights)
 
@@ -50,27 +46,17 @@ class KerasBaseEstimator(BaseEstimator):
         # by default self.encode_targets returns identity of y
         y = self.encode_targets(y)
 
-        # use callbacks only when size of training set is above 100
-        if X.shape[0] > 100:
-            # get pseudo validation set for keras callbacks
-            # fit the model
-            self.model.fit(X, y,
-                           batch_size=self.nn_batch_size,
-                           validation_split=0.1,
-                           epochs=self.epochs,
-                           callbacks=self.callbacks,
-                           verbose=self.verbosity)
-        else:
-            # fit the model
-            msg = 'Cannot use Keras Callbacks because of small sample size.'
+        # use validation split only when size of training set is above 100
+        if X.shape[0] < 100 and self.validation_split is not None:
+            msg = 'Cannot use validation split because of small sample size.'
             logger.warning(msg)
             warnings.warn(msg)
-            self.model.fit(X, y,
-                           batch_size=self.nn_batch_size,
-                           epochs=self.epochs,
-                           callbacks=self.callbacks,
-                           verbose=self.verbosity)
-
+        self.model.fit(X, y,
+                       batch_size=self.nn_batch_size,
+                       epochs=self.epochs,
+                       validation_split=self.validation_split if X.shape[0] > 100 else None,
+                       callbacks=self.callbacks,
+                       verbose=self.verbosity)
         return self
 
     def predict_proba(self, X):
@@ -102,4 +88,4 @@ class KerasBaseEstimator(BaseEstimator):
         # load weights into new model
         loaded_model.load_weights(filename + ".h5")
         self.model = loaded_model
-
+        self.init_weights = self.model.get_weights()

@@ -1,5 +1,6 @@
 import datetime
 import random
+from typing import Union, Generator
 
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.photonlogger.logger import logger
@@ -7,11 +8,18 @@ from photonai.photonlogger.logger import logger
 
 class RandomSearchOptimizer(PhotonSlaveOptimizer):
     """
-     Searches for the best configuration by randomly testing k possible hyperparameter combinations without grid.
+     Searches for the best configuration by randomly testing hyperparameter combinations without grid.
+
+     Parameter
+    ---------
+    * `limit_in_minutes` [int, default: 60]:
+        Total time in minutes.
+    * `n_configurations` [Union[int, None], default: None]:
+        Number of configurations to be calculated.
+
     """
 
-    def __init__(self, n_configurations=None, limit_in_minutes=60):
-        super(RandomSearchOptimizer, self).__init__()
+    def __init__(self, limit_in_minutes: Union[float, None] = 60, n_configurations: Union[int, None] = None):
 
         self.pipeline_elements = None
         self.parameter_iterable = None
@@ -36,14 +44,27 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
             logger.error(msg)
             raise ValueError(msg)
 
-    def prepare(self, pipeline_elements, maximize_metric):
+    def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
+        """Initializes grid free random hyperparameter search.
+
+        Parameters
+        ----------
+        * `pipeline_elements` [list]:
+            List of all pipeline_elements to create hyperparameter_space.
+        * `maximize_metric` [bool]:
+            Boolean for distinguish between score and error.
+
+        """
+        self.start_time = None
         self.pipeline_elements = pipeline_elements
         self.ask = self.next_config_generator()
 
-    def next_config_generator(self):
-
+    def next_config_generator(self) -> Generator:
+        """
+        Creates a random param-generator.
+        """
         while True:
-            val = (yield self.generate_config())
+            _ = (yield self._generate_config())
             self.k_configutration += 1
             if self.limit_in_minutes:
                 if self.start_time is None:
@@ -57,7 +78,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
                 if self.k_configutration >= self.n_configurations:
                     return
 
-    def generate_config(self):
+    def _generate_config(self):
         config = {}
         for p_element in self.pipeline_elements:
             for h_key, h_value in p_element.hyperparameters.items():

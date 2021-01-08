@@ -20,8 +20,32 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 class InnerFoldManager(object):
     """
-        Trains and tests a sklearn pipeline for a specific hyperparameter combination with cross-validation,
-        calculates metrics for each fold and averages metrics over all folds
+    Trains and tests a pipeline for a specific hyperparameter combination with cross-validation,
+    calculates metrics for each fold and averages metrics over all folds
+
+    Parameter
+    ---------
+    * `pipe_ctor`
+        The pipeline instance that shall be trained and tested
+    * `specific_config` [dict]:
+        The hyperparameter configuration to test
+    * `optimization_infos` [Optimization]:
+        Infomrations for the optimizer like best_config_metric, maximize_metric, optimizer_params, ...
+    * `cross_validation_infos` [CrossValidation]:
+        Infomrations for the inner cross-validation like test_size, eval_final_performance, ...
+    * `outer_fold_id` [UUID]:
+        UUID for outer_fold for identification.
+    * `optimization_constraints` [Union[PhotonBaseConstraint, List[PhotonBaseConstraint]]]
+        Constraints for skipping folds of config if specific constraint occurs.
+    * `raise_error` [bool, default=False]
+        if true, raises exception when training and testing the pipeline fails
+    * `training` [bool, default=False]
+        Mode switch.
+    * `cache_folder` [default=None]
+        Path to cache in.
+    * `cache_updater` [default=None]
+        Funtion to update cache.
+
     """
 
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
@@ -31,14 +55,7 @@ class InnerFoldManager(object):
                  training: bool = False,
                  cache_folder=None,
                  cache_updater=None):
-        """
-        Creates a new InnerFoldManager object
-        :param pipe: The sklearn pipeline instance that shall be trained and tested
-        :param specific_config: The hyperparameter configuration to test
-        :type specific_config: dict
-        :param raise_error: if true, raises exception when training and testing the pipeline fails
-        :type raise_error: bool
-        """
+
         self.params = specific_config
         self.pipe = pipe_ctor
         self.optimization_infos = optimization_infos
