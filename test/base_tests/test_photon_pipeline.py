@@ -3,7 +3,7 @@ import os
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
-from sklearn.decomposition.pca import PCA
+from sklearn.decomposition import PCA
 from sklearn.pipeline import Pipeline as SKPipeline
 from sklearn.preprocessing import StandardScaler
 from sklearn.svm import SVC
