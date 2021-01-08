@@ -2,3 +2,4 @@
 configspace
 smac
 emcee
+pyDOE
