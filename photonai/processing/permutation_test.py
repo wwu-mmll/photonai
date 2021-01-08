@@ -3,7 +3,7 @@ import pandas as pd
 import dask
 import os
 from dask.distributed import Client
-
+from datetime import timedelta
 from pymodm import connect
 from pymodm.errors import DoesNotExist, ConnectionError
 from pymongo import DESCENDING
@@ -311,7 +311,11 @@ class PermutationTest:
         mother_permutation.permutation_id = PermutationTest.get_mother_permutation_id(permutation_id)
         mother_permutation.save()
         result = dict()
-        result["estimated_duration"] = mother_permutation.computation_end_time - mother_permutation.computation_start_time
+        if mother_permutation.computation_end_time is not None and mother_permutation.computation_start_time is not None:
+            result[
+                "estimated_duration"] = mother_permutation.computation_end_time - mother_permutation.computation_start_time
+        else:
+            result["estimated_duration"] = timedelta(seconds=0)
         result["usability"] = PermutationTest.__validate_usability(mother_permutation)
         return result
 

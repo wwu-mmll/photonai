@@ -992,3 +992,4 @@ class CallbackElementTests(unittest.TestCase):
         with warnings.catch_warnings(record=True) as w:
             self.callback_branch_pipeline_error.fit(self.X, self.y).predict(self.X)
             assert any("Last element of pipeline cannot be callback" in s for s in [e.message.args[0] for e in w])
+
