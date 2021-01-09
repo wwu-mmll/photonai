@@ -51,8 +51,8 @@ with only one line of code.
         'prettytable',
         'seaborn',
         'joblib',
-        'dask',
-        'distributed',
+        'dask==2.30.0',
+        'distributed==2.30.1',
         'scikit-optimize',
         'xlrd']
 )
