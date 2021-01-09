@@ -3,19 +3,20 @@ Define custom metrics here
 The method stub of all metrics is
 function_name(y_true, y_pred)
 """
-from typing import Union, Type, Callable, Optional, Tuple, Dict
-
-import numpy as np
-from scipy.stats import spearmanr
 import warnings
+import numpy as np
+from typing import Union, Type, Callable, Optional, Tuple, Dict
+from scipy.stats import spearmanr
 from sklearn.metrics import accuracy_score
 
 from photonai.photonlogger.logger import logger
 
 
 class Scorer(object):
-    """
-    Transforms a string literal into an callable instance of a particular metric
+    """Scorer.
+
+    Transforms a string literal into an callable instance of a particular metric.
+
     """
 
     ELEMENT_DICTIONARY: Dict[str, Tuple[str, str, str]] = {
@@ -113,11 +114,18 @@ class Scorer(object):
     
     @classmethod
     def create(cls, metric: str) -> Optional[Callable]:
-        """
-        Searches for the metric by name and instantiates the according calculation function
-        :param metric: the name of the metric as encoded in the ELEMENT_DICTIONARY
-        :type metric: str
-        :return: a callable instance of the metric calculation
+        """Searches for the metric by name and instantiates the according calculation function
+
+        Parameters
+        ----------
+        metric: str
+            The name of the metric as encoded in the ELEMENT_DICTIONARY.
+
+        Returns
+        -------
+        metric_function: Callable
+            A callable instance of the metric calculation.
+
         """
         if metric in Scorer.ELEMENT_DICTIONARY:
             try:
@@ -169,14 +177,24 @@ class Scorer(object):
 
     @staticmethod
     def calculate_metrics(y_true, y_pred, metrics):
-        """
-        Applies all metrics to the given predicted and true values.
-        The metrics are encoded via a string literal which is mapped to the according calculation function
-        :param y_true: the truth values
-        :type y_true: list
-        :param y_pred: the predicted values
-        :param metrics: list
-        :return: dict of metrics
+        """Applies all metrics to the given predicted and true values.
+        The metrics are encoded via a string literal which is mapped
+        to the according calculation function.
+
+        Parameters
+        ----------
+        y_true: list
+            The truth values.
+        y_pred: list
+            The predicted values.
+        metrics: list of str
+            List of all metrics to be calculated from y_true and y_pred.
+
+        Returns
+        --------
+        result: dict
+            Dictionary with format name_of_metric -> value.
+
         """
 
         # Todo: HOW TO CHECK IF ITS REGRESSION?!

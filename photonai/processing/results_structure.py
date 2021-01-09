@@ -244,7 +244,6 @@ class MDBHelper:
                                                       value=calculate_single_metric(op, value_list_validation)))
         return metrics_train, metrics_test
 
-
     @staticmethod
     def get_metric(config_item, operation, metric, train=True):
         if train:
