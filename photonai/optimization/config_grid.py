@@ -1,9 +1,26 @@
+from itertools import product
+
 from photonai.optimization import PhotonHyperparam, IntegerRange, FloatRange, Categorical, BooleanSwitch
 from photonai.photonlogger import logger
-from itertools import product
 
 
 def create_global_config_dict(pipeline_elements):
+    """Creation of a definition set for grid-based optimizers in format: dict key -> value.
+
+    A grid is generated from a given list of hyperparameters for optimization.
+    Initialize hyperparameters with transform().
+
+    Parameters
+    ----------
+    pipeline_elements: list of PhotonHyperparameters
+        List of all set hyperparameters.
+
+    Returns
+    -------
+    global_hyperparameter_dict: dict
+        Grid of configurations.
+
+    """
     global_hyperparameter_dict = {}
     for p_element in pipeline_elements:
 
@@ -27,6 +44,24 @@ def create_global_config_dict(pipeline_elements):
 
 
 def create_global_config_grid(pipeline_elements, add_name=''):
+    """Creation of a list of configuration for grid-based optimizers.
+
+        A grid is generated from a given list of hyperparameters for optimization.
+
+        Parameters
+        ----------
+        pipeline_elements: list of PhotonHyperparameters
+            List of hyperparameters.
+
+        add_name: str, default=''
+            Set praefix to dict keys.
+
+        Returns
+        -------
+        config_dicts: List of dicts
+            List of dicts. Every dict is a possible configurations.
+
+    """
     global_hyperparameter_list = []
     for element in pipeline_elements:
         if hasattr(element, "generate_config_grid"):

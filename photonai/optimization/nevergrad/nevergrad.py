@@ -15,22 +15,24 @@ except ModuleNotFoundError:
 
 
 class NevergradOptimizer(PhotonMasterOptimizer):
+    """Nevergrad Wrapper for PHOTONAI.
 
-    def __init__(self, facade='NGO', n_configurations: int = 100, rng: int = 42):
-        """Nevergrad Wrapper for PHOTONAI.
+    Nevergrad usage and implementation details:
+    https://facebookresearch.github.io/nevergrad/
 
-        Nevergrad usage and implementation details:
-        https://facebookresearch.github.io/nevergrad/
-
-        Parameters
-        ----------
-        * `facade` [str or ng.optimization.base.Optimizer, default: 'NGO']:
+    Parameters
+    ----------
+    facade: str or ng.optimization.base.Optimizer, default='NGO'
             Choice of Nevergrad backend strategy, [NGO, ...].
-        * `n_configurations`: [int, default: 100]
-            Number of runs
-        * `rng` [int, default: 42]
-            Random Seed
-        """
+
+    n_configurations: int, default=100
+        Number of runs.
+
+    rng: int, default=42
+        Random Seed.
+
+    """
+    def __init__(self, facade='NGO', n_configurations: int = 100, rng: int = 42):
 
         if not __found__:
             msg = "Module nevergrad not found or not installed as expected. " \
@@ -61,17 +63,19 @@ class NevergradOptimizer(PhotonMasterOptimizer):
         self.optimizer = None
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function: Callable) -> None:
-        """
-        Initializes Nevergrad Optimizer.
+        """Initializes Nevergrad Optimizer.
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter_space.
-        * `maximize_metric` [bool]:
+
+        maximize_metric: bool
             Boolean for distinguish between score and error.
-        * `objective_function` [Callable]:
+
+        objective_function: Callable
             The cost or objective function.
+
         """
         self.space = self._build_nevergrad_space(pipeline_elements)
         self.space.random_state.seed(self.rng)
@@ -89,19 +93,16 @@ class NevergradOptimizer(PhotonMasterOptimizer):
         self.optimizer = self.facade(parametrization=self.space, budget=self.n_configurations)
 
     def optimize(self) -> None:
-        """
-        Start optimization process.
-        """
         self.optimizer.minimize(self.objective)
 
     def _build_nevergrad_space(self, pipeline_elements: list):
-        """
-        Build entire Nevergrad hyperparameter space.
+        """Build entire Nevergrad hyperparameter space.
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter_space.
+
         """
         param_dict = {}
         for pipe_element in pipeline_elements:
@@ -126,13 +127,13 @@ class NevergradOptimizer(PhotonMasterOptimizer):
 
     @staticmethod
     def _convert_photonai_to_nevergrad_param(hyperparam: PhotonHyperparam):
-        """
-        Helper function: Convert PHOTONAI hyperparameter to Nevergrad hyperparameter.
+        """Helper function: Convert PHOTONAI hyperparameter to Nevergrad hyperparameter.
 
         Parameters
         ----------
-        * `hyperparam` [object]:
+        hyperparam: PhotonHyperparam
              One of photonai.optimization.hyperparameters.
+
         """
         if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):
             return ng.p.Choice(hyperparam.values)

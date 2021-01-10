@@ -7,18 +7,20 @@ from photonai.photonlogger.logger import logger
 
 
 class RandomSearchOptimizer(PhotonSlaveOptimizer):
-    """
-     Searches for the best configuration by randomly testing hyperparameter combinations without grid.
+    """Random search optimizer.
 
-     Parameter
-    ---------
-    * `limit_in_minutes` [int, default: 60]:
+    Searches for the best configuration by randomly
+    testing hyperparameter combinations without grid.
+
+    Parameters
+    ----------
+    limit_in_minutes: int, default=60
         Total time in minutes.
-    * `n_configurations` [Union[int, None], default: None]:
+
+    n_configurations: int or None, default=None
         Number of configurations to be calculated.
 
     """
-
     def __init__(self, limit_in_minutes: Union[float, None] = 60, n_configurations: Union[int, None] = None):
 
         self.pipeline_elements = None
@@ -49,9 +51,10 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter_space.
-        * `maximize_metric` [bool]:
+
+        maximize_metric: bool
             Boolean for distinguish between score and error.
 
         """
@@ -60,9 +63,6 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
         self.ask = self.next_config_generator()
 
     def next_config_generator(self) -> Generator:
-        """
-        Creates a random param-generator.
-        """
         while True:
             _ = (yield self._generate_config())
             self.k_configutration += 1
