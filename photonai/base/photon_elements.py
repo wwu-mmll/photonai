@@ -967,7 +967,7 @@ class Switch(PipelineElement):
 
     """
 
-    def __init__(self, name: str, elements: list = None):
+    def __init__(self, name: str, elements: list = None, estimator_name: str = ''):
         """
         Creates a new Switch object and generated the hyperparameter combination grid
 
@@ -991,6 +991,7 @@ class Switch(PipelineElement):
         self.disabled = False
         self.test_disabled = False
         self.batch_size = 0
+        self.estimator_name = estimator_name
 
         self.needs_y = True
         self.needs_covariates = True
@@ -1128,6 +1129,11 @@ class Switch(PipelineElement):
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
 
         if config:
+
+            if "estimator_name" in config:
+                self.estimator_name = config["estimator_name"]
+                del config["estimator_name"]
+
             # remove name
             unnamed_config = {}
             for config_key, config_value in config.items():
