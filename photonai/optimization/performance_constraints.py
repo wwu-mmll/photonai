@@ -8,10 +8,32 @@ from photonai.photonlogger.logger import logger
 
 
 class PhotonBaseConstraint:
-    """
-    The PHOTONAI base interface for any performance constraints that could speed up hyperparameter search.
-    After a particular configuration is tested in one fold, the performance constraint objects are called to
-    evaluate if the configuration is promising. If not, further testing in other folds is skipped to increase speed.
+    """Photon base constraint.
+
+    The PHOTONAI base interface for any performance constraints
+    that could speed up hyperparameter search.
+    After a particular configuration is tested in one fold,
+    the performance constraint objects are called to
+    evaluate if the configuration is promising. If not,
+    further testing in other folds is skipped to increase speed.
+
+    Parameters
+    ----------
+    metric: str, default=''
+        Name of metric to perform on.
+
+    threshold: float or None, default=None
+        Limit for decision.
+
+    margin: float, default=0
+        Value to be added for threshold value.
+        Continue if:
+            Scorer: P(Config) > P(Dummy) + margin
+            Error:  P(Config) < P(Dummy) - margin
+
+    strategy: str, default='first'
+        One of [first, all, mean].
+
     """
 
     ENUM_STRATEGY = Enum("strategy", "first all mean")
@@ -29,19 +51,10 @@ class PhotonBaseConstraint:
 
     @property
     def strategy(self):
-        """
-        Getter for attribute strategy.
-        :return:
-        """
         return self._strategy
 
     @strategy.setter
     def strategy(self, value):
-        """
-        Setter for strategy. Checks if strategy is supported.
-        :param value: String
-        :return:
-        """
         try:
             self._strategy = PhotonBaseConstraint.ENUM_STRATEGY[value]
         except KeyError:
@@ -50,19 +63,10 @@ class PhotonBaseConstraint:
 
     @property
     def metric(self):
-        """
-        Getter for attribute metric.
-        :return:
-        """
         return self._metric
 
     @metric.setter
     def metric(self, value):
-        """
-        Setter for attribute metric.
-        :param value: metric value
-        :return:
-        """
         try:
             self._metric = value
             self._greater_is_better = Scorer.greater_is_better_distinction(self._metric)
@@ -71,17 +75,20 @@ class PhotonBaseConstraint:
             logger.warning("Your metric is not supported. Performance constraints are constantly False.")
 
     def shall_continue(self, config_item):
-        """
-        Function to evaluate if the constraint is reached.
+        """Function to evaluate if the constraint is reached.
+
         If it returns True, the testing of the configuration is continued.
         If it returns False, further testing of the configuration is skipped
         to increase speed of the hyperparameter search.
 
         Parameters
         ----------
-        * 'config_item' [MDBConfig]:
-            All performance metrics and other scoring information for all configuration's performance.
-            Can be used to evaluate if the configuration has any potential to serve the model's learning task.
+        config_item: MDBConfig
+            All performance metrics and other scoring information
+            for all configuration's performance.
+            Can be used to evaluate if the configuration has any potential
+            to serve the model's learning task.
+
         """
         if self.metric == "unknown":
             msg = "The metric is not known. Please check the metric: " + self.metric + ". " +\
@@ -121,10 +128,6 @@ class PhotonBaseConstraint:
             return True
 
     def copy_me(self):
-        """
-        Copy self object.
-        :return:
-        """
         new_me = type(self)(metric=self.metric)
         signature = inspect.getfullargspec(self.__init__)[0]
         for attr in signature:
@@ -136,14 +139,29 @@ class PhotonBaseConstraint:
 
 
 class MinimumPerformance(PhotonBaseConstraint):
-    """
+    """Minumum performance.
+
     Tests if a configuration performs better than a given limit for a particular metric.
+
+    Parameters
+    ----------
+    metric: str, default=''
+        Name of metric to perform on.
+
+    threshold: float, default=1
+        Limit for decision.
+
+    strategy: str, default='first'
+        One of [first, all, mean].
 
     Example
     -------
-    MinimumPerformance('accuracy', 0.96) tests if the configuration has at least a performance of 0.96 in
+    MinimumPerformance('accuracy', 0.96) tests if the configuration
+    has at least a performance of 0.96 in
     (the) [first, all, mean] fold(s).
-    If not further testing of the configuration is skipped, as it is regarded as not promising enough.
+    If not further testing of the configuration is skipped,
+    as it is regarded as not promising enough.
+
     """
 
     def __init__(self, metric: str = '', threshold: float = 1., strategy='first'):
@@ -151,31 +169,48 @@ class MinimumPerformance(PhotonBaseConstraint):
 
 
 class DummyPerformance(PhotonBaseConstraint):
-    """
+    """Dummy performance.
+
     Tests if a configuration performs better than a given limit for a particular metric.
+
+    Parameters
+    ----------
+    metric: str, default=''
+        Name of metric to perform on.
+
+    margin: float, default=0
+        Value to be added for threshold value.
+        Continue if:
+            Scorer: P(Config) > P(Dummy) + margin
+            Error:  P(Config) < P(Dummy) - margin
+
+    strategy: str, default='first'
+        One of [first, all, mean].
 
     Example
     -------
-    DummyPerformance('accuracy', 0.1) tests if the configuration has at least a 10% better performance than the dummy
+    DummyPerformance('accuracy', 0.1) tests if the configuration has
+    at least a 10% better performance than the dummy
     estimator. Distinguish between [first, all, mean] fold(s).
-    If not further testing of the configuration is skipped, as it is regarded as not promising enough.
+    If not further testing of the configuration is skipped,
+    as it is regarded as not promising enough.
+
     """
 
     def __init__(self, metric: str = '', margin: float = 0, strategy='first'):
         super(DummyPerformance, self).__init__(strategy=strategy, metric=metric, margin=margin)
 
     def set_dummy_performance(self, dummy_result):
+        """Set threshold with margin and dummy_performance value.
+        At the time the object is created, this value is not known.
         """
-        Set threshold with margin and dummy_performance value
-        :param dummy_result: MDBScoreInformation type
-        :return:
-        """
-        self.threshold = dummy_result.validation.metrics[self.metric] + self.margin
+        if self._greater_is_better:
+            self.threshold = dummy_result.validation.metrics[self.metric] + self.margin
+        else:
+            self.threshold = dummy_result.validation.metrics[self.metric] - self.margin
 
     def copy_me(self):
-        """
-        Copy self object. Appending threshold to super.copy_me().
-        :return: DummyPerformance
+        """Copy self object. Appending threshold to super.copy_me().
         """
         new_me = super(DummyPerformance, self).copy_me()
         if "threshold" in self.__dict__.keys():
@@ -184,17 +219,23 @@ class DummyPerformance(PhotonBaseConstraint):
 
 
 class BestPerformance(PhotonBaseConstraint):
-    """
+    """Best performance.
+
     BestPerformance decides in every fold: challenger works better than incumbent
     true: eval next fold, false: eval next config
     better in all inner_folds: incumbent = challenger.
+
+    Parameters
+    ----------
+    metric: str, default=''
+        Name of metric to perform on.
+
+    strategy: str, default='mean'
+        One of [first, all, mean].
+
     """
 
     def __init__(self, metric: str = '', strategy: str = 'mean'):
-        """
-        :param metric:
-        :param strategy:
-        """
         super(BestPerformance, self).__init__(strategy=strategy, metric=metric)
         self.threshold = None
         self.config_items = {}
@@ -202,17 +243,20 @@ class BestPerformance(PhotonBaseConstraint):
         self.run = 0
 
     def shall_continue(self, config_item):
-        """
-        Function to evaluate if the constraint is reached.
+        """Function to evaluate if the constraint is reached.
+
         If it returns True, the testing of the configuration is continued.
         If it returns False, further testing of the configuration is skipped
         to increase speed of the hyperparameter search.
 
         Parameters
         ----------
-        * 'config_item' [MDBConfig]:
-            All performance metrics and other scoring information for all configuration's performance.
-            Can be used to evaluate if the configuration has any potential to serve the model's learning task.
+        config_item: MDBConfig
+            All performance metrics and other scoring information
+            for all configuration's performance.
+            Can be used to evaluate if the configuration has any potential
+            to serve the model's learning task.
+
         """
         self.required_folds = max(self.required_folds, len(self.eval_config_entries(config_item)))
         self.config_items[str(config_item.config_dict)] = self.eval_config_entries(config_item)
@@ -245,9 +289,7 @@ class BestPerformance(PhotonBaseConstraint):
         return False
 
     def copy_me(self):
-        """
-        Copy self object. Appending threshold to super.copy_me().
-        :return: BestPerformance
+        """Copy self object. Appending threshold to super.copy_me().
         """
         new_me = super(BestPerformance, self).copy_me()
         if "threshold" in self.__dict__.keys():

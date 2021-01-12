@@ -2,9 +2,9 @@ from typing import Callable
 
 
 class PhotonSlaveOptimizer(object):
-    """PhotonSlaveOptimizer
+    """Photon Slave optimizer.
 
-    The PhotonSlaveOptimizer is controlled by PHOTONAI.
+    The PhotonSlaveOptimizer is controlled by PHOTONAIs OuterFoldManager.
     With the ask-tell principle PHOTONAI gets new configs.
     It terminates by some specific criteria leads to empty yield ask.
 
@@ -19,42 +19,44 @@ class PhotonSlaveOptimizer(object):
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter_space.
-        * `maximize_metric` [bool]:
+
+        maximize_metric: bool
             Boolean for distinguish between score and error.
+
         """
         pass
 
     def ask(self) -> dict:
-        """
-        When ask is called it returns the next configuration to be tested.
+        """When ask is called it returns the next configuration to be tested.
 
         Returns
         -------
-        * _ [dict]:
-            config_dict, the next config to be tested
+        config: dict
+            Config_dict with parameters of the next config to be tested.
+
         """
         pass
 
     def tell(self, config: dict, performance: float) -> None:
-        """
-        Provide result for optimizer to calculate new ones.
+        """Provide result for optimizer to calculate new ones.
 
         Parameters
         ----------
-        * 'config' [dict]:
+        config: dict
             The configuration that has been trained and tested.
-        * 'performance' [dict]:
+
+        performance: float
             Metrics about the configuration's generalization capabilities.
         """
         pass
 
 
 class PhotonMasterOptimizer(object):
-    """PhotonMasterOptimizer
+    """Photon Master optimizer.
 
-    The PhotonMasterOptimizer controls PHOTONAI.
+    The PhotonMasterOptimizer controls PHOTONAIs optimization process.
     PHOTONAI creates an objective function that is used by the optimizer.
     The limitation of runs and configs of the
     objective function is up to PhotonMasterOptimizer.
@@ -70,17 +72,20 @@ class PhotonMasterOptimizer(object):
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter_space.
-        * `maximize_metric` [bool]:
+
+        maximize_metric: bool
             Boolean for distinguish between score and error.
-        * `objective_function` [Callable]:
+
+        objective_function: Callable:
             The cost or objective function.
+
         """
         pass
 
     def optimize(self) -> None:
-        """
-        Start optimization over objective_function.
+        """Start optimization over objective_function.
+
         """
         pass

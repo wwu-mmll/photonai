@@ -25,14 +25,50 @@ from photonai.processing.results_structure import MDBHyperpipe
 
 
 class ResultsHandler:
+    """Results Handler.
+
+    Provides all functions that operate on calculated results.
+    As IO for the results object the ResultsHandler
+    is able to handle results on its own.
+
+    Parameters
+    ----------
+    results_object: MDBHyperpipe or None, default=None
+        All results are stored here.
+        An initial setting is not necessary,
+        because a later loading via file or MongoDB is possible.
+
+    output_settings: OutputSettings or None, default=None
+        Setting for creation and storage of the results_object.
+
+    """
     def __init__(self, results_object: MDBHyperpipe = None, output_settings=None):
         self.results = results_object
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
+        """Reads results_file from json into MDBHyperpipe object self.results.
+
+        Parameters
+        ----------
+        results_file: str
+            Full path to json file.
+
+        """
         self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
+        """Reads results_file from MongoDB into MDBHyperpipe object self.results.
+
+        Parameters
+        ----------
+        mongodb_connect_url: str
+            MongoDB connection string.
+
+        pipe_name: str
+            Name of the stored hyperpipe.
+
+        """
         connect(mongodb_connect_url, alias="photon_core")
         results = list(MDBHyperpipe.objects.raw({'name': pipe_name}))
         if len(results) == 1:
@@ -47,15 +83,15 @@ class ResultsHandler:
 
     @staticmethod
     def get_methods():
-        """
-        This function returns a list of all methods available for ResultsHandler.
+        """This function returns a list of all methods available for ResultsHandler.
+
         """
         methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
         return methods_list
 
     def get_performance_table(self):
-        """
-        This function returns a summary table of the overall results.
+        """This function returns a summary table of the overall results.
+
         ToDo: add best_config information!
         """
 
@@ -98,9 +134,8 @@ class ResultsHandler:
         return performances
 
     def get_config_evaluations(self):
-        """
-        Return the test performance of every tested configuration in every outer fold.
-        :return:
+        """Return the test performance of every tested configuration in every outer fold.
+
         """
         config_performances = list()
         maximum_fold = None
@@ -169,10 +204,10 @@ class ResultsHandler:
         return minimum_config_evaluations
 
     def get_learning_curves(self, config_nr, outer_fold_nr, save):
-        """
-        This function gets the learning curves out of the result tree.
+        """This function gets the learning curves out of the result tree.
         It returns the learning curves as a pandas dataframe.
         If save = True it saves the learning curves as a csv file.
+
         """
         cuts = self.results.hyperpipe_info.learning_curves_cut.values[1:] + [1.]
         fold_num = len(self.results.outer_folds[0].tested_config_list[config_nr - 1].inner_folds)
@@ -188,19 +223,19 @@ class ResultsHandler:
                 data.update({(metric, ['test', 'train'][t-1]): curves})
         curves = pd.DataFrame(data, index=idx, columns=col)
         if save:
-            curves.to_csv(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.csv' % (outer_fold_nr, config_nr)))
+            curves.to_csv(self._save_prep_learning_curves('lc_outer_fold_%d_config_%d.csv' % (outer_fold_nr, config_nr)))
         return curves
 
     def plot_curves(self, curves: pd.DataFrame, title: str = 'Learning Curves'):
-        """
-        This function plots the learning curves.
+        """This function plots the learning curves.
 
-        Parameter
-        ---------
-        * curves: pd.DataFrame
+        Parameters
+        ----------
+        curves: pd.DataFrame,
             Dataframe with multi-index: (run - fraction of data)
                                columns: at least (metric, train/test) floats
-        * title [str, default: 'Learning Curves']:
+
+        title: str, default='Learning Curves',
             Subtitle of plot.
 
         """
@@ -223,8 +258,7 @@ class ResultsHandler:
         return fig
 
     def plot_learning_curves_config(self, config_nr, outer_fold_nr, save, show=False):
-        """
-        This function gets the learning curves for a specific config nr. and outer fold nr. and plots them
+        """This function gets the learning curves for a specific config nr. and outer fold nr. and plots them
         If config_nr = -1 it gets the best config of the outer fold
         If save = True the plot is saved
         If show = True the plot is shown
@@ -235,14 +269,13 @@ class ResultsHandler:
         curves.columns = curves.columns.to_flat_index()
         fig = self.plot_curves(curves, 'Learning Curves (Outer Fold Nr.%d Config Nr.%d)' % (outer_fold_nr, config_nr))
         if save:
-            plt.savefig(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.png' % (outer_fold_nr, config_nr)))
+            plt.savefig(self._save_prep_learning_curves('lc_outer_fold_%d_config_%d.png' % (outer_fold_nr, config_nr)))
         if show:
             plt.show()
         plt.close()
 
     def plot_learning_curves_outer_fold(self, outer_fold_nr, config_nr_list=None, save=True, show=False):
-        """
-        This function gets the learning curves for a list of configs in a specific outer fold and plots them
+        """This function gets the learning curves for a list of configs in a specific outer fold and plots them
         For each config the mean of the learning curves of all inner folds is used
         If config_nr = -1 it gets the best config of the outer fold
         If save = True the plot is saved
@@ -262,16 +295,13 @@ class ResultsHandler:
         curves_configs = curves_configs.swaplevel()
         fig = self.plot_curves(curves_configs, 'Learning Curves (Outer Fold Nr.%d)' % outer_fold_nr)
         if save:
-            curves_configs.to_csv(self.save_prep_learning_curves('lc_outer_fold_{}.csv'.format(outer_fold_nr)))
-            plt.savefig(self.save_prep_learning_curves('lc_outer_fold_{}.png'.format(outer_fold_nr)))
+            curves_configs.to_csv(self._save_prep_learning_curves('lc_outer_fold_{}.csv'.format(outer_fold_nr)))
+            plt.savefig(self._save_prep_learning_curves('lc_outer_fold_{}.png'.format(outer_fold_nr)))
         if show:
             plt.show()
         plt.close()
 
-    def save_prep_learning_curves(self, file_name):
-        """
-        Helper function to save learning curves
-        """
+    def _save_prep_learning_curves(self, file_name):
         path = self.output_settings.results_folder + '/learning_curves/'
         if not os.path.exists(path):
             os.makedirs(path)
@@ -589,7 +619,7 @@ class ResultsHandler:
             def my_autopct(pct):
                 total = sum(values)
                 if pct/total >= 1:
-                    return str(round(pct,1))+"%"
+                    return str(round(pct, 1))+"%"
                 else:
                     return None
 

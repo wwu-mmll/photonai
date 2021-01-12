@@ -9,10 +9,12 @@ from photonai.photonlogger.logger import logger
 
 
 class GridSearchOptimizer(PhotonSlaveOptimizer):
-    """
-    Searches for the best configuration by iteratively testing all possible hyperparameter combinations.
-    """
+    """Grid search optimizer.
 
+    Searches for the best configuration by iteratively
+    testing all possible hyperparameter combinations.
+
+    """
     def __init__(self):
         self.param_grid = []
         self.pipeline_elements = None
@@ -27,9 +29,10 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter_space.
-        * `maximize_metric` [bool]:
+
+        maximize_metric: bool
             Boolean for distinguish between score and error.
 
         """
@@ -39,32 +42,38 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
         logger.info("Grid Search generated " + str(len(self.param_grid)) + " configurations")
 
     def next_config_generator(self) -> Generator:
-        """
-        Creates a param-generator dealing with the entire grid.
-        """
         for parameters in self.param_grid:
             yield parameters
 
 
 class RandomGridSearchOptimizer(GridSearchOptimizer):
-    """
-    Searches for the best configuration by randomly testing k possible hyperparameter combinations.
+    """Random grid search optimizer.
 
-    Parameter
-    ---------
-    * `n_configurations` [Union[int, None], default: 25]:
+    Searches for the best configuration by randomly
+    testing n possible hyperparameter combinations.
+
+    Parameters
+    ----------
+    n_configurations: int or None, default=25
         Number of configurations to be calculated.
 
     """
-
     def __init__(self, n_configurations: Union[int, None] = 25):
         super(RandomGridSearchOptimizer, self).__init__()
         self._k = n_configurations
         self.n_configurations = self._k
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """
-        Initializes hyperparameter search. Same functionality as in GridSearchOptimizer.
+        """Initializes hyperparameter search.
+
+        Parameters
+        ----------
+        pipeline_elements: list
+            List of all pipeline_elements to create hyperparameter_space.
+
+        maximize_metric: bool
+            Boolean for distinguish between score and error.
+
         """
         super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
         self.n_configurations = self._k
@@ -79,18 +88,20 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
 
 
 class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
-    """
-    Iteratively tests k possible hyperparameter configurations until a certain time limit is reached.
+    """Time boxed random grid serach.
 
-    Parameter
-    ---------
-    * `limit_in_minutes` [int, default: 60]:
+    Iteratively tests n possible hyperparameter configurations
+    until a certain time limit is reached.
+
+    Parameters
+    ----------
+    limit_in_minutes: int, default=60
         Total time in minutes.
-    * `n_configurations` [Union[int, None], default: 25]:
+
+    n_configurations: int or None, default=25
         Number of configurations to be calculated.
 
     """
-
     def __init__(self, limit_in_minutes: float = 60, n_configurations: Union[int, None] = None):
         super(TimeBoxedRandomGridSearchOptimizer, self).__init__(n_configurations)
         self.limit_in_minutes = limit_in_minutes
@@ -98,16 +109,21 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
         self.end_time = None
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """
-        Initializes hyperparameter search. Same functionality as in GridSearchOptimizer.
+        """Initializes hyperparameter search.
+
+        Parameters
+        ----------
+        pipeline_elements: list
+            List of all pipeline_elements to create hyperparameter_space.
+
+        maximize_metric: bool
+            Boolean for distinguish between score and error.
+
         """
         super(TimeBoxedRandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
         self.start_time = None
 
     def next_config_generator(self) -> Generator:
-        """
-        Creates new configs until stopping criteria. Same functionality as in GridSearchOptimizer.
-        """
         if self.start_time is None:
             self.start_time = datetime.datetime.now()
             self.end_time = self.start_time + datetime.timedelta(minutes=self.limit_in_minutes)

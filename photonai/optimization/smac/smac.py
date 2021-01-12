@@ -20,24 +20,26 @@ except ModuleNotFoundError:
 
 
 class SMACOptimizer(PhotonMasterOptimizer):
+    """SMAC Wrapper for PHOTONAI.
 
+    SMAC usage and implementation details:
+    https://automl.github.io/SMAC3/master/quickstart.html
+
+    Parameters
+    ----------
+    facade: str or smac.facade.class, default='SMAC4HPO'
+        Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
+
+    scenario_dict: dict, default=None (warning scenario with wallclock_limit = 60*5)]
+        Informations for scenario settings like run_limit or wallclock_limit.
+        Different to main SMAC, cs (configspace) is not required
+        or used cause PHOTONAI translate own param_space to SMAC.configspace.
+
+    rng: int, default=42
+        random seed of SMAC.facade
+
+    """
     def __init__(self, facade='SMAC4HPO', scenario_dict=None, intensifier_kwargs=None, rng=42):
-        """SMAC Wrapper for PHOTONAI.
-
-        SMAC usage and implementation details:
-        https://automl.github.io/SMAC3/master/quickstart.html
-
-        Parameters
-        ----------
-        * `facade` [str or smac.facade.class, default: 'SMAC4HPO']:
-             Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
-        * `scenario_dict` [dict, default: None (warning scenario with wallclock_limit = 60*5)]
-            Informations for scenario settings like run_limit or wallclock_limit.
-            Different to main SMAC, cs (configspace) is not required or used cause PHOTONAI translate own param_space
-            to SMAC.configspace.
-        * `rng`: [int, default: 42]
-            random seed of SMAC.facade
-        """
 
         super(SMACOptimizer, self).__init__()
 
@@ -82,17 +84,19 @@ class SMACOptimizer(PhotonMasterOptimizer):
         self.constant_dictionary = {}
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function: Callable):
-        """
-        Initializes SMAC Optimizer.
+        """Initializes SMAC Optimizer.
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter space.
-        * `maximize_metric` [bool]:
+
+        maximize_metric: bool
             Boolean for distinguish between score and error.
-        * `objective_function` [callable]:
+
+        objective_function: Callable
             The cost or objective function.
+
         """
         self.cspace = ConfigurationSpace()  # build space
         self._build_smac_space(pipeline_elements)
@@ -117,19 +121,16 @@ class SMACOptimizer(PhotonMasterOptimizer):
                                 tae_runner=smac_objective_function)
 
     def optimize(self):
-        """
-        Start optimization process.
-        """
         self.smac.optimize()
 
     def _build_smac_space(self, pipeline_elements: list):
-        """
-        Build entire SMAC hyperparameter space.
+        """Build entire SMAC hyperparameter space.
 
         Parameters
         ----------
-        * `pipeline_elements` [list]:
+        pipeline_elements: list
             List of all pipeline_elements to create hyperparameter_space.
+
         """
         for pipe_element in pipeline_elements:
             # build conditions for switch elements
@@ -171,15 +172,16 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
     @staticmethod
     def _convert_photonai_to_smac_param(hyperparam: PhotonHyperparam, name: str):
-        """
-        Helper function: Convert PHOTON hyperparameter to SMAC hyperparameter.
+        """Helper function: Convert PHOTON hyperparameter to SMAC hyperparameter.
 
         Parameters
         ----------
-        * `hyperparam` [object]:
-             One of photonai.optimization.hyperparameters.
-        * `name` [str]
+        hyperparam: PhotonHyperparam
+            One of photonai.optimization.hyperparameters.
+
+        name: str
             Name of hyperparameter.
+
         """
         if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):
             return CategoricalHyperparameter(name, hyperparam.values)
