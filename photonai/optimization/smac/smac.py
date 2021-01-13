@@ -30,16 +30,39 @@ class SMACOptimizer(PhotonMasterOptimizer):
     facade: str or smac.facade.class, default='SMAC4HPO'
         Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
 
-    scenario_dict: dict, default=None (warning scenario with wallclock_limit = 60*5)]
-        Informations for scenario settings like run_limit or wallclock_limit.
-        Different to main SMAC, cs (configspace) is not required
-        or used cause PHOTONAI translate own param_space to SMAC.configspace.
+    run_obj: str, default="quality"
+        Defines what metric to optimize.
+        When optimizing runtime, cutoff_time is required as well.
+
+    wallclock_limit: float, default=60.0
+        Maximum amount of wallclock-time used for optimization.
+
+    deterministic: str, default="true"
+        If true, SMAC assumes that the target function or algorithm
+        is deterministic (the same static seed of 0
+        is always passed to the function/algorithm).
+        If false, different random seeds are passed
+        to the target function/algorithm.
+
+    intensifier_kwargs: dict or None, default=None
+        Dict for intensifier settings.
 
     rng: int, default=42
         random seed of SMAC.facade
 
+    Notes
+    -----
+    All initial kwargs are passed to SMACs scenario.
+    Available parameters:
+    https://automl.github.io/SMAC3/master/options.html#scenario
+
     """
-    def __init__(self, facade='SMAC4HPO', scenario_dict=None, intensifier_kwargs=None, rng=42):
+    def __init__(self, facade='SMAC4HPO',
+                 run_obj: str = "quality",
+                 deterministic: str = "true",
+                 wallclock_limit: float = 60.0,
+                 intensifier_kwargs: dict = None,
+                 rng: int = 42, **kwargs):
 
         super(SMACOptimizer, self).__init__()
 
@@ -49,15 +72,10 @@ class SMACOptimizer(PhotonMasterOptimizer):
             logger.error(msg)
             raise ModuleNotFoundError(msg)
 
-        if not scenario_dict:
-            self.scenario_dict = {"run_obj": "quality",
-                                  "deterministic": "true",
-                                  "wallclock_limit": 60 * 5}
-            msg = "No scenario_dict for smac was given. Falling back to default values: {}.".format(self.scenario_dict)
-            logger.warning(msg)
-            warnings.warn(msg)
-        else:
-            self.scenario_dict = scenario_dict
+        self.run_obj = run_obj
+        self.deterministic = deterministic
+        self.wallclock_limit = wallclock_limit
+        self.kwargs = kwargs
 
         if facade in ["SMAC4BO", SMAC4BO, "SMAC4AC", SMAC4AC, "SMAC4HPO", SMAC4HPO, "BOHB4HPO", BOHB4HPO]:
             if type(facade) == str:
@@ -106,16 +124,21 @@ class SMACOptimizer(PhotonMasterOptimizer):
             logger.warning(msg)
             warnings.warn(msg)
         self.maximize_metric = maximize_metric
-        self.scenario_dict["cs"] = self.cspace
-        self.scenario_dict["limit_resources"] = False
 
-        self.scenario = Scenario(self.scenario_dict)
+        scenario_dict = self.kwargs
+        scenario_dict.update({"run_obj":self.run_obj,
+                              "deterministic":self.deterministic,
+                              "wallclock_limit":self.wallclock_limit,
+                              "cs":self.cspace,
+                              "limit_resources": False})
+
+        scenario = Scenario(scenario_dict)
 
         def smac_objective_function(current_config):
             current_config = {k: current_config[k] for k in current_config if (current_config[k] and 'algos' not in k)}
             return objective_function(current_config)
 
-        self.smac = self.facade(scenario=self.scenario,
+        self.smac = self.facade(scenario=scenario,
                                 intensifier_kwargs=self.intensifier_kwargs,
                                 rng=self.rng,
                                 tae_runner=smac_objective_function)

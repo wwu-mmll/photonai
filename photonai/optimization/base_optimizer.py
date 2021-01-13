@@ -49,6 +49,7 @@ class PhotonSlaveOptimizer(object):
 
         performance: float
             Metrics about the configuration's generalization capabilities.
+
         """
         pass
 
@@ -85,7 +86,5 @@ class PhotonMasterOptimizer(object):
         pass
 
     def optimize(self) -> None:
-        """Start optimization over objective_function.
-
-        """
+        """Start optimization over objective_function."""
         pass

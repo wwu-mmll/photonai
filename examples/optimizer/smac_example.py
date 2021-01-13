@@ -4,24 +4,21 @@ from sklearn.model_selection import KFold, ShuffleSplit
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Switch
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
-# WE USE THE BOSTON HOUSING DATA FROM SKLEARN
 X, y = load_boston(return_X_y=True)
-
-scenario_dict = {"run_obj": "quality",  # we optimize quality (alternatively runtime)
-                             "runcount-limit": 30,  # maximum function evaluations
-                             "deterministic": "true",
-                             "wallclock_limit": 60*2
-                             }
 
 # DESIGN YOUR PIPELINE
 settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('smac_example',
-                    optimizer='smac',  # which optimizer PHOTON shall use, in this case smac
-                    optimizer_params={'scenario_dict': scenario_dict},
+                    optimizer='smac',
+                    # possible paramters: facade, intensifier_kwargs
+                    # and scenario parameters: https://automl.github.io/SMAC3/master/options.html#scenario
+                    optimizer_params={"facade": "SMAC4BO",
+                                      "wallclock_limit": 60.0*10,  # seconds
+                                      "ta_run_limit": 100},  # limit of configurations
                     metrics=['mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',
-                    outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
-                    inner_cv=KFold(n_splits=3),
+                    outer_cv=ShuffleSplit(n_splits=5, test_size=0.2),
+                    inner_cv=KFold(n_splits=5),
                     verbosity=1,
                     output_settings=settings)
 
