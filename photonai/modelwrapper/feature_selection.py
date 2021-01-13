@@ -1,9 +1,10 @@
 # Wrapper for Feature Selection (Select Percentile)
 import numpy as np
-from sklearn.base import BaseEstimator, TransformerMixin
-from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, \
-    VarianceThreshold, mutual_info_classif, mutual_info_regression, SelectKBest, chi2
 from sklearn.linear_model import Lasso
+from sklearn.base import BaseEstimator, TransformerMixin
+from sklearn.feature_selection import f_regression, f_classif, SelectPercentile, VarianceThreshold
+
+from photonai.photonlogger.logger import logger
 
 
 class FRegressionFilterPValue(BaseEstimator, TransformerMixin):
@@ -12,14 +13,26 @@ class FRegressionFilterPValue(BaseEstimator, TransformerMixin):
     def __init__(self, p_threshold=.05):
         self.p_threshold = p_threshold
         self.selected_indices = []
+        self.n_original_features = None
 
     def fit(self, X, y):
+        self.n_original_features = X.shape[1]
         f_values, p_values = f_regression(X, y)
         self.selected_indices = np.where(p_values < self.p_threshold)[0]
         return self
 
     def transform(self, X):
         return X[:, self.selected_indices]
+
+    def inverse_transform(self, X):
+        if X.shape[1] != len(self.selected_indices):
+            msg = "X has a different shape than during fitting."
+            logger.error(msg)
+            raise ValueError(msg)
+
+        Xt = np.zeros((X.shape[0], self.n_original_features))
+        Xt[:, self.selected_indices] = X
+        return Xt
 
 
 class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
@@ -40,6 +53,10 @@ class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
 
+    def inverse_transform(self, X):
+        Xt = self.my_fs.inverse_transform(X)
+        return self.var_thres.inverse_transform(Xt)
+
 
 class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
@@ -59,6 +76,10 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
 
+    def inverse_transform(self, X):
+        Xt = self.my_fs.inverse_transform(X)
+        return self.var_thres.inverse_transform(Xt)
+
 
 class ModelSelector(BaseEstimator, TransformerMixin):
     _estimator_type = "transformer"
@@ -69,6 +90,7 @@ class ModelSelector(BaseEstimator, TransformerMixin):
         self.selected_indices = []
         self.percentile = percentile
         self.importance_scores = []
+        self.n_original_features = None
 
     def _get_feature_importances(self, estimator, norm_order=1):
         """Retrieve or aggregate feature importances from estimator"""
@@ -92,6 +114,7 @@ class ModelSelector(BaseEstimator, TransformerMixin):
         return importances
 
     def fit(self, X, y=None, **kwargs):
+        self.n_original_features = X.shape[1]
         # 1. fit estimator
         self.estimator_obj.fit(X, y)
         # penalty = "l1"
@@ -126,6 +149,15 @@ class ModelSelector(BaseEstimator, TransformerMixin):
             return X
         return X_new
 
+    def inverse_transform(self, X):
+        if X.shape[1] != len(self.selected_indices):
+            msg = "X has a different shape than during fitting."
+            logger.error(msg)
+            raise ValueError(msg)
+        Xt = np.zeros((X.shape[0], self.n_original_features))
+        Xt[:, self.selected_indices] = X
+        return Xt
+
     def set_params(self, **params):
         if 'threshold' in params:
             self.threshold = params['threshold']
@@ -157,6 +189,9 @@ class LassoFeatureSelection(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None, **kwargs):
         selected_features = self.model_selector.transform(X, y, **kwargs)
         return selected_features
+
+    def inverse_transform(self, X):
+        return self.model_selector.inverse_transform(X)
 
     def set_params(self, **params):
         super(LassoFeatureSelection, self).set_params(**params)
