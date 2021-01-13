@@ -2,15 +2,7 @@ import pandas as pd
 from sklearn.model_selection import StratifiedKFold, KFold, ShuffleSplit
 
 from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, OutputSettings
-from photonai.optimization import FloatRange, IntegerRange, Categorical
-
-# csv_data = pd.read_csv('~/Downloads/pd_speech_features.csv').to_numpy()
-# X = csv_data[:, 1:-1]
-# y = csv_data[:, -1]
-
-# df = pd.read_csv('https://drive.google.com/uc?id=1kDE9mZaDFGfoIlgMbN9T2jaoF0056h9R')
-# X = df.iloc[:, 1::]
-# y = df.iloc[:, 0]
+from photonai.optimization import FloatRange, IntegerRange, Categorical, BestPerformanceConstraint
 
 df = pd.read_csv('https://drive.google.com/uc?id=1V0eKMG0RwFkOz2EHDvbsdPmYqAd3f1pr')
 
@@ -19,13 +11,16 @@ y = df.iloc[:, 12]
 
 
 my_pipe = Hyperpipe('example_project',
-                    optimizer='random_grid_search',
-                    optimizer_params={'n_configurations': 50},
-                    metrics=['balanced_accuracy', 'f1_score', 'matthews_corrcoef', 'accuracy', 'precision', 'recall'],
+                    optimizer='switch',
+                    optimizer_params={'name': 'sk_opt', 'n_configurations': 25},
+                    metrics=['balanced_accuracy', 'f1_score', 'auc', 'matthews_corrcoef',
+                             'accuracy', 'precision', 'recall'],
                     best_config_metric='matthews_corrcoef',
                     outer_cv=ShuffleSplit(n_splits=100, test_size=0.2),
-                    inner_cv=KFold(n_splits=10, shuffle=True),
+                    inner_cv=KFold(n_splits=5, shuffle=True),
                     output_settings=OutputSettings(project_folder='./tmp'),
+                    performance_constraints=[BestPerformanceConstraint('matthews_corrcoef')],
+                    cache_folder='./cache',
                     verbosity=1)
 
 my_pipe += PipelineElement('StandardScaler')

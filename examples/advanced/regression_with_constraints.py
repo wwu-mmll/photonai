@@ -2,7 +2,7 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization import MinimumPerformance, IntegerRange
+from photonai.optimization import MinimumPerformanceConstraint, IntegerRange
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_boston(return_X_y=True)
@@ -21,8 +21,8 @@ my_pipe = Hyperpipe(name='basic_svm_pipe_no_performance',
                                                    mongodb_connect_url="mongodb://localhost:27017/photon_results",
                                                    save_output=True,
                                                    plots=True),
-                    performance_constraints=[MinimumPerformance('mean_squared_error', 35, 'first'),
-                                             MinimumPerformance('pearson_correlation', 0.7, 'all')])
+                    performance_constraints=[MinimumPerformanceConstraint('mean_squared_error', 35, 'first'),
+                                             MinimumPerformanceConstraint('pearson_correlation', 0.7, 'any')])
 
 my_pipe += PipelineElement('StandardScaler')
 my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': IntegerRange(5, 50)})

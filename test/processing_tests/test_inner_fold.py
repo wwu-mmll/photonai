@@ -10,7 +10,7 @@ from sklearn.preprocessing import StandardScaler
 
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.optimization import MinimumPerformance, FloatRange
+from photonai.optimization import MinimumPerformanceConstraint, FloatRange
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import FoldOperations
@@ -82,7 +82,7 @@ class InnerFoldTests(PhotonBaseTest):
         # A: for a single constraint
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
-                                     optimization_constraints=MinimumPerformance('accuracy', 0.95, 'first'))
+                                     optimization_constraints=MinimumPerformanceConstraint('accuracy', 0.95, 'first'))
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         # the first fold has an accuracy of 0.874 so we expect the test_pipe to stop calculating after the first fold
@@ -93,8 +93,8 @@ class InnerFoldTests(PhotonBaseTest):
         # but specificity should stop the computation (0.78 in first fold < specificity threshold)
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
-                                     optimization_constraints=[MinimumPerformance('accuracy', 0.85, 'first'),
-                                                               MinimumPerformance('specificity', 0.8, 'first')])
+                                     optimization_constraints=[MinimumPerformanceConstraint('accuracy', 0.85, 'first'),
+                                                               MinimumPerformanceConstraint('specificity', 0.8, 'first')])
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         self.assertTrue(len(photon_results_config_item.inner_folds) == 1)
@@ -102,8 +102,8 @@ class InnerFoldTests(PhotonBaseTest):
         # C: for a list of constraints, all should pass
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
-                                     optimization_constraints=[MinimumPerformance('accuracy', 0.75, 'all'),
-                                                               MinimumPerformance('specificity', 0.75, 'all')])
+                                     optimization_constraints=[MinimumPerformanceConstraint('accuracy', 0.75, 'all'),
+                                                               MinimumPerformanceConstraint('specificity', 0.75, 'all')])
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         self.assertTrue(len(photon_results_config_item.inner_folds) == 4)

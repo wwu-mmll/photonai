@@ -466,15 +466,15 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertTrue(isinstance(self.hyperpipe.results_handler, ResultsHandler))
         self.assertTrue(len(self.hyperpipe.results.outer_folds) == 0)
 
-        expected_pipeline_struct = {'StandardScaler': type(self.ss_pipe_element.base_element),
-                                    'PCA': type(self.pca_pipe_element.base_element),
-                                    'SVC': type(self.svc_pipe_element.base_element),
-                                    'final_stack': {'SVC': type(self.svc_pipe_element.base_element),
-                                                    'RandomForestClassifier': type(rfc.base_element),
+        expected_pipeline_struct = {'StandardScaler': str(type(self.ss_pipe_element.base_element)),
+                                    'PCA': str(type(self.pca_pipe_element.base_element)),
+                                    'SVC': str(type(self.svc_pipe_element.base_element)),
+                                    'final_stack': {'SVC': str(type(self.svc_pipe_element.base_element)),
+                                                    'RandomForestClassifier': str(type(rfc.base_element)),
                                                     'dummy_branch': {
-                                                        'SVC': type(self.svc_pipe_element.base_element)
+                                                        'SVC': str(type(self.svc_pipe_element.base_element))
                                                     }},
-                                    'LinearSVC': type(lsvc.base_element)
+                                    'LinearSVC': str(type(lsvc.base_element))
                                     }
         self.assertDictEqual(self.hyperpipe.results.hyperpipe_info.pipeline_elements, expected_pipeline_struct)
 

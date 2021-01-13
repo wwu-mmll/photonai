@@ -93,7 +93,7 @@ class PhotonBaseConstraint:
             if self.strategy.name == 'first':
                 if config_item.inner_folds[0].validation.metrics[self.metric] < self.threshold:
                     return False
-            elif self.strategy.name == 'all':
+            elif self.strategy.name == 'any':
                 if any(item < self.threshold for item in [x.validation.metrics[self.metric]
                                                           for x in config_item.inner_folds]):
                     return False
@@ -105,7 +105,7 @@ class PhotonBaseConstraint:
             if self.strategy.name == 'first':
                 if config_item.inner_folds[0].validation.metrics[self.metric] > self.threshold:
                     return False
-            elif self.strategy.name == 'all':
+            elif self.strategy.name == 'any':
                 if any(item > self.threshold for item in [x.validation.metrics[self.metric]
                                                           for x in config_item.inner_folds]):
                     return False
@@ -129,7 +129,7 @@ class PhotonBaseConstraint:
         return new_me
 
 
-class MinimumPerformance(PhotonBaseConstraint):
+class MinimumPerformanceConstraint(PhotonBaseConstraint):
     """
     Tests if a configuration performs better than a given limit for a particular metric.
 
@@ -141,10 +141,10 @@ class MinimumPerformance(PhotonBaseConstraint):
     """
 
     def __init__(self, metric: str = '', threshold: float = 1., strategy='first'):
-        super(MinimumPerformance, self).__init__(strategy=strategy, metric=metric, threshold=threshold)
+        super(MinimumPerformanceConstraint, self).__init__(strategy=strategy, metric=metric, threshold=threshold)
 
 
-class DummyPerformance(PhotonBaseConstraint):
+class DummyPerformanceConstraint(PhotonBaseConstraint):
     """
     Tests if a configuration performs better than a given limit for a particular metric.
 
@@ -156,7 +156,7 @@ class DummyPerformance(PhotonBaseConstraint):
     """
 
     def __init__(self, metric: str = '', margin: float = 0, strategy='first'):
-        super(DummyPerformance, self).__init__(strategy=strategy, metric=metric, margin=margin)
+        super(DummyPerformanceConstraint, self).__init__(strategy=strategy, metric=metric, margin=margin)
 
     def set_dummy_performance(self, dummy_result):
         """
@@ -171,13 +171,13 @@ class DummyPerformance(PhotonBaseConstraint):
         Copy self object. Appending threshold to super.copy_me().
         :return: DummyPerformance
         """
-        new_me = super(DummyPerformance, self).copy_me()
+        new_me = super(DummyPerformanceConstraint, self).copy_me()
         if "threshold" in self.__dict__.keys():
             new_me.threshold = self.threshold
         return new_me
 
 
-class BestPerformance(PhotonBaseConstraint):
+class BestPerformanceConstraint(PhotonBaseConstraint):
     """
     BestPerformance decides in every fold: challenger works better than incumbent
     true: eval next fold, false: eval next config
@@ -190,7 +190,7 @@ class BestPerformance(PhotonBaseConstraint):
         :param strategy:
         :param fold_start:
         """
-        super(BestPerformance, self).__init__(strategy=strategy, metric=metric)
+        super(BestPerformanceConstraint, self).__init__(strategy=strategy, metric=metric)
         self.threshold = None
         self.config_items = {}
         self.required_folds = 0
@@ -244,7 +244,7 @@ class BestPerformance(PhotonBaseConstraint):
         Copy self object. Appending threshold to super.copy_me().
         :return: BestPerformance
         """
-        new_me = super(BestPerformance, self).copy_me()
+        new_me = super(BestPerformanceConstraint, self).copy_me()
         if "threshold" in self.__dict__.keys():
             new_me.threshold = self.threshold
         return new_me

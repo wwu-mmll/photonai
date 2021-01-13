@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from photonai.optimization import DummyPerformance, MinimumPerformance, BestPerformance, IntegerRange
+from photonai.optimization import DummyPerformanceConstraint, MinimumPerformanceConstraint, BestPerformanceConstraint, IntegerRange
 from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.processing.results_structure import MDBConfig, MDBScoreInformation, MDBInnerFold
 
@@ -107,7 +107,7 @@ class MinimumPerformanceTest(PhotonBaseConstraintTest):
 
     def setUp(self):
         super(MinimumPerformanceTest, self).setUp()
-        self.constraint_object = MinimumPerformance(strategy='first', metric='f1_score', threshold=0)
+        self.constraint_object = MinimumPerformanceConstraint(strategy='first', metric='f1_score', threshold=0)
 
     def test_shall_continue(self):
         super(MinimumPerformanceTest, self).test_shall_continue()
@@ -146,7 +146,7 @@ class DummyPerformanceConstraints(PhotonBaseConstraintTest):
 
     def setUp(self):
         super(DummyPerformanceConstraints, self).setUp()
-        self.constraint_object = DummyPerformance(strategy='first', metric='mean_squared_error', margin=0.1)
+        self.constraint_object = DummyPerformanceConstraint(strategy='first', metric='mean_squared_error', margin=0.1)
         self.constraint_object.set_dummy_performance(self.dummy_config_item.inner_folds[0])
 
 
@@ -154,7 +154,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
 
     def setUp(self):
         super(BestPerformanceTest, self).setUp()
-        self.constraint_object = BestPerformance(strategy='mean', metric='mean_squared_error')
+        self.constraint_object = BestPerformanceConstraint(strategy='mean', metric='mean_squared_error')
 
     def test_shall_continue(self):
         X, y = load_boston(return_X_y=True)

@@ -6,7 +6,7 @@ import json
 from prettytable import PrettyTable
 
 from photonai.helper.helper import PhotonDataHelper, print_double_metrics, print_metrics
-from photonai.optimization import DummyPerformance
+from photonai.optimization import DummyPerformanceConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
@@ -346,7 +346,7 @@ class OuterFoldManager:
 
                 # performaceConstraints: DummyEstimator
                 if self.constraint_objects is not None:
-                    dummy_constraint_objs = [opt for opt in self.constraint_objects if isinstance(opt, DummyPerformance)]
+                    dummy_constraint_objs = [opt for opt in self.constraint_objects if isinstance(opt, DummyPerformanceConstraint)]
                     if dummy_constraint_objs:
                         for dummy_constraint_obj in dummy_constraint_objs:
                             dummy_constraint_obj.set_dummy_performance(self.result_object.dummy_results)

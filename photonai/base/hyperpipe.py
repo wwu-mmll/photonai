@@ -506,9 +506,9 @@ class Hyperpipe(BaseEstimator):
                 element_list[p_el.name] = child_list
             else:
                 if hasattr(p_el, 'base_element'):
-                    element_list[p_el.name] = type(p_el.base_element)
+                    element_list[p_el.name] = str(type(p_el.base_element))
                 else:
-                    element_list[p_el.name] = type(p_el)
+                    element_list[p_el.name] = str(type(p_el))
         return element_list
 
     def _prepare_result_logging(self, start_time):
