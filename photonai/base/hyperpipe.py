@@ -496,6 +496,21 @@ class Hyperpipe(BaseEstimator):
                           'step skipped.')
             return
 
+    def __get_pipeline_structure(self, pipeline_elements):
+        element_list = dict()
+        for p_el in pipeline_elements:
+            if not hasattr(p_el, 'name'):
+                raise Warning('Strange Pipeline Element found that has no name..? Type: '.format(type(p_el)))
+            if hasattr(p_el, 'elements'):
+                child_list = self.__get_pipeline_structure(p_el.elements)
+                element_list[p_el.name] = child_list
+            else:
+                if hasattr(p_el, 'base_element'):
+                    element_list[p_el.name] = type(p_el.base_element)
+                else:
+                    element_list[p_el.name] = type(p_el)
+        return element_list
+
     def _prepare_result_logging(self, start_time):
 
         self.results = MDBHyperpipe(name=self.name, version=__version__)
@@ -522,6 +537,7 @@ class Hyperpipe(BaseEstimator):
                 self.results.wizard_system_name = self.output_settings.wizard_project_name
                 self.results.user_id = self.output_settings.user_id
         self.results.outer_folds = []
+        self.results.hyperpipe_info.pipeline_elements = self.__get_pipeline_structure(self.elements)
         self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics

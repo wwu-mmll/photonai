@@ -452,12 +452,31 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_prepare_result_logging(self):
         # test that results object is given and entails hyperpipe infos
+        rfc = PipelineElement('RandomForestClassifier')
+        lsvc = PipelineElement('LinearSVC')
+        branch = Branch('dummy_branch')
+        branch += PipelineElement('SVC')
+        self.hyperpipe += Stack('final_stack', [PipelineElement('SVC'), rfc, branch])
+        self.hyperpipe += lsvc
+
         self.hyperpipe.data.X = self.__X
         self.hyperpipe.data.y = self.__y
         self.hyperpipe._prepare_result_logging(datetime.datetime.now())
         self.assertTrue(isinstance(self.hyperpipe.results, MDBHyperpipe))
         self.assertTrue(isinstance(self.hyperpipe.results_handler, ResultsHandler))
         self.assertTrue(len(self.hyperpipe.results.outer_folds) == 0)
+
+        expected_pipeline_struct = {'StandardScaler': type(self.ss_pipe_element.base_element),
+                                    'PCA': type(self.pca_pipe_element.base_element),
+                                    'SVC': type(self.svc_pipe_element.base_element),
+                                    'final_stack': {'SVC': type(self.svc_pipe_element.base_element),
+                                                    'RandomForestClassifier': type(rfc.base_element),
+                                                    'dummy_branch': {
+                                                        'SVC': type(self.svc_pipe_element.base_element)
+                                                    }},
+                                    'LinearSVC': type(lsvc.base_element)
+                                    }
+        self.assertDictEqual(self.hyperpipe.results.hyperpipe_info.pipeline_elements, expected_pipeline_struct)
 
     def test_finalize_optimization(self):
         # it is kind of difficult to test that's why we fake it

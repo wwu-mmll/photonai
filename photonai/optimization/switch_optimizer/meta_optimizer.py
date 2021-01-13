@@ -41,6 +41,9 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
                                      'random_search': RandomSearchOptimizer}
 
     def prepare(self, pipeline_elements, maximize_metric):
+        if not pipeline_elements:
+            raise ValueError("Optimizer cannot optimize empty pipeline")
+
         if not isinstance((pipeline_elements[-1]), Switch):
             raise ValueError("Cannot use switch_optimizer without Switch Element at the end of pipeline.")
 
@@ -48,6 +51,8 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
         switch = self.pipeline_elements[-1]
         self.switch_name = switch.name
         self.switch_estimator_config_key = switch.name + "__estimator_name"
+        if self.optimizer_name not in self.OPTIMIZER_DICTIONARY:
+            raise ValueError("SwitchOptimizer could not find optimizer {}".format(self.optimizer_name))
         optimizer_class = self.OPTIMIZER_DICTIONARY[self.optimizer_name]
 
         for element in switch.elements:
