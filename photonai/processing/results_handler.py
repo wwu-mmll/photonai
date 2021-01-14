@@ -735,7 +735,7 @@ class ResultsHandler:
                     with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
                         pickle.dump(backmapping, f)
         except Exception as e:
-            logger.error("Could not save backmapped feature importances")
+            logger.error("Could not save backmapped feature importances.")
             logger.error(e)
 
     def write_convenience_files(self):

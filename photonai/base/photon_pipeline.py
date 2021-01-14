@@ -2,6 +2,7 @@ import datetime
 import os
 
 import numpy as np
+import warnings
 from sklearn.utils.metaestimators import _BaseComposition
 
 from photonai.base.cache_manager import CacheManager
@@ -430,11 +431,17 @@ class PhotonPipeline(_BaseComposition):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
         for name, transform in self.elements[::-1]:
+            if transform.test_disabled:
+                continue
             try:
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
             except Exception as e:
-                if isinstance(e, NotImplementedError):
-                    return X, y, kwargs
+                msg = "The inverse transformation is not possible for {0}. " \
+                      "Cause: {1} " \
+                      "The returned value is based on the inverse input data of {0}.".format(name, str(e))
+                warnings.warn(msg)
+                logger.warning(msg)
+                break
 
         return X, y, kwargs
 

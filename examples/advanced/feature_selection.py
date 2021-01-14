@@ -19,8 +19,7 @@ my_pipe = Hyperpipe('feature_selection',
 my_pipe += PipelineElement('StandardScaler')
 
 lasso = PipelineElement('LassoFeatureSelection',
-                        hyperparameters={'percentile_to_keep': [0.1, 0.2, 0.3],
-                                         'alpha': 1})
+                        hyperparameters={'percentile': [0.1, 0.2, 0.3]}, alpha=1)
 
 f_regression = PipelineElement('FRegressionSelectPercentile',
                                hyperparameters={'percentile': [10, 20, 30]})
