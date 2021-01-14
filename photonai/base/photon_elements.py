@@ -1101,6 +1101,7 @@ class Switch(PipelineElement):
 
         config_nr = None
         config = None
+        self.estimator_name = ''
 
         # in case we are operating with grid search
         if self.sklearn_name in kwargs:
@@ -1108,18 +1109,20 @@ class Switch(PipelineElement):
         elif 'current_element' in kwargs:
             config_nr = kwargs['current_element']
 
-        # in case we are operating with another optimizer
-        if config_nr is None:
+        if "estimator_name" in kwargs:
+            self.estimator_name = kwargs["estimator_name"]
+            del kwargs["estimator_name"]
+            self.base_element = self.elements_dict[self.estimator_name]
 
-            # we need to identify the element to activate by checking for which element the optimizer gave params
-            if kwargs is not None:
-                config = kwargs
-                # ugly hack because subscription is somehow not possible, we use the for loop but break
-                for kwargs_key, kwargs_value in kwargs.items():
-                    first_element_name = kwargs_key.split("__")[0]
-                    self.base_element = self.elements_dict[first_element_name]
-                    break
-        else:
+        if kwargs is not None:
+            config = kwargs
+
+        # todo: raise Warning that Switch could not identify which estimator to set when estimator
+        #  has no params to optimize
+
+        # in case we are operating with grid search or any derivates
+        if config_nr is not None:
+
             if not isinstance(config_nr, (tuple, list)):
                 logger.error('ValueError: current_element must be of type Tuple')
                 raise ValueError('current_element must be of type Tuple')
@@ -1127,13 +1130,18 @@ class Switch(PipelineElement):
             # grid search hack
             self.current_element = config_nr
             config = self.pipeline_element_configurations[config_nr[0]][config_nr[1]]
+        # if we don't use the specialized switch optimizer
+        # we need to identify the element to activate by checking for which element the optimizer gave params
+        elif not self.estimator_name:
+            # ugly hack because subscription is somehow not possible, we use the for loop but break
+            for kwargs_key, kwargs_value in kwargs.items():
+                first_element_name = kwargs_key.split("__")[0]
+                self.base_element = self.elements_dict[first_element_name]
+                break
 
+        # so now the element to be activated is found and taken care of,
+        # let's move on to give the base element the config to set
         if config:
-
-            if "estimator_name" in config:
-                self.estimator_name = config["estimator_name"]
-                del config["estimator_name"]
-
             # remove name
             unnamed_config = {}
             for config_key, config_value in config.items():
