@@ -21,8 +21,7 @@ my_pipe += PipelineElement('StandardScaler')
 
 # some feature selection
 my_pipe += PipelineElement('LassoFeatureSelection',
-                           hyperparameters={'percentile_to_keep': FloatRange(start=0.1, step=0.1, stop=0.7,
-                                                                             range_type='range'),
+                           hyperparameters={'percentile': FloatRange(start=0.1, step=0.1, stop=0.7, range_type='range'),
                                             'alpha': FloatRange(0.5, 1)},
                            test_disabled=True)
 

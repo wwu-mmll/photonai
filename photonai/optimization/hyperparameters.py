@@ -16,7 +16,6 @@ class PhotonHyperparam(object):
         Parameter Domain.
 
     """
-
     def __init__(self, values):
         self.values = values
 
@@ -54,7 +53,6 @@ class Categorical(PhotonHyperparam):
         Definite list of hyperparameter values.
 
     """
-
     def __init__(self, values: list):
         super(Categorical, self).__init__(values)
 
@@ -67,8 +65,8 @@ class BooleanSwitch(PhotonHyperparam):
 
     Class for defining a boolean hyperparameter,
     When both options de- and activation should be tested in hyperparameter optimization.
-    """
 
+    """
     def __init__(self):
         super(BooleanSwitch, self).__init__([True, False])
 
@@ -320,7 +318,6 @@ class FloatRange(NumberRange):
         Further parameters that should be passed to the numpy function chosen with range_type.
 
     """
-
     def __init__(self, start, stop, range_type='linspace', step=None, num=None, **kwargs):
         super(FloatRange, self).__init__(start, stop, range_type, step, num, np.float64, **kwargs)
 

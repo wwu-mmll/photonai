@@ -404,15 +404,15 @@
     "Transformer"
   ],
   "FClassifSelectPercentile":[
-    "photonai.modelwrapper.FeatureSelection.FClassifSelectPercentile",
+    "photonai.modelwrapper.feature_selection.FClassifSelectPercentile",
     "Transformer"
   ],
   "FRegressionFilterPValue":[
-    "photonai.modelwrapper.FeatureSelection.FRegressionFilterPValue",
+    "photonai.modelwrapper.feature_selection.FRegressionFilterPValue",
     "Transformer"
   ],
   "FRegressionSelectPercentile":[
-    "photonai.modelwrapper.FeatureSelection.FRegressionSelectPercentile",
+    "photonai.modelwrapper.feature_selection.FRegressionSelectPercentile",
     "Transformer"
   ],
   "PhotonOneClassSVM":[
@@ -440,7 +440,7 @@
     "Transformer"
   ],
   "LassoFeatureSelection":[
-    "photonai.modelwrapper.FeatureSelection.LassoFeatureSelection",
+    "photonai.modelwrapper.feature_selection.LassoFeatureSelection",
     "Transformer"
   ],
   "RangeRestrictor":[

@@ -89,6 +89,7 @@ class PipelineElement(BaseEstimator):
             self.base_element = base_element
 
         self.is_transformer = hasattr(self.base_element, "transform")
+        self.reduce_dimension = False  # boolean - set on transform method
         self.is_estimator = hasattr(self.base_element, "predict")
         self._name = name
         self.initial_name = str(name)
@@ -443,14 +444,21 @@ class PipelineElement(BaseEstimator):
         This is used if we are using an estimator as a preprocessing step.
         """
         if self.batch_size == 0:
-            return self.__transform(X, y, **kwargs)
+            Xt, yt, kwargs = self.__transform(X, y, **kwargs)
         else:
-            return self.__batch_transform(X, y, **kwargs)
+            Xt, yt, kwargs = self.__batch_transform(X, y, **kwargs)
+        if all(hasattr(data, "shape") for data in [X, Xt]) and all(len(data.shape) > 1 for data in [X, Xt]):
+            self.reduce_dimension = (Xt.shape[1] < X.shape[1])
+        return Xt, yt, kwargs
 
     def inverse_transform(self, X, y=None, **kwargs):
         if hasattr(self.base_element, 'inverse_transform'):
             # todo: check this
             X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
+        elif self.is_transformer and self.reduce_dimension:
+            msg = "{} has no inverse_transform, but element reduce dimesions.".format(self.name)
+            logger.error(msg)
+            raise NotImplementedError(msg)
         return X, y, kwargs
 
     def __batch_transform(self, X, y=None, **kwargs):

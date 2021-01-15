@@ -48,7 +48,7 @@ class Smac3IntegrationTest(unittest.TestCase):
         self.pipe = Hyperpipe('basic_svm_pipe',
                               optimizer='smac',
                               optimizer_params={'facade': SMAC4BO,
-                                                'scenario_dict': scenario_dict,
+                                                'wallclock_limit': self.time_limit,
                                                 'rng': 42},
                               metrics=['accuracy'],
                               random_seed=True,
@@ -123,6 +123,29 @@ class Smac3IntegrationTest(unittest.TestCase):
                                          )
                           )
         return 1 - np.mean(values)
+
+    def test_further_parameters(self):
+        n_configurations = 4
+        pipe = Hyperpipe('basic_svm_pipe',
+                         optimizer='smac',
+                         optimizer_params={'facade': SMAC4BO,
+                                           'wallclock_limit': 1000,
+                                           'ta_run_limit': n_configurations,
+                                           'rng': 42},
+                         metrics=['accuracy'],
+                         random_seed=True,
+                         best_config_metric='accuracy',
+                         inner_cv=self.s_split,
+                         verbosity=0,
+                         output_settings=OutputSettings(project_folder='./tmp/'))
+
+        pipe.add(PipelineElement('StandardScaler'))
+        pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})
+        pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly']),
+                                                             'C': FloatRange(0.5, 200)}, gamma='auto')
+        X, y = self.simple_classification()
+        pipe.fit(X, y)
+        self.assertEqual(len(pipe.results.outer_folds[0].tested_config_list), n_configurations)
 
     # integration test for pipeline with Switch
     def test_photon_implementation_switch(self):
@@ -238,10 +261,8 @@ class Smac3IntegrationTest(unittest.TestCase):
             SMACOptimizer(facade=facade, scenario_dict=scenario_dict)
 
     def test_other(self):
-        with warnings.catch_warnings(record=True) as w:
-            opt = SMACOptimizer(facade="SMAC4BO", intensifier_kwargs={'min_chall': 2})
-            assert any("No scenario_dict for smac" in s for s in [e.message.args[0] for e in w])
-            self.assertIsNotNone(opt.intensifier_kwargs)
+        opt = SMACOptimizer(facade="SMAC4BO", intensifier_kwargs={'min_chall': 2})
+        self.assertIsNotNone(opt.intensifier_kwargs)
 
         pipeline_elements = [PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly', "sigmoid"]),
                                                                      'C': [0.6]})]

@@ -8,6 +8,7 @@ import numpy as np
 import pandas as pd
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
+from sklearn.base import BaseEstimator, TransformerMixin
 
 from photonai.base import Hyperpipe, OutputSettings
 from photonai.base import PipelineElement, Stack
@@ -198,13 +199,38 @@ class ResultsHandlerTest(PhotonBaseTest):
 
         self.output_settings.save_output = True
         self.hyperpipe.fit(self.__X, self.__y)
-        backmapping = np.loadtxt(os.path.join(self.output_settings.results_folder,
-                                              'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
 
-        # since backmapping stops at a stack element, we will get the features that went into the SVC, that is the
-        # number of PCs from the PCA and the number of input features to the MinMaxScaler
-        n_stack_features = self.hyperpipe.best_config['myStack__PCA__n_components'] + np.shape(self.__X)[1]
-        self.assertEqual(n_stack_features, backmapping.size)
+        f_name = os.path.join(self.output_settings.results_folder, 'optimum_pipe_feature_importances_backmapped.csv')
+        self.assertTrue(not os.path.isfile(f_name))
+
+    def test_save_backmapping_reduced_dimension_without_inverse(self):
+        class RD(BaseEstimator, TransformerMixin):
+
+            def fit(self, X, y, **kwargs):
+                pass
+
+            def fit_transform(self, X, y=None, **fit_params):
+                return self.transform(X)
+
+            def transform(self, X):
+                return X[:, :3]
+
+        trans = PipelineElement.create('MyTransformer', base_element=RD(), hyperparameters={})
+
+        self.hyperpipe = Hyperpipe(self.pipe_name, inner_cv=self.inner_cv_object,
+                                   metrics=self.metrics,
+                                   best_config_metric=self.best_config_metric,
+                                   outer_cv=KFold(n_splits=2),
+                                   output_settings=self.output_settings,
+                                   verbosity=1)
+        self.hyperpipe += trans
+        self.hyperpipe.add(self.svc_pipe_element)
+
+        self.output_settings.save_output = True
+
+        f_name = os.path.join(self.output_settings.results_folder, 'optimum_pipe_feature_importances_backmapped.csv')
+        self.assertTrue(not os.path.isfile(f_name))
+
 
     def test_get_feature_importances(self):
         self.hyperpipe.elements[-1] = PipelineElement('LinearSVC')
