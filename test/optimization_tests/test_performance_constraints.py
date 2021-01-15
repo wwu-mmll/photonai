@@ -1,5 +1,6 @@
 import unittest
 import numpy as np
+import warnings
 
 from photonai.optimization import DummyPerformanceConstraint, MinimumPerformanceConstraint, BestPerformanceConstraint, IntegerRange
 from photonai.optimization.performance_constraints import PhotonBaseConstraint
@@ -66,6 +67,8 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             PhotonBaseConstraint(strategy='last', metric='f1_score')
 
+
+
     def test_greater_is_better(self):
         """
         Test for set different metrics (score/error).
@@ -82,8 +85,10 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         Test for shall_continue function.
         """
         # reutrns every times False if the metric does not exists
-        self.constraint_object.metric = "own_metric"
-        self.assertEqual(self.constraint_object.shall_continue(self.dummy_config_item), True)
+        with warnings.catch_warnings(record=True) as w:
+            self.constraint_object.metric = "own_metric"
+            self.assertEqual(self.constraint_object.shall_continue(self.dummy_config_item), True)
+            assert any("The metric is not known." in s for s in [e.message.args[0] for e in w])
 
         # dummy_item with random values
         # score
@@ -163,7 +168,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
         # DESIGN YOUR PIPELINE
         my_pipe = Hyperpipe(name='performance_pipe',
                             optimizer='random_search',
-                            optimizer_params={'limit_in_minutes':2},
+                            optimizer_params={'limit_in_minutes':1},
                             metrics=['mean_squared_error'],
                             best_config_metric='mean_squared_error',
                             inner_cv=KFold(n_splits=inner_fold_length),
@@ -182,7 +187,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
 
         configs = []
 
-        for i in range(len(configs)-1):
+        for i in range(len(results)-1):
             configs.append([x.validation.metrics['mean_squared_error'] for x in results[i].inner_folds])
 
         threshold = np.inf

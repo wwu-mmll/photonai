@@ -2,7 +2,7 @@ import os
 import shutil
 from io import StringIO
 import uuid
-import time
+import warnings
 
 import numpy as np
 import pandas as pd
@@ -87,7 +87,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         areas = data.split("-------------------------------------------------------------------")
 
         # first areas
-        self.assertEqual(areas[0], "\nPHOTON RESULT SUMMARY\n")
+        self.assertEqual(areas[0], "\nPHOTONAI RESULT SUMMARY\n")
 
         result_dict = {"dummy_test": self.hyperpipe.results.dummy_estimator.test,
                        "dummy_train": self.hyperpipe.results.dummy_estimator.train,
@@ -271,9 +271,10 @@ class ResultsHandlerTest(PhotonBaseTest):
 
         # write again to mongodb
         hyperpipe.fit(self.__X, self.__y)
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             my_mongo_result_handler.load_from_mongodb(pipe_name=hyperpipe.name,
                                                       mongodb_connect_url=self.mongodb_path)
+            assert any("Found multiple hyperpipes with that name." in s for s in [e.message.args[0] for e in w])
 
         with self.assertRaises(FileNotFoundError):
             my_result_handler.load_from_mongodb(pipe_name='any_weird_name_1238934384834234892384382',
@@ -304,3 +305,11 @@ class ResultsHandlerTest(PhotonBaseTest):
 
     def test_get_methods(self):
         self.hyperpipe.results_handler.get_methods()
+
+    def test_float_labels_with_mongo(self):
+        """
+        This test was added for a bug with float labels and saving to mongoDB.
+        """
+        local_y = self.__y.astype(float)
+        self.hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
+        self.hyperpipe.fit(self.__X, local_y)

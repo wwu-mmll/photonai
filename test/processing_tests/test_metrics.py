@@ -1,7 +1,7 @@
 import unittest
 import types
 import numpy as np
-import math
+import warnings
 
 from photonai.processing.metrics import Scorer, spearman_correlation, specificity, sensitivity, one_hot_to_binary, \
     pearson_correlation, balanced_accuracy, categorical_accuracy_score, variance_explained_score
@@ -25,7 +25,8 @@ class ScorerTest(unittest.TestCase):
             self.assertIsInstance(Scorer.create(implemented_metric), types.FunctionType)
 
         for not_implemented_metric in self.some_not_implemented_metrics:
-            self.assertIsNone(Scorer.create(not_implemented_metric))
+            with self.assertRaises(NameError):
+                self.assertIsNone(Scorer.create(not_implemented_metric))
 
     def test_greater_is_better_distinction(self):
         """
@@ -50,8 +51,8 @@ class ScorerTest(unittest.TestCase):
                                                            [implemented_metric])[implemented_metric], float)
 
         for not_implemented_metric in self.some_not_implemented_metrics:
-            np.testing.assert_equal(Scorer.calculate_metrics([1, 1, 0, 1],
-                                                             [0, 1, 0, 1],
+            with self.assertRaises(NameError):
+                np.testing.assert_equal(Scorer.calculate_metrics([1, 1, 0, 1], [0, 1, 0, 1],
                                                              [not_implemented_metric])[not_implemented_metric], np.nan)
 
     def test_doubled_custom_metric(self):
@@ -61,11 +62,12 @@ class ScorerTest(unittest.TestCase):
 
         Scorer.register_custom_metric(('a_custom_metric', custom_metric))
 
-        with self.assertRaises(Warning):
-            Scorer.register_custom_metric(('a_custom_metric', custom_metric))
-
         with self.assertRaises(ValueError):
             Scorer.register_custom_metric(None)
+
+        with warnings.catch_warnings(record=True) as w:
+            Scorer.register_custom_metric(('a_custom_metric', custom_metric))
+            assert any("is ambiguous. Please specify metric" in s for s in [e.message.args[0] for e in w])
 
     def test_keras_metric(self):
         try:
@@ -109,11 +111,3 @@ class ScorerTest(unittest.TestCase):
                               np.concatenate((np.zeros((100,)), np.ones((100,))))), axis=1)
         binarized_multidim = one_hot_to_binary(y_one_hot)
         self.assertTrue(np.array_equal(binarized_multidim, np.concatenate((np.zeros((100,)), np.ones((100, ))))))
-
-
-
-
-
-
-
-

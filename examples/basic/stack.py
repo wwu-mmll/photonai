@@ -9,7 +9,7 @@ X, y = load_breast_cancer(return_X_y=True)
 
 my_pipe = Hyperpipe('basic_stack_pipe',
                     optimizer='sk_opt',
-                    optimizer_params={'n_configurations': 5},
+                    optimizer_params={'n_configurations': 25},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
@@ -21,7 +21,7 @@ my_pipe += PipelineElement('StandardScaler')
 
 tree = PipelineElement('DecisionTreeClassifier',
                        hyperparameters={'criterion': ['gini'],
-                                         'min_samples_split': IntegerRange(2, 4)})
+                                        'min_samples_split': IntegerRange(2, 4)})
 
 svc = PipelineElement('LinearSVC',
                       hyperparameters={'C': FloatRange(0.5, 25)})

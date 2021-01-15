@@ -1,7 +1,8 @@
 import unittest
 import numpy as np
-
+import warnings
 from sklearn.base import BaseEstimator
+
 from photonai.base import PipelineElement
 
 
@@ -33,6 +34,8 @@ class DummyBatchTransformer(BaseEstimator):
     def predict(self, X, y=None, **kwargs):
         if hasattr(X, '__iter__'):
             self.predict_count += 1
+            if not hasattr(X, 'shape'):
+                return self.predict_count
             predictions = np.ones((X.shape[0],)) * self.predict_count
             return predictions
         else:
@@ -73,13 +76,15 @@ class BatchingTests(unittest.TestCase):
         self.assertEqual(kwargs_new["animals"][0], "effa")
         self.assertEqual(kwargs_new["animals"][49], "ewöl")
 
-        with self.assertRaises(Warning):
-            self.neuro_batch.transform('str', [0])
+        with warnings.catch_warnings(record=True) as w:
+            self.neuro_batch.transform('str')
+            assert any("Cannot do batching" in s for s in [e.message.args[0] for e in w])
 
     def test_predict(self):
         y_predicted = self.neuro_batch.predict(self.data, **self.kwargs)
         # assure that predict is batch wisely called
         self.assertEqual(y_predicted[0], 1)
         self.assertEqual(y_predicted[-1], (self.data.shape[0]/self.batch_size))
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             self.neuro_batch.predict('str')
+            assert any("Cannot do batching" in s for s in [e.message.args[0] for e in w])

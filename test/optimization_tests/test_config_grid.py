@@ -22,7 +22,7 @@ class CreateGlobalConfigBaseElements(unittest.TestCase):
         self.rf = PipelineElement("RandomForestClassifier")  # no hyperparameter
         self.pipeline_elements = [self.scaler, self.pca, self.svc, self.rf]
 
-    def create_global_config_one_element_test(self):
+    def test_create_global_config_one_element(self):
         """
         Test for function create_global_config_dict with one element in param pipeline_elements (:list)
         """
@@ -44,7 +44,7 @@ class CreateGlobalConfigBaseElements(unittest.TestCase):
                                                                      {'PCA__n_components': 2}])
         self.assertListEqual(create_global_config_grid([self.rf]), [{}])   # no hyperparameter
 
-    def create_global_config_some_elements_test(self):
+    def test_create_global_config_some_elements(self):
         """
         Test for function create_global_config_dict with three elements in param pipeline_elements (:list)
 
@@ -97,7 +97,7 @@ class CreateGlobalConfigAdvancedElements(PhotonBaseTest):
         self.switch_in_switch = Switch('Switch_in_switch', [self.branch,
                                                             self.pipe_switch])
 
-    def create_global_config_switch_test(self):
+    def test_create_global_config_switch(self):
         """
         assert number of different configs to test
         each config combi for each element: 4 for SVC and 3 for logistic regression = 7
@@ -120,7 +120,7 @@ class CreateGlobalConfigAdvancedElements(PhotonBaseTest):
                                                                              {'switch__current_element': (1, 1)},
                                                                              {'switch__current_element': (1, 2)}])
 
-    def create_global_config_branch_test(self):
+    def test_create_global_config_branch(self):
         """
         Test for function create_global_config_dict/grid with branch element.
         """
@@ -135,7 +135,7 @@ class CreateGlobalConfigAdvancedElements(PhotonBaseTest):
                                                        {'branch__SVC__C': 1, 'branch__SVC__kernel': 'rbf'},
                                                        {'branch__SVC__C': 1, 'branch__SVC__kernel': 'sigmoid'}])
 
-    def create_global_config_switch_in_swicht_test(self):
+    def test_create_global_config_switch_in_swicht(self):
         """
         Test for function create_global_config_dict/grid with switch in switch.
 
@@ -173,5 +173,6 @@ class CreateGlobalConfigAdvancedElements(PhotonBaseTest):
         hp += stack
         hp += PipelineElement("SVC", hyperparameters={'kernel': ["linear", "rbf", "sigmoid"]})
         X, y = load_breast_cancer(return_X_y=True)
-        with self.assertRaises(Warning):
+
+        with self.assertRaises(ValueError):
             hp.fit(X, y)

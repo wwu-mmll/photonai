@@ -1,5 +1,7 @@
-from photonai.modelwrapper.keras_base_models import KerasDnnBaseModel, KerasBaseRegressor
 import photonai.modelwrapper.keras_base_models as keras_dnn_base_model
+
+from photonai.modelwrapper.keras_base_models import KerasDnnBaseModel, KerasBaseRegressor
+from photonai.photonlogger import logger
 
 
 class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
@@ -11,6 +13,7 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
                  epochs: int = 10,
                  nn_batch_size: int = 64,
                  metrics: list = None,
+                 validation_split: float = 0.1,
                  callbacks: list = None,
                  batch_normalization: bool = True,
                  verbosity=0,
@@ -21,8 +24,9 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
         self._loss = ""
         self._multi_class = None
         self.loss = loss
-        self.epochs =epochs
+        self.epochs = epochs
         self.nn_batch_size = nn_batch_size
+        self.validation_split = validation_split
 
         if callbacks:
             self.callbacks = callbacks
@@ -46,15 +50,15 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
 
     @property
     def target_activation(self):
-        return self._target_activation
+        return "linear"
 
     @target_activation.setter
     def target_activation(self, value):
-        if value == "linear":
-            self._target_activation = value
-        else:
-            raise ValueError("The subclass of KerasBaseRegressor does not allow to use another "
-                             "target_activation. Please use 'linear' like default.")
+        if value != "linear":
+            msg = "The subclass of KerasBaseRegressor does not allow to use another " \
+                  "target_activation. Please use 'linear' like default."
+            logger.error(msg)
+            raise ValueError(msg)
 
     @property
     def loss(self):
@@ -69,4 +73,4 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
 
     def fit(self, X, y):
         self.create_model(X.shape[1])
-        super(KerasDnnBaseModel, self).fit(X, y, reload_weights=True)
+        super(KerasDnnBaseModel, self).fit(X, y)

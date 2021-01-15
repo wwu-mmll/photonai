@@ -3,17 +3,20 @@ Define custom metrics here
 The method stub of all metrics is
 function_name(y_true, y_pred)
 """
-from typing import Union, Type, Callable, Optional, Tuple, Dict
-
+import warnings
 import numpy as np
+from typing import Union, Type, Callable, Optional, Tuple, Dict
 from scipy.stats import spearmanr
-from photonai.photonlogger.logger import logger
 from sklearn.metrics import accuracy_score
+
+from photonai.photonlogger.logger import logger
 
 
 class Scorer(object):
-    """
-    Transforms a string literal into an callable instance of a particular metric
+    """Scorer.
+
+    Transforms a string literal into an callable instance of a particular metric.
+
     """
 
     ELEMENT_DICTIONARY: Dict[str, Tuple[str, str, str]] = {
@@ -86,7 +89,7 @@ class Scorer(object):
                         'metrics=[(\'MetricName1\', keras.metrics.Accuracy)]. Only the first occurance of this ' \
                         'metric will be used!'
             logger.warning(warn_text)
-            raise Warning(warn_text)
+            warnings.warn(warn_text)
             return None
 
         # derive a metric function from the given object
@@ -111,11 +114,18 @@ class Scorer(object):
     
     @classmethod
     def create(cls, metric: str) -> Optional[Callable]:
-        """
-        Searches for the metric by name and instantiates the according calculation function
-        :param metric: the name of the metric as encoded in the ELEMENT_DICTIONARY
-        :type metric: str
-        :return: a callable instance of the metric calculation
+        """Searches for the metric by name and instantiates the according calculation function
+
+        Parameters
+        ----------
+        metric: str
+            The name of the metric as encoded in the ELEMENT_DICTIONARY.
+
+        Returns
+        -------
+        metric_function: Callable
+            A callable instance of the metric calculation.
+
         """
         if metric in Scorer.ELEMENT_DICTIONARY:
             try:
@@ -128,14 +138,15 @@ class Scorer(object):
                 scoring_method = desired_class
                 return scoring_method
             except AttributeError as ae:
-                logger.error('ValueError: Could not find according class: '
-                               + Scorer.ELEMENT_DICTIONARY[metric])
+                msg = 'Could not find according class: ' + Scorer.ELEMENT_DICTIONARY[metric]
+                logger.error(msg)
+                raise AttributeError(msg)
         elif metric in Scorer.CUSTOM_ELEMENT_DICTIONARY:
             return Scorer.CUSTOM_ELEMENT_DICTIONARY[metric]
         else:
-            logger.error('NameError: Metric not supported right now:' + metric)
-            # raise Warning('Metric not supported right now:', metric)
-            return None
+            msg = 'Metric not supported right now:' + metric
+            logger.error(msg)
+            raise NameError(msg)
 
     @staticmethod
     def greater_is_better_distinction(metric: str) -> bool:
@@ -166,14 +177,24 @@ class Scorer(object):
 
     @staticmethod
     def calculate_metrics(y_true, y_pred, metrics):
-        """
-        Applies all metrics to the given predicted and true values.
-        The metrics are encoded via a string literal which is mapped to the according calculation function
-        :param y_true: the truth values
-        :type y_true: list
-        :param y_pred: the predicted values
-        :param metrics: list
-        :return: dict of metrics
+        """Applies all metrics to the given predicted and true values.
+        The metrics are encoded via a string literal which is mapped
+        to the according calculation function.
+
+        Parameters
+        ----------
+        y_true: list
+            The truth values.
+        y_pred: list
+            The predicted values.
+        metrics: list of str
+            List of all metrics to be calculated from y_true and y_pred.
+
+        Returns
+        --------
+        result: dict
+            Dictionary with format name_of_metric -> value.
+
         """
 
         # Todo: HOW TO CHECK IF ITS REGRESSION?!

@@ -1,18 +1,18 @@
 import pandas as pd
 from sklearn.model_selection import KFold, ShuffleSplit
 from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
-from photonai.optimization import FloatRange, IntegerRange, Categorical, BestPerformanceConstraint
+from photonai.optimization import FloatRange, IntegerRange, Categorical, BestPerformanceConstraint, MinimumPerformanceConstraint
 
 # setup training and test workflow
-my_pipe = Hyperpipe('example_project',
+my_pipe = Hyperpipe('heart_failure_lasso',
                     optimizer='switch',
-                    optimizer_params={'name': 'sk_opt', 'n_configurations': 30},
+                    optimizer_params={'name': 'sk_opt', 'n_configurations': 50},
                     metrics=['balanced_accuracy', 'f1_score', 'auc', 'matthews_corrcoef',
                              'accuracy', 'precision', 'recall'],
                     best_config_metric='matthews_corrcoef',
                     outer_cv=ShuffleSplit(n_splits=100, test_size=0.2),
                     inner_cv=KFold(n_splits=5, shuffle=True),
-                    performance_constraints=[BestPerformanceConstraint('matthews_corrcoef')],
+                    performance_constraints=[MinimumPerformanceConstraint('matthews_corrcoef', 0.5)],
                     output_settings=OutputSettings(project_folder='./tmp'),
                     cache_folder='./cache',
                     verbosity=1)
@@ -22,10 +22,14 @@ my_pipe += PipelineElement('StandardScaler')
 
 my_pipe += PipelineElement('SimpleImputer')
 
-my_pipe += PipelineElement('PCA',
-                           hyperparameters={'n_components':
-                                            FloatRange(0.3, 0.9, step=0.1)},
-                           test_disabled=True)
+# my_pipe += PipelineElement('PCA',
+#                            hyperparameters={'n_components':
+#                                             FloatRange(0.3, 0.9, step=0.1)},
+#                            test_disabled=True)
+
+my_pipe += PipelineElement('LassoFeatureSelection',
+                           hyperparameters={'percentile_to_keep': FloatRange(0.1, 0.7, num=5),
+                                            'alpha': [0.1, 0.3, 0.5, 1, 2]})
 
 my_pipe += PipelineElement('ImbalancedDataTransformer',
                            hyperparameters={'method_name':
@@ -37,10 +41,9 @@ my_pipe += PipelineElement('ImbalancedDataTransformer',
 # compare different learning algorithms in an OR_Element
 estimators = Switch('estimator_selection')
 
-estimators += PipelineElement('RandomForestClassifier', criterion='gini',
+estimators += PipelineElement('RandomForestClassifier', criterion='gini', bootstrap=True,
                               hyperparameters={'min_samples_split': IntegerRange(2, 4),
-                                               'max_features': ['auto', 'sqrt', 'log2'],
-                                               'bootstrap': [True, False]})
+                                               'max_features': ['auto', 'sqrt', 'log2']})
 
 estimators += PipelineElement('GradientBoostingClassifier',
                               hyperparameters={'loss': ['deviance', 'exponential'],

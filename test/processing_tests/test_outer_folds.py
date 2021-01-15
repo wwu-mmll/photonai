@@ -183,6 +183,8 @@ class OuterFoldTests(PhotonBaseTest):
                     self.assertTrue(np.sum(len(fold.feature_importances) == 7))
             else:
                 self.assertTrue(np.sum(len(fold.validation.y_pred) for fold in config.inner_folds) == 0)
+                self.assertTrue(np.sum(len(fold.validation.probabilities) for fold in config.inner_folds) == 0)
+                self.assertTrue(np.sum(len(fold.validation.indices) for fold in config.inner_folds) == 0)
                 self.assertTrue(np.sum(len(fold.feature_importances) for fold in config.inner_folds) == 0)
 
     def test_find_best_config_always_again(self):

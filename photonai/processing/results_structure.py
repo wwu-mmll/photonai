@@ -1,5 +1,4 @@
 import pickle
-import pickle
 import uuid
 from enum import Enum
 
@@ -89,7 +88,7 @@ class MDBConfig(EmbeddedMongoModel):
     def set_photon_id(self):
         self.photon_config_id = str(uuid.uuid4())
 
-    def save_memory(self):
+    def decrease_memory(self):
         for fold in self.inner_folds:
             fold.training.save_memory()
             fold.validation.save_memory()
@@ -250,7 +249,6 @@ class MDBHelper:
                                                       value=calculate_single_metric(op, value_list_validation)))
         return metrics_train, metrics_test
 
-
     @staticmethod
     def get_metric(config_item, operation, metric, train=True):
         if train:
@@ -266,7 +264,3 @@ class MDBHelper:
     @staticmethod
     def load_results(filename):
         return MDBHyperpipe.from_document(pickle.load(open(filename, 'rb')))
-
-
-
-

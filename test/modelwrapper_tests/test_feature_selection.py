@@ -19,12 +19,12 @@ class FeatureSelectionTests(PhotonBaseTest):
         settings = OutputSettings(project_folder=self.tmp_folder_path)
         self.pipe_classif = Hyperpipe("feature_selection_pipe_classif",
                               outer_cv=ShuffleSplit(test_size=0.2, n_splits=1, random_state=15),
-                              inner_cv= KFold(n_splits=3, random_state=15),
+                              inner_cv= KFold(n_splits=3, shuffle=True, random_state=15),
                               metrics=["accuracy"], best_config_metric="accuracy",
                               output_settings=settings)
         self.pipe_regr = Hyperpipe("feature_selection_pipe_regr",
                               outer_cv=ShuffleSplit(test_size=0.2, n_splits=1, random_state=15),
-                              inner_cv= KFold(n_splits=3, random_state=15),
+                              inner_cv= KFold(n_splits=3, shuffle=True, random_state=15),
                               metrics=["mean_absolute_error"], best_config_metric="mean_absolute_error",
                               output_settings=settings)
 

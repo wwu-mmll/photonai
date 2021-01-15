@@ -1,5 +1,7 @@
+import warnings
 import numpy as np
 import keras
+from typing import Union
 from keras.utils import to_categorical
 from keras.layers import Dropout, Dense
 from keras.layers.normalization import BatchNormalization
@@ -8,8 +10,8 @@ from keras.optimizers import Optimizer, Adam, RMSprop, Adadelta, Adagrad, Adamax
 from keras.activations import softmax, softplus, selu, sigmoid, softsign, hard_sigmoid, elu, relu, tanh, \
     linear, exponential
 from sklearn.base import ClassifierMixin, RegressorMixin
-from photonai.photonlogger.logger import logger
 
+from photonai.photonlogger.logger import logger
 from photonai.modelwrapper.keras_base_estimator import KerasBaseEstimator
 
 __supported_optimizers__ = {
@@ -48,11 +50,15 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
     def __init__(self,
                  model=None,
                  epochs: int = 10,
+                 callbacks: list = None,
+                 validation_split: float = 0.1,
                  nn_batch_size: int = 33,
                  multi_class: bool = True,
                  verbosity: int = 0):
         super(KerasBaseClassifier, self).__init__(model=model,
                                                   epochs=epochs,
+                                                  callbacks=callbacks,
+                                                  validation_split=validation_split,
                                                   nn_batch_size=nn_batch_size,
                                                   verbosity=verbosity)
         self.multi_class = multi_class
@@ -62,7 +68,7 @@ class KerasBaseClassifier(KerasBaseEstimator, ClassifierMixin):
         if self.multi_class:
             max_index = np.argmax(predict_result, axis=1)
         else:
-            max_index = np.array([val>0.5 for val in predict_result])
+            max_index = np.array([val > 0.5 for val in predict_result])
         return max_index
 
     def encode_targets(self, y):
@@ -77,11 +83,13 @@ class KerasBaseRegressor(KerasBaseEstimator, RegressorMixin):
     def __init__(self,
                  model=None,
                  epochs: int = 10,
+                 validation_split: float = 0.1,
                  nn_batch_size: int = 64,
                  callbacks: list = None,
                  verbosity: int = 0):
         super(KerasBaseRegressor, self).__init__(model=model,
                                                  epochs=epochs,
+                                                 validation_split=validation_split,
                                                  nn_batch_size=nn_batch_size,
                                                  callbacks=callbacks,
                                                  verbosity=verbosity)
@@ -99,10 +107,10 @@ class KerasDnnBaseModel(KerasBaseEstimator):
                  loss: str = "categorical_crossentropy",
                  metrics: list = None,
                  batch_normalization: bool = True,
-                 verbosity = 0,
-                 dropout_rate = 0.2,  # list or float
-                 activations = 'relu',  # list or str
-                 optimizer = "adam",  # list or keras.optimizer
+                 verbosity: int = 0,
+                 dropout_rate: Union[list, float] = 0.2,
+                 activations: Union[list, str] = 'relu',
+                 optimizer="adam"  # list or keras.optimizer
                  ):
 
         self._hidden_layer_sizes = None
@@ -181,7 +189,9 @@ class KerasDnnBaseModel(KerasBaseEstimator):
             else:
                 if type(value) == float:
                     self._dropout_rate = [value]*len(self.hidden_layer_sizes)
-                    logger.warning("Dropout with type float converted to type list.")
+                    msg = "Dropout with type float converted to type list."
+                    logger.warning(msg)
+                    warnings.warn(msg)
                 elif len(value) != len(self.hidden_layer_sizes):
                     raise ValueError("Dropout length missmatched layer length.")
                 else:
@@ -211,7 +221,9 @@ class KerasDnnBaseModel(KerasBaseEstimator):
                 if type(value) == str:
                     if value in __supported_activations__.keys():
                         self._activations = [value]*len(self.hidden_layer_sizes)
-                        logger.warning("activations with type str converted to type list.")
+                        msg = "activations with type str converted to type list."
+                        logger.warning(msg)
+                        warnings.warn(msg)
                     else:
                         raise ValueError(
                             "activations not supported. Please use one of: " + str(__supported_activations__.keys()))
@@ -276,12 +288,9 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         self.model = Sequential()
         for i, size in enumerate(self.hidden_layer_sizes):
             if i == 0:
-                self.model.add(Dense(size,
-                                input_dim=input_size,
-                                activation=self.activations[i]))
+                self.model.add(Dense(size, input_dim=input_size, activation=self.activations[i]))
             else:
-                self.model.add(Dense(size,
-                                activation=self.activations[i]))
+                self.model.add(Dense(size, activation=self.activations[i]))
             self.model.add(Dropout(rate=self.dropout_rate[i]))
 
             if self.batch_normalization == 1:

@@ -3,6 +3,7 @@ import os
 import shutil
 import time
 import unittest
+import warnings
 
 import numpy as np
 from sklearn.datasets import load_breast_cancer
@@ -113,24 +114,25 @@ class HyperpipeTests(PhotonBaseTest):
     def test_sanity(self):
         # make sure that no metrics means raising an error
         with self.assertRaises(ValueError):
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
 
         # make sure that if no best config metric is given, PHOTON raises a warning
-        with self.assertRaises(Warning):
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
+        with warnings.catch_warnings(record=True) as w:
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
+            assert any("No best config metric was given" in s for s in [e.message.args[0] for e in w])
 
-        with self.assertRaises(Warning):
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
+        with warnings.catch_warnings(record=True) as w:
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
+            assert any("Best Config Metric must be a single" in s for s in [e.message.args[0] for e in w])
 
         with self.assertRaises(NotImplementedError):
-            hyperpipe = Hyperpipe("hp_name", inner_cv=self.inner_cv_object,
-                                  best_config_metric='accuracy', metrics=["accuracy"],
-                                  calculate_metrics_across_folds=False,
-                                  calculate_metrics_per_fold=False)
+            Hyperpipe("hp_name", inner_cv=self.inner_cv_object,
+                                 best_config_metric='accuracy', metrics=["accuracy"],
+                                 calculate_metrics_across_folds=False,
+                                 calculate_metrics_per_fold=False)
 
         with self.assertRaises(AttributeError):
-            hyperpipe = Hyperpipe("hp_name",
-                                  best_config_metric='accuracy', metrics=["accuracy"])
+            Hyperpipe("hp_name", best_config_metric='accuracy', metrics=["accuracy"])
 
         data = np.random.random((500, 50))
 
@@ -411,7 +413,7 @@ class HyperpipeTests(PhotonBaseTest):
         nmb_list = list()
         for i in range(5):
             nmb = ParallelBranch(name=str(i), nr_of_processes=i+3)
-            sp = PipelineElement('PCA', hyperparameters= {'n_components': IntegerRange(1, 50)})
+            sp = PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(1, 50)})
             nmb += sp
             nmb_list.append(nmb)
 
@@ -520,6 +522,32 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertTrue(os.path.isfile(backmapped_feature_importances))
         loaded_array = np.loadtxt(open(backmapped_feature_importances, 'rb'), delimiter=",")
         self.assertEqual(loaded_array.shape[0], self.__X.shape[1])
+
+    def test_finalize_optimization_preprocessing(self):
+        self.hyperpipe.elements = list()
+
+        pre_proc = Preprocessing()
+        pre_proc += PipelineElement('StandardScaler')
+        self.hyperpipe.add(pre_proc)
+        self.hyperpipe.add(PipelineElement('SVC'))
+        self.hyperpipe.fit(self.__X, self.__y)
+
+        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
+                                                    'photon_best_model.photon')))
+
+    def test_finalize_optimization_preprocessing_with_client(self):
+        self.hyperpipe.elements = list()
+
+        pb = ParallelBranch(name="ParallelBranch", nr_of_processes=2)
+        pb += PipelineElement('LabelEncoder')
+        pre_proc = Preprocessing()
+        pre_proc += pb
+        self.hyperpipe.add(pre_proc)
+        self.hyperpipe.add(PipelineElement('SVC'))
+        self.hyperpipe.fit(self.__X, self.__y)
+
+        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
+                                                    'photon_best_model.photon')))
 
     def test_optimum_pipe_predict_and_predict_proba_and_transform(self):
         # find best config and test against sklearn

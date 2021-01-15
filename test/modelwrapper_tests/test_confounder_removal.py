@@ -25,7 +25,8 @@ class ConfounderRemovalTests(PhotonBaseTest):
         self.y_train = self.y[:100]
         self.shuffle_split = ShuffleSplit(test_size=0.2, n_splits=1, random_state=15)
         settings = OutputSettings(project_folder=self.tmp_folder_path)
-        self.pipe = Hyperpipe("confounder_pipe", outer_cv=self.shuffle_split, inner_cv= KFold(n_splits=3, random_state=15),
+        self.pipe = Hyperpipe("confounder_pipe",
+                              outer_cv=self.shuffle_split, inner_cv= KFold(n_splits=3, shuffle=True, random_state=15),
                               metrics=["accuracy"], best_config_metric="accuracy", output_settings=settings)
         self.pipe += PipelineElement("StandardScaler")
         self.cr = PipelineElement("ConfounderRemoval")
