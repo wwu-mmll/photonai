@@ -431,7 +431,7 @@ class PhotonPipeline(_BaseComposition):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
         for name, transform in self.elements[::-1]:
-            if transform.test_disabled:
+            if transform.disabled:
                 continue
             try:
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
