@@ -217,6 +217,7 @@ class DummyPerformanceConstraint(PhotonBaseConstraint):
             new_me.threshold = self.threshold
         return new_me
 
+
 class BestPerformanceConstraint(PhotonBaseConstraint):
     """
     BestPerformance decides in every fold: challenger works better than incumbent
