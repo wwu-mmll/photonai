@@ -12,17 +12,20 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
     Searches for the best configuration by randomly
     testing hyperparameter combinations without grid.
 
-    Parameters
-    ----------
-    limit_in_minutes: int, default=60
-        Total time in minutes.
-
-    n_configurations: int or None, default=None
-        Number of configurations to be calculated.
-
     """
     def __init__(self, limit_in_minutes: Union[float, None] = 60, n_configurations: Union[int, None] = None):
+        """
+        Initialize the object.
+        Only one of limit_in_minutes and n_configurations must be set.
 
+        Parameters:
+            limit_in_minutes:
+                Total time in minutes.
+
+            n_configurations: int or None, default=None
+                Number of configurations to be calculated.
+
+        """
         self.pipeline_elements = None
         self.parameter_iterable = None
         self.ask = self.next_config_generator()
@@ -49,13 +52,12 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
         """Initializes grid free random hyperparameter search.
 
-        Parameters
-        ----------
-        pipeline_elements: list
-            List of all pipeline_elements to create hyperparameter_space.
+        Parameters:
+            pipeline_elements:
+                List of all pipeline_elements to create hyperparameter_space.
 
-        maximize_metric: bool
-            Boolean for distinguish between score and error.
+            maximize_metric:
+                Boolean for distinguish between score and error.
 
         """
         self.start_time = None
@@ -63,6 +65,14 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
         self.ask = self.next_config_generator()
 
     def next_config_generator(self) -> Generator:
+        """
+        Generator for new configs - ask method.
+
+        Returns:
+             next_config:
+                Yields the next config.
+
+        """
         while True:
             _ = (yield self._generate_config())
             self.k_configutration += 1

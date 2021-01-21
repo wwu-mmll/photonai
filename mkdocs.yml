@@ -6,8 +6,18 @@ nav:
     - Classification: classification.md
     - Regression: regression.md
   - 'API':
-    - Hyperpipe: api/hyperpipe.md
-    - Architecture: architecture.md
+    - 'Base':
+      - Hyperpipe: api/base/hyperpipe.md
+      - Architecture: architecture.md
+    - 'Optimization':
+      - GridSearch: api/optimization/grid_search.md
+      - RandomGridSearch: api/optimization/random_grid_search.md
+      - TimeBoxedRandom_GS: api/optimization/time_boxed_random_grid_search.md
+      - scikit-optimize: api/optimization/skopt.md
+      - SMAC: api/optimization/smac.md
+      - Nevergrad: api/optimization/nevergrad.md
+    - 'Processing':
+      - Results Handler: api/processing/not_ready_results_handler.md
   - 'Features':
       - 'Over- /Undersampling': examples/imbalanced_data.md
       - 'Custom Metrics': custom_metrics.md

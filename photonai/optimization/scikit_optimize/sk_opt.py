@@ -14,34 +14,13 @@ from photonai.photonlogger.logger import logger
 
 
 class SkOptOptimizer(PhotonSlaveOptimizer):
-    """Wrapper for scikit-optimize with PHOTONAI.
+    """
+    Wrapper for scikit-optimize with PHOTONAI.
 
-    scikit-optimiz usage and implementation details:
-    https://scikit-optimize.github.io/stable/
+    Scikit-optimize [usage and implementation details](https://scikit-optimize.github.io/stable/)
 
-    A detailed parameter documentation:
-    https://scikit-optimize.github.io/stable/modules/generated/skopt.optimizer.Optimizer.html#skopt.optimizer.Optimizer
-
-    Parameters
-    ----------
-    n_configurations: int, default=20
-        Number of configurations to be calculated.
-
-    n_initial_points: int, default=10
-        Number of evaluations with initialization points
-        before approximating it with `base_estimator`.
-
-    base_estimator: str or sklearn.base.RegressorMixin, default='ET'
-        Estimator for returning std(Y | x) along with E[Y | x].
-
-    initial_point_generator: str, default='random'
-        Generator for initial points.
-
-    acq_func: dict, default=None (warning scenario with wallclock_limit = 60*5)
-        Function to minimize over the posterior distribution. Can be either
-
-    acq_func_kwargs: dict, default=None
-        Additional arguments to be passed to the acquisition function.
+    A detailed parameter documentation [here.](
+    https://scikit-optimize.github.io/stable/modules/generated/skopt.optimizer.Optimizer.html#skopt.optimizer.Optimizer)
 
     """
     def __init__(self,
@@ -51,6 +30,30 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
                  initial_point_generator: str = "random",
                  acq_func: str = 'gp_hedge',
                  acq_func_kwargs: dict = None):
+        """
+        Initialize the object.
+
+        Parameters:
+            n_configurations:
+                Number of configurations to be calculated.
+
+            n_initial_points:
+                Number of evaluations with initialization points
+                before approximating it with `base_estimator`.
+
+            base_estimator:
+                Estimator for returning std(Y | x) along with E[Y | x].
+
+            initial_point_generator:
+                Generator for initial points.
+
+            acq_func:
+                Function to minimize over the posterior distribution.
+
+            acq_func_kwargs:
+                Additional arguments to be passed to the acquisition function.
+
+        """
         self.metric_to_optimize = ''
         self.n_configurations = n_configurations
         self.n_initial_points = n_initial_points
@@ -66,6 +69,14 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         self.ask = self.ask_generator()
 
     def ask_generator(self) -> Generator:
+        """
+        Generator for new configs - ask method.
+
+        Returns:
+            next_config:
+                Yields the next config.
+
+        """
         if self.optimizer is None:
             yield {}
         else:
@@ -82,13 +93,12 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         list in order to prepare the hyperparameter search space.
         Hyperparameters can be accessed via pipe_element.hyperparameters.
 
-        Parameters
-        ----------
-        pipeline_elements: list
-            List of all pipeline_elements to create hyperparameter_space.
+        Parameters:
+            pipeline_elements:
+                List of all pipeline_elements to create hyperparameter_space.
 
-        maximize_metric: bool
-            Boolean for distinguish between score and error.
+            maximize_metric:
+                Boolean for distinguish between score and error.
 
         """
         self.optimizer = None
@@ -139,13 +149,12 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
     def tell(self, config: dict, performance: float) -> None:
         """Provide result for skopt optimizer to calculate new ones.
 
-        Parameters
-         ----------
-        config: dict
-            The configuration that has been trained and tested.
+        Parameters:
+            config: dict
+                The configuration that has been trained and tested.
 
-        performance: dict
-            Metrics about the configuration's generalization capabilities.
+            performance: dict
+                Metrics about the configuration's generalization capabilities.
 
         """
         # convert dictionary to list in correct order

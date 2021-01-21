@@ -22,39 +22,7 @@ except ModuleNotFoundError:
 class SMACOptimizer(PhotonMasterOptimizer):
     """SMAC Wrapper for PHOTONAI.
 
-    SMAC usage and implementation details:
-    https://automl.github.io/SMAC3/master/quickstart.html
-
-    Parameters
-    ----------
-    facade: str or smac.facade.class, default='SMAC4HPO'
-        Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
-
-    run_obj: str, default="quality"
-        Defines what metric to optimize.
-        When optimizing runtime, cutoff_time is required as well.
-
-    wallclock_limit: float, default=60.0
-        Maximum amount of wallclock-time used for optimization.
-
-    deterministic: str, default="true"
-        If true, SMAC assumes that the target function or algorithm
-        is deterministic (the same static seed of 0
-        is always passed to the function/algorithm).
-        If false, different random seeds are passed
-        to the target function/algorithm.
-
-    intensifier_kwargs: dict or None, default=None
-        Dict for intensifier settings.
-
-    rng: int, default=42
-        random seed of SMAC.facade
-
-    Notes
-    -----
-    All initial kwargs are passed to SMACs scenario.
-    Available parameters:
-    https://automl.github.io/SMAC3/master/options.html#scenario
+    SMAC usage and implementation details [here](https://automl.github.io/SMAC3/master/quickstart.html).
 
     """
     def __init__(self, facade='SMAC4HPO',
@@ -63,7 +31,39 @@ class SMACOptimizer(PhotonMasterOptimizer):
                  wallclock_limit: float = 60.0,
                  intensifier_kwargs: dict = None,
                  rng: int = 42, **kwargs):
+        """
+        Initialize the object.
 
+        Parameters:
+            facade:
+                Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
+
+            run_obj:
+                Defines what metric to optimize.
+                When optimizing runtime, cutoff_time is required as well.
+
+            wallclock_limit:
+                Maximum amount of wallclock-time used for optimization.
+
+            deterministic:
+                If true, SMAC assumes that the target function or algorithm
+                is deterministic (the same static seed of 0
+                is always passed to the function/algorithm).
+                If false, different random seeds are passed
+                to the target function/algorithm.
+
+            intensifier_kwargs:
+                Dict for intensifier settings.
+
+            rng: int, default=42
+                random seed of SMAC.facade
+
+            kwargs:
+                All initial kwargs are passed to SMACs scenario.
+                [List of all a vailable parameters](
+                https://automl.github.io/SMAC3/master/options.html#scenario).
+
+        """
         super(SMACOptimizer, self).__init__()
 
         if not __found__:
@@ -104,16 +104,15 @@ class SMACOptimizer(PhotonMasterOptimizer):
     def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function: Callable):
         """Initializes SMAC Optimizer.
 
-        Parameters
-        ----------
-        pipeline_elements: list
-            List of all pipeline_elements to create hyperparameter space.
+        Parameters:
+            pipeline_elements:
+                List of all pipeline_elements to create hyperparameter space.
 
-        maximize_metric: bool
-            Boolean for distinguish between score and error.
+            maximize_metric:
+                Boolean for distinguish between score and error.
 
-        objective_function: Callable
-            The cost or objective function.
+            objective_function:
+                The cost or objective function.
 
         """
         self.cspace = ConfigurationSpace()  # build space
@@ -144,15 +143,15 @@ class SMACOptimizer(PhotonMasterOptimizer):
                                 tae_runner=smac_objective_function)
 
     def optimize(self):
+        """Start optimization process."""
         self.smac.optimize()
 
     def _build_smac_space(self, pipeline_elements: list):
         """Build entire SMAC hyperparameter space.
 
-        Parameters
-        ----------
-        pipeline_elements: list
-            List of all pipeline_elements to create hyperparameter_space.
+        Parameters:
+            pipeline_elements: list
+                List of all pipeline_elements to create hyperparameter_space.
 
         """
         for pipe_element in pipeline_elements:
@@ -197,13 +196,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
     def _convert_photonai_to_smac_param(hyperparam: PhotonHyperparam, name: str):
         """Helper function: Convert PHOTON hyperparameter to SMAC hyperparameter.
 
-        Parameters
-        ----------
-        hyperparam: PhotonHyperparam
-            One of photonai.optimization.hyperparameters.
+        Parameters:
+            hyperparam: PhotonHyperparam
+                One of photonai.optimization.hyperparameters.
 
-        name: str
-            Name of hyperparameter.
+            name: str
+                Name of hyperparameter.
 
         """
         if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):

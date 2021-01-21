@@ -17,22 +17,25 @@ except ModuleNotFoundError:
 class NevergradOptimizer(PhotonMasterOptimizer):
     """Nevergrad Wrapper for PHOTONAI.
 
-    Nevergrad usage and implementation details:
-    https://facebookresearch.github.io/nevergrad/
-
-    Parameters
-    ----------
-    facade: str or ng.optimization.base.Optimizer, default='NGO'
-            Choice of Nevergrad backend strategy, [NGO, ...].
-
-    n_configurations: int, default=100
-        Number of runs.
-
-    rng: int, default=42
-        Random Seed.
+    Nevergrad [usage and implementation details](
+    https://facebookresearch.github.io/nevergrad/)
 
     """
     def __init__(self, facade='NGO', n_configurations: int = 100, rng: int = 42):
+        """
+        Initialize the object.
+
+        Parameters:
+            facade:
+                Choice of Nevergrad backend strategy, [NGO, ...].
+
+            n_configurations:
+                Number of runs.
+
+            rng:
+                Random Seed.
+
+        """
 
         if not __found__:
             msg = "Module nevergrad not found or not installed as expected. " \
@@ -63,18 +66,17 @@ class NevergradOptimizer(PhotonMasterOptimizer):
         self.optimizer = None
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function: Callable) -> None:
-        """Initializes Nevergrad Optimizer.
+        """Prepare Nevergrad Optimizer.
 
-        Parameters
-        ----------
-        pipeline_elements: list
-            List of all pipeline_elements to create hyperparameter_space.
+        Parameters:
+            pipeline_elements:
+                List of all pipeline_elements to create hyperparameter_space.
 
-        maximize_metric: bool
-            Boolean for distinguish between score and error.
+            maximize_metric:
+                Boolean for distinguish between score and error.
 
-        objective_function: Callable
-            The cost or objective function.
+            objective_function:
+                The cost or objective function.
 
         """
         self.space = self._build_nevergrad_space(pipeline_elements)
@@ -98,10 +100,9 @@ class NevergradOptimizer(PhotonMasterOptimizer):
     def _build_nevergrad_space(self, pipeline_elements: list):
         """Build entire Nevergrad hyperparameter space.
 
-        Parameters
-        ----------
-        pipeline_elements: list
-            List of all pipeline_elements to create hyperparameter_space.
+        Parameters:
+            pipeline_elements:
+                List of all pipeline_elements to create hyperparameter_space.
 
         """
         param_dict = {}
@@ -129,10 +130,9 @@ class NevergradOptimizer(PhotonMasterOptimizer):
     def _convert_photonai_to_nevergrad_param(hyperparam: PhotonHyperparam):
         """Helper function: Convert PHOTONAI hyperparameter to Nevergrad hyperparameter.
 
-        Parameters
-        ----------
-        hyperparam: PhotonHyperparam
-             One of photonai.optimization.hyperparameters.
+        Parameters:
+            hyperparam: PhotonHyperparam
+                 One of photonai.optimization.hyperparameters.
 
         """
         if isinstance(hyperparam, PhotonCategorical) or isinstance(hyperparam, BooleanSwitch):
