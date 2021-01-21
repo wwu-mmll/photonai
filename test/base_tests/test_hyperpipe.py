@@ -120,7 +120,8 @@ class HyperpipeTests(PhotonBaseTest):
         # make sure that if no best config metric is given, PHOTON raises a warning
         with warnings.catch_warnings(record=True) as w:
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
-            assert any("No best config metric was given" in s for s in [e.message.args[0] for e in w])
+            assert any("No best config metric was given, so PHOTON chose the first in the list of metrics as"
+                       " criteria for choosing the best configuration." in s for s in [e.message.args[0] for e in w])
 
         with warnings.catch_warnings(record=True) as w:
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
@@ -587,18 +588,18 @@ class HyperpipeTests(PhotonBaseTest):
 class HyperpipeOptimizationClassTests(unittest.TestCase):
 
     def test_best_config_metric(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
         self.assertTrue(my_pipe_optimizer.maximize_metric)
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'mean_squared_error', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'mean_squared_error', None)
         self.assertFalse(my_pipe_optimizer.maximize_metric)
 
     def test_optmizer_input_str(self):
         with self.assertRaises(ValueError):
-            my_pipe_optimizer = Hyperpipe.Optimization('unknown_optimizer', {}, [], 'accuracy', None)
+            my_pipe_optimizer = Optimization('unknown_optimizer', {}, [], 'accuracy', None)
 
-        for name, opt_class in Hyperpipe.Optimization.OPTIMIZER_DICTIONARY.items():
+        for name, opt_class in Optimization.OPTIMIZER_DICTIONARY.items():
             def get_optimizer(name):
-                my_pipe_optimizer = Hyperpipe.Optimization(name, {}, [], 'accuracy', None)
+                my_pipe_optimizer = Optimization(name, {}, [], 'accuracy', None)
                 return my_pipe_optimizer.get_optimizer()
 
             if name == 'smac':

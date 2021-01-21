@@ -106,6 +106,7 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
                                   PipelineElement("SVC")]
         self.optimizer = RandomGridSearchOptimizer()
         self.optimizer_name = 'random_grid_search'
+        self.optimizer_params = None
 
     def test_parameter_k(self):
         """
@@ -130,6 +131,7 @@ class TimeBoxedRandomGridSearchOptimizerTest(RandomGridSearchOptimizerTest):
                                   PipelineElement("SVC")]
         self.optimizer = TimeBoxedRandomGridSearchOptimizer()
         self.optimizer_name = 'timeboxed_random_grid_search'
+        self.optimizer_params = None
 
 
 class BaseOptimizerTests(unittest.TestCase):
