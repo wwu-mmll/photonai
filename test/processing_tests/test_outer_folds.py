@@ -6,6 +6,7 @@ from sklearn.model_selection import ShuffleSplit
 from photonai.base import PipelineElement, Hyperpipe
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.optimization import DummyPerformanceConstraint, MinimumPerformanceConstraint, GridSearchOptimizer
+from photonai.optimization.optimization_info import Optimization
 from photonai.processing.outer_folds import OuterFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBOuterFold, FoldOperations, MDBHelper
@@ -40,10 +41,10 @@ class OuterFoldTests(PhotonBaseTest):
                                     self.outer_cv.split(self.X, self.y)}
 
         self.config_num = 2
-        self.optimization_info = Hyperpipe.Optimization(metrics=['mean_absolute_error', 'mean_squared_error'],
-                                                        best_config_metric='mean_absolute_error',
-                                                        optimizer_input='grid_search', optimizer_params={},
-                                                        performance_constraints=None)
+        self.optimization_info = Optimization(metrics=['mean_absolute_error', 'mean_squared_error'],
+                                              best_config_metric='mean_absolute_error',
+                                              optimizer_input='grid_search', optimizer_params={},
+                                              performance_constraints=None)
         self.elements = [PipelineElement('StandardScaler'),
                          PipelineElement('PCA', {'n_components': [4, 7]}),
                          PipelineElement('DecisionTreeRegressor', random_state=42)]

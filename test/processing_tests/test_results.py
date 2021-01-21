@@ -9,6 +9,7 @@ from sklearn.model_selection import KFold
 
 from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import IntegerRange, FloatRange, Categorical
+from photonai.optimization.optimization_info import Optimization
 from photonai.processing.results_structure import MDBHelper, FoldOperations
 from photonai.helper.photon_base_test import PhotonBaseTest
 from photonai.helper.helper import XPredictor

@@ -24,7 +24,7 @@ class GridSearchOptimizerTest(unittest.TestCase):
                                   PipelineElement("SVC")]
         self.optimizer = GridSearchOptimizer()
         self.optimizer_name = 'grid_search'
-        self.optimizer_params = {}
+        self.optimizer_params = None
 
     def create_hyperpipe(self):
         self.hyperpipe = Hyperpipe('optimizer_test',

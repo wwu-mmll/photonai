@@ -11,6 +11,7 @@ from sklearn.preprocessing import StandardScaler
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.optimization import MinimumPerformanceConstraint, FloatRange
+from photonai.optimization.optimization_info import Optimization
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import FoldOperations
@@ -38,8 +39,7 @@ class InnerFoldTests(PhotonBaseTest):
         self.cross_validation = Hyperpipe.CrossValidation(self.inner_cv, None, True, 0.2, True, False, False, None)
         self.cross_validation.inner_folds = {self. outer_fold_id: {i: FoldInfo(i, i+1, train, test) for i, (train, test) in
                                                                    enumerate(self.inner_cv.split(self.X, self.y))}}
-        self.optimization = Hyperpipe.Optimization('grid_search', {}, ['accuracy', 'recall', 'specificity'],
-                                                   'accuracy', None)
+        self.optimization = Optimization('grid_search', {}, ['accuracy', 'recall', 'specificity'], 'accuracy', None)
 
     def test_fit_against_sklearn(self):
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,

@@ -18,6 +18,7 @@ from keras.metrics import Accuracy
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
     Switch, ParallelBranch
 from photonai.optimization import IntegerRange, Categorical
+from photonai.optimization.optimization_info import Optimization
 from photonai.processing.results_handler import ResultsHandler
 from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, FoldOperations, \
     MDBInnerFold, MDBOuterFold, MDBScoreInformation, MDBDummyResults, MDBHyperpipe
@@ -610,7 +611,7 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
                 self.assertIsInstance(get_optimizer(name), opt_class)
 
     def test_get_optimum_config(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
         list_of_tested_configs = list()
         metric_default = MDBFoldMetric(metric_name='balanced_accuracy',
                                        operation=FoldOperations.MEAN,
@@ -636,7 +637,7 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
         self.assertEqual(winner_config.metrics_test[0].value, 0.99)
 
     def test_get_optimum_config_outer_folds(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
 
         outer_fold_list = list()
         for i in range(10):
