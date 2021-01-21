@@ -2,7 +2,7 @@ from photonai.base import PipelineElement, Switch
 from photonai.optimization import FloatRange, IntegerRange
 from photonai.optimization.switch_optimizer.meta_optimizer import MetaHPOptimizer
 from sklearn.datasets import load_breast_cancer
-from ..grid_search.test_grid_search import GridSearchOptimizerTest
+from ..grid_search_tests.test_grid_search import GridSearchOptimizerTest
 
 
 class SwitchOptimizerTest(GridSearchOptimizerTest):
