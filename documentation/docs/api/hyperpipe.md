@@ -1,1 +1,1 @@
-::: photonai.base.Hyperpipe
+::: photonai.base.OutputSettings

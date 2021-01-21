@@ -10,8 +10,6 @@
 </div>
 
 
-{% include "advanced/test_mkdocs_import.html" %}
-
 <div class="example_syntax">
 	<pre class="python-syntax-pre">
            <code class="python">
