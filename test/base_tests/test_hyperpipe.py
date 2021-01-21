@@ -118,10 +118,10 @@ class HyperpipeTests(PhotonBaseTest):
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
 
         # make sure that if no best config metric is given, PHOTON raises a warning
-        with warnings.catch_warnings(record=True) as w:
+        with self.assertWarns(Warning) as w:
+            # with warnings.catch_warnings(record=True) as w:
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
-            assert any("No best config metric was given, so PHOTON chose the first in the list of metrics as"
-                       " criteria for choosing the best configuration." in s for s in [e.message.args[0] for e in w])
+            assert any("No best config metric was given" in s for s in [e.message.args[0] for e in w])
 
         with warnings.catch_warnings(record=True) as w:
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
@@ -598,8 +598,8 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
             my_pipe_optimizer = Optimization('unknown_optimizer', {}, [], 'accuracy', None)
 
         for name, opt_class in Optimization.OPTIMIZER_DICTIONARY.items():
-            def get_optimizer(name):
-                my_pipe_optimizer = Optimization(name, {}, [], 'accuracy', None)
+            def get_optimizer(name, params={}):
+                my_pipe_optimizer = Optimization(name, params, [], 'accuracy', None)
                 return my_pipe_optimizer.get_optimizer()
 
             if name == 'smac':
@@ -608,6 +608,8 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
                 except ModuleNotFoundError:
                     with self.assertRaises(ModuleNotFoundError):
                         get_optimizer(name)
+            if name =='switch':
+                get_optimizer(name, {'name': 'random_grid_search'})
             else:
                 self.assertIsInstance(get_optimizer(name), opt_class)
 

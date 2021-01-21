@@ -57,8 +57,8 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         self.constraint_object.strategy = 'mean'
         self.assertEqual(self.constraint_object.strategy.name, 'mean')
 
-        self.constraint_object.strategy = 'all'
-        self.assertEqual(self.constraint_object.strategy.name, 'all')
+        self.constraint_object.strategy = 'any'
+        self.assertEqual(self.constraint_object.strategy.name, 'any')
 
         # set in declaration
         with self.assertRaises(KeyError):
@@ -134,7 +134,7 @@ class MinimumPerformanceTest(PhotonBaseConstraintTest):
         self.assertEqual(self.constraint_object.shall_continue(self.dummy_linear_config_item), False)
         self.constraint_object.strategy = "mean"
         self.assertEqual(self.constraint_object.shall_continue(self.dummy_linear_config_item), True)
-        self.constraint_object.strategy = "all"
+        self.constraint_object.strategy = "any"
         self.assertEqual(self.constraint_object.shall_continue(self.dummy_linear_config_item), False)
 
         # error
@@ -144,7 +144,7 @@ class MinimumPerformanceTest(PhotonBaseConstraintTest):
         self.assertEqual(self.constraint_object.shall_continue(self.dummy_linear_config_item), True)
         self.constraint_object.strategy = "mean"
         self.assertEqual(self.constraint_object.shall_continue(self.dummy_linear_config_item), True)
-        self.constraint_object.strategy = "all"
+        self.constraint_object.strategy = "any"
         self.assertEqual(self.constraint_object.shall_continue(self.dummy_linear_config_item), False)
 
 class DummyPerformanceConstraints(PhotonBaseConstraintTest):
