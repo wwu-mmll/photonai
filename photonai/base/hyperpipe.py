@@ -185,11 +185,36 @@ class OutputSettings:
 
 
 class Hyperpipe(BaseEstimator):
-    """Wrapper class for machine learning pipeline, holding all pipeline elements
-    and managing the optimization of the hyperparameters.
+    """The PHOTONAI Hyperpipe class enables you to
+    create a custom pipeline. In addition it defines
+    the relevant analysis’ parameters such as the
+    cross-validation scheme, the hyperparameter optimization
+    strategy, and the performance metrics of interest.
+
+    So called PHOTONAI PipelineElements can be added to
+    the Hyperpipe, each of them being a data-processing
+    method or a learning algorithm. By choosing and
+    combining data-processing methods and algorithms
+    and arranging them with the PHOTONAI classes, both
+    simple and complex pipeline architectures can be designed rapidly.
+
+    The PHOTONAI Hyperpipe automatizes the nested training,
+    test and hyperparameter optimization procedures.
+
+    The Hyperpipe monitors:
+
+    - the nested-cross-validated training
+        and test procedure,
+    - communicates with the hyperparameter optimization
+        strategy,
+    - streams information between the pipeline elements,
+    - logs all results obtained and evaluates the performance.
+    - guides the hyperparameter optimization process by
+        a so-called best config metric which is used to select
+        the best performing hyperparameter configuration.
 
     Attributes:
-        optimum_pipe (Pipeline):
+        optimum_pipe (PhotonPipeline):
             An sklearn pipeline object that is fitted to the training data
             according to the best hyperparameter configuration found.
             Currently, we don't create an ensemble of all best hyperparameter
@@ -214,18 +239,29 @@ class Hyperpipe(BaseEstimator):
 
     Example:
         ```
-        manager = Hyperpipe('test_manager',
-                            optimizer='timeboxed_random_grid_search',
-                            optimizer_params={'limit_in_minutes': 1},
-                            outer_cv=ShuffleSplit(test_size=0.2, n_splits=1),
-                            inner_cv=KFold(n_splits=10, shuffle=True),
-                            metrics=['accuracy', 'precision', 'recall', "f1_score"],
-                            best_config_metric='accuracy', eval_final_performance=True,
-                            verbose=2)
+        from photonai.base import Hyperpipe, PipelineElement
+        from photonai.optimization import FloatRange
+        from sklearn.model_selection import ShuffleSplit, KFold
+        from sklearn.datasets import load_breast_cancer
+
+        X, y = load_breast_cancer(return_X_y=True)
+
+        hyperpipe = Hyperpipe('myPipe',
+                              optimizer='timeboxed_random_grid_search',
+                              optimizer_params={'limit_in_minutes': 2},
+                              outer_cv=ShuffleSplit(test_size=0.2, n_splits=3),
+                              inner_cv=KFold(n_splits=10, shuffle=True),
+                              metrics=['accuracy', 'precision', 'recall', "f1_score"],
+                              best_config_metric='accuracy',
+                              eval_final_performance=True,
+                              verbosity=0)
+
+        hyperpipe += PipelineElement("SVC", hyperparameters={"C": FloatRange(1, 100)})
+
+        hyperpipe.fit(X, y)
         ```
 
     """
-
     def __init__(self, name: Optional[str],
                  inner_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits] = None,
                  outer_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits, None] = None,
@@ -248,6 +284,7 @@ class Hyperpipe(BaseEstimator):
                  nr_of_processes: int = 1,
                  allow_multidim_targets: bool = False):
         """
+        Initialize the object.
 
         Parameters:
             name:
@@ -316,28 +353,35 @@ class Hyperpipe(BaseEstimator):
 
             calculate_metrics_across_folds:
 
-            random_seed
+            random_seed:
+                -
 
             verbosity:
                 The level of verbosity, 0 is least talkative and
                 gives only warn and error, 1 gives adds info and 2 adds debug
 
-            learning_curves
+            learning_curves:
+                -
 
-            learning_curves_cut
+            learning_curves_cut:
+                -
 
-            performance_constraints
+            performance_constraints:
+                -
 
-            permutation_id
+            permutation_id:
+                -
 
-            cache_folder
+            cache_folder:
+                -
 
-            nr_of_processes
+            nr_of_processes:
+                -
 
-            allow_multidim_targets
+            allow_multidim_targets:
+                -
 
-           """
-
+        """
         self.allow_multidim_targets = allow_multidim_targets
         if optimizer_params is None:
             optimizer_params = {}
@@ -1041,8 +1085,7 @@ class Hyperpipe(BaseEstimator):
 
 
         Returns
-            self:
-                Returns fitted Hyperpipe.
+            Fitted Hyperpipe.
 
         """
 
@@ -1159,8 +1202,7 @@ class Hyperpipe(BaseEstimator):
                 Keyword arguments, passed to optimum_pipe.predict.
 
         Returns:
-            pred:
-                Predicted targets calculated on input data with trained model.
+            Predicted targets calculated on input data with trained model.
 
         """
         # Todo: if local_search = true then use optimized pipe here?
@@ -1182,18 +1224,19 @@ class Hyperpipe(BaseEstimator):
                 Keyword arguments, passed to optimum_pipe.predict_proba.
 
         Returns:
-            proba:
-                Probabilities calculated from input data on fitted model.
+            Probabilities calculated from input data on fitted model.
 
 
         """
         if self._pipe:
             return self.optimum_pipe.predict_proba(data, **kwargs)
 
-    def transform(self, data, **kwargs):
+    def transform(self, data, **kwargs) -> np.ndarray:
         """
-        Use the optimum pipe to transform the data
+        Use the optimum pipe to transform the data.
 
+        Returns:
+            Transformed data.
 
         """
         if self._pipe:
@@ -1203,7 +1246,9 @@ class Hyperpipe(BaseEstimator):
     def copy_me(self):
         """
         Helper function to copy an entire Hyperpipe
-        :return: Hyperpipe
+
+        Returns:
+            Hyperpipe
         """
         signature = inspect.getfullargspec(OutputSettings.__init__)[0]
         settings = OutputSettings()
@@ -1257,8 +1302,7 @@ class Hyperpipe(BaseEstimator):
                 Passcode for read file.
 
         Returns:
-            optimum_pipe:
-                Returns pipeline with all trained PipelineElements.
+            Returns pipeline with all trained PipelineElements.
 
         """
         return PhotonModelPersistor.load_optimum_pipe(file, password)
@@ -1289,8 +1333,8 @@ class Hyperpipe(BaseEstimator):
                 The data that should be inversed after training.
 
         Returns:
-            inversed_transformation:
-                Inversed data as array.
+            Inversed data as array.
+
         """
         copied_pipe = self.pipe.copy_me()
         copied_pipe.set_params(**hyperparameters)
