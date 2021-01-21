@@ -1,15 +1,18 @@
 site_name: ""
+docs_dir: documentation/docs
 nav:
   - 'Getting Started':
     - Introduction: index.md
     - Classification: classification.md
     - Regression: regression.md
   - 'API':
+    - Hyperpipe: api/hyperpipe.md
     - Architecture: architecture.md
-    - Hyperipipe: hyperpipe.md
   - 'Features':
+      - 'Over- /Undersampling': examples/imbalanced_data.md
       - 'Custom Metrics': custom_metrics.md
       - 'Hyperparameter Optimization Shortcuts': performance_constraints.md
+
   - 'Algorithms':
       'Transformers': transformers.md
       'Estimators': estimators.md
@@ -22,8 +25,20 @@ extra_css:
   - stylesheets/extra.css
 theme:
   name: material
-  custom_dir: overrides
+  custom_dir: documentation/overrides
   repo_url: https://github.com/wwu-mmll/photonai
   features:
     - navigation.tabs
+
+plugins:
+  - search
+  - macros:
+      include_dir: examples
+  - mkdocstrings
+#        handlers:
+#          python:
+#            setup_commands:
+#              - import sys, os
+#              - curr_dir = os.path.dirname(__file__)
+#              - sys.path.append(os.path.join(curr_dir, "../photonai"))
 
