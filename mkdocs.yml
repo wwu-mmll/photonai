@@ -34,11 +34,14 @@ plugins:
   - search
   - macros:
       include_dir: examples
-  - mkdocstrings
-#        handlers:
-#          python:
-#            setup_commands:
-#              - import sys, os
-#              - curr_dir = os.path.dirname(__file__)
-#              - sys.path.append(os.path.join(curr_dir, "../photonai"))
-
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            filters:
+              - "!^_"
+              - "^__init__$"
+#          setup_commands:
+#            - import sys, os
+#            - curr_dir = os.path.dirname(__file__)
+#            - sys.path.append(os.path.join(curr_dir, "../photonai"))

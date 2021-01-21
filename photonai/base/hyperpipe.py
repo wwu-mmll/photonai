@@ -23,7 +23,6 @@ from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
 from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
-
 from photonai.__init__ import __version__
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
@@ -186,120 +185,50 @@ class OutputSettings:
 
 
 class Hyperpipe(BaseEstimator):
-    """
-    Wrapper class for machine learning pipeline, holding all pipeline elements
-    and managing the optimization of the hyperparameters
+    """Wrapper class for machine learning pipeline, holding all pipeline elements
+    and managing the optimization of the hyperparameters.
 
-    Parameters
-    ----------
-    * `name` [str]:
-        Name of hyperpipe instance
+    Attributes:
+        optimum_pipe (Pipeline):
+            An sklearn pipeline object that is fitted to the training data
+            according to the best hyperparameter configuration found.
+            Currently, we don't create an ensemble of all best hyperparameter
+            configs over all folds. We find the best config by comparing
+            the test error across outer folds. The hyperparameter config of the best
+            fold is used as the optimal model and is then trained on the complete set.
 
-    * `inner_cv` Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits]:
-        Cross validation strategy to test hyperparameter configurations, generates the validation set
+        best_config (dict):
+            Dictionary containing the hyperparameters of the
+            best configuration. Contains the parameters in the sklearn
+            interface of model_name__parameter_name: parameter value.
 
-    * `outer_cv` Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits]:
-        Cross validation strategy to use for the hyperparameter search itself, generates the test set
+        results (MDBHyperpipe):
+            Object containing all information about the for the
+            performed hyperparameter search. Holds the training and test
+            metrics for all outer folds, inner folds
+            and configurations, as well as additional information.
 
-    * `optimizer` [str or object, default="grid_search"]:
-        Hyperparameter optimization algorithm
+        elements (list):
+            Contains `all PipelineElement or Hyperpipe
+            objects that are added to the pipeline.
 
-        - In case a string literal is given:
-            - "grid_search": optimizer that iteratively tests all possible hyperparameter combinations
-            - "random_grid_search": a variation of the grid search optimization that randomly picks hyperparameter
-               combinations from all possible hyperparameter combinations
-            - "timeboxed_random_grid_search": randomly chooses hyperparameter combinations from the set of all
-               possible hyperparameter combinations and tests until the given time limit is reached
-               - `limit_in_minutes`: int
-
-        - In case an object is given:
-          expects the object to have the following methods:
-           - `next_config_generator`: returns a hyperparameter configuration in form of an dictionary containing
-              key->value pairs in the sklearn parameter encoding `model_name__parameter_name: parameter_value`
-           - `prepare`: takes a list of pipeline elements and their particular hyperparameters to test
-           - `evaluate_recent_performance`: gets a tested config and the respective performance in order to
-              calculate a smart next configuration to process
-
-    * `metrics` [list of metric names as str]:
-        Metrics that should be calculated for both training, validation and test set
-        Use the preimported metrics from sklearn and photonai, or register your own
-
-        - Metrics for `classification`:
-            - `accuracy`: sklearn.metrics.accuracy_score
-            - `matthews_corrcoef`: sklearn.metrics.matthews_corrcoef
-            - `confusion_matrix`: sklearn.metrics.confusion_matrix,
-            - `f1_score`: sklearn.metrics.f1_score
-            - `hamming_loss`: sklearn.metrics.hamming_loss
-            - `log_loss`: sklearn.metrics.log_loss
-            - `precision`: sklearn.metrics.precision_score
-            - `recall`: sklearn.metrics.recall_score
-        - Metrics for `regression`:
-            - `mean_squared_error`: sklearn.metrics.mean_squared_error
-            - `mean_absolute_error`: sklearn.metrics.mean_absolute_error
-            - `explained_variance`: sklearn.metrics.explained_variance_score
-            - `r2`: sklearn.metrics.r2_score
-        - Other metrics
-            - `pearson_correlation`: photon_core.framework.Metrics.pearson_correlation
-            - `variance_explained`:  photon_core.framework.Metrics.variance_explained_score
-            - `categorical_accuracy`: photon_core.framework.Metrics.categorical_accuracy_score
-
-    * `best_config_metric` [str]:
-        The metric that should be maximized or minimized in order to choose the best hyperparameter configuration
-
-    * `eval_final_performance` [bool, default=True]:
-        If the metrics should be calculated for the test set, otherwise the test set is seperated but not used
-
-    * `test_size` [float, default=0.2]:
-        the amount of the data that should be left out if no outer_cv is given and
-        eval_final_perfomance is set to True
-
-    * `set_random_seed` [bool, default=False]:
-        If True sets the random seed to 42
-
-    * `verbosity` [int, default=0]:
-        The level of verbosity, 0 is least talkative and gives only warn and error, 1 gives adds info and 2 adds debug
-
-    * `groups` [array-like, default=None]:
-        Info for advanced cross validation strategies, such as LeaveOneSiteOut-CV about the affiliation
-        of the rows in the data. Also works with continuous values and StratifiedKFoldRegression. In case a group
-        variable and a StratifiedCV is passed, the targets will be ignored and only the group variable will be used
-        for the stratification.
-
-    Attributes
-    ----------
-    * `optimum_pipe` [Pipeline]:
-        An sklearn pipeline object that is fitted to the training data according to the best hyperparameter
-        configuration found. Currently, we don't create an ensemble of all best hyperparameter configs over all folds.
-        We find the best config by comparing the test error across outer folds. The hyperparameter config of the best
-        fold is used as the optimal model and is then trained on the complete set.
-
-    * `best_config` [dict]:
-        Dictionary containing the hyperparameters of the best configuration.
-        Contains the parameters in the sklearn interface of model_name__parameter_name: parameter value
-
-    * `results` [MDBHyperpipe]:
-        Object containing all information about the for the performed hyperparameter search.
-        Holds the training and test metrics for all outer folds, inner folds and configurations, as well as
-        additional information.
-
-    * `elements` [list]:
-        Contains all PipelineElement or Hyperpipe objects that are added to the pipeline.
-
-    Example
-    -------
+    Example:
+        ```
         manager = Hyperpipe('test_manager',
-                            optimizer='timeboxed_random_grid_search', optimizer_params={'limit_in_minutes': 1},
+                            optimizer='timeboxed_random_grid_search',
+                            optimizer_params={'limit_in_minutes': 1},
                             outer_cv=ShuffleSplit(test_size=0.2, n_splits=1),
                             inner_cv=KFold(n_splits=10, shuffle=True),
                             metrics=['accuracy', 'precision', 'recall', "f1_score"],
                             best_config_metric='accuracy', eval_final_performance=True,
                             verbose=2)
+        ```
 
-   """
+    """
 
-    def __init__(self, name,
+    def __init__(self, name: Optional[str],
                  inner_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits] = None,
-                 outer_cv = None,
+                 outer_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits, None] = None,
                  optimizer: str = 'grid_search',
                  optimizer_params: dict = None,
                  metrics: Optional[List[Union[Scorer.Metric_Type, str]]] = None,
@@ -313,11 +242,101 @@ class Hyperpipe(BaseEstimator):
                  learning_curves: bool = False,
                  learning_curves_cut: FloatRange = None,
                  output_settings: OutputSettings = None,
-                 performance_constraints = None,
+                 performance_constraints=None,
                  permutation_id: str = None,
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
                  allow_multidim_targets: bool = False):
+        """
+
+        Parameters:
+            name:
+                Name of hyperpipe instance.
+
+            inner_cv:
+                Cross validation strategy to test hyperparameter configurations, generates the validation set.
+
+            outer_cv:
+                Cross validation strategy to use for the hyperparameter search itself, generates the test set.
+
+            optimizer:
+                Hyperparameter optimization algorithm. !!str or object!!
+
+                - In case a string literal is given:
+                    - "grid_search": optimizer that iteratively tests all possible hyperparameter combinations
+                    - "random_grid_search": a variation of the grid search optimization that randomly picks hyperparameter
+                        combinations from all possible hyperparameter combinations
+                    - "timeboxed_random_grid_search": randomly chooses hyperparameter combinations from the set of all
+                        possible hyperparameter combinations and tests until the given time limit is reached
+                        - `limit_in_minutes`: int
+
+                - In case an object is given:
+                    expects the object to have the following methods:
+                    - `next_config_generator`: returns a hyperparameter configuration in form of an dictionary containing
+                        key->value pairs in the sklearn parameter encoding `model_name__parameter_name: parameter_value`
+                    - `prepare`: takes a list of pipeline elements and their particular hyperparameters to test
+                    - `evaluate_recent_performance`: gets a tested config and the respective performance in order to
+                        calculate a smart next configuration to process
+
+            metrics:
+                Metrics that should be calculated for both training, validation and test set
+                Use the preimported metrics from sklearn and photonai, or register your own
+
+                - Metrics for `classification`:
+                    - `accuracy`: sklearn.metrics.accuracy_score
+                    - `matthews_corrcoef`: sklearn.metrics.matthews_corrcoef
+                    - `confusion_matrix`: sklearn.metrics.confusion_matrix,
+                    - `f1_score`: sklearn.metrics.f1_score
+                    - `hamming_loss`: sklearn.metrics.hamming_loss
+                    - `log_loss`: sklearn.metrics.log_loss
+                    - `precision`: sklearn.metrics.precision_score
+                    - `recall`: sklearn.metrics.recall_score
+                - Metrics for `regression`:
+                    - `mean_squared_error`: sklearn.metrics.mean_squared_error
+                    - `mean_absolute_error`: sklearn.metrics.mean_absolute_error
+                    - `explained_variance`: sklearn.metrics.explained_variance_score
+                    - `r2`: sklearn.metrics.r2_score
+                - Other metrics
+                    - `pearson_correlation`: photon_core.framework.Metrics.pearson_correlation
+                    - `variance_explained`:  photon_core.framework.Metrics.variance_explained_score
+                    - `categorical_accuracy`: photon_core.framework.Metrics.categorical_accuracy_score
+
+            best_config_metric:
+                The metric that should be maximized or minimized in order to choose the best hyperparameter configuration
+
+            eval_final_performance [bool, default=True]:
+                If the metrics should be calculated for the test set,
+                otherwise the test set is seperated but not used.
+
+            test_size:
+                The amount of the data that should be left out if no outer_cv is given and
+                eval_final_perfomance is set to True.
+
+            calculate_metrics_per_fold:
+
+            calculate_metrics_across_folds:
+
+            random_seed
+
+            verbosity:
+                The level of verbosity, 0 is least talkative and
+                gives only warn and error, 1 gives adds info and 2 adds debug
+
+            learning_curves
+
+            learning_curves_cut
+
+            performance_constraints
+
+            permutation_id
+
+            cache_folder
+
+            nr_of_processes
+
+            allow_multidim_targets
+
+           """
 
         self.allow_multidim_targets = allow_multidim_targets
         if optimizer_params is None:
@@ -606,15 +625,15 @@ class Hyperpipe(BaseEstimator):
         self.output_settings.verbosity = self._verbosity
         self.output_settings.set_log_level()
 
-    def __iadd__(self, pipe_element):
+    def __iadd__(self, pipe_element: PipelineElement):
         """
         Add an element to the machine learning pipeline
         Returns self
 
         Parameters
-        ----------
-        * 'pipe_element' [PipelineElement]:
-            The object to add to the machine learning pipeline, being either a transformer or an estimator.
+            pipe_element:
+                The object to add to the machine learning pipeline,
+                being either a transformer or an estimator.
 
         """
         if isinstance(pipe_element, Preprocessing):
@@ -629,17 +648,17 @@ class Hyperpipe(BaseEstimator):
                 raise TypeError("Element must be of type Pipeline Element")
         return self
 
-    def add(self, pipe_element):
+    def add(self, pipe_element: PipelineElement):
         """
-           Add an element to the machine learning pipeline
-           Returns self
+        Add an element to the machine learning pipeline
+        Returns self
 
-           Parameters
-           ----------
-           * `pipe_element` [PipelineElement or Hyperpipe]:
-               The object to add to the machine learning pipeline, being either a transformer or an estimator.
+        Parameters
+            pipe_element:
+                The object to add to the machine learning pipeline,
+                being either a transformer or an estimator.
 
-           """
+        """
         self.__iadd__(pipe_element)
 
     def _prepare_dummy_estimator(self):
@@ -994,9 +1013,9 @@ class Hyperpipe(BaseEstimator):
             CacheManager.clear_cache_files(cache_folder)
         return
 
-    def fit(self, data, targets, **kwargs):
+    def fit(self, data: np.ndarray, targets: np.ndarray, **kwargs):
         """
-        Starts the hyperparameter search and/or fits the pipeline to the data and targets
+        Starts the hyperparameter search and/or fits the pipeline to the data and targets.
 
         Manages the nested cross validated hyperparameter search:
 
@@ -1009,18 +1028,21 @@ class Hyperpipe(BaseEstimator):
         7. trains the pipeline with the best config and evaluates the performance on the test set
 
         Parameters
-        ----------
-         * `data` [array-like, shape=[N, D]]:
-            the training and test data, where N is the number of samples and D is the number of features.
+            data:
+                The array-liketraining with shape=[N, D] and test data,
+                where N is the number of samples and D is the number of features.
 
-         * `targets` [array-like, shape=[N]]:
-            the truth values, where N is the number of samples.
+            targets:
+                The truth array-like values with shape=[N],
+                where N is the number of samples.
+
+            kwargs:
+                Keyword arguments, passed to Outer_Fold_Manager.fit.
 
 
         Returns
-        -------
-         * 'self'
-            Returns self
+            self:
+                Returns fitted Hyperpipe.
 
         """
 
@@ -1122,26 +1144,47 @@ class Hyperpipe(BaseEstimator):
                 hyperpipe_client.close()
         return self
 
-    def predict(self, data, **kwargs):
+    def predict(self, data: np.ndarray, **kwargs) -> np.ndarray:
         """
-        Use the optimum pipe to predict the data
+        Use the optimum pipe to predict the input data.
 
-        Returns
-        -------
-            predicted targets
+        Parameters:
+            data:
+                The array-like prediction data with shape=[M, D],
+                where M is the number of samples and D is the number
+                of features. D must correspond to the number
+                of trained dimensions of the fit method.
+
+            kwargs:
+                Keyword arguments, passed to optimum_pipe.predict.
+
+        Returns:
+            pred:
+                Predicted targets calculated on input data with trained model.
 
         """
         # Todo: if local_search = true then use optimized pipe here?
         if self._pipe:
             return self.optimum_pipe.predict(data, **kwargs)
 
-    def predict_proba(self, data, **kwargs):
+    def predict_proba(self, data: np.ndarray, **kwargs) -> np.ndarray:
         """
-        Predict probabilities
+        Use the optimum pipe to predict the probabilities from the input data.
 
-        Returns
-        -------
-        predicted probabilities
+        Parameters:
+            data:
+                The array-like prediction data with shape=[M, D],
+                where M is the number of samples and D is the number
+                of features. D must correspond to the number
+                of trained dimensions of the fit method.
+
+            kwargs:
+                Keyword arguments, passed to optimum_pipe.predict_proba.
+
+        Returns:
+            proba:
+                Probabilities calculated from input data on fitted model.
+
 
         """
         if self._pipe:
@@ -1150,6 +1193,8 @@ class Hyperpipe(BaseEstimator):
     def transform(self, data, **kwargs):
         """
         Use the optimum pipe to transform the data
+
+
         """
         if self._pipe:
             X, _, _ = self.optimum_pipe.transform(data, y=None, **kwargs)
@@ -1198,32 +1243,54 @@ class Hyperpipe(BaseEstimator):
         PhotonModelPersistor.save_optimum_pipe(self, filename, password)
 
     @staticmethod
-    def load_optimum_pipe(file, password=None):
+    def load_optimum_pipe(file: str, password: str = None) -> PhotonPipeline:
+        """
+        Load optimum pipe from file.
+        As staticmethod, instantiation is thus not required.
+
+        Parameters:
+            file:
+                File path specifying .photon file to load
+                trained pipeline from zipped file.
+
+            password:
+                Passcode for read file.
+
+        Returns:
+            optimum_pipe:
+                Returns pipeline with all trained PipelineElements.
+
+        """
         return PhotonModelPersistor.load_optimum_pipe(file, password)
 
-    def inverse_transform_pipeline(self, hyperparameters: dict, data, targets, data_to_inverse):
+    def inverse_transform_pipeline(self, hyperparameters: dict,
+                                   data: np.ndarray,
+                                   targets: np.ndarray,
+                                   data_to_inverse: np.ndarray) -> np.ndarray:
         """
-        Inverse transform data for a pipeline with specific hyperparameter configuration
+        Inverse transform data for a pipeline with specific hyperparameter configuration.
 
         1. Copy Sklearn Pipeline,
         2. Set Parameters
         3. Fit Pipeline to data and targets
         4. Inverse transform data with that pipeline
 
-        Parameters
-        ----------
-        * `hyperparameters` [dict]:
-            The concrete configuration settings for the pipeline elements
-        * `data` [array-like]:
-            The training data to which the pipeline is fitted
-        * `targets` [array-like]:
-            The truth values for training
-        * `data_to_inverse` [array-like]:
-            The data that should be inversed after training
+        Parameters:
+            hyperparameters:
+                The concrete configuration settings for the pipeline elements.
 
-        Returns
-        -------
-        Inversed data as array
+            data:
+                The training data to which the pipeline is fitted.
+
+            targets:
+                The truth values for training.
+
+            data_to_inverse:
+                The data that should be inversed after training.
+
+        Returns:
+            inversed_transformation:
+                Inversed data as array.
         """
         copied_pipe = self.pipe.copy_me()
         copied_pipe.set_params(**hyperparameters)
