@@ -1071,7 +1071,7 @@ class Hyperpipe(BaseEstimator):
         6. finally searches for the best config in all tested configs,
         7. trains the pipeline with the best config and evaluates the performance on the test set
 
-        Parameters
+        Parameters:
             data:
                 The array-liketraining with shape=[N, D] and test data,
                 where N is the number of samples and D is the number of features.

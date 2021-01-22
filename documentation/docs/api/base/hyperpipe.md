@@ -1,5 +1,5 @@
 # Documentation for `Hyperpipe`
-::: photonai.base.hyperpipe.Hyperpipe
+::: photonai.base.Hyperpipe
     selection:
       members:
         - __init__

@@ -8,6 +8,11 @@ nav:
   - 'API':
     - 'Base':
       - Hyperpipe: api/base/hyperpipe.md
+      - PipelineElement: api/base/pipeline_element.md
+      - Branch: api/base/branch.md
+      - Stack: api/base/stack.md
+      - Switch: api/base/switch.md
+      - PreProcessing: api/base/preprocessing.md
       - Architecture: architecture.md
     - 'Optimization':
       - GridSearch: api/optimization/grid_search.md
