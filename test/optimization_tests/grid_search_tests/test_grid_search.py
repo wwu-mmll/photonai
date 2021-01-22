@@ -24,6 +24,7 @@ class GridSearchOptimizerTest(unittest.TestCase):
                                   PipelineElement("SVC")]
         self.optimizer = GridSearchOptimizer()
         self.optimizer_name = 'grid_search'
+        self.optimizer_params = None
 
     def create_hyperpipe(self):
         self.hyperpipe = Hyperpipe('optimizer_test',
@@ -32,7 +33,8 @@ class GridSearchOptimizerTest(unittest.TestCase):
                                    best_config_metric='accuracy',
                                    inner_cv=KFold(n_splits=2),
                                    outer_cv=ShuffleSplit(n_splits=2),
-                                   optimizer=self.optimizer_name)
+                                   optimizer=self.optimizer_name,
+                                   optimizer_params=self.optimizer_params)
 
     def test_run(self):
         self.create_hyperpipe()
@@ -104,6 +106,7 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
                                   PipelineElement("SVC")]
         self.optimizer = RandomGridSearchOptimizer()
         self.optimizer_name = 'random_grid_search'
+        self.optimizer_params = None
 
     def test_parameter_k(self):
         """
@@ -128,6 +131,7 @@ class TimeBoxedRandomGridSearchOptimizerTest(RandomGridSearchOptimizerTest):
                                   PipelineElement("SVC")]
         self.optimizer = TimeBoxedRandomGridSearchOptimizer()
         self.optimizer_name = 'timeboxed_random_grid_search'
+        self.optimizer_params = None
 
 
 class BaseOptimizerTests(unittest.TestCase):

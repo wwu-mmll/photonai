@@ -5,7 +5,8 @@ from sklearn.model_selection import ShuffleSplit
 
 from photonai.base import PipelineElement, Hyperpipe
 from photonai.base.photon_pipeline import PhotonPipeline
-from photonai.optimization import DummyPerformance, MinimumPerformance, GridSearchOptimizer
+from photonai.optimization import DummyPerformanceConstraint, MinimumPerformanceConstraint, GridSearchOptimizer
+from photonai.optimization.optimization_info import Optimization
 from photonai.processing.outer_folds import OuterFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBOuterFold, FoldOperations, MDBHelper
@@ -40,10 +41,10 @@ class OuterFoldTests(PhotonBaseTest):
                                     self.outer_cv.split(self.X, self.y)}
 
         self.config_num = 2
-        self.optimization_info = Hyperpipe.Optimization(metrics=['mean_absolute_error', 'mean_squared_error'],
-                                                        best_config_metric='mean_absolute_error',
-                                                        optimizer_input='grid_search', optimizer_params={},
-                                                        performance_constraints=None)
+        self.optimization_info = Optimization(metrics=['mean_absolute_error', 'mean_squared_error'],
+                                              best_config_metric='mean_absolute_error',
+                                              optimizer_input='grid_search', optimizer_params={},
+                                              performance_constraints=None)
         self.elements = [PipelineElement('StandardScaler'),
                          PipelineElement('PCA', {'n_components': [4, 7]}),
                          PipelineElement('DecisionTreeRegressor', random_state=42)]
@@ -95,8 +96,8 @@ class OuterFoldTests(PhotonBaseTest):
         check_current_best_config_equality(outer_manager_across_folds, FoldOperations.RAW)
 
     def test_prepare(self):
-        self.optimization_info.performance_constraints = [DummyPerformance(self.optimization_info.best_config_metric),
-                                                          MinimumPerformance('mean_squared_error', 75)]
+        self.optimization_info.performance_constraints = [DummyPerformanceConstraint(self.optimization_info.best_config_metric),
+                                                          MinimumPerformanceConstraint('mean_squared_error', 75)]
         outer_fold_man = OuterFoldManager(self.pipe, self.optimization_info, self.outer_fold_id, self.cv_info,
                                           result_obj=MDBOuterFold(fold_nr=1))
 
@@ -212,7 +213,7 @@ class OuterFoldTests(PhotonBaseTest):
                              outer_fold_man2.result_object.best_config.best_config_score.training.metrics, )
 
     def test_fit_dummy(self):
-        self.optimization_info.performance_constraints = DummyPerformance(self.optimization_info.best_config_metric)
+        self.optimization_info.performance_constraints = DummyPerformanceConstraint(self.optimization_info.best_config_metric)
         outer_fold_man = OuterFoldManager(self.pipe, self.optimization_info, self.outer_fold_id, self.cv_info,
                                           result_obj=MDBOuterFold(fold_nr=1))
 

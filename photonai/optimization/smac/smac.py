@@ -15,7 +15,7 @@ try:
     from smac.facade.smac_ac_facade import SMAC4AC
     from smac.facade.smac_bohb_facade import BOHB4HPO
     __found__ = True
-except ModuleNotFoundError:
+except [ModuleNotFoundError, ImportError]:
     __found__ = False
 
 

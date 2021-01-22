@@ -36,6 +36,12 @@ class MDBScoreInformation(EmbeddedMongoModel):
     probabilities = fields.ListField(blank=True)
     metrics_copied_from_inner = fields.BooleanField(default=False)
 
+    def save_memory(self):
+        self.y_true = list()
+        self.y_pred = list()
+        self.indices = list()
+        self.probabilities = list()
+
     def __str__(self):
         return str(self.metrics)
 
@@ -84,12 +90,10 @@ class MDBConfig(EmbeddedMongoModel):
 
     def decrease_memory(self):
         for fold in self.inner_folds:
-            for fold_set in [fold.training, fold.validation]:
-                fold_set.y_true = []
-                fold_set.y_pred = []
-                fold_set.indices = []
-                fold_set.probabilities = []
+            fold.training.save_memory()
+            fold.validation.save_memory()
             fold.feature_importances = []
+            fold.time_monitor = {}
 
 
 class MDBOuterFold(EmbeddedMongoModel):
@@ -151,6 +155,7 @@ class MDBHyperpipeInfo(EmbeddedMongoModel):
     cross_validation = fields.DictField(blank=True)
     optimization = fields.DictField(blank=True)
     flowchart = fields.CharField(blank=True)
+    pipeline_elements = fields.DictField(blank=True)
     metrics = fields.ListField(blank=True)
     best_config_metric = fields.CharField(blank=True)
     maximize_best_config_metric = fields.BooleanField(blank=True)
