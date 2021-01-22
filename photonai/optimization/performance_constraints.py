@@ -36,7 +36,7 @@ class PhotonBaseConstraint:
 
     """
 
-    ENUM_STRATEGY = Enum("strategy", "first all mean")
+    ENUM_STRATEGY = Enum("strategy", "first any mean")
 
     def __init__(self, strategy='first', metric='', threshold: float = None, margin: float = 0, **kwargs):
         self._metric = None

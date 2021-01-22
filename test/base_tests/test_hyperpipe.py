@@ -118,12 +118,14 @@ class HyperpipeTests(PhotonBaseTest):
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
 
         # make sure that if no best config metric is given, PHOTON raises a warning
-        with self.assertWarns(Warning) as w:
-            # with warnings.catch_warnings(record=True) as w:
+        # with self.assertWarns(Warning) as w:
+        # with warnings.catch_warnings(record=True) as w:
+        with self.assertRaises(Warning):
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
             assert any("No best config metric was given" in s for s in [e.message.args[0] for e in w])
 
-        with warnings.catch_warnings(record=True) as w:
+        # with warnings.catch_warnings(record=True) as w:
+        with self.assertRaises(Warning):
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
             assert any("Best Config Metric must be a single" in s for s in [e.message.args[0] for e in w])
 
