@@ -17,6 +17,8 @@ except ModuleNotFoundError:
 class NevergradOptimizer(PhotonMasterOptimizer):
     """Nevergrad Wrapper for PHOTONAI.
 
+    Nevergrad - A gradient-free optimization platform.
+
     Nevergrad [usage and implementation details](
     https://facebookresearch.github.io/nevergrad/)
 

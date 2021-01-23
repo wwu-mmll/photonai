@@ -400,7 +400,7 @@
     "Transformer"
   ],
   "ConfounderRemoval":[
-    "photonai.modelwrapper.ConfounderRemoval.ConfounderRemoval",
+    "photonai.modelwrapper.confounder_removal.ConfounderRemoval",
     "Transformer"
   ],
   "FClassifSelectPercentile":[

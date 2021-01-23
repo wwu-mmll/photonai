@@ -1,4 +1,3 @@
-# Wrapper for Feature Selection (Select Percentile)
 import numpy as np
 from sklearn.linear_model import Lasso
 from sklearn.base import BaseEstimator, TransformerMixin
@@ -13,29 +12,34 @@ class FRegressionFilterPValue(BaseEstimator, TransformerMixin):
     Fit f_regression and select all columns
     when p_value of column < p_threshold.
 
-    Parameters
-    ----------
-    p_threshold: float, default=.05
-        Upper bound for p_values.
-
     """
     _estimator_type = "transformer"
 
     def __init__(self, p_threshold: float = .05):
+        """
+        Initialize the object.
+
+        Parameters:
+            p_threshold:
+                Upper bound for p_values.
+
+        """
         self.p_threshold = p_threshold
         self.selected_indices = []
         self.n_original_features = None
 
-    def fit(self, X, y):
+    def fit(self, X: np.ndarray, y: np.ndarray):
         """Calculation of the important columns.
 
         Apply f_regression on input X, y to generate p_values.
         selected_indices = all p_value(columns) < p_threshold.
 
-        Parameters
-        ----------
-        X : array of shape [n_samples, n_selected_features]
-            The input samples.
+        Parameters:
+            X:
+                The input samples of shape [n_samples, n_original_features]
+
+            y:
+                The input targets of shape [n_samples, 1]
 
         """
         self.n_original_features = X.shape[1]
@@ -43,34 +47,32 @@ class FRegressionFilterPValue(BaseEstimator, TransformerMixin):
         self.selected_indices = np.where(p_values < self.p_threshold)[0]
         return self
 
-    def transform(self, X):
+    def transform(self, X: np.ndarray) -> np.ndarray:
         """Reduced input X to selected_columns.
 
-        Parameters
-        ----------
-        X : array of shape [n_samples, n_original_features]
-            The input samples.
+        Parameters:
+            X
+                The input samples of shape [n_samples, n_original_features]
 
-        Returns
-        -------
-        X_t: array of shape [n_samples, n_selected_features]
-            Column-filtered array.
+        Returns:
+            Column-filtered array of shape [n_samples, n_selected_features].
 
         """
         return X[:, self.selected_indices]
 
-    def inverse_transform(self, X):
+    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
         """Reverse to original dimension.
 
-        Parameters
-        ----------
-        X : array of shape [n_samples, n_selected_features]
-            The input samples.
+        Parameters:
+            X:
+                The input samples of shape [n_samples, n_selected_features].
 
-        Returns
-        -------
-        X_it : array of shape [n_samples, n_original_features]
-            X with columns of zeros inserted where features would have
+        Raises:
+            ValueError: If input X has a different shape than during fitting.
+
+        Returns:
+            Array of shape [n_samples, n_original_features]
+            with columns of zeros inserted where features would have
             been removed.
 
         """
@@ -90,15 +92,18 @@ class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
     Apply VarianceThreshold -> SelectPercentile to data.
     SelectPercentile based on f_regression and parameter percentile.
 
-    Parameters
-    ----------
-    percentile: int, default=10
-        Percent of features to keep.
-
     """
     _estimator_type = "transformer"
 
-    def __init__(self, percentile=10):
+    def __init__(self, percentile: (float, int) = 10):
+        """
+        Initialize the object.
+
+        Parameters:
+            percentile:
+                Percent of features to keep.
+
+        """
         self.var_thres = VarianceThreshold()
         self.percentile = percentile
         self.my_fs = None
@@ -148,6 +153,22 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
         return self.my_fs.transform(X)
 
     def inverse_transform(self, X):
+        """Reverse to original dimension.
+
+        Calls:
+            1. SelectPercentile.inverse_transform
+            2. VarianceThreshold.inverse_transform
+
+        Parameters:
+            X:
+                The input samples of shape [n_samples, n_selected_features].
+
+        Returns:
+            Array of shape [n_samples, n_original_features]
+            with columns of zeros inserted where features would have
+            been removed.
+
+        """
         Xt = self.my_fs.inverse_transform(X)
         return self.var_thres.inverse_transform(Xt)
 
@@ -158,24 +179,27 @@ class ModelSelector(BaseEstimator, TransformerMixin):
     Apply feature selection on specific estimator
     and its importance scores.
 
-    Parameters
-    ----------
-    estimator_obj
-        Estimator with fit/tranform and possibility of feature_importance.
-
-    threshold: float, default=1e-5,
-        If percentile == True:
-            Lower Bound for required importance score to keep.
-        If percentile == True:
-            percentage to keep (ordered features by feature_importance)
-
-    percentile: bool, default=False
-        Percent of features to keep.
-
      """
     _estimator_type = "transformer"
 
     def __init__(self, estimator_obj, threshold: float = 1e-5, percentile: bool = False):
+        """
+        Initialize the object.
+
+        Parameters:
+            estimator_obj:
+                Estimator with fit/tranform and possibility of feature_importance.
+
+            threshold:
+                If percentile == True:
+                    Lower Bound for required importance score to keep.
+                If percentile == True:
+                    percentage to keep (ordered features by feature_importance)
+
+            percentile:
+                Percent of features to keep.
+
+        """
         self.threshold = threshold
         self.estimator_obj = estimator_obj
         self.selected_indices = []
@@ -264,17 +288,22 @@ class LassoFeatureSelection(BaseEstimator, TransformerMixin):
 
     Apply Lasso to ModelSelection.
 
-    Parameters
-    ----------
-    percentile: bool, default=False
-        Percent of features to keep.
-
-    alpha: float, default=1.
-        Weighting parameter for Lasso.
-
-     """
+    """
     def __init__(self, percentile: float = 0.3, alpha: float = 1., **kwargs):
+        """
+        Initialize the object.
 
+        Parameters:
+            percentile: bool, default=False
+                Percent of features to keep.
+
+            alpha: float, default=1.
+                Weighting parameter for Lasso.
+
+            kwargs:
+                Passed to Lasso object.
+
+        """
         self.percentile = percentile
         self.alpha = alpha
         self.model_selector = None

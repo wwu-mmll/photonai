@@ -25,34 +25,35 @@ from photonai.processing.results_structure import MDBHyperpipe
 
 
 class ResultsHandler:
-    """Results Handler.
-
+    """
     Provides all functions that operate on calculated results.
     As IO for the results object the ResultsHandler
     is able to handle results on its own.
 
-    Parameters
-    ----------
-    results_object: MDBHyperpipe or None, default=None
-        All results are stored here.
-        An initial setting is not necessary,
-        because a later loading via file or MongoDB is possible.
-
-    output_settings: OutputSettings or None, default=None
-        Setting for creation and storage of the results_object.
-
     """
     def __init__(self, results_object: MDBHyperpipe = None, output_settings=None):
+        """
+        Initialize the object.
+
+        Parameters:
+            results_object:
+                All results are stored here.
+                An initial setting is not necessary,
+                because a later loading via file or MongoDB is possible.
+
+            output_settings:
+                Setting for creation and storage of the results_object.
+
+        """
         self.results = results_object
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
         """Reads results_file from json into MDBHyperpipe object self.results.
 
-        Parameters
-        ----------
-        results_file: str
-            Full path to json file.
+        Parameters:
+            results_file:
+                Full path to json file.
 
         """
         self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
@@ -60,13 +61,12 @@ class ResultsHandler:
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         """Reads results_file from MongoDB into MDBHyperpipe object self.results.
 
-        Parameters
-        ----------
-        mongodb_connect_url: str
-            MongoDB connection string.
+        Parameters:
+            mongodb_connect_url:
+                MongoDB connection string.
 
-        pipe_name: str
-            Name of the stored hyperpipe.
+            pipe_name:
+                Name of the stored hyperpipe.
 
         """
         connect(mongodb_connect_url, alias="photon_core")
@@ -84,6 +84,9 @@ class ResultsHandler:
     @staticmethod
     def get_methods():
         """This function returns a list of all methods available for ResultsHandler.
+
+        Returns:
+            List of all available methods.
 
         """
         methods_list = [s for s in dir(ResultsHandler) if '__' not in s]

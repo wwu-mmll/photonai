@@ -14,15 +14,27 @@ nav:
       - Switch: api/base/switch.md
       - PreProcessing: api/base/preprocessing.md
       - Architecture: architecture.md
+    - 'Modelwrapper':
+      - 'Feature Selection':
+        - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
+        - FClassifSelectPercentile: api/modelwrapper/feature_selection/FClassifSelectPercentile.md
+        - FRegressionSelectPercentile: api/modelwrapper/feature_selection/FRegressionSelectPercentile.md
+        - LassoFeatureSelection: api/modelwrapper/feature_selection/LassoFeatureSelection.md
+        - ModelSelector: api/modelwrapper/feature_selection/ModelSelector.md
     - 'Optimization':
       - GridSearch: api/optimization/grid_search.md
       - RandomGridSearch: api/optimization/random_grid_search.md
       - TimeBoxedRandom_GS: api/optimization/time_boxed_random_grid_search.md
-      - scikit-optimize: api/optimization/skopt.md
+      - Scikit-Optimize: api/optimization/skopt.md
       - SMAC: api/optimization/smac.md
       - Nevergrad: api/optimization/nevergrad.md
+      - 'Hyperparameter':
+        - Categorical: api/optimization/hyperparameter/categorical.md
+        - BooleanSwitch: api/optimization/hyperparameter/boolean_switch.md
+        - IntegerRange: api/optimization/hyperparameter/integer_range.md
+        - FloatRange: api/optimization/hyperparameter/float_range.md
     - 'Processing':
-      - Results Handler: api/processing/not_ready_results_handler.md
+      - Results Handler: api/processing/results_handler.md
   - 'Features':
       - 'Over- /Undersampling': examples/imbalanced_data.md
       - 'Custom Metrics': custom_metrics.md
