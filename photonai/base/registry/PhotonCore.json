@@ -478,5 +478,9 @@
     "KerasBaseRegression":[
     "photonai.modelwrapper.keras_base_models.KerasBaseRegression",
     "Estimator"
+  ],
+  "LocallyLinearEmbedding":[
+    "sklearn.manifold.LocallyLinearEmbedding",
+    "Transformer"
   ]
 }
