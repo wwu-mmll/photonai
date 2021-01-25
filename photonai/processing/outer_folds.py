@@ -3,7 +3,7 @@ import warnings
 import numpy as np
 
 from photonai.helper.helper import PhotonDataHelper, print_double_metrics, print_metrics
-from photonai.optimization import DummyPerformance
+from photonai.optimization import DummyPerformanceConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
@@ -175,7 +175,7 @@ class OuterFoldManager:
 
         logger.clean_info('---------------------------------------------------------------------------------------------------------------')
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
-        print(self.tested_config_counter)
+        logger.info(self.tested_config_counter)
         # now go on with the best config found
         if self.tested_config_counter > 0:
             best_config_outer_fold = self.optimization_info.get_optimum_config(self.result_object.tested_config_list,
@@ -380,7 +380,8 @@ class OuterFoldManager:
                 # performaceConstraints: DummyEstimator
                 if self.constraint_objects is not None:
                     dummy_constraint_objs = [opt for opt in self.constraint_objects
-                                             if isinstance(opt, DummyPerformance)]
+                                             if isinstance(opt, DummyPerformanceConstraint)]
+
                     if dummy_constraint_objs:
                         for dummy_constraint_obj in dummy_constraint_objs:
                             dummy_constraint_obj.set_dummy_performance(self.result_object.dummy_results)

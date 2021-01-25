@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 
@@ -15,7 +15,8 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     optimizer='sk_opt',
                     optimizer_params={'n_configurations': 25},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
-                    best_config_metric='accuracy')
+                    best_config_metric='accuracy',
+                    output_settings=OutputSettings(project_folder='./tmp'))
 
 my_pipe.add(PipelineElement('StandardScaler'))
 
