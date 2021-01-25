@@ -9,7 +9,6 @@
 </div>
 
 ``` python
-
-  {% include "advanced/imbalanced_data.py" %} 
+{% include "advanced/imbalanced_data.py" %} 
 
 ```
