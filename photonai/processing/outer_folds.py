@@ -175,7 +175,7 @@ class OuterFoldManager:
 
         logger.clean_info('---------------------------------------------------------------------------------------------------------------')
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
-        print(self.tested_config_counter)
+        logger.info(self.tested_config_counter)
         # now go on with the best config found
         if self.tested_config_counter > 0:
             best_config_outer_fold = self.optimization_info.get_optimum_config(self.result_object.tested_config_list,

@@ -456,6 +456,17 @@ class HyperpipeTests(PhotonBaseTest):
             expected_folder = os.path.join(start_folder, nmbranch.name)
             self.assertEqual(nmbranch.base_element.cache_folder, expected_folder)
 
+    def test_setup_error_file(self):
+        # when we init the hyperpipe the file should exist
+        self.assertTrue(os.path.isfile(self.hyperpipe.output_settings.setup_error_file))
+        # when we call fit it shall disappear
+        # we call it empty so that the computation does not occur
+        with self.assertRaises(ValueError):
+            self.hyperpipe.fit(None, None)
+        # however the file should be gone by now
+        self.assertFalse(os.path.isfile(self.hyperpipe.output_settings.setup_error_file))
+
+
     def test_prepare_result_logging(self):
         # test that results object is given and entails hyperpipe infos
         rfc = PipelineElement('RandomForestClassifier')

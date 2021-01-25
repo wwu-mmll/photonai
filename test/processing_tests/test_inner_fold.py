@@ -102,8 +102,8 @@ class InnerFoldTests(PhotonBaseTest):
         # C: for a list of constraints, all should pass
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
-                                     optimization_constraints=[MinimumPerformanceConstraint('accuracy', 0.75, 'all'),
-                                                               MinimumPerformanceConstraint('specificity', 0.75, 'all')])
+                                     optimization_constraints=[MinimumPerformanceConstraint('accuracy', 0.75, 'any'),
+                                                               MinimumPerformanceConstraint('specificity', 0.75, 'any')])
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         self.assertTrue(len(photon_results_config_item.inner_folds) == 4)

@@ -123,8 +123,12 @@ class OutputSettings:
             logger.error(msg)
             raise NotImplementedError(msg)
 
+    @property
+    def setup_error_file(self):
+        return os.path.join(self.project_folder, 'photon_setup_errors.log')
+
     def initialize_log_file(self):
-        self.log_file = os.path.join(self.project_folder, 'photon_setup_errors.log')
+        self.log_file = self.setup_error_file
 
     def _update_settings(self, name, timestamp):
 
@@ -147,6 +151,11 @@ class OutputSettings:
                 self.log_file = 'photon_output.log'
             self.log_file = self._add_timestamp(self.log_file)
             self.set_log_file()
+
+        # if we made it here, there should be no further setup errors, every error that comes
+        # now can go to the standard logger instance
+        if os.path.isfile(self.setup_error_file):
+            os.remove(self.setup_error_file)
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
