@@ -140,9 +140,9 @@ class OuterFoldManager:
 
     def fit(self, X, y=None, **kwargs):
         logger.photon_system_log('')
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.stars()
         logger.photon_system_log('Outer Cross validation Fold {}'.format(self.cross_validation_info.outer_folds[self.outer_fold_id].fold_nr))
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.stars()
 
         self._prepare_data(X, y, **kwargs)
         self._fit_dummy()
@@ -173,7 +173,7 @@ class OuterFoldManager:
             for current_config in self.optimizer.ask:
                 self.objective_function(current_config)
 
-        logger.clean_info('---------------------------------------------------------------------------------------------------------------')
+        logger.line()
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
         logger.info(self.tested_config_counter)
         # now go on with the best config found
@@ -270,8 +270,7 @@ class OuterFoldManager:
     def objective_function(self, current_config):
         if current_config is None:
             return
-        logger.clean_info(
-            '---------------------------------------------------------------------------------------------------------------')
+        logger.line()
         self.tested_config_counter += 1
 
         if hasattr(self.optimizer, 'ask_for_pipe'):

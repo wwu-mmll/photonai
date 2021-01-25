@@ -20,9 +20,10 @@ from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
 
 from photonai.photonlogger.logger import logger
+from photonai.helper.helper import print_double_metrics, print_metrics
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
-
+from photonai.__init__ import __version__
 
 class ResultsHandler:
     """Results Handler.
@@ -88,6 +89,7 @@ class ResultsHandler:
         """
         methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
         return methods_list
+
 
     def get_performance_table(self):
         """This function returns a summary table of the overall results.
@@ -794,80 +796,84 @@ class ResultsHandler:
         return self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_predictions_file(self):
-        filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+        if self.output_settings.save_output:
+            filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
 
-        # usually we write the predictions for the outer fold
-        if not self.output_settings.save_predictions_from_best_config_inner_folds:
-            return self.get_test_predictions(filename)
-        # in case no outer folds exist, we write the inner_fold predictions
-        else:
-            return self.get_best_config_inner_fold_predictions(filename)
+            # usually we write the predictions for the outer fold
+            if not self.output_settings.save_predictions_from_best_config_inner_folds:
+                return self.get_test_predictions(filename)
+            # in case no outer folds exist, we write the inner_fold predictions
+            else:
+                return self.get_best_config_inner_fold_predictions(filename)
 
-    def write_summary(self):
+    def text_summary(self):
+        def divider(header):
+            return header.ljust(101, '=')
 
-        result_tree = self.results
-        pp = pprint.PrettyPrinter(indent=4)
+        output_string = divider("ANALYSIS INFORMATION ")
 
-        text_list = []
-        intro_text = """
-PHOTONAI RESULT SUMMARY
--------------------------------------------------------------------
+        elapsed_time = self.results.computation_end_time - self.results.computation_start_time
+        output_string += """ 
+Project Folder: {},
+Computation Time: {} - {}
+Duration: {}
+Optimized for: {}
+Hyperparameter Optimizer: {}
 
-ANALYSIS NAME: {}
-BEST CONFIG METRIC: {}
-TIME OF RESULT: {}
-VERSION: {}
+""".format(self.output_settings.results_folder,
+           self.results.computation_start_time,
+           self.results.computation_end_time,
+           elapsed_time,
+           self.results.hyperpipe_info.best_config_metric,
+           self.results.hyperpipe_info.optimization["Optimizer"])
 
-        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.computation_end_time,
-                   result_tree.version)
-        text_list.append(intro_text)
+        output_string += divider("DUMMY RESULTS ")
+        output_string += """
+{}
 
-        if result_tree.dummy_estimator:
-            dummy_text = """
--------------------------------------------------------------------
-BASELINE - DUMMY ESTIMATOR
-(always predict mean or most frequent target)
+""".format(print_metrics("DUMMY", self.results.dummy_estimator.get_test_metrics(), summary=True))
 
-strategy: {}     
+        output_string += divider("AVERAGE PERFORMANCE ACROSS OUTER FOLDS ")
 
-            """.format(result_tree.dummy_estimator.strategy)
-            text_list.append(dummy_text)
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.test)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.train)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+        test_metrics = self.get_dict_from_metric_list(self.results.metrics_test)
+        train_metrics = self.get_dict_from_metric_list(self.results.metrics_train)
+        output_string += """
+{}
 
-        if result_tree.best_config:
-            text_list.append("""
+""".format(self.print_table_for_performance_overview(train_metrics, test_metrics))
 
--------------------------------------------------------------------
-OVERALL BEST CONFIG: 
-{}            
-            """.format(pp.pformat(result_tree.best_config.human_readable_config)))
+        output_string += divider("BEST HYPERPARAMETER CONFIGURATION ")
+        output_string += """
+{}
 
-        text_list.append("""
-MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
-        """)
+""".format(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
 
-        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_test)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
-        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_train)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
+        output_string += """
+{}
 
-        for outer_fold in result_tree.outer_folds:
-            text_list.append(self.print_outer_fold(outer_fold, result_tree.hyperpipe_info.estimation_type,
-                                                   result_tree.hyperpipe_info.eval_final_performance))
+""".format(print_double_metrics(self.results.best_config.best_config_score.training.metrics,
+                                self.results.best_config.best_config_score.validation.metrics,
+                                summary=True))
+        output_string += divider("PHOTONAI {} ".format(__version__))
 
-        final_text = ''.join(text_list)
+        if self.output_settings.results_folder is not None:
+            output_string += "\nYour results are stored in " + self.output_settings.results_folder + "\n"
+            output_string += "Go to https://explorer.photon-ai.com and upload your photon_result_file.json " \
+                             "for convenient result visualization! \n"
+            output_string += "For more info and documentation visit https://www.photon-ai.com"
 
-        try:
-            summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
-            text_file = open(summary_filename, "w")
-            text_file.write(final_text)
-            text_file.close()
-        except OSError as e:
-            logger.error("Could not write summary file")
-            logger.error(str(e))
+        if self.output_settings.save_output:
+            try:
+                summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
+                text_file = open(summary_filename, "w")
+                text_file.write(output_string)
+                text_file.close()
+            except OSError as e:
+                logger.error("Could not write summary file")
+                logger.error(str(e))
+
+            return output_string
+
 
     @staticmethod
     def get_dict_from_metric_list(metric_list):
@@ -880,66 +886,10 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
         return best_config_metrics
 
     @staticmethod
-    def print_table_for_performance_overview(metric_dict, header):
+    def print_table_for_performance_overview(metric_dict_train, metric_dict_test):
         x = PrettyTable()
-        x.field_names = ["Metric Name", "MEAN", "STD"]
-        for element_key, element_dict in metric_dict.items():
-            x.add_row([element_key, element_dict["MEAN"], element_dict["STD"]])
-
-        text = """
-{}:
-{}
-                """.format(header, str(x))
-
-        return text
-
-    @staticmethod
-    def print_outer_fold(outer_fold, estimation_type="classifier", eval_final_performance=True):
-
-        pp = pprint.PrettyPrinter(indent=4)
-        outer_fold_text = []
-
-        if outer_fold.best_config is not None:
-            outer_fold_text.append("""
--------------------------------------------------------------------
-OUTER FOLD {}
--------------------------------------------------------------------
-Best Config:
-{}""".format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config)))
-        if eval_final_performance:
-            outer_fold_text.append("""
-            
-Number of samples training {}
-Number of samples test {}
-            """.format(outer_fold.best_config.best_config_score.number_samples_training,
-                       outer_fold.best_config.best_config_score.number_samples_validation))
-
-            if estimation_type == "classifier":
-                outer_fold_text.append("""
-Class distribution training {}
-Class distribution test {}
-
-                """.format(outer_fold.class_distribution_validation,
-                           outer_fold.class_distribution_test))
-            if outer_fold.best_config.config_failed:
-                outer_fold_text.append("""
-Config Failed: {}            
-    """.format(outer_fold.best_config.config_error))
-
-            else:
-                x = PrettyTable()
-                x.field_names = ["Metric Name", "Train Value", "Test Value"]
-                metrics_train = outer_fold.best_config.best_config_score.training.metrics
-                metrics_test = outer_fold.best_config.best_config_score.validation.metrics
-
-                for element_key, element_value in metrics_train.items():
-                    x.add_row([element_key, np.round(element_value, 6), np.round(metrics_test[element_key], 6)])
-                outer_fold_text.append("""
-PERFORMANCE:
-{}
-
-
-
-                """.format(str(x)))
-
-        return ''.join(outer_fold_text)
+        x.field_names = ["Metric Name", "Training Mean", "Training Std", "Test Mean", "Test Std"]
+        for element_key, element_dict in metric_dict_train.items():
+            x.add_row([element_key, element_dict["MEAN"], element_dict["STD"],
+                       metric_dict_test[element_key]["MEAN"], metric_dict_test[element_key]["STD"]])
+        return x

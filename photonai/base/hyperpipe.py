@@ -610,12 +610,12 @@ class Hyperpipe(BaseEstimator):
         # 3. training model with best config
         # 4. persisting best model
         logger.clean_info('')
-        logger.clean_info(
-            '***************************************************************************************************************')
-        logger.info("Finished all outer fold hyperparameter optimizations.")
-        logger.info("Now analysing the results...")
+        logger.stars()
+        logger.photon_system_log("Finished all outer fold computations.")
+        logger.info("Now analysing the final results...")
 
         # computer dummy metrics
+        logger.info("Computing dummy metrics...")
         config_item = MDBConfig()
         dummy_results = [outer_fold.dummy_results for outer_fold in self.results.outer_folds]
         config_item.inner_folds = [f for f in dummy_results if f is not None]
@@ -624,34 +624,24 @@ class Hyperpipe(BaseEstimator):
                 config_item.inner_folds,
                 self.optimization.metrics)
 
+        logger.info("Computing mean and std for all outer fold metrics...")
         # Compute all final metrics
         self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
                                                                                                             self.optimization.metrics)
 
         # Find best config across outer folds
+        logger.info("Find best config across outer folds...")
         best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
         self.best_config = best_config.config_dict
         self.results.best_config = best_config
 
-        logger.photon_system_log('')
-        logger.photon_system_log(
-            '===============================================================================================================')
-        logger.photon_system_log('OVERALL BEST CONFIGURATION')
-        logger.photon_system_log(
-            '===============================================================================================================')
-        logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
-        print_double_metrics(self.results.best_config.best_config_score.training.metrics,
-                             self.results.best_config.best_config_score.validation.metrics,
-                             photon_system_log=True)
-
         # save results again
         self.results.computation_end_time = datetime.datetime.now()
         self.results.computation_completed = True
+        logger.info("Save final results...")
         self.results_handler.save()
 
-        # write all convenience files (summary, predictions_file and plots)
-        self.results_handler.write_convenience_files()
-
+        logger.info("Prepare Hyperpipe.optimum pipe with best config")
         # set self to best config
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config)
@@ -716,18 +706,16 @@ class Hyperpipe(BaseEstimator):
                 if self.cross_validation.learning_curves:
                     self.results_handler.save_all_learning_curves()
 
-        elapsed_time = self.results.computation_end_time - self.results.computation_start_time
-        logger.photon_system_log('')
-        logger.photon_system_log(
-            'Analysis ' + self.name + " done in " + str(elapsed_time))
-        if self.output_settings.results_folder is not None:
-            logger.photon_system_log(
-                '***************************************************************************************************************')
-            logger.photon_system_log('Go to https://explorer.photon-ai.com and '
-                                     'upload your photon_result_file.json for convenient result visualization!')
-            logger.photon_system_log('Your results are stored in ' + self.output_settings.results_folder)
-        logger.photon_system_log('***************************************************************************************************************')
-        logger.photon_system_log('PHOTON ' + str(__version__) + ' - www.photon-ai.com ')
+        logger.info("Summarizing results...")
+
+        logger.info("Write predictions to files...")
+        # write all convenience files (summary, predictions_file and plots)
+        self.results_handler.write_predictions_file()
+
+        logger.info("Write summary...")
+        logger.stars()
+        logger.photon_system_log("")
+        logger.photon_system_log(self.results_handler.text_summary())
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):

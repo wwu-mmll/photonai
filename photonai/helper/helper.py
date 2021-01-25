@@ -205,17 +205,21 @@ class PhotonDataHelper:
         return X, y, kwargs
 
 
-def print_metrics(header, metric_dict):
+def print_metrics(header, metric_dict, summary=False):
     t = PrettyTable(['PERFORMANCE ' + header, ''])
     for m_key, m_value in metric_dict.items():
         t.add_row([m_key, "%.4f" % m_value])
+    if summary:
+        return t
     logger.photon_system_log(t)
 
 
-def print_double_metrics(metric_dict_train, metric_dict_test, photon_system_log=True):
+def print_double_metrics(metric_dict_train, metric_dict_test, photon_system_log=True, summary=False):
     t = PrettyTable(['METRIC', 'PERFORMANCE TRAIN', 'PERFORMANCE TEST'])
     for m_key, m_value in metric_dict_train.items():
         t.add_row([m_key, "%.4f" % m_value, "%.4f" % metric_dict_test[m_key]])
+    if summary:
+        return t
     if photon_system_log:
         logger.photon_system_log(t)
     else:
