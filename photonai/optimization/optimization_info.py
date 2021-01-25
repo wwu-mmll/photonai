@@ -1,7 +1,7 @@
 import numpy as np
 import json
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
-    SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer
+    SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, NevergradOptimizer
 from photonai.optimization.switch_optimizer.meta_optimizer import MetaHPOptimizer
 from photonai.processing.metrics import Scorer
 from photonai.photonlogger.logger import logger
@@ -16,6 +16,7 @@ class Optimization:
                             'sk_opt': SkOptOptimizer,
                             'smac': SMACOptimizer,
                             'random_search': RandomSearchOptimizer,
+                            'nevergrad': NevergradOptimizer,
                             'switch': MetaHPOptimizer}
 
     def __init__(self, optimizer_input, optimizer_params,
