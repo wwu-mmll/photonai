@@ -17,10 +17,23 @@ except ModuleNotFoundError:
 class NevergradOptimizer(PhotonMasterOptimizer):
     """Nevergrad Wrapper for PHOTONAI.
 
-    Nevergrad - A gradient-free optimization platform.
+    Nevergrad is a gradient-free optimization platform.
 
     Nevergrad [usage and implementation details](
     https://facebookresearch.github.io/nevergrad/)
+
+    Example:
+        ```
+        import nevergrad as ng
+        # list of all available nevergrad optimizer
+        print(list(ng.optimizers.registry.values()))
+
+        my_pipe = Hyperpipe('nevergrad_example',
+                            optimizer='nevergrad',
+                            optimizer_params={'facade': 'NGO', 'n_configurations': 30},
+                            ...
+                            )
+        ```
 
     """
     def __init__(self, facade='NGO', n_configurations: int = 100, rng: int = 42):

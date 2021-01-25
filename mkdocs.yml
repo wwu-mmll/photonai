@@ -7,17 +7,18 @@ nav:
     - Regression: regression.md
   - 'API':
     - 'Base':
+      - Architecture: architecture.md
+      - Branch: api/base/branch.md
       - Hyperpipe: api/base/hyperpipe.md
       - PipelineElement: api/base/pipeline_element.md
-      - Branch: api/base/branch.md
+      - Preprocessing: api/base/preprocessing.md
+      - Registry: api/base/registry.md
       - Stack: api/base/stack.md
       - Switch: api/base/switch.md
-      - PreProcessing: api/base/preprocessing.md
-      - Architecture: architecture.md
     - 'Modelwrapper':
       - 'Feature Selection':
-        - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
         - FClassifSelectPercentile: api/modelwrapper/feature_selection/FClassifSelectPercentile.md
+        - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
         - FRegressionSelectPercentile: api/modelwrapper/feature_selection/FRegressionSelectPercentile.md
         - LassoFeatureSelection: api/modelwrapper/feature_selection/LassoFeatureSelection.md
         - ModelSelector: api/modelwrapper/feature_selection/ModelSelector.md
@@ -29,10 +30,10 @@ nav:
       - SMAC: api/optimization/smac.md
       - Nevergrad: api/optimization/nevergrad.md
       - 'Hyperparameter':
-        - Categorical: api/optimization/hyperparameter/categorical.md
         - BooleanSwitch: api/optimization/hyperparameter/boolean_switch.md
-        - IntegerRange: api/optimization/hyperparameter/integer_range.md
+        - Categorical: api/optimization/hyperparameter/categorical.md
         - FloatRange: api/optimization/hyperparameter/float_range.md
+        - IntegerRange: api/optimization/hyperparameter/integer_range.md
     - 'Processing':
       - Results Handler: api/processing/results_handler.md
   - 'Features':

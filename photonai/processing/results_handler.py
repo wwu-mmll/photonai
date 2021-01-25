@@ -82,7 +82,7 @@ class ResultsHandler:
             raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
 
     @staticmethod
-    def get_methods():
+    def get_methods() -> list:
         """This function returns a list of all methods available for ResultsHandler.
 
         Returns:

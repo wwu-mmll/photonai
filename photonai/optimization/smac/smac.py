@@ -28,7 +28,8 @@ class SMACOptimizer(PhotonMasterOptimizer):
     combination with an aggressive racing mechanism to efficiently
     decide which of two configurations performs better.
 
-    SMAC usage and implementation details [here](https://automl.github.io/SMAC3/master/quickstart.html).
+    SMAC usage and implementation details [here](
+    https://automl.github.io/SMAC3/master/quickstart.html).
 
     References:
 

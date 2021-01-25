@@ -24,7 +24,7 @@ class PhotonNative:
 
 class PipelineElement(BaseEstimator):
     """
-    Photon wrapper class for any transformer or predictor element in the pipeline.
+    PHOTONAI wrapper class for any transformer or predictor element in the pipeline.
 
     So called PHOTONAI PipelineElements can be added to the Hyperpipe,
     each of them being a data-processing method or a learning algorithm.
@@ -46,7 +46,8 @@ class PipelineElement(BaseEstimator):
     def __init__(self, name: str, hyperparameters: dict = None, test_disabled: bool = False,
                  disabled: bool = False, base_element=None, batch_size: int = 0, **kwargs) -> None:
         """
-        Takes a string literal and transforms it into an object of the associated class (see PhotonCore.JSON)
+        Takes a string literal and transforms it into an object
+        of the associated class (see PhotonCore.JSON).
 
         Parameters:
             name:
@@ -66,6 +67,7 @@ class PipelineElement(BaseEstimator):
                 does nothing except return the data it received.
 
             batch_size:
+                Size of the division on which is calculated separately.
 
             kwargs:
                 Any parameters that should be passed to the object
@@ -298,17 +300,24 @@ class PipelineElement(BaseEstimator):
 
         Parameters:
             name:
-
-            base_element:
+                A string literal encoding the class to be instantiated.
 
             hyperparameters:
+                Which values/value range should be tested for the
+                hyperparameter.
+                In form of Dict: parameter_name -> HyperparameterElement.
 
             test_disabled:
+                If the hyperparameter search should evaluate a
+                complete disabling of the element.
 
             disabled:
+                If true, the element is currently disabled and
+                does nothing except return the data it received.
 
             kwargs:
-
+                Any parameters that should be passed to the object
+                to be instantiated, default parameters.
 
         Example:
             ```
@@ -325,6 +334,7 @@ class PipelineElement(BaseEstimator):
 
             trans = PipelineElement.create('MyTransformer', base_element=RD(), hyperparameters={})
             ```
+
         """
         if isinstance(base_element, type):
             raise ValueError("Base element should be an instance but is a class.")
@@ -388,7 +398,7 @@ class PipelineElement(BaseEstimator):
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
+                The array-like training and test data with shape=[N, D],
                 where N is the number of samples and D is the number of features.
 
             y:
@@ -456,14 +466,14 @@ class PipelineElement(BaseEstimator):
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
+                The array-like training and test data with shape=[N, D],
                 where N is the number of samples and D is the number of features.
 
             kwargs:
                 Keyword arguments, passed to base_element.predict.
 
         Returns:
-            Predictions.
+            Predictions values.
 
         """
         if self.batch_size == 0:
@@ -512,13 +522,13 @@ class PipelineElement(BaseEstimator):
         """
         Calls transform on the base element.
 
-        IN CASE THERE IS NO TRANSFORM METHOD, CALLS PREDICT.
+        In case there is no transform method, calls predict.
         This is used if we are using an estimator as a preprocessing step.
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like data with shape=[N, D], where N is the
+                number of samples and D is the number of features.
 
             y:
                 The truth array-like values with shape=[N], where N is
@@ -545,13 +555,11 @@ class PipelineElement(BaseEstimator):
 
         For dimension preserving transformers without inverse,
         the value is returned untreated.
-        NotImplemtedError is thrown when there is a
-        dimensional reduction but no inverse is defined.
 
         Parameters:
                 X:
-                    The array-liketraining with shape=[N, D] and test data,
-                    where N is the number of samples and D is the number of features.
+                    The array-like data with shape=[N, D], where N
+                    is the number of samples and D is the number of features.
 
                 y:
                     The truth array-like values with shape=[N], where N is
@@ -559,6 +567,10 @@ class PipelineElement(BaseEstimator):
 
                 kwargs:
                     Keyword arguments, passed to base_element.transform.
+
+        Raises:
+            NotImplementedError:
+                Thrown when there is a dimensional reduction but no inverse is defined.
 
         Returns:
             (X, y, kwargs) in back-transformed version.
@@ -707,17 +719,17 @@ class Branch(PipelineElement):
          ```
 
      """
-    def __init__(self, name, elements: List[PipelineElement] = None):
+    def __init__(self, name: str, elements: List[PipelineElement] = None):
         """
-        Parameters
-        ----------
-        name:
-            Name of the encapsulated item and/or
-            summary of the encapsulated element`s functions.
+        Initialize the object.
 
-        elements:
-            List of elements added  one after another to the Branch.
+        Parameters:
+            name:
+                Name of the encapsulated item and/or
+                summary of the encapsulated element`s functions.
 
+            elements:
+                List of elements added  one after another to the Branch.
 
         """
         super().__init__(name, {}, test_disabled=False, disabled=False, base_element=True)
@@ -738,14 +750,14 @@ class Branch(PipelineElement):
             for element in elements:
                 self.add(element)
 
-    def fit(self, X, y=None, **kwargs):
+    def fit(self, X: np.ndarray, y: np.ndarray = None, **kwargs):
         """
         Calls the fit function on all underlying base elements.
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like input with shape=[N, D], where N is
+                the number of samples and D is the number of features.
 
             y:
                 The truth array-like values with shape=[N],
@@ -761,15 +773,15 @@ class Branch(PipelineElement):
         self.base_element = Branch.sanity_check_pipeline(self.base_element)
         return super().fit(X, y, **kwargs)
 
-    def transform(self, X, y=None, **kwargs) -> np.ndarray:
+    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> np.ndarray:
         """
         Calls the transform function on all underlying base elements.
         If _estimator_type is in ['classifier', 'regressor'], predict is called instead.
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like data with shape=[N, D], where N is the
+                number of samples and D is the number of features.
 
             y:
                 The truth array-like values with shape=[N],
@@ -792,8 +804,8 @@ class Branch(PipelineElement):
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like data with shape=[N, D], where N is the
+                number of samples and D is the number of features.
 
             y:
                 The truth array-like values with shape=[N],
@@ -821,7 +833,7 @@ class Branch(PipelineElement):
         self._prepare_pipeline()
         return self
 
-    def add(self, pipe_element):
+    def add(self, pipe_element: PipelineElement):
         """
         Add an element to the sub pipeline.
 
@@ -881,7 +893,8 @@ class Branch(PipelineElement):
     @hyperparameters.setter
     def hyperparameters(self, value):
         """
-        Setting hyperparameters does not make sense, only the items that added can be optimized, not the container (self)
+        Setting hyperparameters does not make sense, only the items that
+        added can be optimized, not the container (self).
         """
         return
 
@@ -898,7 +911,8 @@ class Branch(PipelineElement):
 
     def generate_sklearn_hyperparameters(self):
         """
-        Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
+        Generates a dictionary according to the sklearn convention of
+        element_name__parameter_name: parameter_value
         """
         self._hyperparameters = {}
         for element in self.elements:
@@ -918,7 +932,7 @@ class Preprocessing(Branch):
     """
     Special kind of Branch.
 
-    If a preprocessing pipe is added to a PHOTONAI Hyperpipe,
+    If a Preprocessing pipe is added to a PHOTONAI Hyperpipe,
     all transformers are applied to the data ONCE
     BEFORE cross validation starts in order to prepare the data.
     Every added element should be a transformer PipelineElement.
@@ -936,7 +950,7 @@ class Preprocessing(Branch):
 
     def __iadd__(self, pipe_element: PipelineElement):
         """
-        Add an element to the sub pipeline
+        Add an element to the sub pipeline.
 
         Parameters:
             pipe_element:
@@ -1068,7 +1082,8 @@ class Stack(PipelineElement):
     @hyperparameters.setter
     def hyperparameters(self, value):
         """
-        Setting hyperparameters does not make sense, only the items that added can be optimized, not the container (self)
+        Setting hyperparameters does not make sense, only the items that added
+        can be optimized, not the container (self).
         """
         pass
 
@@ -1083,9 +1098,7 @@ class Stack(PipelineElement):
         return all_params
 
     def set_params(self, **kwargs):
-        """
-        Find the particular child and distribute the params to it
-        """
+        """Find the particular child and distribute the params to it"""
         spread_params_dict = {}
         for k, val in kwargs.items():
             splitted_k = k.split('__')
@@ -1112,8 +1125,8 @@ class Stack(PipelineElement):
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like data with shape=[N, D], where N is the
+                number of samples and D is the number of features.
 
             y:
                 The truth array-like values with shape=[N],
@@ -1124,6 +1137,7 @@ class Stack(PipelineElement):
 
         Returns:
             Fitted self.
+
         """
         for element in self.elements:
             # Todo: parallellize fitting
@@ -1136,8 +1150,8 @@ class Stack(PipelineElement):
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like data with shape=[N, D], where N is the
+                number of samples and D is the number of features.
 
             y:
                 The truth array-like values with shape=[N],
@@ -1147,7 +1161,7 @@ class Stack(PipelineElement):
                 Keyword arguments, passed to base_elements predict.
 
         Returns:
-            Prediction.
+            Prediction values.
 
         """
         if not self.use_probabilities:
@@ -1156,9 +1170,7 @@ class Stack(PipelineElement):
             return self.predict_proba(X, **kwargs)
 
     def _predict(self, X: np.ndarray, **kwargs):
-        """
-        Iteratively calls predict on every child.
-        """
+        """Iteratively calls predict on every child."""
         # Todo: strategy for concatenating data from different pipes
         # todo: parallelize prediction
         predicted_data = np.array([])
@@ -1173,8 +1185,8 @@ class Stack(PipelineElement):
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like data with shape=[N, D], where N is the number
+                of samples and D is the number of features.
 
             y:
                 The truth array-like values with shape=[N],
@@ -1251,12 +1263,12 @@ class Stack(PipelineElement):
 
 class Switch(PipelineElement):
     """
-    This class encapsulates several pipeline elements that
+    This class encapsulates several PipelineElements that
     belong at the same step of the pipeline, competing for
     being the best choice.
 
-    If for example you want to find out if preprocessing A
-    or preprocessing B is better at this position in the pipe.
+    If for example you want to find out if Preprocessing A
+    or Preprocessing B is better at this position in the pipe.
     Or you want to test if a tree outperforms the good old SVM.
 
     ATTENTION: This class is a construct that may be convenient
@@ -1300,7 +1312,7 @@ class Switch(PipelineElement):
 
     def __init__(self, name: str, elements: List[PipelineElement] = None):
         """
-        Creates a new Switch object and generated the hyperparameter combination grid
+        Creates a new Switch object and generated the hyperparameter combination grid.
 
         Parameters:
             name:
@@ -1479,16 +1491,16 @@ class Switch(PipelineElement):
         ps._current_element = self._current_element
         return ps
 
-    def prettify_config_output(self, config_name, config_value, return_dict=False):
+    def prettify_config_output(self, config_name, config_value, return_dict=False) -> str:
         """
         Makes the sklearn configuration dictionary human readable
 
-        Returns
-        -------
-        * `prettified_configuration_string` [str]:
-            configuration as prettified string or configuration as dict with prettified keys
-        """
+        Returns:
+            prettified_configuration_string:
+                Configuration as prettified string or configuration as
+                dict with prettified keys.
 
+        """
         if isinstance(config_value, tuple):
             output = self.pipeline_element_configurations[config_value[0]][config_value[1]]
             if not output:
@@ -1505,20 +1517,20 @@ class Switch(PipelineElement):
 
     def predict_proba(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
-        Predict probabilities
-        base element needs predict_proba() function, otherwise throw
-        base exception.
+        Predict probabilities. Base element needs predict_proba()
+        function, otherwise return None.
 
         Parameters:
             X:
-                The array-liketraining with shape=[N, D] and test data,
-                where N is the number of samples and D is the number of features.
+                The array-like data with shape=[N, D], where N is the number
+                of samples and D is the number of features.
 
             kwargs:
                 Keyword arguments, not in use yet.
 
         Returns:
             Probabilities.
+
         """
         if not self.disabled:
             if hasattr(self.base_element.base_element, 'predict_proba'):
@@ -1531,6 +1543,28 @@ class Switch(PipelineElement):
         pass
 
     def inverse_transform(self, X, y=None, **kwargs):
+        """
+        Calls inverse_transform on the base element.
+
+        For dimension preserving transformers without inverse,
+        the value is returned untreated.
+
+        Parameters:
+            X:
+                The array-like data with shape=[N, D], where N
+                is the number of samples and D is the number of features.
+
+            y:
+                The truth array-like values with shape=[N], where N is
+                the number of samples.
+
+            kwargs:
+                Keyword arguments, passed to base_element.transform.
+
+            Returns:
+                (X, y, kwargs) in back-transformed version if possible.
+
+            """
         if hasattr(self.base_element, 'inverse_transform'):
             # todo: check this
             X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
@@ -1629,14 +1663,20 @@ class ParallelBranch(Branch):
     A substream of elements, that do not need fit() but can instantly use transform on a single subject level,
     and therefore can be computed in parallel.
 
-    Parameters
-    ----------
-    * `name` [str]:
-        Name of the parallelizable pipeline branch
-
     """
 
-    def __init__(self, name, nr_of_processes=1, output_img: bool = False):
+    def __init__(self, name: str, nr_of_processes: int = 1):
+        """
+        Initialize the object.
+
+        Parameters:
+            name:
+                Name of the parallelizable pipeline branch.
+
+            nr_of_processes:
+                Number of process run in parallel.
+
+        """
         Branch.__init__(self, name)
 
         self._nr_of_processes = 1
@@ -1678,17 +1718,15 @@ class ParallelBranch(Branch):
         else:
             self.local_cluster = None
 
-    def __iadd__(self, pipe_element):
+    def __iadd__(self, pipe_element: PipelineElement):
         """
-        Add an element to the neuro branch. Only neuro pipeline elements are allowed.
-        Returns self
+        Add an element to the neuro branch.
 
-        Parameters
-        ----------
-        * `pipe_element` [PipelineElement]:
-            The transformer object to add. Should be registered in the Neuro module.
+        Parameters:
+            pipe_element:
+                The transformer object to add.
+
         """
-
         self.elements.append(pipe_element)
         self._prepare_pipeline()
 
@@ -1745,10 +1783,13 @@ class ParallelBranch(Branch):
         pipe_copy.transform(data)
         return
 
-    def apply_transform_parallelized(self, X):
+    def apply_transform_parallelized(self, X: np.ndarray):
         """
+        Apply transformation in parallel.
 
-        :param X: the data to which the delegate should be applied in parallel
+        Parameters:
+            X:
+                The data to which the delegate should be applied in parallel.
         """
 
         if self.nr_of_processes > 1:

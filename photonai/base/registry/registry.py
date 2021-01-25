@@ -14,33 +14,36 @@ from photonai.photonlogger.logger import logger
 
 class PhotonRegistry:
     """
-    Helper class to manage the PHOTON Element Register.
+    Helper class to manage the PHOTONAI Element Register.
 
     Use it to add and remove items into the register.
     You can also retrieve information about items and its hyperparameters.
 
-    Every item in the register is encoded by a string literal that points to a python class and its namespace.
+    Every item in the register is encoded by a string literal
+    that points to a python class and its namespace.
     You can access the python class via the string literal.
     The class PhotonElement imports and instantiates the class for you.
 
-    There is a distinct json file with the elements registered for each photon package (core, neuro, genetics, ..)
-    There is also a json file for the user's custom elements.
+    Example:
+        ```
+        import os
+        from photonai.base import PhotonRegistry
 
-    Example
-    -------
-        from photonai.configuration.Register import PhotonRegister
+        # REGISTER ELEMENT saved in folder custom_elements_folder
+        base_folder = os.path.dirname(os.path.abspath(__file__))
+        custom_elements_folder = os.path.join(base_folder, 'custom_elements')
 
-        # get info about object, name, namespace and possible hyperparameters
-        PhotonRegister.info("SVC")
+        registry = PhotonRegistry(custom_elements_folder=custom_elements_folder)
+        registry.register(photon_name='MyCustomEstimator',
+                          class_str='custom_estimator.CustomEstimator',
+                          element_type='Estimator')
 
-        # show all items that are registered
-        PhotonRegister.list()
+        registry.activate()
+        registry.info('MyCustomEstimator')
 
-        # register new object
-        PhotonRegister.save("ABC1", "namespace.filename.ABC1", "Transformer")
-
-        # delete it again.
-        PhotonRegister.delete("ABC1")
+        # get informations of other available elements
+        registry.info('SVC')
+        ```
 
     """
 
@@ -50,7 +53,14 @@ class PhotonRegistry:
     CUSTOM_ELEMENTS = None
 
     def __init__(self, custom_elements_folder: str = None):
+        """
+        Initialize the object.
 
+        Parameters:
+            custom_elements_folder:
+                Path to folder with custom element in it.
+
+        """
         self.current_folder = os.path.dirname(os.path.abspath(inspect.getfile(inspect.currentframe())))
         self.module_path = os.path.join(self.current_folder, "modules")
         if not os.path.isdir(self.module_path):
@@ -82,22 +92,20 @@ class PhotonRegistry:
         os.remove(os.path.join(self.module_path, module_name + ".json"))
         PhotonRegistry.ELEMENT_DICTIONARY = self.get_package_info()
 
-    def _load_json(self, photon_package: str):
+    def _load_json(self, photon_package: str) -> dict:
         """
         Load JSON file in which the elements for the PHOTON submodule are stored.
 
         The JSON files are stored in the framework folder by the name convention 'photon_package.json'
 
         Parameters:
-        -----------
-        * 'photon_package' [str]:
+        photon_package:
           The name of the photonai submodule
 
         Returns:
-        --------
-        JSON file as dict, file path as str
-        """
+            JSON file as dict, file path as str.
 
+        """
         if photon_package == 'CustomElements':
             folder = PhotonRegistry.CUSTOM_ELEMENTS_FOLDER
             if not folder:
@@ -129,16 +137,16 @@ class PhotonRegistry:
 
     def get_package_info(self, photon_package: list = PHOTON_REGISTRIES) -> dict:
         """
-        Collect all registered elements from JSON file
+        Collect all registered elements from JSON file.
 
         Parameters:
-        -----------
-        * 'photon_package' [list]:
-          The names of the PHOTONAI submodules for which the elements should be retrieved
+            photon_package:
+                The names of the PHOTONAI submodules for which
+                the elements should be retrieved.
 
-        Returns
-        -------
-        Dict of registered elements
+        Returns:
+            Dict of registered elements
+
         """
         class_info = dict()
         for package in photon_package:
@@ -206,20 +214,19 @@ class PhotonRegistry:
 
     def register(self, photon_name: str, class_str: str, element_type: str):
         """
-        Save element information to the JSON file
+        Save element information to the JSON file.
 
         Parameters:
-        -----------
-        * 'photon_name' [str]:
-          The string literal with which you want to access the class
-        * 'class_str' [str]:
-          The namespace of the class, like in the import statement
-        * 'element_type' [str]:
-          Can be 'Estimator' or 'Transformer'
-        * 'custom_folder' [str]:
-          All registrations are saved to this folder
-        """
+            photon_name:
+                The string literal with which you want to access the class.
 
+            class_str:
+                The namespace of the class, like in the import statement.
+
+            element_type:
+                Can be 'Estimator' or 'Transformer'
+
+        """
         # check if folder exists
         if not PhotonRegistry.CUSTOM_ELEMENTS_FOLDER:
             raise ValueError("To register an element, specify a custom elements folder when instantiating the registry "
@@ -348,14 +355,14 @@ class PhotonRegistry:
 
         logger.info('All tests on custom element passed.')
 
-    def info(self, photon_name):
+    def info(self, photon_name: str):
         """
         Show information for object that is encoded by this name.
 
         Parameters:
-        -----------
-        * 'photon_name' [str]:
-          The string literal which accesses the class
+            photon_name:
+                The string literal which accesses the class.
+
         """
         content = self.get_package_info()  # load existing json
 
@@ -382,16 +389,15 @@ class PhotonRegistry:
         else:
             logger.error("Could not find element " + photon_name)
 
-    def delete(self, photon_name):
+    def delete(self, photon_name: str):
         """
-        Delete Element from JSON file
+        Delete Element from JSON file.
 
         Parameters:
-        -----------
-        * 'photon_name' [str]:
-          The string literal encoding the class
-        """
+            photon_name:
+                The string literal encoding the class.
 
+        """
         if photon_name in PhotonRegistry.CUSTOM_ELEMENTS:
             del PhotonRegistry.CUSTOM_ELEMENTS[photon_name]
 
@@ -401,24 +407,28 @@ class PhotonRegistry:
             logger.info('Cannot remove "{0}" from CustomElements.json. Element has not been registered before.'.format(photon_name))
 
     @staticmethod
-    def _check_duplicate(photon_name, class_str, content):
+    def _check_duplicate(photon_name, class_str: str, content: str) -> bool:
         """
-        Helper function to check if the entry is either registered by a different name or if the name is already given
-        to another class
+        Helper function to check if the entry is either registered by
+        a different name or if the name is already given to another class.
 
          Parameters:
         -----------
-        * 'content':
-          The content of the CustomElements.json
-        * 'class_str' [str]:
-          The namespace.Classname, where the class lives, from where it should be imported.
-        * 'photon_name':
-          The name of the element with which it is called within PHOTON
-        Returns:
-        --------
-        Bool, False if there is no key with this name and the class is not already registered with another key
-        """
+            content:
+                The content of the CustomElements.json.
 
+            class_str:
+                The namespace.Classname, where the class lives,
+                from where it should be imported.
+
+            photon_name:
+                The name of the element with which it is called within PHOTONAI.
+
+        Returns:
+             False if there is no key with this name and the class
+             is not already registered with another key.
+
+        """
         # check for duplicate name (dict key)
         if photon_name in content:
             logger.info('A PipelineElement named ' + photon_name + ' has already been registered.')
@@ -435,24 +445,24 @@ class PhotonRegistry:
         Write json content to file
 
         Parameters:
-        -----------
-        * 'content2write' [dict]:
-          The new information to attach to the file
-        * 'photon_package' [str]:
-          The PHOTON submodule name to which the new class belongs, so it is written to the correct json file
+        content2write:
+            The new information to attach to the file.
+
         """
         # Writing JSON data
         with open(os.path.join(self.CUSTOM_ELEMENTS_FOLDER, "CustomElements.json"), 'w') as f:
             json.dump(content_to_write, f)
 
-    def list_available_elements(self, photon_package=PHOTON_REGISTRIES):
+    def list_available_elements(self, photon_package: list = PHOTON_REGISTRIES):
         """
-        Print info about all items that are registered for the PHOTON submodule to the console.
+        Print info about all items that are registered for the PHOTONAI
+        submodule to the console.
 
         Parameters:
-        -----------
-        * 'photon_package' [list]:
-          The names of the PHOTON submodules for which the elements should be retrieved
+            photon_package:
+                The names of the PHOTON submodules for which
+                the elements should be retrieved.
+
         """
         if isinstance(photon_package, str):
             photon_package = [photon_package]

@@ -674,7 +674,7 @@ class Hyperpipe(BaseEstimator):
         Add an element to the machine learning pipeline
         Returns self
 
-        Parameters
+        Parameters:
             pipe_element:
                 The object to add to the machine learning pipeline,
                 being either a transformer or an estimator.
@@ -697,7 +697,7 @@ class Hyperpipe(BaseEstimator):
         Add an element to the machine learning pipeline
         Returns self
 
-        Parameters
+        Parameters:
             pipe_element:
                 The object to add to the machine learning pipeline,
                 being either a transformer or an estimator.
@@ -1073,7 +1073,7 @@ class Hyperpipe(BaseEstimator):
 
         Parameters:
             data:
-                The array-liketraining with shape=[N, D] and test data,
+                The array-like training and test data with shape=[N, D],
                 where N is the number of samples and D is the number of features.
 
             targets:
@@ -1084,11 +1084,10 @@ class Hyperpipe(BaseEstimator):
                 Keyword arguments, passed to Outer_Fold_Manager.fit.
 
 
-        Returns
+        Returns:
             Fitted Hyperpipe.
 
         """
-
         # switch to result output folder
         start = datetime.datetime.now()
         self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
@@ -1231,7 +1230,7 @@ class Hyperpipe(BaseEstimator):
         if self._pipe:
             return self.optimum_pipe.predict_proba(data, **kwargs)
 
-    def transform(self, data, **kwargs) -> np.ndarray:
+    def transform(self, data: np.ndarray, **kwargs) -> np.ndarray:
         """
         Use the optimum pipe to transform the data.
 
@@ -1292,6 +1291,7 @@ class Hyperpipe(BaseEstimator):
         """
         Load optimum pipe from file.
         As staticmethod, instantiation is thus not required.
+        Called backend: PhotonModelPersistor.load_optimum_pipe.
 
         Parameters:
             file:
@@ -1549,16 +1549,19 @@ class PhotonModelPersistor:
             pickle.dump(element_identifier, f)
 
     @staticmethod
-    def save_optimum_pipe(optimum_pipe, zip_file, password=None):
+    def save_optimum_pipe(optimum_pipe, zip_file: str, password: str = None):
         """
         Save optimal pipeline only. Complete hyperpipe will no not be saved.
 
-        Parameters
-        ----------
-        * 'file' [str]:
-            File path as string specifying file to save pipeline to
-        * 'password' [str]:
-            Password used to encrypt the pipeline file
+        Parameters:
+            optimum_pipe:
+                The optimum pipe to save.
+
+            zip_file:
+                File path as string specifying file to save pipeline to.
+
+            password:
+                Password used to encrypt the pipeline file.
 
         """
         folder = os.path.splitext(zip_file)[0]
@@ -1646,17 +1649,21 @@ class PhotonModelPersistor:
     @staticmethod
     def load_optimum_pipe(file, password=None):
         """
-        Load optimal pipeline.
+        Load optimum pipe from file.
+        As staticmethod, instantiation is thus not required.
+        Called backend: PhotonModelPersistor.load_optimum_pipe.
 
+        Parameters:
+            file:
+                File path specifying .photon file to load
+                trained pipeline from zipped file.
 
-        Parameters
-        ----------
-        * `file` [str]:
-            File path specifying .photon file to load optimal pipeline from
+            password:
+                Passcode for read file.
 
-        Returns
-        -------
-        sklearn Pipeline with all trained photon_pipelines
+        Returns:
+            Returns pipeline with all trained PipelineElements.
+
         """
         if file.endswith('.photon'):
             folder = os.path.dirname(file)
