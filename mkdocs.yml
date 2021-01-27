@@ -40,8 +40,9 @@ theme:
   features:
     - navigation.tabs
 
-markdown_extension:
+markdown_extensions:
   - pymdownx.highlight
+  - pymdownx.superfences
 
 plugins:
   - search
