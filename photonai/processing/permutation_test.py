@@ -325,11 +325,11 @@ class PermutationTest:
             if mother_permutation.dummy_estimator:
                 best_config_metric = mother_permutation.hyperpipe_info.best_config_metric
                 dummy_threshold_to_beat = [i.value for i in mother_permutation.dummy_estimator.test
-                                           if i.metric_name == best_config_metric and i.operation == str(FoldOperations.MEAN)]
+                                           if i.metric_name == best_config_metric and i.operation == "mean"]
                 if len(dummy_threshold_to_beat) > 0:
                     dummy_threshold_to_beat = dummy_threshold_to_beat[0]
                     mother_perm_threshold = [i.value for i in mother_permutation.metrics_test
-                                             if i.metric_name == best_config_metric and i.operation == str(FoldOperations.MEAN)]
+                                             if i.metric_name == best_config_metric and i.operation == "mean"]
                     mother_perm_threshold = mother_perm_threshold[0]
                     if mother_permutation.hyperpipe_info.maximize_best_config_metric:
 

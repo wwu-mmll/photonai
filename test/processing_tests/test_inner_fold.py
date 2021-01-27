@@ -14,7 +14,6 @@ from photonai.optimization import MinimumPerformanceConstraint, FloatRange
 from photonai.optimization.optimization_info import Optimization
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.results_structure import FoldOperations
 from photonai.helper.photon_base_test import PhotonBaseTest
 
 
@@ -177,23 +176,23 @@ class InnerFoldTests(PhotonBaseTest):
         self.assertTrue(len(across_and_per_folds_config_item.metrics_train) == 2 * num_of_metrics + num_of_metrics)
         self.assertTrue(len(across_and_per_folds_config_item.metrics_test) == 2 * num_of_metrics + num_of_metrics)
 
-        assert_fold_operations([FoldOperations.RAW, FoldOperations.MEAN, FoldOperations.STD],
+        assert_fold_operations(["raw", "mean", "std"],
                                across_and_per_folds_config_item.metrics_train)
-        assert_fold_operations([FoldOperations.RAW, FoldOperations.MEAN, FoldOperations.STD],
+        assert_fold_operations(["raw", "mean", "std"],
                                across_and_per_folds_config_item.metrics_test)
 
         # if we have across folds only, then it should be 3, one for each metrics
         self.assertTrue(len(across_folds_config_item.metrics_train) == num_of_metrics)
         self.assertTrue(len(across_folds_config_item.metrics_test) == num_of_metrics)
 
-        assert_fold_operations([FoldOperations.RAW], across_folds_config_item.metrics_train)
-        assert_fold_operations([FoldOperations.RAW], across_folds_config_item.metrics_test)
+        assert_fold_operations(["raw"], across_folds_config_item.metrics_train)
+        assert_fold_operations(["raw"], across_folds_config_item.metrics_test)
 
         # if we have per fold only, then it should be 6, one for mean and std for each of the three metrics
         self.assertTrue(len(per_fold_config_item.metrics_train) == 2 * num_of_metrics)
         self.assertTrue(len(per_fold_config_item.metrics_test) == 2 * num_of_metrics)
-        assert_fold_operations([FoldOperations.MEAN, FoldOperations.STD], per_fold_config_item.metrics_train)
-        assert_fold_operations([FoldOperations.MEAN, FoldOperations.STD], per_fold_config_item.metrics_test)
+        assert_fold_operations(["mean", "std"], per_fold_config_item.metrics_train)
+        assert_fold_operations(["mean", "std"], per_fold_config_item.metrics_test)
 
     def test_extract_feature_importances(self):
         # one machine with coef_

@@ -10,8 +10,7 @@ from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper, print_do
 from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
-from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
-    FoldOperations, MDBConfig
+from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
@@ -304,7 +303,7 @@ class InnerFoldManager(object):
                 def metric_to_db_class(metric_list):
                     db_metrics = []
                     for metric_name, metric_value in metric_list.items():
-                        new_metric = MDBFoldMetric(operation=FoldOperations.RAW, metric_name=metric_name,
+                        new_metric = MDBFoldMetric(operation="raw", metric_name=metric_name,
                                                    value=metric_value)
                         db_metrics.append(new_metric)
                     return db_metrics

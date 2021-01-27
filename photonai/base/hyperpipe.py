@@ -562,7 +562,7 @@ class Hyperpipe(BaseEstimator):
                 self.results.wizard_system_name = self.output_settings.wizard_project_name
                 self.results.user_id = self.output_settings.user_id
         self.results.outer_folds = []
-        self.results.hyperpipe_info.pipeline_elements = self.__get_pipeline_structure(self.elements)
+        self.results.hyperpipe_info.elements = self.__get_pipeline_structure(self.elements)
         self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
@@ -594,14 +594,6 @@ class Hyperpipe(BaseEstimator):
             msg = "JsonTransformer was unable to create the .json file."
             logger.warning(msg)
             warnings.warn(msg)
-
-        # add flowchart to results
-        try:
-            flowchart = FlowchartCreator(self.elements)
-            self.results.hyperpipe_info.flowchart = flowchart.create_str()
-        except:
-            self.results.hyperpipe_info.flowchart = ""
-        # self.results_handler.save()
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
@@ -900,9 +892,9 @@ class Hyperpipe(BaseEstimator):
         start = datetime.datetime.now()
         self.output_settings._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
 
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.photon_system_log('=' * 101)
         logger.photon_system_log('PHOTONAI ANALYSIS: ' + self.name)
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.photon_system_log('=' * 101)
         logger.info("Preparing data and PHOTONAI objects for analysis...")
 
         # loop over outer cross validation
@@ -1146,155 +1138,6 @@ class Hyperpipe(BaseEstimator):
         copied_pipe.set_params(**hyperparameters)
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)
-
-
-class FlowchartCreator(object):
-
-    def __init__(self, pipeline_elements):
-        self.pipeline_elements = pipeline_elements
-        self.chart_str = ""
-
-    def create_str(self):
-        header_layout = ""
-        header_relate = ""
-        old_element = ""
-        for pipeline_element in self.pipeline_elements:
-            header_layout = header_layout + "[" + pipeline_element.name + "]"
-            if old_element:
-                header_relate = header_relate + "[" + old_element + "]" + "->" + "[" + pipeline_element.name + "]\n"
-            old_element = pipeline_element.name
-
-        self.chart_str = "Layout:\n" + header_layout + "\nRelate:\n" + header_relate + "\n"
-
-        for pipeline_element in self.pipeline_elements:
-            self.chart_str = self.chart_str + self.recursive_element(pipeline_element, "")
-
-        return self.chart_str
-
-    @staticmethod
-    def format_cross_validation(cv):
-        if cv:
-            string = "{}(".format(cv.__class__.__name__)
-            for key, val in cv.__dict__.items():
-                string += "{}={}, ".format(key, val)
-            return string[:-2] + ")"
-        else:
-            return "None"
-
-    @staticmethod
-    def format_optimizer(optimizer):
-        return optimizer.optimizer_input_str, optimizer.optimizer_params, optimizer.metrics, optimizer.best_config_metric
-
-    def format_kwargs(self, kwargs):
-        pass
-
-    @staticmethod
-    def format_hyperparameter(hyperparameter):
-        if isinstance(hyperparameter, IntegerRange):
-            return """IntegerRange(start: {},
-                                   stop: {}, 
-                                   step: {}, 
-                                   range_type: {})""".format(hyperparameter.start, hyperparameter.stop,
-                                                                           hyperparameter.step, hyperparameter.range_type)
-        elif isinstance(hyperparameter, FloatRange):
-            return """FloatRange(start: {},
-                                   stop: {}, 
-                                   step: {}, 
-                                   range_type: {})""".format(hyperparameter.start,
-                                                               hyperparameter.stop,
-                                                               hyperparameter.step,
-                                                               hyperparameter.range_type)
-        elif isinstance(hyperparameter, Categorical):
-            return str(hyperparameter.values)
-        else:
-            return str(hyperparameter)
-
-    def recursive_element(self, pipe_element, parent):
-
-        # PHOTON pipeline
-        string = ""
-
-        # Pipeline Stack
-        if isinstance(pipe_element, Stack):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
-            else:
-                string = "["+parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
-
-            # Layout
-            for pelement in list(pipe_element.elements):
-                string = string + "[" + pelement.name + "]|\n"
-            string = string +"\n"
-            for pelement in list(pipe_element.elements):
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
-
-        # Pipeline Switch
-        elif isinstance(pipe_element, Switch):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
-            else:
-                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
-
-            # Layout
-            for pelement in pipe_element.elements:
-                string = string + "[" + pelement.name + "]\n"
-            string = string + "\n"
-
-            # relate
-            string = string + "\n" + "Relate:\n"
-            old_element = ""
-            for pelement in pipe_element.elements:
-                if old_element:
-                    string = string + "[" + old_element + "]" + "<:-:>" + "[" + pelement.name + ']\n'
-                old_element = pelement.name
-                string = string + "\n"
-
-            for pelement in pipe_element.elements:
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
-
-        # Pipeline Branch
-        elif isinstance(pipe_element, Branch):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
-            else:
-                string = "[" + parent[1:]+"."+pipe_element.name + "]:\n" + "Layout:\n"
-
-            # Layout
-            for pelement in pipe_element.elements:
-                string = string + "[" + pelement.name + "]"
-            string = string + "\n" + "Relate:\n"
-            # Relate
-            old_element = ""
-            for pelement in pipe_element.elements:
-                if old_element:
-                    string = string + "[" + old_element + "]" + "->" + "[" + pelement.name + ']\n'
-                old_element = pelement.name
-                string = string + "\n"
-
-            for pelement in pipe_element.elements:
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
-        elif isinstance(pipe_element, PipelineElement):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Define:\n"
-            else:
-                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Define:\n"
-            hyperparameters = None
-            kwargs = None
-            if hasattr(pipe_element, "hyperparameters"):
-                hyperparameters = pipe_element.hyperparameters
-                for name, parameter in pipe_element.hyperparameters.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
-            if hasattr(pipe_element, "kwargs"):
-                kwargs = pipe_element.kwargs
-                for name, parameter in pipe_element.kwargs.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
-            if not kwargs and not hyperparameters:
-                string += "default\n"
-
-        return string
 
 
 class PhotonModelPersistor:

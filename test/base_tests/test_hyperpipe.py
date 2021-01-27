@@ -20,7 +20,7 @@ from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocess
 from photonai.optimization import IntegerRange, Categorical
 from photonai.optimization.optimization_info import Optimization
 from photonai.processing.results_handler import ResultsHandler
-from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, FoldOperations, \
+from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, \
     MDBInnerFold, MDBOuterFold, MDBScoreInformation, MDBDummyResults, MDBHyperpipe
 from photonai.helper.dummy_elements import DummyTransformer, DummyYAndCovariatesTransformer
 from photonai.helper.photon_base_test import elements_to_dict, PhotonBaseTest
@@ -493,7 +493,7 @@ class HyperpipeTests(PhotonBaseTest):
                                                     }},
                                     'LinearSVC': str(type(lsvc.base_element))
                                     }
-        self.assertDictEqual(self.hyperpipe.results.hyperpipe_info.pipeline_elements, expected_pipeline_struct)
+        self.assertDictEqual(self.hyperpipe.results.hyperpipe_info.elements, expected_pipeline_struct)
 
     def test_finalize_optimization(self):
         # it is kind of difficult to test that's why we fake it
@@ -630,10 +630,10 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
         my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
         list_of_tested_configs = list()
         metric_default = MDBFoldMetric(metric_name='balanced_accuracy',
-                                       operation=FoldOperations.MEAN,
+                                       operation="mean",
                                        value=0.5)
         metric_best = MDBFoldMetric(metric_name='balanced_accuracy',
-                                    operation=FoldOperations.MEAN,
+                                    operation="mean",
                                     value=0.99)
         # we add looser configs, one good config, and one good config that failed
         # and check if the good non-failing config is chosen
@@ -648,7 +648,9 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
                 config.config_failed = True
             list_of_tested_configs.append(config)
 
-        winner_config = my_pipe_optimizer.get_optimum_config(list_of_tested_configs)
+        outer_fold = MDBOuterFold()
+        outer_fold.tested_config_list = list_of_tested_configs
+        winner_config = my_pipe_optimizer.get_optimum_config(outer_fold)
         self.assertIs(winner_config, list_of_tested_configs[5])
         self.assertEqual(winner_config.metrics_test[0].value, 0.99)
 

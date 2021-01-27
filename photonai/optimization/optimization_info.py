@@ -1,11 +1,9 @@
 import numpy as np
-import json
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, NevergradOptimizer
 from photonai.optimization.switch_optimizer.meta_optimizer import MetaHPOptimizer
 from photonai.processing.metrics import Scorer
 from photonai.photonlogger.logger import logger
-from photonai.processing.results_structure import MDBHelper, FoldOperations
 
 
 class Optimization:
@@ -102,53 +100,6 @@ class Optimization:
         else:
             # Todo: check if object has the right interface
             return self.optimizer_input_str
-
-    def get_optimum_config(self, tested_configs, fold_operation=FoldOperations.MEAN):
-        """
-        Looks for the best configuration according to the metric with which the configurations are compared -> best config metric
-        :param tested_configs: the list of tested configurations and their performances
-        :return: MDBConfiguration that has performed best
-        """
-
-        list_of_config_vals = []
-        list_of_non_failed_configs = [conf for conf in tested_configs if not conf.config_failed]
-
-        if len(list_of_non_failed_configs) == 0:
-            raise Warning("No Configs found which did not fail.")
-        try:
-
-            if len(list_of_non_failed_configs) == 1:
-                best_config_outer_fold = list_of_non_failed_configs[0]
-            else:
-                for config in list_of_non_failed_configs:
-                    list_of_config_vals.append(
-                        MDBHelper.get_metric(config, fold_operation, self.best_config_metric, train=False))
-
-                if self.maximize_metric:
-                    # max metric
-                    best_config_metric_nr = np.argmax(list_of_config_vals)
-                else:
-                    # min metric
-                    best_config_metric_nr = np.argmin(list_of_config_vals)
-
-                best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
-
-            # inform user
-            logger.debug('Optimizer metric: ' + self.best_config_metric + '\n' +
-                         '   --> Maximize metric: ' + str(self.maximize_metric))
-
-            logger.info('Number of tested configurations: ' + str(len(tested_configs)))
-            logger.photon_system_log(
-                '---------------------------------------------------------------------------------------------------------------')
-            logger.photon_system_log('BEST_CONFIG ')
-            logger.photon_system_log(
-                '---------------------------------------------------------------------------------------------------------------')
-            logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
-                                                sort_keys=True))
-
-            return best_config_outer_fold
-        except BaseException as e:
-            logger.error(str(e))
 
     def get_optimum_config_outer_folds(self, outer_folds):
         list_of_scores = list()

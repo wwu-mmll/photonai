@@ -21,7 +21,7 @@ VERBOSE_LEVELV_NUM = 25
 CLEAN_LEVELV_NUM = 21
 INFO_LEVELV_NUM = 20
 DEBUG_LEVELV_NUM = 10
-
+LENGTH = 101
 
 # add custom log level
 def photon_system_log(self, message, *args, **kws):
@@ -30,11 +30,15 @@ def photon_system_log(self, message, *args, **kws):
 
 
 def star_log(self):
-    photon_system_log(self, '*'*70)
+    photon_system_log(self, '*' * LENGTH)
+
+
+def system_line(self):
+    photon_system_log(self, '-' * LENGTH)
 
 
 def underscore_log(self):
-    clean_info(self, '-' * 75)
+    clean_info(self, '-' * LENGTH)
 
 
 def clean_info(self, message, *args, **kws):
@@ -72,5 +76,6 @@ logging.addLevelName(DEBUG_LEVELV_NUM, "DEBUG")
 logging.Logger.debug = debug
 logging.Logger.stars = star_log
 logging.Logger.line = underscore_log
+logging.Logger.system_line = system_line
 
 

@@ -9,7 +9,7 @@ from photonai.optimization import DummyPerformanceConstraint, MinimumPerformance
 from photonai.optimization.optimization_info import Optimization
 from photonai.processing.outer_folds import OuterFoldManager
 from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.results_structure import MDBOuterFold, FoldOperations, MDBHelper
+from photonai.processing.results_structure import MDBOuterFold
 from photonai.helper.photon_base_test import PhotonBaseTest
 
 
@@ -67,33 +67,28 @@ class OuterFoldTests(PhotonBaseTest):
             # we know that the first of the two configs is better
             # the value in outer_manager.current_best_config should be the mean value of the best config
             # for train
-            self.assertEqual(str(MDBHelper.get_metric(outer_manager.result_object.best_config,
-                                                      fold_operation,
-                                                      self.optimization_info.best_config_metric)),
-                             str(MDBHelper.get_metric(outer_manager.current_best_config,
-                                                      fold_operation,
-                                                      self.optimization_info.best_config_metric)))
+            self.assertEqual(str(outer_manager.result_object.best_config.get_train_metric(self.optimization_info.best_config_metric,
+                                                                                          fold_operation)),
+                             str(outer_manager.current_best_config.get_train_metric(self.optimization_info.best_config_metric,
+                                                                                    fold_operation)))
             # and for test
-            self.assertEqual(str(MDBHelper.get_metric(outer_manager.result_object.best_config,
-                                                      fold_operation,
-                                                      self.optimization_info.best_config_metric,
-                                                      False)),
-                             str(MDBHelper.get_metric(outer_manager.current_best_config,
-                                                      fold_operation,
-                                                      self.optimization_info.best_config_metric,
-                                                      False)))
+            self.assertEqual(str(outer_manager.result_object.best_config.get_test_metric(self.optimization_info.best_config_metric,
+                                                                                         fold_operation)),
+                             str(outer_manager.current_best_config.get_test_metric(self.optimization_info.best_config_metric,
+                                                                                   fold_operation)))
 
-        # if we have calculate_metrics_per_fold = True then we take the mean value for evaluating the current best metric
+        # if we have calculate_metrics_per_fold = True then
+        # we take the mean value for evaluating the current best metric
         self.cv_info.calculate_metrics_across_folds = False
         self.cv_info.calculate_metrics_per_fold = True
         outer_manager_per_fold = self.prepare_and_fit()
-        check_current_best_config_equality(outer_manager_per_fold, FoldOperations.MEAN)
+        check_current_best_config_equality(outer_manager_per_fold, "mean")
 
         # if we have calculate_metrics_across_fold = True and cm_per_fold = False, we take the raw value to display
         self.cv_info.calculate_metrics_across_folds = True
         self.cv_info.calculate_metrics_per_fold = False
         outer_manager_across_folds = self.prepare_and_fit()
-        check_current_best_config_equality(outer_manager_across_folds, FoldOperations.RAW)
+        check_current_best_config_equality(outer_manager_across_folds, "raw")
 
     def test_prepare(self):
         self.optimization_info.performance_constraints = [DummyPerformanceConstraint(self.optimization_info.best_config_metric),
@@ -129,38 +124,38 @@ class OuterFoldTests(PhotonBaseTest):
 
     def test_eval_final_performance(self):
         # check that best_config_score is copied and not computed
-        def case_check(outer_fold_man, operation_str, operation_type):
+        def case_check(outer_fold_man, operation="mean"):
             # we do so by asserting the values that are in the test set position are EXCACTLY the
             # same as in the values from the validation set in the inner folds (hence, copied, not computed)
-            best_config_score_vals = ["__".join([m_key, operation_str, str(m_val)]) for m_key, m_val
-                                      in outer_fold_man.result_object.best_config.best_config_score.validation.metrics.items()]
-            best_config_inner_cv_vals = [str(m) for m in outer_fold_man.result_object.best_config.metrics_test
-                                         if m.operation == str(operation_type)]
-            self.assertListEqual(best_config_score_vals, best_config_inner_cv_vals)
+            for m_name, m_val in outer_fold_man.result_object.best_config.best_config_score.validation.metrics.items():
+                compare_value = outer_fold_man.result_object.best_config.get_test_metric(name=m_name,
+                                                                                         operation=operation)
+                self.assertAlmostEqual(m_val, compare_value)
+
             # additionally make sure that there are no predictions and no indices for the test set
             self.assertTrue(len(outer_fold_man.result_object.best_config.best_config_score.validation.indices) == 0)
             self.assertTrue(len(outer_fold_man.result_object.best_config.best_config_score.validation.y_pred) == 0)
 
         # in case we don't evaluate the test set
         self.cv_info.eval_final_performance = False
-
+        # todo: metric refactoring update
         # we copy the mean value
         self.cv_info.calculate_metrics_across_folds = False
         self.cv_info.calculate_metrics_per_fold = True
         outer_fold_man = self.prepare_and_fit()
-        case_check(outer_fold_man, "MEAN", FoldOperations.MEAN)
+        case_check(outer_fold_man)
 
         # we still copy the mean value
         self.cv_info.calculate_metrics_across_folds = True
         self.cv_info.calculate_metrics_per_fold = True
         outer_fold_man = self.prepare_and_fit()
-        case_check(outer_fold_man, "MEAN", FoldOperations.MEAN)
+        case_check(outer_fold_man)
 
         # we copy the raw metrics computed across the folds
         self.cv_info.calculate_metrics_across_folds = True
         self.cv_info.calculate_metrics_per_fold = False
         outer_fold_man = self.prepare_and_fit()
-        case_check(outer_fold_man, "RAW", FoldOperations.RAW)
+        case_check(outer_fold_man, operation="raw")
 
     def test_save_predictions_and_feature_importances(self):
         # todo: the best config should have feature importances and predictions, all others shouldn't have them

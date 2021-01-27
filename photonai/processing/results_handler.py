@@ -806,6 +806,40 @@ class ResultsHandler:
             else:
                 return self.get_best_config_inner_fold_predictions(filename)
 
+    def get_best_performances_for_estimator(self, ):
+        # todo: add SWITCH, BRANCH, STACK als identifier vor name of dict.
+        # todo: rename pipeline_elements in elements.
+
+        def setup_estimator_dict(estimator_list):
+            estimator_dict = dict()
+            for estimator in estimator_list:
+                estimator_dict[estimator] = list()
+            return estimator_dict
+
+        # generate config key by switch name
+        # 1. find out which estimators there are
+        last_element_name, last_element_dict = list(self.results.hyperpipe_info.elements)[-1]
+        search_key = last_element_name + "__" + "estimator"
+        estimator_list = last_element_dict.keys()
+        estimator_best_configs = setup_estimator_dict()
+
+        # 2. iterate list and filter configs
+        for outer_fold in self.results.outer_folds:
+            estimator_tested_configs = setup_estimator_dict()
+            for tested_config in outer_fold.tested_config_list:
+                if search_key in tested_config.config_dict:
+                    current_estimator = tested_config.config_dict[search_key]
+
+
+
+        # 3. get list for each estimator
+        # 4. get infos for each list
+        # 5. output results
+
+
+    #     def get_config_performance_infos(self, tested_configs, best_config_metric):
+    #         return min_performance, max_performance, mean_performance, std_performance
+
     def text_summary(self):
         def divider(header):
             return header.ljust(101, '=')
@@ -835,8 +869,8 @@ Hyperparameter Optimizer: {}
 
         output_string += divider("AVERAGE PERFORMANCE ACROSS OUTER FOLDS ")
 
-        test_metrics = self.get_dict_from_metric_list(self.results.metrics_test)
-        train_metrics = self.get_dict_from_metric_list(self.results.metrics_train)
+        test_metrics = self.results.get_test_metrics()
+        train_metrics = self.results.get_train_metrics()
         output_string += """
 {}
 
@@ -874,22 +908,11 @@ Hyperparameter Optimizer: {}
 
             return output_string
 
-
-    @staticmethod
-    def get_dict_from_metric_list(metric_list):
-        best_config_metrics = {}
-        for train_metric in metric_list:
-            if train_metric.metric_name not in best_config_metrics:
-                best_config_metrics[train_metric.metric_name] = {}
-            operation_strip = train_metric.operation.split(".")[1]
-            best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
-        return best_config_metrics
-
     @staticmethod
     def print_table_for_performance_overview(metric_dict_train, metric_dict_test):
         x = PrettyTable()
         x.field_names = ["Metric Name", "Training Mean", "Training Std", "Test Mean", "Test Std"]
         for element_key, element_dict in metric_dict_train.items():
-            x.add_row([element_key, element_dict["MEAN"], element_dict["STD"],
-                       metric_dict_test[element_key]["MEAN"], metric_dict_test[element_key]["STD"]])
+            x.add_row([element_key, element_dict["mean"], element_dict["std"],
+                       metric_dict_test[element_key]["mean"], metric_dict_test[element_key]["std"]])
         return x
