@@ -298,7 +298,7 @@ class FloatRange(NumberRange):
 
     """
     def __init__(self, start: float, stop: float, range_type: str = 'linspace',
-                 step: int = None, num: int = None, **kwargs):
+                 step: float = None, num: int = None, **kwargs):
         """
         Initialize the object.
 

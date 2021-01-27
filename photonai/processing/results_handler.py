@@ -305,7 +305,7 @@ class ResultsHandler:
         plt.close()
 
     def _save_prep_learning_curves(self, file_name):
-        path = self.output_settings.results_folder + '/learning_curves/'
+        path = self.results.output_folder + '/learning_curves/'
         if not os.path.exists(path):
             os.makedirs(path)
         return os.path.join(path, file_name)
@@ -398,9 +398,8 @@ class ResultsHandler:
         if file:
             plt.savefig(file)
         else:
-            if self.output_settings:
-                file = os.path.join(self.output_settings.results_folder, "optimizer_history.png")
-                plt.savefig(file)
+            file = os.path.join(self.results.output_folder, "optimizer_history.png")
+            plt.savefig(file)
         plt.close()
 
     def get_importance_scores(self):
@@ -558,7 +557,7 @@ class ResultsHandler:
         # write csv file with time analysis
         if write_results:
             sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
-            csv_filename = os.path.join(self.output_settings.results_folder, 'time_monitor.csv')
+            csv_filename = os.path.join(self.results.output_folder, 'time_monitor.csv')
             with open(csv_filename, 'w') as csvfile:
                 writer = csv.writer(csvfile)
                 header1 = [""]
@@ -696,7 +695,7 @@ class ResultsHandler:
         #fig.legend(patches+patches_an, element_names+method_list, prop={'size': 10}, loc='lower left')
 
         if write_results:
-            plt.savefig(os.path.join(self.output_settings.results_folder, 'time_monitor_pie.png'))
+            plt.savefig(os.path.join(self.results.output_folder, 'time_monitor_pie.png'))
         plt.close()
         if plotly_return:
             str_fig = "var layout =" + str(plotly_dict["layout"]) + ";"
@@ -725,17 +724,17 @@ class ResultsHandler:
             try:
                 from nibabel.nifti1 import Nifti1Image
                 if isinstance(backmapping, Nifti1Image):
-                    backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+                    backmapping.to_filename(os.path.join(self.results.output_folder, filename + '.nii.gz'))
             except ImportError:
                 pass
             finally:
                 if isinstance(backmapping, np.ndarray):
                     if backmapping.size > 1000:
-                        np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+                        np.savez(os.path.join(self.results.output_folder, filename + '.npz'), backmapping)
                     else:
-                        np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
+                        np.savetxt(os.path.join(self.results.output_folder, filename + '.csv'), backmapping, delimiter=',')
                 else:
-                    with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
+                    with open(os.path.join(self.results.output_folder, filename + '.p'), 'wb') as f:
                         pickle.dump(backmapping, f)
         except Exception as e:
             logger.error("Could not save backmapped feature importances.")
@@ -746,10 +745,6 @@ class ResultsHandler:
             logger.info("Writing summary file, plots and prediction csv to result folder ...")
             self.write_summary()
             self.write_predictions_file()
-
-        if self.output_settings.plots:
-            self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
-            self.eval_mean_time_components()
 
     def convert_to_json_serializable(self, value):
         if isinstance(value, (np.int, np.int32, np.int64)):
@@ -763,7 +758,7 @@ class ResultsHandler:
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
+            local_file = os.path.join(self.results.output_folder, 'photon_result_file.json')
             result = self.round_floats(self.results.to_son().to_dict())
 
             with open(local_file, 'w') as outfile:
@@ -797,7 +792,7 @@ class ResultsHandler:
         return self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_predictions_file(self):
-        filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+        filename = os.path.join(self.results.output_folder, 'best_config_predictions.csv')
 
         # usually we write the predictions for the outer fold
         if not self.output_settings.save_predictions_from_best_config_inner_folds:
@@ -864,7 +859,7 @@ MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES
         final_text = ''.join(text_list)
 
         try:
-            summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
+            summary_filename = os.path.join(self.results.output_folder, 'photon_summary.txt')
             text_file = open(summary_filename, "w")
             text_file.write(final_text)
             text_file.close()

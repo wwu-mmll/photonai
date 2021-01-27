@@ -3,7 +3,7 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold, StratifiedKFold
 
 from photonai.base.json_transformer import JsonTransformer
-from photonai.base import Hyperpipe, OutputSettings, Preprocessing
+from photonai.base import Hyperpipe, Preprocessing
 from photonai.optimization import Categorical
 from photonai.optimization.hyperparameters import IntegerRange, FloatRange
 from photonai.base import Stack, Switch, Branch, PipelineElement
@@ -30,7 +30,7 @@ class JsonTransformerTest(unittest.TestCase):
                             inner_cv=KFold(n_splits=3),
                             verbosity=1,
                             cache_folder="./cache/",
-                            output_settings=OutputSettings(project_folder='./tmp/'))
+                            project_folder='./tmp/')
 
         # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
         tree_qua_branch = Branch('tree_branch')
@@ -131,7 +131,7 @@ class JsonTransformerTest(unittest.TestCase):
                             best_config_metric='balanced_accuracy',
                             outer_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                             inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
-                            output_settings=OutputSettings(project_folder='./tmp/'),
+                            project_folder='./tmp/',
                             random_seed=42)
 
         # ADD ELEMENTS TO YOUR PIPELINE
@@ -185,7 +185,7 @@ class JsonTransformerTest(unittest.TestCase):
                             outer_cv=KFold(n_splits=3),
                             inner_cv=KFold(n_splits=5),
                             verbosity=1,
-                            output_settings=OutputSettings(project_folder='./tmp/'))
+                            project_folder='./tmp/')
 
         # Transformer Switch
         my_pipe += Switch('TransformerSwitch',

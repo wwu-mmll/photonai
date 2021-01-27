@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 data = load_breast_cancer()
@@ -20,7 +20,7 @@ pipe = Hyperpipe('confounder_removal_example',
                  outer_cv=KFold(n_splits=5),
                  inner_cv=KFold(n_splits=3),
                  verbosity=1,
-                 output_settings=OutputSettings(project_folder='./tmp/'))
+                 project_folder='./tmp/')
 
 # # there are two ways of specifying multiple confounders
 # # first, you can simply pass a dictionary with "confounder" as key and a data matrix or list as value

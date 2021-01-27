@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Stack, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, Stack
 from photonai.optimization import FloatRange, IntegerRange
 
 X, y = load_breast_cancer(return_X_y=True)
@@ -14,14 +14,14 @@ my_pipe = Hyperpipe('basic_stack_pipe',
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
-                    verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    verbosity=0,
+                    project_folder='./tmp/')
 
 my_pipe += PipelineElement('StandardScaler')
 
 tree = PipelineElement('DecisionTreeClassifier',
-                       hyperparameters={'criterion': ['gini'],
-                                        'min_samples_split': IntegerRange(2, 4)})
+                       hyperparameters={'min_samples_split': IntegerRange(2, 4)},
+                       criterion='gini')
 
 svc = PipelineElement('LinearSVC',
                       hyperparameters={'C': FloatRange(0.5, 25)})
@@ -32,4 +32,3 @@ my_pipe += Stack('final_stack', [tree, svc], use_probabilities=True)
 
 my_pipe += PipelineElement('LinearSVC')
 my_pipe.fit(X, y)
-

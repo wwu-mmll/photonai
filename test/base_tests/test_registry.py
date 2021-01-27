@@ -48,7 +48,7 @@ class RegistryTest(PhotonBaseTest):
         self.registry.register('MyCustomEstimator', 'custom_estimator.CustomEstimator', 'Estimator')
 
         self.registry.activate()
-        settings = OutputSettings(save_output=False, project_folder='./tmp/')
+        settings = OutputSettings(save_output=False)
 
         # DESIGN YOUR PIPELINE
         pipe = Hyperpipe('custom_estimator_pipe',
@@ -59,6 +59,7 @@ class RegistryTest(PhotonBaseTest):
                          outer_cv=KFold(n_splits=2),
                          inner_cv=KFold(n_splits=2),
                          verbosity=1,
+                         project_folder = './tmp/',
                          output_settings=settings)
 
         pipe += PipelineElement('MyCustomEstimator')

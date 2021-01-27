@@ -7,7 +7,7 @@ from sklearn.datasets import load_boston
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import IntegerRange, FloatRange, Categorical
 from photonai.processing.results_structure import MDBHelper, FoldOperations
 from photonai.helper.photon_base_test import PhotonBaseTest
@@ -34,7 +34,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    outer_cv=KFold(n_splits=self.outer_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    best_config_metric='mean_absolute_error',
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path),
+                                   project_folder=self.tmp_folder_path,
                                    verbosity=0)
 
     def test_cv_config_and_dummy_nr(self):
@@ -95,7 +95,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(outer_preds_received['probabilities'], self.y_true / 10))
 
         csv_file = pd.read_csv(
-            os.path.join(self.hyperpipe.output_settings.results_folder, 'best_config_predictions.csv'))
+            os.path.join(self.hyperpipe.results_folder, 'best_config_predictions.csv'))
         self.assertTrue(np.array_equal(csv_file.y_pred.values, self.y_true))
         self.assertTrue(np.array_equal(csv_file.y_true.values, self.y_true))
         self.assertTrue(np.array_equal(csv_file.probabilities.values, self.y_true / 10))
@@ -128,7 +128,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
         # in case we have no outer cv, we write the inner_cv predictions
         csv_file = pd.read_csv(
-            os.path.join(self.hyperpipe.output_settings.results_folder, 'best_config_predictions.csv'))
+            os.path.join(self.hyperpipe.results_folder, 'best_config_predictions.csv'))
         self.assertTrue(np.array_equal(csv_file.y_pred.values, values_to_expect))
         self.assertTrue(np.array_equal(csv_file.y_true.values, values_to_expect))
         self.assertTrue(np.array_equal(csv_file.probabilities.values, values_to_expect / 10))
@@ -161,7 +161,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    eval_final_performance=False,
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
 
         self.test_metrics_and_aggregations()
 
@@ -174,7 +174,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_per_fold=True,
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
 
         self.test_metrics_and_aggregations()
 
@@ -287,7 +287,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                               outer_cv=KFold(n_splits=3),
                               metrics=['mean_absolute_error', 'mean_squared_error'],
                               best_config_metric='mean_squared_error',
-                              output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                              project_folder=self.tmp_folder_path)
         hyperpipe += PipelineElement('StandardScaler')
         hyperpipe += PipelineElement('DecisionTreeRegressor')
         X, y = load_boston(return_X_y=True)

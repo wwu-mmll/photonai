@@ -1,4 +1,4 @@
-from photonai.base import Hyperpipe, Switch, Stack, Branch, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, Switch, Stack, Branch, PipelineElement
 from photonai.optimization import IntegerRange
 
 from sklearn.model_selection import KFold
@@ -11,7 +11,7 @@ my_pipe = Hyperpipe('voting_example',
                     outer_cv=KFold(n_splits=5),
                     metrics=['balanced_accuracy', 'precision'],
                     best_config_metric='balanced_accuracy',
-                    output_settings=OutputSettings(project_folder='./tmp'))
+                    project_folder='./tmp')
 
 my_pipe += PipelineElement("SimpleImputer")
 

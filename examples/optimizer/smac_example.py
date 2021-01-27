@@ -1,13 +1,12 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings, Switch
+from photonai.base import Hyperpipe, PipelineElement, Switch
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
 my_pipe = Hyperpipe('smac_example',
                     optimizer='smac',
                     # possible paramters: facade, intensifier_kwargs
@@ -20,7 +19,7 @@ my_pipe = Hyperpipe('smac_example',
                     outer_cv=ShuffleSplit(n_splits=5, test_size=0.2),
                     inner_cv=KFold(n_splits=5),
                     verbosity=1,
-                    output_settings=settings)
+                    project_folder='./tmp/')
 
 
 # ADD ELEMENTS TO YOUR PIPELINE

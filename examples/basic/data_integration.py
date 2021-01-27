@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, Switch, DataFilter, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, Switch, DataFilter
 from photonai.optimization import FloatRange, IntegerRange, Categorical
 
 # LOAD DATA FROM SKLEARN
@@ -10,13 +10,13 @@ X, y = load_breast_cancer(return_X_y=True)
 
 my_pipe = Hyperpipe('data_integration',
                     optimizer='random_grid_search',
-                    optimizer_params={'n_configurations': 2},
+                    optimizer_params={'n_configurations': 20},
                     metrics=['accuracy', 'precision', 'recall'],
                     best_config_metric='f1_score',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
-                    verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    verbosity=0,
+                    project_folder='./tmp/')
 
 my_pipe += PipelineElement('SimpleImputer')
 my_pipe += PipelineElement('StandardScaler', {}, with_mean=True)
@@ -43,4 +43,3 @@ my_pipe += Switch('EstimatorSwitch', [PipelineElement('RandomForestClassifier', 
                                       PipelineElement('SVC')])
 
 my_pipe.fit(X, y)
-

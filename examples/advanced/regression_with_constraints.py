@@ -16,10 +16,9 @@ my_pipe = Hyperpipe(name='basic_svm_pipe_no_performance',
                     inner_cv=KFold(n_splits=3),
                     eval_final_performance=True,
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./result_folder',
-                                                   mongodb_connect_url="mongodb://localhost:27017/photon_results",
-                                                   save_output=True,
-                                                   plots=True),
+                    project_folder='./result_folder',
+                    output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
+                                                   save_output=True),
                     performance_constraints=[MinimumPerformance('mean_squared_error', 35, 'first'),
                                              MinimumPerformance('pearson_correlation', 0.7, 'all')])
 
@@ -35,5 +34,3 @@ my_pipe.fit(X, y)
 
 # YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE
 # my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')
-
-

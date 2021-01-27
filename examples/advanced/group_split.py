@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import FloatRange, Categorical
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
@@ -18,7 +18,7 @@ my_pipe = Hyperpipe('group_split_pipe',
                     outer_cv=GroupKFold(n_splits=4),
                     inner_cv=GroupShuffleSplit(n_splits=10),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
@@ -31,4 +31,3 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y, groups=groups)
-

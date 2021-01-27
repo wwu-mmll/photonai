@@ -13,8 +13,6 @@ def my_monitor(X, y=None, **kwargs):
 X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
-
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='grid_search',
                     metrics=['mean_squared_error', 'pearson_correlation'],
@@ -22,7 +20,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=settings)
+                    project_folder='./tmp/')
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
@@ -32,7 +30,7 @@ my_pipe += PipelineElement('StandardScaler')
 my_pipe += CallbackElement("monitor", my_monitor)
 
 # engage and optimize the good old SVM for Classification
-my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators':[10]})
+my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': [10, 100]})
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)

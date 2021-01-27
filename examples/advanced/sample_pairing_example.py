@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import Categorical
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
@@ -16,7 +16,7 @@ my_pipe = Hyperpipe('sample_pairing_example_classification',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'),
+                    project_folder='./tmp/',
                     random_seed=42123)
 
 
@@ -34,5 +34,3 @@ my_pipe += PipelineElement('RandomForestClassifier',
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-

@@ -1,7 +1,7 @@
 from sklearn.model_selection import KFold
 from imblearn.datasets import fetch_datasets
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 
 # example of imbalanced dataset
@@ -17,7 +17,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=5),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 
 # ADD ELEMENTS TO YOUR PIPELINE

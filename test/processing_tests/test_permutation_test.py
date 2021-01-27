@@ -25,8 +25,8 @@ class PermutationTestTests(PhotonBaseTest):
                                    metrics=["accuracy", "balanced_accuracy"],
                                    best_config_metric="balanced_accuracy",
                                    output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
-                                                                  wizard_object_id=str(cls.wizard_obj_id),
-                                                                  project_folder=cls.tmp_folder_path,),
+                                                                  wizard_object_id=str(cls.wizard_obj_id)),
+                                   project_folder=cls.tmp_folder_path,
                                    permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
         cls.hyperpipe += PipelineElement("SVC")
@@ -61,12 +61,11 @@ class PermutationTestTests(PhotonBaseTest):
     def create_hyperpipe(self):
         # this is needed here for the parallelisation
         from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-        from photonai.optimization import FloatRange, Categorical, IntegerRange
+        from photonai.optimization import IntegerRange
         from sklearn.model_selection import GroupKFold
         from sklearn.model_selection import KFold
 
-        settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
-                                  project_folder=self.tmp_folder_path)
+        settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results')
         my_pipe = Hyperpipe('permutation_test_1',
                             optimizer='grid_search',
                             metrics=['accuracy', 'precision', 'recall'],
@@ -76,6 +75,7 @@ class PermutationTestTests(PhotonBaseTest):
                             calculate_metrics_across_folds=True,
                             eval_final_performance=True,
                             verbosity=1,
+                            project_folder=self.tmp_folder_path,
                             output_settings=settings)
 
         # Add transformer elements
@@ -98,8 +98,7 @@ class PermutationTestTests(PhotonBaseTest):
         from sklearn.model_selection import GroupKFold
         from sklearn.model_selection import KFold
 
-        settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
-                                  project_folder=self.tmp_folder_path)
+        settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results')
         my_pipe = Hyperpipe('permutation_test_1',
                             optimizer='grid_search',
                             metrics=['accuracy', 'precision', 'recall'],
@@ -109,6 +108,7 @@ class PermutationTestTests(PhotonBaseTest):
                             calculate_metrics_across_folds=True,
                             eval_final_performance=True,
                             verbosity=1,
+                            project_folder=self.tmp_folder_path,
                             output_settings=settings)
 
         # Add transformer elements
@@ -128,7 +128,6 @@ class PermutationTestTests(PhotonBaseTest):
         from photonai.base import Hyperpipe, OutputSettings
         from sklearn.model_selection import KFold
 
-        settings = OutputSettings(project_folder=self.tmp_folder_path)
         my_pipe = Hyperpipe('permutation_test_1',
                             optimizer='grid_search',
                             metrics=['accuracy', 'precision', 'recall'],
@@ -138,7 +137,7 @@ class PermutationTestTests(PhotonBaseTest):
                             calculate_metrics_across_folds=True,
                             eval_final_performance=True,
                             verbosity=1,
-                            output_settings=settings)
+                            project_folder=self.tmp_folder_path)
         return my_pipe
 
     def test_no_mongo_connection_string(self):
@@ -177,7 +176,3 @@ class PermutationTestTests(PhotonBaseTest):
                                                      mongodb_path='mongodb://localhost:27017/photon_results')
 
         self.assertAlmostEqual(results.p_values['accuracy'], 0)
-
-
-
-

@@ -15,7 +15,7 @@ my_pipe = Hyperpipe('svm_ensemble_pipe',
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 
 preprocessing = Preprocessing()
