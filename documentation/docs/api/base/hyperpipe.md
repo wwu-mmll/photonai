@@ -9,3 +9,4 @@
         - predict_proba
         - load_optimum_pipe
         - inverse_transform_pipeline
+        - copy_me

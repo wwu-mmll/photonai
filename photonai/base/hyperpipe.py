@@ -31,7 +31,7 @@ from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
 from photonai.helper.helper import print_double_metrics
 from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
-    SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, IntegerRange, FloatRange, Categorical
+    SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, IntegerRange, FloatRange, Categorical, PhotonBaseConstraint
 from photonai.optimization.nevergrad.nevergrad import NevergradOptimizer
 from photonai.photonlogger.logger import logger
 from photonai.processing import ResultsHandler
@@ -54,7 +54,7 @@ class OutputSettings:
                  mongodb_connect_url: str = None,
                  save_output: bool = True,
                  overwrite_results: bool = False,
-                 result_file_mode: str = "best",
+                 generate_best_model: bool = True,
                  user_id: str = '',
                  project_folder: str = '',
                  wizard_object_id: str = '',
@@ -64,16 +64,17 @@ class OutputSettings:
 
         Parameters:
             mongodb_connect_url:
-                Valid mongodb connection url that specifies a database for storing the results
+                Valid mongodb connection url that specifies a database for storing the results.
 
             save_output:
-                .
+                Controls the general saving of the results.
 
             overwrite_results:
-                .
+                Allows overwriting the results folder if it already exists.
 
-            result_file_mode:
-                The possible save_modes for .photon file.
+            generate_best_model:
+                Determines whether an optimum_pipe should be created and fitted.
+                If False, no dependent files are created.
 
             user_id:
                The user name of the according PHOTONAI Wizard login.
@@ -106,17 +107,7 @@ class OutputSettings:
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
 
-        if result_file_mode in ["best", "all", "None", None]:
-            if result_file_mode == "all":
-                msg = "The result_file_mode 'all' is not impelmented yet."
-                logger.error(msg)
-                raise NotImplementedError(msg)
-            else:
-                self.result_file_mode = result_file_mode
-        else:
-            msg = "The result_file_mode required one out of ['best', 'all', 'None']. Default: 'best'."
-            logger.error(msg)
-            raise NotImplementedError(msg)
+        self.generate_best_model = generate_best_model
 
 
 class Hyperpipe(BaseEstimator):
@@ -214,7 +205,7 @@ class Hyperpipe(BaseEstimator):
                  learning_curves: bool = False,
                  learning_curves_cut: FloatRange = None,
                  output_settings: OutputSettings = None,
-                 performance_constraints=None,
+                 performance_constraints: Union[List[PhotonBaseConstraint], PhotonBaseConstraint] = None,
                  permutation_id: str = None,
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
@@ -233,7 +224,7 @@ class Hyperpipe(BaseEstimator):
                 Cross validation strategy to use for the hyperparameter search itself, generates the test set.
 
             optimizer:
-                Hyperparameter optimization algorithm. !!str or object!!
+                Hyperparameter optimization algorithm.
 
                 - In case a string literal is given:
                     - "grid_search": optimizer that iteratively tests all possible hyperparameter combinations
@@ -242,6 +233,10 @@ class Hyperpipe(BaseEstimator):
                     - "timeboxed_random_grid_search": randomly chooses hyperparameter combinations from the set of all
                         possible hyperparameter combinations and tests until the given time limit is reached
                         - `limit_in_minutes`: int
+                    - "sk_opt": Scikit-Optimize based on theories of Baysian optimization.
+                    - "random_search": randomly chooses hyperparameter from grid-free domain.
+                    - "smac": SMAC based on theories of Baysian optimization.
+                    - "nevergrad": Nevergrad based on theories of evolutionary learning.
 
                 - In case an object is given:
                     expects the object to have the following methods:
@@ -290,36 +285,43 @@ class Hyperpipe(BaseEstimator):
                 eval_final_perfomance is set to True.
 
             calculate_metrics_per_fold:
+                If True, the metrics are calculated for each inner_fold.
+                If False, calculate_metrics_across_folds must be True.
 
             calculate_metrics_across_folds:
+                If True, the metrics are calculated across all inner_fold.
+                If False, calculate_metrics_per_fold must be True.
 
             random_seed:
-                -
+                Random Seed.
 
             verbosity:
                 The level of verbosity, 0 is least talkative and
                 gives only warn and error, 1 gives adds info and 2 adds debug
 
             learning_curves:
-                -
+                Enables larning curve procedure. Evaluate learning process over
+                different sizes of input. Depends on learning_curves_cut.
 
             learning_curves_cut:
-                -
+                The tested relativ cuts for data size.
 
             performance_constraints:
-                -
+                Objects that indicate whether a configuration should
+                be tested further. For example, the inner fold of a config
+                does not perform better than the dummy performance.
 
             permutation_id:
-                -
+                String identifier for permutation tests.
 
             cache_folder:
-                -
+                Folder path for multi-processing.
 
             nr_of_processes:
-                -
+                Determined the amount of simultaneous calculation of outer_folds.
 
             allow_multidim_targets:
-                -
+                Allows multidimensional targets.
 
         """
         self.allow_multidim_targets = allow_multidim_targets
@@ -785,7 +787,7 @@ class Hyperpipe(BaseEstimator):
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config)
 
-        if self.output_settings.result_file_mode == 'best':
+        if self.output_settings.generate_best_model:
             logger.info("Fitting best model...")
             # set self to best config
             self.optimum_pipe = self._pipe
@@ -1195,6 +1197,7 @@ class Hyperpipe(BaseEstimator):
 
         Returns:
             Hyperpipe
+
         """
         signature = inspect.getfullargspec(OutputSettings.__init__)[0]
         settings = OutputSettings()

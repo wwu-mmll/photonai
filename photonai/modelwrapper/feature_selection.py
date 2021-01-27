@@ -129,10 +129,9 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
     Apply VarianceThreshold -> SelectPercentile to data.
     SelectPercentile based on f_classif and parameter percentile.
 
-    Parameters
-    ----------
-    percentile: int, default=10
-        Percent of features to keep.
+    Parameters:
+        percentile: int, default=10
+            Percent of features to keep.
 
     """
     _estimator_type = "transformer"
@@ -152,12 +151,11 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
 
-    def inverse_transform(self, X):
+    def inverse_transform(self, X: np.ndarray):
         """Reverse to original dimension.
 
-        Calls:
-            1. SelectPercentile.inverse_transform
-            2. VarianceThreshold.inverse_transform
+        1. SelectPercentile.inverse_transform
+        2. VarianceThreshold.inverse_transform
 
         Parameters:
             X:

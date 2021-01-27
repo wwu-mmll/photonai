@@ -7,9 +7,10 @@ nav:
     - Regression: regression.md
   - 'API':
     - 'Base':
-      - Architecture: architecture.md
+      - Architecture: api/architecture.md
       - Branch: api/base/branch.md
       - Hyperpipe: api/base/hyperpipe.md
+      - OutputSettings: api/base/output_settings.md
       - PipelineElement: api/base/pipeline_element.md
       - Preprocessing: api/base/preprocessing.md
       - Registry: api/base/registry.md
