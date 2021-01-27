@@ -528,7 +528,10 @@ class Hyperpipe(BaseEstimator):
                 raise Warning('Strange Pipeline Element found that has no name..? Type: '.format(type(p_el)))
             if hasattr(p_el, 'elements'):
                 child_list = self.__get_pipeline_structure(p_el.elements)
-                element_list[p_el.name] = child_list
+                identifier = p_el.name
+                if hasattr(p_el, "identifier"):
+                    identifier = p_el.identifier + identifier
+                    element_list[identifier] = child_list
             else:
                 if hasattr(p_el, 'base_element'):
                     element_list[p_el.name] = str(type(p_el.base_element))
@@ -612,7 +615,7 @@ class Hyperpipe(BaseEstimator):
         dummy_results = [outer_fold.dummy_results for outer_fold in self.results.outer_folds]
         config_item.inner_folds = [f for f in dummy_results if f is not None]
         if len(config_item.inner_folds) > 0:
-            self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics_for_inner_folds(
+            self.results.dummy_estimator.metrics_train, self.results.dummy_estimator.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(
                 config_item.inner_folds,
                 self.optimization.metrics)
 

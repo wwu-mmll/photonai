@@ -12,7 +12,7 @@ from photonai.base import OutputSettings
 from photonai.photonlogger.logger import logger
 
 from photonai.processing.inner_folds import Scorer
-from photonai.processing.results_structure import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe, FoldOperations
+from photonai.processing.results_structure import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
 
 
 class PermutationTest:
@@ -324,12 +324,12 @@ class PermutationTest:
         if mother_permutation is not None:
             if mother_permutation.dummy_estimator:
                 best_config_metric = mother_permutation.hyperpipe_info.best_config_metric
-                dummy_threshold_to_beat = [i.value for i in mother_permutation.dummy_estimator.test
+                dummy_threshold_to_beat = [i.value for i in mother_permutation.dummy_estimator.metrics_test
                                            if i.metric_name == best_config_metric and i.operation == "mean"]
                 if len(dummy_threshold_to_beat) > 0:
                     dummy_threshold_to_beat = dummy_threshold_to_beat[0]
-                    mother_perm_threshold = [i.value for i in mother_permutation.metrics_test
-                                             if i.metric_name == best_config_metric and i.operation == "mean"]
+                    mother_perm_threshold = mother_permutation.get_test_metric(name=best_config_metric,
+                                                                               operation="mean")
                     mother_perm_threshold = mother_perm_threshold[0]
                     if mother_permutation.hyperpipe_info.maximize_best_config_metric:
 

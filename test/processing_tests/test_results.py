@@ -116,9 +116,9 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         # we should have mean and std for each metric respectively
         expected_dummy_metrics = len(self.hyperpipe.optimization.metrics) * 2
         if self.hyperpipe.cross_validation.eval_final_performance:
-            self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test) == expected_dummy_metrics)
+            self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_test) == expected_dummy_metrics)
         # we should have mean and std for each metric respectively
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train) == expected_dummy_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_train) == expected_dummy_metrics)
 
     def test_get_predictions(self):
 

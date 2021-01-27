@@ -47,6 +47,6 @@ overall_best_config = max_performance(best_configs_outer_folds)
 # setup pipeline with best config
 pipeline.set_params(overall_best_config)
 # train with all data
-pipeline.train(data)
+pipeline.metrics_train(data)
 # save the final model in a standardized format
 pipeline.save()

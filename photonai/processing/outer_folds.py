@@ -191,11 +191,11 @@ class OuterFoldManager:
             logger.system_line()
             logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
                                                 sort_keys=True))
-            logger.line()
-            logger.clean_info('VALIDATION PERFORMANCE')
-            logger.line()
+            logger.system_line()
+            logger.photon_system_log('VALIDATION PERFORMANCE')
+            logger.system_line()
             print_double_metrics(best_config_outer_fold.get_train_metric(operation="mean"),
-                                 best_config_outer_fold.get_test_metric(operation="mean"), photon_system_log=False)
+                                 best_config_outer_fold.get_test_metric(operation="mean"))
 
             if not best_config_outer_fold:
                 raise Exception("No best config was found!")

@@ -29,6 +29,7 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
 
         self.pipeline_elements = None
         self.current_optimizer = None
+        self.n_configurations = -1
         self.estimator_dict = {}
         self.switch_name = ''
         self.switch_estimator_config_key = ''
@@ -64,6 +65,9 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
             self.estimator_dict[element.name] = optimizer
         self.ask = self.next_config_generator()
 
+        if "n_configurations" in self.optimizer_params:
+            self.n_configurations = len(switch.elements) * self.optimizer_params["n_configurations"]
+
     def next_config_generator(self):
         for element_name, optimizer in self.estimator_dict.items():
             self.current_optimizer = optimizer
@@ -79,9 +83,10 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
                 config_copy[self.switch_estimator_config_key] = element_name
                 yield config_copy
 
-    def tell(self, config, performance):
+    def tell(self, params, performance):
         # influence return value of next_config
         # remove current estimator name as it is just a hack to filter configs afterwards, and not part of the HP space
+        config = dict(params)
         del config[self.switch_estimator_config_key]
         config_copy = dict()
         for c_key, c_value in config.items():

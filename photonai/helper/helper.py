@@ -224,3 +224,17 @@ def print_double_metrics(metric_dict_train, metric_dict_test, photon_system_log=
         logger.photon_system_log(t)
     else:
         logger.debug(t)
+
+
+def print_estimator_metrics(estimator_performances, metric_list, summary=False):
+    t = PrettyTable(['Estimator'] + metric_list)
+    for estimator_name, estimator_values in estimator_performances.items():
+        t.add_row([estimator_name] + ["%.4f" % estimator_values[m] for m in metric_list])
+    if summary:
+        return t
+    logger.system_line()
+    logger.photon_system_log("AVERAGE PERFORMANCE PER ESTIMATOR")
+    logger.system_line()
+    logger.photon_system_log(t)
+
+

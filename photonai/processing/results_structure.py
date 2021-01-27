@@ -6,6 +6,21 @@ import numpy as np
 from pymodm import MongoModel, EmbeddedMongoModel, fields
 
 
+class MetricHelper:
+
+    def get_train_metric(self, name="", operation="mean"):
+        return MDBHelper.get_metric(self.metrics_train, name, operation)
+
+    def get_test_metric(self, name="", operation="mean"):
+        return MDBHelper.get_metric(self.metrics_test, name, operation)
+
+    def get_train_metric_dict(self):
+        return MDBHelper.get_dict_from_metric_list(self.metrics_train)
+
+    def get_test_metric_dict(self):
+        return MDBHelper.get_dict_from_metric_list(self.metrics_test)
+
+
 class MDBScoreInformation(EmbeddedMongoModel):
     class Meta:
         final = True
@@ -57,7 +72,7 @@ class MDBFoldMetric(EmbeddedMongoModel):
         return "__".join([self.metric_name, self.operation, str(self.value)])
 
 
-class MDBConfig(EmbeddedMongoModel):
+class MDBConfig(EmbeddedMongoModel, MetricHelper):
     class Meta:
         final = True
         connection_alias = 'photon_core'
@@ -80,41 +95,6 @@ class MDBConfig(EmbeddedMongoModel):
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     human_readable_config = fields.DictField(blank=True)
-
-    def get_train_metric(self, name="", operation="mean"):
-        return self.get_metric(self.metrics_train, name, operation)
-
-    def get_test_metric(self, name="", operation="mean"):
-        return self.get_metric(self.metrics_test, name, operation)
-
-    @staticmethod
-    def get_metric(metric_list, name="", operation=""):
-        if name and operation:
-            metric = [i for i in metric_list if i.metric_name == name and i.operation == operation]
-            if len(metric) == 0:
-                return None
-            if len(metric) == 1:
-                return metric[0].value
-            else:
-                raise KeyError("Found multiple metrics with same operation and name.")
-        elif name and not operation:
-            # try to find "raw" metric
-            metric = [i for i in metric_list if i.metric_name == name and i.operation == "raw"]
-            if len(metric) == 0:
-                raise KeyError("Could not find metric {}. As no operation was given, it defaults to 'raw', "
-                               "maybe try to specify operation explicitly")
-                return None
-            if len(metric) == 1:
-                return metric[0].value
-            else:
-                raise KeyError("Found multiple metrics with same operation and name.")
-        elif not name and operation:
-            metric_list = {i.metric_name: i.value for i in metric_list if i.operation == operation}
-            return metric_list
-        else:
-            raise ValueError("Can get metric(s) either by passing name and operation (raw, mean, std),"
-                             "or operation only. No arguments are given. ")
-            return None
 
     def set_photon_id(self):
         self.photon_config_id = str(uuid.uuid4())
@@ -198,17 +178,14 @@ class MDBPermutationResults(EmbeddedMongoModel):
     metrics = fields.EmbeddedDocumentListField(MDBPermutationMetrics, blank=True)
 
 
-class MDBDummyResults(EmbeddedMongoModel):
+class MDBDummyResults(EmbeddedMongoModel, MetricHelper):
     class Meta:
         final = True
         connection_alias = 'photon_core'
 
     strategy = fields.CharField(blank=True)
-    train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
-    test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
-
-    def get_test_metrics(self):
-        return {m.metric_name: m.value for m in self.test if m.operation == "FoldOperations.MEAN"}
+    metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+    metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
 
 
 class MDBHyperpipeInfo(EmbeddedMongoModel):
@@ -225,9 +202,11 @@ class MDBHyperpipeInfo(EmbeddedMongoModel):
     maximize_best_config_metric = fields.BooleanField(blank=True)
     estimation_type = fields.CharField(blank=True)
     eval_final_performance = fields.BooleanField(blank=True)
+    # todo: deprecated!!! delete in later versions.
+    flowchart = fields.CharField(blank=True)
 
 
-class MDBHyperpipe(MongoModel):
+class MDBHyperpipe(MongoModel, MetricHelper):
     class Meta:
         final = True
         connection_alias = 'photon_core'
@@ -250,21 +229,6 @@ class MDBHyperpipe(MongoModel):
     metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
     metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
 
-    def get_train_metrics(self):
-        return self.get_dict_from_metric_list(self.metrics_train)
-
-    def get_test_metrics(self):
-        return self.get_dict_from_metric_list(self.metrics_test)
-
-    @staticmethod
-    def get_dict_from_metric_list(metric_list):
-        best_config_metrics = {}
-        for train_metric in metric_list:
-            if train_metric.metric_name not in best_config_metrics:
-                best_config_metrics[train_metric.metric_name] = {}
-            best_config_metrics[train_metric.metric_name][train_metric.operation] = np.round(train_metric.value, 6)
-        return best_config_metrics
-
     hyperpipe_info = fields.EmbeddedDocumentField(MDBHyperpipeInfo)
 
     # dummy estimator
@@ -284,6 +248,44 @@ class ParallelData(MongoModel):
 
 class MDBHelper:
     OPERATION_DICT = {"mean": np.mean, "std": np.std}
+
+    @staticmethod
+    def get_metric(metric_list, name="", operation=""):
+        if name and operation:
+            metric = [i for i in metric_list if i.metric_name == name and i.operation == operation]
+            if len(metric) == 0:
+                return None
+            if len(metric) == 1:
+                return metric[0].value
+            else:
+                raise KeyError("Found multiple metrics with same operation and name.")
+        elif name and not operation:
+            # try to find "raw" metric
+            metric = [i for i in metric_list if i.metric_name == name and i.operation == "raw"]
+            if len(metric) == 0:
+                raise KeyError("Could not find metric {}. As no operation was given, it defaults to 'raw', "
+                               "maybe try to specify operation explicitly")
+                return None
+            if len(metric) == 1:
+                return metric[0].value
+            else:
+                raise KeyError("Found multiple metrics with same operation and name.")
+        elif not name and operation:
+            metric_list = {i.metric_name: i.value for i in metric_list if i.operation == operation}
+            return metric_list
+        else:
+            raise ValueError("Can get metric(s) either by passing name and operation (raw, mean, std),"
+                             "or operation only. No arguments are given. ")
+            return None
+
+    @staticmethod
+    def get_dict_from_metric_list(metric_list):
+        best_config_metrics = {}
+        for train_metric in metric_list:
+            if train_metric.metric_name not in best_config_metrics:
+                best_config_metrics[train_metric.metric_name] = {}
+            best_config_metrics[train_metric.metric_name][train_metric.operation] = np.round(train_metric.value, 6)
+        return best_config_metrics
 
     @staticmethod
     def aggregate_metrics_for_outer_folds(outer_folds, metrics):

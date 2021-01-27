@@ -19,9 +19,9 @@ my_pipe = Hyperpipe('basic_switch_pipe',
                     output_settings=OutputSettings(project_folder='./tmp/'))
 
 # Transformer Switch
-my_pipe += Switch('TransformerSwitch',
+my_pipe += Switch('StandardizationSwitch',
                   [PipelineElement('StandardScaler'),
-                   PipelineElement('PCA', test_disabled=True)])
+                   PipelineElement('MinMaxScaler')])
 
 # Estimator Switch
 svm = PipelineElement('SVC',

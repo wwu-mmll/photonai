@@ -20,7 +20,7 @@ from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
 
 from photonai.photonlogger.logger import logger
-from photonai.helper.helper import print_double_metrics, print_metrics
+from photonai.helper.helper import print_double_metrics, print_metrics, print_estimator_metrics
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
 from photonai.__init__ import __version__
@@ -807,38 +807,53 @@ class ResultsHandler:
                 return self.get_best_config_inner_fold_predictions(filename)
 
     def get_best_performances_for_estimator(self, ):
-        # todo: add SWITCH, BRANCH, STACK als identifier vor name of dict.
-        # todo: rename pipeline_elements in elements.
 
-        def setup_estimator_dict(estimator_list):
-            estimator_dict = dict()
-            for estimator in estimator_list:
-                estimator_dict[estimator] = list()
-            return estimator_dict
+        # 1. find out which estimators there are
+        last_element_name_identifier, last_element_dict = list(self.results.hyperpipe_info.elements.items())[-1]
+        no_switch_found = False
+        if not ":" in last_element_name_identifier:
+            no_switch_found = True
+
+        last_element_base_element, last_element_name = last_element_name_identifier.split(":")
+        if not last_element_base_element == "SWITCH":
+            no_switch_found = True
+
+        if no_switch_found:
+            logger.info("Could not identify switch at the end of the pipeline. Estimator Comparison aborted.")
+            return
 
         # generate config key by switch name
-        # 1. find out which estimators there are
-        last_element_name, last_element_dict = list(self.results.hyperpipe_info.elements)[-1]
-        search_key = last_element_name + "__" + "estimator"
+        search_key = last_element_name + "__" + "estimator_name"
         estimator_list = last_element_dict.keys()
-        estimator_best_configs = setup_estimator_dict()
+        best_configs_from_estimators = dict()
+        for estimator in estimator_list:
+            best_configs_from_estimators[estimator] = list()
 
         # 2. iterate list and filter configs
         for outer_fold in self.results.outer_folds:
-            estimator_tested_configs = setup_estimator_dict()
-            for tested_config in outer_fold.tested_config_list:
-                if search_key in tested_config.config_dict:
-                    current_estimator = tested_config.config_dict[search_key]
+            for estimator_name in estimator_list:
+                try:
+                    best_estimator_config = outer_fold.get_optimum_config(metric=self.results.hyperpipe_info.best_config_metric,
+                                                                          maximize_metric=self.results.hyperpipe_info.
+                                                                          maximize_best_config_metric,
+                                                                          dict_filter=(search_key, estimator_name))
+                    best_configs_from_estimators[estimator_name].append(best_estimator_config)
+                except Warning as w:
+                    logger.info("Could not find best config for estimator {} " 
+                                "in outer fold {}".format(estimator_name, outer_fold.fold_nr))
 
-
-
-        # 3. get list for each estimator
         # 4. get infos for each list
+        estimator_performance_values = dict()
+        for estimator_name in estimator_list:
+            estimator_performance_values[estimator_name] = dict()
+            for metric in self.results.hyperpipe_info.metrics:
+                performance_values = [c.get_test_metric(metric, 'mean')
+                                      for c in best_configs_from_estimators[estimator_name]]
+                estimator_performance_values[estimator_name][metric] = np.mean(performance_values)
+
         # 5. output results
-
-
-    #     def get_config_performance_infos(self, tested_configs, best_config_metric):
-    #         return min_performance, max_performance, mean_performance, std_performance
+        output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
+        debug = True
 
     def text_summary(self):
         def divider(header):
@@ -865,12 +880,12 @@ Hyperparameter Optimizer: {}
         output_string += """
 {}
 
-""".format(print_metrics("DUMMY", self.results.dummy_estimator.get_test_metrics(), summary=True))
+""".format(print_metrics("DUMMY", self.results.dummy_estimator.get_test_metric(operation='mean'), summary=True))
 
         output_string += divider("AVERAGE PERFORMANCE ACROSS OUTER FOLDS ")
 
-        test_metrics = self.results.get_test_metrics()
-        train_metrics = self.results.get_train_metrics()
+        test_metrics = self.results.get_test_metric_dict()
+        train_metrics = self.results.get_train_metric_dict()
         output_string += """
 {}
 

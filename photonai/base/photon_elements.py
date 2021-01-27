@@ -589,6 +589,7 @@ class Branch(PipelineElement):
         self.elements = []
         self.has_hyperparameters = True
         self.skip_caching = True
+        self.identifier = "BRANCH:"
 
         # needed for caching on individual level
         self.fix_fold_id = False
@@ -803,6 +804,7 @@ class Stack(PipelineElement):
         # todo: Stack should not be allowed to change y, only covariates
         self.needs_y = False
         self.needs_covariates = True
+        self.identifier = "STACK:"
         self.use_probabilities = use_probabilities
 
     def __iadd__(self, item):
@@ -1012,6 +1014,7 @@ class Switch(PipelineElement):
         # we assume we test models against each other, but only guessing
         self.is_estimator = True
         self.is_transformer = True
+        self.identifier = "SWITCH:"
         self._random_state = False
 
         self.elements_dict = {}
@@ -1116,20 +1119,22 @@ class Switch(PipelineElement):
         config_nr = None
         config = None
         self.estimator_name = ''
+        # copy dict for adaptations
+        params = dict(kwargs)
 
         # in case we are operating with grid search
-        if self.sklearn_name in kwargs:
-            config_nr = kwargs[self.sklearn_name]
-        elif 'current_element' in kwargs:
-            config_nr = kwargs['current_element']
+        if self.sklearn_name in params:
+            config_nr = params[self.sklearn_name]
+        elif 'current_element' in params:
+            config_nr = params['current_element']
 
         if "estimator_name" in kwargs:
-            self.estimator_name = kwargs["estimator_name"]
-            del kwargs["estimator_name"]
+            self.estimator_name = params["estimator_name"]
+            del params["estimator_name"]
             self.base_element = self.elements_dict[self.estimator_name]
 
-        if kwargs is not None:
-            config = kwargs
+        if params is not None:
+            config = params
 
         # todo: raise Warning that Switch could not identify which estimator to set when estimator
         #  has no params to optimize
@@ -1148,7 +1153,7 @@ class Switch(PipelineElement):
         # we need to identify the element to activate by checking for which element the optimizer gave params
         elif not self.estimator_name:
             # ugly hack because subscription is somehow not possible, we use the for loop but break
-            for kwargs_key, kwargs_value in kwargs.items():
+            for kwargs_key, kwargs_value in params.items():
                 first_element_name = kwargs_key.split("__")[0]
                 self.base_element = self.elements_dict[first_element_name]
                 break

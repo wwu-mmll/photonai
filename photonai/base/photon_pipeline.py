@@ -430,7 +430,7 @@ class PhotonPipeline(_BaseComposition):
     def inverse_transform(self, X, y=None, **kwargs):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
-        for name, transform in reversed(self.elements[:-1]):
+        for name, transform in reversed(self.elements):
             if transform.disabled:
                 continue
             try:

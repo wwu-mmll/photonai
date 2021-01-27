@@ -165,8 +165,8 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(expected_num_of_metrics, 3)
 
         # dummy average values
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train), expected_num_of_metrics)
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_train), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_test), expected_num_of_metrics)
 
         # overall average values
         self.assertTrue(len(self.hyperpipe.results.metrics_train), 2 * expected_num_of_metrics)
@@ -500,8 +500,8 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.fit(self.__X, self.__y)
 
         # reset all infos
-        self.hyperpipe.results.dummy_estimator.train = MDBScoreInformation()
-        self.hyperpipe.results.dummy_estimator.test = MDBScoreInformation()
+        self.hyperpipe.results.dummy_estimator.metrics_train = MDBScoreInformation()
+        self.hyperpipe.results.dummy_estimator.metrics_test = MDBScoreInformation()
         self.hyperpipe.results.metrics_train = {}
         self.hyperpipe.results.metrics_test = {}
         self.hyperpipe.best_config = None
@@ -513,8 +513,8 @@ class HyperpipeTests(PhotonBaseTest):
 
         expected_num_of_metrics = len(self.hyperpipe.optimization.metrics)
         # dummy average values
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train), expected_num_of_metrics)
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_train), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_test), expected_num_of_metrics)
         # overall average values
         self.assertTrue(len(self.hyperpipe.results.metrics_train), 2 * expected_num_of_metrics)
         self.assertTrue(len(self.hyperpipe.results.metrics_test), 2 * expected_num_of_metrics)
@@ -635,24 +635,40 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
         metric_best = MDBFoldMetric(metric_name='balanced_accuracy',
                                     operation="mean",
                                     value=0.99)
+        metric_filter_best = MDBFoldMetric(metric_name='another_accuracy',
+                                           operation="mean",
+                                           value=0.75)
+        metric_filter_default = MDBFoldMetric(metric_name='another_accuracy',
+                                              operation="mean",
+                                              value=0.55)
         # we add looser configs, one good config, and one good config that failed
         # and check if the good non-failing config is chosen
         for i in range(10):
             config = MDBConfig()
             # number 5 is the winner
             if i == 5 or i == 8:
-                config.metrics_test = [metric_best]
+                config.metrics_test = [metric_best, metric_filter_default]
+                config.config_dict = {'any_key': 'pressed'}
+            elif i == 7:
+                config.metrics_test = [metric_default, metric_filter_best]
+                config.config_dict = {'any_key': 'pressed'}
             else:
-                config.metrics_test = [metric_default]
+                config.metrics_test = [metric_default, metric_filter_default]
+                config.config_dict = {'any_key': 'not_pressed'}
             if i == 8:
                 config.config_failed = True
             list_of_tested_configs.append(config)
 
         outer_fold = MDBOuterFold()
         outer_fold.tested_config_list = list_of_tested_configs
-        winner_config = my_pipe_optimizer.get_optimum_config(outer_fold)
+        winner_config = outer_fold.get_optimum_config(metric=my_pipe_optimizer.best_config_metric,
+                                                      maximize_metric=my_pipe_optimizer.maximize_metric)
         self.assertIs(winner_config, list_of_tested_configs[5])
-        self.assertEqual(winner_config.metrics_test[0].value, 0.99)
+        self.assertEqual(winner_config.get_test_metric('balanced_accuracy'), 0.99)
+
+        winner_config_filtered = outer_fold.get_optimum_config(metric='another_accuracy', maximize_metric=True,
+                                                               dict_filter=('any_key', 'pressed'))
+        self.assertEqual(winner_config_filtered.get_test_metric('another_accuracy'), 0.75)
 
     def test_get_optimum_config_outer_folds(self):
         my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
