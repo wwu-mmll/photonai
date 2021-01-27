@@ -853,7 +853,6 @@ class ResultsHandler:
 
         # 5. output results
         output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
-        debug = True
 
     def text_summary(self):
         def divider(header):
