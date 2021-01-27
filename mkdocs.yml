@@ -3,8 +3,8 @@ docs_dir: documentation/docs
 nav:
   - 'Getting Started':
     - Introduction: index.md
-    - Classification: classification.md
-    - Regression: regression.md
+    - Classification: getting_started/classification.md
+    - Regression: getting_started/regression.md
   - 'API':
     - 'Base':
       - Hyperpipe: api/base/hyperpipe.md
@@ -17,7 +17,7 @@ nav:
       - SMAC: api/optimization/smac.md
       - Nevergrad: api/optimization/nevergrad.md
     - 'Processing':
-      - Results Handler: api/processing/not_ready_results_handler.md
+      - Results Handler: api/processing/results_handler.md
   - 'Features':
       - 'Over- /Undersampling': examples/imbalanced_data.md
       - 'Custom Metrics': custom_metrics.md
