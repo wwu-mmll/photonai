@@ -80,37 +80,37 @@
 #         exec(open(join(self.examples_folder, "advanced/custom_elements/custom_transformer.py")).read(), locals(), globals())
 #
 #     def test_regression(self):
-#         exec(open(join(self.examples_folder, "basic/regression.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/regression.py")).read(), locals(), globals())
 #
 #     def test_no_outer_cv_default_pipe(self):
-#         exec(open(join(self.examples_folder, "basic/no_outer_cv_default_pipe.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/no_outer_cv_default_pipe.py")).read(), locals(), globals())
 #
 #     def test_load_hyperpipe_from_json(self):
-#         exec(open(join(self.examples_folder, "basic/load_hyperpipe_from_json.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/load_hyperpipe_from_json.py")).read(), locals(), globals())
 #
 #     def test_batching_elements(self):
-#         exec(open(join(self.examples_folder, "basic/batching_elements.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/batching_elements.py")).read(), locals(), globals())
 #
 #     def test_pipeline_branches(self):
-#         exec(open(join(self.examples_folder, "basic/pipeline_branches.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/pipeline_branches.py")).read(), locals(), globals())
 #
 #     def test_stack(self):
-#         exec(open(join(self.examples_folder, "basic/stack.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/stack.py")).read(), locals(), globals())
 #
 #     def test_classification(self):
-#         exec(open(join(self.examples_folder, "basic/classification.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/classification.py")).read(), locals(), globals())
 #
 #     def test_data_integration(self):
-#         exec(open(join(self.examples_folder, "basic/data_integration.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/data_integration.py")).read(), locals(), globals())
 #
 #     def test_jmlr_example(self):
-#         exec(open(join(self.examples_folder, "basic/jmlr_example.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/jmlr_example.py")).read(), locals(), globals())
 #
 #     def test_switch(self):
-#         exec(open(join(self.examples_folder, "basic/switch.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/switch.py")).read(), locals(), globals())
 #
 #     def test_classifier_ensemble(self):
-#         exec(open(join(self.examples_folder, "basic/classifier_ensemble.py")).read(), locals(), globals())
+#         exec(open(join(self.examples_folder, "getting_started/classifier_ensemble.py")).read(), locals(), globals())
 #
 #     def test_skopt_example(self):
 #         exec(open(join(self.examples_folder, "optimizer/skopt_example.py")).read(), locals(), globals())
