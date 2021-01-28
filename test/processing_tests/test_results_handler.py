@@ -82,82 +82,9 @@ class ResultsHandlerTest(PhotonBaseTest):
         """
         Check content of photon_summary.txt. Adjustment with hyperpipe.result.
         """
-<<<<<<< HEAD
-        self.hyperpipe.fit(self.__X, self.__y)
-        with open(os.path.join(self.hyperpipe.results_folder, 'photon_summary.txt')) as file:
-            data = file.read()
 
-        areas = data.split("-------------------------------------------------------------------")
-
-        # first areas
-        self.assertEqual(areas[0], "\nPHOTONAI RESULT SUMMARY\n")
-
-        result_dict = {"dummy_test": self.hyperpipe.results.dummy_estimator.test,
-                       "dummy_train": self.hyperpipe.results.dummy_estimator.train,
-                       "best_config_train": self.hyperpipe.results.metrics_train,
-                       "best_config_test": self.hyperpipe.results.metrics_test}
-
-        outer_fold_traintest = {}
-
-        key_areas_outer_fold = []
-        # all outerfold areas
-        for i in range(len(self.hyperpipe.results.outer_folds)):
-            self.assertEqual(areas[4+i*2], '\nOUTER FOLD '+str(i+1)+'\n')
-            key_areas_outer_fold.append("outer_fold_"+str(i+1))
-            result_dict["outer_fold_"+str(i+1)+"_train"] = \
-                self.hyperpipe.results.outer_folds[i].best_config.best_config_score.training
-            outer_fold_traintest["outer_fold_"+str(i+1)+"_train"] = "TrainValue"
-            result_dict["outer_fold_" + str(i + 1) + "_test"] = \
-                self.hyperpipe.results.outer_folds[i].best_config.best_config_score.validation
-            outer_fold_traintest["outer_fold_"+str(i+1)+"_test"] = "TestValue"
-
-        # check performance / test-train of dummy and best_config
-        key_areas = ["entracee", "name", "dummy", "best_config"]
-        splitted_areas = {}
-
-        for num in range(len(key_areas)):
-            splitted_areas[key_areas[num]] = areas[num].split("\n")
-
-        index_dict = {}
-        for key in key_areas[2:]:
-            if [perf for perf in splitted_areas[key] if perf == "TEST:"]:
-                index_dict[key+"_test"] = splitted_areas[key].index("TEST:")
-                index_dict[key+"_train"] = splitted_areas[key].index("TRAINING:")
-            else:
-                self.assertTrue(False)
-            for data_key in [k for k in list(result_dict.keys()) if key in k]:
-                table_str = "\n".join([splitted_areas[key][index_dict[data_key]+i] for i in [2, 4, 5, 6]])
-                table = pd.read_csv(StringIO(table_str.replace(" ", "")),
-                                    sep="|")[["MetricName", "MEAN", "STD"]].set_index("MetricName")
-                for result_metric in result_dict[data_key]:
-                    self.assertAlmostEqual(result_metric.value,
-                                           table[result_metric.operation.split(".")[1]][result_metric.metric_name], 2)
-
-        splitted_areas = {}
-        for num in range(len(key_areas_outer_fold)):
-            splitted_areas[key_areas_outer_fold[num]] = areas[len(key_areas)+1+num*2].split("\n")
-
-        # check all outer_folds
-        for ka in key_areas_outer_fold:
-            if [perf for perf in splitted_areas[ka] if perf == "PERFORMANCE:"]:
-                index_dict[ka + "_train"] = splitted_areas[ka].index("PERFORMANCE:")
-                index_dict[ka + "_test"] = index_dict[ka+"_train"]
-            else:
-                self.assertTrue(False)
-            for data_key in [k for k in list(result_dict.keys()) if ka in k]:
-                table_str = "\n".join([splitted_areas[ka][index_dict[data_key] + i]
-                                       for i in [2, 4, 5, 6]])
-                table = pd.read_csv(StringIO(table_str.replace(" ", "")), sep="|")[
-                        ["MetricName", "TrainValue", "TestValue"]].set_index("MetricName")
-
-                for result_metric in result_dict[data_key].metrics.keys():
-                    self.assertAlmostEqual(result_dict[data_key].metrics[result_metric],
-                                           table[outer_fold_traintest[data_key]][result_metric], 4)
-=======
         # todo: check appropriately
         pass
-
->>>>>>> develop
 
     def test_save_backmapping_weird_format(self):
         self.hyperpipe.fit(self.__X, self.__y)
