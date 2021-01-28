@@ -1,0 +1,1 @@
+::: photonai.base.OutputSettings

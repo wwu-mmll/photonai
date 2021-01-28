@@ -20,9 +20,10 @@ from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
 
 from photonai.photonlogger.logger import logger
+from photonai.helper.helper import print_double_metrics, print_metrics, print_estimator_metrics
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
-
+from photonai.__init__ import __version__
 
 class ResultsHandler:
     """
@@ -91,6 +92,7 @@ class ResultsHandler:
         """
         methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
         return methods_list
+
 
     def get_performance_table(self):
         """This function returns a summary table of the overall results.
@@ -792,152 +794,136 @@ class ResultsHandler:
         return self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_predictions_file(self):
-        filename = os.path.join(self.results.output_folder, 'best_config_predictions.csv')
-
-        # usually we write the predictions for the outer fold
-        if not self.output_settings.save_predictions_from_best_config_inner_folds:
-            return self.get_test_predictions(filename)
-        # in case no outer folds exist, we write the inner_fold predictions
-        else:
-            return self.get_best_config_inner_fold_predictions(filename)
-
-    def write_summary(self):
-
-        result_tree = self.results
-        pp = pprint.PrettyPrinter(indent=4)
-
-        text_list = []
-        intro_text = """
-PHOTONAI RESULT SUMMARY
--------------------------------------------------------------------
-
-ANALYSIS NAME: {}
-BEST CONFIG METRIC: {}
-TIME OF RESULT: {}
-VERSION: {}
-
-        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.computation_end_time,
-                   result_tree.version)
-        text_list.append(intro_text)
-
-        if result_tree.dummy_estimator:
-            dummy_text = """
--------------------------------------------------------------------
-BASELINE - DUMMY ESTIMATOR
-(always predict mean or most frequent target)
-
-strategy: {}     
-
-            """.format(result_tree.dummy_estimator.strategy)
-            text_list.append(dummy_text)
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.test)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.train)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
-
-        if result_tree.best_config:
-            text_list.append("""
-
--------------------------------------------------------------------
-OVERALL BEST CONFIG: 
-{}            
-            """.format(pp.pformat(result_tree.best_config.human_readable_config)))
-
-        text_list.append("""
-MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
-        """)
-
-        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_test)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
-        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_train)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
-
-        for outer_fold in result_tree.outer_folds:
-            text_list.append(self.print_outer_fold(outer_fold, result_tree.hyperpipe_info.estimation_type,
-                                                   result_tree.hyperpipe_info.eval_final_performance))
-
-        final_text = ''.join(text_list)
-
-        try:
-            summary_filename = os.path.join(self.results.output_folder, 'photon_summary.txt')
-            text_file = open(summary_filename, "w")
-            text_file.write(final_text)
-            text_file.close()
-        except OSError as e:
-            logger.error("Could not write summary file")
-            logger.error(str(e))
-
-    @staticmethod
-    def get_dict_from_metric_list(metric_list):
-        best_config_metrics = {}
-        for train_metric in metric_list:
-            if train_metric.metric_name not in best_config_metrics:
-                best_config_metrics[train_metric.metric_name] = {}
-            operation_strip = train_metric.operation.split(".")[1]
-            best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
-        return best_config_metrics
-
-    @staticmethod
-    def print_table_for_performance_overview(metric_dict, header):
-        x = PrettyTable()
-        x.field_names = ["Metric Name", "MEAN", "STD"]
-        for element_key, element_dict in metric_dict.items():
-            x.add_row([element_key, element_dict["MEAN"], element_dict["STD"]])
-
-        text = """
-{}:
-{}
-                """.format(header, str(x))
-
-        return text
-
-    @staticmethod
-    def print_outer_fold(outer_fold, estimation_type="classifier", eval_final_performance=True):
-
-        pp = pprint.PrettyPrinter(indent=4)
-        outer_fold_text = []
-
-        if outer_fold.best_config is not None:
-            outer_fold_text.append("""
--------------------------------------------------------------------
-OUTER FOLD {}
--------------------------------------------------------------------
-Best Config:
-{}""".format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config)))
-        if eval_final_performance:
-            outer_fold_text.append("""
-            
-Number of samples training {}
-Number of samples test {}
-            """.format(outer_fold.best_config.best_config_score.number_samples_training,
-                       outer_fold.best_config.best_config_score.number_samples_validation))
-
-            if estimation_type == "classifier":
-                outer_fold_text.append("""
-Class distribution training {}
-Class distribution test {}
-
-                """.format(outer_fold.class_distribution_validation,
-                           outer_fold.class_distribution_test))
-            if outer_fold.best_config.config_failed:
-                outer_fold_text.append("""
-Config Failed: {}            
-    """.format(outer_fold.best_config.config_error))
-
+          if self.output_settings.save_output:
+            filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+            # usually we write the predictions for the outer fold
+            if not self.output_settings.save_predictions_from_best_config_inner_folds:
+                return self.get_test_predictions(filename)
+            # in case no outer folds exist, we write the inner_fold predictions
             else:
-                x = PrettyTable()
-                x.field_names = ["Metric Name", "Train Value", "Test Value"]
-                metrics_train = outer_fold.best_config.best_config_score.training.metrics
-                metrics_test = outer_fold.best_config.best_config_score.validation.metrics
+                return self.get_best_config_inner_fold_predictions(filename)
 
-                for element_key, element_value in metrics_train.items():
-                    x.add_row([element_key, np.round(element_value, 6), np.round(metrics_test[element_key], 6)])
-                outer_fold_text.append("""
-PERFORMANCE:
+    def get_best_performances_for_estimator(self, ):
+
+        # 1. find out which estimators there are
+        last_element_name_identifier, last_element_dict = list(self.results.hyperpipe_info.elements.items())[-1]
+        no_switch_found = False
+        if not ":" in last_element_name_identifier:
+            no_switch_found = True
+
+        last_element_base_element, last_element_name = last_element_name_identifier.split(":")
+        if not last_element_base_element == "SWITCH":
+            no_switch_found = True
+
+        if no_switch_found:
+            logger.info("Could not identify switch at the end of the pipeline. Estimator Comparison aborted.")
+            return
+
+        # generate config key by switch name
+        search_key = last_element_name + "__" + "estimator_name"
+        estimator_list = last_element_dict.keys()
+        best_configs_from_estimators = dict()
+        for estimator in estimator_list:
+            best_configs_from_estimators[estimator] = list()
+
+        # 2. iterate list and filter configs
+        for outer_fold in self.results.outer_folds:
+            for estimator_name in estimator_list:
+                try:
+                    best_estimator_config = outer_fold.get_optimum_config(metric=self.results.hyperpipe_info.best_config_metric,
+                                                                          maximize_metric=self.results.hyperpipe_info.
+                                                                          maximize_best_config_metric,
+                                                                          dict_filter=(search_key, estimator_name))
+                    best_configs_from_estimators[estimator_name].append(best_estimator_config)
+                except Warning as w:
+                    logger.info("Could not find best config for estimator {} " 
+                                "in outer fold {}".format(estimator_name, outer_fold.fold_nr))
+
+        # 4. get infos for each list
+        estimator_performance_values = dict()
+        for estimator_name in estimator_list:
+            estimator_performance_values[estimator_name] = dict()
+            for metric in self.results.hyperpipe_info.metrics:
+                performance_values = [c.get_test_metric(metric, 'mean')
+                                      for c in best_configs_from_estimators[estimator_name]]
+                estimator_performance_values[estimator_name][metric] = np.mean(performance_values)
+
+        # 5. output results
+        output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
+
+    def text_summary(self):
+        def divider(header):
+            return header.ljust(101, '=')
+
+        output_string = divider("ANALYSIS INFORMATION ")
+
+        elapsed_time = self.results.computation_end_time - self.results.computation_start_time
+        output_string += """ 
+Project Folder: {},
+Computation Time: {} - {}
+Duration: {}
+Optimized for: {}
+Hyperparameter Optimizer: {}
+
+""".format(self.output_settings.results_folder,
+           self.results.computation_start_time,
+           self.results.computation_end_time,
+           elapsed_time,
+           self.results.hyperpipe_info.best_config_metric,
+           self.results.hyperpipe_info.optimization["Optimizer"])
+
+        output_string += divider("DUMMY RESULTS ")
+        output_string += """
 {}
 
+""".format(print_metrics("DUMMY", self.results.dummy_estimator.get_test_metric(operation='mean'), summary=True))
 
+        output_string += divider("AVERAGE PERFORMANCE ACROSS OUTER FOLDS ")
 
-                """.format(str(x)))
+        test_metrics = self.results.get_test_metric_dict()
+        train_metrics = self.results.get_train_metric_dict()
+        output_string += """
+{}
 
-        return ''.join(outer_fold_text)
+""".format(self.print_table_for_performance_overview(train_metrics, test_metrics))
+
+        output_string += divider("BEST HYPERPARAMETER CONFIGURATION ")
+        output_string += """
+{}
+
+""".format(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
+
+        output_string += """
+{}
+
+""".format(print_double_metrics(self.results.best_config.best_config_score.training.metrics,
+                                self.results.best_config.best_config_score.validation.metrics,
+                                summary=True))
+        output_string += divider("PHOTONAI {} ".format(__version__))
+
+        if self.output_settings.results_folder is not None:
+            output_string += "\nYour results are stored in " + self.output_settings.results_folder + "\n"
+            output_string += "Go to https://explorer.photon-ai.com and upload your photon_result_file.json " \
+                             "for convenient result visualization! \n"
+            output_string += "For more info and documentation visit https://www.photon-ai.com"
+
+        if self.output_settings.save_output:
+            try:
+                summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
+                text_file = open(summary_filename, "w")
+                text_file.write(output_string)
+                text_file.close()
+            except OSError as e:
+                logger.error("Could not write summary file")
+                logger.error(str(e))
+
+            return output_string
+
+    @staticmethod
+    def print_table_for_performance_overview(metric_dict_train, metric_dict_test):
+        x = PrettyTable()
+        x.field_names = ["Metric Name", "Training Mean", "Training Std", "Test Mean", "Test Std"]
+        for element_key, element_dict in metric_dict_train.items():
+            x.add_row([element_key, element_dict["mean"], element_dict["std"],
+                       metric_dict_test[element_key]["mean"], metric_dict_test[element_key]["std"]])
+        return x

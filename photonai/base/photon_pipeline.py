@@ -430,7 +430,7 @@ class PhotonPipeline(_BaseComposition):
     def inverse_transform(self, X, y=None, **kwargs):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
-        for name, transform in self.elements[::-1]:
+        for name, transform in reversed(self.elements):
             if transform.disabled:
                 continue
             try:
@@ -440,7 +440,7 @@ class PhotonPipeline(_BaseComposition):
                       "Cause: {1} " \
                       "The returned value is based on the inverse input data of {0}.".format(name, str(e))
                 warnings.warn(msg)
-                logger.warning(msg)
+                logger.photon_system_log(msg)
                 break
 
         return X, y, kwargs

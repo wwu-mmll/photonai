@@ -82,6 +82,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         """
         Check content of photon_summary.txt. Adjustment with hyperpipe.result.
         """
+<<<<<<< HEAD
         self.hyperpipe.fit(self.__X, self.__y)
         with open(os.path.join(self.hyperpipe.results_folder, 'photon_summary.txt')) as file:
             data = file.read()
@@ -152,6 +153,11 @@ class ResultsHandlerTest(PhotonBaseTest):
                 for result_metric in result_dict[data_key].metrics.keys():
                     self.assertAlmostEqual(result_dict[data_key].metrics[result_metric],
                                            table[outer_fold_traintest[data_key]][result_metric], 4)
+=======
+        # todo: check appropriately
+        pass
+
+>>>>>>> develop
 
     def test_save_backmapping_weird_format(self):
         self.hyperpipe.fit(self.__X, self.__y)

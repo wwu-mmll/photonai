@@ -1,13 +1,14 @@
 import datetime
 import warnings
 import numpy as np
+import json
 
 from photonai.helper.helper import PhotonDataHelper, print_double_metrics, print_metrics
-from photonai.optimization import DummyPerformance
+from photonai.optimization import DummyPerformanceConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.results_structure import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
+from photonai.processing.results_structure import MDBInnerFold, MDBScoreInformation
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer, PhotonMasterOptimizer
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -140,9 +141,9 @@ class OuterFoldManager:
 
     def fit(self, X, y=None, **kwargs):
         logger.photon_system_log('')
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.stars()
         logger.photon_system_log('Outer Cross validation Fold {}'.format(self.cross_validation_info.outer_folds[self.outer_fold_id].fold_nr))
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.stars()
 
         self._prepare_data(X, y, **kwargs)
         self._fit_dummy()
@@ -158,9 +159,9 @@ class OuterFoldManager:
         #                                                 outer_fold_counter=outer_fold_counter)
 
         if self.cross_validation_info.calculate_metrics_per_fold:
-            self.fold_operation = FoldOperations.MEAN
+            self.fold_operation = "mean"
         else:
-            self.fold_operation = FoldOperations.RAW
+            self.fold_operation = "raw"
 
         self.max_nr_of_configs = ''
         if hasattr(self.optimizer, 'n_configurations'):
@@ -173,13 +174,28 @@ class OuterFoldManager:
             for current_config in self.optimizer.ask:
                 self.objective_function(current_config)
 
-        logger.clean_info('---------------------------------------------------------------------------------------------------------------')
+        logger.line()
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
-        print(self.tested_config_counter)
+        logger.info(self.tested_config_counter)
         # now go on with the best config found
         if self.tested_config_counter > 0:
-            best_config_outer_fold = self.optimization_info.get_optimum_config(self.result_object.tested_config_list,
-                                                                               self.fold_operation)
+            best_config_outer_fold = self.result_object.get_optimum_config(self.optimization_info.best_config_metric,
+                                                                           self.optimization_info.maximize_metric,
+                                                                           fold_operation=self.fold_operation)
+            # inform user
+            logger.debug('Optimizer metric: ' + self.optimization_info.best_config_metric + '\n' +
+                         '   --> Maximize metric: ' + str(self.optimization_info.maximize_metric))
+
+            logger.system_line()
+            logger.photon_system_log('BEST_CONFIG ')
+            logger.system_line()
+            logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
+                                                sort_keys=True))
+            logger.system_line()
+            logger.photon_system_log('VALIDATION PERFORMANCE')
+            logger.system_line()
+            print_double_metrics(best_config_outer_fold.get_train_metric(operation="mean"),
+                                 best_config_outer_fold.get_test_metric(operation="mean"))
 
             if not best_config_outer_fold:
                 raise Exception("No best config was found!")
@@ -240,6 +256,9 @@ class OuterFoldManager:
                 best_config_performance_mdb.training = train_score_mdb
                 best_config_performance_mdb.validation = test_score_mdb
 
+                logger.system_line()
+                logger.photon_system_log('TEST PERFORMANCE')
+                logger.system_line()
                 print_double_metrics(train_score_mdb.metrics, test_score_mdb.metrics)
             else:
 
@@ -270,8 +289,7 @@ class OuterFoldManager:
     def objective_function(self, current_config):
         if current_config is None:
             return
-        logger.clean_info(
-            '---------------------------------------------------------------------------------------------------------------')
+        logger.line()
         self.tested_config_counter += 1
 
         if hasattr(self.optimizer, 'ask_for_pipe'):
@@ -292,10 +310,10 @@ class OuterFoldManager:
         current_config_mdb.config_nr = self.tested_config_counter
 
         if not current_config_mdb.config_failed:
-            metric_train = MDBHelper.get_metric(current_config_mdb, self.fold_operation,
-                                                self.optimization_info.best_config_metric)
-            metric_test = MDBHelper.get_metric(current_config_mdb, self.fold_operation,
-                                               self.optimization_info.best_config_metric, train=False)
+            metric_train = current_config_mdb.get_train_metric(self.optimization_info.best_config_metric,
+                                                               self.fold_operation)
+            metric_test = current_config_mdb.get_test_metric(self.optimization_info.best_config_metric,
+                                                             self.fold_operation)
 
             if metric_train is None or metric_test is None:
                 raise Exception("Config did not fail, but did not get any metrics either....!!?")
@@ -380,7 +398,8 @@ class OuterFoldManager:
                 # performaceConstraints: DummyEstimator
                 if self.constraint_objects is not None:
                     dummy_constraint_objs = [opt for opt in self.constraint_objects
-                                             if isinstance(opt, DummyPerformance)]
+                                             if isinstance(opt, DummyPerformanceConstraint)]
+
                     if dummy_constraint_objs:
                         for dummy_constraint_obj in dummy_constraint_objs:
                             dummy_constraint_obj.set_dummy_performance(self.result_object.dummy_results)

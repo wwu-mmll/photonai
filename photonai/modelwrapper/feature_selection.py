@@ -325,3 +325,6 @@ class LassoFeatureSelection(BaseEstimator, TransformerMixin):
 
     def set_params(self, **params):
         super(LassoFeatureSelection, self).set_params(**params)
+
+    def inverse_transform(self, X, y=None, **kwargs):
+        return self.model_selector.inverse_transform(X)

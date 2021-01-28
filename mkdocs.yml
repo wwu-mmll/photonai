@@ -59,6 +59,10 @@ theme:
   features:
     - navigation.tabs
 
+markdown_extensions:
+  - pymdownx.highlight
+  - pymdownx.superfences
+
 plugins:
   - search
   - macros:
@@ -70,7 +74,3 @@ plugins:
             filters:
               - "!^_"
               - "^__init__$"
-#          setup_commands:
-#            - import sys, os
-#            - curr_dir = os.path.dirname(__file__)
-#            - sys.path.append(os.path.join(curr_dir, "../photonai"))

@@ -6,21 +6,19 @@ import numpy as np
 from pymodm import MongoModel, EmbeddedMongoModel, fields
 
 
-class MDBFoldMetric(EmbeddedMongoModel):
-    class Meta:
-        final = True
-        connection_alias = 'photon_core'
+class MetricHelper:
 
-    operation = fields.CharField(blank=True)
-    metric_name = fields.CharField(blank=True)
-    value = fields.FloatField(blank=True)
+    def get_train_metric(self, name="", operation="mean"):
+        return MDBHelper.get_metric(self.metrics_train, name, operation)
 
-    def __str__(self):
-        if self.operation is not None:
-            op = self.operation.split(".")[1]
-        else:
-            op = ''
-        return "__".join([self.metric_name, op, str(self.value)])
+    def get_test_metric(self, name="", operation="mean"):
+        return MDBHelper.get_metric(self.metrics_test, name, operation)
+
+    def get_train_metric_dict(self):
+        return MDBHelper.get_dict_from_metric_list(self.metrics_train)
+
+    def get_test_metric_dict(self):
+        return MDBHelper.get_dict_from_metric_list(self.metrics_test)
 
 
 class MDBScoreInformation(EmbeddedMongoModel):
@@ -35,6 +33,12 @@ class MDBScoreInformation(EmbeddedMongoModel):
     indices = fields.ListField(blank=True)
     probabilities = fields.ListField(blank=True)
     metrics_copied_from_inner = fields.BooleanField(default=False)
+
+    def save_memory(self):
+        self.y_true = list()
+        self.y_pred = list()
+        self.indices = list()
+        self.probabilities = list()
 
     def __str__(self):
         return str(self.metrics)
@@ -55,7 +59,20 @@ class MDBInnerFold(EmbeddedMongoModel):
     learning_curves = fields.ListField(blank=True)
 
 
-class MDBConfig(EmbeddedMongoModel):
+class MDBFoldMetric(EmbeddedMongoModel):
+    class Meta:
+        final = True
+        connection_alias = 'photon_core'
+
+    operation = fields.CharField(blank=True, default='')
+    metric_name = fields.CharField(blank=True)
+    value = fields.FloatField(blank=True)
+
+    def __str__(self):
+        return "__".join([self.metric_name, self.operation, str(self.value)])
+
+
+class MDBConfig(EmbeddedMongoModel, MetricHelper):
     class Meta:
         final = True
         connection_alias = 'photon_core'
@@ -84,12 +101,10 @@ class MDBConfig(EmbeddedMongoModel):
 
     def decrease_memory(self):
         for fold in self.inner_folds:
-            for fold_set in [fold.training, fold.validation]:
-                fold_set.y_true = []
-                fold_set.y_pred = []
-                fold_set.indices = []
-                fold_set.probabilities = []
+            fold.training.save_memory()
+            fold.validation.save_memory()
             fold.feature_importances = []
+            fold.time_monitor = {}
 
 
 class MDBOuterFold(EmbeddedMongoModel):
@@ -105,6 +120,40 @@ class MDBOuterFold(EmbeddedMongoModel):
     class_distribution_validation = fields.DictField(blank=True, default={})
     number_samples_validation = fields.IntegerField(blank=True)
     dummy_results = fields.EmbeddedDocumentField(MDBInnerFold, blank=True)
+
+    def get_optimum_config(self, metric, maximize_metric, dict_filter=None, fold_operation="mean"):
+        """
+        Looks for the best configuration according to the metric with which the configurations are compared
+        :param tested_configs: the list of tested configurations and their performances
+        :return: MDBConfiguration that has performed best
+        """
+
+        list_of_non_failed_configs = [conf for conf in self.tested_config_list if not conf.config_failed]
+
+        # filter configs by key value pair (e.g. estimators__estimator == "SVC")
+        if dict_filter is not None:
+            list_of_non_failed_configs = [conf for conf in list_of_non_failed_configs
+                                          if dict_filter[0] in conf.config_dict
+                                          and conf.config_dict[dict_filter[0]] == dict_filter[1]]
+
+        if len(list_of_non_failed_configs) == 0:
+            raise Warning("No Configs found which did not fail.")
+
+        if len(list_of_non_failed_configs) == 1:
+            best_config_outer_fold = list_of_non_failed_configs[0]
+        else:
+            list_of_config_vals = [c.get_test_metric(metric, fold_operation) for c in list_of_non_failed_configs]
+
+            if maximize_metric:
+                # max metric
+                best_config_metric_nr = np.argmax(list_of_config_vals)
+            else:
+                # min metric
+                best_config_metric_nr = np.argmin(list_of_config_vals)
+
+            best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
+
+        return best_config_outer_fold
 
 
 class MDBPermutationMetrics(EmbeddedMongoModel):
@@ -129,17 +178,14 @@ class MDBPermutationResults(EmbeddedMongoModel):
     metrics = fields.EmbeddedDocumentListField(MDBPermutationMetrics, blank=True)
 
 
-class MDBDummyResults(EmbeddedMongoModel):
+class MDBDummyResults(EmbeddedMongoModel, MetricHelper):
     class Meta:
         final = True
         connection_alias = 'photon_core'
 
     strategy = fields.CharField(blank=True)
-    train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
-    test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
-
-    def get_test_metrics(self):
-        return {m.metric_name: m.value for m in self.test if m.operation == "FoldOperations.MEAN"}
+    metrics_train = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
+    metrics_test = fields.EmbeddedDocumentListField(MDBFoldMetric, default=[], blank=True)
 
 
 class MDBHyperpipeInfo(EmbeddedMongoModel):
@@ -150,15 +196,17 @@ class MDBHyperpipeInfo(EmbeddedMongoModel):
     data = fields.DictField(blank=True)
     cross_validation = fields.DictField(blank=True)
     optimization = fields.DictField(blank=True)
-    flowchart = fields.CharField(blank=True)
+    elements = fields.DictField(blank=True)
     metrics = fields.ListField(blank=True)
     best_config_metric = fields.CharField(blank=True)
     maximize_best_config_metric = fields.BooleanField(blank=True)
     estimation_type = fields.CharField(blank=True)
     eval_final_performance = fields.BooleanField(blank=True)
+    # todo: deprecated!!! delete in later versions.
+    flowchart = fields.CharField(blank=True)
 
 
-class MDBHyperpipe(MongoModel):
+class MDBHyperpipe(MongoModel, MetricHelper):
     class Meta:
         final = True
         connection_alias = 'photon_core'
@@ -192,12 +240,6 @@ class MDBHyperpipe(MongoModel):
     wizard_system_name = fields.CharField(blank=True)
 
 
-class FoldOperations(Enum):
-    MEAN = 0
-    STD = 1
-    RAW = 2
-
-
 class ParallelData(MongoModel):
 
     unprocessed_data = fields.ObjectIdField()
@@ -205,7 +247,34 @@ class ParallelData(MongoModel):
 
 
 class MDBHelper:
-    OPERATION_DICT = {FoldOperations.MEAN: np.mean, FoldOperations.STD: np.std}
+    OPERATION_DICT = {"mean": np.mean, "std": np.std}
+
+    @staticmethod
+    def get_metric(metric_list, name="", operation=""):
+        if name and operation:
+            metric = [i for i in metric_list if i.metric_name == name and i.operation == operation]
+            if len(metric) == 0:
+                return None
+            if len(metric) == 1:
+                return metric[0].value
+            else:
+                raise KeyError("Found multiple metrics with same operation and name.")
+        elif not name and operation:
+            metric_list = {i.metric_name: i.value for i in metric_list if i.operation == operation}
+            return metric_list
+        else:
+            raise ValueError("Can get metric(s) either by passing name and operation (raw, mean, std),"
+                             "or operation only. No arguments are given. ")
+            return None
+
+    @staticmethod
+    def get_dict_from_metric_list(metric_list):
+        best_config_metrics = {}
+        for train_metric in metric_list:
+            if train_metric.metric_name not in best_config_metrics:
+                best_config_metrics[train_metric.metric_name] = {}
+            best_config_metrics[train_metric.metric_name][train_metric.operation] = np.round(train_metric.value, 6)
+        return best_config_metrics
 
     @staticmethod
     def aggregate_metrics_for_outer_folds(outer_folds, metrics):
@@ -226,7 +295,7 @@ class MDBHelper:
                 raise KeyError('Could not find function for processing metrics across folds:' + operation_name)
             return val
 
-        operations = [FoldOperations.MEAN, FoldOperations.STD]
+        operations = MDBHelper.OPERATION_DICT.keys()
         metrics_train = []
         metrics_test = []
         for metric_item in metrics:
@@ -243,18 +312,6 @@ class MDBHelper:
                     metrics_test.append(MDBFoldMetric(operation=op, metric_name=metric_item,
                                                       value=calculate_single_metric(op, value_list_validation)))
         return metrics_train, metrics_test
-
-    @staticmethod
-    def get_metric(config_item, operation, metric, train=True):
-        if train:
-            metric = [item.value for item in config_item.metrics_train if item.operation == str(operation)
-                      and item.metric_name == metric and not config_item.config_failed]
-        else:
-            metric = [item.value for item in config_item.metrics_test if item.operation == str(operation)
-                      and item.metric_name == metric and not config_item.config_failed]
-        if len(metric) == 1:
-            return metric[0]
-        return metric
 
     @staticmethod
     def load_results(filename):

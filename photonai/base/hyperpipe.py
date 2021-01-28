@@ -29,17 +29,16 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
-from photonai.helper.helper import print_double_metrics
-from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
-    SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, IntegerRange, FloatRange, Categorical, PhotonBaseConstraint
-from photonai.optimization.nevergrad.nevergrad import NevergradOptimizer
+from photonai.optimization import FloatRange
+from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing import ResultsHandler
+from photonai.optimization.optimization_info import Optimization
 from photonai.processing.metrics import Scorer
 from photonai.processing.outer_folds import OuterFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo, MDBDummyResults, MDBHelper, \
-    FoldOperations, MDBConfig, MDBOuterFold
+     MDBConfig, MDBOuterFold
 
 
 class OutputSettings:
@@ -48,7 +47,6 @@ class OutputSettings:
     the results are saved. Results can be saved to a MongoDB
     or a simple son-file. You can also choose whether to save
     predictions and/or feature importances.
-
     """
     def __init__(self,
                  mongodb_connect_url: str = None,
@@ -56,9 +54,9 @@ class OutputSettings:
                  overwrite_results: bool = False,
                  generate_best_model: bool = True,
                  user_id: str = '',
-                 project_folder: str = '',
                  wizard_object_id: str = '',
-                 wizard_project_name: str = ''):
+                 wizard_project_name: str = '',
+                 project_folder: str = ''):
         """
         Initialize the object.
 
@@ -88,8 +86,9 @@ class OutputSettings:
 
             project_folder:
                 Deprecated Parameter - transferred to Hyperpipe.
-
         """
+
+
         if project_folder:
             msg = "Deprecated: The parameter 'project_folder' was moved to the Hyperpipe. " \
                   "Please use Hyperpipe(..., project_folder='')."
@@ -97,17 +96,29 @@ class OutputSettings:
             raise DeprecationWarning(msg)
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
-
-        self.save_output = save_output
-        self.save_predictions_from_best_config_inner_folds = None
-
-        self.verbosity = 0
+        self.log_file = self.setup_error_file
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
         self.wizard_project_name = wizard_project_name
 
         self.generate_best_model = generate_best_model
+        self.save_output = save_output
+        self.save_predictions_from_best_config_inner_folds = None
+
+    @property
+    def setup_error_file(self):
+        return os.path.join(self.project_folder, 'photon_setup_errors.log')
+
+    def initialize_log_file(self):
+        # if we made it here, there should be no further setup errors, every error that comes
+        # now can go to the standard logger instance
+        if os.path.isfile(self.setup_error_file):
+            os.remove(self.setup_error_file)
+
+    def _add_timestamp(self, file):
+        return os.path.join(self.results_folder, os.path.basename(file))
+
 
 
 class Hyperpipe(BaseEstimator):
@@ -390,11 +401,11 @@ class Hyperpipe(BaseEstimator):
         self.preprocessing = None
 
         # ====================== Performance Optimization ===========================
-        self.optimization = Hyperpipe.Optimization(metrics=metrics,
-                                                   best_config_metric=best_config_metric,
-                                                   optimizer_input=optimizer,
-                                                   optimizer_params=optimizer_params,
-                                                   performance_constraints=performance_constraints)
+        self.optimization = Optimization(metrics=metrics,
+                                         best_config_metric=best_config_metric,
+                                         optimizer_input=optimizer,
+                                         optimizer_params=optimizer_params,
+                                         performance_constraints=performance_constraints)
 
         self.optimization.sanity_check_metrics()
 
@@ -442,7 +453,6 @@ class Hyperpipe(BaseEstimator):
             self.outer_folds = None
             self.inner_folds = dict()
 
-
     # ============= Data ==================================================================
     class Data:
 
@@ -451,163 +461,9 @@ class Hyperpipe(BaseEstimator):
             self.y = y
             self.kwargs = kwargs
 
-    # ============= Performance Optimization ==================================================================
-    class Optimization:
-
-        OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
-                                'random_grid_search': RandomGridSearchOptimizer,
-                                'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
-                                'sk_opt': SkOptOptimizer,
-                                'smac' : SMACOptimizer,
-                                'nevergrad': NevergradOptimizer,
-                                'random_search': RandomSearchOptimizer}
-
-        # 'fabolas': FabolasOptimizer}
-
-        def __init__(self, optimizer_input, optimizer_params,
-                     metrics, best_config_metric, performance_constraints):
-
-            self._optimizer_input = ''
-            self.optimizer_input_str = optimizer_input
-            self.optimizer_params = optimizer_params
-            self.metrics = metrics
-            self._best_config_metric = ''
-            self.maximize_metric = True
-            self.best_config_metric = best_config_metric
-            self.performance_constraints = performance_constraints
-
-        @property
-        def best_config_metric(self):
-            return self._best_config_metric
-
-        @best_config_metric.setter
-        def best_config_metric(self, value):
-            self._best_config_metric = value
-            if isinstance(self.best_config_metric, str):
-                self.maximize_metric = Scorer.greater_is_better_distinction(self.best_config_metric)
-
-        @property
-        def optimizer_input_str(self):
-            return self._optimizer_input
-
-        @optimizer_input_str.setter
-        def optimizer_input_str(self, value):
-            if isinstance(value, str):
-                if value not in Hyperpipe.Optimization.OPTIMIZER_DICTIONARY:
-                    raise ValueError("Optimizer " + value + " not supported right now.")
-            self._optimizer_input = value
-
-        def sanity_check_metrics(self):
-
-            if self.best_config_metric is not None:
-                if isinstance(self.best_config_metric, list):
-                    warning_text = "Best Config Metric must be a single metric given as string, no list. " \
-                                   "PHOTONAI chose the first one from the list of metrics to calculate."
-
-                    self.best_config_metric = self.best_config_metric[0]
-                    logger.warning(warning_text)
-                    warnings.warn(warning_text)
-                elif not isinstance(self.best_config_metric, str):
-                    self.best_config_metric = Scorer.register_custom_metric(self.best_config_metric)
-
-                if self.metrics is None:
-                    # if only best_config_metric is given, copy if to list of metrics
-                    self.metrics = [self.best_config_metric]
-                else:
-                    # if best_config_metric is not given in metrics list, copy it to list
-                    if self.best_config_metric not in self.metrics:
-                        self.metrics.append(self.best_config_metric)
-
-            if self.metrics is not None and len(self.metrics) > 0:
-                for i in range(len(self.metrics)):
-                    if not isinstance(self.metrics[i], str):
-                        self.metrics[i] = Scorer.register_custom_metric(self.metrics[i])
-                self.metrics = list(filter(None, self.metrics))
-            else:
-                error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
-                            "the best_config_metric so that PHOTONAI which optimizes for"
-                logger.error(error_msg)
-                raise ValueError(error_msg)
-
-            if self.best_config_metric is None and self.metrics is not None and len(self.metrics) > 0:
-                self.best_config_metric = self.metrics[0]
-                warning_text = "No best config metric was given, so PHOTONAI chose the first in the list of metrics as " \
-                               "criteria for choosing the best configuration."
-                logger.warning(warning_text)
-                warnings.warn(warning_text)
-
-        def get_optimizer(self):
-            if isinstance(self.optimizer_input_str, str):
-                # instantiate optimizer from string
-                optimizer_class = self.OPTIMIZER_DICTIONARY[self.optimizer_input_str]
-                optimizer_instance = optimizer_class(**self.optimizer_params)
-                return optimizer_instance
-            else:
-                # Todo: check if object has the right interface
-                return self.optimizer_input_str
-
-        def get_optimum_config(self, tested_configs, fold_operation=FoldOperations.MEAN):
-            """
-            Looks for the best configuration according to the metric with which the configurations are compared -> best config metric
-            :param tested_configs: the list of tested configurations and their performances
-            :return: MDBConfiguration that has performed best
-            """
-
-            list_of_config_vals = []
-            list_of_non_failed_configs = [conf for conf in tested_configs if not conf.config_failed]
-
-            if len(list_of_non_failed_configs) == 0:
-                msg = "No Configs found which did not fail."
-                logger.warning(msg)
-                warnings.warn(msg)
-            try:
-
-                if len(list_of_non_failed_configs) == 1:
-                    best_config_outer_fold = list_of_non_failed_configs[0]
-                else:
-                    for config in list_of_non_failed_configs:
-                        list_of_config_vals.append(
-                            MDBHelper.get_metric(config, fold_operation, self.best_config_metric, train=False))
-
-                    if self.maximize_metric:
-                        # max metric
-                        best_config_metric_nr = np.argmax(list_of_config_vals)
-                    else:
-                        # min metric
-                        best_config_metric_nr = np.argmin(list_of_config_vals)
-
-                    best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
-
-                # inform user
-                logger.debug('Optimizer metric: ' + self.best_config_metric + '\n' +
-                             '   --> Maximize metric: ' + str(self.maximize_metric))
-
-                logger.info('Number of tested configurations: ' + str(len(tested_configs)))
-                logger.photon_system_log('---------------------------------------------------------------------------------------------------------------')
-                logger.photon_system_log('BEST_CONFIG ')
-                logger.photon_system_log('---------------------------------------------------------------------------------------------------------------')
-                logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
-                                                    sort_keys=True))
-
-                return best_config_outer_fold
-            except BaseException as e:
-                logger.error(str(e))
-
-        def get_optimum_config_outer_folds(self, outer_folds):
-            list_of_scores = list()
-            for outer_fold in outer_folds:
-                metrics = outer_fold.best_config.best_config_score.validation.metrics
-                list_of_scores.append(metrics[self.best_config_metric])
-
-            if self.maximize_metric:
-                # max metric
-                best_config_metric_nr = np.argmax(list_of_scores)
-            else:
-                # min metric
-                best_config_metric_nr = np.argmin(list_of_scores)
-
-            best_config = outer_folds[best_config_metric_nr].best_config
-            return best_config
+    # Pipeline Management & Interface
+    #
+    #
 
     @property
     def verbosity(self):
@@ -668,6 +524,24 @@ class Hyperpipe(BaseEstimator):
                           'step skipped.')
             return
 
+    def __get_pipeline_structure(self, pipeline_elements):
+        element_list = dict()
+        for p_el in pipeline_elements:
+            if not hasattr(p_el, 'name'):
+                raise Warning('Strange Pipeline Element found that has no name..? Type: '.format(type(p_el)))
+            if hasattr(p_el, 'elements'):
+                child_list = self.__get_pipeline_structure(p_el.elements)
+                identifier = p_el.name
+                if hasattr(p_el, "identifier"):
+                    identifier = p_el.identifier + identifier
+                    element_list[identifier] = child_list
+            else:
+                if hasattr(p_el, 'base_element'):
+                    element_list[p_el.name] = str(type(p_el.base_element))
+                else:
+                    element_list[p_el.name] = str(type(p_el))
+        return element_list
+
     def _prepare_result_logging(self, start_time):
 
         self.results = MDBHyperpipe(name=self.name, version=__version__)
@@ -694,6 +568,7 @@ class Hyperpipe(BaseEstimator):
                 self.results.wizard_system_name = self.output_settings.wizard_project_name
                 self.results.user_id = self.output_settings.user_id
         self.results.outer_folds = []
+        self.results.hyperpipe_info.elements = self.__get_pipeline_structure(self.elements)
         self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
@@ -726,14 +601,6 @@ class Hyperpipe(BaseEstimator):
             logger.warning(msg)
             warnings.warn(msg)
 
-        # add flowchart to results
-        try:
-            flowchart = FlowchartCreator(self.elements)
-            self.results.hyperpipe_info.flowchart = flowchart.create_str()
-        except:
-            self.results.hyperpipe_info.flowchart = ""
-        # self.results_handler.save()
-
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
         # 1. computing average metrics
@@ -741,48 +608,38 @@ class Hyperpipe(BaseEstimator):
         # 3. training model with best config
         # 4. persisting best model
         logger.clean_info('')
-        logger.clean_info(
-            '***************************************************************************************************************')
-        logger.info("Finished all outer fold hyperparameter optimizations.")
-        logger.info("Now analysing the results...")
+        logger.stars()
+        logger.photon_system_log("Finished all outer fold computations.")
+        logger.info("Now analysing the final results...")
 
         # computer dummy metrics
+        logger.info("Computing dummy metrics...")
         config_item = MDBConfig()
         dummy_results = [outer_fold.dummy_results for outer_fold in self.results.outer_folds]
         config_item.inner_folds = [f for f in dummy_results if f is not None]
         if len(config_item.inner_folds) > 0:
-            self.results.dummy_estimator.train, self.results.dummy_estimator.test = MDBHelper.aggregate_metrics_for_inner_folds(
+            self.results.dummy_estimator.metrics_train, self.results.dummy_estimator.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(
                 config_item.inner_folds,
                 self.optimization.metrics)
 
+        logger.info("Computing mean and std for all outer fold metrics...")
         # Compute all final metrics
         self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
                                                                                                             self.optimization.metrics)
 
         # Find best config across outer folds
+        logger.info("Find best config across outer folds...")
         best_config = self.optimization.get_optimum_config_outer_folds(self.results.outer_folds)
         self.best_config = best_config.config_dict
         self.results.best_config = best_config
 
-        logger.photon_system_log('')
-        logger.photon_system_log(
-            '===============================================================================================================')
-        logger.photon_system_log('OVERALL BEST CONFIGURATION')
-        logger.photon_system_log(
-            '===============================================================================================================')
-        logger.photon_system_log(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
-        print_double_metrics(self.results.best_config.best_config_score.training.metrics,
-                             self.results.best_config.best_config_score.validation.metrics,
-                             photon_system_log=True)
-
         # save results again
         self.results.computation_end_time = datetime.datetime.now()
         self.results.computation_completed = True
+        logger.info("Save final results...")
         self.results_handler.save()
 
-        # write all convenience files (summary, predictions_file and plots)
-        self.results_handler.write_convenience_files()
-
+        logger.info("Prepare Hyperpipe.optimum pipe with best config..")
         # set self to best config
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config)
@@ -847,18 +704,16 @@ class Hyperpipe(BaseEstimator):
                 if self.cross_validation.learning_curves:
                     self.results_handler.save_all_learning_curves()
 
-        elapsed_time = self.results.computation_end_time - self.results.computation_start_time
-        logger.photon_system_log('')
-        logger.photon_system_log(
-            'Analysis ' + self.name + " done in " + str(elapsed_time))
-        if self.results_folder is not None:
-            logger.photon_system_log(
-                '***************************************************************************************************************')
-            logger.photon_system_log('Go to https://explorer.photon-ai.com and '
-                                     'upload your photon_result_file.json for convenient result visualization!')
-            logger.photon_system_log('Your results are stored in ' + self.results_folder)
-        logger.photon_system_log('***************************************************************************************************************')
-        logger.photon_system_log('PHOTON ' + str(__version__) + ' - www.photon-ai.com ')
+        logger.info("Summarizing results...")
+
+        logger.info("Write predictions to files...")
+        # write all convenience files (summary, predictions_file and plots)
+        self.results_handler.write_predictions_file()
+
+        logger.info("Write summary...")
+        logger.stars()
+        logger.photon_system_log("")
+        logger.photon_system_log(self.results_handler.text_summary())
 
     @staticmethod
     def disable_multiprocessing_recursively(pipe):
@@ -1041,9 +896,9 @@ class Hyperpipe(BaseEstimator):
         start = datetime.datetime.now()
         self._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
 
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.photon_system_log('=' * 101)
         logger.photon_system_log('PHOTONAI ANALYSIS: ' + self.name)
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.photon_system_log('=' * 101)
         logger.info("Preparing data and PHOTONAI objects for analysis...")
 
         # loop over outer cross validation
@@ -1292,8 +1147,12 @@ class Hyperpipe(BaseEstimator):
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)
 
+    @property
+    def setup_error_file(self):
+        return os.path.join(self.project_folder, 'photon_setup_errors.log')
+
     def _initialize_log_file(self):
-        self.log_file = os.path.join(self.project_folder, 'photon_setup_errors.log')
+        self.log_file = self.setup_error_file
 
     def _update_settings(self, name, timestamp):
 
@@ -1316,6 +1175,11 @@ class Hyperpipe(BaseEstimator):
                 self.log_file = 'photon_output.log'
             self.log_file = self._add_timestamp(self.log_file)
             self.set_log_file()
+
+        # if we made it here, there should be no further setup errors, every error that comes
+        # now can go to the standard logger instance
+        if os.path.isfile(self.setup_error_file):
+            os.remove(self.setup_error_file)
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
@@ -1348,155 +1212,6 @@ class Hyperpipe(BaseEstimator):
         logger.setLevel(verbose_num)
         for handler in logger.handlers:
             handler.setLevel(verbose_num)
-
-
-class FlowchartCreator(object):
-
-    def __init__(self, pipeline_elements):
-        self.pipeline_elements = pipeline_elements
-        self.chart_str = ""
-
-    def create_str(self):
-        header_layout = ""
-        header_relate = ""
-        old_element = ""
-        for pipeline_element in self.pipeline_elements:
-            header_layout = header_layout + "[" + pipeline_element.name + "]"
-            if old_element:
-                header_relate = header_relate + "[" + old_element + "]" + "->" + "[" + pipeline_element.name + "]\n"
-            old_element = pipeline_element.name
-
-        self.chart_str = "Layout:\n" + header_layout + "\nRelate:\n" + header_relate + "\n"
-
-        for pipeline_element in self.pipeline_elements:
-            self.chart_str = self.chart_str + self.recursive_element(pipeline_element, "")
-
-        return self.chart_str
-
-    @staticmethod
-    def format_cross_validation(cv):
-        if cv:
-            string = "{}(".format(cv.__class__.__name__)
-            for key, val in cv.__dict__.items():
-                string += "{}={}, ".format(key, val)
-            return string[:-2] + ")"
-        else:
-            return "None"
-
-    @staticmethod
-    def format_optimizer(optimizer):
-        return optimizer.optimizer_input_str, optimizer.optimizer_params, optimizer.metrics, optimizer.best_config_metric
-
-    def format_kwargs(self, kwargs):
-        pass
-
-    @staticmethod
-    def format_hyperparameter(hyperparameter):
-        if isinstance(hyperparameter, IntegerRange):
-            return """IntegerRange(start: {},
-                                   stop: {}, 
-                                   step: {}, 
-                                   range_type: {})""".format(hyperparameter.start, hyperparameter.stop,
-                                                                           hyperparameter.step, hyperparameter.range_type)
-        elif isinstance(hyperparameter, FloatRange):
-            return """FloatRange(start: {},
-                                   stop: {}, 
-                                   step: {}, 
-                                   range_type: {})""".format(hyperparameter.start,
-                                                               hyperparameter.stop,
-                                                               hyperparameter.step,
-                                                               hyperparameter.range_type)
-        elif isinstance(hyperparameter, Categorical):
-            return str(hyperparameter.values)
-        else:
-            return str(hyperparameter)
-
-    def recursive_element(self, pipe_element, parent):
-
-        # PHOTON pipeline
-        string = ""
-
-        # Pipeline Stack
-        if isinstance(pipe_element, Stack):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
-            else:
-                string = "["+parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
-
-            # Layout
-            for pelement in list(pipe_element.elements):
-                string = string + "[" + pelement.name + "]|\n"
-            string = string +"\n"
-            for pelement in list(pipe_element.elements):
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
-
-        # Pipeline Switch
-        elif isinstance(pipe_element, Switch):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
-            else:
-                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Layout:\n"
-
-            # Layout
-            for pelement in pipe_element.elements:
-                string = string + "[" + pelement.name + "]\n"
-            string = string + "\n"
-
-            # relate
-            string = string + "\n" + "Relate:\n"
-            old_element = ""
-            for pelement in pipe_element.elements:
-                if old_element:
-                    string = string + "[" + old_element + "]" + "<:-:>" + "[" + pelement.name + ']\n'
-                old_element = pelement.name
-                string = string + "\n"
-
-            for pelement in pipe_element.elements:
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
-
-        # Pipeline Branch
-        elif isinstance(pipe_element, Branch):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Layout:\n"
-            else:
-                string = "[" + parent[1:]+"."+pipe_element.name + "]:\n" + "Layout:\n"
-
-            # Layout
-            for pelement in pipe_element.elements:
-                string = string + "[" + pelement.name + "]"
-            string = string + "\n" + "Relate:\n"
-            # Relate
-            old_element = ""
-            for pelement in pipe_element.elements:
-                if old_element:
-                    string = string + "[" + old_element + "]" + "->" + "[" + pelement.name + ']\n'
-                old_element = pelement.name
-                string = string + "\n"
-
-            for pelement in pipe_element.elements:
-                string = string + "\n" + self.recursive_element(pelement, parent=parent + "." + pipe_element.name)
-
-        elif isinstance(pipe_element, PipelineElement):
-            if parent == "":
-                string = "[" + pipe_element.name + "]:\n" + "Define:\n"
-            else:
-                string = "[" + parent[1:] + "." + pipe_element.name + "]:\n" + "Define:\n"
-            hyperparameters = None
-            kwargs = None
-            if hasattr(pipe_element, "hyperparameters"):
-                hyperparameters = pipe_element.hyperparameters
-                for name, parameter in pipe_element.hyperparameters.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
-            if hasattr(pipe_element, "kwargs"):
-                kwargs = pipe_element.kwargs
-                for name, parameter in pipe_element.kwargs.items():
-                    string += "{}: {}\n".format(name.split('__')[-1], self.format_hyperparameter(parameter))
-            if not kwargs and not hyperparameters:
-                string += "default\n"
-
-        return string
 
 
 class PhotonModelPersistor:

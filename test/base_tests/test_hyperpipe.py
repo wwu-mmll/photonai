@@ -18,8 +18,9 @@ from keras.metrics import Accuracy
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
     Switch, ParallelBranch
 from photonai.optimization import IntegerRange, Categorical
+from photonai.optimization.optimization_info import Optimization
 from photonai.processing.results_handler import ResultsHandler
-from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, FoldOperations, \
+from photonai.processing.results_structure import MDBConfig, MDBFoldMetric, \
     MDBInnerFold, MDBOuterFold, MDBScoreInformation, MDBDummyResults, MDBHyperpipe
 from photonai.helper.dummy_elements import DummyTransformer, DummyYAndCovariatesTransformer
 from photonai.helper.photon_base_test import elements_to_dict, PhotonBaseTest
@@ -116,11 +117,14 @@ class HyperpipeTests(PhotonBaseTest):
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object)
 
         # make sure that if no best config metric is given, PHOTON raises a warning
-        with warnings.catch_warnings(record=True) as w:
+        # with self.assertWarns(Warning) as w:
+        # with warnings.catch_warnings(record=True) as w:
+        with self.assertRaises(Warning):
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, metrics=["accuracy", "f1_score"])
             assert any("No best config metric was given" in s for s in [e.message.args[0] for e in w])
 
-        with warnings.catch_warnings(record=True) as w:
+        # with warnings.catch_warnings(record=True) as w:
+        with self.assertRaises(Warning):
             Hyperpipe("hp_name", inner_cv=self.inner_cv_object, best_config_metric=["accuracy", "f1_score"])
             assert any("Best Config Metric must be a single" in s for s in [e.message.args[0] for e in w])
 
@@ -160,8 +164,8 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(expected_num_of_metrics, 3)
 
         # dummy average values
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train), expected_num_of_metrics)
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_train), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_test), expected_num_of_metrics)
 
         # overall average values
         self.assertTrue(len(self.hyperpipe.results.metrics_train), 2 * expected_num_of_metrics)
@@ -452,8 +456,26 @@ class HyperpipeTests(PhotonBaseTest):
             expected_folder = os.path.join(start_folder, nmbranch.name)
             self.assertEqual(nmbranch.base_element.cache_folder, expected_folder)
 
+    def test_setup_error_file(self):
+        # when we init the hyperpipe the file should exist
+        self.assertTrue(os.path.isfile(self.hyperpipe.output_settings.setup_error_file))
+        # when we call fit it shall disappear
+        # we call it empty so that the computation does not occur
+        with self.assertRaises(ValueError):
+            self.hyperpipe.fit(None, None)
+        # however the file should be gone by now
+        self.assertFalse(os.path.isfile(self.hyperpipe.output_settings.setup_error_file))
+
+
     def test_prepare_result_logging(self):
         # test that results object is given and entails hyperpipe infos
+        rfc = PipelineElement('RandomForestClassifier')
+        lsvc = PipelineElement('LinearSVC')
+        branch = Branch('dummy_branch')
+        branch += PipelineElement('SVC')
+        self.hyperpipe += Stack('final_stack', [PipelineElement('SVC'), rfc, branch])
+        self.hyperpipe += lsvc
+
         self.hyperpipe.data.X = self.__X
         self.hyperpipe.data.y = self.__y
         self.hyperpipe._prepare_result_logging(datetime.datetime.now())
@@ -461,13 +483,25 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertTrue(isinstance(self.hyperpipe.results_handler, ResultsHandler))
         self.assertTrue(len(self.hyperpipe.results.outer_folds) == 0)
 
+        expected_pipeline_struct = {'StandardScaler': str(type(self.ss_pipe_element.base_element)),
+                                    'PCA': str(type(self.pca_pipe_element.base_element)),
+                                    'SVC': str(type(self.svc_pipe_element.base_element)),
+                                    'STACK:final_stack': {'SVC': str(type(self.svc_pipe_element.base_element)),
+                                                          'RandomForestClassifier': str(type(rfc.base_element)),
+                                                          'BRANCH:dummy_branch': {
+                                                              'SVC': str(type(self.svc_pipe_element.base_element))
+                                                          }},
+                                    'LinearSVC': str(type(lsvc.base_element))
+                                    }
+        self.assertDictEqual(self.hyperpipe.results.hyperpipe_info.elements, expected_pipeline_struct)
+
     def test_finalize_optimization(self):
         # it is kind of difficult to test that's why we fake it
         self.hyperpipe.fit(self.__X, self.__y)
 
         # reset all infos
-        self.hyperpipe.results.dummy_estimator.train = MDBScoreInformation()
-        self.hyperpipe.results.dummy_estimator.test = MDBScoreInformation()
+        self.hyperpipe.results.dummy_estimator.metrics_train = MDBScoreInformation()
+        self.hyperpipe.results.dummy_estimator.metrics_test = MDBScoreInformation()
         self.hyperpipe.results.metrics_train = {}
         self.hyperpipe.results.metrics_test = {}
         self.hyperpipe.best_config = None
@@ -479,8 +513,8 @@ class HyperpipeTests(PhotonBaseTest):
 
         expected_num_of_metrics = len(self.hyperpipe.optimization.metrics)
         # dummy average values
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train), expected_num_of_metrics)
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_train), expected_num_of_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_test), expected_num_of_metrics)
         # overall average values
         self.assertTrue(len(self.hyperpipe.results.metrics_train), 2 * expected_num_of_metrics)
         self.assertTrue(len(self.hyperpipe.results.metrics_test), 2 * expected_num_of_metrics)
@@ -565,18 +599,18 @@ class HyperpipeTests(PhotonBaseTest):
 class HyperpipeOptimizationClassTests(unittest.TestCase):
 
     def test_best_config_metric(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
         self.assertTrue(my_pipe_optimizer.maximize_metric)
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'mean_squared_error', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'mean_squared_error', None)
         self.assertFalse(my_pipe_optimizer.maximize_metric)
 
     def test_optmizer_input_str(self):
         with self.assertRaises(ValueError):
-            my_pipe_optimizer = Hyperpipe.Optimization('unknown_optimizer', {}, [], 'accuracy', None)
+            my_pipe_optimizer = Optimization('unknown_optimizer', {}, [], 'accuracy', None)
 
-        for name, opt_class in Hyperpipe.Optimization.OPTIMIZER_DICTIONARY.items():
-            def get_optimizer(name):
-                my_pipe_optimizer = Hyperpipe.Optimization(name, {}, [], 'accuracy', None)
+        for name, opt_class in Optimization.OPTIMIZER_DICTIONARY.items():
+            def get_optimizer(name, params={}):
+                my_pipe_optimizer = Optimization(name, params, [], 'accuracy', None)
                 return my_pipe_optimizer.get_optimizer()
 
             if name == 'smac':
@@ -585,37 +619,57 @@ class HyperpipeOptimizationClassTests(unittest.TestCase):
                 except ModuleNotFoundError:
                     with self.assertRaises(ModuleNotFoundError):
                         get_optimizer(name)
+            if name =='switch':
+                get_optimizer(name, {'name': 'random_grid_search'})
             else:
                 self.assertIsInstance(get_optimizer(name), opt_class)
 
     def test_get_optimum_config(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
         list_of_tested_configs = list()
         metric_default = MDBFoldMetric(metric_name='balanced_accuracy',
-                                       operation=FoldOperations.MEAN,
+                                       operation="mean",
                                        value=0.5)
         metric_best = MDBFoldMetric(metric_name='balanced_accuracy',
-                                    operation=FoldOperations.MEAN,
+                                    operation="mean",
                                     value=0.99)
+        metric_filter_best = MDBFoldMetric(metric_name='another_accuracy',
+                                           operation="mean",
+                                           value=0.75)
+        metric_filter_default = MDBFoldMetric(metric_name='another_accuracy',
+                                              operation="mean",
+                                              value=0.55)
         # we add looser configs, one good config, and one good config that failed
         # and check if the good non-failing config is chosen
         for i in range(10):
             config = MDBConfig()
             # number 5 is the winner
             if i == 5 or i == 8:
-                config.metrics_test = [metric_best]
+                config.metrics_test = [metric_best, metric_filter_default]
+                config.config_dict = {'any_key': 'pressed'}
+            elif i == 7:
+                config.metrics_test = [metric_default, metric_filter_best]
+                config.config_dict = {'any_key': 'pressed'}
             else:
-                config.metrics_test = [metric_default]
+                config.metrics_test = [metric_default, metric_filter_default]
+                config.config_dict = {'any_key': 'not_pressed'}
             if i == 8:
                 config.config_failed = True
             list_of_tested_configs.append(config)
 
-        winner_config = my_pipe_optimizer.get_optimum_config(list_of_tested_configs)
+        outer_fold = MDBOuterFold()
+        outer_fold.tested_config_list = list_of_tested_configs
+        winner_config = outer_fold.get_optimum_config(metric=my_pipe_optimizer.best_config_metric,
+                                                      maximize_metric=my_pipe_optimizer.maximize_metric)
         self.assertIs(winner_config, list_of_tested_configs[5])
-        self.assertEqual(winner_config.metrics_test[0].value, 0.99)
+        self.assertEqual(winner_config.get_test_metric('balanced_accuracy'), 0.99)
+
+        winner_config_filtered = outer_fold.get_optimum_config(metric='another_accuracy', maximize_metric=True,
+                                                               dict_filter=('any_key', 'pressed'))
+        self.assertEqual(winner_config_filtered.get_test_metric('another_accuracy'), 0.75)
 
     def test_get_optimum_config_outer_folds(self):
-        my_pipe_optimizer = Hyperpipe.Optimization('grid_search', {}, [], 'balanced_accuracy', None)
+        my_pipe_optimizer = Optimization('grid_search', {}, [], 'balanced_accuracy', None)
 
         outer_fold_list = list()
         for i in range(10):

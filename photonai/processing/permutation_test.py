@@ -12,7 +12,7 @@ from photonai.base import OutputSettings
 from photonai.photonlogger.logger import logger
 
 from photonai.processing.inner_folds import Scorer
-from photonai.processing.results_structure import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe, FoldOperations
+from photonai.processing.results_structure import MDBPermutationResults, MDBPermutationMetrics, MDBHyperpipe
 
 
 class PermutationTest:
@@ -187,9 +187,6 @@ class PermutationTest:
         logger.info("Calculating permutation test results")
         try:
             mother_permutation = PermutationTest.find_reference(mongodb_path, permutation_id)
-            # mother_permutation = MDBHyperpipe.objects.raw({'permutation_id': PermutationTest.get_mother_permutation_id(permutation_id),
-            #                                                'computation_completed': True}).first()
-
         except DoesNotExist:
             return None
         else:
@@ -202,18 +199,15 @@ class PermutationTest:
             if number_of_permutations == 0:
                 number_of_permutations = 1
 
-            true_performances = dict([(m.metric_name, m.value) for m in mother_permutation.metrics_test
-                                      if m.operation == "FoldOperations.MEAN"])
-
+            true_performances = mother_permutation.get_test_metric(operation="mean")
             perm_performances = dict()
             metric_list = list(set([m.metric_name for m in mother_permutation.metrics_test]))
             metrics = PermutationTest.manage_metrics(metric_list, None,
                                                      mother_permutation.hyperpipe_info.best_config_metric)
 
             for _, metric in metrics.items():
-                perm_performances[metric["name"]] = [m.value for i in all_permutations for m in i.metrics_test
-                                                     if m.metric_name == metric["name"]
-                                                     and m.operation == "FoldOperations.MEAN"]
+                perm_performances[metric["name"]] = [i.get_test_metric(metric["name"], operation="mean")
+                                                     for i in all_permutations for m in i.metrics_test]
 
             # Calculate p-value
             p = PermutationTest.calculate_p(true_performance=true_performances, perm_performances=perm_performances,
@@ -324,15 +318,12 @@ class PermutationTest:
         if mother_permutation is not None:
             if mother_permutation.dummy_estimator:
                 best_config_metric = mother_permutation.hyperpipe_info.best_config_metric
-                dummy_threshold_to_beat = [i.value for i in mother_permutation.dummy_estimator.test
-                                           if i.metric_name == best_config_metric and i.operation == str(FoldOperations.MEAN)]
-                if len(dummy_threshold_to_beat) > 0:
-                    dummy_threshold_to_beat = dummy_threshold_to_beat[0]
-                    mother_perm_threshold = [i.value for i in mother_permutation.metrics_test
-                                             if i.metric_name == best_config_metric and i.operation == str(FoldOperations.MEAN)]
-                    mother_perm_threshold = mother_perm_threshold[0]
+                dummy_threshold_to_beat = mother_permutation.dummy_estimator.get_test_metric(name=best_config_metric,
+                                                                                             operation="mean")
+                if dummy_threshold_to_beat is not None:
+                    mother_perm_threshold = mother_permutation.get_test_metric(name=best_config_metric,
+                                                                               operation="mean")
                     if mother_permutation.hyperpipe_info.maximize_best_config_metric:
-
                         if mother_perm_threshold > dummy_threshold_to_beat:
                             return True
                         else:
