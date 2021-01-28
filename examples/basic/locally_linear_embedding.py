@@ -22,7 +22,7 @@ my_pipe = Hyperpipe(name='llembedding_pipe',
 
 my_pipe.add(PipelineElement('StandardScaler'))
 
-my_pipe += PipelineElement('LocallyLinearEmbedding', hyperparameters={'n_components': math.ceil(0.1 * len(X[0]))})
+my_pipe += PipelineElement('LocallyLinearEmbedding', n_components=math.ceil(0.1 * len(X[0])))
 
 my_pipe += PipelineElement('SVC',
                            hyperparameters={'kernel': Categorical(['rbf', 'linear']),
