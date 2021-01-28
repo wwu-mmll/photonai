@@ -134,7 +134,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(outer_preds_received['probabilities'], self.y_true / 10))
 
         csv_file = pd.read_csv(
-            os.path.join(self.hyperpipe.results_folder, 'best_config_predictions.csv'))
+            os.path.join(self.hyperpipe.output_settings.results_folder, 'best_config_predictions.csv'))
         self.assertTrue(np.array_equal(csv_file.y_pred.values, self.y_true))
         self.assertTrue(np.array_equal(csv_file.y_true.values, self.y_true))
         self.assertTrue(np.array_equal(csv_file.probabilities.values, self.y_true / 10))
@@ -167,7 +167,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
         # in case we have no outer cv, we write the inner_cv predictions
         csv_file = pd.read_csv(
-            os.path.join(self.hyperpipe.results_folder, 'best_config_predictions.csv'))
+            os.path.join(self.hyperpipe.output_settings.results_folder, 'best_config_predictions.csv'))
         self.assertTrue(np.array_equal(csv_file.y_pred.values, values_to_expect))
         self.assertTrue(np.array_equal(csv_file.y_true.values, values_to_expect))
         self.assertTrue(np.array_equal(csv_file.probabilities.values, values_to_expect / 10))

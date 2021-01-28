@@ -65,10 +65,10 @@ class ResultsHandlerTest(PhotonBaseTest):
         Output creation testing. Only write if output_settings.save_output == True
         """
         for file in self.files:
-            self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.results_folder, file)))
+            self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder, file)))
 
         # correct rows
-        with open(os.path.join(self.hyperpipe.results_folder, 'best_config_predictions.csv')) as f:
+        with open(os.path.join(self.hyperpipe.output_settings.results_folder, 'best_config_predictions.csv')) as f:
             self.assertEqual(sum([outer_fold.number_samples_test
                                   for outer_fold in self.hyperpipe.results.outer_folds]),
                              sum(1 for _ in f)-1)
@@ -91,14 +91,14 @@ class ResultsHandlerTest(PhotonBaseTest):
         weird_format_fake = ('string', ['array'])
         # should be saved as pickle
         self.hyperpipe.results_handler.save_backmapping('weird_format', weird_format_fake)
-        expected_file = os.path.join(self.hyperpipe.results_folder, 'weird_format.p')
+        expected_file = os.path.join(self.hyperpipe.output_settings.results_folder, 'weird_format.p')
         self.assertTrue(os.path.isfile(expected_file))
 
     def test_save_backmapping_csv(self):
         """
         Check dimension of feature backmapping equals input dimensions for less than 1000 features.
         """
-        backmapping = np.loadtxt(os.path.join(self.hyperpipe.results_folder,
+        backmapping = np.loadtxt(os.path.join(self.hyperpipe.output_settings.results_folder,
                                  'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
         self.assertEqual(np.shape(self.__X)[1], backmapping.size)
 
@@ -110,7 +110,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         # use np.tile to copy features until at least 1000 features are reached
         X = np.tile(self.__X, (1, 35))
         self.hyperpipe.fit(X, self.__y)
-        npzfile = np.load(os.path.join(self.hyperpipe.results_folder,
+        npzfile = np.load(os.path.join(self.hyperpipe.output_settings.results_folder,
                                        'optimum_pipe_feature_importances_backmapped.npz'))
         self.assertEqual(len(npzfile.files), 1)
         backmapping = npzfile[npzfile.files[0]]
@@ -135,7 +135,8 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.output_settings.save_output = True
         self.hyperpipe.fit(self.__X, self.__y)
 
-        f_name = os.path.join(self.hyperpipe.results_folder, 'optimum_pipe_feature_importances_backmapped.csv')
+        f_name = os.path.join(self.hyperpipe.output_settings.results_folder,
+                              'optimum_pipe_feature_importances_backmapped.csv')
         self.assertTrue(not os.path.isfile(f_name))
 
     def test_save_backmapping_reduced_dimension_without_inverse(self):
@@ -207,7 +208,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         results_handler.save_all_learning_curves()
         config_num = len(hyperpipe.results.outer_folds[0].tested_config_list)
         target_file_num = 2 * config_num * hyperpipe.cross_validation.outer_cv.n_splits
-        curves_folder = hyperpipe.results_folder + '/learning_curves/'
+        curves_folder = hyperpipe.output_settings.results_folder + '/learning_curves/'
         true_file_num = len([name for name in os.listdir(curves_folder)
                              if os.path.isfile(os.path.join(curves_folder, name))])
         self.assertEqual(target_file_num, true_file_num)
@@ -220,7 +221,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
         hyperpipe.fit(self.__X, self.__y)
 
-        results_file = os.path.join(hyperpipe.results_folder, "photon_result_file.json")
+        results_file = os.path.join(hyperpipe.output_settings.results_folder, "photon_result_file.json")
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)

@@ -9,7 +9,6 @@ import re
 import shutil
 import traceback
 import zipfile
-import json
 from copy import deepcopy
 from typing import Optional, List, Union
 import warnings
@@ -30,7 +29,6 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
 from photonai.optimization import FloatRange
-from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing import ResultsHandler
 from photonai.optimization.optimization_info import Optimization
@@ -87,8 +85,6 @@ class OutputSettings:
             project_folder:
                 Deprecated Parameter - transferred to Hyperpipe.
         """
-
-
         if project_folder:
             msg = "Deprecated: The parameter 'project_folder' was moved to the Hyperpipe. " \
                   "Please use Hyperpipe(..., project_folder='')."
@@ -96,7 +92,6 @@ class OutputSettings:
             raise DeprecationWarning(msg)
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
-        self.log_file = self.setup_error_file
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
@@ -106,11 +101,46 @@ class OutputSettings:
         self.save_output = save_output
         self.save_predictions_from_best_config_inner_folds = None
 
+        self.verbosity = 0
+        self.results_folder = None
+        self.log_file = None
+        self.logging_file_handler = None
+        self.project_folder = None
+
+    # this is only allowed from hyperpipe
+    def set_project_folder(self, project_folder):
+        self.project_folder = project_folder
+        self.initialize_log_file()
+
     @property
     def setup_error_file(self):
         return os.path.join(self.project_folder, 'photon_setup_errors.log')
 
     def initialize_log_file(self):
+        self.log_file = self.setup_error_file
+
+    def update_settings(self, name, timestamp):
+
+        if not os.path.exists(self.project_folder):
+            os.makedirs(self.project_folder)
+
+        if self.save_output:
+            # Todo: give rights to user if this is done by docker container
+            if self.overwrite_results:
+                self.results_folder = os.path.join(self.project_folder, name + '_results')
+            else:
+                self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
+
+            logger.info("Output Folder: " + self.results_folder)
+
+            if not os.path.exists(self.results_folder):
+                os.makedirs(self.results_folder)
+
+            if os.path.basename(self.log_file) == "photon_setup_errors.log":
+                self.log_file = 'photon_output.log'
+            self.log_file = self._add_timestamp(self.log_file)
+            self.set_log_file()
+
         # if we made it here, there should be no further setup errors, every error that comes
         # now can go to the standard logger instance
         if os.path.isfile(self.setup_error_file):
@@ -119,6 +149,34 @@ class OutputSettings:
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
 
+    def _get_log_level(self):
+        if self.verbosity == 0:
+            level = 25
+        elif self.verbosity == 1:
+            level = logging.INFO  # 20
+        elif self.verbosity == 2:
+            level = logging.DEBUG  # 10
+        else:
+            level = logging.WARN  # 30
+        return level
+
+    def set_log_file(self):
+        logfile_directory = os.path.dirname(self.log_file)
+        if not os.path.exists(logfile_directory):
+            os.makedirs(logfile_directory)
+        if self.logging_file_handler is None:
+            self.logging_file_handler = logging.FileHandler(self.log_file)
+            self.logging_file_handler.setLevel(self._get_log_level())
+            logger.addHandler(self.logging_file_handler)
+        else:
+            self.logging_file_handler.close()
+            self.logging_file_handler.baseFilename = self.log_file
+
+    def set_log_level(self):
+        verbose_num = self._get_log_level()
+        logger.setLevel(verbose_num)
+        for handler in logger.handlers:
+            handler.setLevel(verbose_num)
 
 
 class Hyperpipe(BaseEstimator):
@@ -175,7 +233,7 @@ class Hyperpipe(BaseEstimator):
             objects that are added to the pipeline.
 
     Example:
-        ```
+        ``` python
         from photonai.base import Hyperpipe, PipelineElement
         from photonai.optimization import FloatRange
         from sklearn.model_selection import ShuffleSplit, KFold
@@ -216,7 +274,7 @@ class Hyperpipe(BaseEstimator):
                  learning_curves: bool = False,
                  learning_curves_cut: FloatRange = None,
                  output_settings: OutputSettings = None,
-                 performance_constraints: Union[List[PhotonBaseConstraint], PhotonBaseConstraint] = None,
+                 performance_constraints: list = None,
                  permutation_id: str = None,
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
@@ -335,25 +393,8 @@ class Hyperpipe(BaseEstimator):
                 Allows multidimensional targets.
 
         """
-        self.allow_multidim_targets = allow_multidim_targets
-        if optimizer_params is None:
-            optimizer_params = {}
-        self.name = re.sub(r'\W+', '', name)
-        self.permutation_id = permutation_id
-        if cache_folder:
-            self.cache_folder = os.path.join(cache_folder, self.name)
-        else:
-            self.cache_folder = None
 
-        # output params
-        if project_folder == '':
-            self.project_folder = os.getcwd()
-        else:
-            self.project_folder = project_folder
-        self.results_folder = None
-        self.log_file = None
-        self.logging_file_handler = None
-        self._initialize_log_file()
+        self.name = re.sub(r'\W+', '', name)
 
         # ====================== Cross Validation ===========================
         # check if both calculate_metrics_per_folds and calculate_metrics_across_folds is False
@@ -385,11 +426,25 @@ class Hyperpipe(BaseEstimator):
         # ====================== Data ===========================
         self.data = Hyperpipe.Data()
 
-        # ====================== Result Logging ===========================
+        # ====================== Output Folder and Log File Management ===========================
         if output_settings:
             self.output_settings = output_settings
         else:
             self.output_settings = OutputSettings()
+
+        if project_folder == '':
+            self.project_folder = os.getcwd()
+        else:
+            self.project_folder = project_folder
+
+        self.output_settings.set_project_folder(self.project_folder)
+
+        # update output options to add pipe name and timestamp to results folder
+        self._verbosity = 0
+        self.verbosity = verbosity
+        self.output_settings.set_log_file()
+
+        # ====================== Result Logging ===========================
         self.results_handler = None
         self.results = None
         self.best_config = None
@@ -401,6 +456,8 @@ class Hyperpipe(BaseEstimator):
         self.preprocessing = None
 
         # ====================== Performance Optimization ===========================
+        if optimizer_params is None:
+            optimizer_params = {}
         self.optimization = Optimization(metrics=metrics,
                                          best_config_metric=best_config_metric,
                                          optimizer_input=optimizer,
@@ -409,27 +466,29 @@ class Hyperpipe(BaseEstimator):
 
         self.optimization.sanity_check_metrics()
 
+        # ====================== Caching and Parallelization ===========================
+        self.nr_of_processes = nr_of_processes
+        if cache_folder:
+            self.cache_folder = os.path.join(cache_folder, self.name)
+        else:
+            self.cache_folder = None
+
         # ====================== Internals ===========================
 
+        self.permutation_id = permutation_id
+        self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
-        self.nr_of_processes = nr_of_processes
+
+        # ====================== Random Seed ===========================
         self.random_state = random_seed
         if random_seed is not None:
             import random
             random.seed(random_seed)
 
-        # initialize logging
-
-        # update output options to add pipe name and timestamp to results folder
-        self._verbosity = 0
-        self.verbosity = verbosity
-        self.set_log_file()
-
+    # ===================================================================
     # Helper Classes
-    #
-    #
-    #
-    # ============= Cross Validation ==================================================================
+    # ===================================================================
+
     class CrossValidation:
 
         def __init__(self, inner_cv, outer_cv,
@@ -453,17 +512,96 @@ class Hyperpipe(BaseEstimator):
             self.outer_folds = None
             self.inner_folds = dict()
 
-    # ============= Data ==================================================================
     class Data:
 
-        def __init__(self, X=None, y=None, kwargs=None):
+        def __init__(self, X=None, y=None, kwargs=None, allow_multidim_targets=False):
             self.X = X
             self.y = y
             self.kwargs = kwargs
+            self.allow_multidim_targets = allow_multidim_targets
 
-    # Pipeline Management & Interface
-    #
-    #
+        def input_data_sanity_checks(self, data, targets, **kwargs):
+            # ==================== SANITY CHECKS ===============================
+            # 1. Make to numpy arrays
+            # 2. erase all Nan targets
+
+            logger.info("Checking input data...")
+            self.X = data
+            self.y = targets
+            self.kwargs = kwargs
+
+            try:
+                if self.X is None:
+                    raise ValueError("(Input-)data is a NoneType.")
+                if self.y is None:
+                    raise ValueError("(Input-)target is a NoneType.")
+
+                shape_x = np.shape(self.X)
+                shape_y = np.shape(self.y)
+                if not self.allow_multidim_targets:
+                    if len(shape_y) != 1:
+                        if len(np.shape(np.squeeze(self.y))) == 1:
+                            # use np.squeeze for non 1D targets.
+                            self.y = np.squeeze(self.y)
+                            shape_y = np.shape(self.y)
+                            warning_text = "y has been automatically squeezed. If this is not your intention, block this " \
+                                           "with Hyperpipe(allow_multidim_targets = True"
+                            logger.warning(warning_text)
+                            warnings.warn(warning_text)
+                        else:
+                            raise ValueError(
+                                "Target is not one-dimensional. Multidimensional targets can cause problems"
+                                "with sklearn metrics. Please override with "
+                                "Hyperpipe(allow_multidim_targets = True).")
+                if not shape_x[0] == shape_y[0]:
+                    raise IndexError(
+                        "Size of targets mismatch to size of the data: " + str(shape_x[0]) + " - " + str(shape_y[0]))
+            except IndexError as ie:
+                logger.error("IndexError: " + str(ie))
+                raise ie
+            except ValueError as ve:
+                logger.error("ValueError: " + str(ve))
+                raise ve
+            except Exception as e:
+                logger.error("Error: " + str(e))
+                raise e
+
+            # be compatible to list of (image-) files
+            if isinstance(self.X, list):
+                self.X = np.asarray(self.X)
+            elif isinstance(self.X, (pd.DataFrame, pd.Series)):
+                self.X = self.X.to_numpy()
+            if isinstance(self.y, list):
+                self.y = np.asarray(self.y)
+            elif isinstance(self.y, pd.Series) or isinstance(self.y, pd.DataFrame):
+                self.y = self.y.to_numpy()
+
+            # at first first, erase all rows where y is Nan if preprocessing has not done it already
+            try:
+                nans_in_y = np.isnan(self.y)
+                nr_of_nans = len(np.where(nans_in_y == 1)[0])
+                if nr_of_nans > 0:
+                    logger.info("You have " + str(nr_of_nans) + " Nans in your target vector, "
+                                                                "PHOTONAI erases every data item that has a Nan Target")
+                    self.X = self.X[~nans_in_y]
+                    self.y = self.y[~nans_in_y]
+            except Exception as e:
+                # This is only for convenience so if it fails then never mind
+                logger.error("Removing Nans in target vector failed: " + str(e))
+                pass
+
+            logger.info("Running analysis with " + str(self.y.shape[0]) + " samples.")
+
+    # ===================================================================
+    # Properties and Helper
+    # ===================================================================
+    @property
+    def estimation_type(self):
+        estimation_type = getattr(self.elements[-1], '_estimator_type')
+        if estimation_type is None:
+            raise NotImplementedError("Last element in Hyperpipe should be an estimator.")
+        else:
+            return estimation_type
 
     @property
     def verbosity(self):
@@ -472,7 +610,52 @@ class Hyperpipe(BaseEstimator):
     @verbosity.setter
     def verbosity(self, value):
         self._verbosity = value
-        self.set_log_level()
+        self.output_settings.verbosity = self._verbosity
+        self.output_settings.set_log_level()
+
+    @staticmethod
+    def disable_multiprocessing_recursively(pipe):
+        if isinstance(pipe, (Stack, Branch, Switch, Preprocessing)):
+            if hasattr(pipe, 'nr_of_processes'):
+                pipe.nr_of_processes = 1
+            for child in pipe.elements:
+                if hasattr(child, 'base_element'):
+                    Hyperpipe.disable_multiprocessing_recursively(child.base_element)
+        elif isinstance(pipe, PhotonPipeline):
+            for name, child in pipe.named_steps.items():
+                Hyperpipe.disable_multiprocessing_recursively(child)
+        else:
+            if hasattr(pipe, 'nr_of_processes'):
+                pipe.nr_of_processes = 1
+
+    @staticmethod
+    def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
+        if isinstance(element, (Switch, Stack, Preprocessing)):
+            for child in element.elements:
+                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
+
+        elif isinstance(element, Branch):
+            # in case it's a Branch, we create a cache subfolder and propagate it to every child
+            if cache_folder:
+                cache_folder = os.path.join(cache_folder, element.name)
+            Hyperpipe.recursive_cache_folder_propagation(element.base_element, cache_folder, inner_fold_id)
+            # Hyperpipe.prepare_caching(element.base_element.cache_folder)
+
+        elif isinstance(element, PhotonPipeline):
+            element.fold_id = inner_fold_id
+            element.cache_folder = cache_folder
+
+            # pipe.caching is automatically set to True or False by .cache_folder setter
+
+            for name, child in element.named_steps.items():
+                # we need to check if any element is Branch, Stack or Swtich
+                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
+
+        # else: if it's a simple PipelineElement, then we just don't do anything
+
+    # ===================================================================
+    # Pipeline Setup
+    # ===================================================================
 
     def __iadd__(self, pipe_element: PipelineElement):
         """
@@ -510,6 +693,9 @@ class Hyperpipe(BaseEstimator):
         """
         self.__iadd__(pipe_element)
 
+    # ===================================================================
+    # Workflow Setup
+    # ===================================================================
     def _prepare_dummy_estimator(self):
         self.results.dummy_estimator = MDBDummyResults()
 
@@ -554,7 +740,7 @@ class Hyperpipe(BaseEstimator):
 
         self.results.computation_start_time = start_time
         self.results.hyperpipe_info.estimation_type = self.estimation_type
-        self.results.output_folder = self.results_folder
+        self.results.output_folder = self.output_settings.results_folder
 
         if self.permutation_id is not None:
             self.results.permutation_id = self.permutation_id
@@ -595,7 +781,7 @@ class Hyperpipe(BaseEstimator):
         # add json file of hyperpipe attributes
         try:
             json_transformer = JsonTransformer()
-            json_transformer.to_json_file(self, self.results_folder+"/hyperpipe_config.json")
+            json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
         except:
             msg = "JsonTransformer was unable to create the .json file."
             logger.warning(msg)
@@ -669,7 +855,7 @@ class Hyperpipe(BaseEstimator):
 
             if self.output_settings.save_output:
                 try:
-                    pretrained_model_filename = os.path.join(self.results_folder, 'photon_best_model.photon')
+                    pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
                     PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
                     logger.info("Saved best model to file.")
                 except Exception as e:
@@ -715,122 +901,6 @@ class Hyperpipe(BaseEstimator):
         logger.photon_system_log("")
         logger.photon_system_log(self.results_handler.text_summary())
 
-    @staticmethod
-    def disable_multiprocessing_recursively(pipe):
-        if isinstance(pipe, (Stack, Branch, Switch, Preprocessing)):
-            if hasattr(pipe, 'nr_of_processes'):
-                pipe.nr_of_processes = 1
-            for child in pipe.elements:
-                if hasattr(child, 'base_element'):
-                    Hyperpipe.disable_multiprocessing_recursively(child.base_element)
-        elif isinstance(pipe, PhotonPipeline):
-            for name, child in pipe.named_steps.items():
-                Hyperpipe.disable_multiprocessing_recursively(child)
-        else:
-            if hasattr(pipe, 'nr_of_processes'):
-                pipe.nr_of_processes = 1
-
-    def _input_data_sanity_checks(self, data, targets, **kwargs):
-        # ==================== SANITY CHECKS ===============================
-        # 1. Make to numpy arrays
-        # 2. erase all Nan targets
-
-        logger.info("Checking input data...")
-        self.data.X = data
-        self.data.y = targets
-        self.data.kwargs = kwargs
-
-        try:
-            if self.data.X is None:
-                raise ValueError("(Input-)data is a NoneType.")
-            if self.data.y is None:
-                raise ValueError("(Input-)target is a NoneType.")
-
-            shape_x = np.shape(self.data.X)
-            shape_y = np.shape(self.data.y)
-            if not self.allow_multidim_targets:
-                if len(shape_y) != 1:
-                    if len(np.shape(np.squeeze(self.data.y))) == 1:
-                        # use np.squeeze for non 1D targets.
-                        self.data.y = np.squeeze(self.data.y)
-                        shape_y = np.shape(self.data.y)
-                        warning_text = "y has been automatically squeezed. If this is not your intention, block this " \
-                                       "with Hyperpipe(allow_multidim_targets = True"
-                        logger.warning(warning_text)
-                        warnings.warn(warning_text)
-                    else:
-                        raise ValueError("Target is not one-dimensional. Multidimensional targets can cause problems"
-                                         "with sklearn metrics. Please override with "
-                                         "Hyperpipe(allow_multidim_targets = True).")
-            if not shape_x[0] == shape_y[0]:
-                raise IndexError(
-                    "Size of targets mismatch to size of the data: " + str(shape_x[0]) + " - " + str(shape_y[0]))
-        except IndexError as ie:
-            logger.error("IndexError: " + str(ie))
-            raise ie
-        except ValueError as ve:
-            logger.error("ValueError: " + str(ve))
-            raise ve
-        except Exception as e:
-            logger.error("Error: " + str(e))
-            raise e
-
-        # be compatible to list of (image-) files
-        if isinstance(self.data.X, list):
-            self.data.X = np.asarray(self.data.X)
-        elif isinstance(self.data.X, (pd.DataFrame, pd.Series)):
-            self.data.X = self.data.X.to_numpy()
-        if isinstance(self.data.y, list):
-            self.data.y = np.asarray(self.data.y)
-        elif isinstance(self.data.y, pd.Series) or isinstance(self.data.y, pd.DataFrame):
-            self.data.y = self.data.y.to_numpy()
-
-        # at first first, erase all rows where y is Nan if preprocessing has not done it already
-        try:
-            nans_in_y = np.isnan(self.data.y)
-            nr_of_nans = len(np.where(nans_in_y == 1)[0])
-            if nr_of_nans > 0:
-                logger.info("You have " + str(nr_of_nans) + " Nans in your target vector, "
-                                                              "PHOTONAI erases every data item that has a Nan Target")
-                self.data.X = self.data.X[~nans_in_y]
-                self.data.y = self.data.y[~nans_in_y]
-        except Exception as e:
-            # This is only for convenience so if it fails then never mind
-            logger.error("Removing Nans in target vector failed: " + str(e))
-            pass
-
-        logger.info("Running analysis with " + str(self.data.y.shape[0]) + " samples.")
-
-    # @staticmethod
-    # def prepare_caching(cache_folder):
-    #     if cache_folder and not os.path.isdir(cache_folder):
-    #         os.makedirs(cache_folder, exist_ok=True)
-
-    @staticmethod
-    def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
-        if isinstance(element, (Switch, Stack, Preprocessing)):
-            for child in element.elements:
-                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
-
-        elif isinstance(element, Branch):
-            # in case it's a Branch, we create a cache subfolder and propagate it to every child
-            if cache_folder:
-                cache_folder = os.path.join(cache_folder, element.name)
-            Hyperpipe.recursive_cache_folder_propagation(element.base_element, cache_folder, inner_fold_id)
-            # Hyperpipe.prepare_caching(element.base_element.cache_folder)
-
-        elif isinstance(element, PhotonPipeline):
-            element.fold_id = inner_fold_id
-            element.cache_folder = cache_folder
-
-            # pipe.caching is automatically set to True or False by .cache_folder setter
-
-            for name, child in element.named_steps.items():
-                # we need to check if any element is Branch, Stack or Swtich
-                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
-
-        # if it's a simple PipelineElement, then we just don't do anything
-
     def preprocess_data(self):
         # if there is a preprocessing pipeline, we apply it first.
         if self.preprocessing is not None:
@@ -845,13 +915,9 @@ class Hyperpipe(BaseEstimator):
         if self.random_state:
             self._pipe.random_state = self.random_state
 
-    @property
-    def estimation_type(self):
-        estimation_type = getattr(self.elements[-1], '_estimator_type')
-        if estimation_type is None:
-            raise NotImplementedError("Last element in Hyperpipe should be an estimator.")
-        else:
-            return estimation_type
+    # ===================================================================
+    # sklearn interfaces
+    # ===================================================================
 
     @staticmethod
     def fit_outer_folds(outer_fold_computer, X, y, kwargs, cache_folder):
@@ -894,7 +960,7 @@ class Hyperpipe(BaseEstimator):
         """
         # switch to result output folder
         start = datetime.datetime.now()
-        self._update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
+        self.output_settings.update_settings(self.name, start.strftime("%Y-%m-%d_%H-%M-%S"))
 
         logger.photon_system_log('=' * 101)
         logger.photon_system_log('PHOTONAI ANALYSIS: ' + self.name)
@@ -907,7 +973,7 @@ class Hyperpipe(BaseEstimator):
 
         try:
             # check data
-            self._input_data_sanity_checks(data, targets, **kwargs)
+            self.data.input_data_sanity_checks(data, targets, **kwargs)
             # create photon pipeline
             self._prepare_pipeline()
             # initialize the progress monitors
@@ -1046,6 +1112,44 @@ class Hyperpipe(BaseEstimator):
             X, _, _ = self.optimum_pipe.transform(data, y=None, **kwargs)
             return X
 
+    def inverse_transform_pipeline(self, hyperparameters: dict,
+                                   data: np.ndarray,
+                                   targets: np.ndarray,
+                                   data_to_inverse: np.ndarray) -> np.ndarray:
+        """
+        Inverse transform data for a pipeline with specific hyperparameter configuration.
+
+        1. Copy Sklearn Pipeline,
+        2. Set Parameters
+        3. Fit Pipeline to data and targets
+        4. Inverse transform data with that pipeline
+
+        Parameters:
+            hyperparameters:
+                The concrete configuration settings for the pipeline elements.
+
+            data:
+                The training data to which the pipeline is fitted.
+
+            targets:
+                The truth values for training.
+
+            data_to_inverse:
+                The data that should be inversed after training.
+
+        Returns:
+            Inversed data as array.
+
+        """
+        copied_pipe = self.pipe.copy_me()
+        copied_pipe.set_params(**hyperparameters)
+        copied_pipe.fit(data, targets)
+        return copied_pipe.inverse_transform(data_to_inverse)
+
+    # ===================================================================
+    # Copy, Save and Load
+    # ===================================================================
+
     def copy_me(self):
         """
         Helper function to copy an entire Hyperpipe
@@ -1059,7 +1163,7 @@ class Hyperpipe(BaseEstimator):
         for attr in signature:
             if hasattr(self.output_settings, attr):
                 setattr(settings, attr, getattr(self.output_settings, attr))
-        self._initialize_log_file()
+        self.output_settings.initialize_log_file()
 
         # create new Hyperpipe instance
         pipe_copy = Hyperpipe(name=self.name,
@@ -1112,106 +1216,6 @@ class Hyperpipe(BaseEstimator):
 
         """
         return PhotonModelPersistor.load_optimum_pipe(file, password)
-
-    def inverse_transform_pipeline(self, hyperparameters: dict,
-                                   data: np.ndarray,
-                                   targets: np.ndarray,
-                                   data_to_inverse: np.ndarray) -> np.ndarray:
-        """
-        Inverse transform data for a pipeline with specific hyperparameter configuration.
-
-        1. Copy Sklearn Pipeline,
-        2. Set Parameters
-        3. Fit Pipeline to data and targets
-        4. Inverse transform data with that pipeline
-
-        Parameters:
-            hyperparameters:
-                The concrete configuration settings for the pipeline elements.
-
-            data:
-                The training data to which the pipeline is fitted.
-
-            targets:
-                The truth values for training.
-
-            data_to_inverse:
-                The data that should be inversed after training.
-
-        Returns:
-            Inversed data as array.
-
-        """
-        copied_pipe = self.pipe.copy_me()
-        copied_pipe.set_params(**hyperparameters)
-        copied_pipe.fit(data, targets)
-        return copied_pipe.inverse_transform(data_to_inverse)
-
-    @property
-    def setup_error_file(self):
-        return os.path.join(self.project_folder, 'photon_setup_errors.log')
-
-    def _initialize_log_file(self):
-        self.log_file = self.setup_error_file
-
-    def _update_settings(self, name, timestamp):
-
-        if not os.path.exists(self.project_folder):
-            os.makedirs(self.project_folder)
-
-        if self.output_settings.save_output:
-            # Todo: give rights to user if this is done by docker container
-            if self.output_settings.overwrite_results:
-                self.results_folder = os.path.join(self.project_folder, name + '_results')
-            else:
-                self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
-
-            logger.info("Output Folder: " + self.results_folder)
-
-            if not os.path.exists(self.results_folder):
-                os.makedirs(self.results_folder)
-
-            if os.path.basename(self.log_file) == "photon_setup_errors.log":
-                self.log_file = 'photon_output.log'
-            self.log_file = self._add_timestamp(self.log_file)
-            self.set_log_file()
-
-        # if we made it here, there should be no further setup errors, every error that comes
-        # now can go to the standard logger instance
-        if os.path.isfile(self.setup_error_file):
-            os.remove(self.setup_error_file)
-
-    def _add_timestamp(self, file):
-        return os.path.join(self.results_folder, os.path.basename(file))
-
-    def _get_log_level(self):
-        if self.verbosity == 0:
-            level = 25
-        elif self.verbosity == 1:
-            level = logging.INFO  # 20
-        elif self.verbosity == 2:
-            level = logging.DEBUG  # 10
-        else:
-            level = logging.WARN  # 30
-        return level
-
-    def set_log_file(self):
-        logfile_directory = os.path.dirname(self.log_file)
-        if not os.path.exists(logfile_directory):
-            os.makedirs(logfile_directory)
-        if self.logging_file_handler is None:
-            self.logging_file_handler = logging.FileHandler(self.log_file)
-            self.logging_file_handler.setLevel(self._get_log_level())
-            logger.addHandler(self.logging_file_handler)
-        else:
-            self.logging_file_handler.close()
-            self.logging_file_handler.baseFilename = self.log_file
-
-    def set_log_level(self):
-        verbose_num = self._get_log_level()
-        logger.setLevel(verbose_num)
-        for handler in logger.handlers:
-            handler.setLevel(verbose_num)
 
 
 class PhotonModelPersistor:

@@ -266,11 +266,11 @@ class HyperpipeTests(PhotonBaseTest):
         my_pipe += PipelineElement('LogisticRegression', solver='lbfgs')
 
         my_pipe.fit(self.__X, self.__y)
-        model_path = os.path.join(my_pipe.results_folder, 'photon_best_model.photon')
+        model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
         self.assertTrue(os.path.exists(model_path))
 
         # now move optimum pipe to new folder
-        test_folder = os.path.join(my_pipe.results_folder, 'new_test_folder')
+        test_folder = os.path.join(my_pipe.output_settings.results_folder, 'new_test_folder')
         new_model_path = os.path.join(test_folder, 'photon_best_model.photon')
         os.makedirs(test_folder)
         shutil.copyfile(model_path, new_model_path)
@@ -302,7 +302,7 @@ class HyperpipeTests(PhotonBaseTest):
                             output_settings=settings)
         my_pipe += PipelineElement('KerasDnnClassifier', {}, epochs=1, hidden_layer_sizes=[5])
         my_pipe.fit(self.__X, self.__y)
-        model_path = os.path.join(my_pipe.results_folder, 'photon_best_model.photon')
+        model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model.photon')
         self.assertTrue(os.path.exists(model_path))
 
         # check if load_optimum_pipe also works
@@ -326,7 +326,7 @@ class HyperpipeTests(PhotonBaseTest):
                             output_settings=settings)
         my_pipe += PipelineElement('KNeighborsClassifier')
         my_pipe.fit(self.__X, self.__y)
-        model_path = os.path.join(my_pipe.results_folder, 'photon_best_model_wrong_path.photon')
+        model_path = os.path.join(my_pipe.output_settings.results_folder, 'photon_best_model_wrong_path.photon')
         with self.assertRaises(FileNotFoundError):
             Hyperpipe.load_optimum_pipe(model_path)
 
@@ -335,7 +335,7 @@ class HyperpipeTests(PhotonBaseTest):
         Test for right handling of parameter output_settings.overwrite.
         """
         def get_summary_file():
-            return os.path.join(self.hyperpipe.results_folder, 'photon_summary.txt')
+            return os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
 
         # Case 1: default
         output_settings1 = OutputSettings(save_output=True,
@@ -526,13 +526,13 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertIsNotNone(self.hyperpipe.optimum_pipe)
         self.assertEqual(self.hyperpipe.optimum_pipe.named_steps["SVC"].base_element.C, self.hyperpipe.best_config["SVC__C"])
         # save optimum model
-        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.results_folder,
+        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
                                                     'photon_best_model.photon')))
 
         # backmapping
         # because the pca is test disabled, we expect the number of features
         self.assertEqual(len(self.hyperpipe.results.best_config_feature_importances[0]), self.__X.shape[1])
-        backmapped_feature_importances = os.path.join(self.hyperpipe.results_folder,
+        backmapped_feature_importances = os.path.join(self.hyperpipe.output_settings.results_folder,
                                                       'optimum_pipe_feature_importances_backmapped.csv')
         self.assertTrue(os.path.isfile(backmapped_feature_importances))
         loaded_array = np.loadtxt(open(backmapped_feature_importances, 'rb'), delimiter=",")
@@ -547,7 +547,8 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.add(PipelineElement('SVC'))
         self.hyperpipe.fit(self.__X, self.__y)
 
-        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.results_folder, 'photon_best_model.photon')))
+        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
+                                                    'photon_best_model.photon')))
 
     def test_finalize_optimization_preprocessing_with_client(self):
         self.hyperpipe.elements = list()
@@ -560,7 +561,8 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.add(PipelineElement('SVC'))
         self.hyperpipe.fit(self.__X, self.__y)
 
-        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.results_folder, 'photon_best_model.photon')))
+        self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder,
+                                                    'photon_best_model.photon')))
 
     def test_optimum_pipe_predict_and_predict_proba_and_transform(self):
         # find best config and test against sklearn
