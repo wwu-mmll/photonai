@@ -16,20 +16,12 @@ my_pipe = Hyperpipe(name='basic_svm_pipe_no_performance',
                     inner_cv=KFold(n_splits=3),
                     eval_final_performance=True,
                     verbosity=1,
-<<<<<<< HEAD
                     project_folder='./result_folder',
                     output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
                                                    save_output=True),
-                    performance_constraints=[MinimumPerformance('mean_squared_error', 35, 'first'),
-                                             MinimumPerformance('pearson_correlation', 0.7, 'all')])
-=======
-                    output_settings=OutputSettings(project_folder='./result_folder',
-                                                   mongodb_connect_url="mongodb://localhost:27017/photon_results",
-                                                   save_output=True,
-                                                   plots=True),
                     performance_constraints=[MinimumPerformanceConstraint('mean_squared_error', 35, 'first'),
                                              MinimumPerformanceConstraint('pearson_correlation', 0.7, 'any')])
->>>>>>> develop
+
 
 my_pipe += PipelineElement('StandardScaler')
 my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': IntegerRange(5, 50)})

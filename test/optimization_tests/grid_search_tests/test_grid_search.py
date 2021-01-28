@@ -33,13 +33,9 @@ class GridSearchOptimizerTest(unittest.TestCase):
                                    best_config_metric='accuracy',
                                    inner_cv=KFold(n_splits=2),
                                    outer_cv=ShuffleSplit(n_splits=2),
-<<<<<<< HEAD
-                                   verbosity=0,
-                                   optimizer=self.optimizer_name)
-=======
                                    optimizer=self.optimizer_name,
-                                   optimizer_params=self.optimizer_params)
->>>>>>> develop
+                                   optimizer_params=self.optimizer_params,
+                                   verbosity=0)
 
     def test_run(self):
         self.create_hyperpipe()
