@@ -102,10 +102,10 @@ class OutputSettings:
         self.save_predictions_from_best_config_inner_folds = None
 
         self.verbosity = 0
-        self.results_folder = None
-        self.log_file = None
+        self.results_folder = ''
+        self.project_folder = ''
+        self.log_file = ''
         self.logging_file_handler = None
-        self.project_folder = None
 
     # this is only allowed from hyperpipe
     def set_project_folder(self, project_folder):
@@ -114,17 +114,20 @@ class OutputSettings:
 
     @property
     def setup_error_file(self):
-        return os.path.join(self.project_folder, 'photon_setup_errors.log')
+        if self.project_folder:
+            return os.path.join(self.project_folder, 'photon_setup_errors.log')
+        else:
+            return ""
 
     def initialize_log_file(self):
         self.log_file = self.setup_error_file
 
     def update_settings(self, name, timestamp):
 
-        if not os.path.exists(self.project_folder):
-            os.makedirs(self.project_folder)
-
         if self.save_output:
+            if not os.path.exists(self.project_folder):
+                os.makedirs(self.project_folder)
+
             # Todo: give rights to user if this is done by docker container
             if self.overwrite_results:
                 self.results_folder = os.path.join(self.project_folder, name + '_results')

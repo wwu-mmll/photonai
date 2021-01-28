@@ -76,7 +76,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         shutil.rmtree(self.tmp_folder_path, ignore_errors=True)
         self.hyperpipe.output_settings = OutputSettings(save_output=False)
         self.hyperpipe.fit(self.__X, self.__y)
-        self.assertFalse(os.path.exists(self.hyperpipe.results_folder))
+        self.assertFalse(os.path.exists(self.hyperpipe.output_settings.results_folder))
 
     def test_summary(self):
         """

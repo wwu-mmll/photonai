@@ -1,10 +1,10 @@
 import pandas as pd
 from sklearn.model_selection import KFold, ShuffleSplit
-from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, Switch
 from photonai.optimization import FloatRange, IntegerRange, Categorical, BestPerformanceConstraint, MinimumPerformanceConstraint
 
 # setup training and test workflow
-my_pipe = Hyperpipe('heart_failure_no_fu',
+my_pipe = Hyperpipe('heart_failure_total',
                     outer_cv=ShuffleSplit(n_splits=100, test_size=0.2),
                     inner_cv=KFold(n_splits=5, shuffle=True),
                     metrics=['balanced_accuracy', 'f1_score', 'auc', 'matthews_corrcoef',
@@ -13,8 +13,8 @@ my_pipe = Hyperpipe('heart_failure_no_fu',
                     optimizer='switch',
                     optimizer_params={'name': 'sk_opt', 'n_configurations': 50},
                     performance_constraints=[MinimumPerformanceConstraint('matthews_corrcoef', 0.35)],
-                    output_settings=OutputSettings(project_folder='./tmp'),
-                    verbosity=1)
+                    project_folder='./tmp',
+                    verbosity=0)
 
 # arrange a sequence of algorithms subsequently applied
 my_pipe += PipelineElement('StandardScaler')
@@ -27,7 +27,7 @@ my_pipe += PipelineElement('SimpleImputer')
 #                            test_disabled=True)
 
 my_pipe += PipelineElement('LassoFeatureSelection',
-                           hyperparameters={'percentile_to_keep': FloatRange(0.1, 0.5),
+                           hyperparameters={'percentile': FloatRange(0.05, 0.4),
                                             'alpha': FloatRange(0.1, 2, range_type="logspace")})
 
 my_pipe += PipelineElement('ImbalancedDataTransformer',
@@ -62,7 +62,7 @@ my_pipe += estimators
 
 # read data
 df = pd.read_csv('./heart_failure_clinical_records_dataset.csv')
-X = df.iloc[:, 0:11]
+X = df.iloc[:, 0:12]
 y = df.iloc[:, 12]
 
 # start the training, optimization and test procedure
