@@ -259,17 +259,6 @@ class MDBHelper:
                 return metric[0].value
             else:
                 raise KeyError("Found multiple metrics with same operation and name.")
-        elif name and not operation:
-            # try to find "raw" metric
-            metric = [i for i in metric_list if i.metric_name == name and i.operation == "raw"]
-            if len(metric) == 0:
-                raise KeyError("Could not find metric {}. As no operation was given, it defaults to 'raw', "
-                               "maybe try to specify operation explicitly")
-                return None
-            if len(metric) == 1:
-                return metric[0].value
-            else:
-                raise KeyError("Found multiple metrics with same operation and name.")
         elif not name and operation:
             metric_list = {i.metric_name: i.value for i in metric_list if i.operation == operation}
             return metric_list

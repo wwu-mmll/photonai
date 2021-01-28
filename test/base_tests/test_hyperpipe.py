@@ -488,7 +488,7 @@ class HyperpipeTests(PhotonBaseTest):
                                     'SVC': str(type(self.svc_pipe_element.base_element)),
                                     'STACK:final_stack': {'SVC': str(type(self.svc_pipe_element.base_element)),
                                                           'RandomForestClassifier': str(type(rfc.base_element)),
-                                                          'BRANCH;dummy_branch': {
+                                                          'BRANCH:dummy_branch': {
                                                               'SVC': str(type(self.svc_pipe_element.base_element))
                                                           }},
                                     'LinearSVC': str(type(lsvc.base_element))

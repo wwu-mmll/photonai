@@ -68,10 +68,10 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
         self.check_for_dummy()
 
-
     def test_get_metric(self):
 
         metric_list = [MDBFoldMetric(metric_name='a', value=1, operation='raw'),
+                       MDBFoldMetric(metric_name='a', value=0.5, operation='mean'),
                        MDBFoldMetric(metric_name='b', value=1, operation='raw'),
                        MDBFoldMetric(metric_name='c', value=1, operation='raw'),
                        MDBFoldMetric(metric_name='c', value=0, operation='mean'),
@@ -79,37 +79,33 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         doubled_metrics = [MDBFoldMetric(metric_name='a', value=1, operation='raw'),
                            MDBFoldMetric(metric_name='a', value=1, operation='raw')]
 
+        okay_config = MDBConfig()
+        okay_config.metrics_test = metric_list
+        doubled_config = MDBConfig()
+        doubled_config.metrics_test = doubled_metrics
+
         # raise error when no metric filter infos are given
         with self.assertRaises(ValueError):
-            MDBConfig.get_metric(metric_list)
+            okay_config.get_test_metric(name="", operation="")
 
         # check doubled metrics
         with self.assertRaises(KeyError):
-            MDBConfig.get_metric(doubled_metrics, name='a', operation='raw')
+            doubled_config.get_test_metric(name='a', operation='raw')
 
         # check None is returned when there is no metric
-        self.assertIsNone(MDBConfig.get_metric(metric_list, name='d', operation='raw'))
+        self.assertIsNone(okay_config.get_test_metric(name='d', operation='raw'))
 
-        # check there is a Key Error for giving only name
-        with self.assertRaises(KeyError):
-            # a) when there is no such metric
-            MDBConfig.get_metric(doubled_metrics, name='d')
         with self.assertRaises(KeyError):
             # b) when there are doubled metrics
-            MDBConfig.get_metric(doubled_metrics, name='a')
+            doubled_config.get_test_metric(name='a', operation="raw")
 
-        # check there is "raw" given for when there is no operation
-        self.assertEqual(MDBConfig.get_metric(metric_list, name='a'), 1)
+        # check there is "mean" given for when there is no operation
+        self.assertEqual(okay_config.get_test_metric(name='a'), 0.5)
         # check there is the correct metric value returned
-        self.assertEqual(MDBConfig.get_metric(metric_list, name='c', operation='mean'), 0)
+        self.assertEqual(okay_config.get_test_metric(name='c', operation='std'), 2)
 
         expected_dict = {'a': 1, 'b': 1, 'c': 1}
-        self.assertDictEqual(expected_dict, MDBConfig.get_metric(metric_list, operation='raw'))
-
-
-
-
-
+        self.assertDictEqual(expected_dict, okay_config.get_test_metric(operation='raw'))
 
     def check_for_dummy(self):
         self.assertTrue(hasattr(self.hyperpipe.results, 'dummy_estimator'))
