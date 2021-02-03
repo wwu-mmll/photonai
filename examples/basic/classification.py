@@ -16,7 +16,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     optimizer_params={'n_configurations': 5},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
-                    output_settings=OutputSettings(project_folder='./tmp'))
+                    project_folder='./tmp')
 
 # my_pipe.add(PipelineElement('StandardScaler'))
 

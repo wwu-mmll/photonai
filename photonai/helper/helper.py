@@ -238,3 +238,16 @@ def print_estimator_metrics(estimator_performances, metric_list, summary=False):
     logger.photon_system_log(t)
 
 
+def print_config_list_table(estimator_name="", list_of_config_dicts=list(), summary=False):
+
+    parameter_names = list(set().union(*list_of_config_dicts))
+    t = PrettyTable(['Config #'] + parameter_names)
+    for idx, config in enumerate(list_of_config_dicts):
+        t.add_row([str(idx)] + [config[p] for p in parameter_names])
+    if summary:
+        return t
+
+    logger.system_line()
+    logger.photon_system_log("Estimator Name")
+    logger.system_line()
+    logger.photon_system_log(t)

@@ -1,9 +1,7 @@
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, Switch
 from photonai.optimization import IntegerRange
-
-
 
 my_pipe = Hyperpipe('covid_pipe',
                     optimizer='random_grid_search',
@@ -13,7 +11,7 @@ my_pipe = Hyperpipe('covid_pipe',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=5),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 my_pipe += PipelineElement('StandardScaler')
 my_pipe += PipelineElement('SimpleImputer')

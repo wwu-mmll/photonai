@@ -5,7 +5,7 @@ import warnings
 from sklearn.metrics import accuracy_score
 
 from photonai.helper.helper import PhotonDataHelper
-from photonai.base import PipelineElement, Hyperpipe, OutputSettings
+from photonai.base import PipelineElement, Hyperpipe
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.optimization import FloatRange, Categorical, IntegerRange
 from photonai.optimization.hyperparameters import NumberRange
@@ -28,9 +28,6 @@ class NevergradIntegrationTest(unittest.TestCase):
 
         self.time_limit = 20
 
-        settings = OutputSettings(project_folder='./tmp/')
-
-
         # DESIGN YOUR PIPELINE
         self.pipe = Hyperpipe('basic_svm_pipe',
                               optimizer='nevergrad',
@@ -41,7 +38,7 @@ class NevergradIntegrationTest(unittest.TestCase):
                               best_config_metric='accuracy',
                               inner_cv=self.s_split,
                               verbosity=0,
-                              output_settings=settings)
+                              project_folder='./tmp/')
 
     def simple_classification(self):
         dataset = load_breast_cancer()

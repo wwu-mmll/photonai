@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, Switch
 from photonai.optimization import IntegerRange
 
 # GET DATA
@@ -16,7 +16,7 @@ my_pipe = Hyperpipe('basic_switch_pipe',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=5),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 # Transformer Switch
 my_pipe += Switch('StandardizationSwitch',

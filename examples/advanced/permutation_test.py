@@ -8,12 +8,10 @@ from photonai.processing.permutation_test import PermutationTest
 def create_hyperpipe():
     # this is needed here for the parallelisation
     from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-    from photonai.optimization import FloatRange, Categorical, IntegerRange
     from sklearn.model_selection import GroupKFold
     from sklearn.model_selection import KFold
 
-    settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
-                              project_folder='./tmp/')
+    settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results')
     my_pipe = Hyperpipe('permutation_test_1',
                         optimizer='grid_search',
                         metrics=['accuracy', 'precision', 'recall'],
@@ -23,6 +21,7 @@ def create_hyperpipe():
                         calculate_metrics_across_folds=True,
                         eval_final_performance=True,
                         verbosity=1,
+                        project_folder='./tmp/',
                         output_settings=settings)
 
     # Add transformer elements

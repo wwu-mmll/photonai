@@ -22,7 +22,31 @@ except (ModuleNotFoundError, ImportError):
 class SMACOptimizer(PhotonMasterOptimizer):
     """SMAC Wrapper for PHOTONAI.
 
-    SMAC usage and implementation details [here](https://automl.github.io/SMAC3/master/quickstart.html).
+    SMAC (sequential model-based algorithm configuration) is a
+    versatile tool for optimizing algorithm parameters.
+    The main core consists of Bayesian Optimization in
+    combination with an aggressive racing mechanism to efficiently
+    decide which of two configurations performs better.
+
+    SMAC usage and implementation details [here](
+    https://automl.github.io/SMAC3/master/quickstart.html).
+
+    References:
+
+        Hutter, F. and Hoos, H. H. and Leyton-Brown, K.
+        Sequential Model-Based Optimization for General Algorithm Configuration
+        In: Proceedings of the conference on Learning and Intelligent OptimizatioN (LION 5)
+
+    Example:
+        ```
+        my_pipe = Hyperpipe('smac_example',
+                            optimizer='smac',
+                            optimizer_params={"facade": "SMAC4BO",
+                                              "wallclock_limit": 60.0*10,  # seconds
+                                              "ta_run_limit": 100},  # limit of configurations
+                            ...)
+
+        ```
 
     """
     def __init__(self, facade='SMAC4HPO',
@@ -55,7 +79,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
             intensifier_kwargs:
                 Dict for intensifier settings.
 
-            rng: int, default=42
+            rng:
                 random seed of SMAC.facade
 
             kwargs:

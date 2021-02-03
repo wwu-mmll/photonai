@@ -83,10 +83,10 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
                 config_copy[self.switch_estimator_config_key] = element_name
                 yield config_copy
 
-    def tell(self, params, performance):
+    def tell(self, config, performance):
         # influence return value of next_config
         # remove current estimator name as it is just a hack to filter configs afterwards, and not part of the HP space
-        config = dict(params)
+        config = dict(config)
         del config[self.switch_estimator_config_key]
         config_copy = dict()
         for c_key, c_value in config.items():

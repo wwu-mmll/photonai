@@ -74,7 +74,7 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
             sample_ols_confounder = self._standardize(sample_ols_confounder, is_fit=True)
 
         # sample_ols_confounder: confounder variables of the samples to be fitted
-        ols_confounder = sm.add_constant(sample_ols_confounder)
+        ols_confounder = sm.add_constant(sample_ols_confounder, has_constant="add")
         self.olsModel_params = np.zeros(shape=(X.shape[1], ols_confounder.shape[1]))
 
         for i in range(X.shape[1]):
@@ -91,7 +91,7 @@ class ConfounderRemoval(BaseEstimator, TransformerMixin):
         if self.standardize_covariates:
             sample_ols_confounder = self._standardize(sample_ols_confounder, is_fit=False)
 
-        sample_ols_confounder = sm.add_constant(sample_ols_confounder)
+        sample_ols_confounder = sm.add_constant(sample_ols_confounder, has_constant="add")
         X_new = np.empty(X.shape)
         for i in range(X.shape[1]):
             preds = np.matmul(sample_ols_confounder, np.squeeze(self.olsModel_params[i]))

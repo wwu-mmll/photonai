@@ -102,17 +102,16 @@ class JsonTransformer(object):
             self.json["optimizer_params"] = self.transform_elements_recursive(pipe.optimization.optimizer_params)
         self.json["metrics"] = self.transform_elements_recursive(pipe.optimization.metrics)
         self.json["best_config_metric"] = pipe.optimization.best_config_metric
+        self.json["project_folder"] = pipe.project_folder
 
         if pipe.output_settings:
-            self.json["output_settings"] = {"mongodb_connect_url" : pipe.output_settings.mongodb_connect_url,
-                                            "save_output" : pipe.output_settings.save_output,
-                                            "plots" : pipe.output_settings.plots,
-                                            "overwrite_results" : pipe.output_settings.overwrite_results,
-                                            "project_folder" : pipe.output_settings.project_folder,
-                                            "user_id" : pipe.output_settings.user_id,
+            self.json["output_settings"] = {"mongodb_connect_url": pipe.output_settings.mongodb_connect_url,
+                                            "save_output": pipe.output_settings.save_output,
+                                            "overwrite_results": pipe.output_settings.overwrite_results,
+                                            "user_id": pipe.output_settings.user_id,
                                             "wizard_object_id" : pipe.output_settings.wizard_object_id,
-                                            "wizard_project_name" : pipe.output_settings.wizard_project_name,
-                                            "__photon_type" : "OutputSettings"}
+                                            "wizard_project_name": pipe.output_settings.wizard_project_name,
+                                            "__photon_type": "OutputSettings"}
 
         if pipe.preprocessing:
             self.json["preprocessing"] = {"elements" : self.transform_elements_recursive(pipe.preprocessing.elements),

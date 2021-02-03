@@ -1,7 +1,7 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import IntegerRange
 
 X, y = load_boston(return_X_y=True)
@@ -14,7 +14,7 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features

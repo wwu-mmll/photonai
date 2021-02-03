@@ -14,13 +14,28 @@ from photonai.photonlogger.logger import logger
 
 
 class SkOptOptimizer(PhotonSlaveOptimizer):
-    """
-    Wrapper for scikit-optimize with PHOTONAI.
+    """Wrapper for Scikit-Optimize with PHOTONAI.
+
+    Scikit-Optimize, or skopt, is a simple and efficient library to
+    minimize (very) expensive and noisy black-box functions.
+    It implements several methods for sequential model-based optimization.
+    skopt aims to be accessible and easy to use in many contexts.
+
 
     Scikit-optimize [usage and implementation details](https://scikit-optimize.github.io/stable/)
 
     A detailed parameter documentation [here.](
     https://scikit-optimize.github.io/stable/modules/generated/skopt.optimizer.Optimizer.html#skopt.optimizer.Optimizer)
+
+    Example:
+        ```
+        my_pipe = Hyperpipe('skopt_example',
+                            optimizer='sk_opt',
+                            optimizer_params={'n_configurations': 25,
+                                              'acq_func': 'LCB',
+                                              'acq_func_kwargs': {'kappa': 1.96}},
+                            ...)
+        ```
 
     """
     def __init__(self,

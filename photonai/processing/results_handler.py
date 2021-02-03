@@ -20,40 +20,42 @@ from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
 
 from photonai.photonlogger.logger import logger
-from photonai.helper.helper import print_double_metrics, print_metrics, print_estimator_metrics
+from photonai.helper.helper import print_double_metrics, print_metrics, print_estimator_metrics, print_config_list_table
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
 from photonai.__init__ import __version__
 
-class ResultsHandler:
-    """Results Handler.
 
+class ResultsHandler:
+    """
     Provides all functions that operate on calculated results.
     As IO for the results object the ResultsHandler
     is able to handle results on its own.
 
-    Parameters
-    ----------
-    results_object: MDBHyperpipe or None, default=None
-        All results are stored here.
-        An initial setting is not necessary,
-        because a later loading via file or MongoDB is possible.
-
-    output_settings: OutputSettings or None, default=None
-        Setting for creation and storage of the results_object.
-
     """
     def __init__(self, results_object: MDBHyperpipe = None, output_settings=None):
+        """
+        Initialize the object.
+
+        Parameters:
+            results_object:
+                All results are stored here.
+                An initial setting is not necessary,
+                because a later loading via file or MongoDB is possible.
+
+            output_settings:
+                Setting for creation and storage of the results_object.
+
+        """
         self.results = results_object
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
         """Reads results_file from json into MDBHyperpipe object self.results.
 
-        Parameters
-        ----------
-        results_file: str
-            Full path to json file.
+        Parameters:
+            results_file:
+                Full path to json file.
 
         """
         self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
@@ -61,13 +63,12 @@ class ResultsHandler:
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         """Reads results_file from MongoDB into MDBHyperpipe object self.results.
 
-        Parameters
-        ----------
-        mongodb_connect_url: str
-            MongoDB connection string.
+        Parameters:
+            mongodb_connect_url:
+                MongoDB connection string.
 
-        pipe_name: str
-            Name of the stored hyperpipe.
+            pipe_name:
+                Name of the stored hyperpipe.
 
         """
         connect(mongodb_connect_url, alias="photon_core")
@@ -83,8 +84,11 @@ class ResultsHandler:
             raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
 
     @staticmethod
-    def get_methods():
+    def get_methods() -> list:
         """This function returns a list of all methods available for ResultsHandler.
+
+        Returns:
+            List of all available methods.
 
         """
         methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
@@ -304,7 +308,7 @@ class ResultsHandler:
         plt.close()
 
     def _save_prep_learning_curves(self, file_name):
-        path = self.output_settings.results_folder + '/learning_curves/'
+        path = self.results.output_folder + '/learning_curves/'
         if not os.path.exists(path):
             os.makedirs(path)
         return os.path.join(path, file_name)
@@ -397,9 +401,8 @@ class ResultsHandler:
         if file:
             plt.savefig(file)
         else:
-            if self.output_settings:
-                file = os.path.join(self.output_settings.results_folder, "optimizer_history.png")
-                plt.savefig(file)
+            file = os.path.join(self.results.output_folder, "optimizer_history.png")
+            plt.savefig(file)
         plt.close()
 
     def get_importance_scores(self):
@@ -557,7 +560,7 @@ class ResultsHandler:
         # write csv file with time analysis
         if write_results:
             sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
-            csv_filename = os.path.join(self.output_settings.results_folder, 'time_monitor.csv')
+            csv_filename = os.path.join(self.results.output_folder, 'time_monitor.csv')
             with open(csv_filename, 'w') as csvfile:
                 writer = csv.writer(csvfile)
                 header1 = [""]
@@ -695,7 +698,7 @@ class ResultsHandler:
         #fig.legend(patches+patches_an, element_names+method_list, prop={'size': 10}, loc='lower left')
 
         if write_results:
-            plt.savefig(os.path.join(self.output_settings.results_folder, 'time_monitor_pie.png'))
+            plt.savefig(os.path.join(self.results.output_folder, 'time_monitor_pie.png'))
         plt.close()
         if plotly_return:
             str_fig = "var layout =" + str(plotly_dict["layout"]) + ";"
@@ -724,17 +727,17 @@ class ResultsHandler:
             try:
                 from nibabel.nifti1 import Nifti1Image
                 if isinstance(backmapping, Nifti1Image):
-                    backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+                    backmapping.to_filename(os.path.join(self.results.output_folder, filename + '.nii.gz'))
             except ImportError:
                 pass
             finally:
                 if isinstance(backmapping, np.ndarray):
                     if backmapping.size > 1000:
-                        np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+                        np.savez(os.path.join(self.results.output_folder, filename + '.npz'), backmapping)
                     else:
-                        np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
+                        np.savetxt(os.path.join(self.results.output_folder, filename + '.csv'), backmapping, delimiter=',')
                 else:
-                    with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
+                    with open(os.path.join(self.results.output_folder, filename + '.p'), 'wb') as f:
                         pickle.dump(backmapping, f)
         except Exception as e:
             logger.error("Could not save backmapped feature importances.")
@@ -745,10 +748,6 @@ class ResultsHandler:
             logger.info("Writing summary file, plots and prediction csv to result folder ...")
             self.write_summary()
             self.write_predictions_file()
-
-        if self.output_settings.plots:
-            self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
-            self.eval_mean_time_components()
 
     def convert_to_json_serializable(self, value):
         if isinstance(value, (np.int, np.int32, np.int64)):
@@ -762,7 +761,7 @@ class ResultsHandler:
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
+            local_file = os.path.join(self.results.output_folder, 'photon_result_file.json')
             result = self.round_floats(self.results.to_son().to_dict())
 
             with open(local_file, 'w') as outfile:
@@ -796,9 +795,8 @@ class ResultsHandler:
         return self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_predictions_file(self):
-        if self.output_settings.save_output:
+          if self.output_settings.save_output:
             filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
-
             # usually we write the predictions for the outer fold
             if not self.output_settings.save_predictions_from_best_config_inner_folds:
                 return self.get_test_predictions(filename)
@@ -806,8 +804,7 @@ class ResultsHandler:
             else:
                 return self.get_best_config_inner_fold_predictions(filename)
 
-    def get_best_performances_for_estimator(self):
-
+    def _get_best_outer_fold_configs_per_estimator(self) -> dict:
         # 1. find out which estimators there are
         last_element_name_identifier, last_element_dict = list(self.results.hyperpipe_info.elements.items())[-1]
         no_switch_found = False
@@ -833,25 +830,51 @@ class ResultsHandler:
         for outer_fold in self.results.outer_folds:
             for estimator_name in estimator_list:
                 try:
-                    best_estimator_config = outer_fold.get_optimum_config(metric=self.results.hyperpipe_info.best_config_metric,
-                                                                          maximize_metric=self.results.hyperpipe_info.
-                                                                          maximize_best_config_metric,
-                                                                          dict_filter=(search_key, estimator_name))
+                    best_estimator_config = outer_fold.get_optimum_config(
+                        metric=self.results.hyperpipe_info.best_config_metric,
+                        maximize_metric=self.results.hyperpipe_info.
+                        maximize_best_config_metric,
+                        dict_filter=(search_key, estimator_name))
                     best_configs_from_estimators[estimator_name].append(best_estimator_config)
                 except Warning as w:
-                    logger.info("Could not find best config for estimator {} " 
+                    logger.info("Could not find best config for estimator {} "
                                 "in outer fold {}".format(estimator_name, outer_fold.fold_nr))
 
-        # 4. get infos for each list
+        return best_configs_from_estimators
+
+    def get_n_best_validation_configs_per_estimator(self, n=10, estimator_names=None) -> dict:
+        best_configs_from_estimator = self._get_best_outer_fold_configs_per_estimator()
+        if estimator_names:
+            all_estimators = list(best_configs_from_estimator.keys())
+            for name in all_estimators:
+                if name not in estimator_names:
+                    del best_configs_from_estimator[name]
+
+        best_n_config_dict = dict()
+        for estimator_name, estimator_list in best_configs_from_estimator.items():
+            if n > len(estimator_list):
+                n_configs_per_estimator = [c.config_dict for c in estimator_list]
+            else:
+                sort_order = np.argsort([[c.get_test_metric(self.results.hyperpipe_info.best_config_metric, 'mean')
+                                          for c in estimator_list]])
+                n_configs_per_estimator = [estimator_list[idx].config_dict for idx in sort_order[:n]]
+            best_n_config_dict[estimator_name] = n_configs_per_estimator
+            print_config_list_table(estimator_name, n_configs_per_estimator)
+
+        return best_n_config_dict
+
+    def get_mean_of_best_validation_configs_per_estimator(self):
+
+        best_configs_from_estimators = self._get_best_outer_fold_configs_per_estimator()
+
+        # get mean values for each metric for each estimator config list
         estimator_performance_values = dict()
-        for estimator_name in estimator_list:
+        for estimator_name, estimator_config_list in best_configs_from_estimators.items():
             estimator_performance_values[estimator_name] = dict()
             for metric in self.results.hyperpipe_info.metrics:
                 performance_values = [c.get_test_metric(metric, 'mean')
-                                      for c in best_configs_from_estimators[estimator_name]]
+                                      for c in estimator_config_list]
                 estimator_performance_values[estimator_name][metric] = np.mean(performance_values)
-
-        # 5. output results
         output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
 
     def text_summary(self):

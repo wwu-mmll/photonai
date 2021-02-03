@@ -29,11 +29,10 @@ from photonai.helper.photon_base_test import elements_to_dict, PhotonBaseTest
 class HyperpipeTests(PhotonBaseTest):
 
     def setup_hyperpipe(self, output_settings=None):
-        if output_settings is None:
-            output_settings = OutputSettings(project_folder=self.tmp_folder_path)
         self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
                                    metrics=self.metrics,
                                    best_config_metric=self.best_config_metric,
+                                   project_folder=self.tmp_folder_path,
                                    output_settings=output_settings,
                                    verbosity=2)
         self.hyperpipe += self.ss_pipe_element
@@ -152,7 +151,7 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
                                    metrics=[('custom_metric', custom_metric), 'accuracy'],
                                    best_config_metric=Accuracy,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
         self.hyperpipe += self.ss_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
         self.hyperpipe.fit(self.__X, self.__y)
@@ -228,7 +227,7 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_save_optimum_pipe(self):
         tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
-        settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
+        settings = OutputSettings(overwrite_results=True)
 
         my_pipe = Hyperpipe('hyperpipe',
                             optimizer='random_grid_search',
@@ -238,6 +237,7 @@ class HyperpipeTests(PhotonBaseTest):
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
                             verbosity=1,
+                            project_folder=tmp_path,
                             output_settings=settings)
 
         preproc = Preprocessing()
@@ -288,7 +288,7 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_save_optimum_pipe_custom_element(self):
         tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
-        settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
+        settings = OutputSettings(overwrite_results=True)
 
         my_pipe = Hyperpipe('hyperpipe',
                             optimizer='random_grid_search',
@@ -298,6 +298,7 @@ class HyperpipeTests(PhotonBaseTest):
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
                             verbosity=1,
+                            project_folder=tmp_path,
                             output_settings=settings)
         my_pipe += PipelineElement('KerasDnnClassifier', {}, epochs=1, hidden_layer_sizes=[5])
         my_pipe.fit(self.__X, self.__y)
@@ -311,7 +312,7 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_failure_to_save_optimum_pipe(self):
         tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
-        settings = OutputSettings(project_folder=tmp_path, overwrite_results=True)
+        settings = OutputSettings(overwrite_results=True)
 
         my_pipe = Hyperpipe('hyperpipe',
                             optimizer='random_grid_search',
@@ -321,6 +322,7 @@ class HyperpipeTests(PhotonBaseTest):
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
                             verbosity=1,
+                            project_folder=tmp_path,
                             output_settings=settings)
         my_pipe += PipelineElement('KNeighborsClassifier')
         my_pipe.fit(self.__X, self.__y)
@@ -336,8 +338,7 @@ class HyperpipeTests(PhotonBaseTest):
             return os.path.join(self.hyperpipe.output_settings.results_folder, 'photon_summary.txt')
 
         # Case 1: default
-        output_settings1 = OutputSettings(project_folder=self.tmp_folder_path,
-                                          save_output=True,
+        output_settings1 = OutputSettings(save_output=True,
                                           overwrite_results=False)
         self.setup_hyperpipe(output_settings1)
         self.hyperpipe.fit(self.__X, self.__y)
@@ -354,8 +355,7 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertNotEqual(tmp_path, tmp_path2)
 
         # Case 2 overwrite results: all in the same folder
-        output_settings2 = OutputSettings(project_folder=self.tmp_folder_path,
-                                          save_output=True,
+        output_settings2 = OutputSettings(save_output=True,
                                           overwrite_results=True)
         self.setup_hyperpipe(output_settings2)
         self.hyperpipe.fit(self.__X, self.__y)
@@ -488,7 +488,7 @@ class HyperpipeTests(PhotonBaseTest):
                                     'SVC': str(type(self.svc_pipe_element.base_element)),
                                     'STACK:final_stack': {'SVC': str(type(self.svc_pipe_element.base_element)),
                                                           'RandomForestClassifier': str(type(rfc.base_element)),
-                                                          'BRANCH;dummy_branch': {
+                                                          'BRANCH:dummy_branch': {
                                                               'SVC': str(type(self.svc_pipe_element.base_element))
                                                           }},
                                     'LinearSVC': str(type(lsvc.base_element))

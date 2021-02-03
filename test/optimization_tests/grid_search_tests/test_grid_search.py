@@ -4,7 +4,7 @@ from functools import reduce
 import operator
 from inspect import signature
 
-from photonai.base import PipelineElement, Switch, Branch, Hyperpipe, OutputSettings
+from photonai.base import PipelineElement, Switch, Branch, Hyperpipe
 from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, \
     IntegerRange
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer, PhotonMasterOptimizer
@@ -28,13 +28,14 @@ class GridSearchOptimizerTest(unittest.TestCase):
 
     def create_hyperpipe(self):
         self.hyperpipe = Hyperpipe('optimizer_test',
-                                   output_settings=OutputSettings(project_folder='./tmp'),
+                                   project_folder='./tmp',
                                    metrics=['accuracy'],
                                    best_config_metric='accuracy',
                                    inner_cv=KFold(n_splits=2),
                                    outer_cv=ShuffleSplit(n_splits=2),
                                    optimizer=self.optimizer_name,
-                                   optimizer_params=self.optimizer_params)
+                                   optimizer_params=self.optimizer_params,
+                                   verbosity=0)
 
     def test_run(self):
         self.create_hyperpipe()

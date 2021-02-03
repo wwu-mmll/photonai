@@ -29,8 +29,8 @@ class ResultsHandlerTest(PhotonBaseTest):
                      'photon_summary.txt',
                      'photon_best_model.photon']
 
-        cls.output_settings = OutputSettings(project_folder=cls.tmp_folder_path,
-                                             save_output=True)
+        cls.results_folder = cls.tmp_folder_path
+        cls.output_settings = OutputSettings(save_output=True)
 
         cls.mongodb_path = 'mongodb://localhost:27017/photon_results'
 
@@ -47,6 +47,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                                   metrics=cls.metrics,
                                   best_config_metric=cls.best_config_metric,
                                   outer_cv=KFold(n_splits=2),
+                                  project_folder=cls.results_folder,
                                   output_settings=cls.output_settings,
                                   verbosity=1)
         cls.hyperpipe += cls.ss_pipe_element
@@ -64,40 +65,40 @@ class ResultsHandlerTest(PhotonBaseTest):
         Output creation testing. Only write if output_settings.save_output == True
         """
         for file in self.files:
-            self.assertTrue(os.path.isfile(os.path.join(self.output_settings.results_folder, file)))
+            self.assertTrue(os.path.isfile(os.path.join(self.hyperpipe.output_settings.results_folder, file)))
 
         # correct rows
-        with open(os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')) as f:
+        with open(os.path.join(self.hyperpipe.output_settings.results_folder, 'best_config_predictions.csv')) as f:
             self.assertEqual(sum([outer_fold.number_samples_test
                                   for outer_fold in self.hyperpipe.results.outer_folds]),
                              sum(1 for _ in f)-1)
 
         shutil.rmtree(self.tmp_folder_path, ignore_errors=True)
-        self.output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=False)
+        self.hyperpipe.output_settings = OutputSettings(save_output=False)
         self.hyperpipe.fit(self.__X, self.__y)
-        self.assertIsNone(self.output_settings.results_folder)
+        self.assertFalse(os.path.exists(self.hyperpipe.output_settings.results_folder))
 
     def test_summary(self):
         """
         Check content of photon_summary.txt. Adjustment with hyperpipe.result.
         """
+
         # todo: check appropriately
         pass
-
 
     def test_save_backmapping_weird_format(self):
         self.hyperpipe.fit(self.__X, self.__y)
         weird_format_fake = ('string', ['array'])
         # should be saved as pickle
         self.hyperpipe.results_handler.save_backmapping('weird_format', weird_format_fake)
-        expected_file = os.path.join(self.output_settings.results_folder, 'weird_format.p')
+        expected_file = os.path.join(self.hyperpipe.output_settings.results_folder, 'weird_format.p')
         self.assertTrue(os.path.isfile(expected_file))
 
     def test_save_backmapping_csv(self):
         """
         Check dimension of feature backmapping equals input dimensions for less than 1000 features.
         """
-        backmapping = np.loadtxt(os.path.join(self.output_settings.results_folder,
+        backmapping = np.loadtxt(os.path.join(self.hyperpipe.output_settings.results_folder,
                                  'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
         self.assertEqual(np.shape(self.__X)[1], backmapping.size)
 
@@ -109,7 +110,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         # use np.tile to copy features until at least 1000 features are reached
         X = np.tile(self.__X, (1, 35))
         self.hyperpipe.fit(X, self.__y)
-        npzfile = np.load(os.path.join(self.output_settings.results_folder,
+        npzfile = np.load(os.path.join(self.hyperpipe.output_settings.results_folder,
                                        'optimum_pipe_feature_importances_backmapped.npz'))
         self.assertEqual(len(npzfile.files), 1)
         backmapping = npzfile[npzfile.files[0]]
@@ -122,6 +123,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                                    best_config_metric=self.best_config_metric,
                                    outer_cv=KFold(n_splits=2),
                                    output_settings=self.output_settings,
+                                   project_folder=self.results_folder,
                                    verbosity=1)
         self.hyperpipe += self.ss_pipe_element
         self.stack = Stack("myStack")
@@ -133,7 +135,8 @@ class ResultsHandlerTest(PhotonBaseTest):
         self.output_settings.save_output = True
         self.hyperpipe.fit(self.__X, self.__y)
 
-        f_name = os.path.join(self.output_settings.results_folder, 'optimum_pipe_feature_importances_backmapped.csv')
+        f_name = os.path.join(self.hyperpipe.output_settings.results_folder,
+                              'optimum_pipe_feature_importances_backmapped.csv')
         self.assertTrue(not os.path.isfile(f_name))
 
     def test_save_backmapping_reduced_dimension_without_inverse(self):
@@ -154,6 +157,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                                    metrics=self.metrics,
                                    best_config_metric=self.best_config_metric,
                                    outer_cv=KFold(n_splits=2),
+                                   project_folder=self.results_folder,
                                    output_settings=self.output_settings,
                                    verbosity=1)
         self.hyperpipe += trans
@@ -161,9 +165,8 @@ class ResultsHandlerTest(PhotonBaseTest):
 
         self.output_settings.save_output = True
 
-        f_name = os.path.join(self.output_settings.results_folder, 'optimum_pipe_feature_importances_backmapped.csv')
+        f_name = os.path.join(self.results_folder, 'optimum_pipe_feature_importances_backmapped.csv')
         self.assertTrue(not os.path.isfile(f_name))
-
 
     def test_get_feature_importances(self):
         self.hyperpipe.elements[-1] = PipelineElement('LinearSVC')
@@ -194,6 +197,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                               metrics=self.metrics,
                               best_config_metric=self.best_config_metric,
                               outer_cv=KFold(n_splits=2),
+                              project_folder=self.results_folder,
                               output_settings=self.output_settings,
                               verbosity=1)
         hyperpipe += self.ss_pipe_element

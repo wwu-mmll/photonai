@@ -1,6 +1,6 @@
 
 from photonai.helper.photon_base_test import PhotonBaseTest
-from photonai.base import PipelineElement, Hyperpipe, OutputSettings, ParallelBranch
+from photonai.base import PipelineElement, Hyperpipe, ParallelBranch
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_pipeline import PhotonPipeline
 
@@ -178,7 +178,7 @@ class CachedHyperpipeTests(PhotonBaseTest):
                                    cache_folder=cache_path,
                                    metrics=['mean_squared_error'],
                                    best_config_metric='mean_squared_error',
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
 
         nb = ParallelBranch("SubjectCaching", nr_of_processes=1)
         nb += PipelineElement.create("ResampleImages", StupidAdditionTransformer(), {'voxel_size': [3, 5, 10]},

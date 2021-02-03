@@ -1,19 +1,19 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
 
-from photonai.base import Hyperpipe, PipelineElement, Stack, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, Stack
 from photonai.optimization import FloatRange
 
 X, y = load_breast_cancer(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe(name='Estimator_pipe',
-                    optimizer='grid_search',
+                    optimizer='random_grid_search',
                     metrics=['balanced_accuracy'],
                     best_config_metric='balanced_accuracy',
                     outer_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                     inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features

@@ -14,6 +14,15 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
     Searches for the best configuration by iteratively
     testing all possible hyperparameter combinations.
 
+    Example:
+        ```
+        my_pipe = Hyperpipe(name='grid_based_pipe',
+                            optimizer='grid_search',
+                            ...
+                            )
+        my_pipe.fit(X, y)
+        ```
+
     """
     def __init__(self):
         """Initialize the object."""
@@ -60,6 +69,16 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
     Searches for the best configuration by randomly
     testing n possible hyperparameter combinations.
 
+    Example:
+        ```
+        my_pipe = Hyperpipe(name='rgrid_based_pipe',
+                            optimizer='random_grid_search',
+                            optimizer_params={'n_configurations': 50},
+                            ...
+                            )
+        my_pipe.fit(X, y)
+        ```
+
     """
     def __init__(self, n_configurations: Union[int, None] = 25):
         """
@@ -102,6 +121,17 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
 
     Iteratively tests n possible hyperparameter configurations
     until a certain time limit is reached.
+
+    Example:
+        ```
+        my_pipe = Hyperpipe(name='trgrid_based_pipe',
+                            optimizer='timeboxed_random_grid_search',
+                            optimizer_params={'n_configurations': 50,
+                                              'limit_in_minutes': 10},
+                            ...
+                            )
+        my_pipe.fit(X, y)
+        ```
 
     """
     def __init__(self, limit_in_minutes: float = 60, n_configurations: Union[int, None] = None):

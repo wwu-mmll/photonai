@@ -4,7 +4,7 @@ import numpy as np
 from sklearn.datasets import make_regression, make_classification, load_iris
 from sklearn.model_selection import KFold, ShuffleSplit, LeaveOneOut
 
-from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, OutputSettings, Branch, DataFilter
+from photonai.base import Hyperpipe, PipelineElement, Switch, Stack, Branch, DataFilter
 from photonai.optimization import Categorical, FloatRange, IntegerRange
 from photonai.helper.photon_base_test import PhotonBaseTest
 
@@ -29,13 +29,11 @@ class TestArchitectures(PhotonBaseTest):
             outer_cv_list = [None, KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.25),
                              LeaveOneOut()]
             performance_constraints_list = [None]
-            plots_bool_list = [True]
 
             combinations = list(product(optimizer_list, eval_final_performance_list, inner_cv_list, outer_cv_list,
-                                performance_constraints_list, plots_bool_list))
-            for optimizer, eval_final_performance, inner_cv, outer_cv, performance_constraints, plots_bool in combinations:
-                cls.hyperpipes.append(cls.create_hyperpipes(plots=plots_bool,
-                                                            optimizer=optimizer,
+                                performance_constraints_list))
+            for optimizer, eval_final_performance, inner_cv, outer_cv, performance_constraints in combinations:
+                cls.hyperpipes.append(cls.create_hyperpipes(optimizer=optimizer,
                                                             inner_cv=inner_cv,
                                                             outer_cv=outer_cv,
                                                             eval_final_performance=eval_final_performance,
@@ -55,12 +53,12 @@ class TestArchitectures(PhotonBaseTest):
     @staticmethod
     def create_hyperpipes(metrics: list = None, inner_cv=KFold(n_splits=3, shuffle=True, random_state=42),
                           outer_cv=ShuffleSplit(n_splits=1, test_size=.2),
-                          plots: bool = False, optimizer: str = 'random_grid_search',
+                          optimizer: str = 'random_grid_search',
                           optimizer_params: dict = {'n_configurations': 10}, eval_final_performance: bool = True,
                           performance_constraints: list = None, cache_folder='./cache', tmp_folder='./tmp'):
 
         pipe = Hyperpipe(name="architecture_test_pipe",
-                         output_settings=OutputSettings(project_folder=tmp_folder, plots=plots),
+                         project_folder=tmp_folder,
                          optimizer=optimizer,
                          optimizer_params=optimizer_params,
                          best_config_metric='accuracy',
@@ -70,7 +68,7 @@ class TestArchitectures(PhotonBaseTest):
                          eval_final_performance=eval_final_performance,
                          performance_constraints=performance_constraints,
                          cache_folder=cache_folder,
-                         verbosity=1)
+                         verbosity=0)
         return pipe
 
     @staticmethod

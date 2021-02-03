@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Stack, Branch, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, Stack, Branch
 from photonai.optimization import IntegerRange, Categorical, FloatRange
 
 X, y = load_breast_cancer(return_X_y=True)
@@ -13,7 +13,7 @@ my_pipe = Hyperpipe('basic_stacking',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=10),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
 tree_qua_branch = Branch('tree_branch')

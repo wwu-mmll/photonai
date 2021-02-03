@@ -1,15 +1,13 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import FloatRange
 
 # WE USE THE BOSTON HOUSING DATA FROM SKLEARN
 X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
-
 my_pipe = Hyperpipe('results_example',
                     learning_curves=True,
                     learning_curves_cut=FloatRange(0, 1, 'range', 0.2),
@@ -20,7 +18,7 @@ my_pipe = Hyperpipe('results_example',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=settings)
+                    project_folder='./tmp/')
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features

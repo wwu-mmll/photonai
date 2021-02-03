@@ -7,7 +7,7 @@ from shutil import rmtree
 from sklearn.metrics import accuracy_score
 
 from photonai.helper.helper import PhotonDataHelper
-from photonai.base import PipelineElement, Switch, Hyperpipe, OutputSettings
+from photonai.base import PipelineElement, Switch, Hyperpipe
 from photonai.base.photon_pipeline import PhotonPipeline
 from sklearn.datasets import fetch_olivetti_faces
 from sklearn.model_selection import ShuffleSplit
@@ -38,13 +38,6 @@ class Smac3IntegrationTest(unittest.TestCase):
 
         self.time_limit = 20
 
-        settings = OutputSettings(project_folder='./tmp/')
-
-        scenario_dict = {"run_obj": "quality",
-                         "deterministic": "true",
-                         "wallclock_limit": self.time_limit
-                         }
-
         self.pipe = Hyperpipe('basic_svm_pipe',
                               optimizer='smac',
                               optimizer_params={'facade': SMAC4BO,
@@ -55,7 +48,7 @@ class Smac3IntegrationTest(unittest.TestCase):
                               best_config_metric='accuracy',
                               inner_cv=self.s_split,
                               verbosity=0,
-                              output_settings=settings)
+                              project_folder='./tmp/')
 
     def simple_classification(self):
         dataset = fetch_olivetti_faces(download_if_missing=True)
@@ -137,7 +130,7 @@ class Smac3IntegrationTest(unittest.TestCase):
                          best_config_metric='accuracy',
                          inner_cv=self.s_split,
                          verbosity=0,
-                         output_settings=OutputSettings(project_folder='./tmp/'))
+                         project_folder='./tmp/')
 
         pipe.add(PipelineElement('StandardScaler'))
         pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})

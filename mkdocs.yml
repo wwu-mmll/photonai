@@ -7,17 +7,36 @@ nav:
     - Regression: regression.md
   - 'API':
     - 'Base':
+      - Architecture: api/architecture.md
+      - Branch: api/base/branch.md
       - Hyperpipe: api/base/hyperpipe.md
-      - Architecture: architecture.md
+      - OutputSettings: api/base/output_settings.md
+      - PipelineElement: api/base/pipeline_element.md
+      - Preprocessing: api/base/preprocessing.md
+      - Registry: api/base/registry.md
+      - Stack: api/base/stack.md
+      - Switch: api/base/switch.md
+    - 'Modelwrapper':
+      - 'Feature Selection':
+        - FClassifSelectPercentile: api/modelwrapper/feature_selection/FClassifSelectPercentile.md
+        - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
+        - FRegressionSelectPercentile: api/modelwrapper/feature_selection/FRegressionSelectPercentile.md
+        - LassoFeatureSelection: api/modelwrapper/feature_selection/LassoFeatureSelection.md
+        - ModelSelector: api/modelwrapper/feature_selection/ModelSelector.md
     - 'Optimization':
       - GridSearch: api/optimization/grid_search.md
       - RandomGridSearch: api/optimization/random_grid_search.md
       - TimeBoxedRandom_GS: api/optimization/time_boxed_random_grid_search.md
-      - scikit-optimize: api/optimization/skopt.md
+      - Scikit-Optimize: api/optimization/skopt.md
       - SMAC: api/optimization/smac.md
       - Nevergrad: api/optimization/nevergrad.md
+      - 'Hyperparameter':
+        - BooleanSwitch: api/optimization/hyperparameter/boolean_switch.md
+        - Categorical: api/optimization/hyperparameter/categorical.md
+        - FloatRange: api/optimization/hyperparameter/float_range.md
+        - IntegerRange: api/optimization/hyperparameter/integer_range.md
     - 'Processing':
-      - Results Handler: api/processing/not_ready_results_handler.md
+      - Results Handler: api/processing/results_handler.md
   - 'Features':
       - 'Over- /Undersampling': examples/imbalanced_data.md
       - 'Custom Metrics': custom_metrics.md

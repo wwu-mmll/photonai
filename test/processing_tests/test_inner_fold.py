@@ -222,13 +222,14 @@ class InnerFoldTests(PhotonBaseTest):
         def test_one_hyperpipe(learning_curves, learning_curves_cut):
             if learning_curves and learning_curves_cut is None:
                 learning_curves_cut = FloatRange(0, 1, 'range', 0.2)
-            output_settings = OutputSettings(project_folder=self.tmp_folder_path, save_output=False)
+            output_settings = OutputSettings(save_output=False)
             test_hyperpipe = Hyperpipe('test_pipe',
                                        learning_curves=learning_curves,
                                        learning_curves_cut=learning_curves_cut,
                                        metrics=['accuracy', 'recall', 'specificity'],
                                        best_config_metric='accuracy',
                                        inner_cv=self.inner_cv,
+                                       project_folder=self.tmp_folder_path,
                                        output_settings=output_settings)
 
             self.assertEqual(test_hyperpipe.cross_validation.learning_curves, learning_curves)

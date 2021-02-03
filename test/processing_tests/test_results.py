@@ -7,7 +7,7 @@ from sklearn.datasets import load_boston
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import IntegerRange, FloatRange, Categorical
 from photonai.helper.photon_base_test import PhotonBaseTest
 from photonai.helper.helper import XPredictor
@@ -34,7 +34,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    outer_cv=KFold(n_splits=self.outer_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    best_config_metric='mean_absolute_error',
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path),
+                                   project_folder=self.tmp_folder_path,
                                    verbosity=0)
 
     def test_cv_config_and_dummy_nr(self):
@@ -68,10 +68,10 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
         self.check_for_dummy()
 
-
     def test_get_metric(self):
 
         metric_list = [MDBFoldMetric(metric_name='a', value=1, operation='raw'),
+                       MDBFoldMetric(metric_name='a', value=0.5, operation='mean'),
                        MDBFoldMetric(metric_name='b', value=1, operation='raw'),
                        MDBFoldMetric(metric_name='c', value=1, operation='raw'),
                        MDBFoldMetric(metric_name='c', value=0, operation='mean'),
@@ -79,37 +79,33 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         doubled_metrics = [MDBFoldMetric(metric_name='a', value=1, operation='raw'),
                            MDBFoldMetric(metric_name='a', value=1, operation='raw')]
 
+        okay_config = MDBConfig()
+        okay_config.metrics_test = metric_list
+        doubled_config = MDBConfig()
+        doubled_config.metrics_test = doubled_metrics
+
         # raise error when no metric filter infos are given
         with self.assertRaises(ValueError):
-            MDBConfig.get_metric(metric_list)
+            okay_config.get_test_metric(name="", operation="")
 
         # check doubled metrics
         with self.assertRaises(KeyError):
-            MDBConfig.get_metric(doubled_metrics, name='a', operation='raw')
+            doubled_config.get_test_metric(name='a', operation='raw')
 
         # check None is returned when there is no metric
-        self.assertIsNone(MDBConfig.get_metric(metric_list, name='d', operation='raw'))
+        self.assertIsNone(okay_config.get_test_metric(name='d', operation='raw'))
 
-        # check there is a Key Error for giving only name
-        with self.assertRaises(KeyError):
-            # a) when there is no such metric
-            MDBConfig.get_metric(doubled_metrics, name='d')
         with self.assertRaises(KeyError):
             # b) when there are doubled metrics
-            MDBConfig.get_metric(doubled_metrics, name='a')
+            doubled_config.get_test_metric(name='a', operation="raw")
 
-        # check there is "raw" given for when there is no operation
-        self.assertEqual(MDBConfig.get_metric(metric_list, name='a'), 1)
+        # check there is "mean" given for when there is no operation
+        self.assertEqual(okay_config.get_test_metric(name='a'), 0.5)
         # check there is the correct metric value returned
-        self.assertEqual(MDBConfig.get_metric(metric_list, name='c', operation='mean'), 0)
+        self.assertEqual(okay_config.get_test_metric(name='c', operation='std'), 2)
 
         expected_dict = {'a': 1, 'b': 1, 'c': 1}
-        self.assertDictEqual(expected_dict, MDBConfig.get_metric(metric_list, operation='raw'))
-
-
-
-
-
+        self.assertDictEqual(expected_dict, okay_config.get_test_metric(operation='raw'))
 
     def check_for_dummy(self):
         self.assertTrue(hasattr(self.hyperpipe.results, 'dummy_estimator'))
@@ -204,7 +200,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    eval_final_performance=False,
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
 
         self.test_metrics_and_aggregations()
 
@@ -217,7 +213,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_per_fold=True,
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
 
         self.test_metrics_and_aggregations()
 
@@ -326,7 +322,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                               outer_cv=KFold(n_splits=3),
                               metrics=['mean_absolute_error', 'mean_squared_error'],
                               best_config_metric='mean_squared_error',
-                              output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                              project_folder=self.tmp_folder_path)
         hyperpipe += PipelineElement('StandardScaler')
         hyperpipe += PipelineElement('DecisionTreeRegressor')
         X, y = load_boston(return_X_y=True)
