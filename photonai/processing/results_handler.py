@@ -806,7 +806,7 @@ class ResultsHandler:
             else:
                 return self.get_best_config_inner_fold_predictions(filename)
 
-    def get_best_performances_for_estimator(self, ):
+    def get_best_performances_for_estimator(self):
 
         # 1. find out which estimators there are
         last_element_name_identifier, last_element_dict = list(self.results.hyperpipe_info.elements.items())[-1]

@@ -4,7 +4,7 @@ from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
 from photonai.optimization import FloatRange, IntegerRange, Categorical, BestPerformanceConstraint, MinimumPerformanceConstraint
 
 # setup training and test workflow
-my_pipe = Hyperpipe('heart_failure_no_fu',
+my_pipe = Hyperpipe('heart_failure',
                     outer_cv=ShuffleSplit(n_splits=100, test_size=0.2),
                     inner_cv=KFold(n_splits=5, shuffle=True),
                     metrics=['balanced_accuracy', 'f1_score', 'auc', 'matthews_corrcoef',
@@ -12,7 +12,7 @@ my_pipe = Hyperpipe('heart_failure_no_fu',
                     best_config_metric='matthews_corrcoef',
                     optimizer='switch',
                     optimizer_params={'name': 'sk_opt', 'n_configurations': 50},
-                    performance_constraints=[MinimumPerformanceConstraint('matthews_corrcoef', 0.35)],
+                    performance_constraints=[MinimumPerformanceConstraint('matthews_corrcoef', 0.30)],
                     output_settings=OutputSettings(project_folder='./tmp'),
                     verbosity=1)
 
@@ -27,7 +27,7 @@ my_pipe += PipelineElement('SimpleImputer')
 #                            test_disabled=True)
 
 my_pipe += PipelineElement('LassoFeatureSelection',
-                           hyperparameters={'percentile_to_keep': FloatRange(0.1, 0.5),
+                           hyperparameters={'percentile': FloatRange(0.1, 0.5),
                                             'alpha': FloatRange(0.1, 2, range_type="logspace")})
 
 my_pipe += PipelineElement('ImbalancedDataTransformer',
@@ -68,3 +68,4 @@ y = df.iloc[:, 12]
 # start the training, optimization and test procedure
 my_pipe.fit(X, y)
 
+my_pipe.results_handler.get_best_performances_for_estimator()
