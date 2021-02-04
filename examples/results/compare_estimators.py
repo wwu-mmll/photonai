@@ -45,4 +45,8 @@ my_pipe += estimators
 my_pipe.fit(X, y)
 
 output = my_pipe.results_handler.get_best_performances_for_estimator()
+res = ResultsHandler()
+res.load_from_file("./photon_result_file.json")
+estimator_performances = res.get_best_performances_for_estimator()
+
 debug = True

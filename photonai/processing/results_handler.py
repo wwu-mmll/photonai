@@ -803,7 +803,7 @@ class ResultsHandler:
             else:
                 return self.get_best_config_inner_fold_predictions(filename)
 
-    def get_best_performances_for_estimator(self, ):
+    def get_best_performances_for_estimator(self, write_to_file=True):
 
         # 1. find out which estimators there are
         last_element_name_identifier, last_element_dict = list(self.results.hyperpipe_info.elements.items())[-1]
@@ -850,6 +850,12 @@ class ResultsHandler:
 
         # 5. output results
         output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
+        if write_to_file:
+            text_file = open(os.path.join(self.output_settings.results_folder,
+                                          "mean_best_estimator_performance.txt"), "w")
+            text_file.write(output)
+            text_file.close()
+        return output
 
     def text_summary(self):
         def divider(header):

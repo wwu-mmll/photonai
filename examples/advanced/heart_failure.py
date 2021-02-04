@@ -7,9 +7,8 @@ from photonai.optimization import FloatRange, IntegerRange, Categorical, BestPer
 my_pipe = Hyperpipe('heart_failure_total',
                     outer_cv=ShuffleSplit(n_splits=100, test_size=0.2),
                     inner_cv=KFold(n_splits=5, shuffle=True),
-                    metrics=['balanced_accuracy', 'f1_score', 'auc', 'matthews_corrcoef',
-                             'accuracy', 'precision', 'recall'],
-                    best_config_metric='matthews_corrcoef',
+                    metrics=['balanced_accuracy', 'f1_score', 'precision', 'recall'],
+                    best_config_metric='f1_score',
                     optimizer='switch',
                     optimizer_params={'name': 'sk_opt', 'n_configurations': 50},
                     performance_constraints=[MinimumPerformanceConstraint('matthews_corrcoef', 0.35)],
@@ -54,9 +53,11 @@ estimators += PipelineElement('SVC',
 
 estimators += PipelineElement('MLPClassifier', learning_rate='adaptive',
                               hyperparameters={'activation': ['logistic', 'tanh', 'relu'],
+                                               'hidden_layer_sizes': [15, 30, 50, 75, 100, 150, 300],
                                                'alpha': FloatRange(0.001, 1, "logspace")})
 
-estimators += PipelineElement('GaussianNB', priors=(0.7, 0.3))
+estimators += PipelineElement('LogisticRegression',
+                              hyperparameters={'C': FloatRange(0.1, 5)})
 
 my_pipe += estimators
 
@@ -67,4 +68,8 @@ y = df.iloc[:, 12]
 
 # start the training, optimization and test procedure
 my_pipe.fit(X, y)
+
+output = my_pipe.results_handler.get_best_performances_for_estimator()
+
+
 
