@@ -9,7 +9,7 @@ X, y = load_boston(return_X_y=True)
 my_pipe = Hyperpipe(name='default_pipe',
                     metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_absolute_error',
-                    eval_final_performance=False,
+                    use_test_set=False,
                     inner_cv=KFold(n_splits=10, shuffle=True, random_state=42),
                     verbosity=0,
                     project_folder='./tmp/')

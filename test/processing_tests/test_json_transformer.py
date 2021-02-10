@@ -75,7 +75,7 @@ class JsonTransformerTest(unittest.TestCase):
                             optimizer='grid_search',
                             metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                             best_config_metric='accuracy',
-                            eval_final_performance=False,
+                            use_test_set=False,
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=3),
                             verbosity=1,

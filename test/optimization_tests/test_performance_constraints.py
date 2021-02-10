@@ -172,7 +172,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
                             metrics=['mean_squared_error'],
                             best_config_metric='mean_squared_error',
                             inner_cv=KFold(n_splits=inner_fold_length),
-                            eval_final_performance=True,
+                            use_test_set=True,
                             project_folder='./tmp',
                             performance_constraints=[self.constraint_object])
 

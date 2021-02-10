@@ -28,7 +28,7 @@ class OuterFoldTests(PhotonBaseTest):
         self.outer_cv = ShuffleSplit(n_splits=1, test_size=0.2, random_state=42)
         self.cv_info = Hyperpipe.CrossValidation(inner_cv=self.inner_cv,
                                                  outer_cv=self.outer_cv,
-                                                 eval_final_performance=True,
+                                                 use_test_set=True,
                                                  test_size=0.2,
                                                  calculate_metrics_per_fold=True,
                                                  calculate_metrics_across_folds=False,

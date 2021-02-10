@@ -65,7 +65,7 @@ class TestArchitectures(PhotonBaseTest):
                          metrics=metrics,
                          inner_cv=inner_cv,
                          outer_cv=outer_cv,
-                         eval_final_performance=eval_final_performance,
+                         use_test_set=eval_final_performance,
                          performance_constraints=performance_constraints,
                          cache_folder=cache_folder,
                          verbosity=0)

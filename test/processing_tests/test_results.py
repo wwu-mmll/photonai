@@ -197,7 +197,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.hyperpipe = Hyperpipe('test_prediction_collection',
                                    inner_cv=KFold(n_splits=self.inner_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
-                                   eval_final_performance=False,
+                                   use_test_set=False,
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_across_folds=True,
                                    project_folder=self.tmp_folder_path)
@@ -209,7 +209,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    outer_cv=KFold(n_splits=self.outer_fold_nr),
                                    inner_cv=KFold(n_splits=self.inner_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
-                                   eval_final_performance=False,
+                                   use_test_set=False,
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_per_fold=True,
                                    calculate_metrics_across_folds=True,

@@ -73,7 +73,7 @@ class PermutationTestTests(PhotonBaseTest):
                             outer_cv=GroupKFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
                             calculate_metrics_across_folds=True,
-                            eval_final_performance=True,
+                            use_test_set=True,
                             verbosity=1,
                             project_folder=self.tmp_folder_path,
                             output_settings=settings)
@@ -106,7 +106,7 @@ class PermutationTestTests(PhotonBaseTest):
                             outer_cv=GroupKFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
                             calculate_metrics_across_folds=True,
-                            eval_final_performance=True,
+                            use_test_set=True,
                             verbosity=1,
                             project_folder=self.tmp_folder_path,
                             output_settings=settings)
@@ -135,7 +135,7 @@ class PermutationTestTests(PhotonBaseTest):
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
                             calculate_metrics_across_folds=True,
-                            eval_final_performance=True,
+                            use_test_set=True,
                             verbosity=1,
                             project_folder=self.tmp_folder_path)
         return my_pipe

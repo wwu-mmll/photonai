@@ -267,7 +267,7 @@ class Hyperpipe(BaseEstimator):
                  optimizer_params: dict = None,
                  metrics: Optional[List[Union[Scorer.Metric_Type, str]]] = None,
                  best_config_metric: Optional[Union[Scorer.Metric_Type, str]] = None,
-                 eval_final_performance: bool = True,
+                 use_test_set: bool = True,
                  test_size: float = 0.2,
                  project_folder: str = '',
                  calculate_metrics_per_fold: bool = True,
@@ -344,7 +344,7 @@ class Hyperpipe(BaseEstimator):
             best_config_metric:
                 The metric that should be maximized or minimized in order to choose the best hyperparameter configuration
 
-            eval_final_performance [bool, default=True]:
+            use_test_set [bool, default=True]:
                 If the metrics should be calculated for the test set,
                 otherwise the test set is seperated but not used.
 
@@ -419,7 +419,7 @@ class Hyperpipe(BaseEstimator):
 
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
                                                           outer_cv=outer_cv,
-                                                          eval_final_performance=eval_final_performance,
+                                                          use_test_set=use_test_set,
                                                           test_size=test_size,
                                                           calculate_metrics_per_fold=calculate_metrics_per_fold,
                                                           calculate_metrics_across_folds=calculate_metrics_across_folds,
@@ -495,14 +495,14 @@ class Hyperpipe(BaseEstimator):
     class CrossValidation:
 
         def __init__(self, inner_cv, outer_cv,
-                     eval_final_performance, test_size,
+                     use_test_set, test_size,
                      calculate_metrics_per_fold,
                      calculate_metrics_across_folds,
                      learning_curves,
                      learning_curves_cut):
             self.inner_cv = inner_cv
             self.outer_cv = outer_cv
-            self.eval_final_performance = eval_final_performance
+            self.eval_final_performance = use_test_set
             self.test_size = test_size
 
             self.learning_curves = learning_curves
