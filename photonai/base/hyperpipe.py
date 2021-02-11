@@ -502,7 +502,7 @@ class Hyperpipe(BaseEstimator):
                      learning_curves_cut):
             self.inner_cv = inner_cv
             self.outer_cv = outer_cv
-            self.eval_final_performance = use_test_set
+            self.use_test_set = use_test_set
             self.test_size = test_size
 
             self.learning_curves = learning_curves
@@ -737,7 +737,7 @@ class Hyperpipe(BaseEstimator):
         self.results.hyperpipe_info = MDBHyperpipeInfo()
 
         # in case eval final performance is false, we have no outer fold predictions
-        if not self.cross_validation.eval_final_performance:
+        if not self.cross_validation.use_test_set:
             self.output_settings.save_predictions_from_best_config_inner_folds = True
         self.results_handler = ResultsHandler(self.results, self.output_settings)
 
@@ -758,7 +758,7 @@ class Hyperpipe(BaseEstimator):
                 self.results.user_id = self.output_settings.user_id
         self.results.outer_folds = []
         self.results.hyperpipe_info.elements = self.__get_pipeline_structure(self.elements)
-        self.results.hyperpipe_info.eval_final_performance = self.cross_validation.eval_final_performance
+        self.results.hyperpipe_info.eval_final_performance = self.cross_validation.use_test_set
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
         self.results.hyperpipe_info.learning_curves_cut = self.cross_validation.learning_curves_cut
@@ -989,7 +989,7 @@ class Hyperpipe(BaseEstimator):
                 # Outer Folds
                 outer_folds = FoldInfo.generate_folds(self.cross_validation.outer_cv,
                                                       self.data.X, self.data.y, self.data.kwargs,
-                                                      self.cross_validation.eval_final_performance,
+                                                      self.cross_validation.use_test_set,
                                                       self.cross_validation.test_size)
 
                 self.cross_validation.outer_folds = {f.fold_id: f for f in outer_folds}

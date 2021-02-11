@@ -137,7 +137,7 @@ class OuterFoldTests(PhotonBaseTest):
             self.assertTrue(len(outer_fold_man.result_object.best_config.best_config_score.validation.y_pred) == 0)
 
         # in case we don't evaluate the test set
-        self.cv_info.eval_final_performance = False
+        self.cv_info.use_test_set = False
         # todo: metric refactoring update
         # we copy the mean value
         self.cv_info.calculate_metrics_across_folds = False

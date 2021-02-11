@@ -70,7 +70,7 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertIsNotNone(self.hyperpipe.cross_validation)
         self.assertEqual(self.hyperpipe.cross_validation.inner_cv, self.inner_cv_object)
         self.assertIsNone(self.hyperpipe.cross_validation.outer_cv, None)
-        self.assertTrue(self.hyperpipe.cross_validation.eval_final_performance)
+        self.assertTrue(self.hyperpipe.cross_validation.use_test_set)
         self.assertTrue(self.hyperpipe.cross_validation.calculate_metrics_per_fold)
         self.assertFalse(self.hyperpipe.cross_validation.calculate_metrics_across_folds)
         self.assertIsNone(self.hyperpipe.cross_validation.outer_folds)

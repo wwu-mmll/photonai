@@ -235,7 +235,7 @@ class OuterFoldManager:
             best_config_performance_mdb.number_samples_validation = self._test_y.shape[0]
             best_config_performance_mdb.feature_importances = optimum_pipe.feature_importances_
 
-            if self.cross_validation_info.eval_final_performance:
+            if self.cross_validation_info.use_test_set:
                 # Todo: generate mean and std over outer folds as well. move this items to the top
                 logger.info('Calculating best model performance on test set...')
 
@@ -386,7 +386,7 @@ class OuterFoldManager:
                 inner_fold = MDBInnerFold()
                 inner_fold.training = train_scores
 
-                if self.cross_validation_info.eval_final_performance:
+                if self.cross_validation_info.use_test_set:
                     test_scores = InnerFoldManager.score(self.dummy_estimator,
                                                          self._test_X, self._test_y,
                                                          metrics=self.optimization_info.metrics)

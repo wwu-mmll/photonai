@@ -92,7 +92,7 @@ class JsonTransformer(object):
 
         self.json["inner_cv"] = self.transform_elements_recursive(pipe.cross_validation.inner_cv)
         self.json["outer_cv"] = self.transform_elements_recursive(pipe.cross_validation.outer_cv)
-        for c_key in ["calculate_metrics_across_folds", "eval_final_performance", "test_size",
+        for c_key in ["calculate_metrics_across_folds", "use_test_set", "test_size",
                       "calculate_metrics_per_fold"]:
             self.json[c_key] = getattr(pipe.cross_validation, c_key)
 

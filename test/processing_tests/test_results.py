@@ -111,7 +111,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.assertTrue(hasattr(self.hyperpipe.results, 'dummy_estimator'))
         # we should have mean and std for each metric respectively
         expected_dummy_metrics = len(self.hyperpipe.optimization.metrics) * 2
-        if self.hyperpipe.cross_validation.eval_final_performance:
+        if self.hyperpipe.cross_validation.use_test_set:
             self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_test) == expected_dummy_metrics)
         # we should have mean and std for each metric respectively
         self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_train) == expected_dummy_metrics)
@@ -142,13 +142,13 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
     def test_get_predictions_no_outer_cv_eval_final_performance_false(self):
         self.hyperpipe += PipelineElement('PhotonTestXPredictor')
         self.hyperpipe.cross_validation.outer_cv = None
-        self.hyperpipe.cross_validation.eval_final_performance = False
+        self.hyperpipe.cross_validation.use_test_set = False
         self.hyperpipe.fit(self.X, self.y_true)
         self.check_predictions_eval_final_performance_false()
 
     def get_predictions_outer_cv_eval_final_performance_false(self):
         self.hyperpipe += PipelineElement('PhotonTestXPredictor')
-        self.hyperpipe.cross_validation.eval_final_performance = False
+        self.hyperpipe.cross_validation.use_test_set = False
         self.hyperpipe.fit(self.X, self.y_true)
         self.check_predictions_eval_final_performance_false()
 
@@ -270,7 +270,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                 actual_mean_absolute_error_across_folds = config.get_train_metric('mean_absolute_error', "raw")
                 self.assertEqual(expected_mean_absolute_error_across_folds, actual_mean_absolute_error_across_folds)
 
-            if self.hyperpipe.cross_validation.eval_final_performance:
+            if self.hyperpipe.cross_validation.use_test_set:
                 expected_outer_test_mae = mean_absolute_error(XPredictor.adapt_X(outer_fold.test_indices),
                                                               outer_fold.test_indices)
 
