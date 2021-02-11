@@ -38,7 +38,7 @@ with only one line of code.
     keywords=['machine learning', 'deep learning', 'neural networks', 'hyperparameter'],
     classifiers=[],
     install_requires=[
-        'numpy==1.20.0',
+        'numpy',
         'matplotlib',
         'scikit-learn',
         'keras',
