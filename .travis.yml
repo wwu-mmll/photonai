@@ -2,7 +2,7 @@ os: linux
 dist: bionic
 language: python
 python:
-  - "3.7"
+  - "3.7.6"
 services:
   - docker
 before_install:
