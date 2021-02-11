@@ -1115,6 +1115,30 @@ class Hyperpipe(BaseEstimator):
             X, _, _ = self.optimum_pipe.transform(data, y=None, **kwargs)
             return X
 
+    def score(self, data: np.ndarray, y: np.ndarray, **kwargs) -> np.ndarray:
+        """
+        Use the optimum pipe to score the model.
+
+        Parameters:
+            data:
+                The array-like data with shape=[M, D],
+                where M is the number of samples and D is the number
+                of features. D must correspond to the number
+                of trained dimensions of the fit method.
+
+            y:
+                The array-like true targets.
+
+            kwargs:
+                Keyword arguments, passed to optimum_pipe.predict.
+
+        Returns:
+            Score data on input data with trained model.
+
+        """
+        if self._pipe:
+            return self.optimum_pipe.score(data, y, **kwargs)
+
     def inverse_transform_pipeline(self, hyperparameters: dict,
                                    data: np.ndarray,
                                    targets: np.ndarray,
