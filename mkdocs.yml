@@ -3,8 +3,11 @@ docs_dir: documentation/docs
 nav:
   - 'Getting Started':
     - Introduction: index.md
-    - Classification: classification.md
-    - Regression: regression.md
+    - Classification: getting_started/classification.md
+    - Regression: getting_started/regression.md
+    - Saving and loading: getting_started/save_load.md
+    - Registry: getting_started/registry.md
+    - Output: getting_started/output.md
   - 'API':
     - 'Base':
       - Architecture: api/architecture.md
@@ -38,16 +41,31 @@ nav:
     - 'Processing':
       - Results Handler: api/processing/results_handler.md
   - 'Features':
+      - 'Hyperparameter Optimization Shortcuts': features/performance_constraints.md
       - 'Over- /Undersampling': examples/imbalanced_data.md
       - 'Custom Metrics': custom_metrics.md
-      - 'Hyperparameter Optimization Shortcuts': performance_constraints.md
+      - 'Subpipelines': examples/subpipelines.md
+      - 'Switch': features/switch.md
+      - 'Stack': features/stack.md
+      - 'Permutation Test': features/permutation_test.md
 
   - 'Algorithms':
       'Transformers': transformers.md
       'Estimators': estimators.md
   - 'Examples':
-      - 'Sample Pairing': sample_pairing.md
-      - 'Over- and Undersampling': over_undersampling.md
+      - No Outer CV: examples/no_outer_cv.md
+      - Group driven CV split: examples/group_driven_cv_split.md
+      - Feature Subset Pipelines: examples/feature_subset_pipelines.md
+      - Classifier Ensemble: examples/classifier_ensemble.md
+      - Confounder Removal: examples/confounder_removal.md
+      - Sample Pairing: examples/sample_pairing.md
+      - Permutation Test: examples/permutation_test.md
+      - Subpipelines: examples/subpipelines.md
+      - Scikit-learn MLP: examples/scikit_learn_mlp.md
+      - DNN with multiclass prediction: examples/dnn_multiclass_prediction.md
+      - Custom Transformer: examples/custom_transformer.md
+      - Custom Estimator: examples/custom_estimator.md
+      - Over- and Undersampling: examples/imbalanced_data.md
   - 'About':
       - 'Contributions': contribution.md
 extra_css:
