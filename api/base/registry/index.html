@@ -1,0 +1,2034 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+      
+      
+      <link rel="shortcut icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
+    
+    
+      
+        <title>Registry - </title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.15aa0b43.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.75751829.min.css">
+        
+      
+    
+    
+    
+      
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
+        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
+      
+    
+    
+    
+      <link rel="stylesheet" href="../../../stylesheets/extra.css">
+    
+    
+      
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
+      
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#documentation-for-photonregistry" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header-nav md-grid" aria-label="Header">
+    <a href="../../.." title="" class="md-header-nav__button md-logo" aria-label="">
+      <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
+    </a>
+    <label class="md-header-nav__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    </label>
+    <div class="md-header-nav__title" data-md-component="header-title">
+      <div class="md-header-nav__ellipsis">
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+          </span>
+        </div>
+        <div class="md-header-nav__topic">
+          <span class="md-ellipsis">
+            
+              Registry
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <label class="md-header-nav__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+      </label>
+      
+<div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+      </label>
+      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
+      </button>
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+  </nav>
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-tabs__inner md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../.." class="md-tabs__link">
+        Getting Started
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+    
+  
+
+
+  
+  
+  
+    
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../architecture/" class="md-tabs__link md-tabs__link--active">
+        API
+      </a>
+    </li>
+  
+
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../features/performance_constraints/" class="md-tabs__link">
+        Features
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../transformers.md" class="md-tabs__link">
+        Algorithms
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../../examples/no_outer_cv/" class="md-tabs__link">
+        Examples
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="https://www.photon-ai.com" class="md-tabs__link">
+        About
+      </a>
+    </li>
+  
+
+      
+    </ul>
+  </div>
+</nav>
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="" class="md-nav__button md-logo" aria-label="">
+      <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
+    </a>
+    
+  </label>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" >
+      
+      <label class="md-nav__link" for="nav-1">
+        Getting Started
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
+        <label class="md-nav__title" for="nav-1">
+          <span class="md-nav__icon md-icon"></span>
+          Getting Started
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        Introduction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting_started/classification/" class="md-nav__link">
+        Classification
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting_started/regression/" class="md-nav__link">
+        Regression
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting_started/save_load/" class="md-nav__link">
+        Saving and loading
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting_started/registry/" class="md-nav__link">
+        Registry
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../getting_started/output/" class="md-nav__link">
+        Output
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" checked>
+      
+      <label class="md-nav__link" for="nav-2">
+        API
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="API" data-md-level="1">
+        <label class="md-nav__title" for="nav-2">
+          <span class="md-nav__icon md-icon"></span>
+          API
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-1" type="checkbox" id="nav-2-1" checked>
+      
+      <label class="md-nav__link" for="nav-2-1">
+        Base
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Base" data-md-level="2">
+        <label class="md-nav__title" for="nav-2-1">
+          <span class="md-nav__icon md-icon"></span>
+          Base
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../architecture/" class="md-nav__link">
+        Architecture
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../branch/" class="md-nav__link">
+        Branch
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../hyperpipe/" class="md-nav__link">
+        Hyperpipe
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../output_settings/" class="md-nav__link">
+        OutputSettings
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../pipeline_element/" class="md-nav__link">
+        PipelineElement
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../preprocessing/" class="md-nav__link">
+        Preprocessing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Registry
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Registry
+      </a>
+      
+        
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry" class="md-nav__link">
+    photonai.base.registry.registry.PhotonRegistry
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.delete" class="md-nav__link">
+    delete()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.get_package_info" class="md-nav__link">
+    get_package_info()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.info" class="md-nav__link">
+    info()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.list_available_elements" class="md-nav__link">
+    list_available_elements()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.register" class="md-nav__link">
+    register()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stack/" class="md-nav__link">
+        Stack
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../switch/" class="md-nav__link">
+        Switch
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-2" type="checkbox" id="nav-2-2" >
+      
+      <label class="md-nav__link" for="nav-2-2">
+        Modelwrapper
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Modelwrapper" data-md-level="2">
+        <label class="md-nav__title" for="nav-2-2">
+          <span class="md-nav__icon md-icon"></span>
+          Modelwrapper
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-2-1" type="checkbox" id="nav-2-2-1" >
+      
+      <label class="md-nav__link" for="nav-2-2-1">
+        Feature Selection
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Feature Selection" data-md-level="3">
+        <label class="md-nav__title" for="nav-2-2-1">
+          <span class="md-nav__icon md-icon"></span>
+          Feature Selection
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modelwrapper/feature_selection/FClassifSelectPercentile/" class="md-nav__link">
+        FClassifSelectPercentile
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modelwrapper/feature_selection/FRegressionFilterPValue/" class="md-nav__link">
+        FRegressionFilterPValue
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modelwrapper/feature_selection/FRegressionSelectPercentile/" class="md-nav__link">
+        FRegressionSelectPercentile
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modelwrapper/feature_selection/LassoFeatureSelection/" class="md-nav__link">
+        LassoFeatureSelection
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../modelwrapper/feature_selection/ModelSelector/" class="md-nav__link">
+        ModelSelector
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-3" type="checkbox" id="nav-2-3" >
+      
+      <label class="md-nav__link" for="nav-2-3">
+        Optimization
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Optimization" data-md-level="2">
+        <label class="md-nav__title" for="nav-2-3">
+          <span class="md-nav__icon md-icon"></span>
+          Optimization
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/grid_search/" class="md-nav__link">
+        GridSearch
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/random_grid_search/" class="md-nav__link">
+        RandomGridSearch
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/time_boxed_random_grid_search/" class="md-nav__link">
+        TimeBoxedRandom_GS
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/skopt/" class="md-nav__link">
+        Scikit-Optimize
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/smac/" class="md-nav__link">
+        SMAC
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/nevergrad/" class="md-nav__link">
+        Nevergrad
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-3-7" type="checkbox" id="nav-2-3-7" >
+      
+      <label class="md-nav__link" for="nav-2-3-7">
+        Hyperparameter
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Hyperparameter" data-md-level="3">
+        <label class="md-nav__title" for="nav-2-3-7">
+          <span class="md-nav__icon md-icon"></span>
+          Hyperparameter
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/hyperparameter/boolean_switch/" class="md-nav__link">
+        BooleanSwitch
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/hyperparameter/categorical/" class="md-nav__link">
+        Categorical
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/hyperparameter/float_range/" class="md-nav__link">
+        FloatRange
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../optimization/hyperparameter/integer_range/" class="md-nav__link">
+        IntegerRange
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-4" type="checkbox" id="nav-2-4" >
+      
+      <label class="md-nav__link" for="nav-2-4">
+        Processing
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Processing" data-md-level="2">
+        <label class="md-nav__title" for="nav-2-4">
+          <span class="md-nav__icon md-icon"></span>
+          Processing
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../processing/results_handler/" class="md-nav__link">
+        Results Handler
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
+      
+      <label class="md-nav__link" for="nav-3">
+        Features
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Features" data-md-level="1">
+        <label class="md-nav__title" for="nav-3">
+          <span class="md-nav__icon md-icon"></span>
+          Features
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../features/performance_constraints/" class="md-nav__link">
+        Hyperparameter Optimization Shortcuts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/imbalanced_data/" class="md-nav__link">
+        Over- /Undersampling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../custom_metrics.md" class="md-nav__link">
+        Custom Metrics
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/subpipelines/" class="md-nav__link">
+        Subpipelines
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../features/switch/" class="md-nav__link">
+        Switch
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../features/stack/" class="md-nav__link">
+        Stack
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../features/permutation_test/" class="md-nav__link">
+        Permutation Test
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
+      
+      <label class="md-nav__link" for="nav-4">
+        Algorithms
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Algorithms" data-md-level="1">
+        <label class="md-nav__title" for="nav-4">
+          <span class="md-nav__icon md-icon"></span>
+          Algorithms
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../transformers.md" class="md-nav__link">
+        Transformers
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../estimators.md" class="md-nav__link">
+        Estimators
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
+      
+      <label class="md-nav__link" for="nav-5">
+        Examples
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Examples" data-md-level="1">
+        <label class="md-nav__title" for="nav-5">
+          <span class="md-nav__icon md-icon"></span>
+          Examples
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/no_outer_cv/" class="md-nav__link">
+        No Outer CV
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/group_driven_cv_split/" class="md-nav__link">
+        Group driven CV split
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/feature_subset_pipelines/" class="md-nav__link">
+        Feature Subset Pipelines
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/classifier_ensemble/" class="md-nav__link">
+        Classifier Ensemble
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/confounder_removal/" class="md-nav__link">
+        Confounder Removal
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/sample_pairing/" class="md-nav__link">
+        Sample Pairing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/permutation_test/" class="md-nav__link">
+        Permutation Test
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/subpipelines/" class="md-nav__link">
+        Subpipelines
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/scikit_learn_mlp/" class="md-nav__link">
+        Scikit-learn MLP
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/dnn_multiclass_prediction/" class="md-nav__link">
+        DNN with multiclass prediction
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/custom_transformer/" class="md-nav__link">
+        Custom Transformer
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/custom_estimator/" class="md-nav__link">
+        Custom Estimator
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/imbalanced_data/" class="md-nav__link">
+        Over- and Undersampling
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" >
+      
+      <label class="md-nav__link" for="nav-6">
+        About
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="About" data-md-level="1">
+        <label class="md-nav__title" for="nav-6">
+          <span class="md-nav__icon md-icon"></span>
+          About
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://www.photon-ai.com" class="md-nav__link">
+        Website
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="https://arxiv.org/abs/2002.05426" class="md-nav__link">
+        Preprint
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contribution.md" class="md-nav__link">
+        Contributions
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry" class="md-nav__link">
+    photonai.base.registry.registry.PhotonRegistry
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.__init__" class="md-nav__link">
+    __init__()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.delete" class="md-nav__link">
+    delete()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.get_package_info" class="md-nav__link">
+    get_package_info()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.info" class="md-nav__link">
+    info()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.list_available_elements" class="md-nav__link">
+    list_available_elements()
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#photonai.base.registry.registry.PhotonRegistry.register" class="md-nav__link">
+    register()
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          <div class="md-content">
+            <article class="md-content__inner md-typeset">
+              
+                
+                
+                <h1 id="documentation-for-photonregistry">Documentation for <code>PhotonRegistry</code></h1>
+<div class="doc doc-object doc-class">
+<h2 class="hidden-toc" id="photonai.base.registry.registry.PhotonRegistry" style="visibility: hidden; position: absolute;">
+        </h2>
+<div class="doc doc-contents first">
+<p>Helper class to manage the PHOTONAI Element Register.</p>
+<p>Use it to add and remove items into the register.
+You can also retrieve information about items and its hyperparameters.</p>
+<p>Every item in the register is encoded by a string literal
+that points to a python class and its namespace.
+You can access the python class via the string literal.
+The class PhotonElement imports and instantiates the class for you.</p>
+<p><strong>Examples:</strong></p>
+<div class="highlight">
+<pre><span></span><code>import os
+from photonai.base import PhotonRegistry
+
+# REGISTER ELEMENT saved in folder custom_elements_folder
+base_folder = os.path.dirname(os.path.abspath(__file__))
+custom_elements_folder = os.path.join(base_folder, 'custom_elements')
+
+registry = PhotonRegistry(custom_elements_folder=custom_elements_folder)
+registry.register(photon_name='MyCustomEstimator',
+                  class_str='custom_estimator.CustomEstimator',
+                  element_type='Estimator')
+
+registry.activate()
+registry.info('MyCustomEstimator')
+
+# get informations of other available elements
+registry.info('SVC')
+</code></pre>
+</div>
+<div class="doc doc-children">
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.__init__">
+
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_elements_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
+
+  <span class="doc doc-properties">
+      <small class="doc doc-property doc-property-special"><code>special</code></small>
+  </span>
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Initialize the object.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>custom_elements_folder</code></td>
+<td><code>str</code></td>
+<td>
+<p>Path to folder with custom element in it.</p>
+</td>
+<td><code>None</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_elements_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Initialize the object.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        custom_elements_folder:</span>
+<span class="sd">            Path to folder with custom element in it.</span>
+
+<span class="sd">    """</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getfile</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">())))</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">module_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span><span class="p">,</span> <span class="s2">"modules"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">):</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">)</span>
+
+    <span class="c1"># update list with available sub_elements</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_list_available_modules</span><span class="p">()</span>
+    <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span> <span class="o">=</span> <span class="n">custom_elements_folder</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">_load_custom_folder</span><span class="p">(</span><span class="n">custom_elements_folder</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">()</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.delete">
+
+<code class="highlight language-python"><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Delete Element from JSON file.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>photon_name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The string literal encoding the class.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Delete Element from JSON file.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        photon_name:</span>
+<span class="sd">            The string literal encoding the class.</span>
+
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="n">photon_name</span> <span class="ow">in</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">:</span>
+        <span class="k">del</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_to_json</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Removing the PipelineElement named "</span><span class="si">{0}</span><span class="s1">" from CustomElements.json.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Cannot remove "</span><span class="si">{0}</span><span class="s1">" from CustomElements.json. Element has not been registered before.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.get_package_info">
+
+<code class="highlight language-python"><span class="n">get_package_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="o">=</span><span class="p">[</span><span class="s1">'PhotonCore'</span><span class="p">])</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Collect all registered elements from JSON file.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>photon_package</code></td>
+<td><code>list</code></td>
+<td>
+<p>The names of the PHOTONAI submodules for which
+the elements should be retrieved.</p>
+</td>
+<td><code>['PhotonCore']</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Returns:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Type</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dict</code></td>
+<td>
+<p>Dict of registered elements</p>
+</td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">get_package_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">"""</span>
+<span class="sd">    Collect all registered elements from JSON file.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        photon_package:</span>
+<span class="sd">            The names of the PHOTONAI submodules for which</span>
+<span class="sd">            the elements should be retrieved.</span>
+
+<span class="sd">    Returns:</span>
+<span class="sd">        Dict of registered elements</span>
+
+<span class="sd">    """</span>
+    <span class="n">class_info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">photon_package</span><span class="p">:</span>
+
+        <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_json</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
+            <span class="n">class_path</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">package</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"PhotonCore"</span><span class="p">,</span> <span class="s2">"CustomElements"</span><span class="p">]:</span>
+                <span class="c1"># try to import something from module.</span>
+                <span class="c1"># if that fails. drop this shit.</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">imported_module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">class_path</span><span class="p">)</span>
+                    <span class="n">desired_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">imported_module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                    <span class="n">custom_element</span> <span class="o">=</span> <span class="n">desired_class</span><span class="p">()</span>
+                <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Could not import from package </span><span class="si">{}</span><span class="s2">. Deleting json."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">package</span><span class="p">))</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">delete_module</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+
+            <span class="n">class_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_path</span><span class="p">,</span> <span class="n">class_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">return</span> <span class="n">class_info</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.info">
+
+<code class="highlight language-python"><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Show information for object that is encoded by this name.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>photon_name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The string literal which accesses the class.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Show information for object that is encoded by this name.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        photon_name:</span>
+<span class="sd">            The string literal which accesses the class.</span>
+
+<span class="sd">    """</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">()</span>  <span class="c1"># load existing json</span>
+
+    <span class="k">if</span> <span class="n">photon_name</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+        <span class="n">element_namespace</span><span class="p">,</span> <span class="n">element_name</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span>
+
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------------------"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Name: "</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"Namespace: "</span> <span class="o">+</span> <span class="n">element_namespace</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------------------"</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="n">imported_module</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">element_namespace</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">element_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+            <span class="n">desired_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">imported_module</span><span class="p">,</span> <span class="n">element_name</span><span class="p">)</span>
+            <span class="n">base_element</span> <span class="o">=</span> <span class="n">desired_class</span><span class="p">()</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"Possible Hyperparameters as derived from constructor:"</span><span class="p">)</span>
+            <span class="n">class_args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">base_element</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">more_info</span> <span class="ow">in</span> <span class="n">class_args</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">more_info</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------------------"</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Could not instantiate class "</span> <span class="o">+</span> <span class="n">element_namespace</span> <span class="o">+</span> <span class="s2">"."</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Could not find element "</span> <span class="o">+</span> <span class="n">photon_name</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.list_available_elements">
+
+<code class="highlight language-python"><span class="n">list_available_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="o">=</span><span class="p">[</span><span class="s1">'PhotonCore'</span><span class="p">])</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Print info about all items that are registered for the PHOTONAI
+submodule to the console.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>photon_package</code></td>
+<td><code>list</code></td>
+<td>
+<p>The names of the PHOTON submodules for which
+the elements should be retrieved.</p>
+</td>
+<td><code>['PhotonCore']</code></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">list_available_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Print info about all items that are registered for the PHOTONAI</span>
+<span class="sd">    submodule to the console.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        photon_package:</span>
+<span class="sd">            The names of the PHOTON submodules for which</span>
+<span class="sd">            the elements should be retrieved.</span>
+
+<span class="sd">    """</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">photon_package</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">photon_package</span> <span class="o">=</span> <span class="p">[</span><span class="n">photon_package</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">photon_package</span><span class="p">:</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_json</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">package</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">content</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                <span class="n">class_info</span><span class="p">,</span> <span class="n">package_type</span> <span class="o">=</span> <span class="n">v</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2"> </span><span class="si">{:&lt;5}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">class_info</span><span class="p">,</span> <span class="n">package_type</span><span class="p">))</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+<div class="doc doc-object doc-method">
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.register">
+
+<code class="highlight language-python"><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">,</span> <span class="n">class_str</span><span class="p">,</span> <span class="n">element_type</span><span class="p">)</span></code>
+
+
+      </h2>
+<div class="doc doc-contents ">
+<p>Save element information to the JSON file.</p>
+<p><strong>Parameters:</strong></p>
+<table>
+<thead>
+<tr>
+<th>Name</th>
+<th>Type</th>
+<th>Description</th>
+<th>Default</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>photon_name</code></td>
+<td><code>str</code></td>
+<td>
+<p>The string literal with which you want to access the class.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>class_str</code></td>
+<td><code>str</code></td>
+<td>
+<p>The namespace of the class, like in the import statement.</p>
+</td>
+<td><em>required</em></td>
+</tr>
+<tr>
+<td><code>element_type</code></td>
+<td><code>str</code></td>
+<td>
+<p>Can be 'Estimator' or 'Transformer'</p>
+</td>
+<td><em>required</em></td>
+</tr>
+</tbody>
+</table>
+<details class="quote">
+          <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
+          <div class="highlight">
+<pre><span></span><code><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">class_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">element_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">"""</span>
+<span class="sd">    Save element information to the JSON file.</span>
+
+<span class="sd">    Parameters:</span>
+<span class="sd">        photon_name:</span>
+<span class="sd">            The string literal with which you want to access the class.</span>
+
+<span class="sd">        class_str:</span>
+<span class="sd">            The namespace of the class, like in the import statement.</span>
+
+<span class="sd">        element_type:</span>
+<span class="sd">            Can be 'Estimator' or 'Transformer'</span>
+
+<span class="sd">    """</span>
+    <span class="c1"># check if folder exists</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"To register an element, specify a custom elements folder when instantiating the registry "</span>
+                         <span class="s2">"module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER)"</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">"Estimator"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">"Transformer"</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Variable element_type must be 'Estimator' or 'Transformer'"</span><span class="p">)</span>
+
+    <span class="n">duplicate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_duplicate</span><span class="p">(</span><span class="n">photon_name</span><span class="o">=</span><span class="n">photon_name</span><span class="p">,</span> <span class="n">class_str</span><span class="o">=</span><span class="n">class_str</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">duplicate</span><span class="p">:</span>
+        <span class="n">python_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">,</span> <span class="n">class_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.py'</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">python_file</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">"Couldn't find python file </span><span class="si">{}</span><span class="s2"> in your custom elements folder. "</span>
+                                    <span class="s2">"Please copy your file into this folder first!"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">python_file</span><span class="p">))</span>
+        <span class="c1"># add new element</span>
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_str</span><span class="p">,</span> <span class="n">element_type</span>
+
+        <span class="c1"># write back to file</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_write_to_json</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Adding PipelineElement '</span> <span class="o">+</span> <span class="n">class_str</span> <span class="o">+</span> <span class="s1">' to CustomElements.json as "'</span> <span class="o">+</span> <span class="n">photon_name</span> <span class="o">+</span> <span class="s1">'".'</span><span class="p">)</span>
+
+        <span class="c1"># activate custom elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
+
+        <span class="c1"># check custom element</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Running tests on custom element..."</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_tests</span><span class="p">(</span><span class="n">photon_name</span><span class="p">,</span> <span class="n">element_type</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">'Could not register element!'</span><span class="p">)</span>
+</code></pre>
+</div>
+</details>
+</div>
+</div>
+</div>
+</div>
+</div>
+                
+              
+              
+                
+
+
+              
+            </article>
+          </div>
+        </div>
+      </main>
+      
+        
+<footer class="md-footer">
+  
+    <div class="md-footer-nav">
+      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+        
+          <a href="../preprocessing/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+            </div>
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Previous
+                </span>
+                Preprocessing
+              </div>
+            </div>
+          </a>
+        
+        
+          <a href="../stack/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+            <div class="md-footer-nav__title">
+              <div class="md-ellipsis">
+                <span class="md-footer-nav__direction">
+                  Next
+                </span>
+                Stack
+              </div>
+            </div>
+            <div class="md-footer-nav__button md-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    </div>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+          Material for MkDocs
+        </a>
+      </div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    
+      <script src="../../../assets/javascripts/vendor.93c04032.min.js"></script>
+      <script src="../../../assets/javascripts/bundle.83e5331e.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
+      
+      <script>
+        app = initialize({
+          base: "../../..",
+          features: ['navigation.tabs'],
+          search: Object.assign({
+            worker: "../../../assets/javascripts/worker/search.8c7e0a7e.min.js"
+          }, typeof search !== "undefined" && search)
+        })
+      </script>
+      
+    
+  </body>
+</html>
