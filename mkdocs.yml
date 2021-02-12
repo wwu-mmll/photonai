@@ -67,6 +67,8 @@ nav:
       - Custom Estimator: examples/custom_estimator.md
       - Over- and Undersampling: examples/imbalanced_data.md
   - 'About':
+      - Website: 'https://www.photon-ai.com'
+      - Preprint: 'https://arxiv.org/abs/2002.05426'
       - 'Contributions': contribution.md
 extra_css:
   - stylesheets/extra.css

@@ -7,51 +7,24 @@
 # pip install photonai
 ```
 
-[comment]: <> (<div class="example_syntax">)
-
-[comment]: <> (	<pre class="python-syntax-pre">)
-
-[comment]: <> (           <code class="python">)
-
-[comment]: <> (pip install photonai)
-
-[comment]: <> (           </code></pre>)
-
-[comment]: <> (</div>)
-
-
-
 <h2>Build your pipeline</h2>
 <div class="tutorial-step">
     <p><span class="bold-paragraph-index">1. Setup New Analysis</span>
-        Start by creating a new
-        Hyperpipe
-        instance and giving it a name to identify your analysis.
-        You can also set parameters to declare the output folder, where to save the results and the final model.
+        Start by creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs. 
 
 ```python
-(pipe = Hyperpipe('basic_pipe',
-                  output_settings=OutputSettings(project_folder='path/to/project'))
+pipe = Hyperpipe('basic_pipe', project_folder='path/to/project')
 ```
-[comment]: <> (    <pre class="python-syntax-pre">)
 
-[comment]: <> (               <code class="python">)
-
-[comment]: <> (pipe = Hyperpipe&#40;'basic_pipe',)
-
-[comment]: <> (                  output_settings=OutputSettings&#40;project_folder='path/to/project'&#41;&#41;)
-
-[comment]: <> (               </code></pre>)
 </div>
 <div class="tutorial-step">
     <p><span class="bold-paragraph-index">2. Customize the training and testing process</span>
-        Now you can select parameters to customize the training,
-        hyperparameter optimization and testing procedure.
+        Now you can select parameters to customize the training, hyperparameter optimization and testing procedure.
         Particularly, you can choose the hyperparameter optimization strategy, set parameters, choose performance metrics
         and choose the performance metric to minimize or maximize, respectively.
-
-    <pre class="python-syntax-pre">
-               <code class="python">
+    </p>
+</div>
+```python 
 pipe = Hyperpipe('basic_pipe',
                   output_settings=OutputSettings(project_folder='path/to/project'))
 
@@ -69,17 +42,16 @@ pipe = Hyperpipe('basic_pipe',
                   # select cross validation strategies
                   outer_cv=ShuffleSplit(n_splits=3, test_size=0.2),
                   inner_cv=KFold(n_splits=10),
-               </code></pre>
-</div>
+``` 
+
 <div class="tutorial-step">
     <p><span class="bold-paragraph-index">3. Build custom pipeline</span>
         Select and arrange normalization, dimensionality reduction, feature selection, data augmentation,
         over- or undersampling algorithms in simple or parallel data streams. You can integrate
-        custom algorithms
-            or choose from our wide range of
-            pre-registered algorithms from established toolboxes.
-    <pre class="python-syntax-pre">
-               <code class="python">
+        custom algorithms or choose from our wide range of pre-registered algorithms from established toolboxes.
+    </p>
+</div>
+```python
 # access the scikit-learn implementations via keywords
 # at the same time define the hyperparameters to optimize for each element
 pipe += PipelineElement('StandardScaler')
@@ -89,19 +61,21 @@ pipe += PipelineElement('PCA',
 
 pipe += PipelineElement('RandomForestRegressor',
                         hyperparameters={'n_samples_split': IntegerRange(2, 10)})
-               </code></pre>
-</div>
+```
+
 <div class="tutorial-step">
     <p><span class="bold-paragraph-index">4. Feed Data and Train</span>
         Load your data and start the (nested-) cross-validated hyperparameter optimization, training and evaluation procedure.
     You will see an extensive output to monitor the hyperparameter optimization progress, see the results and track the
     best performances so far.
-    <pre class="python-syntax-pre">
-               <code class="python">
+    </p>
+</div>
+
+```python
 X, y = load_boston(return_X_y=True)
 pipe.fit(X, y)
-               </code></pre>
-</div>
+```
+
 <div class="tutorial-step">
     <p><span class="bold-paragraph-index">5. Visualize Results</span>
         Finally, you find all results conveniently stored in the output folder. You have a final model which is trained

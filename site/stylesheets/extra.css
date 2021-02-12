@@ -1,0 +1,22 @@
+:root {
+  --md-primary-fg-color:       #0e0e1d;;
+  --md-primary-fg-color--light: #2388fe;
+  --md-primary-fg-color--dark:  #231c44;
+}
+
+
+.md-header{
+  background: #0e0e1d url("https://www.photon-ai.com/static/img/ep_naturalblack.png");
+}
+
+.photon-logo {
+  font-weight: bold;
+  color: #2388fe;
+  margin-bottom: 0px;
+  font-size: 0.85rem;
+  letter-spacing: 9px;
+}
+
+
+.ai {
+  color: #a9c2fe; }
