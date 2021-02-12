@@ -2,6 +2,7 @@
 configuration.ini
 
 documentation/site/
+site/
 
 **/photon_setup_errors.log
 .pypirc
