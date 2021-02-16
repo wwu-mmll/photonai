@@ -1,4 +1,4 @@
-# Algorithm Selection
+# Algorithms 
 
 PHOTONAI offers easy access to established machine learning algorithms.
 
@@ -29,7 +29,7 @@ PipelineElement('PCA',
 # to test if disabling the PipelineElement improves performance,
 # simply add the test_disabled=True parameter
 ```       
-<h2>SVC</h2>
+## SVC
 ```python
 PipelineElement('SVC',
                 hyperparameters={'kernel': Categorical(['rbf', 'poly']),
@@ -37,7 +37,7 @@ PipelineElement('SVC',
                 gamma='auto')
 ```
 
-<h2>Keras Neural Net</h2>
+## Keras Neural Net
 ```python
 PipelineElement('KerasDnnRegressor',
                 hyperparameters={'hidden_layer_sizes': Categorical([[10, 8, 4],
