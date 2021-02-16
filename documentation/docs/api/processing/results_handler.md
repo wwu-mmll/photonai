@@ -1,3 +1,4 @@
+# ResultsHandler Class
 ::: photonai.processing.ResultsHandler
     selection:
       members:

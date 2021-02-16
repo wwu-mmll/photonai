@@ -12,7 +12,6 @@ my_pipe = Hyperpipe(name='Estimator_pipe',
                     inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                     project_folder='./tmp/')
 
-
 my_pipe += PipelineElement('StandardScaler')
 
 # setup estimator stack

@@ -863,7 +863,7 @@ class ResultsHandler:
 
         return best_n_config_dict
 
-    def get_mean_of_best_validation_configs_per_estimator(self):
+    def get_mean_of_best_validation_configs_per_estimator(self, write_to_file=False):
 
         best_configs_from_estimators = self._get_best_outer_fold_configs_per_estimator()
 
@@ -876,6 +876,12 @@ class ResultsHandler:
                                       for c in estimator_config_list]
                 estimator_performance_values[estimator_name][metric] = np.mean(performance_values)
         output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
+        if write_to_file:
+            text_file = open(os.path.join(self.output_settings.results_folder,
+                                          "mean_best_estimator_performance.txt"), "w")
+            text_file.write(output)
+            text_file.close()
+        return output
 
     def text_summary(self):
         def divider(header):

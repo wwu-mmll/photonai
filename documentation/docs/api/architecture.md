@@ -1,5 +1,4 @@
 # Architecture
-
 The photonai package is divided in the following packages
 
 * _base_:
@@ -16,3 +15,4 @@ The photonai package is divided in the following packages
     
 
 ![Basic PHOTONAI class hierachy](/assets/images/architecture.jpg "PHOTONAI class diagram")
+

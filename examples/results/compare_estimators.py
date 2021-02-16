@@ -44,5 +44,13 @@ my_pipe += estimators
 # start the training, optimization and test procedure
 my_pipe.fit(X, y)
 
+<<<<<<< HEAD
 output = my_pipe.results_handler.get_mean_of_best_validation_configs_per_estimator()
+=======
+output = my_pipe.results_handler.get_best_performances_for_estimator()
+res = ResultsHandler()
+res.load_from_file("./photon_result_file.json")
+estimator_performances = res.get_best_performances_for_estimator()
+
+>>>>>>> develop
 debug = True
