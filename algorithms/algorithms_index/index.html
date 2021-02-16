@@ -60,7 +60,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#algorithm-selection" class="md-skip">
+        <a href="#algorithms" class="md-skip">
           Skip to content
         </a>
       
@@ -805,6 +805,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#svc" class="md-nav__link">
+    SVC
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keras-neural-net" class="md-nav__link">
+    Keras Neural Net
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1518,6 +1532,20 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#svc" class="md-nav__link">
+    SVC
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keras-neural-net" class="md-nav__link">
+    Keras Neural Net
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1531,7 +1559,7 @@
               
                 
                 
-                <h1 id="algorithm-selection">Algorithm Selection</h1>
+                <h1 id="algorithms">Algorithms</h1>
 <p>PHOTONAI offers easy access to established machine learning algorithms.</p>
 <p>The algorithms can be imported by adding a Pipeline element with a specific name,
 such as <em>"SVC"</em> for importing the SupportVectorClassifier from scikit-learn, as shown in the following examples.</p>
@@ -1553,13 +1581,13 @@ PHOTONAI offers Grid-Search, Random Search and two frameworks for bayesian optim
 <span class="c1"># to test if disabling the PipelineElement improves performance,</span>
 <span class="c1"># simply add the test_disabled=True parameter</span>
 </code></pre></div>
-<h2>SVC</h2>
+<h2 id="svc">SVC</h2>
 <div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">,</span>
                 <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;kernel&#39;</span><span class="p">:</span> <span class="n">Categorical</span><span class="p">([</span><span class="s1">&#39;rbf&#39;</span><span class="p">,</span> <span class="s1">&#39;poly&#39;</span><span class="p">]),</span>
                                  <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)},</span>
                 <span class="n">gamma</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
 </code></pre></div>
-<h2>Keras Neural Net</h2>
+<h2 id="keras-neural-net">Keras Neural Net</h2>
 <div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;KerasDnnRegressor&#39;</span><span class="p">,</span>
                 <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;hidden_layer_sizes&#39;</span><span class="p">:</span> <span class="n">Categorical</span><span class="p">([[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
                                                                     <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]),</span>
