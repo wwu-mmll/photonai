@@ -6,7 +6,7 @@ The algorithms can be imported by adding a Pipeline element with a specific name
 such as _"SVC"_ for importing the SupportVectorClassifier from scikit-learn, as shown in the following examples.
 
 You can set all parameters of the imported class as usual: e.g. add _gamma='auto'_ to the Pipeline Element to set the
-support vector machine's gamma parameter to 'auto'. All parameters given are 
+support vector machine's gamma parameter to 'auto'. 
 
 In addition, you can specify each parameter as a hyperparameter and define a value range or value list to 
 find the optimal value, such as _'kernel': ['linear', 'rbf']_ . 
