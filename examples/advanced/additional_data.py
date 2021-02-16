@@ -2,7 +2,6 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 from sklearn.base import BaseEstimator, ClassifierMixin
-
 from photonai.base import Hyperpipe, PipelineElement
 
 
@@ -25,10 +24,6 @@ class AdditionalDataWrapper(BaseEstimator, ClassifierMixin):
         return None
 
 
-# WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_breast_cancer(return_X_y=True)
-
-# DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('basic_svm_pipe',
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
@@ -41,5 +36,6 @@ my_pipe.add(PipelineElement('StandardScaler'))
 
 my_pipe += PipelineElement.create("CustomWrapper", AdditionalDataWrapper(), hyperparameters={})
 
+X, y = load_breast_cancer(return_X_y=True)
 my_pipe.fit(X, y, true_predictions=np.array(y))
 

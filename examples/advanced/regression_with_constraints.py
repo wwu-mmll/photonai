@@ -30,8 +30,3 @@ my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimato
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
-# AND SHOW THE RESULTS IN THE WEBBASED PHOTON INVESTIGATOR TOOL
-# Investigator.show(my_pipe)
-
-# YOU CAN ALSO SAVE THE BEST PERFORMING PIPELINE FOR FURTHER USE
-# my_pipe.save_optimum_pipe('/home/photon_user/photon_test/optimum_pipe.photon')

@@ -1,0 +1,82 @@
+:root {
+  --md-primary-fg-color:       #0e0e1d;;
+  --md-primary-fg-color--light: #2388fe;
+  --md-primary-fg-color--dark:  #231c44;
+  --md-code-hl-string-color: #2388fe;
+  --md-code-hl-number-color: #231c44;
+}
+body{
+  font-family: Roboto, sans-serif;
+}
+.highlight .cpf, .highlight .l, .highlight .s, .highlight .sb, .highlight .sc,
+.highlight .s2, .highlight .si, .highlight .s1, .highlight .ss{
+  color: #2388fe;
+}
+.highlight .m, .highlight .mb, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo {
+    color: #7b6cc2;
+}
+
+a{
+  color: #2388fe;
+}
+
+a:hover{
+  text-decoration: none;
+  text-size: 1.1pt;
+}
+
+pre{
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.photon-docu-header .md-typeset ul, .md-typeset ol
+{
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.md-typeset h1, h1{
+  text-transform: uppercase;
+  font-size: 1.3rem;
+  color: #2388fe;
+  font-weight: bold;
+  font-family: "Roboto";
+}
+
+.md-typeset h2, h2{
+  font-weight: bold;
+  font-family: "Roboto";
+  font-size: 1.1rem;
+}
+
+.md-typeset h3, h3{
+  font-weight: bold;
+}
+.md-tabs__link{
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.md-tabs__link:hover{
+  text-size: 1.1pt;
+  text-decoration: none;
+}
+
+.md-header{
+  background: #0e0e1d url("https://www.photon-ai.com/static/img/ep_naturalblack.png");
+}
+
+.photon-logo {
+  font-weight: bold;
+  color: #2388fe;
+  margin-bottom: 0px;
+  font-size: 0.85rem;
+  letter-spacing: 9px;
+}
+
+
+.ai {
+  color: #a9c2fe; }

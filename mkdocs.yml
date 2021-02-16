@@ -2,76 +2,90 @@ site_name: ""
 docs_dir: documentation/docs
 nav:
   - 'Getting Started':
-    - Introduction: index.md
-    - Classification: getting_started/classification.md
-    - Regression: getting_started/regression.md
-    - Saving and loading: getting_started/save_load.md
-    - Registry: getting_started/registry.md
-    - Output: getting_started/output.md
-  - 'API':
-    - 'Base':
-      - Architecture: api/architecture.md
-      - Branch: api/base/branch.md
-      - Hyperpipe: api/base/hyperpipe.md
-      - OutputSettings: api/base/output_settings.md
-      - PipelineElement: api/base/pipeline_element.md
-      - Preprocessing: api/base/preprocessing.md
-      - Registry: api/base/registry.md
-      - Stack: api/base/stack.md
-      - Switch: api/base/switch.md
-    - 'Modelwrapper':
-      - 'Feature Selection':
-        - FClassifSelectPercentile: api/modelwrapper/feature_selection/FClassifSelectPercentile.md
-        - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
-        - FRegressionSelectPercentile: api/modelwrapper/feature_selection/FRegressionSelectPercentile.md
-        - LassoFeatureSelection: api/modelwrapper/feature_selection/LassoFeatureSelection.md
-        - ModelSelector: api/modelwrapper/feature_selection/ModelSelector.md
-    - 'Optimization':
-      - GridSearch: api/optimization/grid_search.md
-      - RandomGridSearch: api/optimization/random_grid_search.md
-      - TimeBoxedRandom_GS: api/optimization/time_boxed_random_grid_search.md
-      - Scikit-Optimize: api/optimization/skopt.md
-      - SMAC: api/optimization/smac.md
-      - Nevergrad: api/optimization/nevergrad.md
-      - 'Hyperparameter':
-        - BooleanSwitch: api/optimization/hyperparameter/boolean_switch.md
-        - Categorical: api/optimization/hyperparameter/categorical.md
-        - FloatRange: api/optimization/hyperparameter/float_range.md
-        - IntegerRange: api/optimization/hyperparameter/integer_range.md
-    - 'Processing':
-      - Results Handler: api/processing/results_handler.md
+      - 'Basic Usage': getting_started/introduction.md
+      - 'PHOTONAI Framework': getting_started/photonai.md
+      - 'Access established ml-packages': algorithms/algorithms_index.md
+      - 'Hyperparameter Optimization': getting_started/hpos.md
+      - 'Include custom algorithm': getting_started/custom_algorithm.md
+      - 'Inspect and visualize results': getting_started/output.md
+      - 'Simple Classification': getting_started/classification.md
+      - 'Simple Regression': getting_started/regression.md
   - 'Features':
-      - 'Hyperparameter Optimization Shortcuts': features/performance_constraints.md
-      - 'Over- /Undersampling': examples/imbalanced_data.md
-      - 'Custom Metrics': custom_metrics.md
-      - 'Subpipelines': examples/subpipelines.md
-      - 'Switch': features/switch.md
-      - 'Stack': features/stack.md
-      - 'Permutation Test': features/permutation_test.md
-
-  - 'Algorithms':
-      'Transformers': transformers.md
-      'Estimators': estimators.md
+       - 'Load and use a .photon model': features/save_load.md
+       - 'Hyperparameter Optimization Shortcuts': features/performance_constraints.md
+       - 'Custom Metrics': features/custom_metrics.md
+       - 'Stream additional data': features/additional_data.md
+       - 'Inspect the dataflow at runtime': features/callbacks.md
+       - 'Caching': features/caching.md
+       - 'Transform in Batches': features/batching.md
+       - 'Learning Curves': features/learning_curves.md
+#           Multidim y?
+#      - 'Permutation Test': features/permutation_test.md
+  - 'Pipeline Architecture':
+      - 'Switch (OR)': photon_elements/switch.md
+      - 'Stack (AND)': photon_elements/stack.md
+      - Feature Subset Pipelines: photon_elements/feature_subset_pipelines.md
+#      - Subpipelines: examples/subpipelines.md
+      - Classifier Ensemble: photon_elements/classifier_ensemble.md
   - 'Examples':
-      - No Outer CV: examples/no_outer_cv.md
-      - Group driven CV split: examples/group_driven_cv_split.md
-      - Feature Subset Pipelines: examples/feature_subset_pipelines.md
-      - Classifier Ensemble: examples/classifier_ensemble.md
-      - Confounder Removal: examples/confounder_removal.md
-      - Sample Pairing: examples/sample_pairing.md
-      - Permutation Test: examples/permutation_test.md
-      - Subpipelines: examples/subpipelines.md
-      - Scikit-learn MLP: examples/scikit_learn_mlp.md
-      - DNN with multiclass prediction: examples/dnn_multiclass_prediction.md
-      - Custom Transformer: examples/custom_transformer.md
-      - Custom Estimator: examples/custom_estimator.md
-      - Over- and Undersampling: examples/imbalanced_data.md
+      - 'Over- /Undersampling': examples/imbalanced_data.md
+      - 'Sample Pairing': examples/sample_pairing.md
+      - 'No Hyperparameter Optimization': examples/no_outer_cv.md
+      - 'Use site-specific validation': examples/group_driven_cv_split.md
+      - 'Remove confounders': examples/confounder_removal.md
+#      - Permutation Test: examples/permutation_test.md
+      - 'Optimize a MLP': examples/scikit_learn_mlp.md
+      - 'Use a DNN with multiclass prediction': examples/dnn_multiclass_prediction.md
+  - 'Algorithms':
+      - 'Access pre-registered algorithms': algorithms/algorithms_index.md
+      - 'Transformers': algorithms/transformers.md
+      - 'Estimators': algorithms/estimators.md
+      - 'Hyperparameter Optimizers': getting_started/hpos.md
+      - 'Registry': algorithms/registry.md
+  - 'API':
+        - 'Base':
+            - Architecture: api/architecture.md
+            - Branch: api/base/branch.md
+            - Hyperpipe: api/base/hyperpipe.md
+            - OutputSettings: api/base/output_settings.md
+            - PipelineElement: api/base/pipeline_element.md
+            - Preprocessing: api/base/preprocessing.md
+            - Registry: api/base/registry.md
+            - Stack: api/base/stack.md
+            - Switch: api/base/switch.md
+        - 'Modelwrapper':
+            - 'Feature Selection':
+                - FClassifSelectPercentile: api/modelwrapper/feature_selection/FClassifSelectPercentile.md
+                - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
+                - FRegressionSelectPercentile: api/modelwrapper/feature_selection/FRegressionSelectPercentile.md
+                - LassoFeatureSelection: api/modelwrapper/feature_selection/LassoFeatureSelection.md
+                - ModelSelector: api/modelwrapper/feature_selection/ModelSelector.md
+        - 'Optimization':
+            - GridSearch: api/optimization/grid_search.md
+            - RandomGridSearch: api/optimization/random_grid_search.md
+            - TimeBoxedRandom_GS: api/optimization/time_boxed_random_grid_search.md
+            - Scikit-Optimize: api/optimization/skopt.md
+            - SMAC: api/optimization/smac.md
+            - Nevergrad: api/optimization/nevergrad.md
+            - 'Hyperparameter':
+                - BooleanSwitch: api/optimization/hyperparameter/boolean_switch.md
+                - Categorical: api/optimization/hyperparameter/categorical.md
+                - FloatRange: api/optimization/hyperparameter/float_range.md
+                - IntegerRange: api/optimization/hyperparameter/integer_range.md
+        - 'Processing':
+            - Results Handler: api/processing/results_handler.md
+        - 'Custom Elements':
+            - Custom Transformer: api/custom_transformer.md
+            - Custom Estimator: api/custom_estimator.md
   - 'About':
       - Website: 'https://www.photon-ai.com'
       - Preprint: 'https://arxiv.org/abs/2002.05426'
       - 'Contributions': contribution.md
 extra_css:
-  - stylesheets/extra.css
+  - assets/stylesheets/uikit.min.css
+  - assets/stylesheets/extra.css
+extra_javascript:
+  - assets/javascripts/uikit.min.js
 theme:
   name: material
   custom_dir: documentation/overrides

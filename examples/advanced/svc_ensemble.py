@@ -31,7 +31,6 @@ for i in range(20):
 my_pipe += my_stack
 my_pipe += PipelineElement('GaussianProcessClassifier')
 
-# NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
 

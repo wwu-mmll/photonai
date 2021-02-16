@@ -8,7 +8,7 @@ from photonai.optimization import IntegerRange
 
 # REGISTER ELEMENT
 base_folder = os.path.dirname(os.path.abspath(__file__))
-custom_elements_folder = os.path.join(base_folder, 'custom_elements')
+custom_elements_folder = os.path.join(base_folder, '../advanced/custom_elements')
 
 registry = PhotonRegistry(custom_elements_folder=custom_elements_folder)
 registry.register(photon_name='MyCustomEstimator',

@@ -62,7 +62,7 @@ my_pipe = Hyperpipe('basic_svm_pipe',  # the name of your pipeline
                     # test each configuration five times respectively,
                     inner_cv=KFold(n_splits=5),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 
 # first normalize all features
@@ -87,53 +87,32 @@ my_pipe.fit(X, y)
 
 #### Easy access to established ML implementations
 We pre-registered diverse preprocessing and learning algorithms from 
-state-of-the-art toolboxes e.g. scikit-learn, keras and imbalanced learn, 
-[which you can choose](https://www.photon-ai.com/documentation/content-guide/algorithms_index) to 
+state-of-the-art toolboxes e.g. scikit-learn, keras and imbalanced learn to 
 rapidly build custom pipelines
 
 #### Hyperparameter Optimization
 With PHOTONAI you can seamlessly switch between diverse hyperparameter 
-optimization strategies, such as [(random) grid-search](https://www.photon-ai.com/documentation/content-guide/random_search)
- or bayesian optimization ([scikit-optimize](https://www.photon-ai.com/documentation/content-guide/skopt, 
- [smac3](https://www.photon-ai.com/documentation/content-guide/smac3)).
+optimization strategies, such as (random) grid-search
+ or bayesian optimization (scikit-optimize, smac3).
 
 #### Extended ML Pipeline
 You can build custom sequences of processing and learning algorithms with a simple syntax. 
 PHOTONAI offers extended pipeline functionality such as parallel sequences, custom callbacks in-between pipeline 
-elements, [AND-](https://www.photon-ai.com/documentation/user-guide/switch_element) and 
-[OR-](https://www.photon-ai.com/documentation/user-guide/stack_element) Operations, 
-as well as the possibility to flexibly position 
-[data augmentation](https://www.photon-ai.com/documentation/user-guide/sample_pairing), 
-[class balancing](https://www.photon-ai.com/documentation/user-guide/imbalanced_data) or 
-[learning algorithms](https://www.photon-ai.com/documentation/user-guide/classifier_ensemble) anywhere in the pipeline.
+elements, AND- and OR- Operations, as well as the possibility to flexibly position data augmentation, class balancing
+or learning algorithms anywhere in the pipeline.
 
 #### Model Sharing
-PHOTONAI provides a standardized format for sharing and 
-[loading optimized pipelines](https://www.photon-ai.com/documentation/user-guide/load_and_share) across platforms with only one line of code.
+PHOTONAI provides a standardized format for sharing and loading optimized pipelines across 
+platforms with only one line of code.
 
 #### Automation
-While you concentrate on selecting appropriate processing steps, learning algorithms, hyperparameters and training parameters, PHOTONAI automates the nested cross-validated optimization and evaluation loop for any custom pipeline.
+While you concentrate on selecting appropriate processing steps, learning algorithms, hyperparameters and
+training parameters, PHOTONAI automates the nested cross-validated optimization and evaluation loop for any custom pipeline.
 
 #### Results Visualization
-PHOTONAI comes with extensive logging of all information in the training, testing and hyperparameter optimization process. In addition, optimum performances and the hyperparameter optimization progress 
+PHOTONAI comes with extensive logging of all information in the training, testing and hyperparameter 
+optimization process. In addition, optimum performances and the hyperparameter optimization progress 
 are visualized in the [PHOTONAI Explorer](https://explorer.photon-ai.com).
-
-
-
-## Examples
-#### How to Handle Imbalanced Classes
-Based on the popular imbalanced-learn library, learn how to handle class imbalance in your custom pipeline.
-[See example code](https://www.photon-ai.com/documentation/user-guide/imbalanced_data) 
-
-#### Competing Learning Algorithms
-In case you are wondering which learning algorithm fits your data well, let the
-hyperparameter optimization strategy compare different learning algorithms using OR-Element.
-[See example code](https://www.photon-ai.com/documentation/user-guide/switch_element)
-
-#### Save and share the optimized model
-Learn how to share your PHOTONAI model with the world, 
-receive external validation and make other people use it in two lines of code.
-[See example code](https://www.photon-ai.com/documentation/user-guide/load_and_share) 
 
 #### For more use cases, examples, contribution guidelines and API details visit our website
 ## [www.photon-ai.com](www.photon-ai.com)  

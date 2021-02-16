@@ -22,7 +22,7 @@ metadata = """
         "__photon_type": "KFold"
     },
     "calculate_metrics_across_folds": false,
-    "eval_final_performance": true,
+    "use_test_set": true,
     "test_size": 0.2,
     "calculate_metrics_per_fold": true,
     "performance_constraints": null,

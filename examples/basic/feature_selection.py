@@ -6,7 +6,6 @@ from photonai.optimization import IntegerRange
 
 X, y = load_boston(return_X_y=True)
 
-# DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('feature_selection',
                     optimizer='grid_search',
                     metrics=['mean_squared_error', 'pearson_correlation', 'mean_absolute_error', 'explained_variance'],

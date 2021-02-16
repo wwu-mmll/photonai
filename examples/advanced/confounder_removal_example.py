@@ -25,7 +25,7 @@ pipe = Hyperpipe('confounder_removal_example',
 # # there are two ways of specifying multiple confounders
 # # first, you can simply pass a dictionary with "confounder" as key and a data matrix or list as value
 # pipe += PipelineElement('ConfounderRemoval', {}, standardize_covariates=True, test_disabled=False)
-# pipe.fit(X, y, **{'confounder': [mean_radius, mean_texture]})
+# pipe.fit(X, y, confounder=[mean_radius, mean_texture])
 # pipe += PipelineElement('SVC')
 
 # second, you can also specify the names of the variables that should be used in the confounder removal step
@@ -36,4 +36,4 @@ pipe += PipelineElement('ConfounderRemoval', {},
 pipe += PipelineElement('SVC')
 
 # those names must be keys in the kwargs dictionary
-pipe.fit(X, y, **{'mean_radius': mean_radius, 'mean_texture': mean_texture})
+pipe.fit(X, y,  mean_radius=mean_radius, mean_texture=mean_texture)
