@@ -2,7 +2,7 @@ site_name: ""
 docs_dir: documentation/docs
 nav:
   - 'Getting Started':
-      - 'Basic Usage': getting_started/introduction.md
+      - 'Basic Usage': index.md
       - 'PHOTONAI Framework': getting_started/photonai.md
       - 'Access established ml-packages': algorithms/algorithms_index.md
       - 'Hyperparameter Optimization': getting_started/hpos.md
@@ -43,8 +43,8 @@ nav:
       - 'Hyperparameter Optimizers': getting_started/hpos.md
       - 'Registry': algorithms/registry.md
   - 'API':
+        - Overview: api/architecture.md
         - 'Base':
-            - Architecture: api/architecture.md
             - Branch: api/base/branch.md
             - Hyperpipe: api/base/hyperpipe.md
             - OutputSettings: api/base/output_settings.md

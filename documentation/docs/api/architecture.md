@@ -1,5 +1,5 @@
-# Architecture
-The photonai package is divided in the following packages
+# Package Structure
+The photonai source code is divided in the following folders
 
 * _base_:
   Here reside photonai's core elements such as the Hyperpipe, the pipeline, the pipeline element and all other photonai pipeline specialities.
@@ -14,5 +14,4 @@ The photonai package is divided in the following packages
 * _processing_ :  Here reside all classes that do the actual computing
     
 
-![Basic PHOTONAI class hierachy](/assets/images/architecture.jpg "PHOTONAI class diagram")
 
