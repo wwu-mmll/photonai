@@ -165,7 +165,7 @@
             {% set key = headers[i] %}
             <h2>{{key}}</h2>
             <div style="transform: scale(1)">
-                <table class="uk-table uk-table-divider">
+                <table class="styled-table">
                     <thead>
                         <td>Name</td>
                         <td>Class</td>

@@ -10,17 +10,6 @@ nav:
       - 'Inspect and visualize results': getting_started/output.md
       - 'Simple Classification': getting_started/classification.md
       - 'Simple Regression': getting_started/regression.md
-  - 'Features':
-       - 'Load and use a .photon model': features/save_load.md
-       - 'Hyperparameter Optimization Shortcuts': features/performance_constraints.md
-       - 'Custom Metrics': features/custom_metrics.md
-       - 'Stream additional data': features/additional_data.md
-       - 'Inspect the dataflow at runtime': features/callbacks.md
-       - 'Caching': features/caching.md
-       - 'Transform in Batches': features/batching.md
-       - 'Learning Curves': features/learning_curves.md
-#           Multidim y?
-#      - 'Permutation Test': features/permutation_test.md
   - 'Pipeline Architecture':
       - 'Switch (OR)': photon_elements/switch.md
       - 'Stack (AND)': photon_elements/stack.md
@@ -36,6 +25,17 @@ nav:
 #      - Permutation Test: examples/permutation_test.md
       - 'Optimize a MLP': examples/scikit_learn_mlp.md
       - 'Use a DNN with multiclass prediction': examples/dnn_multiclass_prediction.md
+  - 'Features':
+      - 'Load and use a .photon model': features/save_load.md
+      - 'Hyperparameter Optimization Shortcuts': features/performance_constraints.md
+      - 'Custom Metrics': features/custom_metrics.md
+      - 'Stream additional data': features/additional_data.md
+      - 'Inspect the dataflow at runtime': features/callbacks.md
+      - 'Caching': features/caching.md
+      - 'Transform in Batches': features/batching.md
+      - 'Learning Curves': features/learning_curves.md
+#           Multidim y?
+#      - 'Permutation Test': features/permutation_test.md
   - 'Algorithms':
       - 'Access pre-registered algorithms': algorithms/algorithms_index.md
       - 'Transformers': algorithms/transformers.md
@@ -82,10 +82,7 @@ nav:
       - Preprint: 'https://arxiv.org/abs/2002.05426'
       - 'Contributions': contribution.md
 extra_css:
-  - assets/stylesheets/uikit.min.css
   - assets/stylesheets/extra.css
-extra_javascript:
-  - assets/javascripts/uikit.min.js
 theme:
   name: material
   custom_dir: documentation/overrides

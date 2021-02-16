@@ -1,22 +1,26 @@
-<h1>Algorithm Selection</h1>
+# Algorithm Selection
 
-<p>
-    PHOTONAI offers easy access to established machine learning algorithms.
-    The algorithms can be imported by adding a Pipeline element with a specific name,
-    such as "SVC" for importing the SupportVectorClassifier from scikit-learn, as shown in the following examples.
-</p>
+PHOTONAI offers easy access to established machine learning algorithms.
 
-<p>To build a custom pipeline, have a look at PHOTONAIs pre-registered Pre-processing and Learning Algorithms.
-    You can access algorithms for all purposes from several open-source packages. In addition, PHOTONAI offers
-    several utility classes as well, such as linear statistical feature selection or sample pairing algorithms.</p>
+The algorithms can be imported by adding a Pipeline element with a specific name,
+such as _"SVC"_ for importing the SupportVectorClassifier from scikit-learn, as shown in the following examples.
 
-<p>
-    In addition you can specify hyperparameters as well as their value range 
-    in order to be optimized by the hyperparameter optimization strategy. Currently,
-    PHOTONAI offers Grid-Search, Random Search and two frameworks for bayesian optimization.
-</p>
+You can set all parameters of the imported class as usual: e.g. add _gamma='auto'_ to the Pipeline Element to set the
+support vector machine's gamma parameter to 'auto'. All parameters given are 
 
-<h2>PCA</h2>
+In addition, you can specify each parameter as a hyperparameter and define a value range or value list to 
+find the optimal value, such as _'kernel': ['linear', 'rbf']_ . 
+
+To build a custom pipeline, have a look at PHOTONAIs pre-registered processing- and learning algorithms.
+You can access algorithms for all purposes from several open-source packages. In addition, PHOTONAI offers
+several utility classes as well, such as linear statistical feature selection or sample pairing algorithms.
+
+In addition you can specify hyperparameters as well as their value range 
+in order to be optimized by the hyperparameter optimization strategy. Currently,
+PHOTONAI offers Grid-Search, Random Search and two frameworks for bayesian optimization.
+
+
+## PCA
 ```python
 from photonai.base import PipelineElement
 PipelineElement('PCA',

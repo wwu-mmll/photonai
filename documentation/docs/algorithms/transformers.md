@@ -96,7 +96,7 @@
     {% for key in ['Decomposition', 'Feature Selection', 'Preprocessing', 'Other'] %}
         <div>
             <h2>{{key}}</h2>
-            <table class="uk-table uk-table-divider">
+            <table class="styled-table">
                 <thead>
                     <td>Name</td>
                     <td>Class</td>
