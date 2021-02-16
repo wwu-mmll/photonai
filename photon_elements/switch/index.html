@@ -14,7 +14,7 @@
     
     
       
-        <title>Stack - </title>
+        <title>Switch (OR) - </title>
       
     
     
@@ -36,7 +36,9 @@
     
     
     
-      <link rel="stylesheet" href="../../stylesheets/extra.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/uikit.min.css">
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/extra.css">
     
     
       
@@ -58,6 +60,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#switch" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -84,7 +91,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Stack
+              Switch (OR)
             
           </span>
         </div>
@@ -158,33 +165,8 @@
   
   
   
-    
-
-  
-  
-  
     <li class="md-tabs__item">
-      <a href="../../api/architecture/" class="md-tabs__link">
-        API
-      </a>
-    </li>
-  
-
-  
-
-      
-        
-  
-  
-    
-  
-
-
-  
-  
-  
-    <li class="md-tabs__item">
-      <a href="../performance_constraints/" class="md-tabs__link md-tabs__link--active">
+      <a href="../../features/save_load/" class="md-tabs__link">
         Features
       </a>
     </li>
@@ -194,13 +176,47 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../../transformers.md" class="md-tabs__link">
+      <a href="./" class="md-tabs__link md-tabs__link--active">
+        Pipeline Architecture
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../examples/imbalanced_data/" class="md-tabs__link">
+        Examples
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+
+
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../../algorithms/algorithms_index/" class="md-tabs__link">
         Algorithms
       </a>
     </li>
@@ -216,8 +232,8 @@
   
   
     <li class="md-tabs__item">
-      <a href="../../examples/no_outer_cv/" class="md-tabs__link">
-        Examples
+      <a href="../../api/architecture/" class="md-tabs__link">
+        API
       </a>
     </li>
   
@@ -301,7 +317,7 @@
   
     <li class="md-nav__item">
       <a href="../.." class="md-nav__link">
-        Introduction
+        Basic Usage
       </a>
     </li>
   
@@ -312,8 +328,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/classification/" class="md-nav__link">
-        Classification
+      <a href="../../getting_started/photonai/" class="md-nav__link">
+        PHOTONAI Framework
       </a>
     </li>
   
@@ -324,8 +340,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/regression/" class="md-nav__link">
-        Regression
+      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+        Access established ml-packages
       </a>
     </li>
   
@@ -336,8 +352,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/save_load/" class="md-nav__link">
-        Saving and loading
+      <a href="../../getting_started/hpos/" class="md-nav__link">
+        Hyperparameter Optimization
       </a>
     </li>
   
@@ -348,8 +364,8 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/registry/" class="md-nav__link">
-        Registry
+      <a href="../../getting_started/custom_algorithm/" class="md-nav__link">
+        Include custom algorithm
       </a>
     </li>
   
@@ -361,7 +377,31 @@
   
     <li class="md-nav__item">
       <a href="../../getting_started/output/" class="md-nav__link">
-        Output
+        Inspect and visualize results
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/classification/" class="md-nav__link">
+        Simple Classification
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/regression/" class="md-nav__link">
+        Simple Regression
       </a>
     </li>
   
@@ -388,11 +428,438 @@
         <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
       
       <label class="md-nav__link" for="nav-2">
+        Features
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Features" data-md-level="1">
+        <label class="md-nav__title" for="nav-2">
+          <span class="md-nav__icon md-icon"></span>
+          Features
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/save_load/" class="md-nav__link">
+        Load and use a .photon model
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/performance_constraints/" class="md-nav__link">
+        Hyperparameter Optimization Shortcuts
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/custom_metrics/" class="md-nav__link">
+        Custom Metrics
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/additional_data/" class="md-nav__link">
+        Stream additional data
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/callbacks/" class="md-nav__link">
+        Inspect the dataflow at runtime
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/caching/" class="md-nav__link">
+        Caching
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/batching/" class="md-nav__link">
+        Transform in Batches
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../features/learning_curves/" class="md-nav__link">
+        Learning Curves
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+    
+  
+  
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
+      
+      <label class="md-nav__link" for="nav-3">
+        Pipeline Architecture
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Pipeline Architecture" data-md-level="1">
+        <label class="md-nav__title" for="nav-3">
+          <span class="md-nav__icon md-icon"></span>
+          Pipeline Architecture
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Switch (OR)
+      </a>
+      
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../stack/" class="md-nav__link">
+        Stack (AND)
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../feature_subset_pipelines/" class="md-nav__link">
+        Feature Subset Pipelines
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../classifier_ensemble/" class="md-nav__link">
+        Classifier Ensemble
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
+      
+      <label class="md-nav__link" for="nav-4">
+        Examples
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Examples" data-md-level="1">
+        <label class="md-nav__title" for="nav-4">
+          <span class="md-nav__icon md-icon"></span>
+          Examples
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/imbalanced_data/" class="md-nav__link">
+        Over- /Undersampling
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/sample_pairing/" class="md-nav__link">
+        Sample Pairing
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/no_outer_cv/" class="md-nav__link">
+        No Hyperparameter Optimization
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/group_driven_cv_split/" class="md-nav__link">
+        Use site-specific validation
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/confounder_removal/" class="md-nav__link">
+        Remove confounders
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
+        Optimize a MLP
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/dnn_multiclass_prediction/" class="md-nav__link">
+        Use a DNN with multiclass prediction
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
+      
+      <label class="md-nav__link" for="nav-5">
+        Algorithms
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Algorithms" data-md-level="1">
+        <label class="md-nav__title" for="nav-5">
+          <span class="md-nav__icon md-icon"></span>
+          Algorithms
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+        Access pre-registered algorithms
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../algorithms/transformers/" class="md-nav__link">
+        Transformers
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../algorithms/estimators/" class="md-nav__link">
+        Estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../getting_started/hpos/" class="md-nav__link">
+        Hyperparameter Optimizers
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../algorithms/registry/" class="md-nav__link">
+        Registry
+      </a>
+    </li>
+  
+
+          
+        </ul>
+      </nav>
+    </li>
+  
+
+    
+      
+      
+      
+
+
+  
+  
+  
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" >
+      
+      <label class="md-nav__link" for="nav-6">
         API
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="nav-2">
+        <label class="md-nav__title" for="nav-6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
@@ -403,35 +870,35 @@
   
   
   
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-1" type="checkbox" id="nav-2-1" >
-      
-      <label class="md-nav__link" for="nav-2-1">
-        Base
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Base" data-md-level="2">
-        <label class="md-nav__title" for="nav-2-1">
-          <span class="md-nav__icon md-icon"></span>
-          Base
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
+    <li class="md-nav__item">
+      <a href="../../api/architecture/" class="md-nav__link">
+        Overview
+      </a>
+    </li>
+  
+
           
             
   
   
   
-    <li class="md-nav__item">
-      <a href="../../api/architecture/" class="md-nav__link">
-        Architecture
-      </a>
-    </li>
-  
-
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+      
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-2" type="checkbox" id="nav-6-2" >
+      
+      <label class="md-nav__link" for="nav-6-2">
+        Base
+        <span class="md-nav__icon md-icon"></span>
+      </label>
+      <nav class="md-nav" aria-label="Base" data-md-level="2">
+        <label class="md-nav__title" for="nav-6-2">
+          <span class="md-nav__icon md-icon"></span>
+          Base
+        </label>
+        <ul class="md-nav__list" data-md-scrollfix>
+          
           
             
   
@@ -543,14 +1010,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-2" type="checkbox" id="nav-2-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3" type="checkbox" id="nav-6-3" >
       
-      <label class="md-nav__link" for="nav-2-2">
+      <label class="md-nav__link" for="nav-6-3">
         Modelwrapper
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Modelwrapper" data-md-level="2">
-        <label class="md-nav__title" for="nav-2-2">
+        <label class="md-nav__title" for="nav-6-3">
           <span class="md-nav__icon md-icon"></span>
           Modelwrapper
         </label>
@@ -565,14 +1032,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-2-1" type="checkbox" id="nav-2-2-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3-1" type="checkbox" id="nav-6-3-1" >
       
-      <label class="md-nav__link" for="nav-2-2-1">
+      <label class="md-nav__link" for="nav-6-3-1">
         Feature Selection
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Feature Selection" data-md-level="3">
-        <label class="md-nav__title" for="nav-2-2-1">
+        <label class="md-nav__title" for="nav-6-3-1">
           <span class="md-nav__icon md-icon"></span>
           Feature Selection
         </label>
@@ -659,14 +1126,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-3" type="checkbox" id="nav-2-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4" type="checkbox" id="nav-6-4" >
       
-      <label class="md-nav__link" for="nav-2-3">
+      <label class="md-nav__link" for="nav-6-4">
         Optimization
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Optimization" data-md-level="2">
-        <label class="md-nav__title" for="nav-2-3">
+        <label class="md-nav__title" for="nav-6-4">
           <span class="md-nav__icon md-icon"></span>
           Optimization
         </label>
@@ -753,14 +1220,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-3-7" type="checkbox" id="nav-2-3-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4-7" type="checkbox" id="nav-6-4-7" >
       
-      <label class="md-nav__link" for="nav-2-3-7">
+      <label class="md-nav__link" for="nav-6-4-7">
         Hyperparameter
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Hyperparameter" data-md-level="3">
-        <label class="md-nav__title" for="nav-2-3-7">
+        <label class="md-nav__title" for="nav-6-4-7">
           <span class="md-nav__icon md-icon"></span>
           Hyperparameter
         </label>
@@ -835,14 +1302,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2-4" type="checkbox" id="nav-2-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-5" type="checkbox" id="nav-6-5" >
       
-      <label class="md-nav__link" for="nav-2-4">
+      <label class="md-nav__link" for="nav-6-5">
         Processing
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="Processing" data-md-level="2">
-        <label class="md-nav__title" for="nav-2-4">
+        <label class="md-nav__title" for="nav-6-5">
           <span class="md-nav__icon md-icon"></span>
           Processing
         </label>
@@ -867,142 +1334,7 @@
   
 
           
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-
-  
-  
-    
-  
-  
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" checked>
-      
-      <label class="md-nav__link" for="nav-3">
-        Features
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Features" data-md-level="1">
-        <label class="md-nav__title" for="nav-3">
-          <span class="md-nav__icon md-icon"></span>
-          Features
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-          
             
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../performance_constraints/" class="md-nav__link">
-        Hyperparameter Optimization Shortcuts
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/imbalanced_data/" class="md-nav__link">
-        Over- /Undersampling
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../custom_metrics.md" class="md-nav__link">
-        Custom Metrics
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/subpipelines/" class="md-nav__link">
-        Subpipelines
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../switch/" class="md-nav__link">
-        Switch
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-    
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        Stack
-      </a>
-      
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../permutation_test/" class="md-nav__link">
-        Permutation Test
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-
   
   
   
@@ -1010,16 +1342,16 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-6" type="checkbox" id="nav-6-6" >
       
-      <label class="md-nav__link" for="nav-4">
-        Algorithms
+      <label class="md-nav__link" for="nav-6-6">
+        Custom Elements
         <span class="md-nav__icon md-icon"></span>
       </label>
-      <nav class="md-nav" aria-label="Algorithms" data-md-level="1">
-        <label class="md-nav__title" for="nav-4">
+      <nav class="md-nav" aria-label="Custom Elements" data-md-level="2">
+        <label class="md-nav__title" for="nav-6-6">
           <span class="md-nav__icon md-icon"></span>
-          Algorithms
+          Custom Elements
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
@@ -1029,183 +1361,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../transformers.md" class="md-nav__link">
-        Transformers
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../estimators.md" class="md-nav__link">
-        Estimators
-      </a>
-    </li>
-  
-
-          
-        </ul>
-      </nav>
-    </li>
-  
-
-    
-      
-      
-      
-
-
-  
-  
-  
-    
-    <li class="md-nav__item md-nav__item--nested">
-      
-      
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
-      
-      <label class="md-nav__link" for="nav-5">
-        Examples
-        <span class="md-nav__icon md-icon"></span>
-      </label>
-      <nav class="md-nav" aria-label="Examples" data-md-level="1">
-        <label class="md-nav__title" for="nav-5">
-          <span class="md-nav__icon md-icon"></span>
-          Examples
-        </label>
-        <ul class="md-nav__list" data-md-scrollfix>
-          
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/no_outer_cv/" class="md-nav__link">
-        No Outer CV
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/group_driven_cv_split/" class="md-nav__link">
-        Group driven CV split
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/feature_subset_pipelines/" class="md-nav__link">
-        Feature Subset Pipelines
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/classifier_ensemble/" class="md-nav__link">
-        Classifier Ensemble
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/confounder_removal/" class="md-nav__link">
-        Confounder Removal
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/sample_pairing/" class="md-nav__link">
-        Sample Pairing
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/permutation_test/" class="md-nav__link">
-        Permutation Test
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/subpipelines/" class="md-nav__link">
-        Subpipelines
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
-        Scikit-learn MLP
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/dnn_multiclass_prediction/" class="md-nav__link">
-        DNN with multiclass prediction
-      </a>
-    </li>
-  
-
-          
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/custom_transformer/" class="md-nav__link">
+      <a href="../../api/custom_transformer/" class="md-nav__link">
         Custom Transformer
       </a>
     </li>
@@ -1217,21 +1373,15 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/custom_estimator/" class="md-nav__link">
+      <a href="../../api/custom_estimator/" class="md-nav__link">
         Custom Estimator
       </a>
     </li>
   
 
           
-            
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../examples/imbalanced_data/" class="md-nav__link">
-        Over- and Undersampling
-      </a>
+        </ul>
+      </nav>
     </li>
   
 
@@ -1254,14 +1404,14 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" >
       
-      <label class="md-nav__link" for="nav-6">
+      <label class="md-nav__link" for="nav-7">
         About
         <span class="md-nav__icon md-icon"></span>
       </label>
       <nav class="md-nav" aria-label="About" data-md-level="1">
-        <label class="md-nav__title" for="nav-6">
+        <label class="md-nav__title" for="nav-7">
           <span class="md-nav__icon md-icon"></span>
           About
         </label>
@@ -1317,62 +1467,70 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
               
                 
                 
-                <h1>Stack</h1>
-<div class="photon-docu-header">
-    <p>
-        You want to do stacking if more than one algorithm shall be applied, which equals to an AND-Operation.
-    </p>
-    <p>
-        The PHOTONAI Stack delivers the data to all of the entailed PipelineElements and the transformations or 
-        predictions are afterwards horizontally concatenated.
-    </p>
-    <p>
-        In this way you can preprocess data in different ways and collect the resulting information to create a new
-        feature matrix. Additionally, you can train several learning algorithms with the same data in an ensemble-like
-        fashion and concatenate their predictions to a prediction matrix on which you can apply further processing like
-        voting strategies.
-    </p>
-</div>
-
+                <h1 id="switch">Switch</h1>
+<p>The PipelineSwitch element acts like an OR-Operator and decides which element performs best. Currently, you can
+only optimize the PipelineSwitch using Grid Search, Random Grid Search and smac3</p>
+<p>In this example, we add two different transformer elements and two different estimators, and PHOTONAI will 
+evaluate the best choices including the respective hyperparameters.</p>
+<p><img alt="PHOTONAI Switch" src="/assets/images/switch.jpg" title="PHOTONAI switch pipeline element" /></p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
 
-<span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">Stack</span>
-<span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">FloatRange</span><span class="p">,</span> <span class="n">IntegerRange</span>
+<span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">Switch</span>
+<span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">IntegerRange</span>
 
+<span class="c1"># GET DATA</span>
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_breast_cancer</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-
-<span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_stack_pipe&#39;</span><span class="p">,</span>
-                    <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;sk_opt&#39;</span><span class="p">,</span>
-                    <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">},</span>
+<span class="c1"># CREATE HYPERPIPE</span>
+<span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_switch_pipe&#39;</span><span class="p">,</span>
+                    <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;random_grid_search&#39;</span><span class="p">,</span>
+                    <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">},</span>
                     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span> <span class="s1">&#39;precision&#39;</span><span class="p">,</span> <span class="s1">&#39;recall&#39;</span><span class="p">],</span>
                     <span class="n">best_config_metric</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span>
                     <span class="n">outer_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
-                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
-                    <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
+                    <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
                     <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./tmp/&#39;</span><span class="p">)</span>
 
-<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">)</span>
+<span class="c1"># Transformer Switch</span>
+<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">Switch</span><span class="p">(</span><span class="s1">&#39;StandardizationSwitch&#39;</span><span class="p">,</span>
+                  <span class="p">[</span><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">),</span>
+                   <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;MinMaxScaler&#39;</span><span class="p">)])</span>
+
+<span class="c1"># Estimator Switch</span>
+<span class="n">svm</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">,</span>
+                      <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;kernel&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;rbf&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">]})</span>
 
 <span class="n">tree</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;DecisionTreeClassifier&#39;</span><span class="p">,</span>
-                       <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;min_samples_split&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">)},</span>
-                       <span class="n">criterion</span><span class="o">=</span><span class="s1">&#39;gini&#39;</span><span class="p">)</span>
+                       <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;min_samples_split&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                                        <span class="s1">&#39;min_samples_leaf&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                                        <span class="s1">&#39;criterion&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="s1">&#39;entropy&#39;</span><span class="p">]})</span>
 
-<span class="n">svc</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;LinearSVC&#39;</span><span class="p">,</span>
-                      <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">25</span><span class="p">)})</span>
+<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">Switch</span><span class="p">(</span><span class="s1">&#39;EstimatorSwitch&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">svm</span><span class="p">,</span> <span class="n">tree</span><span class="p">])</span>
 
-<span class="c1"># for a stack that includes estimators you can choose whether predict or predict_proba is called for all estimators</span>
-<span class="c1"># in case only some implement predict_proba, predict is called for the remaining estimators</span>
-<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">Stack</span><span class="p">(</span><span class="s1">&#39;final_stack&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">tree</span><span class="p">,</span> <span class="n">svc</span><span class="p">],</span> <span class="n">use_probabilities</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;LinearSVC&#39;</span><span class="p">)</span>
 <span class="n">my_pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre></div>
                 
@@ -1393,7 +1551,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../switch/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../../features/learning_curves/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1402,19 +1560,19 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Switch
+                Learning Curves
               </div>
             </div>
           </a>
         
         
-          <a href="../permutation_test/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../stack/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Permutation Test
+                Stack (AND)
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">
@@ -1453,6 +1611,8 @@
           }, typeof search !== "undefined" && search)
         })
       </script>
+      
+        <script src="../../assets/javascripts/uikit.min.js"></script>
       
     
   </body>
