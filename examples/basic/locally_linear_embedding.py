@@ -3,7 +3,7 @@ import math
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import FloatRange, Categorical
 
 
@@ -17,10 +17,10 @@ my_pipe = Hyperpipe(name='llembedding_pipe',
                     best_config_metric='balanced_accuracy',
                     outer_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                     inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
-                    output_settings=OutputSettings(project_folder='./tmp/'),
-                    verbosity=1)
+                    project_folder='./tmp/',
+                    verbosity=0)
 
-my_pipe.add(PipelineElement('StandardScaler'))
+my_pipe += PipelineElement('StandardScaler')
 
 my_pipe += PipelineElement('LocallyLinearEmbedding', n_components=math.ceil(0.1 * len(X[0])))
 

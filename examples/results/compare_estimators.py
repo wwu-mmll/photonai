@@ -1,7 +1,7 @@
-import pandas as pd
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.datasets import load_breast_cancer
-from photonai.base import Hyperpipe, PipelineElement, Switch, OutputSettings
+
+from photonai.base import Hyperpipe, PipelineElement, Switch
 from photonai.optimization import FloatRange, IntegerRange
 from photonai.processing import ResultsHandler
 
@@ -16,7 +16,7 @@ my_pipe = Hyperpipe('compare_estimators',
                     best_config_metric='balanced_accuracy',
                     optimizer='switch',
                     optimizer_params={'name': 'sk_opt', 'n_configurations': 10},
-                    output_settings=OutputSettings(project_folder='./tmp'),
+                    project_folder='./tmp',
                     verbosity=1)
 
 # arrange a sequence of algorithms subsequently applied
@@ -44,13 +44,7 @@ my_pipe += estimators
 # start the training, optimization and test procedure
 my_pipe.fit(X, y)
 
-<<<<<<< HEAD
-output = my_pipe.results_handler.get_mean_of_best_validation_configs_per_estimator()
-=======
 output = my_pipe.results_handler.get_best_performances_for_estimator()
 res = ResultsHandler()
 res.load_from_file("./photon_result_file.json")
 estimator_performances = res.get_best_performances_for_estimator()
-
->>>>>>> develop
-debug = True

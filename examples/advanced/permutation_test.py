@@ -28,11 +28,10 @@ def create_hyperpipe():
     my_pipe += PipelineElement("StandardScaler", hyperparameters={},
                                test_disabled=True, with_mean=True, with_std=True)
 
-    my_pipe += PipelineElement("PCA",  # hyperparameters={'n_components': IntegerRange(5, 15)},
-                               test_disabled=False)
+    my_pipe += PipelineElement("PCA", test_disabled=False)
 
     # Add estimator
-    my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']}, #C': FloatRange(0.1, 5),
+    my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']},
                                gamma='scale', max_iter=1000000)
 
     return my_pipe

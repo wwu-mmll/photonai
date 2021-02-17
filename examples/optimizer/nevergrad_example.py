@@ -2,7 +2,7 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import ShuffleSplit
 import nevergrad as ng
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import BooleanSwitch, FloatRange
 
 X, y = load_boston(return_X_y=True)
@@ -26,9 +26,8 @@ my_pipe += PipelineElement('StandardScaler')
 
 my_pipe += PipelineElement('PCA', n_components='mle')
 
-my_pipe += PipelineElement('Ridge',
-                           hyperparameters={'alpha': FloatRange(0.1, 100),
-                                            'fit_intercept': BooleanSwitch(),
-                                            'normalize': BooleanSwitch()})
+my_pipe += PipelineElement('Ridge', hyperparameters={'alpha': FloatRange(0.1, 100),
+                                                     'fit_intercept': BooleanSwitch(),
+                                                     'normalize': BooleanSwitch()})
 
 my_pipe.fit(X, y)

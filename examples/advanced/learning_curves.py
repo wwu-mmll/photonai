@@ -5,10 +5,10 @@ from photonai.optimization import FloatRange
 
 my_pipe = Hyperpipe('basic_svm_pipe',
                     project_folder='./tmp',
-                    inner_cv=KFold(n_splits=5),
-                    outer_cv=KFold(n_splits=3),
+                    inner_cv=KFold(n_splits=2),
+                    outer_cv=KFold(n_splits=2),
                     optimizer='sk_opt',
-                    optimizer_params={'n_configurations': 5},
+                    optimizer_params={'n_configurations': 15},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
                     # this is how to make photonai calculate learning curves
@@ -21,4 +21,3 @@ my_pipe.add(PipelineElement('StandardScaler'))
 my_pipe += PipelineElement('RandomForestClassifier')
 X, y = load_breast_cancer(return_X_y=True)
 my_pipe.fit(X, y)
-

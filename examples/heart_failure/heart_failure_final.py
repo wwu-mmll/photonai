@@ -1,5 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import KFold, ShuffleSplit
+
 from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import IntegerRange, MinimumPerformanceConstraint
 
@@ -13,9 +14,7 @@ my_pipe = Hyperpipe('heart_failure_final_perf',
                     best_config_metric='f1_score',
                     optimizer='grid_search',
                     project_folder='./tmpv2',
-                    performance_constraints=MinimumPerformanceConstraint('f1_score',
-                                                                         threshold=0.7,
-                                                                         strategy="mean"),
+                    performance_constraints=MinimumPerformanceConstraint('f1_score', threshold=0.7, strategy="mean"),
                     cache_folder='./cache',
                     verbosity=0)
 
@@ -27,9 +26,7 @@ my_pipe += PipelineElement('SimpleImputer')
 
 
 my_pipe += PipelineElement('ImbalancedDataTransformer',
-                           hyperparameters={'method_name': ['RandomUnderSampler',
-                                                            'RandomOverSampler',
-                                                            'SMOTE']},
+                           hyperparameters={'method_name': ['RandomUnderSampler', 'RandomOverSampler', 'SMOTE']},
                            test_disabled=True)
 
 # compare different learning algorithms in an OR_Element

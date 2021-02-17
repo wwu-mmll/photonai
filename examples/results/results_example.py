@@ -11,21 +11,21 @@ X, y = load_boston(return_X_y=True)
 my_pipe = Hyperpipe('results_example',
                     learning_curves=True,
                     learning_curves_cut=FloatRange(0, 1, 'range', 0.2),
-                    optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
+                    optimizer='sk_opt',
                     optimizer_params={'n_configurations': 20, 'acq_func_kwargs': {'kappa': 1}},
                     metrics=['mean_squared_error'],
                     best_config_metric='mean_squared_error',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    project_folder='./tmp/')
+                    project_folder='./tmp')
 
 # ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
 my_pipe += PipelineElement('StandardScaler')
 
 # engage and optimize SVR
-my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, range_type='geomspace', step=100),
+my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, range_type='logspace'),
                                                    'epsilon': FloatRange(1e-3, 10),
                                                    'tol': FloatRange(1e-4, 1e-2)}, kernel='linear')
 # NOW TRAIN YOUR PIPELINE

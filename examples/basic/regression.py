@@ -7,6 +7,7 @@ from photonai.optimization import IntegerRange, FloatRange
 
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='random_search',
+                    optimizer_params={'n_configurations': 25},
                     metrics=['mean_squared_error', 'pearson_correlation', 'mean_absolute_error', 'explained_variance'],
                     best_config_metric='mean_squared_error',
                     outer_cv=KFold(n_splits=3),

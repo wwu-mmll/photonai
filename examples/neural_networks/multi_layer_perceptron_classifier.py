@@ -16,11 +16,11 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 
 # ADD ELEMENTS TO YOUR PIPELINE
-my_pipe.add(PipelineElement('StandardScaler'))
+my_pipe += PipelineElement('StandardScaler')
 
 my_pipe += PipelineElement('PhotonMLPClassifier', hyperparameters={'layer_1': IntegerRange(1, 5),
                                                                    'layer_2': IntegerRange(0, 5),

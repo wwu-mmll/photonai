@@ -1,4 +1,5 @@
-from typing import Union, Callable
+from typing import Callable
+import warnings
 
 from photonai.optimization import Categorical as PhotonCategorical
 from photonai.optimization import FloatRange, IntegerRange, BooleanSwitch, PhotonHyperparam
@@ -8,7 +9,6 @@ from photonai.photonlogger import logger
 try:
     import nevergrad as ng
     from nevergrad.optimization.base import Optimizer
-    from nevergrad.optimization.test_optimizerlib import *
     __found__ = True
 except ModuleNotFoundError:
     __found__ = False

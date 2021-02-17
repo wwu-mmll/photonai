@@ -28,13 +28,12 @@ my_pipe += PipelineElement('PCA',
                            test_disabled=True)
 
 my_pipe += PipelineElement('ImbalancedDataTransformer',
-                           hyperparameters={'method_name': Categorical(['RandomUnderSampler','SMOTE'])},
+                           hyperparameters={'method_name': Categorical(['RandomUnderSampler', 'SMOTE'])},
                            test_disabled=True)
 
 my_pipe += PipelineElement('SVC',
                            hyperparameters={'kernel': Categorical(['rbf', 'linear']),
                                             'C': FloatRange(0.5, 2)})
-
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
@@ -49,7 +48,7 @@ my_pipe.fit(X, y)
 #        - SMOTENC
 #        - SVMSMOTE
 #
-#    imbalance_type = UNDERSAMPLING:
+# imbalance_type = UNDERSAMPLING:
 #        - ClusterCentroids,
 #        - RandomUnderSampler,
 #        - NearMiss,
@@ -61,6 +60,6 @@ my_pipe.fit(X, y)
 #        - NeighbourhoodCleaningRule,
 #        - OneSidedSelection
 #
-#    imbalance_type = COMBINE:
+# imbalance_type = COMBINE:
 #        - SMOTEENN,
 #        - SMOTETomek

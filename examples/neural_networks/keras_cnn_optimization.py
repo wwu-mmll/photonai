@@ -8,18 +8,15 @@ import os
 
 from keras.utils import data_utils
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers import Dropout
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
+from keras.layers import Dense, Flatten, Dropout
+from keras.layers.convolutional import Conv1D, MaxPooling1D
 from sklearn.model_selection import StratifiedShuffleSplit
 from sklearn.preprocessing import StandardScaler
 from sklearn.base import BaseEstimator
 
 from examples.neural_networks.dataset import load_har
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings, PhotonRegistry
+from photonai.base import Hyperpipe, PipelineElement, PhotonRegistry
 from photonai.modelwrapper.keras_base_models import KerasBaseClassifier
 from photonai.optimization import IntegerRange, BooleanSwitch
 
@@ -146,7 +143,7 @@ if __name__ == "__main__":  # prevents double optimization, cause registry calls
                         outer_cv=StratifiedShuffleSplit(n_splits=5, test_size=0.2),
                         inner_cv=StratifiedShuffleSplit(n_splits=5, test_size=0.2),
                         verbosity=1,
-                        output_settings=OutputSettings(project_folder='./tmp/'))
+                        project_folder='./tmp/')
 
     my_pipe += PipelineElement('MyCnnScaler', hyperparameters={'standardize': BooleanSwitch()})
 

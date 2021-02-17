@@ -97,7 +97,7 @@ class PipelineElement(BaseEstimator):
                     self.base_element = desired_class(**kwargs)
                 except AttributeError as ae:
                     logger.error('ValueError: Could not find according class:'
-                                   + str(PhotonRegistry.ELEMENT_DICTIONARY[name]))
+                                 + str(PhotonRegistry.ELEMENT_DICTIONARY[name]))
                     raise ValueError('Could not find according class:', PhotonRegistry.ELEMENT_DICTIONARY[name])
             else:
                 # if even after reload the element does not appear, it is not supported
@@ -1620,6 +1620,7 @@ class DataFilter(BaseEstimator, PhotonNative):
         self.indices = indices
         self.needs_covariates = False
         self.needs_y = False
+        self.disabled = False
 
     def fit(self, X, y=None, **kwargs):
         return self
@@ -1651,6 +1652,7 @@ class CallbackElement(PhotonNative):
         self.hyperparameters = {}
         self.is_transformer = True
         self.is_estimator = False
+        self.disabled = False
 
     def fit(self, X, y=None, **kwargs):
         if self.method_to_monitor == 'fit':

@@ -16,7 +16,7 @@ my_pipe = Hyperpipe('sample_pairing_example_classification',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    project_folder='./tmp/',
+                    project_folder='./tmp',
                     random_seed=42123)
 
 
@@ -30,7 +30,7 @@ my_pipe += PipelineElement('SamplePairingClassification',
                            test_disabled=True)
 
 my_pipe += PipelineElement('RandomForestClassifier',
-                           hyperparameters={'n_estimators': [10]})
+                           hyperparameters={'n_estimators': [10, 100]})
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)

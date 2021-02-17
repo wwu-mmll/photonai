@@ -11,6 +11,7 @@ metadata = """
     "cache_folder": null,
     "nr_of_processes": 1,
     "random_seed": false,
+    "project_folder": "./tmp",
     "inner_cv": {
         "n_splits": 5,
         "shuffle": false,
@@ -28,7 +29,7 @@ metadata = """
     "performance_constraints": null,
     "optimizer": "sk_opt",
     "optimizer_params": {
-        "n_configurations": 5
+        "n_configurations": 25
     },
     "metrics": [
         "accuracy",
@@ -40,9 +41,7 @@ metadata = """
     "output_settings": {
         "mongodb_connect_url": null,
         "save_output": true,
-        "plots": true,
         "overwrite_results": false,
-        "project_folder": ".",
         "user_id": "",
         "wizard_object_id": "",
         "wizard_project_name": "",
@@ -64,7 +63,6 @@ metadata = """
                     "__photon_type": "Categorical"
                 },
                 "C": {
-                    "range_type": "range",
                     "start": 1,
                     "stop": 6,
                     "__photon_type": "FloatRange"
@@ -88,11 +86,6 @@ my_pipe = json_transformer.from_json(metadata_json)
 
 # Pipe from json-File
 # my_pipe = json_transformer.read_json_file(filepath="./basic_svm_pipe_results_2020-03-27_09-13-56/hyperpipe_config.json")
-
-# WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(return_X_y=True)
 
 my_pipe.fit(X, y)
-
-
-

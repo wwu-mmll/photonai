@@ -38,4 +38,3 @@ my_pipe += PipelineElement.create("CustomWrapper", AdditionalDataWrapper(), hype
 
 X, y = load_breast_cancer(return_X_y=True)
 my_pipe.fit(X, y, true_predictions=np.array(y))
-

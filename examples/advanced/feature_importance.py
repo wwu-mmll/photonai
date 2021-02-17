@@ -20,7 +20,8 @@ my_pipe = Hyperpipe('basic_svm_pipe',
                     outer_cv=KFold(n_splits=3),
                     optimizer='grid_search',
                     metrics=['mean_absolute_error'],
-                    best_config_metric='mean_absolute_error')
+                    best_config_metric='mean_absolute_error',
+                    project_folder='./tmp')
 
 my_pipe += PipelineElement("StandardScaler")
 my_pipe += PipelineElement('Ridge', alpha=1e-2)

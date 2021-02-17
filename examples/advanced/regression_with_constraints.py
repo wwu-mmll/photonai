@@ -16,7 +16,7 @@ my_pipe = Hyperpipe(name='basic_svm_pipe_no_performance',
                     inner_cv=KFold(n_splits=3),
                     use_test_set=True,
                     verbosity=1,
-                    project_folder='./result_folder',
+                    project_folder='./tmp',
                     output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
                                                    save_output=True),
                     performance_constraints=[MinimumPerformanceConstraint('mean_squared_error', 35, 'first'),
@@ -29,4 +29,3 @@ my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimato
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-

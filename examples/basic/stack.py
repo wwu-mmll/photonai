@@ -6,7 +6,6 @@ from photonai.optimization import FloatRange, IntegerRange
 
 X, y = load_breast_cancer(return_X_y=True)
 
-
 my_pipe = Hyperpipe('basic_stack_pipe',
                     optimizer='sk_opt',
                     optimizer_params={'n_configurations': 25},
@@ -23,8 +22,7 @@ tree = PipelineElement('DecisionTreeClassifier',
                        hyperparameters={'min_samples_split': IntegerRange(2, 4)},
                        criterion='gini')
 
-svc = PipelineElement('LinearSVC',
-                      hyperparameters={'C': FloatRange(0.5, 25)})
+svc = PipelineElement('LinearSVC', hyperparameters={'C': FloatRange(0.5, 25)})
 
 # for a stack that includes estimators you can choose whether predict or predict_proba is called for all estimators
 # in case only some implement predict_proba, predict is called for the remaining estimators

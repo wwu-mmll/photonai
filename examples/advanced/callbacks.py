@@ -11,7 +11,6 @@ def my_monitor(X, y=None, **kwargs):
     # and do fancy developer stuff
     debug = True
 
-
 my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
                     optimizer='grid_search',
                     metrics=['mean_squared_error', 'pearson_correlation'],
@@ -36,5 +35,3 @@ my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimato
 
 X, y = load_boston(return_X_y=True)
 my_pipe.fit(X, y)
-
-

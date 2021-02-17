@@ -6,16 +6,13 @@
 
 from keras.utils import data_utils
 from keras.models import Sequential
-from keras.layers import Dense
-from keras.layers import Flatten
-from keras.layers import Dropout
-from keras.layers.convolutional import Conv1D
-from keras.layers.convolutional import MaxPooling1D
+from keras.layers import Dense, Flatten, Dropout
+from keras.layers.convolutional import Conv1D, MaxPooling1D
 from sklearn.model_selection import StratifiedShuffleSplit
 
 from examples.neural_networks.dataset import load_har
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import Categorical
 
 dataset_path = data_utils.get_file(
@@ -41,8 +38,6 @@ model.add(Dense(100, activation='relu'))
 model.add(Dense(n_outputs, activation='softmax'))
 model.compile(loss='categorical_crossentropy', optimizer='adam', metrics=['accuracy'])
 
-settings = OutputSettings(project_folder='./tmp/')
-
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('cnn_keras_multiclass_pipe',
                     optimizer='grid_search',
@@ -52,7 +47,7 @@ my_pipe = Hyperpipe('cnn_keras_multiclass_pipe',
                     outer_cv=StratifiedShuffleSplit(n_splits=3, test_size=0.2),
                     inner_cv=StratifiedShuffleSplit(n_splits=2, test_size=0.2),
                     verbosity=1,
-                    output_settings=settings)
+                    project_folder='./tmp/')
 
 my_pipe += PipelineElement('KerasBaseClassifier',
                            hyperparameters={'epochs': Categorical([10, 20])},

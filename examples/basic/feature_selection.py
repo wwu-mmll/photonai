@@ -19,17 +19,10 @@ my_pipe += PipelineElement('StandardScaler')
 
 lasso = PipelineElement('LassoFeatureSelection',
                         hyperparameters={'percentile': [0.1, 0.2, 0.3]}, alpha=1)
-
 f_regression = PipelineElement('FRegressionSelectPercentile',
                                hyperparameters={'percentile': [10, 20, 30]})
 
 my_pipe += Switch('FeatureSelection', [lasso, f_regression])
-
 my_pipe += PipelineElement('RandomForestRegressor',
                            hyperparameters={'n_estimators': IntegerRange(10, 50)})
-
-
 my_pipe.fit(X, y)
-
-
-

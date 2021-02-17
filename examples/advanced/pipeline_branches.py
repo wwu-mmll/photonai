@@ -27,7 +27,7 @@ svm_mima_branch = Branch('svm_branch')
 svm_mima_branch += PipelineElement('MinMaxScaler')
 svm_mima_branch += PipelineElement('SVC',
                                    {'kernel': Categorical(['rbf', 'linear']),
-                                    'C': FloatRange(0.01, 2.0)},
+                                    'C': FloatRange(0.01, 2.0, num=10)},
                                    gamma='auto')
 
 # BRANCH WITH StandardScaler AND KNeighborsClassifier

@@ -71,8 +71,9 @@ class PhotonRegistry:
         PhotonRegistry.CUSTOM_ELEMENTS_FOLDER = custom_elements_folder
         self._load_custom_folder(custom_elements_folder)
 
-        if len(PhotonRegistry.ELEMENT_DICTIONARY) == 0:
-            PhotonRegistry.ELEMENT_DICTIONARY = self.get_package_info()
+        if len(PhotonRegistry.ELEMENT_DICTIONARY) == 0 or \
+                PhotonRegistry.ELEMENT_DICTIONARY == PhotonRegistry.CUSTOM_ELEMENTS:
+            PhotonRegistry.ELEMENT_DICTIONARY.update(self.get_package_info())
 
     def _list_available_modules(self):
         for abs_filename in glob(os.path.join(self.module_path, "*.json")):
