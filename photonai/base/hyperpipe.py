@@ -22,6 +22,7 @@ from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
 from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
+from sklearn.inspection import permutation_importance
 from photonai.__init__ import __version__
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
@@ -1137,7 +1138,19 @@ class Hyperpipe(BaseEstimator):
 
         """
         if self._pipe:
-            return self.optimum_pipe.score(data, y, **kwargs)
+            predictions = self.optimum_pipe.predict(data, **kwargs)
+            scorer = Scorer.create(self.optimization.best_config_metric)
+            return scorer(y, predictions)
+
+    def get_permutation_feature_importances(self, X_val, y_val, **kwargs):
+        """
+        Since PHOTONAI is built on top of the scikit-learn interface,
+        it is possible to use direct functions from their package.
+        Here the example of the feature importance via permutations. The example can be found at:
+        https://scikit-learn.org/stable/modules/permutation_importance.html
+        """
+
+        return permutation_importance(self.optimum_pipe, X_val, y_val, **kwargs)
 
     def inverse_transform_pipeline(self, hyperparameters: dict,
                                    data: np.ndarray,
