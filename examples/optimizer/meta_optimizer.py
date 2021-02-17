@@ -39,3 +39,5 @@ estimator_selection += PipelineElement('SVC',
 
 my_pipe += estimator_selection
 my_pipe.fit(X, y)
+
+my_pipe.results_handler.get_mean_of_best_validation_configs_per_estimator()

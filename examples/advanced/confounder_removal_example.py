@@ -33,6 +33,7 @@ pipe += PipelineElement('ConfounderRemoval', {},
                         standardize_covariates=True,
                         test_disabled=True,
                         confounder_names=['mean_radius', 'mean_texture'])
+
 pipe += PipelineElement('SVC')
 
 # those names must be keys in the kwargs dictionary
