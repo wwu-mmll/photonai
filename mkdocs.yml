@@ -22,6 +22,7 @@ nav:
       - 'No Hyperparameter Optimization': examples/no_outer_cv.md
       - 'Use site-specific validation': examples/group_driven_cv_split.md
       - 'Remove confounders': examples/confounder_removal.md
+      - 'Compare estimators': examples/compare_estimators.md
 #      - Permutation Test: examples/permutation_test.md
       - 'Optimize a MLP': examples/scikit_learn_mlp.md
       - 'Use a DNN with multiclass prediction': examples/dnn_multiclass_prediction.md
@@ -87,11 +88,13 @@ theme:
   name: material
   custom_dir: documentation/overrides
   repo_url: https://github.com/wwu-mmll/photonai
+  favicon: favicon.png
   features:
     - navigation.tabs
 
 markdown_extensions:
-  - pymdownx.highlight
+  - pymdownx.highlight:
+      linenums: true
   - pymdownx.superfences
 
 plugins:
