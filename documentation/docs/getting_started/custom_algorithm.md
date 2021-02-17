@@ -1,7 +1,9 @@
 <h1>Add a custom algorithm</h1>
 
 In order to integrate a custom algorithm in PHOTONAI, all you need to do is provide a class adhering to the popular
-scikit-learn object API. In the following we will demonstrate an example to integrate a custom transformer to the pipeline. 
+[scikit-learn object API](https://scikit-learn.org/stable/modules/generated/sklearn.base.BaseEstimator.html). 
+In the following we will demonstrate an example to integrate a custom transformer to the 
+[Hyperpipe](../../api/base/hyperpipe). 
 
 First, implement your data processing logic like this.
 ```python

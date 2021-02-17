@@ -1,6 +1,7 @@
 # Switch
-The PipelineSwitch element acts like an OR-Operator and decides which element performs best. Currently, you can
-only optimize the PipelineSwitch using Grid Search, Random Grid Search and smac3
+The [PipelineSwitch element](../../api/base/switch) acts like an OR-Operator and decides which element performs best. 
+Currently, you can only optimize the PipelineSwitch using [Grid Search](../../api/optimization/grid_search), 
+[Random Grid Search](../../api/optimization/random_grid_search) and [Smac3](../../api/optimization/smac).
 
 In this example, we add two different transformer elements and two different estimators, and PHOTONAI will 
 evaluate the best choices including the respective hyperparameters.

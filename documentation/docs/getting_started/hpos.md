@@ -87,7 +87,7 @@ SMAC usage and implementation details available [here](
 
 <h3>Switch Optimizer</h3>
 This optimizer is special, as it uses the strategies above to optimizes the same dataflow for different 
-learning algorithms in a switch ("OR") element at the end of the pipeline. 
+learning algorithms in a [switch ("OR") element](../../api/base/switch) at the end of the pipeline. 
 
 For example you can use bayesian optimization for each learning algorithm and select that each of the algorithms
 gets 25 configurations to be tested. 

@@ -7,6 +7,6 @@ Thereby, a developer may inspect e.g. the shape and values of the feature matrix
 transformations have been applied. Return values from the delegate functions are ignored, 
 so that after returning from the delegate call, the original data is directly passed to the next processing step.
 
-```python hl_lines="7-8 33"
+```python hl_lines="7-8 32"
 {% include '/advanced/callbacks.py' %}
 ```

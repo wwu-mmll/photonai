@@ -4,7 +4,7 @@ for nested cross-validation splits. This is particularly useful for reusing resu
 
 More generally, caching is useful whenever re-computation needs more time than loading data. 
 
-It is easily enabled by adding the _cache_folder_ parameter to the Hyperpipe.
+It is easily enabled by adding the _cache_folder_ parameter to the <a href="../../api/base/hyperpipe">Hyperpipe</a>.
 
 ```python
 pipe = Hyperpipe("...",

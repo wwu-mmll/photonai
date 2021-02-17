@@ -2,14 +2,14 @@
 
 With the specialized switch optimizer the user can allocate 
 the same computational resource to hyperparameter optimize the pipeline for each learning algorithm
-in a final switch element, respectively.
+in a final [switch element](../../api/base/switch), respectively.
 
 The user chooses a hyperparameter optimization strategy, to be applied to optimize the pipeline for each learning 
 algorithm in a distinct hyperparameter space. Thereby each algorithm is optimized with the pipeline 
 with the same settings, so that comparability between the learning algorithms is given. 
 
 Another strategy would be to optimize estimator selection within a unified hyperparameter space, e.g. by applying the
-smac3 optimizer. Within a unified hyperparameter space there is an exploration phase,
+[smac3 optimizer](../../api/optimization/smac). Within a unified hyperparameter space there is an exploration phase,
 after which only the most promising algorithms receive further computational time and 
 thus, some learning algorithms receive more computational resources than others. This strategy is capable to auto-
 matically select the best algorithm, however it is due to the given reasons less suitable for algorithm comparisons. 

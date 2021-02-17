@@ -9,7 +9,7 @@ A text file including a summary of the results.
 This file saves the test set predictions for the best configuration of each outer fold.
 
 <h3>photon_result_file.json</h3>
-You can visualize this file with our <a href="https://explorer.photon-ai.com/" target="_blank">Explorer</a> 
+You can visualize this file with our <a href="https://explorer.photon-ai.com/" target="_blank">Explorer</a>. 
 
 Visualized information:
 <ul class="uk-list">
@@ -24,7 +24,7 @@ Visualized information:
 This file stores the best model. You can share or reload it later.
 
 <h3>photon_output.log</h3>
-Saves the console output from every Fold, including the time, the current testing configurations and the results.
+Saves the console output from every fold, including the time, the current testing configurations and the results.
 
 <h3>hyperpipe_config.json</h3>
 Here is the initial setup for your analysis, so you can recreate it later.
