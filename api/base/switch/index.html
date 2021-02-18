@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -338,7 +338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -582,6 +582,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -802,7 +826,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1599,27 +1623,31 @@ belong at the same step of the pipeline, competing for
 being the best choice.</p>
 <p>If for example you want to find out if Preprocessing A
 or Preprocessing B is better at this position in the pipe.
-Or you want to test if a tree outperforms the good old SVM.</p>
+Or you want to test if a rnadom forest outperforms the good old SVM.</p>
 <p>ATTENTION: This class is a construct that may be convenient
 but is not suitable for any complex optimizations.
-Currently it only works for grid_search and the derived
-optimization strategies. USE THIS ONLY FOR RAPID PROTOTYPING
-AND PRELIMINARY RESULTS.</p>
-<p>The class acts as if it is a single entity. Tt joins the
-hyperparamater combinations of each encapsulated element to
-a single, big combination grid. Each hyperparameter
-combination from that grid gets a number. Then the Switch
-object publishes the numbers to be chosen as the object's
-hyperparameter. When a new number is chosen from the
-optimizer, it internally activates the belonging element
-and sets the element's parameter to the hyperparameter
-combination. In that way, each of the elements is tested
-in all its configurations at the same position in the
-pipeline. From the outside, the process and the optimizer
-only sees one parameter of the Switch, that is
-the an integer indicating which item of the hyperparameter
-combination grid is currently active.</p>
+Currently optimization works for grid_search, random search and
+smac and the specializes switch optimizer.</p>
 <p><strong>Examples:</strong></p>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12</pre>
+</div>
+</td>
+<td class="code">
 <div class="highlight">
 <pre><span></span><code>from photonai.base import PipelineElement, Switch
 from photonai.optimization import IntegerRange
@@ -1635,6 +1663,9 @@ tree = PipelineElement('DecisionTreeClassifier',
 my_pipe += Switch('EstimatorSwitch', [svm, tree])
 </code></pre>
 </div>
+</td>
+</tr>
+</table>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.__iadd__">

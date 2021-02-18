@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -338,7 +338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="./" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -572,6 +572,30 @@
     <li class="md-nav__item">
       <a href="../../examples/confounder_removal/" class="md-nav__link">
         Remove confounders
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
       </a>
     </li>
   
@@ -856,7 +880,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1561,34 +1585,55 @@
                 
                 <h1 id="algorithms">Algorithms</h1>
 <p>PHOTONAI offers easy access to established machine learning algorithms.</p>
-<p>The algorithms can be imported by adding a Pipeline element with a specific name,
-such as <em>"SVC"</em> for importing the SupportVectorClassifier from scikit-learn, as shown in the following examples.</p>
-<p>You can set all parameters of the imported class as usual: e.g. add <em>gamma='auto'</em> to the Pipeline Element to set the
-support vector machine's gamma parameter to 'auto'. </p>
+<p>The algorithms can be imported by adding a <a href="../../api/base/pipeline_element">PipelineElement</a> 
+with a specific name, such as <em>"SVC"</em> for importing the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC.html">SupportVectorClassifier</a> from 
+<a href="https://scikit-learn.org/stable/">scikit-learn</a>, as shown in the following examples.</p>
+<p>You can set all parameters of the imported class as usual: e.g. add <em>gamma='auto'</em> to the 
+<a href="../../api/base/pipeline_element">PipelineElement</a> to set the support vector machine's 
+gamma parameter to 'auto'. </p>
 <p>In addition, you can specify each parameter as a hyperparameter and define a value range or value list to 
 find the optimal value, such as <em>'kernel': ['linear', 'rbf']</em> . </p>
-<p>To build a custom pipeline, have a look at PHOTONAIs pre-registered processing- and learning algorithms.
+<p>To build a custom pipeline, have a look at PHOTONAIs <a href="../../algorithms/transformers/">pre-registered processing-</a> 
+and <a href="../../algorithms/estimators/">learning algorithms</a>.
 You can access algorithms for all purposes from several open-source packages. In addition, PHOTONAI offers
 several utility classes as well, such as linear statistical feature selection or sample pairing algorithms.</p>
 <p>In addition you can specify hyperparameters as well as their value range 
 in order to be optimized by the hyperparameter optimization strategy. Currently,
-PHOTONAI offers Grid-Search, Random Search and two frameworks for bayesian optimization.</p>
+PHOTONAI offers <a href="../../api/optimization/grid_search">Grid-Search</a>, <a href="../../api/optimization/random_grid_search">Random Search</a> and two frameworks for bayesian optimization.</p>
 <h2 id="pca">PCA</h2>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">PipelineElement</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">PipelineElement</span>
 <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;PCA&#39;</span><span class="p">,</span>
                 <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_components&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">20</span><span class="p">)},</span>
                 <span class="n">test_disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="c1"># to test if disabling the PipelineElement improves performance,</span>
 <span class="c1"># simply add the test_disabled=True parameter</span>
 </code></pre></div>
+</td></tr></table>
 <h2 id="svc">SVC</h2>
-<div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">,</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">,</span>
                 <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;kernel&#39;</span><span class="p">:</span> <span class="n">Categorical</span><span class="p">([</span><span class="s1">&#39;rbf&#39;</span><span class="p">,</span> <span class="s1">&#39;poly&#39;</span><span class="p">]),</span>
                                  <span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">2</span><span class="p">)},</span>
                 <span class="n">gamma</span><span class="o">=</span><span class="s1">&#39;auto&#39;</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
 <h2 id="keras-neural-net">Keras Neural Net</h2>
-<div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;KerasDnnRegressor&#39;</span><span class="p">,</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6
+7
+8
+9</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;KerasDnnRegressor&#39;</span><span class="p">,</span>
                 <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;hidden_layer_sizes&#39;</span><span class="p">:</span> <span class="n">Categorical</span><span class="p">([[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">4</span><span class="p">],</span>
                                                                     <span class="p">[</span><span class="mi">20</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">]]),</span>
                                  <span class="s1">&#39;dropout_rate&#39;</span><span class="p">:</span> <span class="n">Categorical</span><span class="p">([[</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.2</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">],</span>
@@ -1598,6 +1643,7 @@ PHOTONAI offers Grid-Search, Random Search and two frameworks for bayesian optim
                 <span class="n">epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">,</span>
                 <span class="n">batch_size</span><span class="o">=</span><span class="mi">32</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
                 
               
               

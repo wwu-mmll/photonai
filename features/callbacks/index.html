@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +577,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1471,19 +1495,54 @@ They must define a function delegate which is called with the exact same data th
 <p>Thereby, a developer may inspect e.g. the shape and values of the feature matrix after a sequence of 
 transformations have been applied. Return values from the delegate functions are ignored, 
 so that after returning from the delegate call, the original data is directly passed to the next processing step.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_boston</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_boston</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
 <span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">CallbackElement</span>
 
 
 <span class="c1"># DEFINE CALLBACK ELEMENT</span>
-<span class="k">def</span> <span class="nf">my_monitor</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
-
+<span class="hll"><span class="k">def</span> <span class="nf">my_monitor</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+</span><span class="hll">    <span class="nb">print</span><span class="p">(</span><span class="n">X</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+</span>
     <span class="c1"># here is a useless statement where you can easily set a breakpoint</span>
     <span class="c1"># and do fancy developer stuff</span>
     <span class="n">debug</span> <span class="o">=</span> <span class="kc">True</span>
-
 
 <span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_svm_pipe_no_performance&#39;</span><span class="p">,</span>
                     <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;grid_search&#39;</span><span class="p">,</span>
@@ -1503,13 +1562,14 @@ so that after returning from the delegate call, the original data is directly pa
                            <span class="n">test_disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="c1"># here we inspect the data after augmentation</span>
-<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">CallbackElement</span><span class="p">(</span><span class="s2">&quot;monitor&quot;</span><span class="p">,</span> <span class="n">my_monitor</span><span class="p">)</span>
-
+<span class="hll"><span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">CallbackElement</span><span class="p">(</span><span class="s2">&quot;monitor&quot;</span><span class="p">,</span> <span class="n">my_monitor</span><span class="p">)</span>
+</span>
 <span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;RandomForestRegressor&#39;</span><span class="p">,</span> <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_estimators&#39;</span><span class="p">:</span> <span class="p">[</span><span class="mi">10</span><span class="p">,</span> <span class="mi">100</span><span class="p">]})</span>
 
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">my_pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
                 
               
               

@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +577,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -797,7 +821,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1475,7 +1499,34 @@
   </p>
 </div>
 
-<div class="highlight"><pre><span></span><code><span class="c1"># we use BaseEstimator as to prepare the transformer for hyperparameter optimization</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="c1"># we use BaseEstimator as to prepare the transformer for hyperparameter optimization</span>
 <span class="c1"># we inherit the get_params and set_params methods</span>
 <span class="kn">from</span> <span class="nn">sklearn.base</span> <span class="kn">import</span> <span class="n">BaseEstimator</span>
 
@@ -1504,6 +1555,7 @@
 <span class="sd">        &quot;&quot;&quot;</span>
         <span class="k">return</span> <span class="n">data</span>
 </code></pre></div>
+</td></tr></table>
                 
               
               

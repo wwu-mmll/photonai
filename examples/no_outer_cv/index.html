@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -586,6 +586,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1466,7 +1490,35 @@
                 
                   <h1>No Hyperparameter Optimization</h1>
                 
-                <div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+                <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
 <span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_boston</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
 
@@ -1477,9 +1529,9 @@
 <span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;default_pipe&#39;</span><span class="p">,</span>
                     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span> <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">],</span>
                     <span class="n">best_config_metric</span><span class="o">=</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">,</span>
-                    <span class="n">use_test_set</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
-                    <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+<span class="hll">                    <span class="n">use_test_set</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+</span><span class="hll">                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">10</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">random_state</span><span class="o">=</span><span class="mi">42</span><span class="p">),</span>
+</span>                    <span class="n">verbosity</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
                     <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./tmp/&#39;</span><span class="p">)</span>
 
 
@@ -1496,6 +1548,7 @@
 <span class="n">test_metrics</span> <span class="o">=</span> <span class="n">my_pipe</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">metrics_test</span>
 <span class="n">train_metrics</span> <span class="o">=</span> <span class="n">my_pipe</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">metrics_train</span> 
 </code></pre></div>
+</td></tr></table>
                 
               
               

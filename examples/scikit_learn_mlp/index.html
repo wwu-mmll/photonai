@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +577,30 @@
             
   
   
+  
+    <li class="md-nav__item">
+      <a href="../compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
     
   
   
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1466,7 +1490,36 @@
                 
                   <h1>Optimize a MLP</h1>
                 
-                <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
+                <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
 
 <span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">OutputSettings</span>
@@ -1484,19 +1537,20 @@
                     <span class="n">outer_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
                     <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
                     <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">output_settings</span><span class="o">=</span><span class="n">OutputSettings</span><span class="p">(</span><span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./tmp/&#39;</span><span class="p">))</span>
+                    <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./tmp/&#39;</span><span class="p">)</span>
 
 
 <span class="c1"># ADD ELEMENTS TO YOUR PIPELINE</span>
-<span class="n">my_pipe</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">))</span>
+<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">)</span>
 
-<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;PhotonMLPClassifier&#39;</span><span class="p">,</span> <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;layer_1&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                                                                   <span class="s1">&#39;layer_2&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                                                                   <span class="s1">&#39;layer_3&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)})</span>
-
+<span class="hll"><span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;PhotonMLPClassifier&#39;</span><span class="p">,</span> <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;layer_1&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+</span><span class="hll">                                                                   <span class="s1">&#39;layer_2&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+</span><span class="hll">                                                                   <span class="s1">&#39;layer_3&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">5</span><span class="p">)})</span>
+</span>
 <span class="c1"># NOW TRAIN YOUR PIPELINE</span>
 <span class="n">my_pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span> 
 </code></pre></div>
+</td></tr></table>
                 
               
               
@@ -1515,7 +1569,7 @@
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../confounder_removal/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../permutation_importances/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1524,7 +1578,7 @@
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Remove confounders
+                Permutation Importances
               </div>
             </div>
           </a>

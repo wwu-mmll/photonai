@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +577,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1468,9 +1492,10 @@
 <p>PHOTONAI offers batch processing of elements. This comes in handy for working memory sensitive tasks.
 An example is handling large medical data modalities, such as resampling gray matter 3D brain scan niftis. 
 However, be aware that this only makes sense for algorithms that independently transform each item.</p>
-<p>Batching is easily accessed by adding the <em>batch_size</em> parameter to the pipeline element.</p>
-<div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s2">&quot;LabelEncoder&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<p>Batching is easily accessed by adding the <em>batch_size</em> parameter to the <a href="../../api/base/pipeline_element">PipelineElement</a>.</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">PipelineElement</span><span class="p">(</span><span class="s2">&quot;LabelEncoder&quot;</span><span class="p">,</span> <span class="n">batch_size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
                 
               
               

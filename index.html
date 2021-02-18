@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="assets/images/favicon.png">
+      <link rel="shortcut icon" href="favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -342,7 +342,7 @@
   
   
     <li class="md-nav__item">
-      <a href="algorithms/algorithms_index/" class="md-nav__link">
+      <a href="getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -586,6 +586,30 @@
   
   
     <li class="md-nav__item">
+      <a href="examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="getting_started/hpos/" class="md-nav__link">
+      <a href="algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1468,17 +1492,34 @@
 <h2>1. Installation</h2>
 <p class="small-p">You only need two things: Python 3 and your favourite Python IDE to get started. Then simply install via pip.</p>
 
-<div class="highlight"><pre><span></span><code><span class="n">pip</span> <span class="n">install</span> <span class="n">photonai</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pip</span> <span class="n">install</span> <span class="n">photonai</span>
 </code></pre></div>
+</td></tr></table>
 <h2>2. Setup New Analysis</h2>
 <p>Start by creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs. </p>
-<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;path/to/project&#39;</span><span class="p">)</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;path/to/project&#39;</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
 <h2>3. Define training, optimization and testing parameters</h2>
 <p>Select parameters to customize the training, hyperparameter optimization and testing procedure.</p>
 <p>Particularly, you can choose the hyperparameter optimization strategy, set parameters, choose performance metrics
 and choose the performance metric to minimize or maximize, respectively.</p>
-<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;path/to/project&#39;</span><span class="p">,</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;path/to/project&#39;</span><span class="p">,</span>
 
                   <span class="c1"># choose hyperparameter optimization strategy</span>
                   <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;random_grid_search&#39;</span><span class="p">,</span>
@@ -1495,11 +1536,27 @@ and choose the performance metric to minimize or maximize, respectively.</p>
                   <span class="n">outer_cv</span><span class="o">=</span><span class="n">ShuffleSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span>
                   <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
 </code></pre></div>
+</td></tr></table>
 <h2>4. Build custom pipeline</h2>
 <p>Select and arrange normalization, dimensionality reduction, feature selection, data augmentation,
 over- or undersampling algorithms in simple or parallel data streams. You can integrate
 custom algorithms or choose from our wide range of pre-registered algorithms from established toolboxes.</p>
-<div class="highlight"><pre><span></span><code><span class="c1"># access the scikit-learn implementations via keywords</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="c1"># access the scikit-learn implementations via keywords</span>
 <span class="c1"># at the same time define the hyperparameters to optimize for each element</span>
 <span class="n">pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">)</span>
 
@@ -1516,13 +1573,16 @@ custom algorithms or choose from our wide range of pre-registered algorithms fro
 
 <span class="n">pipe</span> <span class="o">+=</span> <span class="n">or_element</span>
 </code></pre></div>
+</td></tr></table>
 <h2>5. Load Data and Train</h2>
 <p>Load your data and start the (nested-) cross-validated hyperparameter optimization, training and evaluation procedure.
 You will see an extensive output to monitor the hyperparameter optimization progress, see the results and track the
 best performances so far.</p>
-<div class="highlight"><pre><span></span><code><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
                 
               
               

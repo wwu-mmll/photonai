@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -338,7 +338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -582,6 +582,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -802,7 +826,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1643,6 +1667,17 @@ child receiving the same input data. The data is iteratively
 distributed to all children, the results are collected
 and horizontally concatenated.</p>
 <p><strong>Examples:</strong></p>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span>1
+2
+3
+4</pre>
+</div>
+</td>
+<td class="code">
 <div class="highlight">
 <pre><span></span><code>tree = PipelineElement('DecisionTreeClassifier')
 svc = PipelineElement('LinearSVC')
@@ -1650,6 +1685,9 @@ svc = PipelineElement('LinearSVC')
 my_pipe += Stack('final_stack', [tree, svc], use_probabilities=True)
 </code></pre>
 </div>
+</td>
+</tr>
+</table>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.__iadd__">

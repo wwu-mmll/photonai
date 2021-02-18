@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +577,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1465,672 +1489,664 @@
                 
                 
                 <h1>Estimator</h1>
+
+<p><a class="md-button--primary md-button" href="#" id="button_all" onclick="myFunction('')">All</a>
+<a class="md-button" href="#" id="button_class" onclick="myFunction('class')">Classification</a>
+<a class="md-button" href="#" id="button_reg" onclick="myFunction('reg')">Regression</a></p>
 <div class="photon-docu-header">
 
-
-
-    <div uk-filter="target:.js-filter0; animation: -20000">
-
-    <div uk-filter="target:.js-filter1; animation: -20000">
-
-    <div uk-filter="target:.js-filter2; animation: -20000">
-
-    <div uk-filter="target:.js-filter3; animation: -20000">
-
-    <div uk-filter="target:.js-filter4; animation: -20000">
-
-    <div uk-filter="target:.js-filter5; animation: -20000">
-
-    <div uk-filter="target:.js-filter6; animation: -20000">
-
-    <div uk-filter="target:.js-filter7; animation: -20000">
-
-
-      <!--  <ul class="uk-list uk-subnav uk-subnav-pill">
-
-            <li class="uk-active" uk-filter-control><a href="#">All</a></li>
-
-            <li uk-filter-control="filter:[ml-type='class'];"><a href="#">Classification</a></li>
-
-            <li uk-filter-control="filter:[ml-type='reg'];"><a href="#">Regression</a></li>
-
-        </ul> -->
-
-
         <div>
 
-            <h2>Linear Estimators</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter0">
+                <h2>Linear Estimators</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=reg>
-                                <td>ARDRegression</td>
+                                <tr ml-type=reg>
+                                    <td>ARDRegression</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ARDRegression">sklearn.linear_model.ARDRegression</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ARDRegression">sklearn.linear_model.ARDRegression</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>BayesianRidge</td>
+                                <tr ml-type=reg>
+                                    <td>BayesianRidge</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.BayesianRidge">sklearn.linear_model.BayesianRidge</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.BayesianRidge">sklearn.linear_model.BayesianRidge</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>ElasticNet</td>
+                                <tr ml-type=reg>
+                                    <td>ElasticNet</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet">sklearn.linear_model.ElasticNet</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.ElasticNet">sklearn.linear_model.ElasticNet</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>HuberRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>HuberRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.HuberRegressor">sklearn.linear_model.HuberRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.HuberRegressor">sklearn.linear_model.HuberRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>Lars</td>
+                                <tr ml-type=reg>
+                                    <td>Lars</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lars">sklearn.linear_model.Lars</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lars">sklearn.linear_model.Lars</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>Lasso</td>
+                                <tr ml-type=reg>
+                                    <td>Lasso</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso">sklearn.linear_model.Lasso</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Lasso">sklearn.linear_model.Lasso</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>LassoLars</td>
+                                <tr ml-type=reg>
+                                    <td>LassoLars</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LassoLars">sklearn.linear_model.LassoLars</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LassoLars">sklearn.linear_model.LassoLars</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>LinearRegression</td>
+                                <tr ml-type=reg>
+                                    <td>LinearRegression</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression">sklearn.linear_model.LinearRegression</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LinearRegression">sklearn.linear_model.LinearRegression</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>LogisticRegression</td>
+                                <tr ml-type=reg>
+                                    <td>LogisticRegression</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression">sklearn.linear_model.LogisticRegression</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.LogisticRegression">sklearn.linear_model.LogisticRegression</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>PassiveAggressiveClassifier</td>
+                                <tr ml-type=class>
+                                    <td>PassiveAggressiveClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier">sklearn.linear_model.PassiveAggressiveClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.PassiveAggressiveClassifier">sklearn.linear_model.PassiveAggressiveClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>Perceptron</td>
+                                <tr ml-type=class>
+                                    <td>Perceptron</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Perceptron">sklearn.linear_model.Perceptron</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Perceptron">sklearn.linear_model.Perceptron</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>RANSACRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>RANSACRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RANSACRegressor">sklearn.linear_model.RANSACRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RANSACRegressor">sklearn.linear_model.RANSACRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=>
-                                <td>Ridge</td>
+                                <tr ml-type=reg>
+                                    <td>Ridge</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge">sklearn.linear_model.Ridge</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.Ridge">sklearn.linear_model.Ridge</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>RidgeClassifier</td>
+                                <tr ml-type=class>
+                                    <td>RidgeClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RidgeClassifier">sklearn.linear_model.RidgeClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.RidgeClassifier">sklearn.linear_model.RidgeClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>SGDClassifier</td>
+                                <tr ml-type=class>
+                                    <td>SGDClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier">sklearn.linear_model.SGDClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDClassifier">sklearn.linear_model.SGDClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>SGDRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>SGDRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor">sklearn.linear_model.SGDRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.SGDRegressor">sklearn.linear_model.SGDRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>TheilSenRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>TheilSenRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.TheilSenRegressor">sklearn.linear_model.TheilSenRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.linear_model.TheilSenRegressor">sklearn.linear_model.TheilSenRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
         <div>
 
-            <h2>Tree-based</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter1">
+                <h2>Tree-based</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=class>
-                                <td>ExtraTreesClassifier</td>
+                                <tr ml-type=class>
+                                    <td>ExtraTreesClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier">sklearn.ensemble.ExtraTreesClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesClassifier">sklearn.ensemble.ExtraTreesClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>ExtraTreesRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>ExtraTreesRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesRegressor">sklearn.ensemble.ExtraTreesRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.ExtraTreesRegressor">sklearn.ensemble.ExtraTreesRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>DecisionTreeClassifier</td>
+                                <tr ml-type=class>
+                                    <td>DecisionTreeClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier">sklearn.tree.DecisionTreeClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeClassifier">sklearn.tree.DecisionTreeClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>DecisionTreeRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>DecisionTreeRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor">sklearn.tree.DecisionTreeRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.tree.DecisionTreeRegressor">sklearn.tree.DecisionTreeRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>RandomForestClassifier</td>
+                                <tr ml-type=class>
+                                    <td>RandomForestClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier">sklearn.ensemble.RandomForestClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestClassifier">sklearn.ensemble.RandomForestClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>RandomForestRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>RandomForestRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor">sklearn.ensemble.RandomForestRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.RandomForestRegressor">sklearn.ensemble.RandomForestRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
         <div>
 
-            <h2>Supported Vector Machines</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter2">
+                <h2>Supported Vector Machines</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=class>
-                                <td>LinearSVC</td>
+                                <tr ml-type=class>
+                                    <td>LinearSVC</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC">sklearn.svm.LinearSVC</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVC">sklearn.svm.LinearSVC</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>LinearSVR</td>
+                                <tr ml-type=reg>
+                                    <td>LinearSVR</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVR">sklearn.svm.LinearSVR</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.LinearSVR">sklearn.svm.LinearSVR</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>NuSVC</td>
+                                <tr ml-type=class>
+                                    <td>NuSVC</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.NuSVC">sklearn.svm.NuSVC</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.NuSVC">sklearn.svm.NuSVC</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>NuSVR</td>
+                                <tr ml-type=reg>
+                                    <td>NuSVR</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.NuSVR">sklearn.svm.NuSVR</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.NuSVR">sklearn.svm.NuSVR</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>OneClassSVM</td>
+                                <tr ml-type=class>
+                                    <td>OneClassSVM</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.OneClassSVM">sklearn.svm.OneClassSVM</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.OneClassSVM">sklearn.svm.OneClassSVM</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=>
-                                <td>PhotonOneClassSVM</td>
+                                <tr ml-type=>
+                                    <td>PhotonOneClassSVM</td>
 
-                                    <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/PhotonOneClassSVM.py">photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM</a></td>
+                                        <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/PhotonOneClassSVM.py">photonai.modelwrapper.PhotonOneClassSVM.PhotonOneClassSVM</a></td>
 
-                                <td>scikit-learn / PHOTONAI</td>
-                            </tr>
+                                    <td>scikit-learn / PHOTONAI</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>SVC</td>
+                                <tr ml-type=class>
+                                    <td>SVC</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC">sklearn.svm.SVC</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVC">sklearn.svm.SVC</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>SVR</td>
+                                <tr ml-type=reg>
+                                    <td>SVR</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR">sklearn.svm.SVR</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.svm.SVR">sklearn.svm.SVR</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
         <div>
 
-            <h2>Neural Networks</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter3">
+                <h2>Neural Networks</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=>
-                                <td>BernoulliRBM</td>
+                                <tr ml-type=>
+                                    <td>BernoulliRBM</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.BernoulliRBM">sklearn.neural_network.BernoulliRBM</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.BernoulliRBM">sklearn.neural_network.BernoulliRBM</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>KerasDnnClassifier</td>
+                                <tr ml-type=class>
+                                    <td>KerasDnnClassifier</td>
 
-                                    <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/keras_dnn_classifier.py">photonai.modelwrapper.keras_dnn_classifier.KerasDnnClassifier</a></td>
+                                        <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/keras_dnn_classifier.py">photonai.modelwrapper.keras_dnn_classifier.KerasDnnClassifier</a></td>
 
-                                <td>keras / PHOTONAI</td>
-                            </tr>
+                                    <td>keras / PHOTONAI</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>KerasDnnRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>KerasDnnRegressor</td>
 
-                                    <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/keras_dnn_regressor.py">photonai.modelwrapper.keras_dnn_regressor.KerasDnnRegressor</a></td>
+                                        <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/keras_dnn_regressor.py">photonai.modelwrapper.keras_dnn_regressor.KerasDnnRegressor</a></td>
 
-                                <td>keras / PHOTONAI</td>
-                            </tr>
+                                    <td>keras / PHOTONAI</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>MLPClassifier</td>
+                                <tr ml-type=class>
+                                    <td>MLPClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier">sklearn.neural_network.MLPClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPClassifier">sklearn.neural_network.MLPClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>MLPRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>MLPRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor">sklearn.neural_network.MLPRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neural_network.MLPRegressor">sklearn.neural_network.MLPRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>PhotonMLPClassifier</td>
+                                <tr ml-type=class>
+                                    <td>PhotonMLPClassifier</td>
 
-                                    <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/PhotonMLPClassifier.py">photonai.modelwrapper.PhotonMLPClassifier.PhotonMLPClassifier</a></td>
+                                        <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/PhotonMLPClassifier.py">photonai.modelwrapper.PhotonMLPClassifier.PhotonMLPClassifier</a></td>
 
-                                <td>scikit-learn / PHOTONAI</td>
-                            </tr>
+                                    <td>scikit-learn / PHOTONAI</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
         <div>
 
-            <h2>Ensemble</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter4">
+                <h2>Ensemble</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=class>
-                                <td>AdaBoostClassifier</td>
+                                <tr ml-type=class>
+                                    <td>AdaBoostClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostClassifier">sklearn.ensemble.AdaBoostClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostClassifier">sklearn.ensemble.AdaBoostClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>AdaBoostRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>AdaBoostRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostRegressor">sklearn.ensemble.AdaBoostRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.AdaBoostRegressor">sklearn.ensemble.AdaBoostRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>BaggingClassifier</td>
+                                <tr ml-type=class>
+                                    <td>BaggingClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingClassifier">sklearn.ensemble.BaggingClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingClassifier">sklearn.ensemble.BaggingClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>BaggingRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>BaggingRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingRegressor">sklearn.ensemble.BaggingRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.BaggingRegressor">sklearn.ensemble.BaggingRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>GradientBoostingClassifier</td>
+                                <tr ml-type=class>
+                                    <td>GradientBoostingClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier">sklearn.ensemble.GradientBoostingClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingClassifier">sklearn.ensemble.GradientBoostingClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>GradientBoostingRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>GradientBoostingRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor">sklearn.ensemble.GradientBoostingRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.ensemble.GradientBoostingRegressor">sklearn.ensemble.GradientBoostingRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
         <div>
 
-            <h2>Neighour-Based</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter5">
+                <h2>Neighour-Based</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=class>
-                                <td>KNeighborsClassifier</td>
+                                <tr ml-type=class>
+                                    <td>KNeighborsClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier">sklearn.neighbors.KNeighborsClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsClassifier">sklearn.neighbors.KNeighborsClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>KNeighborsRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>KNeighborsRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor">sklearn.neighbors.KNeighborsRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.KNeighborsRegressor">sklearn.neighbors.KNeighborsRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>NearestCentroid</td>
+                                <tr ml-type=class>
+                                    <td>NearestCentroid</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestCentroid">sklearn.neighbors.NearestCentroid</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.NearestCentroid">sklearn.neighbors.NearestCentroid</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>RadiusNeighborsClassifier</td>
+                                <tr ml-type=class>
+                                    <td>RadiusNeighborsClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.RadiusNeighborsClassifier">sklearn.neighbors.RadiusNeighborsClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.RadiusNeighborsClassifier">sklearn.neighbors.RadiusNeighborsClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>RadiusNeighborsRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>RadiusNeighborsRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.RadiusNeighborsRegressor">sklearn.neighbors.RadiusNeighborsRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.neighbors.RadiusNeighborsRegressor">sklearn.neighbors.RadiusNeighborsRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
         <div>
 
-            <h2>Probabilistic</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter6">
+                <h2>Probabilistic</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=>
-                                <td>BayesianGaussianMixture</td>
+                                <tr ml-type=>
+                                    <td>BayesianGaussianMixture</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.mixture.BayesianGaussianMixture">sklearn.mixture.BayesianGaussianMixture</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.mixture.BayesianGaussianMixture">sklearn.mixture.BayesianGaussianMixture</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>BernoulliNB</td>
+                                <tr ml-type=class>
+                                    <td>BernoulliNB</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.BernoulliNB">sklearn.naive_bayes.BernoulliNB</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.BernoulliNB">sklearn.naive_bayes.BernoulliNB</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>GaussianNB</td>
+                                <tr ml-type=class>
+                                    <td>GaussianNB</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.GaussianNB">sklearn.naive_bayes.GaussianNB</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.GaussianNB">sklearn.naive_bayes.GaussianNB</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>MultinomialNB</td>
+                                <tr ml-type=class>
+                                    <td>MultinomialNB</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB">sklearn.naive_bayes.MultinomialNB</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.naive_bayes.MultinomialNB">sklearn.naive_bayes.MultinomialNB</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=>
-                                <td>GaussianMixture</td>
+                                <tr ml-type=>
+                                    <td>GaussianMixture</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture">sklearn.mixture.GaussianMixture</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.mixture.GaussianMixture">sklearn.mixture.GaussianMixture</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>GaussianProcessClassifier</td>
+                                <tr ml-type=class>
+                                    <td>GaussianProcessClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.GaussianProcessClassifier">sklearn.gaussian_process.GaussianProcessClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.GaussianProcessClassifier">sklearn.gaussian_process.GaussianProcessClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>GaussianProcessRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>GaussianProcessRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.GaussianProcessRegressor">sklearn.gaussian_process.GaussianProcessRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.gaussian_process.GaussianProcessRegressor">sklearn.gaussian_process.GaussianProcessRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
         <div>
 
-            <h2>Other</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter7">
+                <h2>Other</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
 
-                            <tr ml-type=class>
-                                <td>DummyClassifier</td>
+                                <tr ml-type=class>
+                                    <td>DummyClassifier</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyClassifier">sklearn.dummy.DummyClassifier</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyClassifier">sklearn.dummy.DummyClassifier</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>DummyRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>DummyRegressor</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyRegressor">sklearn.dummy.DummyRegressor</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.dummy.DummyRegressor">sklearn.dummy.DummyRegressor</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>KernelRidge</td>
+                                <tr ml-type=reg>
+                                    <td>KernelRidge</td>
 
-                                    <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.kernel_ridge.KernelRidge">sklearn.kernel_ridge.KernelRidge</a></td>
+                                        <td><a href="https://scikit-learn.org/stable/modules/generated/sklearn.kernel_ridge.KernelRidge">sklearn.kernel_ridge.KernelRidge</a></td>
 
-                                <td>scikit-learn</td>
-                            </tr>
+                                    <td>scikit-learn</td>
+                                </tr>
 
-                            <tr ml-type=class>
-                                <td>PhotonVotingClassifier</td>
+                                <tr ml-type=class>
+                                    <td>PhotonVotingClassifier</td>
 
-                                    <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/Voting.py">photonai.modelwrapper.Voting.PhotonVotingClassifier</a></td>
+                                        <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/Voting.py">photonai.modelwrapper.Voting.PhotonVotingClassifier</a></td>
 
-                                <td>PHOTONAI</td>
-                            </tr>
+                                    <td>PHOTONAI</td>
+                                </tr>
 
-                            <tr ml-type=reg>
-                                <td>PhotonVotingRegressor</td>
+                                <tr ml-type=reg>
+                                    <td>PhotonVotingRegressor</td>
 
-                                    <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/Voting.py">photonai.modelwrapper.Voting.PhotonVotingRegressor</a></td>
+                                        <td><a href="https://github.com/wwu-mmll/photonai/blob/master/photonai/modelwrapper/Voting.py">photonai.modelwrapper.Voting.PhotonVotingRegressor</a></td>
 
-                                <td>PHOTONAI</td>
-                            </tr>
+                                    <td>PHOTONAI</td>
+                                </tr>
 
-                    </tbody>
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
 
 </div>
 
+<script>
+function myFunction(filter) {
+  var input, table, tr, td, i, txtValue;
+  if (filter == 'class') {
+    document.getElementById("button_all").classList.remove('md-button--primary');
+    document.getElementById("button_class").classList.add('md-button--primary');
+    document.getElementById("button_reg").classList.remove('md-button--primary');
+  } else if (filter == 'reg') {
+    document.getElementById("button_all").classList.remove('md-button--primary');
+    document.getElementById("button_class").classList.remove('md-button--primary');
+    document.getElementById("button_reg").classList.add('md-button--primary');
+  } else {
+    document.getElementById("button_all").classList.add('md-button--primary');
+    document.getElementById("button_class").classList.remove('md-button--primary');
+    document.getElementById("button_reg").classList.remove('md-button--primary');
+  }
+  alltables = document.querySelectorAll("table[data-name=filterTable]");
 
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
-
-</div>
+  alltables.forEach(function(table){
+      tr = table.getElementsByTagName("tr");
+      // Loop through all table rows, and hide those who don't match the search query
+      for (i = 0; i < tr.length; i++) {
+        txtValue = tr[i].getAttribute('ml-type');
+        if (txtValue) {
+          if (txtValue.indexOf(filter) > -1) {
+            tr[i].style.display = "";
+          } else {
+            tr[i].style.display = "none";
+          }
+        } 
+      }
+  });
+}
+</script>
                 
               
               
@@ -2164,7 +2180,7 @@
           </a>
         
         
-          <a href="../../getting_started/hpos/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../hpos/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">

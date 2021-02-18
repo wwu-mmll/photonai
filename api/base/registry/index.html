@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -338,7 +338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -582,6 +582,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -802,7 +826,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1630,6 +1654,30 @@ that points to a python class and its namespace.
 You can access the python class via the string literal.
 The class PhotonElement imports and instantiates the class for you.</p>
 <p><strong>Examples:</strong></p>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17</pre>
+</div>
+</td>
+<td class="code">
 <div class="highlight">
 <pre><span></span><code>import os
 from photonai.base import PhotonRegistry
@@ -1650,6 +1698,9 @@ registry.info('MyCustomEstimator')
 registry.info('SVC')
 </code></pre>
 </div>
+</td>
+</tr>
+</table>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.__init__">
@@ -1706,8 +1757,9 @@ registry.info('SVC')
     <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span> <span class="o">=</span> <span class="n">custom_elements_folder</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_load_custom_folder</span><span class="p">(</span><span class="n">custom_elements_folder</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
-        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">()</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> \
+            <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span> <span class="o">==</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">:</span>
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">())</span>
 </code></pre>
 </div>
 </details>

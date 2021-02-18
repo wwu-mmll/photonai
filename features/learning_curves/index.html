@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +577,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1466,30 +1490,54 @@
                 
                 <h1>Learning Curves</h1>
 
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
 <span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span>
 <span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">FloatRange</span>
 
 <span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_svm_pipe&#39;</span><span class="p">,</span>
                     <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./tmp&#39;</span><span class="p">,</span>
-                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">5</span><span class="p">),</span>
-                    <span class="n">outer_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
+                    <span class="n">outer_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">2</span><span class="p">),</span>
                     <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;sk_opt&#39;</span><span class="p">,</span>
-                    <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">5</span><span class="p">},</span>
+                    <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">15</span><span class="p">},</span>
                     <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span> <span class="s1">&#39;precision&#39;</span><span class="p">,</span> <span class="s1">&#39;recall&#39;</span><span class="p">,</span> <span class="s1">&#39;balanced_accuracy&#39;</span><span class="p">],</span>
                     <span class="n">best_config_metric</span><span class="o">=</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span>
                     <span class="c1"># this is how to make photonai calculate learning curves</span>
                     <span class="c1"># output and figures for this can be found in the project folder</span>
-                    <span class="n">learning_curves</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                    <span class="n">learning_curves_cut</span><span class="o">=</span><span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
-
+<span class="hll">                    <span class="n">learning_curves</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span class="hll">                    <span class="n">learning_curves_cut</span><span class="o">=</span><span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.1</span><span class="p">))</span>
+</span>
 <span class="n">my_pipe</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">))</span>
 
 <span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;RandomForestClassifier&#39;</span><span class="p">)</span>
 <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_breast_cancer</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">my_pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
+<p><img alt="PHOTONAI Learning Curve Plot" src="https://www.photon-ai.com/static/img/photon/learning_curves.png" title="PHOTONAI learning curve plot" /></p>
                 
               
               

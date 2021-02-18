@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -58,6 +58,11 @@
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
     <label class="md-overlay" for="__drawer"></label>
     <div data-md-component="skip">
+      
+        
+        <a href="#performance-constraints" class="md-skip">
+          Skip to content
+        </a>
       
     </div>
     <div data-md-component="announce">
@@ -333,7 +338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +582,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -651,6 +680,8 @@
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+        
       
       
       <a href="./" class="md-nav__link md-nav__link--active">
@@ -806,7 +837,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1458,54 +1489,102 @@
               </div>
             
             
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+    
+  
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
           
           <div class="md-content">
             <article class="md-content__inner md-typeset">
               
                 
                 
-                <h1>Performance Constraints</h1>
-<div class="photon-docu-header">
-    <p>
-        Integrating performance baselines and performance expectations in the hyperparameter optimization process is
-        furthermore helpful to increase the overall speed and efficiency. The user can specify to skip the testing of
-        a specific hyperparameter configuration in further inner-cross-validation folds if the given configuration
-        performs worse than a given static or dynamic threshold.
-    </p>
-</div>
-
-<div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_boston</span>
+                <h1 id="performance-constraints">Performance Constraints</h1>
+<p>Integrating performance baselines and performance expectations in the hyperparameter optimization process is
+furthermore helpful to increase the overall speed and efficiency. Further testing of
+a specific hyperparameter configuration in further inner-cross-validation folds can be skipped 
+if the given configuration performs worse than a given static or dynamic threshold.</p>
+<p>There are three types of contraints implemented in PHOTONAI:</p>
+<ul>
+<li><em>MinimumPerformanceConstraint</em>: the lower bound is the given threshold (e.g. accuracy of at least 0.8)</li>
+<li><em>BestPerformanceConstraint</em>: the lower bound (+- margin) is the so far best metric value </li>
+<li><em>DummyPerformanceConstraint</em>: the lower bound (+-margin) is the dummy performance of the specific metric</li>
+</ul>
+<p>The threshold is applied in three strategies:</p>
+<ul>
+<li><em>any</em>: Computation is skipped if any of the folds is worse than the threshold</li>
+<li><em>first</em>: Computation is skipped if the first fold performs worse than the threshold</li>
+<li><em>mean</em>: Computation is skipped if the mean of all folds computed so far is worse than the threshold</li>
+</ul>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_boston</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
 
 <span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">OutputSettings</span>
-<span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">MinimumPerformanceConstraint</span><span class="p">,</span> <span class="n">IntegerRange</span>
+<span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">MinimumPerformanceConstraint</span><span class="p">,</span> <span class="n">DummyPerformanceConstraint</span><span class="p">,</span> <span class="n">BestPerformanceConstraint</span><span class="p">,</span> <span class="n">IntegerRange</span>
 
-<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="c1"># DESIGN YOUR PIPELINE</span>
 <span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="n">name</span><span class="o">=</span><span class="s1">&#39;basic_svm_pipe_no_performance&#39;</span><span class="p">,</span>
-                    <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;sk_opt&#39;</span><span class="p">,</span>
-                    <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">},</span>
-                    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span> <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">],</span>
+                    <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;grid_search&#39;</span><span class="p">,</span>
+                    <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">,</span> <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">],</span>
                     <span class="n">best_config_metric</span><span class="o">=</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span>
                     <span class="n">outer_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">),</span>
+                    <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
                     <span class="n">use_test_set</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
                     <span class="n">verbosity</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
-                    <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./result_folder&#39;</span><span class="p">,</span>
+                    <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./tmp&#39;</span><span class="p">,</span>
                     <span class="n">output_settings</span><span class="o">=</span><span class="n">OutputSettings</span><span class="p">(</span><span class="n">mongodb_connect_url</span><span class="o">=</span><span class="s2">&quot;mongodb://localhost:27017/photon_results&quot;</span><span class="p">,</span>
                                                    <span class="n">save_output</span><span class="o">=</span><span class="kc">True</span><span class="p">),</span>
-                    <span class="n">performance_constraints</span><span class="o">=</span><span class="p">[</span><span class="n">MinimumPerformanceConstraint</span><span class="p">(</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span> <span class="mi">35</span><span class="p">,</span> <span class="s1">&#39;first&#39;</span><span class="p">),</span>
-                                             <span class="n">MinimumPerformanceConstraint</span><span class="p">(</span><span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span> <span class="mf">0.7</span><span class="p">,</span> <span class="s1">&#39;any&#39;</span><span class="p">)])</span>
-
+<span class="hll">                    <span class="n">performance_constraints</span><span class="o">=</span><span class="p">[</span><span class="n">DummyPerformanceConstraint</span><span class="p">(</span><span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">),</span>
+</span><span class="hll">                                             <span class="n">MinimumPerformanceConstraint</span><span class="p">(</span><span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span> <span class="mf">0.65</span><span class="p">,</span> <span class="s1">&#39;any&#39;</span><span class="p">),</span>
+</span><span class="hll">                                             <span class="n">BestPerformanceConstraint</span><span class="p">(</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;mean&#39;</span><span class="p">)])</span>
+</span>
 
 <span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">)</span>
 <span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;RandomForestRegressor&#39;</span><span class="p">,</span> <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_estimators&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">5</span><span class="p">,</span> <span class="mi">50</span><span class="p">)})</span>
 
-
-<span class="c1"># NOW TRAIN YOUR PIPELINE</span>
+<span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">my_pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
                 
               
               

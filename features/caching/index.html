@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -577,6 +577,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1468,10 +1492,12 @@
 <p>PHOTONAI offers a specialized caching that handles partially overlapping hyperparameter configurations 
 for nested cross-validation splits. This is particularly useful for reusing results from expensive computations. </p>
 <p>More generally, caching is useful whenever re-computation needs more time than loading data. </p>
-<p>It is easily enabled by adding the <em>cache_folder</em> parameter to the Hyperpipe.</p>
-<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<p>It is easily enabled by adding the <em>cache_folder</em> parameter to the <a href="../../api/base/hyperpipe">Hyperpipe</a>.</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
                  <span class="n">cache_folder</span><span class="o">=</span><span class="s2">&quot;./cache&quot;</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
                 
               
               

@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -338,7 +338,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -582,6 +582,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -802,7 +826,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1727,6 +1751,33 @@ objects that are added to the pipeline.</p>
 </tbody>
 </table>
 <p><strong>Examples:</strong></p>
+<table class="highlighttable">
+<tr>
+<td class="linenos">
+<div class="linenodiv">
+<pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20</pre>
+</div>
+</td>
+<td class="code">
 <div class="highlight">
 <pre><span></span><code><span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span>
 <span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">FloatRange</span>
@@ -1750,6 +1801,9 @@ objects that are added to the pipeline.</p>
 <span class="n">hyperpipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre>
 </div>
+</td>
+</tr>
+</table>
 <div class="doc doc-children">
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="photonai.base.hyperpipe.Hyperpipe.__init__">
@@ -1825,10 +1879,11 @@ objects that are added to the pipeline.</p>
 <p>In case an object is given:
     expects the object to have the following methods:</p>
 <ul>
-<li><code>next_config_generator</code>: returns a hyperparameter configuration in form of an dictionary containing
+<li><code>ask</code>: returns a hyperparameter configuration in form of an dictionary containing
     key-&gt;value pairs in the sklearn parameter encoding <code>model_name__parameter_name: parameter_value</code></li>
-<li><code>prepare</code>: takes a list of pipeline elements and their particular hyperparameters to test</li>
-<li><code>evaluate_recent_performance</code>: gets a tested config and the respective performance in order to
+<li><code>prepare</code>: takes a list of pipeline elements and their particular hyperparameters to prepare the
+             hyperparameter space</li>
+<li><code>tell</code>: gets a tested config and the respective performance in order to
     calculate a smart next configuration to process</li>
 </ul>
 </li>
@@ -2057,10 +2112,11 @@ does not perform better than the dummy performance.</p>
 
 <span class="sd">            - In case an object is given:</span>
 <span class="sd">                expects the object to have the following methods:</span>
-<span class="sd">                - `next_config_generator`: returns a hyperparameter configuration in form of an dictionary containing</span>
+<span class="sd">                - `ask`: returns a hyperparameter configuration in form of an dictionary containing</span>
 <span class="sd">                    key-&gt;value pairs in the sklearn parameter encoding `model_name__parameter_name: parameter_value`</span>
-<span class="sd">                - `prepare`: takes a list of pipeline elements and their particular hyperparameters to test</span>
-<span class="sd">                - `evaluate_recent_performance`: gets a tested config and the respective performance in order to</span>
+<span class="sd">                - `prepare`: takes a list of pipeline elements and their particular hyperparameters to prepare the</span>
+<span class="sd">                             hyperparameter space</span>
+<span class="sd">                - `tell`: gets a tested config and the respective performance in order to</span>
 <span class="sd">                    calculate a smart next configuration to process</span>
 
 <span class="sd">        metrics:</span>
@@ -2212,7 +2268,7 @@ does not perform better than the dummy performance.</p>
                                      <span class="n">optimizer_params</span><span class="o">=</span><span class="n">optimizer_params</span><span class="p">,</span>
                                      <span class="n">performance_constraints</span><span class="o">=</span><span class="n">performance_constraints</span><span class="p">)</span>
 
-    <span class="bp">self</span><span class="o">.</span><span class="n">optimization</span><span class="o">.</span><span class="n">sanity_check_metrics</span><span class="p">()</span>
+    <span class="c1"># self.optimization.sanity_check_metrics()</span>
 
     <span class="c1"># ====================== Caching and Parallelization ===========================</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">nr_of_processes</span> <span class="o">=</span> <span class="n">nr_of_processes</span>

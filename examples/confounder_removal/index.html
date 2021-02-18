@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -333,7 +333,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../../getting_started/algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -586,6 +586,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -806,7 +830,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../getting_started/hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1466,7 +1490,46 @@
                 
                   <h1>Remove confounders</h1>
                 
-                <div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
+                <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span> 1
+ 2
+ 3
+ 4
+ 5
+ 6
+ 7
+ 8
+ 9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
 <span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">KFold</span>
 
 <span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span>
@@ -1497,15 +1560,17 @@
 <span class="c1"># pipe += PipelineElement(&#39;SVC&#39;)</span>
 
 <span class="c1"># second, you can also specify the names of the variables that should be used in the confounder removal step</span>
-<span class="n">pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;ConfounderRemoval&#39;</span><span class="p">,</span> <span class="p">{},</span>
-                        <span class="n">standardize_covariates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="n">test_disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-                        <span class="n">confounder_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_radius&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_texture&#39;</span><span class="p">])</span>
+<span class="hll"><span class="n">pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;ConfounderRemoval&#39;</span><span class="p">,</span> <span class="p">{},</span>
+</span><span class="hll">                        <span class="n">standardize_covariates</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span class="hll">                        <span class="n">test_disabled</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+</span><span class="hll">                        <span class="n">confounder_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_radius&#39;</span><span class="p">,</span> <span class="s1">&#39;mean_texture&#39;</span><span class="p">])</span>
+</span>
 <span class="n">pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">)</span>
 
 <span class="c1"># those names must be keys in the kwargs dictionary</span>
-<span class="n">pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>  <span class="n">mean_radius</span><span class="o">=</span><span class="n">mean_radius</span><span class="p">,</span> <span class="n">mean_texture</span><span class="o">=</span><span class="n">mean_texture</span><span class="p">)</span> 
-</code></pre></div>
+<span class="hll"><span class="n">pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span>  <span class="n">mean_radius</span><span class="o">=</span><span class="n">mean_radius</span><span class="p">,</span> <span class="n">mean_texture</span><span class="o">=</span><span class="n">mean_texture</span><span class="p">)</span> 
+</span></code></pre></div>
+</td></tr></table>
                 
               
               
@@ -1539,13 +1604,13 @@
           </a>
         
         
-          <a href="../scikit_learn_mlp/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../compare_estimators/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Optimize a MLP
+                Compare estimators
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

@@ -9,12 +9,12 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
       
-        <title>Hyperparameter Optimizers - </title>
+        <title>Hyperparameter Optimization - </title>
       
     
     
@@ -84,7 +84,7 @@
         <div class="md-header-nav__topic">
           <span class="md-ellipsis">
             
-              Hyperparameter Optimizers
+              Hyperparameter Optimization
             
           </span>
         </div>
@@ -137,13 +137,15 @@
         
   
   
+    
+  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../.." class="md-tabs__link">
+      <a href="../.." class="md-tabs__link md-tabs__link--active">
         Getting Started
       </a>
     </li>
@@ -201,15 +203,13 @@
         
   
   
-    
-  
 
 
   
   
   
     <li class="md-tabs__item">
-      <a href="../../algorithms/algorithms_index/" class="md-tabs__link md-tabs__link--active">
+      <a href="../../algorithms/algorithms_index/" class="md-tabs__link">
         Algorithms
       </a>
     </li>
@@ -285,12 +285,14 @@
 
   
   
+    
+  
   
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" checked>
       
       <label class="md-nav__link" for="nav-1">
         Getting Started
@@ -333,7 +335,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -343,11 +345,18 @@
             
   
   
+    
   
-    <li class="md-nav__item">
-      <a href="./" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
         Hyperparameter Optimization
       </a>
+      
     </li>
   
 
@@ -577,6 +586,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -737,14 +770,12 @@
 
   
   
-    
-  
   
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
       
       <label class="md-nav__link" for="nav-5">
         Algorithms
@@ -797,18 +828,11 @@
             
   
   
-    
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
-      
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
-      
     </li>
   
 
@@ -1470,34 +1494,108 @@
 <h3>Grid Search</h3>
 <p>An exhaustive searching through a manually specified subset of the hyperparameter space. The grid is defined by 
 a finite list for each hyperparameter. </p>
-<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> 
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> 
                  <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;grid_search&#39;</span><span class="p">)</span>
 </code></pre></div>
+</td></tr></table>
 <h3>Random Grid Search</h3>
 <p>Random sampling of a manually specified subset of the hyperparameter space. The grid is defined by 
 a finite list for each hyperparameter. Then, a specified number of random configurations from this grid is tested</p>
-<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> 
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> 
                  <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;random_grid_search&#39;</span><span class="p">,</span>
                  <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">})</span>
 </code></pre></div>
-<h3>Timeboxed Random Grid Search</h3>
+</td></tr></table>
 <h3>Random Search</h3>
+<p>A grid-free selecion of configurations based on the hyperparameter space. In the case of numerical parameters, 
+decisions are made only on the basis of the interval limits. The creation of configurations is limited 
+by time or a maximum number of runs.
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> 
+                 <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;random_grid_search&#39;</span><span class="p">,</span>
+                 <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">,</span>
+                                   <span class="s1">&#39;limit_in_minutes&#39;</span><span class="p">:</span> <span class="mi">20</span><span class="p">})</span>
+</code></pre></div>
+</td></tr></table></p>
 <h3>Scikit-Optimize</h3>
+<p>Scikit-Optimize, or skopt, is a simple and efficient library to
+minimize (very) expensive and noisy black-box functions.
+It implements several methods for sequential model-based optimization.
+skopt aims to be accessible and easy to use in many contexts.</p>
+<p>Scikit-optimize usage and implementation details available <a href="https://scikit-optimize.github.io/stable/">here</a>.
+A detailed parameter documentation <a href="https://scikit-optimize.github.io/stable/modules/generated/skopt.optimizer.Optimizer.html#skopt.optimizer.Optimizer">here.</a>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> 
+                 <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;sk_opt&#39;</span><span class="p">,</span>
+                 <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">,</span>
+                                   <span class="s1">&#39;acq_func&#39;</span><span class="p">:</span> <span class="s1">&#39;LCB&#39;</span><span class="p">,</span>
+                                   <span class="s1">&#39;acq_func_kwargs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;kappa&#39;</span><span class="p">:</span> <span class="mf">1.96</span><span class="p">}})</span>
+</code></pre></div>
+</td></tr></table></p>
 <h3>Nevergrad</h3>
+<p>Nevergrad is a gradient-free optimization platform. 
+Thus, this package is suitable for optimizing over the hyperparamter space.
+As a great advantage, evolutionary algorithms are implemented here 
+in addition to Bayesian techniques.</p>
+<p>Nevergrad usage and implementation details available <a href="https://facebookresearch.github.io/nevergrad/">here</a>.
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">import</span> <span class="nn">nevergrad</span> <span class="k">as</span> <span class="nn">ng</span>
+<span class="c1"># list of all available nevergrad optimizer</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">ng</span><span class="o">.</span><span class="n">optimizers</span><span class="o">.</span><span class="n">registry</span><span class="o">.</span><span class="n">values</span><span class="p">()))</span>
+<span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span> 
+                    <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;nevergrad&#39;</span><span class="p">,</span>
+                    <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;facade&#39;</span><span class="p">:</span> <span class="s1">&#39;NGO&#39;</span><span class="p">,</span> <span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">30</span><span class="p">})</span>
+</code></pre></div>
+</td></tr></table></p>
 <h3>Smac</h3>
+
+<p>SMAC (sequential model-based algorithm configuration) is a
+versatile tool for optimizing algorithm parameters.
+The main core consists of Bayesian Optimization in
+combination with an aggressive racing mechanism to efficiently
+decide which of two configurations performs better.</p>
+<p>SMAC usage and implementation details available <a href="https://automl.github.io/SMAC3/master/quickstart.html">here</a>.</p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code>        <span class="n">my_pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+                            <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;smac&#39;</span><span class="p">,</span>
+                            <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;facade&quot;</span><span class="p">:</span> <span class="s2">&quot;SMAC4BO&quot;</span><span class="p">,</span>
+                                              <span class="s2">&quot;wallclock_limit&quot;</span><span class="p">:</span> <span class="mf">60.0</span><span class="o">*</span><span class="mi">10</span><span class="p">,</span>  <span class="c1"># seconds</span>
+                                              <span class="s2">&quot;ta_run_limit&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">},</span>  <span class="c1"># limit of configurations</span>
+                            <span class="p">)</span>
+</code></pre></div>
+</td></tr></table>
 <h3>Switch Optimizer</h3>
 <p>This optimizer is special, as it uses the strategies above to optimizes the same dataflow for different 
-learning algorithms in a switch ("OR") element at the end of the pipeline. </p>
+learning algorithms in a <a href="../../api/base/switch">switch ("OR") element</a> at the end of the pipeline. </p>
 <p>For example you can use bayesian optimization for each learning algorithm and select that each of the algorithms
 gets 25 configurations to be tested. </p>
 <p>This is different to a global optimization, in which, after an initial exploration phase, computational resources 
 are dedicated to the best performing learning algorithm only. </p>
 <p>By equally distributing computational ressources to each learning algorithms, better comparability is achieved 
 in-between the algorithms. This can according to the use case be desirable.<br />
-<div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s2">&quot;...&quot;</span><span class="p">,</span>
                  <span class="n">optimizer</span><span class="o">=</span><span class="s2">&quot;switch&quot;</span><span class="p">,</span>
                  <span class="n">optimizer_params</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;name&#39;</span><span class="p">:</span> <span class="s1">&#39;sk_opt&#39;</span><span class="p">,</span> <span class="s1">&#39;n_configurations&#39;</span><span class="p">:</span> <span class="mi">25</span><span class="p">})</span>
-</code></pre></div></p>
+</code></pre></div>
+</td></tr></table></p>
                 
               
               
@@ -1516,7 +1614,7 @@ in-between the algorithms. This can according to the use case be desirable.<br /
     <div class="md-footer-nav">
       <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
         
-          <a href="../../algorithms/estimators/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
+          <a href="../algorithm_index/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
             <div class="md-footer-nav__button md-icon">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
             </div>
@@ -1525,19 +1623,19 @@ in-between the algorithms. This can according to the use case be desirable.<br /
                 <span class="md-footer-nav__direction">
                   Previous
                 </span>
-                Estimators
+                Access established ml-packages
               </div>
             </div>
           </a>
         
         
-          <a href="../../algorithms/registry/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../custom_algorithm/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
                   Next
                 </span>
-                Registry
+                Include custom algorithm
               </div>
             </div>
             <div class="md-footer-nav__button md-icon">

@@ -9,7 +9,7 @@
       
       
       
-      <link rel="shortcut icon" href="../../assets/images/favicon.png">
+      <link rel="shortcut icon" href="../../favicon.png">
       <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.5">
     
     
@@ -60,7 +60,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#class-structure" class="md-skip">
+        <a href="#reasons-to-use-photonai" class="md-skip">
           Skip to content
         </a>
       
@@ -333,6 +333,8 @@
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
       
+        
+      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           PHOTONAI Framework
@@ -347,6 +349,8 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -355,8 +359,15 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class-structure" class="md-nav__link">
-    Class structure
+  <a href="#class-diagram" class="md-nav__link">
+    Class diagram
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-structure" class="md-nav__link">
+    Basic structure
   </a>
   
 </li>
@@ -374,7 +385,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../algorithms/algorithms_index/" class="md-nav__link">
+      <a href="../algorithm_index/" class="md-nav__link">
         Access established ml-packages
       </a>
     </li>
@@ -618,6 +629,30 @@
   
   
     <li class="md-nav__item">
+      <a href="../../examples/compare_estimators/" class="md-nav__link">
+        Compare estimators
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../examples/permutation_importances/" class="md-nav__link">
+        Permutation Importances
+      </a>
+    </li>
+  
+
+          
+            
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../examples/scikit_learn_mlp/" class="md-nav__link">
         Optimize a MLP
       </a>
@@ -838,7 +873,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../hpos/" class="md-nav__link">
+      <a href="../../algorithms/hpos/" class="md-nav__link">
         Hyperparameter Optimizers
       </a>
     </li>
@@ -1498,6 +1533,8 @@
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
   
   
+    
+  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1506,8 +1543,15 @@
     <ul class="md-nav__list" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#class-structure" class="md-nav__link">
-    Class structure
+  <a href="#class-diagram" class="md-nav__link">
+    Class diagram
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#basic-structure" class="md-nav__link">
+    Basic structure
   </a>
   
 </li>
@@ -1525,26 +1569,27 @@
               
                 
                 
-                <h1>Reasons to Use PHOTONAI</h1>
-<ul class="uk-list">
+                <h1 id="reasons-to-use-photonai">Reasons to Use PHOTONAI</h1>
+<ul>
 <li>It allows researchers to build, optimize and evaluate machine learning pipelines with 
-    few lines of code</li>
-<li>It automates the training, optimization and test workflow according to user-defined parameters. </li>
-<li>It offers convenient access to established machine learning toolboxes such as sklearn</li>
-<li>It is especially well-suited for researchers with little programming experience. </li>
-<li>Users can select and change hyperparameter optimization strategies by keywords</li>
-<li> It is built on clean interfaces and therefore fully customizable.</li>
+  few lines of code.</li>
+<li>It automates the training, optimization and test workflow according to user-defined parameters.</li>
+<li>It offers convenient access to established machine learning toolboxes such as sklearn.</li>
+<li>It facilitates machine learning applications for researchers with little programming experience.</li>
+<li>Users can select and change hyperparameter optimization strategies with simple keywords.</li>
+<li>It is built on clean interfaces and therefore fully customizable.</li>
 <li>It is easily extendable with custom algorithms, e.g. for handling biomedical data modalities.</li>
 <li>It acts as a unifying framework to help researchers share and reuse code across projects. </li>
-<li>It offers both simple and parallel pipeline streams for comparing algorithms, combining features and building ensembles</li>
-<li>It extends existing pipeline implementations to enable the developer, e.g. to change the dataset (data augmentation) 
-    within the training and testing cross validation splits at runtime.</li>
+<li>It offers both simple and parallel pipeline streams for comparing algorithms, 
+  combining features and building ensembles.</li>
+<li>It extends existing pipeline implementations to enable the developer, e.g. to change the dataset (data augmentation
+  within the training and testing cross validation splits at runtime.</li>
 <li>It enables rapid prototyping in contexts which require iterative evaluation of novel machine learning models.</li>
-<li>and many others...</li>
 </ul>
-
-<p><img alt="Basic PHOTONAI class hierachy" src="https://www.photon-ai.com/static/img/architecture.jpg" title="PHOTONAI class diagram" /></p>
-<h2 id="class-structure">Class structure</h2>
+<p>and many others...</p>
+<h2 id="class-diagram">Class diagram</h2>
+<p><img alt="Basic PHOTONAI class hierachy" src="https://www.photon-ai.com/static/img/photon/architecture.jpg" title="PHOTONAI class diagram" /></p>
+<h2 id="basic-structure">Basic structure</h2>
 <p>The PHOTONAI framework is built to accelerate and simplify the design of machine learning pipelines and automatize the training, testing and hyperparameter optimization process. The most important class is the <em>Hyperpipe</em>, as it is used to parametrize and control both the pipeline and the training and testing workflow. The <em>Pipeline</em> streams data through a sequence of <em>PipelineElements</em>, the latter of which represent either established or custom algorithm implementations (<em>BaseElement</em>). <em>PipelineElements</em> can share a position within the data stream via an And-Operation (<em>Stack</em>), an Or-Operation (<em>Switch</em>) or represent a parallel sub-pipeline (<em>Branch</em>)</p>
                 
               
@@ -1579,7 +1624,7 @@
           </a>
         
         
-          <a href="../../algorithms/algorithms_index/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
+          <a href="../algorithm_index/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
             <div class="md-footer-nav__title">
               <div class="md-ellipsis">
                 <span class="md-footer-nav__direction">
