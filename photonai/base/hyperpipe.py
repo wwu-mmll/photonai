@@ -469,7 +469,7 @@ class Hyperpipe(BaseEstimator):
                                          optimizer_params=optimizer_params,
                                          performance_constraints=performance_constraints)
 
-        self.optimization.sanity_check_metrics()
+        # self.optimization.sanity_check_metrics()
 
         # ====================== Caching and Parallelization ===========================
         self.nr_of_processes = nr_of_processes

@@ -23,13 +23,12 @@ class Optimization:
         self._optimizer_input = ''
         self.optimizer_input_str = optimizer_input
         self.optimizer_params = optimizer_params
-        self.metrics = metrics
         self._best_config_metric = ''
-        self.maximize_metric = True
-        self.best_config_metric = best_config_metric
         self.performance_constraints = performance_constraints
-
-
+        self.metrics = None
+        self.maximize_metric = None
+        self.best_config_metric = None
+        self.sanity_check_metrics(metrics, best_config_metric)
 
     @property
     def best_config_metric(self):
@@ -52,7 +51,30 @@ class Optimization:
                 raise ValueError("Optimizer " + value + " not supported right now.")
         self._optimizer_input = value
 
-    def sanity_check_metrics(self):
+    def sanity_check_metrics(self, metrics, best_config_metric):
+
+        # first of all register all custom elements, if any
+        if best_config_metric is not None and not isinstance(best_config_metric, str):
+            best_config_metric = Scorer.register_custom_metric(best_config_metric)
+
+        if metrics is not None and len(metrics) > 0:
+            for i in range(len(metrics)):
+                if not isinstance(metrics[i], str):
+                    metrics[i] = Scorer.register_custom_metric(metrics[i])
+
+        metrics = list(filter(None, metrics))
+        self.metrics = metrics
+        self.best_config_metric = best_config_metric
+
+        if self.metrics is None or len(self.metrics) == 0:
+            if self.best_config_metric is None:
+                error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
+                            "the best_config_metric so that PHOTON which optimizes for"
+                logger.error(error_msg)
+                raise ValueError(error_msg)
+            else:
+                # if only best_config_metric is given, copy if to list of metrics
+                self.metrics = [self.best_config_metric]
 
         if self.best_config_metric is not None:
             if isinstance(self.best_config_metric, list):
@@ -62,27 +84,10 @@ class Optimization:
                 self.best_config_metric = self.best_config_metric[0]
                 logger.warning(warning_text)
                 raise Warning(warning_text)
-            elif not isinstance(self.best_config_metric, str):
-                self.best_config_metric = Scorer.register_custom_metric(self.best_config_metric)
 
-            if self.metrics is None:
-                # if only best_config_metric is given, copy if to list of metrics
-                self.metrics = [self.best_config_metric]
-            else:
-                # if best_config_metric is not given in metrics list, copy it to list
-                if self.best_config_metric not in self.metrics:
-                    self.metrics.append(self.best_config_metric)
-
-        if self.metrics is not None and len(self.metrics) > 0:
-            for i in range(len(self.metrics)):
-                if not isinstance(self.metrics[i], str):
-                    self.metrics[i] = Scorer.register_custom_metric(self.metrics[i])
-            self.metrics = list(filter(None, self.metrics))
-        else:
-            error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
-                        "the best_config_metric so that PHOTON which optimizes for"
-            logger.error(error_msg)
-            raise ValueError(error_msg)
+            # if best_config_metric is not given in metrics list, copy it to list
+            if self.best_config_metric not in self.metrics:
+                self.metrics.append(self.best_config_metric)
 
         if self.best_config_metric is None and self.metrics is not None and len(self.metrics) > 0:
             self.best_config_metric = self.metrics[0]
