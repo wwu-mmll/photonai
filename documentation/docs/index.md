@@ -7,10 +7,15 @@ pip install photonai
 ```
 
 <h2>2. Setup New Analysis</h2>
-Start by creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs. 
+Start by importing some utilities and creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs. 
 
 ```python
-pipe = Hyperpipe('basic_pipe', project_folder='path/to/project')
+from sklearn.model_selection import ShuffleSplit, KFold
+from sklearn.datasets import load_breast_cancer
+from photonai.base import Hyperpipe, PipelineElement, Switch
+from photonai.optimization import IntegerRange, FloatRange
+
+pipe = Hyperpipe('basic_pipe', project_folder='./')
 ```
 
 
@@ -21,22 +26,21 @@ Particularly, you can choose the hyperparameter optimization strategy, set param
 and choose the performance metric to minimize or maximize, respectively.
     
 ```python 
-pipe = Hyperpipe('basic_pipe', project_folder='path/to/project',
+pipe = Hyperpipe('basic_pipe', project_folder='./',
 
                   # choose hyperparameter optimization strategy
                   optimizer='random_grid_search',
 
                   # PHOTONAI automatically calculates your preferred metrics
-                  metrics=['mean_squared_error', 'pearson_correlation',
-                           'mean_absolute_error', 'explained_variance'],
+                  metrics=['accuracy', 'balanced_accuracy', 'f1_score'],
 
                   # this metrics selects the best hyperparameter configuration
                   # in this case mean squared error is minimized
-                  best_config_metric='mean_squared_error',
+                  best_config_metric='f1_score',
 
                   # select cross validation strategies
                   outer_cv=ShuffleSplit(n_splits=3, test_size=0.2),
-                  inner_cv=KFold(n_splits=10),
+                  inner_cv=KFold(n_splits=10))
 ``` 
 
 <h2>4. Build custom pipeline</h2>
@@ -45,8 +49,6 @@ over- or undersampling algorithms in simple or parallel data streams. You can in
 custom algorithms or choose from our wide range of pre-registered algorithms from established toolboxes.
 
 ```python
-# access the scikit-learn implementations via keywords
-# at the same time define the hyperparameters to optimize for each element
 pipe += PipelineElement('StandardScaler')
 
 pipe += PipelineElement('PCA',
@@ -56,9 +58,13 @@ pipe += PipelineElement('ImbalancedDataTransformer',
                         hyperparameters={'method_name': ['RandomUnderSampler',
                                                          'RandomOverSampler',
                                                          'SMOTE']})
+
 or_element = Switch('EstimatorSwitch')
-or_element += PipelineElement('RandomForestClassifier', {'n_estimators': IntegerRange(2, 5)}) 
-or_element += PipelineElement('SVC', {'C': FloatRange(0.5, 10), 'kernel': ['linear', 'rbf']})
+or_element += PipelineElement('RandomForestClassifier',
+                              hyperparameters={'min_samples_split': IntegerRange(2, 30)})
+or_element += PipelineElement('SVC',
+                              hyperparameters={'C': FloatRange(0.5, 10),
+                                               'kernel': ['linear', 'rbf']})
 
 pipe += or_element
 ```
@@ -70,7 +76,7 @@ best performances so far.
 
 
 ```python
-X, y = load_boston(return_X_y=True)
+X, y = load_breast_cancer(return_X_y=True)
 pipe.fit(X, y)
 ```
 
