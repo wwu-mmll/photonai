@@ -104,7 +104,7 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         self.method = desired_class(**kwargs)
 
     def fit_transform(self, X, y):
-        return self.method.fit_sample(X, y)
+        return self.method.fit_resample(X, y)
 
     #  define an alias for imblearn consistency
     fit_sample = fit_transform

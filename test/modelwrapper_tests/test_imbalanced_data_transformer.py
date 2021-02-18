@@ -30,11 +30,11 @@ class ImbalancedDataTransformTest(BaseModelWrapperTest):
         """
         sampling_strategy = {0: 9, 1: 12}
         imbalanced_data_transformer = ImbalancedDataTransformer(method_name='SMOTE',
-                                                              sampling_strategy = {0: 9, 1: 12},
-                                                              random_state = test_smote.RND_SEED)
+                                                                sampling_strategy = {0: 9, 1: 12},
+                                                                random_state = test_smote.RND_SEED)
 
         # test_sample_regular_half() -> smote
-        X_resampled, y_resampled = imbalanced_data_transformer.fit_transform(test_smote.X,test_smote.Y)
+        X_resampled, y_resampled = imbalanced_data_transformer.fit_transform(test_smote.X, test_smote.Y)
         X_gt = np.array([[0.11622591, -0.0317206], [0.77481731, 0.60935141], [
             1.25192108, -0.22367336
         ], [0.53366841, -0.30312976], [1.52091956, -0.49283504], [
