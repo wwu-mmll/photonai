@@ -1496,8 +1496,18 @@
 </code></pre></div>
 </td></tr></table>
 <h2>2. Setup New Analysis</h2>
-<p>Start by creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs. </p>
-<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;path/to/project&#39;</span><span class="p">)</span>
+<p>Start by importing some utilities and creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs. </p>
+<table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
+2
+3
+4
+5
+6</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="kn">from</span> <span class="nn">sklearn.model_selection</span> <span class="kn">import</span> <span class="n">ShuffleSplit</span><span class="p">,</span> <span class="n">KFold</span>
+<span class="kn">from</span> <span class="nn">sklearn.datasets</span> <span class="kn">import</span> <span class="n">load_breast_cancer</span>
+<span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">Hyperpipe</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">Switch</span>
+<span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">IntegerRange</span><span class="p">,</span> <span class="n">FloatRange</span>
+
+<span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
 <h2>3. Define training, optimization and testing parameters</h2>
@@ -1518,23 +1528,21 @@ and choose the performance metric to minimize or maximize, respectively.</p>
 12
 13
 14
-15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;path/to/project&#39;</span><span class="p">,</span>
+15</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">=</span> <span class="n">Hyperpipe</span><span class="p">(</span><span class="s1">&#39;basic_pipe&#39;</span><span class="p">,</span> <span class="n">project_folder</span><span class="o">=</span><span class="s1">&#39;./&#39;</span><span class="p">,</span>
 
                   <span class="c1"># choose hyperparameter optimization strategy</span>
                   <span class="n">optimizer</span><span class="o">=</span><span class="s1">&#39;random_grid_search&#39;</span><span class="p">,</span>
 
                   <span class="c1"># PHOTONAI automatically calculates your preferred metrics</span>
-                  <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span> <span class="s1">&#39;pearson_correlation&#39;</span><span class="p">,</span>
-                           <span class="s1">&#39;mean_absolute_error&#39;</span><span class="p">,</span> <span class="s1">&#39;explained_variance&#39;</span><span class="p">],</span>
+                  <span class="n">metrics</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;accuracy&#39;</span><span class="p">,</span> <span class="s1">&#39;balanced_accuracy&#39;</span><span class="p">,</span> <span class="s1">&#39;f1_score&#39;</span><span class="p">],</span>
 
                   <span class="c1"># this metrics selects the best hyperparameter configuration</span>
                   <span class="c1"># in this case mean squared error is minimized</span>
-                  <span class="n">best_config_metric</span><span class="o">=</span><span class="s1">&#39;mean_squared_error&#39;</span><span class="p">,</span>
+                  <span class="n">best_config_metric</span><span class="o">=</span><span class="s1">&#39;f1_score&#39;</span><span class="p">,</span>
 
                   <span class="c1"># select cross validation strategies</span>
                   <span class="n">outer_cv</span><span class="o">=</span><span class="n">ShuffleSplit</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">test_size</span><span class="o">=</span><span class="mf">0.2</span><span class="p">),</span>
-                  <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">10</span><span class="p">),</span>
+                  <span class="n">inner_cv</span><span class="o">=</span><span class="n">KFold</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">10</span><span class="p">))</span>
 </code></pre></div>
 </td></tr></table>
 <h2>4. Build custom pipeline</h2>
@@ -1556,9 +1564,9 @@ custom algorithms or choose from our wide range of pre-registered algorithms fro
 13
 14
 15
-16</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="c1"># access the scikit-learn implementations via keywords</span>
-<span class="c1"># at the same time define the hyperparameters to optimize for each element</span>
-<span class="n">pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">)</span>
+16
+17
+18</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;StandardScaler&#39;</span><span class="p">)</span>
 
 <span class="n">pipe</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;PCA&#39;</span><span class="p">,</span>
                         <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;n_components&#39;</span><span class="p">:</span> <span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.8</span><span class="p">,</span> <span class="n">step</span><span class="o">=</span><span class="mf">0.1</span><span class="p">)})</span>
@@ -1567,9 +1575,13 @@ custom algorithms or choose from our wide range of pre-registered algorithms fro
                         <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;method_name&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;RandomUnderSampler&#39;</span><span class="p">,</span>
                                                          <span class="s1">&#39;RandomOverSampler&#39;</span><span class="p">,</span>
                                                          <span class="s1">&#39;SMOTE&#39;</span><span class="p">]})</span>
+
 <span class="n">or_element</span> <span class="o">=</span> <span class="n">Switch</span><span class="p">(</span><span class="s1">&#39;EstimatorSwitch&#39;</span><span class="p">)</span>
-<span class="n">or_element</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;RandomForestClassifier&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;n_estimators&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">)})</span> 
-<span class="n">or_element</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">,</span> <span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span> <span class="s1">&#39;kernel&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;rbf&#39;</span><span class="p">]})</span>
+<span class="n">or_element</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;RandomForestClassifier&#39;</span><span class="p">,</span>
+                              <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;min_samples_split&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">30</span><span class="p">)})</span>
+<span class="n">or_element</span> <span class="o">+=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">,</span>
+                              <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;C&#39;</span><span class="p">:</span> <span class="n">FloatRange</span><span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+                                               <span class="s1">&#39;kernel&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;linear&#39;</span><span class="p">,</span> <span class="s1">&#39;rbf&#39;</span><span class="p">]})</span>
 
 <span class="n">pipe</span> <span class="o">+=</span> <span class="n">or_element</span>
 </code></pre></div>
@@ -1579,7 +1591,7 @@ custom algorithms or choose from our wide range of pre-registered algorithms fro
 You will see an extensive output to monitor the hyperparameter optimization progress, see the results and track the
 best performances so far.</p>
 <table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span>1
-2</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+2</pre></div></td><td class="code"><div class="highlight"><pre><span></span><code><span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_breast_cancer</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 <span class="n">pipe</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">)</span>
 </code></pre></div>
 </td></tr></table>
