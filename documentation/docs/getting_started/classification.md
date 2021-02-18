@@ -7,6 +7,6 @@
 </div>
 
 ``` python
-{% include "basic/classification.py" %} 
+{% include "examples/basic/classification.py" %} 
 
 ```

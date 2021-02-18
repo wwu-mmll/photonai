@@ -6,10 +6,10 @@ Currently, you can only optimize the PipelineSwitch using [Grid Search](../../ap
 In this example, we add two different transformer elements and two different estimators, and PHOTONAI will 
 evaluate the best choices including the respective hyperparameters.
 
-![PHOTONAI Switch](https://www.photon-ai.com/static/img/switch.jpg "PHOTONAI switch pipeline element")
+![PHOTONAI Switch](https://www.photon-ai.com/static/img/photon/switch.jpg "PHOTONAI switch pipeline element")
 
 
 ``` python
-{% include "basic/switch.py" %}
+{% include "examples/basic/switch.py" %}
 
 ```

@@ -9,9 +9,9 @@ feature matrix. Additionally, you can train several learning algorithms with the
 fashion and concatenate their predictions to a prediction matrix on which you can apply further processing like
 voting strategies.
 
-![PHOTONAI Stack](https://www.photon-ai.com/static/img/stack.jpg "PHOTONAI stack pipeline element")
+![PHOTONAI Stack](https://www.photon-ai.com/static/img/photon/stack.jpg "PHOTONAI stack pipeline element")
 
 ``` python
-{% include "basic/stack.py" %}
+{% include "examples/basic/stack.py" %}
 
 ```

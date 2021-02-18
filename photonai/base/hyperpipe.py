@@ -313,10 +313,11 @@ class Hyperpipe(BaseEstimator):
 
                 - In case an object is given:
                     expects the object to have the following methods:
-                    - `next_config_generator`: returns a hyperparameter configuration in form of an dictionary containing
+                    - `ask`: returns a hyperparameter configuration in form of an dictionary containing
                         key->value pairs in the sklearn parameter encoding `model_name__parameter_name: parameter_value`
-                    - `prepare`: takes a list of pipeline elements and their particular hyperparameters to test
-                    - `evaluate_recent_performance`: gets a tested config and the respective performance in order to
+                    - `prepare`: takes a list of pipeline elements and their particular hyperparameters to prepare the
+                                 hyperparameter space
+                    - `tell`: gets a tested config and the respective performance in order to
                         calculate a smart next configuration to process
 
             metrics:
@@ -515,6 +516,9 @@ class Hyperpipe(BaseEstimator):
 
             self.outer_folds = None
             self.inner_folds = dict()
+
+    def __str__(self):
+        return "Hyperpipe {}".format(self.name)
 
     class Data:
 

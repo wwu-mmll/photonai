@@ -10,6 +10,6 @@
 </div>
 
 ``` python hl_lines="30 31 32"
-{% include "basic/imbalanced_data.py" %} 
+{% include "examples/basic/imbalanced_data.py" %} 
 ```
 

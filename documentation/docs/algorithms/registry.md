@@ -9,6 +9,6 @@
 </div>
 
 ``` python
-{% include "basic/register_elements.py" %} 
+{% include "examples/basic/register_elements.py" %} 
 
 ```

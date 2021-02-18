@@ -8,5 +8,5 @@ transformations have been applied. Return values from the delegate functions are
 so that after returning from the delegate call, the original data is directly passed to the next processing step.
 
 ```python hl_lines="7-8 32"
-{% include '/advanced/callbacks.py' %}
+{% include 'examples/advanced/callbacks.py' %}
 ```

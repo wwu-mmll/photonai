@@ -146,9 +146,9 @@ class OuterFoldManager:
         logger.stars()
 
         self._prepare_data(X, y, **kwargs)
+        self._prepare_optimization()
         self._fit_dummy()
         self._generate_inner_folds()
-        self._prepare_optimization()
 
         outer_fold_fit_start_time = datetime.datetime.now()
         self.best_metric_yet = None

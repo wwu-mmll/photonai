@@ -1,4 +1,4 @@
 ``` python
-{% include "basic/classifier_ensemble.py" %} 
+{% include "examples/basic/classifier_ensemble.py" %} 
 
 ```

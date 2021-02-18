@@ -8,6 +8,6 @@
 </div>
 
 ``` python
-{% include "advanced/custom_elements/custom_estimator.py" %} 
+{% include "examples/advanced/custom_elements/custom_estimator.py" %} 
 
 ```

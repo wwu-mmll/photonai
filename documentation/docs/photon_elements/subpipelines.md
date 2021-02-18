@@ -12,6 +12,6 @@
 </div>
 
 ``` python
-{% include "advanced/pipeline_branches.py" %} 
+{% include "examples/advanced/pipeline_branches.py" %} 
 
 ```

@@ -7,7 +7,7 @@ In the following we will demonstrate an example to integrate a custom transforme
 
 First, implement your data processing logic like this.
 ```python
-{% include '/advanced/custom_elements/custom_transformer.py' %}
+{% include 'examples//advanced/custom_elements/custom_transformer.py' %}
 ```
 
 Afterwards, register your element with the photon registry like this. 

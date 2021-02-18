@@ -7,6 +7,6 @@
 </div>
 
 ``` python
-{% include "basic/regression.py" %} 
+{% include "examples/basic/regression.py" %} 
 
 ```

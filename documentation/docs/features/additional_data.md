@@ -4,5 +4,5 @@ effect of covariates. In PHOTONAI, additional data can be streamed through the p
 all pipeline steps while - importantly - being matched to the (nested) cross-validation splits.
 
 ```python
-{% include '/advanced/additional_data.py' %}
+{% include 'examples//advanced/additional_data.py' %}
 ```

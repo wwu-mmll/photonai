@@ -1271,28 +1271,12 @@ class Switch(PipelineElement):
 
     If for example you want to find out if Preprocessing A
     or Preprocessing B is better at this position in the pipe.
-    Or you want to test if a tree outperforms the good old SVM.
+    Or you want to test if a rnadom forest outperforms the good old SVM.
 
     ATTENTION: This class is a construct that may be convenient
     but is not suitable for any complex optimizations.
-    Currently it only works for grid_search and the derived
-    optimization strategies. USE THIS ONLY FOR RAPID PROTOTYPING
-    AND PRELIMINARY RESULTS.
-
-    The class acts as if it is a single entity. Tt joins the
-    hyperparamater combinations of each encapsulated element to
-    a single, big combination grid. Each hyperparameter
-    combination from that grid gets a number. Then the Switch
-    object publishes the numbers to be chosen as the object's
-    hyperparameter. When a new number is chosen from the
-    optimizer, it internally activates the belonging element
-    and sets the element's parameter to the hyperparameter
-    combination. In that way, each of the elements is tested
-    in all its configurations at the same position in the
-    pipeline. From the outside, the process and the optimizer
-    only sees one parameter of the Switch, that is
-    the an integer indicating which item of the hyperparameter
-    combination grid is currently active.
+    Currently optimization works for grid_search, random search and
+    smac and the specializes switch optimizer.
 
     Example:
         ```

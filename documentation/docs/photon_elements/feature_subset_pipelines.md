@@ -1,4 +1,4 @@
 ``` python
-{% include "basic/data_integration.py" %} 
+{% include "examples/basic/data_integration.py" %} 
 
 ```

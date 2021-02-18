@@ -18,8 +18,8 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         Set default start setting for all tests.
         """
         self.constraint_object = PhotonBaseConstraint(strategy='first',
-                                                             metric='mean_squared_error',
-                                                             margin=0.1)
+                                                      metric='mean_squared_error',
+                                                      margin=0.1)
 
         metrics_list = ["f1_score", "mean_squared_error"]
         self.dummy_config_item = MDBConfig()
@@ -67,8 +67,6 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         with self.assertRaises(KeyError):
             PhotonBaseConstraint(strategy='last', metric='f1_score')
 
-
-
     def test_greater_is_better(self):
         """
         Test for set different metrics (score/error).
@@ -87,19 +85,18 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         # reutrns every times False if the metric does not exists
         with warnings.catch_warnings(record=True) as w:
             self.constraint_object.metric = "own_metric"
-            self.assertEqual(self.constraint_object.shall_continue(self.dummy_config_item), True)
+            self.assertTrue(self.constraint_object.shall_continue(self.dummy_config_item))
             assert any("The metric is not known." in s for s in [e.message.args[0] for e in w])
 
         # dummy_item with random values
         # score
         self.constraint_object.metric = "f1_score"
         self.constraint_object.threshold = 0
-        self.assertEqual(self.constraint_object.shall_continue(self.dummy_config_item), True)
+        self.assertTrue(self.constraint_object.shall_continue(self.dummy_config_item))
 
         self.constraint_object.threshold = 1
         self.constraint_object.strategy = "mean"
-        self.assertEqual(self.constraint_object.shall_continue(self.dummy_config_item),
-                         (self.constraint_object.threshold==0))
+        self.assertFalse(self.constraint_object.shall_continue(self.dummy_config_item))
 
     def test_copy_me(self):
         """
@@ -107,6 +104,7 @@ class PhotonBaseConstraintTest(unittest.TestCase):
         """
         new_constraint_object = self.constraint_object.copy_me()
         self.assertDictEqual(new_constraint_object.__dict__,self.constraint_object.__dict__)
+
 
 class MinimumPerformanceTest(PhotonBaseConstraintTest):
 
@@ -159,7 +157,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
 
     def setUp(self):
         super(BestPerformanceTest, self).setUp()
-        self.constraint_object = BestPerformanceConstraint(strategy='mean', metric='mean_squared_error')
+        self.constraint_object = BestPerformanceConstraint(strategy='mean', margin=-0.2, metric='mean_squared_error')
 
     def test_shall_continue(self):
         X, y = load_boston(return_X_y=True)
@@ -168,7 +166,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
         # DESIGN YOUR PIPELINE
         my_pipe = Hyperpipe(name='performance_pipe',
                             optimizer='random_search',
-                            optimizer_params={'limit_in_minutes':1},
+                            optimizer_params={'limit_in_minutes': 1},
                             metrics=['mean_squared_error'],
                             best_config_metric='mean_squared_error',
                             inner_cv=KFold(n_splits=inner_fold_length),

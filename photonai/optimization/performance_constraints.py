@@ -1,5 +1,6 @@
 from enum import Enum
 import numpy as np
+import numbers
 import inspect
 import warnings
 
@@ -47,6 +48,12 @@ class PhotonBaseConstraint:
         self.metric = metric
         self.threshold = threshold
         self.margin = margin
+
+        if not isinstance(self.margin, numbers.Number):
+            msg = "Could not set margin in {}. Defaulting to 0.".format(str(type(self).__name__))
+            logger.warning(msg)
+            warnings.warn(msg)
+            self.margin = 0
         self.strategy = strategy
 
     @property
@@ -102,6 +109,13 @@ class PhotonBaseConstraint:
             logger.warning(msg)
             warnings.warn(msg)
             return False
+        if self.threshold is None:
+            msg = "Could not established threshold for performance constraint: {}. " \
+                  "Continuing computation for all folds.".format(str(type(self).__name__))
+            logger.warning(msg)
+            warnings.warn(msg)
+            return True
+
         if self._greater_is_better:
             if self.strategy.name == 'first':
                 if config_item.inner_folds[0].validation.metrics[self.metric] < self.threshold:
@@ -168,7 +182,6 @@ class MinimumPerformanceConstraint(PhotonBaseConstraint):
         super(MinimumPerformanceConstraint, self).__init__(strategy=strategy, metric=metric, threshold=threshold)
 
 
-
 class DummyPerformanceConstraint(PhotonBaseConstraint):
     """
     Tests if a configuration performs better than a given limit for a particular metric.
@@ -204,10 +217,13 @@ class DummyPerformanceConstraint(PhotonBaseConstraint):
         """Set threshold with margin and dummy_performance value.
         At the time the object is created, this value is not known.
         """
+        performance = dummy_result.validation.metrics[self.metric]
+        if performance is None or performance is np.nan:
+            raise ValueError("Could not set dummy threshold for metric " + self.metric)
         if self._greater_is_better:
-            self.threshold = dummy_result.validation.metrics[self.metric] + self.margin
+            self.threshold = performance + self.margin
         else:
-            self.threshold = dummy_result.validation.metrics[self.metric] - self.margin
+            self.threshold = performance - self.margin
 
     def copy_me(self):
         """Copy self object. Appending threshold to super.copy_me().
@@ -234,13 +250,13 @@ class BestPerformanceConstraint(PhotonBaseConstraint):
 
     """
 
-    def __init__(self, metric: str = '', strategy: str = 'mean'):
+    def __init__(self, metric: str = '', margin: float = 0, strategy: str = 'mean'):
         """
         :param metric:
         :param strategy:
         :param fold_start:
         """
-        super(BestPerformanceConstraint, self).__init__(strategy=strategy, metric=metric)
+        super(BestPerformanceConstraint, self).__init__(strategy=strategy, margin=margin, metric=metric)
 
         self.threshold = None
         self.config_items = {}

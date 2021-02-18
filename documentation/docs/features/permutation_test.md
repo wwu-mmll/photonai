@@ -1,4 +1,4 @@
 ``` python
-{% include "advanced/permutation_test.py" %}
+{% include "examples/advanced/permutation_test.py" %}
 
 ```

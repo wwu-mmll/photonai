@@ -17,7 +17,7 @@ matically select the best algorithm, however it is due to the given reasons less
 With the last line of code in this example, the user requests a comparative performance metrics table, that 
 shows the mean _validation_ performances for the best configurations found in each outer fold for each estimator,
 respectively. 
-```python hl_lines="15 16 29 40 43"
-{% include 'optimizer/meta_optimizer.py' %}
+```python hl_lines="10 11 35 24 40"
+{% include 'examples/optimizer/meta_optimizer.py' %}
 
 ```

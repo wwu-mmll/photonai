@@ -4,7 +4,7 @@ nav:
   - 'Getting Started':
       - 'Basic Usage': index.md
       - 'PHOTONAI Framework': getting_started/photonai.md
-      - 'Access established ml-packages': algorithms/algorithms_index.md
+      - 'Access established ml-packages': getting_started/algorithm_index.md
       - 'Hyperparameter Optimization': getting_started/hpos.md
       - 'Include custom algorithm': getting_started/custom_algorithm.md
       - 'Inspect and visualize results': getting_started/output.md
@@ -23,6 +23,7 @@ nav:
       - 'Use site-specific validation': examples/group_driven_cv_split.md
       - 'Remove confounders': examples/confounder_removal.md
       - 'Compare estimators': examples/compare_estimators.md
+      - 'Permutation Importances': examples/permutation_importances.md
 #      - Permutation Test: examples/permutation_test.md
       - 'Optimize a MLP': examples/scikit_learn_mlp.md
       - 'Use a DNN with multiclass prediction': examples/dnn_multiclass_prediction.md
@@ -41,7 +42,7 @@ nav:
       - 'Access pre-registered algorithms': algorithms/algorithms_index.md
       - 'Transformers': algorithms/transformers.md
       - 'Estimators': algorithms/estimators.md
-      - 'Hyperparameter Optimizers': getting_started/hpos.md
+      - 'Hyperparameter Optimizers': algorithms/hpos.md
       - 'Registry': algorithms/registry.md
   - 'API':
         - Overview: api/architecture.md
@@ -101,7 +102,7 @@ markdown_extensions:
 plugins:
   - search
   - macros:
-      include_dir: examples
+      include_dir: ./
   - mkdocstrings:
       handlers:
         python:
