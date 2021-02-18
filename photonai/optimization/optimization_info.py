@@ -54,7 +54,8 @@ class Optimization:
     def sanity_check_metrics(self, metrics, best_config_metric):
 
         # first of all register all custom elements, if any
-        if best_config_metric is not None and not isinstance(best_config_metric, str):
+        if best_config_metric is not None and not isinstance(best_config_metric, str) \
+                and not isinstance(best_config_metric, list):
             best_config_metric = Scorer.register_custom_metric(best_config_metric)
 
         if metrics is not None and len(metrics) > 0:
@@ -62,7 +63,8 @@ class Optimization:
                 if not isinstance(metrics[i], str):
                     metrics[i] = Scorer.register_custom_metric(metrics[i])
 
-        metrics = list(filter(None, metrics))
+        if metrics is not None:
+            metrics = list(filter(None, metrics))
         self.metrics = metrics
         self.best_config_metric = best_config_metric
 

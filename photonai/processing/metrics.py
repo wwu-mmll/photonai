@@ -144,7 +144,7 @@ class Scorer(object):
         elif metric in Scorer.CUSTOM_ELEMENT_DICTIONARY:
             return Scorer.CUSTOM_ELEMENT_DICTIONARY[metric]
         else:
-            msg = 'Metric not supported right now:' + metric
+            msg = 'Metric not supported right now:' + str(metric)
             logger.error(msg)
             raise NameError(msg)
 

@@ -3,7 +3,6 @@ PHOTON classes for testing a specific hyperparameter configuration and calculati
 """
 
 from .results_handler import ResultsHandler
-from .metrics import Scorer
 
 
 # __all__ = ("InnerFoldManager",
