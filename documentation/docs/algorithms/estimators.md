@@ -22,7 +22,7 @@
                     'package': 'scikit-learn', 'example': 'classifier_ensemble'},
                 { 'module': 'RANSACRegressor', 'class': 'sklearn.linear_model.RANSACRegressor', 'ml_type':'reg',
                     'package': 'scikit-learn'},
-                { 'module': 'Ridge', 'class': 'sklearn.linear_model.Ridge', 'ml_typy':'reg', 'package': 'scikit-learn'},
+                { 'module': 'Ridge', 'class': 'sklearn.linear_model.Ridge', 'ml_type':'reg', 'package': 'scikit-learn'},
                 { 'module': 'RidgeClassifier', 'class': 'sklearn.linear_model.RidgeClassifier', 'ml_type':'class',
                     'package': 'scikit-learn', 'example': 'classifier_ensemble'},
                 { 'module': 'SGDClassifier', 'class': 'sklearn.linear_model.SGDClassifier', 'package': 'scikit-learn',
@@ -143,53 +143,73 @@
                     'Neural Networks', 'Ensemble', 'Neighour-Based', 'Probabilistic', 'Other'] %}
 
 <h1>Estimator</h1>
+
+[All](#){: #button_all .md-button--primary .md-button onclick="myFunction('')"}
+[Classification](#){: #button_class .md-button onclick="myFunction('class')"}
+[Regression](#){: #button_reg .md-button onclick="myFunction('reg')"}
+
 <div class="photon-docu-header">
-
-
-{% for i in range(8)%}
-    <div uk-filter="target:.js-filter{{i}}; animation: -20000">
-{% endfor %}
-
-      <!--  <ul class="uk-list uk-subnav uk-subnav-pill">
-
-            <li class="uk-active" uk-filter-control><a href="#">All</a></li>
-
-            <li uk-filter-control="filter:[ml-type='class'];"><a href="#">Classification</a></li>
-
-            <li uk-filter-control="filter:[ml-type='reg'];"><a href="#">Regression</a></li>
-
-        </ul> -->
-
-        {% for i in range(8)%}
+      {% for i in range(8)%}
         <div>
             {% set key = headers[i] %}
-            <h2>{{key}}</h2>
-            <div style="transform: scale(1)">
-                <table class="styled-table">
-                    <thead>
-                        <td>Name</td>
-                        <td>Class</td>
-                        <td>Package</td>
-                    </thead>
-                    <tbody class="js-filter{{i}}">
-                        {% for element in items[key] %}
-                            <tr ml-type={{element['ml_type']}}>
-                                <td>{{element['module']}}</td>
-                                {% if element['package'] == 'scikit-learn'%}
-                                    <td><a href="{{sklearn_path+element['class']}}">{{element['class']}}</a></td>
-                                {% else %}
-                                    <td><a href="{{github_path+'/'.join(element['class'].split('.')[:-1])+'.py'}}">{{element['class']}}</a></td>
-                                {% endif %}
-                                <td>{{element['package']}}</td>
-                            </tr>
-                        {%endfor%}
-                    </tbody>
+                <h2>{{key}}</h2>
+                <div style="transform: scale(1)">
+                    <table class="styled-table" data-name=filterTable>
+                        <thead>
+                            <td>Name</td>
+                            <td>Class</td>
+                            <td>Package</td>
+                        </thead>
+                        <tbody>
+                            {% for element in items[key] %}
+                                <tr ml-type={{element['ml_type']}}>
+                                    <td>{{element['module']}}</td>
+                                    {% if element['package'] == 'scikit-learn'%}
+                                        <td><a href="{{sklearn_path+element['class']}}">{{element['class']}}</a></td>
+                                    {% else %}
+                                        <td><a href="{{github_path+'/'.join(element['class'].split('.')[:-1])+'.py'}}">{{element['class']}}</a></td>
+                                    {% endif %}
+                                    <td>{{element['package']}}</td>
+                                </tr>
+                            {%endfor%}
+                        </tbody>
                     </table>
-            </div>
+                </div>
         </div>
     {%endfor%}
 </div>
+    
+<script>
+function myFunction(filter) {
+  var input, table, tr, td, i, txtValue;
+  if (filter == 'class') {
+    document.getElementById("button_all").classList.remove('md-button--primary');
+    document.getElementById("button_class").classList.add('md-button--primary');
+    document.getElementById("button_reg").classList.remove('md-button--primary');
+  } else if (filter == 'reg') {
+    document.getElementById("button_all").classList.remove('md-button--primary');
+    document.getElementById("button_class").classList.remove('md-button--primary');
+    document.getElementById("button_reg").classList.add('md-button--primary');
+  } else {
+    document.getElementById("button_all").classList.add('md-button--primary');
+    document.getElementById("button_class").classList.remove('md-button--primary');
+    document.getElementById("button_reg").classList.remove('md-button--primary');
+  }
+  alltables = document.querySelectorAll("table[data-name=filterTable]");
 
-    {% for i in range(8)%}
-</div>
-{% endfor %}
+  alltables.forEach(function(table){
+      tr = table.getElementsByTagName("tr");
+      // Loop through all table rows, and hide those who don't match the search query
+      for (i = 0; i < tr.length; i++) {
+        txtValue = tr[i].getAttribute('ml-type');
+        if (txtValue) {
+          if (txtValue.indexOf(filter) > -1) {
+            tr[i].style.display = "";
+          } else {
+            tr[i].style.display = "none";
+          }
+        } 
+      }
+  });
+}
+</script>
