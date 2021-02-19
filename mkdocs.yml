@@ -17,6 +17,8 @@ nav:
 #      - Subpipelines: examples/subpipelines.md
       - Classifier Ensemble: photon_elements/classifier_ensemble.md
   - 'Examples':
+      - 'First Classification': examples/classification.md
+      - 'First Regression': examples/regression.md
       - 'Over- /Undersampling': examples/imbalanced_data.md
       - 'Sample Pairing': examples/sample_pairing.md
       - 'No Hyperparameter Optimization': examples/no_outer_cv.md
@@ -65,7 +67,7 @@ nav:
         - 'Optimization':
             - GridSearch: api/optimization/grid_search.md
             - RandomGridSearch: api/optimization/random_grid_search.md
-            - TimeBoxedRandom_GS: api/optimization/time_boxed_random_grid_search.md
+            - RandomSearch: api/optimization/random_search.md
             - Scikit-Optimize: api/optimization/skopt.md
             - SMAC: api/optimization/smac.md
             - Nevergrad: api/optimization/nevergrad.md

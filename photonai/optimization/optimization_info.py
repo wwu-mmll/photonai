@@ -1,5 +1,5 @@
 import numpy as np
-from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
+from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, NevergradOptimizer
 from photonai.optimization.switch_optimizer.meta_optimizer import MetaHPOptimizer
 from photonai.processing.metrics import Scorer
@@ -10,7 +10,6 @@ class Optimization:
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
-                            'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
                             'sk_opt': SkOptOptimizer,
                             'smac': SMACOptimizer,
                             'random_search': RandomSearchOptimizer,

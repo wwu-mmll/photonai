@@ -10,7 +10,7 @@ def custom_metric(y_true, y_pred):
     return np.random.random_sample()
 
 
-my_pipe = Hyperpipe('example_project',
+my_pipe = Hyperpipe('custom_metric_project',
                     optimizer='sk_opt',
                     optimizer_params={'n_configurations': 25},
                     # and here is how to register it in photonai

@@ -5,7 +5,6 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import FloatRange
-from photonai.processing import ResultsHandler
 from sklearn.datasets import fetch_openml
 
 # blood-transfusion-service-center
@@ -33,6 +32,7 @@ my_pipe.fit(X, y)
 # Either, we continue working with the results directly now
 handler = my_pipe.results_handler
 #, or we load them again later.
+# from photonai.processing import ResultsHandler
 # handler = ResultsHandler().load_from_file(os.path.join(my_pipe.results.output_folder, "photon_results_file.json"))
 
 

@@ -9,7 +9,7 @@
     </p>
 </div>
 
-``` python hl_lines="30 31 32"
+``` python hl_lines="32-34"
 {% include "examples/basic/imbalanced_data.py" %} 
 ```
 

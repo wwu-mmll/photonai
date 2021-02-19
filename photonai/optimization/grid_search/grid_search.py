@@ -73,18 +73,22 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         ```
         my_pipe = Hyperpipe(name='rgrid_based_pipe',
                             optimizer='random_grid_search',
-                            optimizer_params={'n_configurations': 50},
+                            optimizer_params={'n_configurations': 50,
+                                              'limit_in_minutes': 10},
                             ...
                             )
         my_pipe.fit(X, y)
         ```
 
     """
-    def __init__(self, n_configurations: Union[int, None] = 25):
+    def __init__(self, limit_in_minutes: Union[float, None] = None, n_configurations: Union[int, None] = 25):
         """
         Initialize the object.
 
         Parameters:
+            limit_in_minutes:
+                Total time in minutes.
+
             n_configurations: int or None, default=25
                 Number of configurations to be calculated.
 
@@ -92,6 +96,8 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         super(RandomGridSearchOptimizer, self).__init__()
         self._k = n_configurations
         self.n_configurations = self._k
+        self.limit_in_minutes = limit_in_minutes
+        self.start_time, self.end_time = None, None
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
         """Prepare hyperparameter search.
@@ -105,6 +111,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
 
         """
         super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
+        self.start_time = None
         self.n_configurations = self._k
         self.param_grid = list(self.param_grid)
         # create random order in list
@@ -115,56 +122,6 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
                 self.n_configurations = len(self.param_grid)
             self.param_grid = self.param_grid[0:self.n_configurations]
 
-
-class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
-    """Time boxed random grid serach.
-
-    Iteratively tests n possible hyperparameter configurations
-    until a certain time limit is reached.
-
-    Example:
-        ```
-        my_pipe = Hyperpipe(name='trgrid_based_pipe',
-                            optimizer='timeboxed_random_grid_search',
-                            optimizer_params={'n_configurations': 50,
-                                              'limit_in_minutes': 10},
-                            ...
-                            )
-        my_pipe.fit(X, y)
-        ```
-
-    """
-    def __init__(self, limit_in_minutes: float = 60, n_configurations: Union[int, None] = None):
-        """
-        Initialize the object.
-
-        Parameters:
-            limit_in_minutes:
-                Total time in minutes.
-
-            n_configurations:
-                Number of configurations to be calculated.
-
-        """
-        super(TimeBoxedRandomGridSearchOptimizer, self).__init__(n_configurations)
-        self.limit_in_minutes = limit_in_minutes
-        self.start_time = None
-        self.end_time = None
-
-    def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Prepare hyperparameter search.
-
-        Parameters:
-            pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
-
-            maximize_metric:
-                Boolean for distinguish between score and error.
-
-        """
-        super(TimeBoxedRandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
-        self.start_time = None
-
     def next_config_generator(self) -> Generator:
         """
         Generator for new configs - ask method.
@@ -174,9 +131,9 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
                 Yields the next config.
 
         """
-        if self.start_time is None:
+        if self.start_time is None and self.limit_in_minutes is not None:
             self.start_time = datetime.datetime.now()
             self.end_time = self.start_time + datetime.timedelta(minutes=self.limit_in_minutes)
-        for parameters in super(TimeBoxedRandomGridSearchOptimizer, self).next_config_generator():
-            if datetime.datetime.now() < self.end_time:
+        for parameters in super(RandomGridSearchOptimizer, self).next_config_generator():
+            if self.limit_in_minutes is None or datetime.datetime.now() < self.end_time:
                 yield parameters

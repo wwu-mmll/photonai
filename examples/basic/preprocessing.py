@@ -8,7 +8,7 @@ audiology = fetch_openml(name='audiology')
 X = audiology.data.values
 y = audiology.target.values
 
-my_pipe = Hyperpipe('hot_encode_pipeline',
+my_pipe = Hyperpipe('hot_encoder_pipeline',
                     inner_cv=ShuffleSplit(n_splits=5, test_size=0.2),
                     outer_cv=ShuffleSplit(n_splits=3, test_size=0.2),
                     optimizer='sk_opt',

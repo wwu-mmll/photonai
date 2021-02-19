@@ -11,7 +11,7 @@ def my_monitor(X, y=None, **kwargs):
     # and do fancy developer stuff
     debug = True
 
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
+my_pipe = Hyperpipe('monitoring_pipe',
                     optimizer='grid_search',
                     metrics=['mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',

@@ -6,6 +6,7 @@ from numpy import dstack
 from pandas import read_csv
 import numpy as np
 
+
 # load a single file as a numpy array
 def load_file(filepath):
     dataframe = read_csv(filepath, header=None, delim_whitespace=True)

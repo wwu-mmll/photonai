@@ -5,8 +5,7 @@ import operator
 from inspect import signature
 
 from photonai.base import PipelineElement, Switch, Branch, Hyperpipe
-from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, \
-    IntegerRange
+from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, IntegerRange
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer, PhotonMasterOptimizer
 
 from sklearn.datasets import load_breast_cancer
@@ -121,20 +120,6 @@ class RandomGridSearchOptimizerTest(GridSearchOptimizerTest):
         self.assertEqual(len(self.optimizer.param_grid), 15)
 
 
-class TimeBoxedRandomGridSearchOptimizerTest(RandomGridSearchOptimizerTest):
-
-    def setUp(self):
-        """
-        Set up for TimeBoxedRandomGridSearchOptimizer
-        """
-        self.pipeline_elements = [PipelineElement("StandardScaler"),
-                                  PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
-                                  PipelineElement("SVC")]
-        self.optimizer = TimeBoxedRandomGridSearchOptimizer()
-        self.optimizer_name = 'timeboxed_random_grid_search'
-        self.optimizer_params = None
-
-
 class BaseOptimizerTests(unittest.TestCase):
 
     @staticmethod
@@ -142,7 +127,7 @@ class BaseOptimizerTests(unittest.TestCase):
         opt = PhotonSlaveOptimizer()
         opt.prepare(list(), True)
         opt.ask()
-        opt.tell(dict(), dict())
+        opt.tell(dict(), float())
 
     @staticmethod
     def test_master_interface():

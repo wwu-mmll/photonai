@@ -8,7 +8,7 @@ from photonai.optimization import FloatRange, Categorical, IntegerRange
 X, y = load_breast_cancer(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe('batching',
+my_pipe = Hyperpipe('batching_pipe',
                     optimizer='grid_search',
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
@@ -36,5 +36,3 @@ my_pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(['rbf',
 my_pipe.fit(X, y)
 
 debug = True
-
-

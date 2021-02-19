@@ -10,7 +10,7 @@ X, y = load_boston(return_X_y=True)
 # list of all available nevergrad optimizer
 print(list(ng.optimizers.registry.values()))
 
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
+my_pipe = Hyperpipe('nevergrad_optimization_pipe',
                     optimizer='nevergrad',
                     optimizer_params={'facade': 'NGO', 'n_configurations': 30},
                     metrics=['mean_squared_error', 'pearson_correlation', 'mean_absolute_error', 'explained_variance'],

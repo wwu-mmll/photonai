@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import IntegerRange, FloatRange
 
 
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
+my_pipe = Hyperpipe('basic_regression_pipe',
                     optimizer='random_search',
                     optimizer_params={'n_configurations': 25},
                     metrics=['mean_squared_error', 'pearson_correlation',
