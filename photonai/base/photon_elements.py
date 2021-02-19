@@ -938,6 +938,18 @@ class Preprocessing(Branch):
     BEFORE cross validation starts in order to prepare the data.
     Every added element should be a transformer PipelineElement.
 
+    Example:
+        ```
+        pre_proc = Preprocessing()
+        pre_proc += PipelineElement('OneHotEncoder', sparse=False)
+        my_pipe += pre_proc
+        ```
+        Some transformations should be performed bundled at the beginning.
+        Here at the example of the OneHotEncoder. Due to the cross-validation split,
+        some cateogries can no longer occur in any subsets.
+        Therefore, a trained OneHotEncoding could fail on other subsets.
+        By using the Preprocessing object, this effect can no longer appear.
+
     """
     def __init__(self):
         """Initialize the object."""
