@@ -31,8 +31,7 @@ estimators += PipelineElement('RandomForestClassifier', criterion='gini', bootst
 
 estimators += PipelineElement('GradientBoostingClassifier',
                               hyperparameters={'loss': ['deviance', 'exponential'],
-                                               'learning_rate': FloatRange(0.001, 1,
-                                                                           "logspace")})
+                                               'learning_rate': FloatRange(0.001, 1, "logspace")})
 estimators += PipelineElement('SVC',
                               hyperparameters={'C': FloatRange(0.5, 25),
                                                'kernel': ['linear', 'rbf']})

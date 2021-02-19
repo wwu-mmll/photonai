@@ -1,64 +1,64 @@
-from sklearn.datasets import load_boston
-from sklearn.model_selection import KFold
+import os
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import StratifiedShuffleSplit
 
 from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import FloatRange
+from photonai.processing import ResultsHandler
+from sklearn.datasets import fetch_openml
 
-# WE USE THE BOSTON HOUSING DATA FROM SKLEARN
-X, y = load_boston(return_X_y=True)
+# blood-transfusion-service-center
+blood_transfusion = fetch_openml(name='blood-transfusion-service-center')
+X = blood_transfusion.data.values
+y = blood_transfusion.target.values
+y = (y == '2').astype(int)
 
-# DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('results_example',
-                    learning_curves=True,
-                    learning_curves_cut=FloatRange(0, 1, 'range', 0.2),
                     optimizer='sk_opt',
-                    optimizer_params={'n_configurations': 20, 'acq_func_kwargs': {'kappa': 1}},
-                    metrics=['mean_squared_error'],
-                    best_config_metric='mean_squared_error',
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=3),
-                    verbosity=1,
+                    optimizer_params={'n_configurations': 15, 'acq_func_kwargs': {'kappa': 1}},
+                    metrics=['accuracy', 'f1_score'],
+                    best_config_metric='f1_score',
+                    outer_cv=StratifiedShuffleSplit(n_splits=3, test_size=0.2),
+                    inner_cv=StratifiedShuffleSplit(n_splits=4, test_size=0.2),
+                    verbosity=0,
                     project_folder='./tmp')
 
-# ADD ELEMENTS TO YOUR PIPELINE
 # first normalize all features
 my_pipe += PipelineElement('StandardScaler')
+my_pipe += PipelineElement('SVC', hyperparameters={'C': FloatRange(0.1, 150)}, probability=True)
 
-# engage and optimize SVR
-my_pipe += PipelineElement('SVR', hyperparameters={'C': FloatRange(1e-3, 100, range_type='logspace'),
-                                                   'epsilon': FloatRange(1e-3, 10),
-                                                   'tol': FloatRange(1e-4, 1e-2)}, kernel='linear')
-# NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
 
+# Either, we continue working with the results directly now
 handler = my_pipe.results_handler
+#, or we load them again later.
+# handler = ResultsHandler().load_from_file(os.path.join(my_pipe.results.output_folder, "photon_results_file.json"))
 
-# get predictions for your best configuration (for all outer folds)
+
+# A table with properties and performance of each outer
+# fold (and the overall run) is created with the following command.
+performance_table = handler.get_performance_table()
+with pd.option_context('display.max_rows', None, 'display.max_columns', None):
+    print(performance_table)
+print(" ")
+
+# We now analyze the optimization influence on the result.
+config_evals = handler.get_config_evaluations()
+for i, j in enumerate(config_evals['f1_score']):
+    print("Standard deviation for fold {}: {}.".format(str(i), str(np.std(j))))
+print(" ")
+
+# To get an impression of the results,
+# it is possible to take a closer look at the test_predictions.
 best_config_preds = handler.get_test_predictions()
 y_pred = best_config_preds['y_pred']
 y_pred_probabilities = best_config_preds['probabilities']
 y_true = best_config_preds['y_true']
 
-# get feature importances (training set) for your best configuration (for all outer folds)
-# this function returns the importance scores for the best configuration of each outer fold in a list
-importance_scores = handler.get_importance_scores()
-
-# get performance for all outer folds
-performance = handler.get_performance_outer_folds()
-
-# get all configuration evaluations
-config_evaluations = handler.get_config_evaluations()
-minimum_config_evaluations = handler.get_minimum_config_evaluations()
-
-# handler.plot_optimizer_history('mean_squared_error', 'RGS 40 Eval (Scatter)', 'scatter',
-#                                'optimizer_history_random_grid_search_40_scatter.png')
-handler.plot_optimizer_history(metric='mean_squared_error',
-                               title='Scikit Optimize 20 Eval (Scatter)',
-                               type='scatter',
-                               reduce_scatter_by=1,
-                               file='./tmp/optimizer_history_scikit_optimize_20_scatter.png')
-
-# plot learning curves of all configs of the first outer fold
-handler.plot_learning_curves_outer_fold(outer_fold_nr=1, config_nr_list=None, save=False, show=True)
-
-debug = True
+# While some elements have been misclassified,
+# we have a closer look to the elementwise probability.
+for i in range(2, 6):
+    attribute = "correct" if y_true[i] == y_pred[i] else "incorrect"
+    print("Test-element {} was {} predicted "
+          "with an assignment probability of {}.".format(str(i), attribute, str(y_pred_probabilities[i])))

@@ -26,7 +26,7 @@ class SwitchOptimizerTest(GridSearchOptimizerTest):
 
     def test_wrong_setup(self):
         with self.assertRaises(ValueError):
-            opt = MetaHPOptimizer(any_param_but_no_name=1)
+            _ = MetaHPOptimizer(any_param_but_no_name=1)
 
         opt = MetaHPOptimizer(name='grid_search')
         with self.assertRaises(ValueError):

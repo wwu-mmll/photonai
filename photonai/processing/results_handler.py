@@ -104,10 +104,7 @@ class ResultsHandler:
         res_tab = pd.DataFrame()
         for i, folds in enumerate(self.results.outer_folds):
             # add best config infos
-            try:
-                res_tab.loc[i, 'best_config'] = folds.best_config.human_readable_config
-            except:
-                res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
+            res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
 
             # add fold index
             res_tab.loc[i, 'fold'] = folds.fold_nr
@@ -165,7 +162,7 @@ class ResultsHandler:
                         performance[metric].append(np.nan)
                     else:
                         for item in config.metrics_test:
-                            if (item.operation == 'FoldOperations.MEAN') and (item.metric_name == metric):
+                            if (item.operation == 'mean') and (item.metric_name == metric):
                                 performance[metric].append(item.value)
             config_performances.append(performance)
 

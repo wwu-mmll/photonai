@@ -85,7 +85,7 @@ class PipelineTests(PhotonBaseTest):
         my_preprocessing = Preprocessing()
         my_preprocessing += PipelineElement('LabelEncoder')
         photon_pipe = PhotonPipeline([("PCA", self.p_pca), ("SVC", self.p_svm)])
-        photon_pipe._add_preprocessing(my_preprocessing)
+        photon_pipe.add_preprocessing(my_preprocessing)
 
         self.assertEqual(len(photon_pipe.named_steps), 3)
         first_element = photon_pipe.elements[0][1]
@@ -242,7 +242,8 @@ class CacheManagerTests(PhotonBaseTest):
         super(CacheManagerTests, self).setUp()
 
         self.cache_man = CacheManager("123353423434", self.cache_folder_path)
-        self.X, self.y, self.kwargs = np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3, 4, 5]), {'covariates': [9, 8, 7, 6, 5]}
+        self.X, self.y, self.kwargs = np.array([1, 2, 3, 4, 5]), np.array([1, 2, 3, 4, 5]), \
+                                      {'covariates': [9, 8, 7, 6, 5]}
 
         self.config1 = {'PCA__n_components': 5,
                         'SVC__C': 3,

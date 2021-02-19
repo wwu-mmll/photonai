@@ -20,14 +20,15 @@ class PermutationTestTests(PhotonBaseTest):
         cls.perm_id = uuid.uuid4()
         cls.wizard_obj_id = ObjectId()
         cls.hyperpipe = Hyperpipe("permutation_test_pipe",
-                                   inner_cv = KFold(n_splits=4),
-                                   outer_cv = KFold(n_splits=3),
-                                   metrics=["accuracy", "balanced_accuracy"],
-                                   best_config_metric="balanced_accuracy",
-                                   output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
-                                                                  wizard_object_id=str(cls.wizard_obj_id)),
-                                   project_folder=cls.tmp_folder_path,
-                                   permutation_id=str(cls.perm_id) + "_reference")
+                                  inner_cv = KFold(n_splits=4),
+                                  outer_cv = KFold(n_splits=3),
+                                  metrics=["accuracy", "balanced_accuracy"],
+                                  best_config_metric="balanced_accuracy",
+                                  output_settings=OutputSettings(
+                                      mongodb_connect_url="mongodb://localhost:27017/photon_results",
+                                      wizard_object_id=str(cls.wizard_obj_id)),
+                                  project_folder=cls.tmp_folder_path,
+                                  permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
         cls.hyperpipe += PipelineElement("SVC")
         cls.X, cls.y = load_breast_cancer(return_X_y=True)
@@ -45,7 +46,8 @@ class PermutationTestTests(PhotonBaseTest):
 
         my_handler = ResultsHandler()
         my_handler.load_from_mongodb(self.hyperpipe.output_settings.mongodb_connect_url, str(self.wizard_obj_id))
-        self.assertEqual(my_handler.results.permutation_id, PermutationTest.get_mother_permutation_id(str(self.perm_id)))
+        self.assertEqual(my_handler.results.permutation_id,
+                         PermutationTest.get_mother_permutation_id(str(self.perm_id)))
 
     def test_find_reference(self):
         obj_id = self.hyperpipe.results._id

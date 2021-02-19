@@ -300,12 +300,9 @@ class Hyperpipe(BaseEstimator):
                 Hyperparameter optimization algorithm.
 
                 - In case a string literal is given:
-                    - "grid_search": optimizer that iteratively tests all possible hyperparameter combinations
-                    - "random_grid_search": a variation of the grid search optimization that randomly picks hyperparameter
-                        combinations from all possible hyperparameter combinations
-                    - "timeboxed_random_grid_search": randomly chooses hyperparameter combinations from the set of all
-                        possible hyperparameter combinations and tests until the given time limit is reached
-                        - `limit_in_minutes`: int
+                    - "grid_search": Optimizer that iteratively tests all possible hyperparameter combinations.
+                    - "random_grid_search": A variation of the grid search optimization that randomly picks
+                        hyperparameter combinations from all possible hyperparameter combinations.
                     - "sk_opt": Scikit-Optimize based on theories of Baysian optimization.
                     - "random_search": randomly chooses hyperparameter from grid-free domain.
                     - "smac": SMAC based on theories of Baysian optimization.
@@ -344,7 +341,8 @@ class Hyperpipe(BaseEstimator):
                     - `categorical_accuracy`: photon_core.framework.Metrics.categorical_accuracy_score
 
             best_config_metric:
-                The metric that should be maximized or minimized in order to choose the best hyperparameter configuration
+                The metric that should be maximized or minimized in order to choose
+                the best hyperparameter configuration.
 
             use_test_set [bool, default=True]:
                 If the metrics should be calculated for the test set,
@@ -408,8 +406,9 @@ class Hyperpipe(BaseEstimator):
                                       "calculate_metrics_per_fold=False. In this case PHOTONAI does not calculate "
                                       "any metrics which doesn't make any sense. Set at least one to True.")
         if inner_cv is None:
-            msg = "PHOTONAI requires an inner_cv split. Please enable inner cross-validation. As exmaple: Hyperpipe(..." \
-                  " inner_cv = KFold(n_splits = 3), ...). Ensure you import the cross_validation object first."
+            msg = "PHOTONAI requires an inner_cv split. Please enable inner cross-validation. " \
+                  "As exmaple: Hyperpipe(...inner_cv = KFold(n_splits = 3), ...). " \
+                  "Ensure you import the cross_validation object first."
             logger.error(msg)
             raise AttributeError(msg)
 
@@ -552,10 +551,10 @@ class Hyperpipe(BaseEstimator):
                             # use np.squeeze for non 1D targets.
                             self.y = np.squeeze(self.y)
                             shape_y = np.shape(self.y)
-                            warning_text = "y has been automatically squeezed. If this is not your intention, block this " \
-                                           "with Hyperpipe(allow_multidim_targets = True"
-                            logger.warning(warning_text)
-                            warnings.warn(warning_text)
+                            msg = "y has been automatically squeezed. If this is not your intention, block this " \
+                                  "with Hyperpipe(allow_multidim_targets = True"
+                            logger.warning(msg)
+                            warnings.warn(msg)
                         else:
                             raise ValueError(
                                 "Target is not one-dimensional. Multidimensional targets can cause problems"
@@ -589,8 +588,8 @@ class Hyperpipe(BaseEstimator):
                 nans_in_y = np.isnan(self.y)
                 nr_of_nans = len(np.where(nans_in_y == 1)[0])
                 if nr_of_nans > 0:
-                    logger.info("You have " + str(nr_of_nans) + " Nans in your target vector, "
-                                                                "PHOTONAI erases every data item that has a Nan Target")
+                    logger.info("You have {} Nans in your target vector, "
+                                "PHOTONAI erases every data item that has a Nan Target".format(str(nr_of_nans)))
                     self.X = self.X[~nans_in_y]
                     self.y = self.y[~nans_in_y]
             except Exception as e:
@@ -714,8 +713,8 @@ class Hyperpipe(BaseEstimator):
             self.results.dummy_estimator.strategy = 'most_frequent'
             return DummyClassifier(strategy=self.results.dummy_estimator.strategy)
         else:
-            logger.info('Estimator does not specify whether it is a regressor or classifier. DummyEstimator '
-                          'step skipped.')
+            logger.info('Estimator does not specify whether it is a regressor or classifier. '
+                        'DummyEstimator step skipped.')
             return
 
     def __get_pipeline_structure(self, pipeline_elements):
@@ -779,12 +778,13 @@ class Hyperpipe(BaseEstimator):
             else:
                 return "None"
 
-        self.results.hyperpipe_info.cross_validation = {'OuterCV': _format_cross_validation(self.cross_validation.outer_cv),
-                                                        'InnerCV': _format_cross_validation(self.cross_validation.inner_cv)}
+        self.results.hyperpipe_info.cross_validation = \
+            {'OuterCV': _format_cross_validation(self.cross_validation.outer_cv),
+             'InnerCV': _format_cross_validation(self.cross_validation.inner_cv)}
         self.results.hyperpipe_info.data = {'X_shape': self.data.X.shape, 'y_shape': self.data.y.shape}
         self.results.hyperpipe_info.optimization = {'Optimizer': self.optimization.optimizer_input_str,
-                                                        'OptimizerParams': str(self.optimization.optimizer_params),
-                                                        'BestConfigMetric': self.optimization.best_config_metric}
+                                                    'OptimizerParams': str(self.optimization.optimizer_params),
+                                                    'BestConfigMetric': self.optimization.best_config_metric}
 
         # add json file of hyperpipe attributes
         try:
@@ -812,14 +812,13 @@ class Hyperpipe(BaseEstimator):
         dummy_results = [outer_fold.dummy_results for outer_fold in self.results.outer_folds]
         config_item.inner_folds = [f for f in dummy_results if f is not None]
         if len(config_item.inner_folds) > 0:
-            self.results.dummy_estimator.metrics_train, self.results.dummy_estimator.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(
-                config_item.inner_folds,
-                self.optimization.metrics)
+            self.results.dummy_estimator.metrics_train, self.results.dummy_estimator.metrics_test = \
+                MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds, self.optimization.metrics)
 
         logger.info("Computing mean and std for all outer fold metrics...")
         # Compute all final metrics
-        self.results.metrics_train, self.results.metrics_test = MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds,
-                                                                                                            self.optimization.metrics)
+        self.results.metrics_train, self.results.metrics_test = \
+            MDBHelper.aggregate_metrics_for_outer_folds(self.results.outer_folds, self.optimization.metrics)
 
         # Find best config across outer folds
         logger.info("Find best config across outer folds...")
@@ -856,14 +855,15 @@ class Hyperpipe(BaseEstimator):
             self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
             # Before saving the optimum pipe, add preprocessing without multiprocessing
-            self.optimum_pipe._add_preprocessing(self.disable_multiprocessing_recursively(self.preprocessing))
+            self.optimum_pipe.add_preprocessing(self.disable_multiprocessing_recursively(self.preprocessing))
 
             # Now truly set to no caching (including single_subject_caching)
             self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
 
             if self.output_settings.save_output:
                 try:
-                    pretrained_model_filename = os.path.join(self.output_settings.results_folder, 'photon_best_model.photon')
+                    pretrained_model_filename = os.path.join(self.output_settings.results_folder,
+                                                             'photon_best_model.photon')
                     PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
                     logger.info("Saved best model to file.")
                 except Exception as e:
@@ -889,8 +889,8 @@ class Hyperpipe(BaseEstimator):
                         if not any("The inverse transformation is not possible for" in s
                                    for s in [e.message.args[0] for e in w]):
                             # save backmapping
-                            self.results_handler.save_backmapping(filename='optimum_pipe_feature_importances_backmapped',
-                                                                  backmapping=backmapping)
+                            self.results_handler.save_backmapping(
+                                filename='optimum_pipe_feature_importances_backmapped', backmapping=backmapping)
                         else:
                             logger.info('Could not save feature importance: backmapping NOT successful.')
 
@@ -1385,10 +1385,10 @@ class PhotonModelPersistor:
                         photon_building_block += element
                     element_list.append((element_info['element_name'], photon_building_block))
                 elif element_info['mode'] == 'custom':
-                    if 'class_name' in element_info: # (class_name != element_name) - possibility
+                    if 'class_name' in element_info:  # (class_name != element_name) - possibility
                         spec = importlib.util.spec_from_file_location(element_info['class_name'],
-                                                                          os.path.join(folder,
-                                                                          element_info['wrapper_script']))
+                                                                      os.path.join(folder,
+                                                                                   element_info['wrapper_script']))
                         imported_module = importlib.util.module_from_spec(spec)
                         spec.loader.exec_module(imported_module)
                         base_element = getattr(imported_module, element_info['class_name'])

@@ -9,13 +9,13 @@ X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('skopt_example',
-                    optimizer='sk_opt',  # which optimizer PHOTON shall use, in this case sk_opt
+                    optimizer='sk_opt',  # which optimizer PHOTONAI shall use, in this case sk_opt
                     optimizer_params={'n_configurations': 25, 'acq_func': 'LCB', 'acq_func_kwargs': {'kappa': 1.96}},
                     metrics=['mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',
-                    outer_cv=ShuffleSplit(n_splits=1, test_size=0.2),
+                    outer_cv=ShuffleSplit(n_splits=4, test_size=0.2),
                     inner_cv=KFold(n_splits=3),
-                    verbosity=1,
+                    verbosity=0,
                     project_folder='./tmp/')
 
 # ADD ELEMENTS TO YOUR PIPELINE
