@@ -1261,6 +1261,10 @@ class Hyperpipe(BaseEstimator):
         """
         return PhotonModelPersistor.load_optimum_pipe(file, password)
 
+    def __repr__(self, **kwargs):
+        """Overwrite BaseEstimator's function to avoid errors when using Jupyter Notebooks."""
+        return "Hyperpipe(name='{}')".format(self.name)
+
 
 class PhotonModelPersistor:
 
