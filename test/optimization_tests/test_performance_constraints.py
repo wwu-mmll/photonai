@@ -172,6 +172,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
                             inner_cv=KFold(n_splits=inner_fold_length),
                             use_test_set=True,
                             project_folder='./tmp',
+                            verbosity=0,
                             performance_constraints=[self.constraint_object])
 
         my_pipe += PipelineElement('StandardScaler')

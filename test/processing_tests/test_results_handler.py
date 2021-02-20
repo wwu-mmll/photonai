@@ -49,7 +49,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                                   outer_cv=KFold(n_splits=2),
                                   project_folder=cls.results_folder,
                                   output_settings=cls.output_settings,
-                                  verbosity=1)
+                                  verbosity=0)
         cls.hyperpipe += cls.ss_pipe_element
         cls.hyperpipe += cls.pca_pipe_element
         cls.hyperpipe.add(cls.svc_pipe_element)

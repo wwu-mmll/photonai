@@ -20,14 +20,15 @@ class PermutationTestTests(PhotonBaseTest):
         cls.perm_id = uuid.uuid4()
         cls.wizard_obj_id = ObjectId()
         cls.hyperpipe = Hyperpipe("permutation_test_pipe",
-                                  inner_cv = KFold(n_splits=4),
-                                  outer_cv = KFold(n_splits=3),
+                                  inner_cv=KFold(n_splits=4),
+                                  outer_cv=KFold(n_splits=3),
                                   metrics=["accuracy", "balanced_accuracy"],
                                   best_config_metric="balanced_accuracy",
                                   output_settings=OutputSettings(
                                       mongodb_connect_url="mongodb://localhost:27017/photon_results",
                                       wizard_object_id=str(cls.wizard_obj_id)),
                                   project_folder=cls.tmp_folder_path,
+                                  verbosity=0,
                                   permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
         cls.hyperpipe += PipelineElement("SVC")

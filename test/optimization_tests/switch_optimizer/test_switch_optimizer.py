@@ -11,7 +11,6 @@ class SwitchOptimizerTest(GridSearchOptimizerTest):
         """
         Set up for SkOptOptimizerTest.
         """
-
         self.pipeline_elements = [PipelineElement("StandardScaler"),
                                   PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   Switch('estimators', [PipelineElement("SVC",

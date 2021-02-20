@@ -335,6 +335,3 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
             self.assertTrue(len(outer_fold.best_config.best_config_score.feature_importances) == exepcted_nr_of_feature_importances)
             for inner_fold in outer_fold.best_config.inner_folds:
                 self.assertTrue(len(inner_fold.feature_importances) == exepcted_nr_of_feature_importances)
-
-
-
