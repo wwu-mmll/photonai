@@ -48,8 +48,7 @@ PipelineElement('KerasDnnRegressor',
                 hyperparameters={'hidden_layer_sizes': Categorical([[10, 8, 4],
                                                                     [20, 5, 3]]),
                                  'dropout_rate': Categorical([[0.5, 0.2, 0.1],
-                                                              0.1])
-                                },
+                                                              0.1])},
                 activations='relu',
                 epochs=5,
                 batch_size=32)

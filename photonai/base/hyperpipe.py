@@ -369,7 +369,7 @@ class Hyperpipe(BaseEstimator):
 
             verbosity:
                 The level of verbosity, 0 is least talkative and
-                gives only warn and error, 1 gives adds info and 2 adds debug
+                gives only warn and error, 1 gives adds info and 2 adds debug.
 
             learning_curves:
                 Enables larning curve procedure. Evaluate learning process over

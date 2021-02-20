@@ -1,4 +1,6 @@
+import numpy as np
 from sklearn.base import BaseEstimator, TransformerMixin
+
 from photonai.photonlogger.logger import logger
 
 try:
@@ -12,10 +14,21 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
     """
     Applies the chosen strategy to the data in order to handle the imbalance in the data.
     Instantiates the strategy filter object according to the name given as string.
-    Underlying architecture: Imbalanced-Learning
+    Underlying architecture: Imbalanced-Learning.
     More infomration on: https://imbalanced-learn.readthedocs.io/en/stable/api.html
-    """
 
+    Example:
+        ```
+        from photonai.optimization import Categorical
+
+        tested_methods = Categorical(['RandomOverSampler', 'SMOTEENN', 'SVMSMOTE',
+                              'BorderlineSMOTE', 'SMOTE', 'ClusterCentroids'])
+        PipelineElement('ImbalancedDataTransformer',
+                        hyperparameters={'method_name': tested_methods},
+                        test_disabled=True)
+        ```
+
+    """
     IMBALANCED_DICT = {
         'oversampling': ["ADASYN",
                          "BorderlineSMOTE",
@@ -42,38 +55,40 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         """
         Instantiates an object that transforms the data into balanced groups according to the given method
 
-        Possible values for method_name:
-        imbalance_type = OVERSAMPLING:
-            - ADASYN
-            - BorderlineSMOTE
-            - KMeansSMOTE
-            - RandomOverSampler
-            - SMOTE
-            - SMOTENC
-            - SVMSMOTE
+        Parameters:
+            method_name:
+                Imbalanced learning strategy. Possible values:
+                    Possible values for method_name:
 
-        imbalance_type = UNDERSAMPLING:
-            - ClusterCentroids,
-            - RandomUnderSampler,
-            - NearMiss,
-            - InstanceHardnessThreshold,
-            - CondensedNearestNeighbour,
-            - EditedNearestNeighbours,
-            - RepeatedEditedNearestNeighbours,
-            - AllKNN,
-            - NeighbourhoodCleaningRule,
-            - OneSidedSelection
+                    imbalance_type = OVERSAMPLING:
+                        - ADASYN
+                        - BorderlineSMOTE
+                        - KMeansSMOTE
+                        - RandomOverSampler
+                        - SMOTE
+                        - SMOTENC
+                        - SVMSMOTE
 
-        imbalance_type = COMBINE:
-            - SMOTEENN,
-            - SMOTETomek
+                    imbalance_type = UNDERSAMPLING:
+                        - ClusterCentroids,
+                        - RandomUnderSampler,
+                        - NearMiss,
+                        - InstanceHardnessThreshold,
+                        - CondensedNearestNeighbour,
+                        - EditedNearestNeighbours,
+                        - RepeatedEditedNearestNeighbours,
+                        - AllKNN,
+                        - NeighbourhoodCleaningRule,
+                        - OneSidedSelection
 
-        :param method_name: which imbalanced strategy to use
-        :type method_name: str
-        :param kwargs: any parameters to pass to the imbalance strategy object
-        :type kwargs:  dict
+                    imbalance_type = COMBINE:
+                        - SMOTEENN,
+                        - SMOTETomek
+
+            kwargs:
+                Any parameters to pass to the imbalance strategy object.
+
         """
-
         if not __found__:
             raise ModuleNotFoundError("Module imblearn not found or not installed as expected. "
                                       "Please install the requirements.txt in PHOTON main folder.")
@@ -93,17 +108,31 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         elif imbalance_type == "combine" or imbalance_type == "combination":
             home = combine
         else:
-            msg = "Imbalance Type not found. Can be oversampling, undersampling or combine."
-            msg += "oversampling: method_name one of "+str(self.IMBALANCED_DICT["oversampling"])
-            msg += "undersampling: method_name one of "+str(self.IMBALANCED_DICT["undersampling"])
-            msg += "combine: method_name one of " + str(self.IMBALANCED_DICT["combine"])
+            msg = "Imbalance Type not found. Can be oversampling, undersampling or combine. " \
+                  "Oversampling: method_name one of {}. Undersampling: method_name one of {}." \
+                  "Combine: method_name one of {}.".format(str(self.IMBALANCED_DICT["oversampling"]),
+                                                           str(self.IMBALANCED_DICT["undersampling"]),
+                                                           str(self.IMBALANCED_DICT["combine"]))
             logger.error(msg)
             raise ValueError(msg)
 
         desired_class = getattr(home, method_name)
         self.method = desired_class(**kwargs)
 
-    def fit_transform(self, X, y):
+    def fit_transform(self, X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
+        """Call of the underlying imblearn.fit_resample(X, y).
+
+        Parameters:
+            X:
+                The input samples of shape [n_samples, n_features].
+
+            y:
+                The input targets of shape [n_samples, 1].
+
+        Returns:
+            Transformed data.
+
+        """
         return self.method.fit_resample(X, y)
 
     #  define an alias for imblearn consistency
@@ -111,15 +140,21 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
     fit_resample = fit_transform
 
     def fit(self, X, y, **kwargs):
-        """
-        Required method for PHOTON. imblearn can't fit a model. Strategy is unique on every dataset.
-        These method is empty.
-        """
+        """Empty method required in PHOTONAI."""
         return
 
-    def transform(self, X, y=None, **kwargs):
-        """
-        Cause fit is empty transform is the same as fit_transform.
+    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray):
+        """Forwarding to the fit_transform method.
+
+        Parameters:
+            X:
+                The input samples of shape [n_samples, n_features].
+
+            y:
+                The input targets of shape [n_samples, 1].
+
+        Returns:
+            Transformed data.
+
         """
         return self.fit_transform(X, y)
-

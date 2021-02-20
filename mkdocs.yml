@@ -64,6 +64,10 @@ nav:
                 - FRegressionSelectPercentile: api/modelwrapper/feature_selection/FRegressionSelectPercentile.md
                 - LassoFeatureSelection: api/modelwrapper/feature_selection/LassoFeatureSelection.md
                 - ModelSelector: api/modelwrapper/feature_selection/ModelSelector.md
+            - 'Keras':
+                - 'KerasDnnClassifier': api/modelwrapper/keras/dnn_classifier.md
+                - 'KerasDnnRegressor': api/modelwrapper/keras/dnn_regressor.md
+            - 'ImbalancedDataTransformer': api/modelwrapper/imblearn.md
         - 'Optimization':
             - GridSearch: api/optimization/grid_search.md
             - RandomGridSearch: api/optimization/random_grid_search.md

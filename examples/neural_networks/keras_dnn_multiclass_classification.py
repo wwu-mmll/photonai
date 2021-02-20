@@ -1,5 +1,6 @@
 from sklearn.datasets import load_digits
 from sklearn.model_selection import KFold
+
 from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import Categorical
 
@@ -22,16 +23,16 @@ my_pipe = Hyperpipe('basic_keras_multiclass_pipe',
 my_pipe.add(PipelineElement('StandardScaler'))
 
 # attention: shape of hidden_layer_sizes == shape of activations. If you want to choose a function in every layer,
-# grid_search eleminates combinations with len(hidden_layer_size) != len(activations).
+# grid_search eliminates combinations with len(hidden_layer_size) != len(activations).
 # Check out: hidden_layer_sizes=[25, 10], activations=['tanh', 'relu']
 my_pipe += PipelineElement('KerasDnnClassifier',
-                           hyperparameters={'hidden_layer_sizes': Categorical([[10, 8, 4], [20, 5]]),
-                                            'dropout_rate': Categorical([0.5, [0.5, 0.2]])
-                                            },
+                           hyperparameters={'hidden_layer_sizes': Categorical([[20, 10, 5], [10, 8, 4]]),
+                                            'dropout_rate': Categorical([0.5, [0.5, 0.5, 0.5]])},
                            activations='relu',
                            nn_batch_size=32,
+                           epochs=50,
                            multi_class=True,
-                           verbosity=1)
+                           verbosity=0)
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
