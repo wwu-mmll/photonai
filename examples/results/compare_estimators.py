@@ -1,3 +1,4 @@
+import os
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.datasets import load_breast_cancer
 
@@ -45,7 +46,8 @@ my_pipe.fit(X, y)
 
 my_pipe.results_handler.get_mean_of_best_validation_configs_per_estimator()
 
-# or after training 
+# or after training
+results_folder = my_pipe.results_handler.output_settings.results_folder
 res = ResultsHandler()
-res.load_from_file("./photon_result_file.json")
+res.load_from_file(os.path.join(results_folder, "photon_result_file.json"))
 estimator_performances = res.get_mean_of_best_validation_configs_per_estimator()
