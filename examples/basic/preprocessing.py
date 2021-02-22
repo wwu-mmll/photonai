@@ -21,8 +21,8 @@ my_pipe = Hyperpipe('hot_encoder_pipeline',
 pre_proc = Preprocessing()
 pre_proc += PipelineElement('OneHotEncoder', sparse=False)
 pre_proc += PipelineElement('LabelEncoder')
-
 my_pipe += pre_proc
+
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': FloatRange(0.2, 0.7)})
 my_pipe += PipelineElement('SVC', hyperparameters={'C': FloatRange(1, 150)}, kernel='rbf')
 
