@@ -5,6 +5,9 @@
   --md-code-hl-string-color: #2388fe;
   --md-code-hl-number-color: #231c44;
 }
+.md-content {
+  --md-typeset-a-color: #1658a6;
+}
 body{
   font-family: Roboto, sans-serif;
 }
