@@ -18,18 +18,20 @@ nav:
 #      - Subpipelines: examples/subpipelines.md
       - Classifier Ensemble: photon_elements/classifier_ensemble.md
   - 'Examples':
-      - 'Simple Classification': examples/classification.md
-      - 'Simple Regression': examples/regression.md
-      - 'Over- /Undersampling': examples/imbalanced_data.md
-      - 'Sample Pairing': examples/sample_pairing.md
-      - 'No Hyperparameter Optimization': examples/no_outer_cv.md
-      - 'Use site-specific validation': examples/group_driven_cv_split.md
-      - 'Remove confounders': examples/confounder_removal.md
-      - 'Compare estimators': examples/compare_estimators.md
-      - 'Permutation Importances': examples/permutation_importances.md
-#      - Permutation Test: examples/permutation_test.md
-      - 'Optimize a MLP': examples/scikit_learn_mlp.md
-      - 'Use a DNN with multiclass prediction': examples/dnn_multiclass_prediction.md
+      - 'General':
+          - 'Simple Classification': examples/classification.md
+          - 'Simple Regression': examples/regression.md
+          - 'Compare estimators': examples/compare_estimators.md
+          - 'Over- /Undersampling': examples/imbalanced_data.md
+          - 'Remove confounders': examples/confounder_removal.md
+          - 'Use a DNN with multiclass prediction': examples/dnn_multiclass_prediction.md
+      - 'Specific Use Cases':
+          - 'Sample Pairing': examples/sample_pairing.md
+          - 'No Hyperparameter Optimization': examples/no_outer_cv.md
+          - 'Use site-specific validation': examples/group_driven_cv_split.md
+          - 'Permutation Importances': examples/permutation_importances.md
+    #      - Permutation Test: examples/permutation_test.md
+          - 'Optimize a MLP': examples/scikit_learn_mlp.md
   - 'Features':
       - 'Custom Metrics': features/custom_metrics.md
       - 'Hyperparameter Optimization Shortcuts': features/performance_constraints.md
