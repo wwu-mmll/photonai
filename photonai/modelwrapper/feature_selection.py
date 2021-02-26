@@ -95,7 +95,7 @@ class FRegressionSelectPercentile(BaseEstimator, TransformerMixin):
     """
     _estimator_type = "transformer"
 
-    def __init__(self, percentile: (float, int) = 10):
+    def __init__(self, percentile: float = 10):
         """
         Initialize the object.
 
@@ -129,14 +129,18 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
     Apply VarianceThreshold -> SelectPercentile to data.
     SelectPercentile based on f_classif and parameter percentile.
 
-    Parameters:
-        percentile: int, default=10
-            Percent of features to keep.
-
     """
     _estimator_type = "transformer"
 
-    def __init__(self, percentile=10):
+    def __init__(self, percentile: float = 10):
+        """
+        Initialize the object.
+
+        Parameters:
+            percentile:
+                Percent of features to keep.
+
+        """
         self.var_thres = VarianceThreshold()
         self.percentile = percentile
         self.my_fs = None
@@ -151,7 +155,7 @@ class FClassifSelectPercentile(BaseEstimator, TransformerMixin):
         X = self.var_thres.transform(X)
         return self.my_fs.transform(X)
 
-    def inverse_transform(self, X: np.ndarray):
+    def inverse_transform(self, X: np.ndarray) -> np.ndarray:
         """Reverse to original dimension.
 
         1. SelectPercentile.inverse_transform
@@ -180,7 +184,7 @@ class ModelSelector(BaseEstimator, TransformerMixin):
      """
     _estimator_type = "transformer"
 
-    def __init__(self, estimator_obj, threshold: float = 1e-5, percentile: bool = False):
+    def __init__(self, estimator_obj: BaseEstimator, threshold: float = 1e-5, percentile: bool = False):
         """
         Initialize the object.
 
@@ -298,7 +302,7 @@ class LassoFeatureSelection(BaseEstimator, TransformerMixin):
             alpha: float, default=1.
                 Weighting parameter for Lasso.
 
-            kwargs:
+            kwargs (dict):
                 Passed to Lasso object.
 
         """
@@ -319,9 +323,6 @@ class LassoFeatureSelection(BaseEstimator, TransformerMixin):
     def transform(self, X, y=None, **kwargs):
         selected_features = self.model_selector.transform(X, y, **kwargs)
         return selected_features
-
-    def inverse_transform(self, X):
-        return self.model_selector.inverse_transform(X)
 
     def set_params(self, **params):
         super(LassoFeatureSelection, self).set_params(**params)

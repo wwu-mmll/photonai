@@ -18,33 +18,33 @@ from photonai.photonlogger.logger import logger
 
 
 class PhotonNative:
-    """only for checking if code is meeting requirements"""
+    """Only for checking if code is meeting requirements."""
     pass
 
 
 class PipelineElement(BaseEstimator):
     """
-    PHOTONAI wrapper class for any transformer or predictor element in the pipeline.
+    PHOTONAI wrapper class for any transformer or estimator in the pipeline.
 
     So called PHOTONAI PipelineElements can be added to the Hyperpipe,
     each of them being a data-processing method or a learning algorithm.
-    By choosing and combining data-processing methods and algorithms
-    and arranging them with the PHOTONAI classes, both simple and complex
+    By choosing, combining data-processing methods and algorithms,
+    and arranging them with the PHOTONAI classes, simple and complex
     pipeline architectures can be designed rapidly.
 
     The PHOTONAI PipelineElement implements several helpful features:
 
-    1. Saves the hyperparameters that are to be tested
+    - Saves the hyperparameters that should be tested
         and creates a grid of all hyperparameter configurations.
-    2. Enables fast and rapid instantiation of pipeline
+    - Enables fast and rapid instantiation of pipeline
         elements per string identifier, e.g 'svc' creates
         an sklearn.svm.SVC object.
-    3. Attaches a "disable" switch to every element
-        in the pipeline in order to test a complete disable
+    - Attaches a "disable" switch to every element
+        in the pipeline in order to test a complete disable.
 
     """
     def __init__(self, name: str, hyperparameters: dict = None, test_disabled: bool = False,
-                 disabled: bool = False, base_element=None, batch_size: int = 0, **kwargs) -> None:
+                 disabled: bool = False, base_element: BaseEstimator = None, batch_size: int = 0, **kwargs) -> None:
         """
         Takes a string literal and transforms it into an object
         of the associated class (see PhotonCore.JSON).
@@ -66,10 +66,14 @@ class PipelineElement(BaseEstimator):
                 If true, the element is currently disabled and
                 does nothing except return the data it received.
 
+            base_element:
+                The underlying BaseEstimator. If not given the
+                instantiation per string identifier takes place.
+
             batch_size:
                 Size of the division on which is calculated separately.
 
-            kwargs:
+            kwargs (dict):
                 Any parameters that should be passed to the object
                 to be instantiated, default parameters.
 
@@ -177,7 +181,8 @@ class PipelineElement(BaseEstimator):
 
     def generate_sklearn_hyperparameters(self, value: dict):
         """
-        Generates a dictionary according to the sklearn convention of element_name__parameter_name: parameter_value
+        Generates a dictionary according to the sklearn convention of
+        element_name__parameter_name: parameter_value.
         """
         self._hyperparameters = {}
         for attribute, value_list in value.items():
@@ -220,11 +225,10 @@ class PipelineElement(BaseEstimator):
     # this is only here because everything inherits from PipelineElement.
     def __iadd__(self, pipe_element):
         """
-        Add an element to the element list
-        Returns self
+        Add an element to the intern list of elements.
 
         Parameters:
-            pipe_element:
+            pipe_element (PipelineElement):
                 The object to add, being either a transformer or an estimator.
 
         """
@@ -290,17 +294,20 @@ class PipelineElement(BaseEstimator):
         return copy
 
     @classmethod
-    def create(cls, name: str, base_element, hyperparameters: dict, test_disabled: bool = False,
+    def create(cls, name: str, base_element: BaseEstimator, hyperparameters: dict, test_disabled: bool = False,
                disabled: bool = False, **kwargs):
         """
         Takes an instantiated object and encapsulates it
-        into the PHOTONAI structure,
-        add the disabled function and attaches
+        into the PHOTONAI structure.
+        Add the disabled function and attaches
         information about the hyperparameters that should be tested.
 
         Parameters:
             name:
                 A string literal encoding the class to be instantiated.
+
+            base_element:
+                The underlying transformer or estimator class.
 
             hyperparameters:
                 Which values/value range should be tested for the
@@ -315,12 +322,12 @@ class PipelineElement(BaseEstimator):
                 If true, the element is currently disabled and
                 does nothing except return the data it received.
 
-            kwargs:
+            kwargs (dict):
                 Any parameters that should be passed to the object
                 to be instantiated, default parameters.
 
         Example:
-            ```
+            ``` python
             class RD(BaseEstimator, TransformerMixin):
 
                 def fit(self, X, y, **kwargs):
@@ -405,7 +412,7 @@ class PipelineElement(BaseEstimator):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_element.predict.
 
         Returns:
@@ -462,14 +469,14 @@ class PipelineElement(BaseEstimator):
 
     def predict(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
-        Calls the predict function of the base element.
+        Calls the predict function of the underlying base_element.
 
         Parameters:
             X:
                 The array-like training and test data with shape=[N, D],
                 where N is the number of samples and D is the number of features.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_element.predict.
 
         Returns:
@@ -518,7 +525,7 @@ class PipelineElement(BaseEstimator):
         else:
             return X, y, kwargs
 
-    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs):
+    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray, dict):
         """
         Calls transform on the base element.
 
@@ -534,11 +541,11 @@ class PipelineElement(BaseEstimator):
                 The truth array-like values with shape=[N], where N is
                 the number of samples.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_element.transform.
 
         Returns:
-            (X, y, kwargs) in transformed version.
+            (X, y) in transformed version and original kwargs.
 
         """
         if self.batch_size == 0:
@@ -549,24 +556,24 @@ class PipelineElement(BaseEstimator):
             self.reduce_dimension = (Xt.shape[1] < X.shape[1])
         return Xt, yt, kwargs
 
-    def inverse_transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs):
+    def inverse_transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray, dict):
         """
         Calls inverse_transform on the base element.
 
-        For dimension preserving transformers without inverse,
-        the value is returned untreated.
+        When the dimension is preserved: transformers
+        without inverse returns original input.
 
         Parameters:
-                X:
-                    The array-like data with shape=[N, D], where N
-                    is the number of samples and D is the number of features.
+            X:
+                The array-like data with shape=[N, D], where N
+                is the number of samples and D is the number of features.
 
-                y:
-                    The truth array-like values with shape=[N], where N is
-                    the number of samples.
+            y:
+                The truth array-like values with shape=[N], where N is
+                the number of samples.
 
-                kwargs:
-                    Keyword arguments, passed to base_element.transform.
+            kwargs (dict):
+                Keyword arguments, passed to base_element.transform.
 
         Raises:
             NotImplementedError:
@@ -666,9 +673,9 @@ class PipelineElement(BaseEstimator):
         else:
             return delegate(X)
 
-    def score(self, X_test: np.ndarray, y_test: np.ndarray):
+    def score(self, X_test: np.ndarray, y_test: np.ndarray) -> float:
         """
-        Calls the score function on the base element:
+        Calls the score function on the base element.
 
         Parameters:
             X_test:
@@ -704,10 +711,10 @@ class PipelineElement(BaseEstimator):
 
 class Branch(PipelineElement):
     """
-     A substream of pipeline elements that is encapsulated e.g. for parallelization.
+     A substream of pipeline elements that is encapsulated, e.g. for parallelization.
 
      Example:
-         ```
+         ``` python
          from photonai.base import Branch
          from photonai.optimization import IntegerRange
 
@@ -729,7 +736,7 @@ class Branch(PipelineElement):
                 summary of the encapsulated element`s functions.
 
             elements:
-                List of elements added  one after another to the Branch.
+                List of PipelineElements added one after another to the Branch.
 
         """
         super().__init__(name, {}, test_disabled=False, disabled=False, base_element=True)
@@ -764,7 +771,7 @@ class Branch(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_elements fit.
 
         Returns:
@@ -774,7 +781,7 @@ class Branch(PipelineElement):
         self.base_element = Branch.sanity_check_pipeline(self.base_element)
         return super().fit(X, y, **kwargs)
 
-    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> np.ndarray:
+    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray, dict):
         """
         Calls the transform function on all underlying base elements.
         If _estimator_type is in ['classifier', 'regressor'], predict is called instead.
@@ -788,7 +795,7 @@ class Branch(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_elements predict/transform.
 
         Returns:
@@ -799,7 +806,7 @@ class Branch(PipelineElement):
             return super().predict(X), y, kwargs
         return super().transform(X, y, **kwargs)
 
-    def predict(self, X, **kwargs) -> np.ndarray:
+    def predict(self, X: np.ndarray, **kwargs) -> np.ndarray:
         """
         Calls the predict function on underlying base elements.
 
@@ -808,15 +815,11 @@ class Branch(PipelineElement):
                 The array-like data with shape=[N, D], where N is the
                 number of samples and D is the number of features.
 
-            y:
-                The truth array-like values with shape=[N],
-                where N is the number of samples.
-
-            kwargs:
-                Keyword arguments, passed to base_elements fit.
+            kwargs (dict):
+                Keyword arguments, passed to base_elements predict method.
 
         Returns:
-            Prediction.
+            Prediction values.
 
         """
         return super().predict(X, **kwargs)
@@ -827,7 +830,7 @@ class Branch(PipelineElement):
 
         Parameters:
             pipe_element:
-                The object to add, being either a transformer or an estimator.
+                The PipelineElement to add, being either a transformer or an estimator.
 
         """
         super(Branch, self).__iadd__(pipe_element)
@@ -840,7 +843,7 @@ class Branch(PipelineElement):
 
         Parameters:
             pipe_element:
-                The object to add, being either a transformer or an estimator.
+                The PipelineElement to add, being either a transformer or an estimator.
 
         """
         self.__iadd__(pipe_element)
@@ -863,7 +866,6 @@ class Branch(PipelineElement):
 
     def _prepare_pipeline(self):
         """ Generates sklearn pipeline with all underlying elements """
-
         self._hyperparameters = {item.name: item.hyperparameters for item in self.elements
                                  if hasattr(item, 'hyperparameters')}
 
@@ -939,7 +941,7 @@ class Preprocessing(Branch):
     Every added element should be a transformer PipelineElement.
 
     Example:
-        ```
+        ``` python
         pre_proc = Preprocessing()
         pre_proc += PipelineElement('OneHotEncoder', sparse=False)
         my_pipe += pre_proc
@@ -993,14 +995,14 @@ class Stack(PipelineElement):
     """
     Creates a vertical stacking/parallelization of pipeline items.
 
-    The object acts as single pipeline element and encapsulates
-    several vertically stacked other pipeline elements, each
+    The object acts as a single PipelineElement and encapsulates
+    several vertically stacked other PipelineElements, each
     child receiving the same input data. The data is iteratively
     distributed to all children, the results are collected
     and horizontally concatenated.
 
     Example:
-        ```
+        ``` python
         tree = PipelineElement('DecisionTreeClassifier')
         svc = PipelineElement('LinearSVC')
 
@@ -1044,8 +1046,8 @@ class Stack(PipelineElement):
 
     def __iadd__(self, item: PipelineElement):
         """
-        Adds a new element to the stack.
-        Generates sklearn hyperparameter names in order
+        Add a new element to the stack.
+        Generate sklearn hyperparameter names in order
         to set the item's hyperparameters in the optimization process.
 
         Parameters:
@@ -1077,8 +1079,8 @@ class Stack(PipelineElement):
 
     def add(self, item: PipelineElement):
         """
-        Adds a new element to the stack.
-        Generates sklearn hyperparameter names in order
+        Add a new element to the stack.
+        Generate sklearn hyperparameter names in order
         to set the item's hyperparameters in the optimization process.
 
         Parameters:
@@ -1146,7 +1148,7 @@ class Stack(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_elements fit.
 
         Returns:
@@ -1167,11 +1169,7 @@ class Stack(PipelineElement):
                 The array-like data with shape=[N, D], where N is the
                 number of samples and D is the number of features.
 
-            y:
-                The truth array-like values with shape=[N],
-                where N is the number of samples.
-
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_elements predict.
 
         Returns:
@@ -1210,7 +1208,7 @@ class Stack(PipelineElement):
                 Keyword arguments, not used yet.
 
         Returns:
-            Probabilites.
+            Probability values.
 
         """
         predicted_data = np.array([])
@@ -1221,7 +1219,7 @@ class Stack(PipelineElement):
             predicted_data = PhotonDataHelper.stack_data_horizontally(predicted_data, element_transform)
         return predicted_data
 
-    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs):
+    def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray, dict):
         """
         Calls transform on every child.
 
@@ -1236,11 +1234,11 @@ class Stack(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_elements transform.
 
         Returns:
-            Prediction.
+            Prediction values.
 
         """
         transformed_data = np.array([])
@@ -1283,7 +1281,7 @@ class Switch(PipelineElement):
 
     If for example you want to find out if Preprocessing A
     or Preprocessing B is better at this position in the pipe.
-    Or you want to test if a rnadom forest outperforms the good old SVM.
+    Or you want to test if a random forest outperforms the good old SVM.
 
     ATTENTION: This class is a construct that may be convenient
     but is not suitable for any complex optimizations.
@@ -1291,7 +1289,7 @@ class Switch(PipelineElement):
     smac and the specializes switch optimizer.
 
     Example:
-        ```
+        ``` python
         from photonai.base import PipelineElement, Switch
         from photonai.optimization import IntegerRange
         # Estimator Switch
@@ -1318,6 +1316,9 @@ class Switch(PipelineElement):
 
             elements:
                 The competing pipeline elements.
+
+            estimator_name:
+                -
 
         """
         self._name = name
@@ -1353,7 +1354,7 @@ class Switch(PipelineElement):
     def __iadd__(self, pipeline_element: PipelineElement):
         """
         Add a new estimator or transformer object to the switch container.
-        All items change positions during testing.
+        All items change their positions during testing.
 
         Parameters:
             pipeline_element:
@@ -1369,7 +1370,7 @@ class Switch(PipelineElement):
     def add(self, pipeline_element: PipelineElement):
         """
         Add a new estimator or transformer object to the switch container.
-        All items change positions during testing.
+        All items change their positions during testing.
 
         Parameters:
             pipeline_element:
@@ -1508,7 +1509,7 @@ class Switch(PipelineElement):
 
     def prettify_config_output(self, config_name, config_value, return_dict=False) -> str:
         """
-        Makes the sklearn configuration dictionary human readable
+        Makes the sklearn configuration dictionary human readable.
 
         Returns:
             prettified_configuration_string:
@@ -1540,7 +1541,7 @@ class Switch(PipelineElement):
                 The array-like data with shape=[N, D], where N is the number
                 of samples and D is the number of features.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, not in use yet.
 
         Returns:
@@ -1557,11 +1558,11 @@ class Switch(PipelineElement):
     def _check_hyper(self,BaseEstimator):
         pass
 
-    def inverse_transform(self, X, y=None, **kwargs):
+    def inverse_transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs):
         """
         Calls inverse_transform on the base element.
 
-        For dimension preserving transformers without inverse,
+        For a dimension preserving transformer without inverse,
         the value is returned untreated.
 
         Parameters:
@@ -1573,11 +1574,11 @@ class Switch(PipelineElement):
                 The truth array-like values with shape=[N], where N is
                 the number of samples.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to base_element.transform.
 
-            Returns:
-                (X, y, kwargs) in back-transformed version if possible.
+        Returns:
+            (X, y, kwargs) in back-transformed version if possible.
 
             """
         if hasattr(self.base_element, 'inverse_transform'):
@@ -1737,7 +1738,7 @@ class ParallelBranch(Branch):
 
     def __iadd__(self, pipe_element: PipelineElement):
         """
-        Add an element to the neuro branch.
+        Add an element to the ParallelBranch.
 
         Parameters:
             pipe_element:

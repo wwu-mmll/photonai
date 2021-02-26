@@ -12,7 +12,7 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
     See [Keras API](https://keras.io/api/).
 
     Example:
-        ```
+        ``` python
         PipelineElement('KerasDnnRegressor',
                         hyperparameters={'hidden_layer_sizes': Categorical([[18, 14], [30, 5]]),
                                          'dropout_rate': Categorical([0.01, 0.2])},
@@ -143,14 +143,15 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
             raise ValueError("Loss function is not supported. Feel free to use upperclass without restrictions.")
 
     def fit(self, X, y):
-        """Starting the learning.
+        """
+        Starting the learning.
 
         Parameters:
             X:
-                The input samples of shape [n_samples, n_features]
+                The input samples with shape [n_samples, n_features].
 
             y:
-                The input targets of shape [n_samples, 1]
+                The input targets with shape [n_samples, 1].
 
         """
         self.create_model(X.shape[1])

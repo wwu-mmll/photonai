@@ -15,7 +15,7 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
     testing a grid of possible hyperparameter combinations.
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe(name='grid_based_pipe',
                             optimizer='grid_search',
                             ...
@@ -68,7 +68,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
     testing n points of a grid of possible hyperparameters.
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe(name='rgrid_based_pipe',
                             optimizer='random_grid_search',
                             optimizer_params={'n_configurations': 50,

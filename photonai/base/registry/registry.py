@@ -25,7 +25,7 @@ class PhotonRegistry:
     The class PhotonElement imports and instantiates the class for you.
 
     Example:
-        ```
+        ``` python
         import os
         from photonai.base import PhotonRegistry
 
@@ -100,8 +100,8 @@ class PhotonRegistry:
         The JSON files are stored in the framework folder by the name convention 'photon_package.json'
 
         Parameters:
-        photon_package:
-          The name of the photonai submodule
+            photon_package:
+              The name of the photonai submodule
 
         Returns:
             JSON file as dict, file path as str.
@@ -146,7 +146,7 @@ class PhotonRegistry:
                 the elements should be retrieved.
 
         Returns:
-            Dict of registered elements
+            Dict of registered elements.
 
         """
         class_info = dict()
@@ -414,7 +414,6 @@ class PhotonRegistry:
         a different name or if the name is already given to another class.
 
          Parameters:
-        -----------
             content:
                 The content of the CustomElements.json.
 

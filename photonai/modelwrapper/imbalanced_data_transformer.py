@@ -12,13 +12,13 @@ except ModuleNotFoundError:
 
 class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
     """
-    Applies the chosen strategy to the data in order to handle the imbalance in the data.
-    Instantiates the strategy filter object according to the name given as string.
+    Applies the chosen strategy to the data in order to balance the input data.
+    Instantiates the strategy filter object according to the name given as string literal.
     Underlying architecture: Imbalanced-Learning.
-    More infomration on: https://imbalanced-learn.readthedocs.io/en/stable/api.html
+    More information on their [documentation](https://imbalanced-learn.org/stable/).
 
     Example:
-        ```
+        ``` python
         from photonai.optimization import Categorical
 
         tested_methods = Categorical(['RandomOverSampler', 'SMOTEENN', 'SVMSMOTE',
@@ -53,39 +53,38 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
 
     def __init__(self, method_name: str = 'RandomUnderSampler', **kwargs):
         """
-        Instantiates an object that transforms the data into balanced groups according to the given method
+        Instantiates an object that transforms the data into balanced groups according to the given method.
 
         Parameters:
             method_name:
-                Imbalanced learning strategy. Possible values:
-                    Possible values for method_name:
+                Imbalanced learning strategy. Possible values with
 
-                    imbalance_type = OVERSAMPLING:
-                        - ADASYN
-                        - BorderlineSMOTE
-                        - KMeansSMOTE
-                        - RandomOverSampler
-                        - SMOTE
-                        - SMOTENC
-                        - SVMSMOTE
+                - an oversampling strategy are:
+                    - ADASYN,
+                    - BorderlineSMOTE,
+                    - KMeansSMOTE,
+                    - RandomOverSampler,
+                    - SMOTE,
+                    - SMOTENC,
+                    - SVMSMOTE,
 
-                    imbalance_type = UNDERSAMPLING:
-                        - ClusterCentroids,
-                        - RandomUnderSampler,
-                        - NearMiss,
-                        - InstanceHardnessThreshold,
-                        - CondensedNearestNeighbour,
-                        - EditedNearestNeighbours,
-                        - RepeatedEditedNearestNeighbours,
-                        - AllKNN,
-                        - NeighbourhoodCleaningRule,
-                        - OneSidedSelection
+                - an undersampling strategy are:
+                    - ClusterCentroids,
+                    - RandomUnderSampler,
+                    - NearMiss,
+                    - InstanceHardnessThreshold,
+                    - CondensedNearestNeighbour,
+                    - EditedNearestNeighbours,
+                    - RepeatedEditedNearestNeighbours,
+                    - AllKNN,
+                    - NeighbourhoodCleaningRule,
+                    - OneSidedSelection,
 
-                    imbalance_type = COMBINE:
-                        - SMOTEENN,
-                        - SMOTETomek
+                - a combined strategy are:
+                    - SMOTEENN,
+                    - SMOTETomek.
 
-            kwargs:
+            kwargs (dict):
                 Any parameters to pass to the imbalance strategy object.
 
         """
@@ -119,8 +118,9 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         desired_class = getattr(home, method_name)
         self.method = desired_class(**kwargs)
 
-    def fit_transform(self, X: np.ndarray, y: np.ndarray) -> (np.ndarray, np.ndarray):
-        """Call of the underlying imblearn.fit_resample(X, y).
+    def fit_transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray):
+        """
+        Call of the underlying imblearn.fit_resample(X, y).
 
         Parameters:
             X:
@@ -128,6 +128,9 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
 
             y:
                 The input targets of shape [n_samples, 1].
+
+            kwargs (dict):
+                Ignored input.
 
         Returns:
             Transformed data.
@@ -144,7 +147,8 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         return
 
     def transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray):
-        """Forwarding to the fit_transform method.
+        """
+        Forwarding to the self.fit_transform method.
 
         Parameters:
             X:
@@ -152,6 +156,9 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
 
             y:
                 The input targets of shape [n_samples, 1].
+
+            kwargs (dict):
+                Ignored input.
 
         Returns:
             Transformed data.

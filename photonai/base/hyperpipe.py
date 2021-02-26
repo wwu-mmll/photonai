@@ -81,10 +81,11 @@ class OutputSettings:
                to the results in the PHOTONAI CORE Database.
 
             wizard_project_name:
-               How the project is titled in the PHOTONAI Wizard.
+                How the project is titled in the PHOTONAI Wizard.
 
             project_folder:
                 Deprecated Parameter - transferred to Hyperpipe.
+
         """
         if project_folder:
             msg = "Deprecated: The parameter 'project_folder' was moved to the Hyperpipe. " \
@@ -184,8 +185,8 @@ class OutputSettings:
 
 
 class Hyperpipe(BaseEstimator):
-    """The PHOTONAI Hyperpipe class enables you to
-    create a custom pipeline. In addition it defines
+    """The PHOTONAI Hyperpipe class creates a custom
+    machine learning pipeline. In addition it defines
     the relevant analysis’ parameters such as the
     cross-validation scheme, the hyperparameter optimization
     strategy, and the performance metrics of interest.
@@ -193,8 +194,8 @@ class Hyperpipe(BaseEstimator):
     So called PHOTONAI PipelineElements can be added to
     the Hyperpipe, each of them being a data-processing
     method or a learning algorithm. By choosing and
-    combining data-processing methods and algorithms
-    and arranging them with the PHOTONAI classes, both
+    combining data-processing methods or algorithms,
+    and arranging them with the PHOTONAI classes,
     simple and complex pipeline architectures can be designed rapidly.
 
     The PHOTONAI Hyperpipe automatizes the nested training,
@@ -207,7 +208,7 @@ class Hyperpipe(BaseEstimator):
     - communicates with the hyperparameter optimization
         strategy,
     - streams information between the pipeline elements,
-    - logs all results obtained and evaluates the performance.
+    - logs all results obtained and evaluates the performance,
     - guides the hyperparameter optimization process by
         a so-called best config metric which is used to select
         the best performing hyperparameter configuration.
@@ -243,11 +244,9 @@ class Hyperpipe(BaseEstimator):
         from sklearn.model_selection import ShuffleSplit, KFold
         from sklearn.datasets import load_breast_cancer
 
-        X, y = load_breast_cancer(return_X_y=True)
-
         hyperpipe = Hyperpipe('myPipe',
-                              optimizer='timeboxed_random_grid_search',
-                              optimizer_params={'limit_in_minutes': 2},
+                              optimizer='random_grid_search',
+                              optimizer_params={'limit_in_minutes': 5},
                               outer_cv=ShuffleSplit(test_size=0.2, n_splits=3),
                               inner_cv=KFold(n_splits=10, shuffle=True),
                               metrics=['accuracy', 'precision', 'recall', "f1_score"],
@@ -257,6 +256,7 @@ class Hyperpipe(BaseEstimator):
 
         hyperpipe += PipelineElement("SVC", hyperparameters={"C": FloatRange(1, 100)})
 
+        X, y = load_breast_cancer(return_X_y=True)
         hyperpipe.fit(X, y)
         ```
 
@@ -1075,7 +1075,7 @@ class Hyperpipe(BaseEstimator):
                 of features. D must correspond to the number
                 of trained dimensions of the fit method.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to optimum_pipe.predict.
 
         Returns:
@@ -1097,7 +1097,7 @@ class Hyperpipe(BaseEstimator):
                 of features. D must correspond to the number
                 of trained dimensions of the fit method.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to optimum_pipe.predict_proba.
 
         Returns:
@@ -1111,6 +1111,13 @@ class Hyperpipe(BaseEstimator):
     def transform(self, data: np.ndarray, **kwargs) -> np.ndarray:
         """
         Use the optimum pipe to transform the data.
+
+        Parameters:
+            data:
+                The array-like input data with shape=[M, D],
+                where M is the number of samples and D is the number
+                of features. D must correspond to the number
+                of trained dimensions of the fit method.
 
         Returns:
             Transformed data.
@@ -1134,7 +1141,7 @@ class Hyperpipe(BaseEstimator):
             y:
                 The array-like true targets.
 
-            kwargs:
+            kwargs (dict):
                 Keyword arguments, passed to optimum_pipe.predict.
 
         Returns:
@@ -1146,12 +1153,29 @@ class Hyperpipe(BaseEstimator):
             scorer = Scorer.create(self.optimization.best_config_metric)
             return scorer(y, predictions)
 
-    def get_permutation_feature_importances(self, X_val, y_val, **kwargs):
+    def get_permutation_feature_importances(self, X_val: np.ndarray, y_val: np.ndarray, **kwargs):
         """
         Since PHOTONAI is built on top of the scikit-learn interface,
         it is possible to use direct functions from their package.
-        Here the example of the feature importance via permutations. The example can be found at:
-        https://scikit-learn.org/stable/modules/permutation_importance.html
+        Here the example of the [feature importance via permutations](
+        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html).
+
+        Parameters:
+            X_val:
+                The array-like data with shape=[M, D],
+                where M is the number of samples and D is the number
+                of features. D must correspond to the number
+                of trained dimensions of the fit method.
+
+            y_val:
+                The array-like true targets.
+
+            kwargs (dict):
+                Keyword arguments, passed to sklearn.permutation_importance.
+
+        Returns:
+            Dictionary-like object, with the following attributes: importances_mean, importances_std, importances.
+
         """
 
         return permutation_importance(self.optimum_pipe, X_val, y_val, **kwargs)
@@ -1182,7 +1206,7 @@ class Hyperpipe(BaseEstimator):
                 The data that should be inversed after training.
 
         Returns:
-            Inversed data as array.
+            Inverse data as array.
 
         """
         copied_pipe = self.pipe.copy_me()

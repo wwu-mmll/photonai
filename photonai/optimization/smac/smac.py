@@ -38,7 +38,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
         In: Proceedings of the conference on Learning and Intelligent OptimizatioN (LION 5)
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe('smac_example',
                             optimizer='smac',
                             optimizer_params={"facade": "SMAC4BO",

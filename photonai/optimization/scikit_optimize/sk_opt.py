@@ -29,7 +29,7 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
     https://scikit-optimize.github.io/stable/modules/generated/skopt.optimizer.Optimizer.html#skopt.optimizer.Optimizer)
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe('skopt_example',
                             optimizer='sk_opt',
                             optimizer_params={'n_configurations': 25,

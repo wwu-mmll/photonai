@@ -4,6 +4,7 @@ from typing import Callable
 class PhotonSlaveOptimizer(object):
     """Photon slave optimizer.
 
+    Base class for optimizer in PHOTONAI.
     The PhotonSlaveOptimizer is controlled by PHOTONAIs OuterFoldManager.
     With the ask-tell principle PHOTONAI gets new configs.
     It terminates by some specific criteria, that leads to an empty ask generator.
@@ -55,6 +56,7 @@ class PhotonSlaveOptimizer(object):
 class PhotonMasterOptimizer(object):
     """Photon master optimizer.
 
+    Base class for optimizer in PHOTONAI.
     The PhotonMasterOptimizer controls PHOTONAIs optimization process.
     PHOTONAI creates an objective function that is used by the optimizer.
     The limitation of runs and configs of the

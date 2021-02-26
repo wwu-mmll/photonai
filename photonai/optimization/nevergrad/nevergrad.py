@@ -23,7 +23,7 @@ class NevergradOptimizer(PhotonMasterOptimizer):
     https://facebookresearch.github.io/nevergrad/).
 
     Example:
-        ```
+        ``` python
         import nevergrad as ng
         # list of all available nevergrad optimizer
         print(list(ng.optimizers.registry.values()))

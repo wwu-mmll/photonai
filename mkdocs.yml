@@ -63,6 +63,7 @@ nav:
             - Stack: api/base/stack.md
             - Switch: api/base/switch.md
         - 'Modelwrapper':
+            - 'BaseModelWrapper': api/modelwrapper/base_model_wrapper.md
             - 'Feature Selection':
                 - FClassifSelectPercentile: api/modelwrapper/feature_selection/FClassifSelectPercentile.md
                 - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
@@ -72,6 +73,7 @@ nav:
             - 'Keras':
                 - 'KerasDnnClassifier': api/modelwrapper/keras/dnn_classifier.md
                 - 'KerasDnnRegressor': api/modelwrapper/keras/dnn_regressor.md
+            - 'LabelEncoder': api/modelwrapper/label_encoder.md
             - 'ImbalancedDataTransformer': api/modelwrapper/imblearn.md
         - 'Optimization':
             - GridSearch: api/optimization/grid_search.md

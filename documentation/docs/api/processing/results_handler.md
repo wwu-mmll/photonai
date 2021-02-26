@@ -1,4 +1,4 @@
-# ResultsHandler Class
+# Documentation for `ResultsHandler`
 ::: photonai.processing.ResultsHandler
     selection:
       members:

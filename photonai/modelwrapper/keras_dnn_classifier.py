@@ -12,7 +12,7 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
     See [Keras API](https://keras.io/api/).
 
     Example:
-        ```
+        ``` python
         PipelineElement('KerasDnnClassifier',
                         hyperparameters={'hidden_layer_sizes': Categorical([[10, 8, 4], [20, 15, 5]]),
                                          'dropout_rate': Categorical([0.5, [0.5, 0.2, 0.1]])},
@@ -170,14 +170,15 @@ class KerasDnnClassifier(KerasDnnBaseModel, KerasBaseClassifier):
             self.target_dimension = len(np.unique(y))
 
     def fit(self, X: np.ndarray, y: np.ndarray):
-        """Starting the learning process of the neural network.
+        """
+        Starting the learning process of the neural network.
 
         Parameters:
             X:
-                The input samples of shape [n_samples, n_features]
+                The input samples with shape [n_samples, n_features].
 
             y:
-                The input targets of shape [n_samples, 1]
+                The input targets with shape [n_samples, 1].
 
         """
         self._calc_target_dimension(y)
