@@ -95,9 +95,3 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
             else:
                 config_copy[c_key] = c_value
         self.current_optimizer.tell(config_copy, performance)
-
-
-
-
-
-

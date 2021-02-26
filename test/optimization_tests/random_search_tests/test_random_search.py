@@ -8,9 +8,6 @@ from ..grid_search_tests.test_grid_search import GridSearchOptimizerTest
 class RandomSearchOptimizerTest(GridSearchOptimizerTest):
 
     def setUp(self):
-        """
-        Set up for RandomGridSearchOptimizer.
-        """
         self.pipeline_elements = [PipelineElement("StandardScaler"),
                                   PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   PipelineElement("SVC")]
@@ -18,9 +15,7 @@ class RandomSearchOptimizerTest(GridSearchOptimizerTest):
         self.optimizer_name = 'random_search'
 
     def test_parameter_k(self):
-        """
-        Test for parameter k.
-        """
+        """Test for parameter n_configuration and k."""
         self.optimizer = RandomSearchOptimizer(n_configurations=3)
         self.optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
         configs = []

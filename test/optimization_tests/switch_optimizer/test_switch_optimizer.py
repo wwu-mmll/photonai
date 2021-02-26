@@ -8,9 +8,6 @@ from ..grid_search_tests.test_grid_search import GridSearchOptimizerTest
 class SwitchOptimizerTest(GridSearchOptimizerTest):
 
     def setUp(self):
-        """
-        Set up for SkOptOptimizerTest.
-        """
         self.pipeline_elements = [PipelineElement("StandardScaler"),
                                   PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
                                   Switch('estimators', [PipelineElement("SVC",

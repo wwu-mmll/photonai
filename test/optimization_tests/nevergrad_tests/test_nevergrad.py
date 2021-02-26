@@ -20,6 +20,7 @@ warnings.filterwarnings("ignore")
 if photonai_ng.__found__:
     import nevergrad as ng
 
+
 @unittest.skipIf(not photonai_ng.__found__, 'nevergrad not available')
 class NevergradIntegrationTest(unittest.TestCase):
 
@@ -32,8 +33,8 @@ class NevergradIntegrationTest(unittest.TestCase):
         self.pipe = Hyperpipe('basic_svm_pipe',
                               optimizer='nevergrad',
                               optimizer_params={'facade': ng.optimizers.NGO,
-                                                'n_configurations':20,
-                                                'rng':42},
+                                                'n_configurations': 20,
+                                                'rng': 42},
                               metrics=['accuracy'],
                               best_config_metric='accuracy',
                               inner_cv=self.s_split,
@@ -46,9 +47,9 @@ class NevergradIntegrationTest(unittest.TestCase):
         self.y = dataset["target"]
         return self.X, self.y
 
-    # integration test for simple pipeline without Switch
     def test_photon_implementation_simple(self):
-        # PHOTON implementation
+        """Integration test for simple pipeline without Switch."""
+        # PHOTONAI implementation
         self.pipe.add(PipelineElement('StandardScaler'))
         self.pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})
         self.pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly']),
@@ -108,14 +109,15 @@ class NevergradIntegrationTest(unittest.TestCase):
 
     def test_other(self):
         opt = NevergradOptimizer(facade="NGO", n_configurations=10)
-        pipeline_elements = [PipelineElement('SVC', hyperparameters={'kernel': ["sigmoid","rbf"],
+        pipeline_elements = [PipelineElement('SVC', hyperparameters={'kernel': ["sigmoid", "rbf"],
                                                                      'C': [0.6], 'coef0': Categorical([0.5])})]
         of = lambda x: x ** 2
         with warnings.catch_warnings(record=True) as w:
             opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
             assert any("PHOTONAI has detected some" in s for s in [e.message.args[0] for e in w])
 
-        pipeline_elements = [PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 0.5, range_type='geomspace')})]
+        pipeline_elements = [PipelineElement("SVC", hyperparameters={'C': FloatRange(0.1, 0.5,
+                                                                                     range_type='geomspace')})]
         opt = NevergradOptimizer(facade="NGO")
         with self.assertRaises(NotImplementedError):
             opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)

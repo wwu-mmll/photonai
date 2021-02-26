@@ -4,17 +4,15 @@ from photonai.optimization.hyperparameters import NumberRange
 from ..grid_search_tests.test_grid_search import GridSearchOptimizerTest
 
 import warnings
+import time
 
 
 class SkOptOptimizerTest(GridSearchOptimizerTest):
 
     def setUp(self):
-        """
-        Set up for SkOptOptimizerTest.
-        """
         self.pipeline_elements = [PipelineElement("StandardScaler"),
                                   PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 20)}),
-                                  PipelineElement("SVC")]
+                                  PipelineElement("SVC", hyperparameters={'C': FloatRange(1, 100)})]
         self.optimizer = SkOptOptimizer()
         self.optimizer_name = "sk_opt"
         self.optimizer_params = None
@@ -64,3 +62,14 @@ class SkOptOptimizerTest(GridSearchOptimizerTest):
                                                                      'C': NumberRange(1, 3, range_type='range')})]
         with self.assertRaises(ValueError):
             self.optimizer.prepare(pipeline_elements, True)
+
+    def test_time_limit(self):
+        self.optimizer = SkOptOptimizer(limit_in_minutes=0.05, n_configurations=1000)  # 3 seconds
+        self.optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
+        configs = []
+        start = time.time()
+        for config in self.optimizer.ask:
+            configs.append(config)
+            time.sleep(0.005)
+        stop = time.time()
+        self.assertAlmostEqual(stop-start, 3, 0)

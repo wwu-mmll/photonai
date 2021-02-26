@@ -12,7 +12,7 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
     """Grid search optimizer.
 
     Searches for the best configuration by iteratively
-    testing all possible hyperparameter combinations.
+    testing a grid of possible hyperparameter combinations.
 
     Example:
         ```
@@ -32,17 +32,16 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
         self.ask = self.next_config_generator()
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Prepare grid based hyperparameter search.
-
-        Creates a grid from input pipeline_elements.
+        """
+        Creates a grid from a list of PipelineElements.
         Hyperparameters can be accessed via pipe_element.hyperparameters.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all PipelineElements to create the hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
         """
         self.pipeline_elements = pipeline_elements
@@ -55,8 +54,7 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            next_config:
-                Yields the next config.
+            Yields the next config.
 
         """
         for parameters in self.param_grid:
@@ -67,7 +65,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
     """Random grid search optimizer.
 
     Searches for the best configuration by randomly
-    testing n possible hyperparameter combinations.
+    testing n points of a grid of possible hyperparameters.
 
     Example:
         ```
@@ -89,7 +87,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
             limit_in_minutes:
                 Total time in minutes.
 
-            n_configurations: int or None, default=25
+            n_configurations:
                 Number of configurations to be calculated.
 
         """
@@ -100,14 +98,15 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         self.start_time, self.end_time = None, None
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Prepare hyperparameter search.
+        """
+        Prepare hyperparameter search.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all PipelineElements to create the hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
         """
         super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
@@ -127,8 +126,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            next_config:
-                Yields the next config.
+            Yields the next config.
 
         """
         if self.start_time is None and self.limit_in_minutes is not None:

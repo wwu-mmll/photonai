@@ -4,4 +4,4 @@
       members:
         - __init__
         - prepare
-        - optimize
+        - next_config_generator
