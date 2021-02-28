@@ -137,7 +137,7 @@ class NumberRange(PhotonHyperparam):
                 if range_type == 'linspace', range_type == 'logspace', or range_type == 'geomspace',
                 the number of samples to generate.
 
-            kwargs:
+            **kwargs:
                 Further parameters that should be passed to the numpy function chosen with range_type.
 
         """
@@ -268,7 +268,7 @@ class IntegerRange(NumberRange):
                 If range_type == 'linspace', range_type == 'logspace', or range_type == 'geomspace',
                 the number of samples to generate.
 
-            kwargs:
+            **kwargs:
                 Further parameters that should be passed to the numpy function chosen with range_type.
 
         """

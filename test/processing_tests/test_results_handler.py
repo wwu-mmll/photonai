@@ -1,8 +1,8 @@
 import os
 import shutil
-from io import StringIO
 import uuid
 import warnings
+from prettytable import PrettyTable
 
 import numpy as np
 import pandas as pd
@@ -11,7 +11,8 @@ from sklearn.model_selection import KFold
 from sklearn.base import BaseEstimator, TransformerMixin
 
 from photonai.base import Hyperpipe, OutputSettings
-from photonai.base import PipelineElement, Stack
+from photonai.base import PipelineElement, Stack, Switch
+from photonai.optimization import IntegerRange, FloatRange
 from photonai.processing import ResultsHandler
 from photonai.helper.photon_base_test import PhotonBaseTest
 from photonai.processing.results_structure import MDBHyperpipe
@@ -37,7 +38,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         cls.ss_pipe_element = PipelineElement('StandardScaler')
         cls.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, random_state=42)
         cls.svc_pipe_element = PipelineElement('SVC', {'C': [0.1], 'kernel': ['linear']},  # 'rbf', 'sigmoid']
-                                                random_state=42)
+                                               random_state=42)
 
         cls.inner_cv_object = KFold(n_splits=3)
         cls.metrics = ["accuracy", 'recall', 'precision']
@@ -190,7 +191,7 @@ class ResultsHandlerTest(PhotonBaseTest):
 
     def test_save_all_learning_curves(self):
         """
-        Test number of saved learning curve files
+        Test count of saved learning curve files.
         """
         hyperpipe = Hyperpipe(self.pipe_name, inner_cv=self.inner_cv_object,
                               learning_curves=True,
@@ -199,7 +200,7 @@ class ResultsHandlerTest(PhotonBaseTest):
                               outer_cv=KFold(n_splits=2),
                               project_folder=self.results_folder,
                               output_settings=self.output_settings,
-                              verbosity=1)
+                              verbosity=2)
         hyperpipe += self.ss_pipe_element
         hyperpipe += self.pca_pipe_element
         hyperpipe.add(self.svc_pipe_element)
@@ -253,13 +254,13 @@ class ResultsHandlerTest(PhotonBaseTest):
 
         for i in range(2):
             self.assertEqual(int(performance_table.iloc[i]["fold"]), i+1)
-            for key, value in self.hyperpipe.results_handler.results.outer_folds[i]. \
+            for key, value in self.hyperpipe.results_handler.results.outer_folds[i].\
                     best_config.best_config_score.validation.metrics.items():
                 self.assertEqual(performance_table.iloc[i][key], value)
             self.assertEqual(self.hyperpipe.results_handler.results.outer_folds[i].best_config.
                              best_config_score.number_samples_training,
                              performance_table.iloc[i]["n_train"])
-            self.assertEqual(self.hyperpipe.results_handler.results.outer_folds[i].best_config. \
+            self.assertEqual(self.hyperpipe.results_handler.results.outer_folds[i].best_config.
                              best_config_score.number_samples_validation,
                              performance_table.iloc[i]["n_validation"])
         self.assertEqual(performance_table.iloc[2].isnull().all(), False)
@@ -276,3 +277,30 @@ class ResultsHandlerTest(PhotonBaseTest):
         local_y = self.__y.astype(float)
         self.hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
         self.hyperpipe.fit(self.__X, local_y)
+
+    def test_get_mean_of_best_validation_configs_per_estimator(self):
+        hyperpipe = Hyperpipe('compare_estimators',
+                              inner_cv=KFold(n_splits=2, shuffle=True),
+                              outer_cv=KFold(n_splits=2, shuffle=True),
+                              metrics=['mean_squared_error'],
+                              best_config_metric='mean_squared_error',
+                              optimizer='switch',
+                              optimizer_params={'name': 'random_search', 'n_configurations': 3},
+                              project_folder='./tmp',
+                              verbosity=0)
+        hyperpipe += self.ss_pipe_element
+
+        # compare different learning algorithms in an OR_Element
+        estimators = Switch('estimator_selection')
+        estimators += PipelineElement('RandomForestRegressor',
+                                      hyperparameters={'min_samples_split': IntegerRange(2, 4)})
+        estimators += PipelineElement('SVR', hyperparameters={'C': FloatRange(0.5, 25)})
+
+        hyperpipe += estimators
+        hyperpipe.fit(self.__X[:150], self.__y[:150])
+
+        output = hyperpipe.results_handler.get_mean_of_best_validation_configs_per_estimator()
+        output2 = hyperpipe.results_handler.get_n_best_validation_configs_per_estimator()
+
+        self.assertTrue(isinstance(output, PrettyTable))
+        self.assertTrue(isinstance(output2, dict))

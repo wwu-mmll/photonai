@@ -445,8 +445,8 @@ class PhotonRegistry:
         Write json content to file
 
         Parameters:
-        content2write:
-            The new information to attach to the file.
+            content2write:
+                The new information to attach to the file.
 
         """
         # Writing JSON data

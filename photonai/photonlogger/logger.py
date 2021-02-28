@@ -1,7 +1,6 @@
 import datetime
 import logging
 import sys
-import os
 import sklearn
 
 logging.getLogger(sklearn.__name__).setLevel(logging.ERROR)
@@ -22,6 +21,7 @@ CLEAN_LEVELV_NUM = 21
 INFO_LEVELV_NUM = 20
 DEBUG_LEVELV_NUM = 10
 LENGTH = 101
+
 
 # add custom log level
 def photon_system_log(self, message, *args, **kws):
@@ -77,5 +77,3 @@ logging.Logger.debug = debug
 logging.Logger.stars = star_log
 logging.Logger.line = underscore_log
 logging.Logger.system_line = system_line
-
-

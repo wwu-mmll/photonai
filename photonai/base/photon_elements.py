@@ -8,7 +8,7 @@ import numpy as np
 import warnings
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
-from typing import List
+from typing import List, Union
 
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.registry.registry import PhotonRegistry
@@ -73,7 +73,7 @@ class PipelineElement(BaseEstimator):
             batch_size:
                 Size of the division on which is calculated separately.
 
-            kwargs (dict):
+            **kwargs:
                 Any parameters that should be passed to the object
                 to be instantiated, default parameters.
 
@@ -322,7 +322,7 @@ class PipelineElement(BaseEstimator):
                 If true, the element is currently disabled and
                 does nothing except return the data it received.
 
-            kwargs (dict):
+            **kwargs:
                 Any parameters that should be passed to the object
                 to be instantiated, default parameters.
 
@@ -412,7 +412,7 @@ class PipelineElement(BaseEstimator):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_element.predict.
 
         Returns:
@@ -476,7 +476,7 @@ class PipelineElement(BaseEstimator):
                 The array-like training and test data with shape=[N, D],
                 where N is the number of samples and D is the number of features.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_element.predict.
 
         Returns:
@@ -541,7 +541,7 @@ class PipelineElement(BaseEstimator):
                 The truth array-like values with shape=[N], where N is
                 the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_element.transform.
 
         Returns:
@@ -572,7 +572,7 @@ class PipelineElement(BaseEstimator):
                 The truth array-like values with shape=[N], where N is
                 the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_element.transform.
 
         Raises:
@@ -771,7 +771,7 @@ class Branch(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_elements fit.
 
         Returns:
@@ -795,7 +795,7 @@ class Branch(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_elements predict/transform.
 
         Returns:
@@ -815,7 +815,7 @@ class Branch(PipelineElement):
                 The array-like data with shape=[N, D], where N is the
                 number of samples and D is the number of features.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_elements predict method.
 
         Returns:
@@ -1148,7 +1148,7 @@ class Stack(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_elements fit.
 
         Returns:
@@ -1169,7 +1169,7 @@ class Stack(PipelineElement):
                 The array-like data with shape=[N, D], where N is the
                 number of samples and D is the number of features.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_elements predict.
 
         Returns:
@@ -1204,7 +1204,7 @@ class Stack(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs:
+            **kwargs:
                 Keyword arguments, not used yet.
 
         Returns:
@@ -1234,7 +1234,7 @@ class Stack(PipelineElement):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_elements transform.
 
         Returns:
@@ -1512,9 +1512,8 @@ class Switch(PipelineElement):
         Makes the sklearn configuration dictionary human readable.
 
         Returns:
-            prettified_configuration_string:
-                Configuration as prettified string or configuration as
-                dict with prettified keys.
+            Configuration as prettified string or configuration as
+            dict with prettified keys.
 
         """
         if isinstance(config_value, tuple):
@@ -1531,7 +1530,7 @@ class Switch(PipelineElement):
         else:
             return super(Switch, self).prettify_config_output(config_name, config_value)
 
-    def predict_proba(self, X: np.ndarray, **kwargs) -> np.ndarray:
+    def predict_proba(self, X: np.ndarray, **kwargs) -> Union[np.ndarray, None]:
         """
         Predict probabilities. Base element needs predict_proba()
         function, otherwise return None.
@@ -1541,7 +1540,7 @@ class Switch(PipelineElement):
                 The array-like data with shape=[N, D], where N is the number
                 of samples and D is the number of features.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, not in use yet.
 
         Returns:
@@ -1574,7 +1573,7 @@ class Switch(PipelineElement):
                 The truth array-like values with shape=[N], where N is
                 the number of samples.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to base_element.transform.
 
         Returns:

@@ -104,7 +104,7 @@ class BaseModelWrapper(BaseEstimator):
         Automatically implemented when inheriting from sklearn.base.BaseEstimator.
 
         Parameters:
-            kwargs (dict): Estimator parameters.
+            **kwargs: Estimator parameters.
 
         """
         super(BaseModelWrapper, self).set_params(**kwargs)

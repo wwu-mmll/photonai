@@ -84,7 +84,7 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
                     - SMOTEENN,
                     - SMOTETomek.
 
-            kwargs (dict):
+            **kwargs:
                 Any parameters to pass to the imbalance strategy object.
 
         """
@@ -129,7 +129,7 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
             y:
                 The input targets of shape [n_samples, 1].
 
-            kwargs (dict):
+            **kwargs:
                 Ignored input.
 
         Returns:
@@ -157,7 +157,7 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
             y:
                 The input targets of shape [n_samples, 1].
 
-            kwargs (dict):
+            **kwargs:
                 Ignored input.
 
         Returns:

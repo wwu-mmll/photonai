@@ -666,8 +666,8 @@ class Hyperpipe(BaseEstimator):
 
     def __iadd__(self, pipe_element: PipelineElement):
         """
-        Add an element to the machine learning pipeline
-        Returns self
+        Add an element to the machine learning pipeline.
+        Returns self.
 
         Parameters:
             pipe_element:
@@ -689,8 +689,8 @@ class Hyperpipe(BaseEstimator):
 
     def add(self, pipe_element: PipelineElement):
         """
-        Add an element to the machine learning pipeline
-        Returns self
+        Add an element to the machine learning pipeline.
+        Returns self.
 
         Parameters:
             pipe_element:
@@ -958,7 +958,7 @@ class Hyperpipe(BaseEstimator):
                 The truth array-like values with shape=[N],
                 where N is the number of samples.
 
-            kwargs:
+            **kwargs:
                 Keyword arguments, passed to Outer_Fold_Manager.fit.
 
 
@@ -1075,7 +1075,7 @@ class Hyperpipe(BaseEstimator):
                 of features. D must correspond to the number
                 of trained dimensions of the fit method.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to optimum_pipe.predict.
 
         Returns:
@@ -1097,7 +1097,7 @@ class Hyperpipe(BaseEstimator):
                 of features. D must correspond to the number
                 of trained dimensions of the fit method.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to optimum_pipe.predict_proba.
 
         Returns:
@@ -1118,6 +1118,9 @@ class Hyperpipe(BaseEstimator):
                 where M is the number of samples and D is the number
                 of features. D must correspond to the number
                 of trained dimensions of the fit method.
+
+            **kwargs:
+                Keyword arguments, passed to optimum_pipe.transform.
 
         Returns:
             Transformed data.
@@ -1141,7 +1144,7 @@ class Hyperpipe(BaseEstimator):
             y:
                 The array-like true targets.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to optimum_pipe.predict.
 
         Returns:
@@ -1170,7 +1173,7 @@ class Hyperpipe(BaseEstimator):
             y_val:
                 The array-like true targets.
 
-            kwargs (dict):
+            **kwargs:
                 Keyword arguments, passed to sklearn.permutation_importance.
 
         Returns:
@@ -1446,7 +1449,7 @@ class PhotonModelPersistor:
         return element_list
 
     @staticmethod
-    def load_optimum_pipe(file, password=None):
+    def load_optimum_pipe(file: str, password: str = None):
         """
         Load optimum pipe from file.
         As staticmethod, instantiation is thus not required.

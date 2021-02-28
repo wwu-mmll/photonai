@@ -1,9 +1,5 @@
-import datetime
-import random
-
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.base.photon_elements import Switch
-from photonai.photonlogger.logger import logger
 
 from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer

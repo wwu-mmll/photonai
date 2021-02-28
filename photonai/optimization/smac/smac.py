@@ -82,7 +82,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
             rng:
                 Random seed of SMAC.facade.
 
-            kwargs:
+            **kwargs:
                 All initial kwargs are passed to SMACs scenario.
                 [List of all a vailable parameters](
                 https://automl.github.io/SMAC3/master/options.html#scenario).

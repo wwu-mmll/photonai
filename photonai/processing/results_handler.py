@@ -876,7 +876,7 @@ class ResultsHandler:
                 performance_values = [c.get_test_metric(metric, 'mean')
                                       for c in estimator_config_list]
                 estimator_performance_values[estimator_name][metric] = np.mean(performance_values)
-        output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
+        output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics, True)
         if write_to_file:
             text_file = open(os.path.join(self.output_settings.results_folder,
                                           "mean_best_estimator_performance.txt"), "w")

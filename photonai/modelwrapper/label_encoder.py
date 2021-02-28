@@ -25,7 +25,7 @@ class LabelEncoder(SKLabelEncoder):
             y:
                 The input targets of shape [n_samples, 1].
 
-            kwargs (dict):
+            **kwargs:
                 Ignored input.
 
         """
@@ -43,7 +43,7 @@ class LabelEncoder(SKLabelEncoder):
             y:
                 The input targets of shape [n_samples, 1].
 
-            kwargs (dict):
+            **kwargs:
                 Ignored input.
 
         Returns:
@@ -64,7 +64,7 @@ class LabelEncoder(SKLabelEncoder):
             y:
                 The input targets of shape [n_samples, 1].
 
-            kwargs (dict):
+            **kwargs:
                 Ignored input.
 
         Returns:

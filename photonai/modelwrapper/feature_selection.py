@@ -302,7 +302,7 @@ class LassoFeatureSelection(BaseEstimator, TransformerMixin):
             alpha: float, default=1.
                 Weighting parameter for Lasso.
 
-            kwargs (dict):
+            **kwargs:
                 Passed to Lasso object.
 
         """

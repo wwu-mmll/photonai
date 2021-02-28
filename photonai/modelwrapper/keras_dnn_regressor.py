@@ -1,4 +1,5 @@
 from typing import Union
+import numpy as np
 from keras.optimizers import Optimizer
 import photonai.modelwrapper.keras_base_models as keras_dnn_base_model
 
@@ -142,7 +143,7 @@ class KerasDnnRegressor(KerasDnnBaseModel, KerasBaseRegressor):
         else:
             raise ValueError("Loss function is not supported. Feel free to use upperclass without restrictions.")
 
-    def fit(self, X, y):
+    def fit(self, X: np.ndarray, y: np.ndarray):
         """
         Starting the learning.
 
