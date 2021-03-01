@@ -19,7 +19,7 @@ state-of-the-art machine learning toolboxes,
  optimization metrics from a list of pre-registered options. 
  
  Importantly, you can integrate custom solutions into your data processing pipeline, 
- but also for any part of the model training and evaluation process including ucstom
+ but also for any part of the model training and evaluation process including custom
  hyperparameter optimization strategies.  
 
 For a detailed description, 
