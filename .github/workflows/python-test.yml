@@ -10,7 +10,7 @@ on:
     branches: [ master, develop ]
 
 jobs:
-  build:
+  pytest:
 
     runs-on: ubuntu-18.04
     
@@ -38,8 +38,10 @@ jobs:
     - name: Test with pytest
       run: |
         PYTHONPATH=./ pytest ./test --cov=./photonai
+  
+  coveralls:
+    runs-on: ubuntu-18.04
+    needs: pytest
+    steps:
     - name: Coveralls
-      uses: coverallsapp/github-action@master
-      with:
-        github-token: ${{ secrets.GITHUB_TOKEN }}
-        path-to-lcov: ./.coverage    
+      run: coveralls
