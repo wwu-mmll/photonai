@@ -458,6 +458,10 @@ class HyperpipeTests(PhotonBaseTest):
         self.hyperpipe.add(PipelineElement('SVC'))
         return nmb_list
 
+    def test_eval_final_performance_deprecation(self):
+        with self.assertRaises(DeprecationWarning):
+            Hyperpipe('name', eval_final_performance=True)
+
     def test_recursive_disabling(self):
         list_of_elements_to_detect = self.setup_crazy_pipe()
         self.hyperpipe._pipe = Branch.prepare_photon_pipe(list_of_elements_to_detect)

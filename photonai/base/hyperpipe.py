@@ -268,6 +268,7 @@ class Hyperpipe(BaseEstimator):
                  optimizer_params: dict = None,
                  metrics: Optional[List[Union[Scorer.Metric_Type, str]]] = None,
                  best_config_metric: Optional[Union[Scorer.Metric_Type, str]] = None,
+                 eval_final_performance: bool = None,
                  use_test_set: bool = True,
                  test_size: float = 0.2,
                  project_folder: str = '',
@@ -344,6 +345,9 @@ class Hyperpipe(BaseEstimator):
                 The metric that should be maximized or minimized in order to choose
                 the best hyperparameter configuration.
 
+            eval_final_performance [bool, default=True]:
+                DEPRECATED! Use "use_test_set" instead!
+
             use_test_set [bool, default=True]:
                 If the metrics should be calculated for the test set,
                 otherwise the test set is seperated but not used.
@@ -398,6 +402,12 @@ class Hyperpipe(BaseEstimator):
         """
 
         self.name = re.sub(r'\W+', '', name)
+
+        if eval_final_performance is not None:
+            depr_warning = "Hyperpipe parameter eval_final_performance is deprecated. It's called use_test_set now."
+            use_test_set = eval_final_performance
+            logger.warning(depr_warning)
+            raise DeprecationWarning(depr_warning)
 
         # ====================== Cross Validation ===========================
         # check if both calculate_metrics_per_folds and calculate_metrics_across_folds is False
