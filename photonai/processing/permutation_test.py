@@ -376,16 +376,3 @@ class PermutationTest:
         else:
             greater_is_better = Scorer.greater_is_better_distinction(metric)
         return greater_is_better
-
-
-
-
-
-
-
-
-
-
-
-
-

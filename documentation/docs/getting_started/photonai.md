@@ -21,4 +21,9 @@ and many others...
 ![Basic PHOTONAI class hierachy](https://www.photon-ai.com/static/img/photon/architecture.jpg "PHOTONAI class diagram")
 
 ## Basic structure 
-The PHOTONAI framework is built to accelerate and simplify the design of machine learning pipelines and automatize the training, testing and hyperparameter optimization process. The most important class is the _Hyperpipe_, as it is used to parametrize and control both the pipeline and the training and testing workflow. The _Pipeline_ streams data through a sequence of _PipelineElements_, the latter of which represent either established or custom algorithm implementations (_BaseElement_). _PipelineElements_ can share a position within the data stream via an And-Operation (_Stack_), an Or-Operation (_Switch_) or represent a parallel sub-pipeline (_Branch_)
+The PHOTONAI framework is built to accelerate and simplify the design of machine learning pipelines and automatize the 
+training, testing and hyperparameter optimization process. The most important class is the _Hyperpipe_, as it is used to 
+parametrize and control both the pipeline and the training and testing workflow. The _Pipeline_ streams data through a 
+sequence of _PipelineElements_, the latter of which represent either established or custom algorithm implementations 
+(_BaseElement_). _PipelineElements_ can share a position within the data stream via an And-Operation (_Stack_), an 
+Or-Operation (_Switch_) or represent a parallel sub-pipeline (_Branch_).

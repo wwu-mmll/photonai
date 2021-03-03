@@ -38,7 +38,7 @@ class SMACOptimizer(PhotonMasterOptimizer):
         In: Proceedings of the conference on Learning and Intelligent OptimizatioN (LION 5)
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe('smac_example',
                             optimizer='smac',
                             optimizer_params={"facade": "SMAC4BO",
@@ -60,10 +60,10 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
         Parameters:
             facade:
-                Choice of SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
+                Choice of the SMAC backend strategy, [SMAC4BO, SMAC4HPO, SMAC4AC, BOHB4HPO].
 
             run_obj:
-                Defines what metric to optimize.
+                Defines the optimization metric.
                 When optimizing runtime, cutoff_time is required as well.
 
             wallclock_limit:
@@ -80,9 +80,9 @@ class SMACOptimizer(PhotonMasterOptimizer):
                 Dict for intensifier settings.
 
             rng:
-                random seed of SMAC.facade
+                Random seed of SMAC.facade.
 
-            kwargs:
+            **kwargs:
                 All initial kwargs are passed to SMACs scenario.
                 [List of all a vailable parameters](
                 https://automl.github.io/SMAC3/master/options.html#scenario).
@@ -126,14 +126,15 @@ class SMACOptimizer(PhotonMasterOptimizer):
         self.constant_dictionary = {}
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool, objective_function: Callable):
-        """Initializes SMAC Optimizer.
+        """
+        Initializes the SMAC Optimizer.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter space.
+                List of all PipelineElements to create hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
             objective_function:
                 The cost or objective function.
@@ -171,11 +172,12 @@ class SMACOptimizer(PhotonMasterOptimizer):
         self.smac.optimize()
 
     def _build_smac_space(self, pipeline_elements: list):
-        """Build entire SMAC hyperparameter space.
+        """
+        Build the entire SMAC hyperparameter space.
 
         Parameters:
-            pipeline_elements: list
-                List of all pipeline_elements to create hyperparameter_space.
+            pipeline_elements:
+                List of all PipelineElements to create the hyperparameter space.
 
         """
         for pipe_element in pipeline_elements:
@@ -218,13 +220,14 @@ class SMACOptimizer(PhotonMasterOptimizer):
 
     @staticmethod
     def _convert_photonai_to_smac_param(hyperparam: PhotonHyperparam, name: str):
-        """Helper function: Convert PHOTON hyperparameter to SMAC hyperparameter.
+        """
+        Helper function: Convert PHOTONAI to SMAC hyperparameter.
 
         Parameters:
-            hyperparam: PhotonHyperparam
+            hyperparam:
                 One of photonai.optimization.hyperparameters.
 
-            name: str
+            name:
                 Name of hyperparameter.
 
         """

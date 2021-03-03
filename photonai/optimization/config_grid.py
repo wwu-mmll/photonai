@@ -4,20 +4,18 @@ from photonai.optimization import PhotonHyperparam, IntegerRange, FloatRange, Ca
 from photonai.photonlogger import logger
 
 
-def create_global_config_dict(pipeline_elements):
-    """Creation of a definition set for grid-based optimizers in format: dict key -> value.
+def create_global_config_dict(pipeline_elements: list) -> dict:
+    """
+    Creation of a definition set for grid-based optimizers in format: dict key -> value.
 
-    A grid is generated from a given list of hyperparameters for optimization.
-    Initialize hyperparameters with transform().
+    A grid is generated from a given list of hyperparameters for the optimization process.
+    Furthermore, the initialization of hyperparameters takes place.
 
-    Parameters
-    ----------
-    pipeline_elements: list of PhotonHyperparameters
-        List of all set hyperparameters.
+    Parameters:
+        pipeline_elements:
+            List of all set hyperparameters.
 
-    Returns
-    -------
-    global_hyperparameter_dict: dict
+    Returns:
         Grid of configurations.
 
     """
@@ -43,23 +41,20 @@ def create_global_config_dict(pipeline_elements):
     return global_hyperparameter_dict
 
 
-def create_global_config_grid(pipeline_elements, add_name=''):
-    """Creation of a list of configuration for grid-based optimizers.
+def create_global_config_grid(pipeline_elements: list, add_name: str = '') -> list:
+    """
+    Creation of a list of configuration for grid-based optimizers.
+    A grid is generated from a given list of hyperparameters for the optimization process.
 
-        A grid is generated from a given list of hyperparameters for optimization.
-
-        Parameters
-        ----------
-        pipeline_elements: list of PhotonHyperparameters
-            List of hyperparameters.
+    Parameters:
+        pipeline_elements:
+            List of PipelineElements.
 
         add_name: str, default=''
-            Set praefix to dict keys.
+            Set prefix to dict keys.
 
-        Returns
-        -------
-        config_dicts: List of dicts
-            List of dicts. Every dict is a possible configurations.
+    Returns:
+        List of dicts. Every dict is a possible configurations.
 
     """
     global_hyperparameter_list = []

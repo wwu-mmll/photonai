@@ -43,7 +43,7 @@ class ResultsHandler:
                 An initial setting is not necessary,
                 because a later loading via file or MongoDB is possible.
 
-            output_settings:
+            output_settings (OutputSettings):
                 Setting for creation and storage of the results_object.
 
         """
@@ -51,7 +51,8 @@ class ResultsHandler:
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
-        """Reads results_file from json into MDBHyperpipe object self.results.
+        """
+        Read results_file from json into MDBHyperpipe object self.results.
 
         Parameters:
             results_file:
@@ -61,7 +62,8 @@ class ResultsHandler:
         self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
-        """Reads results_file from MongoDB into MDBHyperpipe object self.results.
+        """
+        Read results_file from MongoDB into MDBHyperpipe object self.results.
 
         Parameters:
             mongodb_connect_url:
@@ -85,7 +87,8 @@ class ResultsHandler:
 
     @staticmethod
     def get_methods() -> list:
-        """This function returns a list of all methods available for ResultsHandler.
+        """
+        This function returns a list of all methods available for ResultsHandler.
 
         Returns:
             List of all available methods.
@@ -94,20 +97,15 @@ class ResultsHandler:
         methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
         return methods_list
 
-
     def get_performance_table(self):
         """This function returns a summary table of the overall results.
 
         ToDo: add best_config information!
         """
-
         res_tab = pd.DataFrame()
         for i, folds in enumerate(self.results.outer_folds):
             # add best config infos
-            try:
-                res_tab.loc[i, 'best_config'] = folds.best_config.human_readable_config
-            except:
-                res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
+            res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
 
             # add fold index
             res_tab.loc[i, 'fold'] = folds.fold_nr
@@ -139,8 +137,12 @@ class ResultsHandler:
                 performances[metric].append(value)
         return performances
 
-    def get_config_evaluations(self):
-        """Return the test performance of every tested configuration in every outer fold.
+    def get_config_evaluations(self) -> dict:
+        """
+        Return the test performance of every tested configuration in every outer fold.
+
+        Returns:
+            Test performance of every configuration.
 
         """
         config_performances = list()
@@ -165,7 +167,7 @@ class ResultsHandler:
                         performance[metric].append(np.nan)
                     else:
                         for item in config.metrics_test:
-                            if (item.operation == 'FoldOperations.MEAN') and (item.metric_name == metric):
+                            if (item.operation == 'mean') and (item.metric_name == metric):
                                 performance[metric].append(item.value)
             config_performances.append(performance)
 
@@ -235,14 +237,13 @@ class ResultsHandler:
     def plot_curves(self, curves: pd.DataFrame, title: str = 'Learning Curves'):
         """This function plots the learning curves.
 
-        Parameters
-        ----------
-        curves: pd.DataFrame,
-            Dataframe with multi-index: (run - fraction of data)
-                               columns: at least (metric, train/test) floats
+        Parameters:
+            curves:
+                Dataframe with multi-index: (run - fraction of data)
+                columns: at least (metric, train/test) floats
 
-        title: str, default='Learning Curves',
-            Subtitle of plot.
+            title:
+                Subtitle of plot.
 
         """
         metrics = self.results.hyperpipe_info.metrics
@@ -875,7 +876,7 @@ class ResultsHandler:
                 performance_values = [c.get_test_metric(metric, 'mean')
                                       for c in estimator_config_list]
                 estimator_performance_values[estimator_name][metric] = np.mean(performance_values)
-        output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics)
+        output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics, True)
         if write_to_file:
             text_file = open(os.path.join(self.output_settings.results_folder,
                                           "mean_best_estimator_performance.txt"), "w")

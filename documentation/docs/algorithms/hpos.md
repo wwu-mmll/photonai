@@ -1,6 +1,6 @@
 <h1>Hyperparameter Optimization</h1>
 
-PHOTONAI offers easy access to several established Hyperparameter Optimization Strategies.
+PHOTONAI offers easy access to several established hyperparameter optimization strategies.
 
 <h3>Grid Search</h3>
 An exhaustive searching through a manually specified subset of the hyperparameter space. The grid is defined by 
@@ -17,16 +17,17 @@ a finite list for each hyperparameter. Then, a specified number of random config
 ```python
 pipe = Hyperpipe("...", 
                  optimizer='random_grid_search',
-                 optimizer_params={'n_configurations': 30})
+                 optimizer_params={'n_configurations': 30,
+                                   'limit_in_minutes': 10})
 ```
 
 <h3>Random Search</h3>
-A grid-free selecion of configurations based on the hyperparameter space. In the case of numerical parameters, 
+A grid-free selection of configurations based on the hyperparameter space. In the case of numerical parameters, 
 decisions are made only on the basis of the interval limits. The creation of configurations is limited 
 by time or a maximum number of runs.
 ```python
 pipe = Hyperpipe("...", 
-                 optimizer='random_grid_search',
+                 optimizer='random_search',
                  optimizer_params={'n_configurations': 30,
                                    'limit_in_minutes': 20})
 ```
@@ -43,7 +44,9 @@ A detailed parameter documentation [here.](
 ```python
 pipe = Hyperpipe("...", 
                  optimizer='sk_opt',
-                 optimizer_params={'n_configurations': 25,
+                 optimizer_params={'n_configurations': 55,
+                                   'n_initial_points': 15,
+                                   'initial_point_generator': "sobol",
                                    'acq_func': 'LCB',
                                    'acq_func_kwargs': {'kappa': 1.96}})
 ```
@@ -76,12 +79,12 @@ SMAC usage and implementation details available [here](
     https://automl.github.io/SMAC3/master/quickstart.html).
 
 ```python
-        my_pipe = Hyperpipe("...",
-                            optimizer='smac',
-                            optimizer_params={"facade": "SMAC4BO",
-                                              "wallclock_limit": 60.0*10,  # seconds
-                                              "ta_run_limit": 100},  # limit of configurations
-                            )
+my_pipe = Hyperpipe("...",
+                    optimizer='smac',
+                    optimizer_params={"facade": "SMAC4BO",
+                                      "wallclock_limit": 60.0*10,  # seconds
+                                      "ta_run_limit": 100}  # limit of configurations
+                    )
 ```
 
 

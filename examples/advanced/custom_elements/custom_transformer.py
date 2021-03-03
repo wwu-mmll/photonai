@@ -26,8 +26,3 @@ class CustomTransformer(BaseEstimator):
         Apply the method's logic to the data.
         """
         return data
-
-
-
-
-

@@ -5,7 +5,7 @@ from photonai.base import Hyperpipe, PipelineElement, OutputSettings
 from photonai.optimization import MinimumPerformanceConstraint, DummyPerformanceConstraint, BestPerformanceConstraint, IntegerRange
 
 
-my_pipe = Hyperpipe(name='basic_svm_pipe_no_performance',
+my_pipe = Hyperpipe(name='constrained_forest_pipe',
                     optimizer='grid_search',
                     metrics=['mean_squared_error', 'mean_absolute_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',

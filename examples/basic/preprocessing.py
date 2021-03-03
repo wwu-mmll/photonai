@@ -8,7 +8,7 @@ audiology = fetch_openml(name='audiology')
 X = audiology.data.values
 y = audiology.target.values
 
-my_pipe = Hyperpipe('hot_encode_pipeline',
+my_pipe = Hyperpipe('hot_encoder_pipeline',
                     inner_cv=ShuffleSplit(n_splits=5, test_size=0.2),
                     outer_cv=ShuffleSplit(n_splits=3, test_size=0.2),
                     optimizer='sk_opt',
@@ -21,8 +21,8 @@ my_pipe = Hyperpipe('hot_encode_pipeline',
 pre_proc = Preprocessing()
 pre_proc += PipelineElement('OneHotEncoder', sparse=False)
 pre_proc += PipelineElement('LabelEncoder')
-
 my_pipe += pre_proc
+
 my_pipe += PipelineElement('PCA', hyperparameters={'n_components': FloatRange(0.2, 0.7)})
 my_pipe += PipelineElement('SVC', hyperparameters={'C': FloatRange(1, 150)}, kernel='rbf')
 

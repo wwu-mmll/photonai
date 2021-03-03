@@ -10,3 +10,4 @@
         - load_optimum_pipe
         - inverse_transform_pipeline
         - copy_me
+        - get_permutation_feature_importances

@@ -12,10 +12,10 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
     """Grid search optimizer.
 
     Searches for the best configuration by iteratively
-    testing all possible hyperparameter combinations.
+    testing a grid of possible hyperparameter combinations.
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe(name='grid_based_pipe',
                             optimizer='grid_search',
                             ...
@@ -32,17 +32,16 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
         self.ask = self.next_config_generator()
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Prepare grid based hyperparameter search.
-
-        Creates a grid from input pipeline_elements.
+        """
+        Creates a grid from a list of PipelineElements.
         Hyperparameters can be accessed via pipe_element.hyperparameters.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all PipelineElements to create the hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
         """
         self.pipeline_elements = pipeline_elements
@@ -55,8 +54,7 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            next_config:
-                Yields the next config.
+            Yields the next config.
 
         """
         for parameters in self.param_grid:
@@ -67,65 +65,12 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
     """Random grid search optimizer.
 
     Searches for the best configuration by randomly
-    testing n possible hyperparameter combinations.
+    testing n points of a grid of possible hyperparameters.
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe(name='rgrid_based_pipe',
                             optimizer='random_grid_search',
-                            optimizer_params={'n_configurations': 50},
-                            ...
-                            )
-        my_pipe.fit(X, y)
-        ```
-
-    """
-    def __init__(self, n_configurations: Union[int, None] = 25):
-        """
-        Initialize the object.
-
-        Parameters:
-            n_configurations: int or None, default=25
-                Number of configurations to be calculated.
-
-        """
-        super(RandomGridSearchOptimizer, self).__init__()
-        self._k = n_configurations
-        self.n_configurations = self._k
-
-    def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Prepare hyperparameter search.
-
-        Parameters:
-            pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
-
-            maximize_metric:
-                Boolean for distinguish between score and error.
-
-        """
-        super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
-        self.n_configurations = self._k
-        self.param_grid = list(self.param_grid)
-        # create random order in list
-        np.random.shuffle(self.param_grid)
-        if self.n_configurations is not None:
-            # k is maximal all grid items
-            if self.n_configurations > len(self.param_grid):
-                self.n_configurations = len(self.param_grid)
-            self.param_grid = self.param_grid[0:self.n_configurations]
-
-
-class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
-    """Time boxed random grid serach.
-
-    Iteratively tests n possible hyperparameter configurations
-    until a certain time limit is reached.
-
-    Example:
-        ```
-        my_pipe = Hyperpipe(name='trgrid_based_pipe',
-                            optimizer='timeboxed_random_grid_search',
                             optimizer_params={'n_configurations': 50,
                                               'limit_in_minutes': 10},
                             ...
@@ -134,7 +79,7 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
         ```
 
     """
-    def __init__(self, limit_in_minutes: float = 60, n_configurations: Union[int, None] = None):
+    def __init__(self, limit_in_minutes: Union[float, None] = None, n_configurations: Union[int, None] = 25):
         """
         Initialize the object.
 
@@ -146,37 +91,47 @@ class TimeBoxedRandomGridSearchOptimizer(RandomGridSearchOptimizer):
                 Number of configurations to be calculated.
 
         """
-        super(TimeBoxedRandomGridSearchOptimizer, self).__init__(n_configurations)
+        super(RandomGridSearchOptimizer, self).__init__()
+        self._k = n_configurations
+        self.n_configurations = self._k
         self.limit_in_minutes = limit_in_minutes
-        self.start_time = None
-        self.end_time = None
+        self.start_time, self.end_time = None, None
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Prepare hyperparameter search.
+        """
+        Prepare hyperparameter search.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all PipelineElements to create the hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
         """
-        super(TimeBoxedRandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
+        super(RandomGridSearchOptimizer, self).prepare(pipeline_elements, maximize_metric)
         self.start_time = None
+        self.n_configurations = self._k
+        self.param_grid = list(self.param_grid)
+        # create random order in list
+        np.random.shuffle(self.param_grid)
+        if self.n_configurations is not None:
+            # k is maximal all grid items
+            if self.n_configurations > len(self.param_grid):
+                self.n_configurations = len(self.param_grid)
+            self.param_grid = self.param_grid[0:self.n_configurations]
 
     def next_config_generator(self) -> Generator:
         """
         Generator for new configs - ask method.
 
         Returns:
-            next_config:
-                Yields the next config.
+            Yields the next config.
 
         """
-        if self.start_time is None:
+        if self.start_time is None and self.limit_in_minutes is not None:
             self.start_time = datetime.datetime.now()
             self.end_time = self.start_time + datetime.timedelta(minutes=self.limit_in_minutes)
-        for parameters in super(TimeBoxedRandomGridSearchOptimizer, self).next_config_generator():
-            if datetime.datetime.now() < self.end_time:
+        for parameters in super(RandomGridSearchOptimizer, self).next_config_generator():
+            if self.limit_in_minutes is None or datetime.datetime.now() < self.end_time:
                 yield parameters

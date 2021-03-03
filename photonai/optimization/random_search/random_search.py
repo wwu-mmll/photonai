@@ -10,19 +10,19 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
     """Random search optimizer.
 
     Searches for the best configuration by randomly
-    testing hyperparameter combinations without grid.
+    testing hyperparameter combinations without any grid.
 
     """
     def __init__(self, limit_in_minutes: Union[float, None] = 60, n_configurations: Union[int, None] = None):
         """
         Initialize the object.
-        Only one of limit_in_minutes and n_configurations must be set.
+        One of limit_in_minutes or n_configurations must differ from None.
 
         Parameters:
             limit_in_minutes:
                 Total time in minutes.
 
-            n_configurations: int or None, default=None
+            n_configurations:
                 Number of configurations to be calculated.
 
         """
@@ -50,14 +50,15 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
             raise ValueError(msg)
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Initializes grid free random hyperparameter search.
+        """
+        Initializes grid free random hyperparameter search.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all PipelineElements to create the hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
         """
         self.start_time = None
@@ -69,8 +70,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-             next_config:
-                Yields the next config.
+            Yields the next config.
 
         """
         while True:

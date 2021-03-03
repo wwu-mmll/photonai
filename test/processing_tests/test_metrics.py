@@ -52,8 +52,8 @@ class ScorerTest(unittest.TestCase):
 
         for not_implemented_metric in self.some_not_implemented_metrics:
             with self.assertRaises(NameError):
-                np.testing.assert_equal(Scorer.calculate_metrics([1, 1, 0, 1], [0, 1, 0, 1],
-                                                             [not_implemented_metric])[not_implemented_metric], np.nan)
+                np.testing.assert_equal(Scorer.calculate_metrics(
+                    [1, 1, 0, 1], [0, 1, 0, 1], [not_implemented_metric])[not_implemented_metric], np.nan)
 
     def test_doubled_custom_metric(self):
 
@@ -84,7 +84,7 @@ class ScorerTest(unittest.TestCase):
 
         pearson_corr = pearson_correlation(y_true, y_pred)
         self.assertAlmostEqual(pearson_corr, 0.6324555320336789)
-        spearman_corr =spearman_correlation(y_true, y_pred)
+        spearman_corr = spearman_correlation(y_true, y_pred)
         self.assertAlmostEqual(spearman_corr, 0.632455532033676)
         cat_acc = categorical_accuracy_score(y_true, y_pred)
         self.assertAlmostEqual(cat_acc, 0.8333333333333334)

@@ -1,5 +1,6 @@
 from sklearn.base import BaseEstimator
 
+
 class CustomCovariateTransformer(BaseEstimator):
     """
     Any algorithm that uses the target values to change the data (e.g. transform male and female differently?)

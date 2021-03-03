@@ -15,6 +15,7 @@ Custom elements must only be registered once.
 
 ```python
 from photonai.base import PhotonRegistry
+
 custom_element_root_folder = "./"
 registry = PhotonRegistry(custom_elements_folder=custom_element_root_folder)
 

@@ -35,7 +35,7 @@ class HyperpipeTests(PhotonBaseTest):
                                    best_config_metric=self.best_config_metric,
                                    project_folder=self.tmp_folder_path,
                                    output_settings=output_settings,
-                                   verbosity=2)
+                                   verbosity=0)
         self.hyperpipe += self.ss_pipe_element
         self.hyperpipe += self.pca_pipe_element
         self.hyperpipe.add(self.svc_pipe_element)
@@ -188,7 +188,7 @@ class HyperpipeTests(PhotonBaseTest):
                        metrics=self.metrics,
                        best_config_metric=self.best_config_metric,
                        project_folder=self.tmp_folder_path,
-                       verbosity=2)
+                       verbosity=0)
         svc = PipelineElement('SVC')
         hp += svc
         hp.fit(self.__X, self.__y)
@@ -256,7 +256,7 @@ class HyperpipeTests(PhotonBaseTest):
                             best_config_metric='f1_score',
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
-                            verbosity=1,
+                            verbosity=0,
                             project_folder=tmp_path,
                             output_settings=settings)
 
@@ -317,7 +317,7 @@ class HyperpipeTests(PhotonBaseTest):
                             best_config_metric='f1_score',
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
-                            verbosity=1,
+                            verbosity=0,
                             project_folder=tmp_path,
                             output_settings=settings)
         my_pipe += PipelineElement('KerasDnnClassifier', {}, epochs=1, hidden_layer_sizes=[5])
@@ -341,7 +341,7 @@ class HyperpipeTests(PhotonBaseTest):
                             best_config_metric='f1_score',
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=2),
-                            verbosity=1,
+                            verbosity=0,
                             project_folder=tmp_path,
                             output_settings=settings)
         my_pipe += PipelineElement('KNeighborsClassifier')

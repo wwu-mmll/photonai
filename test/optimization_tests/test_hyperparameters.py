@@ -149,5 +149,3 @@ class HyperparameterOtherTest(unittest.TestCase):
         complex_range.transform()
         str_range = NumberRange(1, 2, num_type=np.bool_, range_type="range")
         str_range.transform()
-
-

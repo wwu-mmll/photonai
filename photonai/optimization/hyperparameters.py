@@ -8,7 +8,7 @@ from photonai.photonlogger.logger import logger
 class PhotonHyperparam(object):
     """Photon hyperparameter.
 
-    Base class handles over own value domain.
+    A base class that manages its own range of values.
 
     """
     def __init__(self, values: list):
@@ -23,11 +23,12 @@ class PhotonHyperparam(object):
         self.values = values
 
     def get_random_value(self, definite_list: bool = True):
-        """Method for random search to get random parameter based on its domain.
+        """
+        Method for random search to get a random value based on the underlying domain.
 
         Parameters:
             definite_list:
-                 Choice of transform param to discret list or not.
+                 Choice  between an element of a discrete list or a value within an interval.
                  In some cases, certain settings such as the
                  step size may otherwise be lost.
 
@@ -44,10 +45,9 @@ class PhotonHyperparam(object):
 
 
 class Categorical(PhotonHyperparam):
-    """Categorical.
+    """
+    Class for defining a definite list of values.
 
-    Class for defining a  definite list of hyperparameter values.
-    Can be used for categorical values, but also for numbers.
     """
     def __init__(self, values: list):
         """
@@ -67,9 +67,8 @@ class Categorical(PhotonHyperparam):
 class BooleanSwitch(PhotonHyperparam):
     """Boolean switch.
 
-    Class for defining a boolean hyperparameter,
-    When both options de- and activation should be
-    tested in hyperparameter optimization.
+    Class for defining a boolean hyperparameter.
+    Equivalent to Categorical([True, False]).
 
     """
     def __init__(self):
@@ -80,27 +79,27 @@ class BooleanSwitch(PhotonHyperparam):
 class NumberRange(PhotonHyperparam):
     """Number range.
 
-    Class for easily creating a range of numbers to be tested in hyperparameter optimization.
+    Class for easily creating a range of numbers to be tested in the optimization process.
 
-    Notes
-    -----
-    Before the values of the domain are available,
-    it is mandatory to call the transform method.
+    Notes:
+
+        Before the values of the domain are available,
+        it is mandatory to call the transform method.
 
     """
-
     def __init__(self, start: float, stop: float, range_type: str, step: int = None,
                  num: int = None, num_type: type = np.int64, **kwargs):
         """
         Initialize the object.
 
-        Parameters
+        Parameters:
             start:
-                The start value for generating the number interval.
-                The resulting interval includes the value, default is 0.
+                The start value for generating the lower bound.
+                The resulting interval includes the value.
 
             stop:
-                The stop value for generating the number interval.
+                The stop value for generating the upper bound.
+
                 - if range_type == "range":
                     The end value is not included in the interval (see documentation of numpy.arange).
                 - if range_type == "linspace"
@@ -116,17 +115,18 @@ class NumberRange(PhotonHyperparam):
             range_type:
                 Which method to use for generating the number interval.
                 Possible options:
-                    - "range": numpy.arange is used to generate a list
-                        of values separated by the same step width.
-                    - "linspace": numpy.linspace is used to generate a certain
-                        number of values between start and stop.
-                    - "logspace": numpy.logspace is used to generate a logarithmically
-                        distributed range of a certain length.
-                    - "geomspace": numpy.geomspace is used to generate numbers spaced
-                        evenly on a log scale (geometric progression)
+
+                - "range": numpy.arange is used to generate a list
+                    of values separated by the same step width.
+                - "linspace": numpy.linspace is used to generate a certain
+                    number of values between start and stop.
+                - "logspace": numpy.logspace is used to generate a logarithmically
+                    distributed range of a certain length.
+                - "geomspace": numpy.geomspace is used to generate numbers spaced
+                    evenly on a log scale (geometric progression).
 
             num_type:
-                The specific type specification for the interval's numbers.
+                The underlying datatype of the values.
                 For the inheriting class IntegerRange it is set to np.int32.
                 For the inheriting class FloatRange it is set to np.float32.
 
@@ -134,13 +134,14 @@ class NumberRange(PhotonHyperparam):
                 if range_type == 'range', the spacing between values.
 
             num:
-                if range_type == 'linspace' or range_type == 'logspace' or range_type == 'geomspace',
+                if range_type == 'linspace', range_type == 'logspace', or range_type == 'geomspace',
                 the number of samples to generate.
 
-            kwargs:
+            **kwargs:
                 Further parameters that should be passed to the numpy function chosen with range_type.
+
         """
-        super(NumberRange, self).__init__(None)
+        super(NumberRange, self).__init__([])
         self.start = start
         self.stop = stop
         self._range_type = None
@@ -151,7 +152,8 @@ class NumberRange(PhotonHyperparam):
         self.num = num
 
     def transform(self):
-        """Translates the definition into an area with values.
+        """
+        Translates the definition into an area with values.
         These values are again stored in the attribute self.values.
 
         """
@@ -217,8 +219,8 @@ class NumberRange(PhotonHyperparam):
 class IntegerRange(NumberRange):
     """Integer range.
 
-    Class for easily creating a range of integer
-    numbers to be tested in hyperparameter optimization.
+    Class for easily creating a range of integers
+    to be tested in optimization process.
 
     """
     def __init__(self, start: float, stop: float, range_type: str = 'range',
@@ -228,11 +230,12 @@ class IntegerRange(NumberRange):
 
         Parameters:
             start:
-                The start value for generating the number interval.
-                The resulting interval includes the value, default is 0.
+                The start value for generating the lower bound.
+                The resulting interval includes the value.
 
             stop:
-                The stop value for generating the number interval.
+                The stop value for generating the upper bound.
+
                 - if range_type == "range":
                     The end value is not included in the interval (see documentation of numpy.arange).
                 - if range_type == "linspace"
@@ -247,37 +250,39 @@ class IntegerRange(NumberRange):
 
             range_type:
                 Which method to use for generating the number interval.
-                Possible options:
-                    - "range": numpy.arange is used to generate a list
-                        of values separated by the same step width.
-                    - "linspace": numpy.linspace is used to generate a certain
-                        number of values between start and stop.
-                    - "logspace": numpy.logspace is used to generate a logarithmically
-                        distributed range of a certain length.
-                    - "geomspace": numpy.geomspace is used to generate numbers spaced
-                        evenly on a log scale (geometric progression)
+                Possible options,
+
+                - "range": numpy.arange is used to generate a list
+                    of values separated by the same step width.
+                - "linspace": numpy.linspace is used to generate a certain
+                    number of values between start and stop.
+                - "logspace": numpy.logspace is used to generate a logarithmically
+                    distributed range of a certain length.
+                - "geomspace": numpy.geomspace is used to generate numbers spaced
+                    evenly on a log scale (geometric progression).
 
             step:
-                if range_type == 'range', the spacing between values.
+                If range_type == 'range', the spacing between values.
 
             num:
-                if range_type == 'linspace' or range_type == 'logspace' or range_type == 'geomspace',
+                If range_type == 'linspace', range_type == 'logspace', or range_type == 'geomspace',
                 the number of samples to generate.
 
-            kwargs:
+            **kwargs:
                 Further parameters that should be passed to the numpy function chosen with range_type.
 
         """
         super().__init__(start, stop, range_type, step, num, np.int32, **kwargs)
 
     def get_random_value(self, definite_list: bool = False):
-        """Method for random search to get random parameter based on its domain.
+        """
+        Method for random search to get a random value based on the underlying domain.
 
         Parameters:
             definite_list:
-                Choice of transform param to discret list or not.
-                In some cases, certain settings such as the
-                step size may otherwise be lost.
+                 Choice  between an element of a discrete list or a value within an interval.
+                 As example, the step parameter would vanishes when this parameter
+                 is set to False.
 
         """
         if definite_list:
@@ -293,8 +298,8 @@ class IntegerRange(NumberRange):
 class FloatRange(NumberRange):
     """Float range.
 
-    Class for easily creating a range of integer
-    numbers to be tested in hyperparameter optimization.
+    Class for easily creating an interval of numbers
+    to be tested in the optimization process.
 
     """
     def __init__(self, start: float, stop: float, range_type: str = 'linspace',
@@ -304,11 +309,12 @@ class FloatRange(NumberRange):
 
         Parameters:
             start:
-                The start value for generating the number interval.
-                The resulting interval includes the value, default is 0.
+                The start value for generating the lower bound.
+                The resulting interval includes the value.
 
             stop:
-                The stop value for generating the number interval.
+                The stop value for generating the upper bound.
+
                 - if range_type == "range":
                     The end value is not included in the interval (see documentation of numpy.arange).
                 - if range_type == "linspace"
@@ -323,21 +329,22 @@ class FloatRange(NumberRange):
 
             range_type:
                 Which method to use for generating the number interval.
-                Possible options:
-                    - "range": numpy.arange is used to generate a list
-                        of values separated by the same step width.
-                    - "linspace": numpy.linspace is used to generate a certain
-                        number of values between start and stop.
-                    - "logspace": numpy.logspace is used to generate a logarithmically
-                        distributed range of a certain length.
-                    - "geomspace": numpy.geomspace is used to generate numbers spaced
-                        evenly on a log scale (geometric progression)
+                Possible options,
+
+                - "range": numpy.arange is used to generate a list
+                    of values separated by the same step width.
+                - "linspace": numpy.linspace is used to generate a certain
+                    number of values between start and stop.
+                - "logspace": numpy.logspace is used to generate a logarithmically
+                    distributed range of a certain length.
+                - "geomspace": numpy.geomspace is used to generate numbers spaced
+                    evenly on a log scale (geometric progression).
 
             step:
-                if range_type == 'range', the spacing between values.
+                If range_type == 'range', the spacing between values.
 
             num:
-                if range_type == 'linspace' or range_type == 'logspace' or range_type == 'geomspace',
+                If range_type == 'linspace', range_type == 'logspace', or range_type == 'geomspace',
                 the number of samples to generate.
 
             kwargs:
@@ -347,13 +354,14 @@ class FloatRange(NumberRange):
         super(FloatRange, self).__init__(start, stop, range_type, step, num, np.float64, **kwargs)
 
     def get_random_value(self, definite_list: bool = False):
-        """Method for random search to get random parameter based on its domain.
+        """
+        Method for random search to get a random value based on the underlying domain.
 
         Parameters:
             definite_list:
-                Choice of transform param to discret list or not.
-                In some cases, certain settings such as the
-                step size may otherwise be lost.
+                 Choice  between an element of a discrete list or a value within an interval.
+                 As example, the num parameter would vanishes when this parameter
+                 is set to False.
 
         """
         if definite_list:

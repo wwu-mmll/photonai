@@ -3,7 +3,7 @@ from sklearn.model_selection import StratifiedKFold
 
 from photonai.base import Hyperpipe, PipelineElement, Stack
 
-my_pipe = Hyperpipe(name='Estimator_pipe',
+my_pipe = Hyperpipe(name='ensemble_pipe',
                     optimizer='random_grid_search',
                     metrics=['balanced_accuracy'],
                     best_config_metric='balanced_accuracy',

@@ -515,7 +515,7 @@ class PhotonPipeline(_BaseComposition):
         if self.cache_man is not None:
             self.cache_man.clear_cache()
 
-    def _add_preprocessing(self, preprocessing):
+    def add_preprocessing(self, preprocessing):
         if preprocessing:
             self.elements.insert(0, (preprocessing.name, preprocessing))
 

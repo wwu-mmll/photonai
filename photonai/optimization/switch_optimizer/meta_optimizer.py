@@ -1,11 +1,7 @@
-import datetime
-import random
-
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.base.photon_elements import Switch
-from photonai.photonlogger.logger import logger
 
-from photonai.optimization import GridSearchOptimizer, TimeBoxedRandomGridSearchOptimizer, RandomGridSearchOptimizer, \
+from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, \
     SkOptOptimizer, RandomSearchOptimizer
 
 
@@ -37,7 +33,6 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
 
         self.OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                                      'random_grid_search': RandomGridSearchOptimizer,
-                                     'timeboxed_random_grid_search': TimeBoxedRandomGridSearchOptimizer,
                                      'sk_opt': SkOptOptimizer,
                                      'random_search': RandomSearchOptimizer}
 
@@ -96,9 +91,3 @@ class MetaHPOptimizer(PhotonSlaveOptimizer):
             else:
                 config_copy[c_key] = c_value
         self.current_optimizer.tell(config_copy, performance)
-
-
-
-
-
-

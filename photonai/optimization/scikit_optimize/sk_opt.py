@@ -1,11 +1,12 @@
-from skopt import Optimizer
-from skopt.space import Real, Integer, Dimension
-from skopt.space import Categorical as skoptCategorical
-
-import warnings
+import datetime
 import numpy as np
 from typing import Union, Generator
 import sklearn
+import warnings
+
+from skopt import Optimizer
+from skopt.space import Real, Integer, Dimension
+from skopt.space import Categorical as skoptCategorical
 
 from photonai.optimization import FloatRange, IntegerRange, BooleanSwitch, PhotonHyperparam
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
@@ -28,7 +29,7 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
     https://scikit-optimize.github.io/stable/modules/generated/skopt.optimizer.Optimizer.html#skopt.optimizer.Optimizer)
 
     Example:
-        ```
+        ``` python
         my_pipe = Hyperpipe('skopt_example',
                             optimizer='sk_opt',
                             optimizer_params={'n_configurations': 25,
@@ -41,6 +42,7 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
     def __init__(self,
                  n_configurations: int = 20,
                  n_initial_points: int = 10,
+                 limit_in_minutes: Union[float, None] = None,
                  base_estimator: Union[str, sklearn.base.RegressorMixin] = "ET",
                  initial_point_generator: str = "random",
                  acq_func: str = 'gp_hedge',
@@ -55,6 +57,9 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
             n_initial_points:
                 Number of evaluations with initialization points
                 before approximating it with `base_estimator`.
+
+            limit_in_minutes:
+                Total time in minutes.
 
             base_estimator:
                 Estimator for returning std(Y | x) along with E[Y | x].
@@ -76,6 +81,8 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         self.initial_point_generator = initial_point_generator
         self.acq_func = acq_func
         self.acq_func_kwargs = acq_func_kwargs
+        self.limit_in_minutes = limit_in_minutes
+        self.start_time, self.end_time = None, None
 
         self.optimizer = None
         self.maximize_metric = None
@@ -88,10 +95,12 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            next_config:
-                Yields the next config.
+            Yields the next config.
 
         """
+        if self.start_time is None and self.limit_in_minutes is not None:
+            self.start_time = datetime.datetime.now()
+            self.end_time = self.start_time + datetime.timedelta(minutes=self.limit_in_minutes)
         if self.optimizer is None:
             yield {}
         else:
@@ -99,23 +108,29 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
                 next_config_list = self.optimizer.ask()
                 next_config_dict = {self.hyperparameter_list[number]:
                                     self._convert_to_native(value) for number, value in enumerate(next_config_list)}
-                yield next_config_dict
+                if self.limit_in_minutes is None or datetime.datetime.now() < self.end_time:
+                    yield next_config_dict
+                else:
+                    yield {}
+                    break
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
-        """Initializes hyperparameter search with scikit-optimize.
+        """
+        Initializes hyperparameter search with scikit-optimize.
 
-        Assembles all hyperparameters of the pipeline_element
-        list in order to prepare the hyperparameter search space.
+        Assembles all hyperparameters of the list of PipelineElements
+        in order to prepare the hyperparameter space.
         Hyperparameters can be accessed via pipe_element.hyperparameters.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all PipelineElements to create the hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
         """
+        self.start_time = None
         self.optimizer = None
         self.hyperparameter_list = []
         self.maximize_metric = maximize_metric
@@ -162,13 +177,14 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         self.ask = self.ask_generator()
 
     def tell(self, config: dict, performance: float) -> None:
-        """Provide result for skopt optimizer to calculate new ones.
+        """
+        Provide a config result to calculate new ones.
 
         Parameters:
-            config: dict
+            config:
                 The configuration that has been trained and tested.
 
-            performance: dict
+            performance:
                 Metrics about the configuration's generalization capabilities.
 
         """

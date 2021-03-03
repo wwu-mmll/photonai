@@ -6,7 +6,7 @@ from photonai.base import Hyperpipe, PipelineElement
 
 X, y = load_boston(return_X_y=True)
 
-my_pipe = Hyperpipe(name='default_pipe',
+my_pipe = Hyperpipe(name='single_outer_pipe',
                     metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_absolute_error',
                     use_test_set=False,

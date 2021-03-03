@@ -5,14 +5,13 @@ from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import IntegerRange, FloatRange
 
 
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
+my_pipe = Hyperpipe('basic_regression_pipe',
                     optimizer='random_search',
                     optimizer_params={'n_configurations': 25},
-                    metrics=['mean_squared_error', 'pearson_correlation',
-                             'mean_absolute_error', 'explained_variance'],
+                    metrics=['mean_squared_error', 'mean_absolute_error', 'explained_variance'],
                     best_config_metric='mean_squared_error',
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=3),
+                    outer_cv=KFold(n_splits=3, shuffle=True),
+                    inner_cv=KFold(n_splits=3, shuffle=True),
                     verbosity=1,
                     project_folder='./tmp/')
 

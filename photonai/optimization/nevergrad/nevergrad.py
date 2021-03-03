@@ -20,10 +20,10 @@ class NevergradOptimizer(PhotonMasterOptimizer):
     Nevergrad is a gradient-free optimization platform.
 
     Nevergrad [usage and implementation details](
-    https://facebookresearch.github.io/nevergrad/)
+    https://facebookresearch.github.io/nevergrad/).
 
     Example:
-        ```
+        ``` python
         import nevergrad as ng
         # list of all available nevergrad optimizer
         print(list(ng.optimizers.registry.values()))
@@ -42,7 +42,7 @@ class NevergradOptimizer(PhotonMasterOptimizer):
 
         Parameters:
             facade:
-                Choice of Nevergrad backend strategy, [NGO, ...].
+                Choice of the Nevergrad backend strategy, e.g. [NGO, ...].
 
             n_configurations:
                 Number of runs.
@@ -85,10 +85,10 @@ class NevergradOptimizer(PhotonMasterOptimizer):
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all PipelineElements to create the hyperparameter space.
 
             maximize_metric:
-                Boolean for distinguish between score and error.
+                Boolean to distinguish between score and error.
 
             objective_function:
                 The cost or objective function.
@@ -113,11 +113,12 @@ class NevergradOptimizer(PhotonMasterOptimizer):
         self.optimizer.minimize(self.objective)
 
     def _build_nevergrad_space(self, pipeline_elements: list):
-        """Build entire Nevergrad hyperparameter space.
+        """
+        Build entire Nevergrad hyperparameter space.
 
         Parameters:
             pipeline_elements:
-                List of all pipeline_elements to create hyperparameter_space.
+                List of all pipeline_elements to create the hyperparameter space.
 
         """
         param_dict = {}
@@ -143,10 +144,11 @@ class NevergradOptimizer(PhotonMasterOptimizer):
 
     @staticmethod
     def _convert_photonai_to_nevergrad_param(hyperparam: PhotonHyperparam):
-        """Helper function: Convert PHOTONAI hyperparameter to Nevergrad hyperparameter.
+        """
+        Helper function: Convert PHOTONAI to Nevergrad hyperparameter.
 
         Parameters:
-            hyperparam: PhotonHyperparam
+            hyperparam:
                  One of photonai.optimization.hyperparameters.
 
         """

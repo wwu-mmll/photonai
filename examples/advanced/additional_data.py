@@ -24,7 +24,7 @@ class AdditionalDataWrapper(BaseEstimator, ClassifierMixin):
         return None
 
 
-my_pipe = Hyperpipe('basic_svm_pipe',
+my_pipe = Hyperpipe('additional_data_pipe',
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),

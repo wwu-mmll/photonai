@@ -1,21 +1,25 @@
-from sklearn.model_selection import KFold
+import warnings
+from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
+from sklearn.exceptions import UndefinedMetricWarning
 from imblearn.datasets import fetch_datasets
 
 from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import FloatRange, Categorical, IntegerRange
+from photonai.optimization import Categorical
+
+# Since we test very imbalanced data, we want to ignore some metric based zero-divisions.
+warnings.filterwarnings("ignore", category=UndefinedMetricWarning)
 
 # example of imbalanced dataset
 dataset = fetch_datasets()['coil_2000']
 X, y = dataset.data, dataset.target
-# ratio class 0: 0.06%, class 1: 0.94%
+# ratio class 0: 6%, class 1: 94%
 
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
-                    optimizer='random_grid_search',
-                    optimizer_params={'n_configurations': 10},
-                    metrics=['accuracy', 'precision', 'recall'],
-                    best_config_metric='recall',
-                    outer_cv=KFold(n_splits=3),
-                    inner_cv=KFold(n_splits=5),
+my_pipe = Hyperpipe('balancing_pipe',
+                    optimizer='grid_search',
+                    metrics=['accuracy', 'precision', 'recall', 'f1_score'],
+                    best_config_metric='f1_score',
+                    outer_cv=StratifiedKFold(n_splits=3),
+                    inner_cv=StratifiedShuffleSplit(n_splits=5, test_size=0.2),
                     verbosity=1,
                     project_folder='./tmp/')
 
@@ -23,17 +27,13 @@ my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
 # ADD ELEMENTS TO YOUR PIPELINE
 my_pipe += PipelineElement('StandardScaler')
 
-my_pipe += PipelineElement('PCA',
-                           hyperparameters={'n_components': IntegerRange(5, 20)},
-                           test_disabled=True)
-
+tested_methods = Categorical(['RandomOverSampler', 'SMOTEENN', 'SVMSMOTE',
+                              'BorderlineSMOTE', 'SMOTE', 'ClusterCentroids'])
 my_pipe += PipelineElement('ImbalancedDataTransformer',
-                           hyperparameters={'method_name': Categorical(['RandomUnderSampler', 'SMOTE'])},
+                           hyperparameters={'method_name': tested_methods},
                            test_disabled=True)
 
-my_pipe += PipelineElement('SVC',
-                           hyperparameters={'kernel': Categorical(['rbf', 'linear']),
-                                            'C': FloatRange(0.5, 2)})
+my_pipe += PipelineElement("RandomForestClassifier", n_estimators=200)
 
 # NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)

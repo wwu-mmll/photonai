@@ -20,14 +20,16 @@ class PermutationTestTests(PhotonBaseTest):
         cls.perm_id = uuid.uuid4()
         cls.wizard_obj_id = ObjectId()
         cls.hyperpipe = Hyperpipe("permutation_test_pipe",
-                                   inner_cv = KFold(n_splits=4),
-                                   outer_cv = KFold(n_splits=3),
-                                   metrics=["accuracy", "balanced_accuracy"],
-                                   best_config_metric="balanced_accuracy",
-                                   output_settings=OutputSettings(mongodb_connect_url="mongodb://localhost:27017/photon_results",
-                                                                  wizard_object_id=str(cls.wizard_obj_id)),
-                                   project_folder=cls.tmp_folder_path,
-                                   permutation_id=str(cls.perm_id) + "_reference")
+                                  inner_cv=KFold(n_splits=4),
+                                  outer_cv=KFold(n_splits=3),
+                                  metrics=["accuracy", "balanced_accuracy"],
+                                  best_config_metric="balanced_accuracy",
+                                  output_settings=OutputSettings(
+                                      mongodb_connect_url="mongodb://localhost:27017/photon_results",
+                                      wizard_object_id=str(cls.wizard_obj_id)),
+                                  project_folder=cls.tmp_folder_path,
+                                  verbosity=0,
+                                  permutation_id=str(cls.perm_id) + "_reference")
         cls.hyperpipe += PipelineElement("StandardScaler")
         cls.hyperpipe += PipelineElement("SVC")
         cls.X, cls.y = load_breast_cancer(return_X_y=True)
@@ -45,7 +47,8 @@ class PermutationTestTests(PhotonBaseTest):
 
         my_handler = ResultsHandler()
         my_handler.load_from_mongodb(self.hyperpipe.output_settings.mongodb_connect_url, str(self.wizard_obj_id))
-        self.assertEqual(my_handler.results.permutation_id, PermutationTest.get_mother_permutation_id(str(self.perm_id)))
+        self.assertEqual(my_handler.results.permutation_id,
+                         PermutationTest.get_mother_permutation_id(str(self.perm_id)))
 
     def test_find_reference(self):
         obj_id = self.hyperpipe.results._id
@@ -74,40 +77,7 @@ class PermutationTestTests(PhotonBaseTest):
                             inner_cv=KFold(n_splits=2),
                             calculate_metrics_across_folds=True,
                             use_test_set=True,
-                            verbosity=1,
-                            project_folder=self.tmp_folder_path,
-                            output_settings=settings)
-
-        # Add transformer elements
-        my_pipe += PipelineElement("StandardScaler", hyperparameters={},
-                                   test_disabled=False, with_mean=True, with_std=True)
-
-        my_pipe += PipelineElement("PCA", hyperparameters={'n_components': IntegerRange(3, 5)},
-                                   test_disabled=False)
-
-        # Add estimator
-        my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']},  # C': FloatRange(0.1, 5),
-                                   gamma='scale', max_iter=1000000)
-
-        return my_pipe
-
-    def create_hyperpipe(self):
-        # this is needed here for the parallelisation
-        from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-        from photonai.optimization import FloatRange, Categorical, IntegerRange
-        from sklearn.model_selection import GroupKFold
-        from sklearn.model_selection import KFold
-
-        settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results')
-        my_pipe = Hyperpipe('permutation_test_1',
-                            optimizer='grid_search',
-                            metrics=['accuracy', 'precision', 'recall'],
-                            best_config_metric='accuracy',
-                            outer_cv=GroupKFold(n_splits=2),
-                            inner_cv=KFold(n_splits=2),
-                            calculate_metrics_across_folds=True,
-                            use_test_set=True,
-                            verbosity=1,
+                            verbosity=0,
                             project_folder=self.tmp_folder_path,
                             output_settings=settings)
 
@@ -125,7 +95,7 @@ class PermutationTestTests(PhotonBaseTest):
         return my_pipe
 
     def create_hyperpipe_no_mongo(self):
-        from photonai.base import Hyperpipe, OutputSettings
+        from photonai.base import Hyperpipe
         from sklearn.model_selection import KFold
 
         my_pipe = Hyperpipe('permutation_test_1',
@@ -136,7 +106,7 @@ class PermutationTestTests(PhotonBaseTest):
                             inner_cv=KFold(n_splits=2),
                             calculate_metrics_across_folds=True,
                             use_test_set=True,
-                            verbosity=1,
+                            verbosity=0,
                             project_folder=self.tmp_folder_path)
         return my_pipe
 
