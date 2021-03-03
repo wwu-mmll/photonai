@@ -10,7 +10,7 @@ except ImportError:
 # class Modulenstalltio
 
 
-__version__ = '2.0.0'
+__version__ = '2.1.0'
 
 setup(
     name='photonai',
@@ -51,7 +51,8 @@ with only one line of code.
         'prettytable',
         'seaborn',
         'joblib',
-        'dask',
-        'distributed',
-        'scikit-optimize']
+        'dask==2.30.0',
+        'distributed==2.30.1',
+        'scikit-optimize',
+        'xlrd']
 )

@@ -1,0 +1,134 @@
+:root {
+  --md-primary-fg-color:       #0e0e1d;
+  --md-primary-fg-color--light: #2388fe;
+  --md-primary-fg-color--dark:  #0e0e1d;
+  --md-code-hl-string-color: #2388fe;
+  --md-code-hl-number-color: #231c44;
+  --md-accent-fg-color: #0e0e1d;
+}
+.md-content {
+  --md-typeset-a-color: #2388fe;
+}
+.md-content a:hover{
+  color: var(--md-primary-fg-color);
+}
+.md-nav a{
+    color: #0e0e1d;
+}
+.md-nav__item .md-nav__link--active{
+    color: #2388fe;
+}
+body{
+  font-family: Roboto, sans-serif;
+}
+.highlight .cpf, .highlight .l, .highlight .s, .highlight .sb, .highlight .sc,
+.highlight .s2, .highlight .si, .highlight .s1, .highlight .ss{
+  color: #2388fe;
+}
+.highlight .m, .highlight .mb, .highlight .mf, .highlight .mh, .highlight .mi, .highlight .il, .highlight .mo {
+    color: #7b6cc2;
+}
+
+a{
+  color: #2388fe;
+}
+
+a:hover{
+  text-decoration: none;
+  font-weight: bold;
+}
+
+pre{
+  margin: 0;
+  border: 0;
+  padding: 0;
+}
+.photon-docu-header .md-typeset ul, .md-typeset ol
+{
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.md-typeset h1, h1{
+  text-transform: uppercase;
+  font-size: 1.3rem;
+  color: #2388fe;
+  font-weight: bold;
+  font-family: "Roboto";
+}
+
+.md-typeset h2, h2{
+  font-weight: bold;
+  font-family: "Roboto";
+  font-size: 1.1rem;
+}
+
+.md-typeset h3, h3{
+  font-weight: bold;
+}
+.md-tabs__link{
+  color: white;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.md-tabs__link:hover{
+  text-size: 1.1pt;
+  text-decoration: none;
+}
+
+.md-header{
+  background: #0e0e1d url("https://www.photon-ai.com/static/img/ep_naturalblack.png");
+}
+
+.photon-logo {
+  font-weight: bold;
+  color: #2388fe;
+  margin-bottom: 0px;
+  font-size: 0.85rem;
+  letter-spacing: 9px;
+}
+
+.ai {
+  color: #a9c2fe; }
+
+em{
+    color: #2388fe;
+    font-weight: bold;
+}
+
+.styled-table {
+    margin: 25px 0;
+    font-size: 0.9em;
+    font-family: sans-serif;
+    min-width: 400px;
+}
+
+.styled-table thead tr {
+    background-color: #808080;
+    color: #ffffff;
+    text-align: left;
+}
+
+.styled-table th,
+.styled-table td {
+    padding: 12px 15px;
+}
+
+.styled-table tbody tr {
+    border-bottom: 1px solid #dddddd;
+}
+
+.styled-table tbody tr:nth-of-type(even) {
+    background-color: #f3f3f3;
+}
+
+.styled-table tbody tr:last-of-type {
+    border-bottom: 2px solid #009879;
+}
+
+.styled-table tbody tr.active-row {
+    font-weight: bold;
+    color: #009879;
+}

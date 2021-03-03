@@ -1,8 +1,8 @@
 import csv
-import itertools
 import os
 import pickle
 import pprint
+import warnings
 from typing import Union
 
 import matplotlib
@@ -18,22 +18,61 @@ from pymodm import connect
 from pymongo import DESCENDING
 from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
-from sklearn.metrics import confusion_matrix, roc_curve
 
 from photonai.photonlogger.logger import logger
+from photonai.helper.helper import print_double_metrics, print_metrics, print_estimator_metrics, print_config_list_table
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
+from photonai.__init__ import __version__
 
 
 class ResultsHandler:
+    """
+    Provides all functions that operate on calculated results.
+    As IO for the results object the ResultsHandler
+    is able to handle results on its own.
+
+    """
     def __init__(self, results_object: MDBHyperpipe = None, output_settings=None):
+        """
+        Initialize the object.
+
+        Parameters:
+            results_object:
+                All results are stored here.
+                An initial setting is not necessary,
+                because a later loading via file or MongoDB is possible.
+
+            output_settings (OutputSettings):
+                Setting for creation and storage of the results_object.
+
+        """
         self.results = results_object
         self.output_settings = output_settings
 
     def load_from_file(self, results_file: str):
+        """
+        Read results_file from json into MDBHyperpipe object self.results.
+
+        Parameters:
+            results_file:
+                Full path to json file.
+
+        """
         self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
+        """
+        Read results_file from MongoDB into MDBHyperpipe object self.results.
+
+        Parameters:
+            mongodb_connect_url:
+                MongoDB connection string.
+
+            pipe_name:
+                Name of the stored hyperpipe.
+
+        """
         connect(mongodb_connect_url, alias="photon_core")
         results = list(MDBHyperpipe.objects.raw({'name': pipe_name}))
         if len(results) == 1:
@@ -42,31 +81,31 @@ class ResultsHandler:
             self.results = MDBHyperpipe.objects.order_by([("computation_start_time", DESCENDING)]).raw({'name': pipe_name}).first()
             warn_text = 'Found multiple hyperpipes with that name. Returning most recent one.'
             logger.warning(warn_text)
-            raise Warning(warn_text)
+            warnings.warn(warn_text)
         else:
             raise FileNotFoundError('Could not load hyperpipe from MongoDB.')
 
     @staticmethod
-    def get_methods():
+    def get_methods() -> list:
         """
         This function returns a list of all methods available for ResultsHandler.
+
+        Returns:
+            List of all available methods.
+
         """
-        methods_list = [s for s in dir(ResultsHandler) if not '__' in s]
+        methods_list = [s for s in dir(ResultsHandler) if '__' not in s]
         return methods_list
 
     def get_performance_table(self):
-        """
-        This function returns a summary table of the overall results.
+        """This function returns a summary table of the overall results.
+
         ToDo: add best_config information!
         """
-
         res_tab = pd.DataFrame()
         for i, folds in enumerate(self.results.outer_folds):
             # add best config infos
-            try:
-                res_tab.loc[i, 'best_config'] = folds.best_config.human_readable_config
-            except:
-                res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
+            res_tab.loc[i, 'best_config'] = str(folds.best_config.human_readable_config)
 
             # add fold index
             res_tab.loc[i, 'fold'] = folds.fold_nr
@@ -98,10 +137,13 @@ class ResultsHandler:
                 performances[metric].append(value)
         return performances
 
-    def get_config_evaluations(self):
+    def get_config_evaluations(self) -> dict:
         """
         Return the test performance of every tested configuration in every outer fold.
-        :return:
+
+        Returns:
+            Test performance of every configuration.
+
         """
         config_performances = list()
         maximum_fold = None
@@ -125,7 +167,7 @@ class ResultsHandler:
                         performance[metric].append(np.nan)
                     else:
                         for item in config.metrics_test:
-                            if (item.operation == 'FoldOperations.MEAN') and (item.metric_name == metric):
+                            if (item.operation == 'mean') and (item.metric_name == metric):
                                 performance[metric].append(item.value)
             config_performances.append(performance)
 
@@ -170,10 +212,10 @@ class ResultsHandler:
         return minimum_config_evaluations
 
     def get_learning_curves(self, config_nr, outer_fold_nr, save):
-        """
-        This function gets the learning curves out of the result tree.
+        """This function gets the learning curves out of the result tree.
         It returns the learning curves as a pandas dataframe.
         If save = True it saves the learning curves as a csv file.
+
         """
         cuts = self.results.hyperpipe_info.learning_curves_cut.values[1:] + [1.]
         fold_num = len(self.results.outer_folds[0].tested_config_list[config_nr - 1].inner_folds)
@@ -189,33 +231,41 @@ class ResultsHandler:
                 data.update({(metric, ['test', 'train'][t-1]): curves})
         curves = pd.DataFrame(data, index=idx, columns=col)
         if save:
-            curves.to_csv(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.csv' % (outer_fold_nr, config_nr)))
+            curves.to_csv(self._save_prep_learning_curves('lc_outer_fold_%d_config_%d.csv' % (outer_fold_nr, config_nr)))
         return curves
 
-    def plot_curves(self, curves, title='Learning Curves'):
-        """
-        This funtion plots the learning curves
+    def plot_curves(self, curves: pd.DataFrame, title: str = 'Learning Curves'):
+        """This function plots the learning curves.
+
+        Parameters:
+            curves:
+                Dataframe with multi-index: (run - fraction of data)
+                columns: at least (metric, train/test) floats
+
+            title:
+                Subtitle of plot.
+
         """
         metrics = self.results.hyperpipe_info.metrics
         fig, axes = plt.subplots(1, len(metrics), figsize=(len(metrics) * 4., 4.))
         if len(metrics) == 1:
             axes = [axes]
+        cuts = curves.index.get_level_values(0)
+        col_template = tuple(curves.columns[0])
+        # iterate only over first 2 entries [(metric, train/test)], example 'mean' as third
+
         for metric, ax in zip(metrics, axes):
-            cuts = curves.index.get_level_values(0)
-            y = list(curves.columns[0])
-            y[:2] = [metric, 'test']
-            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_test', data=curves, ax=ax)
-            y[1] = 'train'
-            sns.lineplot(x=cuts, y=tuple(y), label=metric + '_train', data=curves, ax=ax)
+            for subset in ['test', 'train']:
+                sns.lineplot(x=cuts, y=curves[(metric, subset)+col_template[2:]], label=metric + '_' + subset, ax=ax)
             ax.set(xlabel='Fraction of Train Data used', ylabel='Metric Value')
             ax.legend(fontsize='small')
         plt.suptitle(title)
         plt.tight_layout(rect=[0, 0.03, 1, 0.95])
+
         return fig
 
     def plot_learning_curves_config(self, config_nr, outer_fold_nr, save, show=False):
-        """
-        This function gets the learning curves for a specific config nr. and outer fold nr. and plots them
+        """This function gets the learning curves for a specific config nr. and outer fold nr. and plots them
         If config_nr = -1 it gets the best config of the outer fold
         If save = True the plot is saved
         If show = True the plot is shown
@@ -226,14 +276,13 @@ class ResultsHandler:
         curves.columns = curves.columns.to_flat_index()
         fig = self.plot_curves(curves, 'Learning Curves (Outer Fold Nr.%d Config Nr.%d)' % (outer_fold_nr, config_nr))
         if save:
-            plt.savefig(self.save_prep_learning_curves('lc_outer_fold_%d_config_%d.png' % (outer_fold_nr, config_nr)))
+            plt.savefig(self._save_prep_learning_curves('lc_outer_fold_%d_config_%d.png' % (outer_fold_nr, config_nr)))
         if show:
             plt.show()
         plt.close()
 
     def plot_learning_curves_outer_fold(self, outer_fold_nr, config_nr_list=None, save=True, show=False):
-        """
-        This function gets the learning curves for a list of configs in a specific outer fold and plots them
+        """This function gets the learning curves for a list of configs in a specific outer fold and plots them
         For each config the mean of the learning curves of all inner folds is used
         If config_nr = -1 it gets the best config of the outer fold
         If save = True the plot is saved
@@ -253,17 +302,14 @@ class ResultsHandler:
         curves_configs = curves_configs.swaplevel()
         fig = self.plot_curves(curves_configs, 'Learning Curves (Outer Fold Nr.%d)' % outer_fold_nr)
         if save:
-            curves_configs.to_csv(self.save_prep_learning_curves('lc_outer_fold_{}.csv'.format(outer_fold_nr)))
-            plt.savefig(self.save_prep_learning_curves('lc_outer_fold_{}.png'.format(outer_fold_nr)))
+            curves_configs.to_csv(self._save_prep_learning_curves('lc_outer_fold_{}.csv'.format(outer_fold_nr)))
+            plt.savefig(self._save_prep_learning_curves('lc_outer_fold_{}.png'.format(outer_fold_nr)))
         if show:
             plt.show()
         plt.close()
 
-    def save_prep_learning_curves(self, file_name):
-        """
-        Helper function to save learning curves
-        """
-        path = self.output_settings.results_folder + '/learning_curves/'
+    def _save_prep_learning_curves(self, file_name):
+        path = self.results.output_folder + '/learning_curves/'
         if not os.path.exists(path):
             os.makedirs(path)
         return os.path.join(path, file_name)
@@ -279,7 +325,7 @@ class ResultsHandler:
                                reduce_scatter_by: Union[int, str] = 'auto',
                                file: str = None):
         """
-        :param metric: specify metric that has been stored within the PHOTON results tree
+        :param metric: specify metric that has been stored within the PHOTONAI results tree
         :param type: 'plot' or 'scatter'
         :param reduce_scatter_by: integer or string ('auto'), reduce the number of points plotted by scatter
         :param file: specify a filename if you want to save the plot
@@ -315,8 +361,10 @@ class ResultsHandler:
             # now do smoothing
             if isinstance(reduce_scatter_by, str):
                 if reduce_scatter_by != 'auto':
-                    logger.warning('{} is not a valid smoothing_kernel specifier. Falling back to "auto".'.format(
-                        reduce_scatter_by))
+                    msg = '{} is not a valid smoothing_kernel specifier. ' \
+                          'Falling back to "auto".'.format(reduce_scatter_by)
+                    logger.warning(msg)
+                    warnings.warn(msg)
 
                 # if auto, then calculate size of reduce_scatter_by so that 75 points on x remain
                 # smallest reduce_scatter_by should be 1
@@ -354,9 +402,8 @@ class ResultsHandler:
         if file:
             plt.savefig(file)
         else:
-            if self.output_settings:
-                file = os.path.join(self.output_settings.results_folder, "optimizer_history.png")
-                plt.savefig(file)
+            file = os.path.join(self.results.output_folder, "optimizer_history.png")
+            plt.savefig(file)
         plt.close()
 
     def get_importance_scores(self):
@@ -368,7 +415,8 @@ class ResultsHandler:
             imps.append(fold.best_config.best_config_score.feature_importances)
         return imps
 
-    def collect_fold_lists(self, score_info_list, fold_nr, predictions_filename=''):
+    @staticmethod
+    def collect_fold_lists(score_info_list, fold_nr, predictions_filename=''):
         if len(score_info_list) > 0:
             fold_nr_array = []
             collectables = {'y_pred': [], 'y_true': [], 'indices': [], 'probabilities': []}
@@ -414,7 +462,7 @@ class ResultsHandler:
             fold_nr_list.append(outer_fold.fold_nr)
         return self.collect_fold_lists(score_info_list, fold_nr_list, filename)
 
-    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, config_id=None, filename=''):
+    def get_validation_predictions(self, outer_fold_nr=0, config_no=0, filename=''):
         """
         This function returns the predictions, probabilities, true targets, fold and index
         for the config_nr of the given outer_fold
@@ -513,7 +561,7 @@ class ResultsHandler:
         # write csv file with time analysis
         if write_results:
             sub_keys = ["total_seconds", "mean_seconds_per_config", "mean_seconds_per_item"]
-            csv_filename = os.path.join(self.output_settings.results_folder, 'time_monitor.csv')
+            csv_filename = os.path.join(self.results.output_folder, 'time_monitor.csv')
             with open(csv_filename, 'w') as csvfile:
                 writer = csv.writer(csvfile)
                 header1 = [""]
@@ -577,7 +625,7 @@ class ResultsHandler:
             def my_autopct(pct):
                 total = sum(values)
                 if pct/total >= 1:
-                    return str(round(pct,1))+"%"
+                    return str(round(pct, 1))+"%"
                 else:
                     return None
 
@@ -611,7 +659,7 @@ class ResultsHandler:
             append_plotly(labels=[str(d) for d in element_names],
                           values=values,
                           name=k,
-                          colors=[(col) for col in colors],
+                          colors=colors,
                           domain={'x': [i/len(plot_list), (i+1)/len(plot_list)], 'y': [0.55, 1]})
 
         plt.legend(
@@ -636,8 +684,7 @@ class ResultsHandler:
                                    autopct=eval_mean_time_autopct(data))
 
         append_plotly(labels=method_list, values=[val / sum(data) for val in data], name="methods",
-                           colors=[(col) for col in colors],
-                           domain={'x': [0, 1], 'y': [0, 0.45]})
+                      colors=colors, domain={'x': [0, 1], 'y': [0, 0.45]})
 
         plt.axis('equal')
         plt.title("methods")
@@ -652,7 +699,7 @@ class ResultsHandler:
         #fig.legend(patches+patches_an, element_names+method_list, prop={'size': 10}, loc='lower left')
 
         if write_results:
-            plt.savefig(os.path.join(self.output_settings.results_folder, 'time_monitor_pie.png'))
+            plt.savefig(os.path.join(self.results.output_folder, 'time_monitor_pie.png'))
         plt.close()
         if plotly_return:
             str_fig = "var layout =" + str(plotly_dict["layout"]) + ";"
@@ -667,7 +714,7 @@ class ResultsHandler:
             logger.info('Write results to mongodb...')
             try:
                 self.results.save()
-            except DocumentTooLarge as e:
+            except DocumentTooLarge:
                 logger.error('Could not save document into MongoDB: Document too large')
         if self.output_settings.save_output:
             logger.info("Writing results to project folder...")
@@ -681,20 +728,20 @@ class ResultsHandler:
             try:
                 from nibabel.nifti1 import Nifti1Image
                 if isinstance(backmapping, Nifti1Image):
-                    backmapping.to_filename(os.path.join(self.output_settings.results_folder, filename + '.nii.gz'))
+                    backmapping.to_filename(os.path.join(self.results.output_folder, filename + '.nii.gz'))
             except ImportError:
                 pass
             finally:
                 if isinstance(backmapping, np.ndarray):
                     if backmapping.size > 1000:
-                        np.savez(os.path.join(self.output_settings.results_folder, filename + '.npz'), backmapping)
+                        np.savez(os.path.join(self.results.output_folder, filename + '.npz'), backmapping)
                     else:
-                        np.savetxt(os.path.join(self.output_settings.results_folder, filename + '.csv'), backmapping, delimiter=',')
+                        np.savetxt(os.path.join(self.results.output_folder, filename + '.csv'), backmapping, delimiter=',')
                 else:
-                    with open(os.path.join(self.output_settings.results_folder, filename + '.p'), 'wb') as f:
+                    with open(os.path.join(self.results.output_folder, filename + '.p'), 'wb') as f:
                         pickle.dump(backmapping, f)
         except Exception as e:
-            logger.error("Could not save backmapped feature importances")
+            logger.error("Could not save backmapped feature importances.")
             logger.error(e)
 
     def write_convenience_files(self):
@@ -703,27 +750,42 @@ class ResultsHandler:
             self.write_summary()
             self.write_predictions_file()
 
-        if self.output_settings.plots:
-            self.plot_optimizer_history(self.results.hyperpipe_info.best_config_metric)
-            self.eval_mean_time_components()
-
     def convert_to_json_serializable(self, value):
         if isinstance(value, (np.int, np.int32, np.int64)):
             return int(value)
         if isinstance(value, (np.float, np.float32, np.float64)):
+            if self.output_settings.reduce_space:
+                return round(float(value), 3)
             return float(value)
         else:
             return json_util.default(value)
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.output_settings.results_folder, 'photon_result_file.json')
-            # file_opened = open(local_file, 'wb')
+            local_file = os.path.join(self.results.output_folder, 'photon_result_file.json')
+            result = self.round_floats(self.results.to_son().to_dict())
+
             with open(local_file, 'w') as outfile:
-                json.dump(self.results.to_son(), outfile, default=self.convert_to_json_serializable)
+                json.dump(result, outfile, default=self.convert_to_json_serializable)
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))
+
+    @classmethod
+    def round_floats(cls, d):
+        # recursive method for rounding all floats in result.json
+        result = {}
+        if isinstance(d, dict):
+            for key, value in d.items():
+                value = cls.round_floats(value)
+                result.update({key: value})
+            return result
+        elif isinstance(d, list):
+            return [cls.round_floats(val) for val in d]
+        elif isinstance(d, float):
+            return round(d, 6)
+        else:
+            return d
 
     def get_best_config_inner_fold_predictions(self, filename=''):
         score_info_list = []
@@ -734,149 +796,167 @@ class ResultsHandler:
         return self.collect_fold_lists(score_info_list, fold_nr, filename)
 
     def write_predictions_file(self):
-        filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
-
-        # usually we write the predictions for the outer fold
-        if not self.output_settings.save_predictions_from_best_config_inner_folds:
-            return self.get_test_predictions(filename)
-        # in case no outer folds exist, we write the inner_fold predictions
-        else:
-            return self.get_best_config_inner_fold_predictions(filename)
-
-    def write_summary(self):
-
-        result_tree = self.results
-        pp = pprint.PrettyPrinter(indent=4)
-
-        text_list = []
-        intro_text = """
-PHOTON RESULT SUMMARY
--------------------------------------------------------------------
-
-ANALYSIS NAME: {}
-BEST CONFIG METRIC: {}
-TIME OF RESULT: {}
-VERSION: {}
-
-        """.format(result_tree.name, result_tree.hyperpipe_info.best_config_metric, result_tree.computation_end_time,
-                   result_tree.version)
-        text_list.append(intro_text)
-
-        if result_tree.dummy_estimator:
-            dummy_text = """
--------------------------------------------------------------------
-BASELINE - DUMMY ESTIMATOR
-(always predict mean or most frequent target)
-
-strategy: {}     
-
-            """.format(result_tree.dummy_estimator.strategy)
-            text_list.append(dummy_text)
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.test)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
-            train_metrics = self.get_dict_from_metric_list(result_tree.dummy_estimator.train)
-            text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
-
-        if result_tree.best_config:
-            text_list.append("""
-
--------------------------------------------------------------------
-OVERALL BEST CONFIG: 
-{}            
-            """.format(pp.pformat(result_tree.best_config.human_readable_config)))
-
-        text_list.append("""
-MEAN AND STD FOR ALL OUTER FOLD PERFORMANCES        
-        """)
-
-        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_test)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TEST"))
-        train_metrics = self.get_dict_from_metric_list(result_tree.metrics_train)
-        text_list.append(self.print_table_for_performance_overview(train_metrics, "TRAINING"))
-
-        for outer_fold in result_tree.outer_folds:
-            text_list.append(self.print_outer_fold(outer_fold, result_tree.hyperpipe_info.estimation_type,
-                                                   result_tree.hyperpipe_info.eval_final_performance))
-
-        final_text = ''.join(text_list)
-
-        try:
-            summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
-            text_file = open(summary_filename, "w")
-            text_file.write(final_text)
-            text_file.close()
-        except OSError as e:
-            logger.error("Could not write summary file")
-            logger.error(str(e))
-
-    def get_dict_from_metric_list(self, metric_list):
-        best_config_metrics = {}
-        for train_metric in metric_list:
-            if not train_metric.metric_name in best_config_metrics:
-                best_config_metrics[train_metric.metric_name] = {}
-            operation_strip = train_metric.operation.split(".")[1]
-            best_config_metrics[train_metric.metric_name][operation_strip] = np.round(train_metric.value, 6)
-        return best_config_metrics
-
-    def print_table_for_performance_overview(self, metric_dict, header):
-        x = PrettyTable()
-        x.field_names = ["Metric Name", "MEAN", "STD"]
-        for element_key, element_dict in metric_dict.items():
-            x.add_row([element_key, element_dict["MEAN"], element_dict["STD"]])
-
-        text = """
-{}:
-{}
-                """.format(header, str(x))
-
-        return text
-
-    def print_outer_fold(self, outer_fold, estimation_type="classifier", eval_final_performance=True):
-
-        pp = pprint.PrettyPrinter(indent=4)
-        outer_fold_text = []
-
-        if outer_fold.best_config is not None:
-            outer_fold_text.append("""
--------------------------------------------------------------------
-OUTER FOLD {}
--------------------------------------------------------------------
-Best Config:
-{}""".format(outer_fold.fold_nr, pp.pformat(outer_fold.best_config.human_readable_config)))
-        if eval_final_performance:
-            outer_fold_text.append("""
-            
-Number of samples training {}
-Number of samples test {}
-            """.format(outer_fold.best_config.best_config_score.number_samples_training,
-                       outer_fold.best_config.best_config_score.number_samples_validation))
-
-            if estimation_type == "classifier":
-                outer_fold_text.append("""
-Class distribution training {}
-Class distribution test {}
-
-                """.format(outer_fold.class_distribution_validation,
-                           outer_fold.class_distribution_test))
-            if outer_fold.best_config.config_failed:
-                outer_fold_text.append("""
-Config Failed: {}            
-    """.format(outer_fold.best_config.config_error))
-
+          if self.output_settings.save_output:
+            filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+            # usually we write the predictions for the outer fold
+            if not self.output_settings.save_predictions_from_best_config_inner_folds:
+                return self.get_test_predictions(filename)
+            # in case no outer folds exist, we write the inner_fold predictions
             else:
-                x = PrettyTable()
-                x.field_names = ["Metric Name", "Train Value", "Test Value"]
-                metrics_train = outer_fold.best_config.best_config_score.training.metrics
-                metrics_test = outer_fold.best_config.best_config_score.validation.metrics
+                return self.get_best_config_inner_fold_predictions(filename)
 
-                for element_key, element_value in metrics_train.items():
-                    x.add_row([element_key, np.round(element_value, 6), np.round(metrics_test[element_key], 6)])
-                outer_fold_text.append("""
-PERFORMANCE:
+    def _get_best_outer_fold_configs_per_estimator(self) -> dict:
+        # 1. find out which estimators there are
+        last_element_name_identifier, last_element_dict = list(self.results.hyperpipe_info.elements.items())[-1]
+        no_switch_found = False
+        if not ":" in last_element_name_identifier:
+            no_switch_found = True
+
+        last_element_base_element, last_element_name = last_element_name_identifier.split(":")
+        if not last_element_base_element == "SWITCH":
+            no_switch_found = True
+
+        if no_switch_found:
+            logger.info("Could not identify switch at the end of the pipeline. Estimator Comparison aborted.")
+            return
+
+        # generate config key by switch name
+        search_key = last_element_name + "__" + "estimator_name"
+        estimator_list = last_element_dict.keys()
+        best_configs_from_estimators = dict()
+        for estimator in estimator_list:
+            best_configs_from_estimators[estimator] = list()
+
+        # 2. iterate list and filter configs
+        for outer_fold in self.results.outer_folds:
+            for estimator_name in estimator_list:
+                try:
+                    best_estimator_config = outer_fold.get_optimum_config(
+                        metric=self.results.hyperpipe_info.best_config_metric,
+                        maximize_metric=self.results.hyperpipe_info.
+                        maximize_best_config_metric,
+                        dict_filter=(search_key, estimator_name))
+                    best_configs_from_estimators[estimator_name].append(best_estimator_config)
+                except Warning as w:
+                    logger.info("Could not find best config for estimator {} "
+                                "in outer fold {}".format(estimator_name, outer_fold.fold_nr))
+
+        return best_configs_from_estimators
+
+    def get_n_best_validation_configs_per_estimator(self, n=10, estimator_names=None) -> dict:
+        best_configs_from_estimator = self._get_best_outer_fold_configs_per_estimator()
+        if estimator_names:
+            all_estimators = list(best_configs_from_estimator.keys())
+            for name in all_estimators:
+                if name not in estimator_names:
+                    del best_configs_from_estimator[name]
+
+        best_n_config_dict = dict()
+        for estimator_name, estimator_list in best_configs_from_estimator.items():
+            if n > len(estimator_list):
+                n_configs_per_estimator = [c.config_dict for c in estimator_list]
+            else:
+                sort_order = np.argsort([[c.get_test_metric(self.results.hyperpipe_info.best_config_metric, 'mean')
+                                          for c in estimator_list]])
+                n_configs_per_estimator = [estimator_list[idx].config_dict for idx in sort_order[:n]]
+            best_n_config_dict[estimator_name] = n_configs_per_estimator
+            print_config_list_table(estimator_name, n_configs_per_estimator)
+
+        return best_n_config_dict
+
+    def get_mean_of_best_validation_configs_per_estimator(self, write_to_file=False):
+
+        best_configs_from_estimators = self._get_best_outer_fold_configs_per_estimator()
+
+        # get mean values for each metric for each estimator config list
+        estimator_performance_values = dict()
+        for estimator_name, estimator_config_list in best_configs_from_estimators.items():
+            estimator_performance_values[estimator_name] = dict()
+            for metric in self.results.hyperpipe_info.metrics:
+                performance_values = [c.get_test_metric(metric, 'mean')
+                                      for c in estimator_config_list]
+                estimator_performance_values[estimator_name][metric] = np.mean(performance_values)
+        output = print_estimator_metrics(estimator_performance_values, self.results.hyperpipe_info.metrics, True)
+        if write_to_file:
+            text_file = open(os.path.join(self.output_settings.results_folder,
+                                          "mean_best_estimator_performance.txt"), "w")
+            text_file.write(output)
+            text_file.close()
+        return output
+
+    def text_summary(self):
+        def divider(header):
+            return header.ljust(101, '=')
+
+        output_string = divider("ANALYSIS INFORMATION ")
+
+        elapsed_time = self.results.computation_end_time - self.results.computation_start_time
+        output_string += """ 
+Project Folder: {},
+Computation Time: {} - {}
+Duration: {}
+Optimized for: {}
+Hyperparameter Optimizer: {}
+
+""".format(self.output_settings.results_folder,
+           self.results.computation_start_time,
+           self.results.computation_end_time,
+           elapsed_time,
+           self.results.hyperpipe_info.best_config_metric,
+           self.results.hyperpipe_info.optimization["Optimizer"])
+
+        output_string += divider("DUMMY RESULTS ")
+        output_string += """
 {}
 
+""".format(print_metrics("DUMMY", self.results.dummy_estimator.get_test_metric(operation='mean'), summary=True))
 
+        output_string += divider("AVERAGE PERFORMANCE ACROSS OUTER FOLDS ")
 
-                """.format(str(x)))
+        test_metrics = self.results.get_test_metric_dict()
+        train_metrics = self.results.get_train_metric_dict()
+        output_string += """
+{}
 
-        return ''.join(outer_fold_text)
+""".format(self.print_table_for_performance_overview(train_metrics, test_metrics))
+
+        output_string += divider("BEST HYPERPARAMETER CONFIGURATION ")
+        output_string += """
+{}
+
+""".format(json.dumps(self.results.best_config.human_readable_config, indent=4, sort_keys=True))
+
+        output_string += """
+{}
+
+""".format(print_double_metrics(self.results.best_config.best_config_score.training.metrics,
+                                self.results.best_config.best_config_score.validation.metrics,
+                                summary=True))
+        output_string += divider("PHOTONAI {} ".format(__version__))
+
+        if self.output_settings.results_folder is not None:
+            output_string += "\nYour results are stored in " + self.output_settings.results_folder + "\n"
+            output_string += "Go to https://explorer.photon-ai.com and upload your photon_result_file.json " \
+                             "for convenient result visualization! \n"
+            output_string += "For more info and documentation visit https://www.photon-ai.com"
+
+        if self.output_settings.save_output:
+            try:
+                summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
+                text_file = open(summary_filename, "w")
+                text_file.write(output_string)
+                text_file.close()
+            except OSError as e:
+                logger.error("Could not write summary file")
+                logger.error(str(e))
+
+            return output_string
+
+    @staticmethod
+    def print_table_for_performance_overview(metric_dict_train, metric_dict_test):
+        x = PrettyTable()
+        x.field_names = ["Metric Name", "Training Mean", "Training Std", "Test Mean", "Test Std"]
+        for element_key, element_dict in metric_dict_train.items():
+            x.add_row([element_key, element_dict["mean"], element_dict["std"],
+                       metric_dict_test[element_key]["mean"], metric_dict_test[element_key]["std"]])
+        return x

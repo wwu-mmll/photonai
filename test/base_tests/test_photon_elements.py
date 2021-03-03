@@ -1,6 +1,7 @@
 import unittest
-
+import warnings
 import numpy as np
+
 from sklearn.datasets import load_breast_cancer
 from sklearn.decomposition import PCA
 from sklearn.svm import SVC
@@ -630,12 +631,14 @@ class BranchTests(unittest.TestCase):
         def callback_func(X, y, **kwargs):
             pass
 
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             my_callback = CallbackElement('final_element_callback', delegate_function=callback_func)
             test_branch += my_callback
             no_callback_pipe = test_branch.prepare_photon_pipe(test_branch.elements)
+            self.assertTrue(no_callback_pipe.elements[-1][1] is my_callback)
             test_branch.sanity_check_pipeline(no_callback_pipe)
-            self.assertFalse(no_callback_pipe[-1] is not my_callback)
+            self.assertFalse(no_callback_pipe.elements)
+            assert any("Last element of pipeline cannot be callback" in s for s in [e.message.args[0] for e in w])
 
     def test_prepare_pipeline(self):
         self.assertEqual(len(self.transformer_branch.elements), 2)
@@ -906,8 +909,9 @@ class PreprocessingTests(unittest.TestCase):
     def test_predict_warning(self):
         pe = Preprocessing()
         pe.add(PipelineElement('SVC'))
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             pe.predict([0, 1, 2])
+            assert any("There is no predict function" in s for s in [e.message.args[0] for e in w])
 
 
 class DataFilterTests(unittest.TestCase):
@@ -985,5 +989,7 @@ class CallbackElementTests(unittest.TestCase):
         for pipeline in pipelines:
             pipeline.fit(self.X, self.y).predict(self.X)
 
-        with self.assertRaises(Warning):
+        with warnings.catch_warnings(record=True) as w:
             self.callback_branch_pipeline_error.fit(self.X, self.y).predict(self.X)
+            assert any("Last element of pipeline cannot be callback" in s for s in [e.message.args[0] for e in w])
+

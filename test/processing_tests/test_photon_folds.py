@@ -75,6 +75,3 @@ class PhotonFoldsTests(unittest.TestCase):
         expected_outcome = {str(i): 10 for i in range(10)}
         data_count = FoldInfo.data_overview(self.kwargs['groups'].astype(int))
         self.assertDictEqual(expected_outcome, data_count)
-
-
-

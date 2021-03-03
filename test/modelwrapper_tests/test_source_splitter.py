@@ -1,7 +1,7 @@
 import unittest
 import numpy as np
 
-from sklearn.utils.testing import assert_array_equal
+from numpy.testing import assert_array_equal
 from photonai.modelwrapper.source_splitter import SourceSplitter
 
 

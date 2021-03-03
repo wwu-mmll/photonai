@@ -8,12 +8,10 @@ from photonai.processing.permutation_test import PermutationTest
 def create_hyperpipe():
     # this is needed here for the parallelisation
     from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-    from photonai.optimization import FloatRange, Categorical, IntegerRange
     from sklearn.model_selection import GroupKFold
     from sklearn.model_selection import KFold
 
-    settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results',
-                              project_folder='./tmp/')
+    settings = OutputSettings(mongodb_connect_url='mongodb://localhost:27017/photon_results')
     my_pipe = Hyperpipe('permutation_test_1',
                         optimizer='grid_search',
                         metrics=['accuracy', 'precision', 'recall'],
@@ -21,19 +19,19 @@ def create_hyperpipe():
                         outer_cv=GroupKFold(n_splits=2),
                         inner_cv=KFold(n_splits=2),
                         calculate_metrics_across_folds=True,
-                        eval_final_performance=True,
+                        use_test_set=True,
                         verbosity=1,
+                        project_folder='./tmp/',
                         output_settings=settings)
 
     # Add transformer elements
     my_pipe += PipelineElement("StandardScaler", hyperparameters={},
                                test_disabled=True, with_mean=True, with_std=True)
 
-    my_pipe += PipelineElement("PCA",  # hyperparameters={'n_components': IntegerRange(5, 15)},
-                               test_disabled=False)
+    my_pipe += PipelineElement("PCA", test_disabled=False)
 
     # Add estimator
-    my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']}, #C': FloatRange(0.1, 5),
+    my_pipe += PipelineElement("SVC", hyperparameters={'kernel': ['linear', 'rbf']},
                                gamma='scale', max_iter=1000000)
 
     return my_pipe

@@ -7,11 +7,11 @@ from sklearn.datasets import load_boston
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement
 from photonai.optimization import IntegerRange, FloatRange, Categorical
-from photonai.processing.results_structure import MDBHelper, FoldOperations
 from photonai.helper.photon_base_test import PhotonBaseTest
 from photonai.helper.helper import XPredictor
+from photonai.processing.results_structure import MDBConfig, MDBFoldMetric
 
 
 class ResultHandlerAndHelperTests(PhotonBaseTest):
@@ -34,7 +34,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    outer_cv=KFold(n_splits=self.outer_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
                                    best_config_metric='mean_absolute_error',
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path),
+                                   project_folder=self.tmp_folder_path,
                                    verbosity=0)
 
     def test_cv_config_and_dummy_nr(self):
@@ -68,14 +68,53 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
 
         self.check_for_dummy()
 
+    def test_get_metric(self):
+
+        metric_list = [MDBFoldMetric(metric_name='a', value=1, operation='raw'),
+                       MDBFoldMetric(metric_name='a', value=0.5, operation='mean'),
+                       MDBFoldMetric(metric_name='b', value=1, operation='raw'),
+                       MDBFoldMetric(metric_name='c', value=1, operation='raw'),
+                       MDBFoldMetric(metric_name='c', value=0, operation='mean'),
+                       MDBFoldMetric(metric_name='c', value=2, operation='std')]
+        doubled_metrics = [MDBFoldMetric(metric_name='a', value=1, operation='raw'),
+                           MDBFoldMetric(metric_name='a', value=1, operation='raw')]
+
+        okay_config = MDBConfig()
+        okay_config.metrics_test = metric_list
+        doubled_config = MDBConfig()
+        doubled_config.metrics_test = doubled_metrics
+
+        # raise error when no metric filter infos are given
+        with self.assertRaises(ValueError):
+            okay_config.get_test_metric(name="", operation="")
+
+        # check doubled metrics
+        with self.assertRaises(KeyError):
+            doubled_config.get_test_metric(name='a', operation='raw')
+
+        # check None is returned when there is no metric
+        self.assertIsNone(okay_config.get_test_metric(name='d', operation='raw'))
+
+        with self.assertRaises(KeyError):
+            # b) when there are doubled metrics
+            doubled_config.get_test_metric(name='a', operation="raw")
+
+        # check there is "mean" given for when there is no operation
+        self.assertEqual(okay_config.get_test_metric(name='a'), 0.5)
+        # check there is the correct metric value returned
+        self.assertEqual(okay_config.get_test_metric(name='c', operation='std'), 2)
+
+        expected_dict = {'a': 1, 'b': 1, 'c': 1}
+        self.assertDictEqual(expected_dict, okay_config.get_test_metric(operation='raw'))
+
     def check_for_dummy(self):
         self.assertTrue(hasattr(self.hyperpipe.results, 'dummy_estimator'))
         # we should have mean and std for each metric respectively
         expected_dummy_metrics = len(self.hyperpipe.optimization.metrics) * 2
-        if self.hyperpipe.cross_validation.eval_final_performance:
-            self.assertTrue(len(self.hyperpipe.results.dummy_estimator.test) == expected_dummy_metrics)
+        if self.hyperpipe.cross_validation.use_test_set:
+            self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_test) == expected_dummy_metrics)
         # we should have mean and std for each metric respectively
-        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.train) == expected_dummy_metrics)
+        self.assertTrue(len(self.hyperpipe.results.dummy_estimator.metrics_train) == expected_dummy_metrics)
 
     def test_get_predictions(self):
 
@@ -103,13 +142,13 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
     def test_get_predictions_no_outer_cv_eval_final_performance_false(self):
         self.hyperpipe += PipelineElement('PhotonTestXPredictor')
         self.hyperpipe.cross_validation.outer_cv = None
-        self.hyperpipe.cross_validation.eval_final_performance = False
+        self.hyperpipe.cross_validation.use_test_set = False
         self.hyperpipe.fit(self.X, self.y_true)
         self.check_predictions_eval_final_performance_false()
 
     def get_predictions_outer_cv_eval_final_performance_false(self):
         self.hyperpipe += PipelineElement('PhotonTestXPredictor')
-        self.hyperpipe.cross_validation.eval_final_performance = False
+        self.hyperpipe.cross_validation.use_test_set = False
         self.hyperpipe.fit(self.X, self.y_true)
         self.check_predictions_eval_final_performance_false()
 
@@ -158,10 +197,10 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.hyperpipe = Hyperpipe('test_prediction_collection',
                                    inner_cv=KFold(n_splits=self.inner_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
-                                   eval_final_performance=False,
+                                   use_test_set=False,
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
 
         self.test_metrics_and_aggregations()
 
@@ -170,11 +209,11 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    outer_cv=KFold(n_splits=self.outer_fold_nr),
                                    inner_cv=KFold(n_splits=self.inner_fold_nr),
                                    metrics=['mean_absolute_error', 'mean_squared_error'],
-                                   eval_final_performance=False,
+                                   use_test_set=False,
                                    best_config_metric='mean_absolute_error',
                                    calculate_metrics_per_fold=True,
                                    calculate_metrics_across_folds=True,
-                                   output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                                   project_folder=self.tmp_folder_path)
 
         self.test_metrics_and_aggregations()
 
@@ -182,10 +221,10 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         def check_metrics(metric_name, expected_metric_list, mean_metrics):
             for metric in mean_metrics:
                 if metric.metric_name == metric_name:
-                    if metric.operation == 'FoldOperations.MEAN':
+                    if metric.operation == 'mean':
                         expected_val_mean = np.mean(expected_metric_list)
                         self.assertEqual(expected_val_mean, metric.value)
-                    elif metric.operation == 'FoldOperations.STD':
+                    elif metric.operation == 'std':
                         expected_val_std = np.std(expected_metric_list)
                         self.assertAlmostEqual(expected_val_std, metric.value)
             return expected_val_mean, expected_val_std
@@ -228,10 +267,10 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
             if self.hyperpipe.cross_validation.calculate_metrics_across_folds:
                 expected_mean_absolute_error_across_folds = mean_absolute_error(XPredictor.adapt_X(outer_fold.train_indices),
                                                                                 outer_fold.train_indices)
-                actual_mean_absolute_error_across_folds = MDBHelper.get_metric(config, FoldOperations.RAW, 'mean_absolute_error')
+                actual_mean_absolute_error_across_folds = config.get_train_metric('mean_absolute_error', "raw")
                 self.assertEqual(expected_mean_absolute_error_across_folds, actual_mean_absolute_error_across_folds)
 
-            if self.hyperpipe.cross_validation.eval_final_performance:
+            if self.hyperpipe.cross_validation.use_test_set:
                 expected_outer_test_mae = mean_absolute_error(XPredictor.adapt_X(outer_fold.test_indices),
                                                               outer_fold.test_indices)
 
@@ -251,11 +290,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                  len(outer_fold_results.best_config.best_config_score.training.y_pred))
             else:
                 # if we dont use the test set, we want the values from the inner_cv to be copied
-                expected_outer_test_mae = [m.value for m in outer_fold_results.best_config.metrics_test
-                                           if m.metric_name == 'mean_absolute_error'
-                                           and m.operation == 'FoldOperations.MEAN']
-                if len(expected_outer_test_mae) > 0:
-                    expected_outer_test_mae = expected_outer_test_mae[0]
+                expected_outer_test_mae = outer_fold_results.best_config.get_test_metric('mean_absolute_error', 'mean')
 
                 self.assertTrue(outer_fold_results.best_config.best_config_score.validation.metrics_copied_from_inner)
                 self.assertTrue(outer_fold_results.best_config.best_config_score.training.metrics_copied_from_inner)
@@ -287,7 +322,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                               outer_cv=KFold(n_splits=3),
                               metrics=['mean_absolute_error', 'mean_squared_error'],
                               best_config_metric='mean_squared_error',
-                              output_settings=OutputSettings(project_folder=self.tmp_folder_path))
+                              project_folder=self.tmp_folder_path)
         hyperpipe += PipelineElement('StandardScaler')
         hyperpipe += PipelineElement('DecisionTreeRegressor')
         X, y = load_boston(return_X_y=True)
@@ -300,6 +335,3 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
             self.assertTrue(len(outer_fold.best_config.best_config_score.feature_importances) == exepcted_nr_of_feature_importances)
             for inner_fold in outer_fold.best_config.inner_folds:
                 self.assertTrue(len(inner_fold.feature_importances) == exepcted_nr_of_feature_importances)
-
-
-

@@ -1,10 +1,24 @@
+from itertools import product
+
 from photonai.optimization import PhotonHyperparam, IntegerRange, FloatRange, Categorical, BooleanSwitch
 from photonai.photonlogger import logger
-from itertools import product
-import numpy as np
 
 
-def create_global_config_dict(pipeline_elements):
+def create_global_config_dict(pipeline_elements: list) -> dict:
+    """
+    Creation of a definition set for grid-based optimizers in format: dict key -> value.
+
+    A grid is generated from a given list of hyperparameters for the optimization process.
+    Furthermore, the initialization of hyperparameters takes place.
+
+    Parameters:
+        pipeline_elements:
+            List of all set hyperparameters.
+
+    Returns:
+        Grid of configurations.
+
+    """
     global_hyperparameter_dict = {}
     for p_element in pipeline_elements:
 
@@ -27,7 +41,22 @@ def create_global_config_dict(pipeline_elements):
     return global_hyperparameter_dict
 
 
-def create_global_config_grid(pipeline_elements, add_name=''):
+def create_global_config_grid(pipeline_elements: list, add_name: str = '') -> list:
+    """
+    Creation of a list of configuration for grid-based optimizers.
+    A grid is generated from a given list of hyperparameters for the optimization process.
+
+    Parameters:
+        pipeline_elements:
+            List of PipelineElements.
+
+        add_name: str, default=''
+            Set prefix to dict keys.
+
+    Returns:
+        List of dicts. Every dict is a possible configurations.
+
+    """
     global_hyperparameter_list = []
     for element in pipeline_elements:
         if hasattr(element, "generate_config_grid"):
@@ -47,12 +76,12 @@ def create_global_config_grid(pipeline_elements, add_name=''):
     for i in global_hyperparameter_list:
         total_product_num = total_product_num * len(i)
     if total_product_num > threshold:
-        warn_text = 'The entire configuration grid entails more than ' + str(threshold) + ' possible configurations. ' \
-                                                                                          'This might take veeeeeeery ' \
-                                                                                          'looooong to both compute ' \
-                                                                                          'and process.'
-        logger.warning(warn_text)
-        raise Warning(warn_text)
+        msg = 'The entire configuration grid entails more than ' + str(threshold) + ' possible configurations. ' \
+                                                                                    'This might take very ' \
+                                                                                    'long to both compute ' \
+                                                                                    'and process.'
+        logger.error(msg)
+        raise ValueError(msg)
     config_list = list(product(*global_hyperparameter_list))
     config_dicts = []
     # get all configs in one

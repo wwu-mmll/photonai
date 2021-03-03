@@ -1,43 +1,37 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
-
-from photonai.base import Hyperpipe, PipelineElement, CallbackElement, OutputSettings
+from photonai.base import Hyperpipe, PipelineElement, CallbackElement
 
 
 # DEFINE CALLBACK ELEMENT
 def my_monitor(X, y=None, **kwargs):
-   print(X.shape)
-   debug = True
+    print(X.shape)
 
+    # here is a useless statement where you can easily set a breakpoint
+    # and do fancy developer stuff
+    debug = True
 
-# WE USE THE BREAST CANCER SET FROM SKLEARN
-X, y = load_boston(return_X_y=True)
-
-# DESIGN YOUR PIPELINE
-settings = OutputSettings(project_folder='./tmp/')
-
-my_pipe = Hyperpipe('basic_svm_pipe_no_performance',
+my_pipe = Hyperpipe('monitoring_pipe',
                     optimizer='grid_search',
                     metrics=['mean_squared_error', 'pearson_correlation'],
                     best_config_metric='mean_squared_error',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
                     verbosity=1,
-                    output_settings=settings)
+                    project_folder='./tmp/')
 
-
-# ADD ELEMENTS TO YOUR PIPELINE
-# first normalize all features
 my_pipe += PipelineElement('StandardScaler')
 
+my_pipe += PipelineElement('SamplePairingClassification',
+                           hyperparameters={'draw_limit': [500, 1000, 10000]},
+                           distance_metric='euclidean',
+                           generator='nearest_pair',
+                           test_disabled=True)
+
+# here we inspect the data after augmentation
 my_pipe += CallbackElement("monitor", my_monitor)
 
-# engage and optimize the good old SVM for Classification
-my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators':[10]})
+my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': [10, 100]})
 
-# NOW TRAIN YOUR PIPELINE
+X, y = load_boston(return_X_y=True)
 my_pipe.fit(X, y)
-
-debug = True
-
-

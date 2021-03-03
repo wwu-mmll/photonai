@@ -57,7 +57,3 @@ class PhotonVotingRegressor(BaseEstimator, RegressorMixin):
                 return [np.round(output)]
             else:
                 return output
-
-
-
-

@@ -3,11 +3,12 @@ from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold, StratifiedKFold
 
 from photonai.base.json_transformer import JsonTransformer
-from photonai.base import Hyperpipe, OutputSettings, Preprocessing
+from photonai.base import Hyperpipe, Preprocessing
 from photonai.optimization import Categorical
 from photonai.optimization.hyperparameters import IntegerRange, FloatRange
 from photonai.base import Stack, Switch, Branch, PipelineElement
 from test.base_tests.test_photon_elements import elements_to_dict
+
 
 class JsonTransformerTest(unittest.TestCase):
 
@@ -30,7 +31,7 @@ class JsonTransformerTest(unittest.TestCase):
                             inner_cv=KFold(n_splits=3),
                             verbosity=1,
                             cache_folder="./cache/",
-                            output_settings=OutputSettings(project_folder='./tmp/'))
+                            project_folder='./tmp/')
 
         # BRANCH WITH QUANTILTRANSFORMER AND DECISIONTREECLASSIFIER
         tree_qua_branch = Branch('tree_branch')
@@ -66,7 +67,6 @@ class JsonTransformerTest(unittest.TestCase):
         """
         Test for simple pipeline with data.
         """
-
         X, y = load_breast_cancer(return_X_y=True)
 
         # DESIGN YOUR PIPELINE
@@ -74,10 +74,10 @@ class JsonTransformerTest(unittest.TestCase):
                             optimizer='grid_search',
                             metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                             best_config_metric='accuracy',
-                            eval_final_performance=False,
+                            use_test_set=False,
                             outer_cv=KFold(n_splits=2),
                             inner_cv=KFold(n_splits=3),
-                            verbosity=1,
+                            verbosity=0,
                             random_seed=42)
 
         preprocessing = Preprocessing()
@@ -106,7 +106,7 @@ class JsonTransformerTest(unittest.TestCase):
         json_transformer = JsonTransformer()
 
         pipe_json = json_transformer.create_json(my_pipe)
-        a = elements_to_dict(my_pipe.copy_me())
+        _ = elements_to_dict(my_pipe.copy_me())
         my_pipe_reload = json_transformer.from_json(pipe_json)
         pipe_json_reload = pipe_json = json_transformer.create_json(my_pipe_reload)
 
@@ -121,9 +121,6 @@ class JsonTransformerTest(unittest.TestCase):
         """
         Test for Pipeline with data.
         """
-
-        X, y = load_breast_cancer(return_X_y=True)
-
         # DESIGN YOUR PIPELINE
         my_pipe = Hyperpipe(name='Estimator_pipe',
                             optimizer='grid_search',
@@ -131,7 +128,7 @@ class JsonTransformerTest(unittest.TestCase):
                             best_config_metric='balanced_accuracy',
                             outer_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                             inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
-                            output_settings=OutputSettings(project_folder='./tmp/'),
+                            project_folder='./tmp/',
                             random_seed=42)
 
         # ADD ELEMENTS TO YOUR PIPELINE
@@ -140,8 +137,8 @@ class JsonTransformerTest(unittest.TestCase):
 
         # some feature selection
         my_pipe += PipelineElement('LassoFeatureSelection',
-                                   hyperparameters={'percentile_to_keep': FloatRange(start=0.1, step=0.1, stop=0.7,
-                                                                                     range_type='range'),
+                                   hyperparameters={'percentile': FloatRange(start=0.1, step=0.1, stop=0.7,
+                                                                             range_type='range'),
                                                     'alpha': FloatRange(0.5, 1)},
                                    test_disabled=True)
 
@@ -161,22 +158,16 @@ class JsonTransformerTest(unittest.TestCase):
 
         my_pipe += PipelineElement('PhotonVotingClassifier')
 
-
         json_transformer = JsonTransformer()
         pipe_json = json_transformer.create_json(my_pipe)
         my_pipe_reload = json_transformer.from_json(pipe_json)
 
         self.assertDictEqual(elements_to_dict(my_pipe.copy_me()), elements_to_dict(my_pipe_reload.copy_me()))
 
-
-
     def test_class_switch(self):
         """
         Test for Pipeline with data.
         """
-
-        X, y = load_breast_cancer(return_X_y=True)
-
         my_pipe = Hyperpipe('basic_switch_pipe',
                             optimizer='random_grid_search',
                             optimizer_params={'n_configurations': 15},
@@ -184,8 +175,8 @@ class JsonTransformerTest(unittest.TestCase):
                             best_config_metric='accuracy',
                             outer_cv=KFold(n_splits=3),
                             inner_cv=KFold(n_splits=5),
-                            verbosity=1,
-                            output_settings=OutputSettings(project_folder='./tmp/'))
+                            verbosity=0,
+                            project_folder='./tmp/')
 
         # Transformer Switch
         my_pipe += Switch('TransformerSwitch',
@@ -203,14 +194,9 @@ class JsonTransformerTest(unittest.TestCase):
 
         my_pipe += Switch('EstimatorSwitch', [svm, tree])
 
-
         json_transformer = JsonTransformer()
 
         pipe_json = json_transformer.create_json(my_pipe)
         my_pipe_reload = json_transformer.from_json(pipe_json)
 
         self.assertDictEqual(elements_to_dict(my_pipe.copy_me()), elements_to_dict(my_pipe_reload.copy_me()))
-
-
-
-

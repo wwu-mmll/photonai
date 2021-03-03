@@ -1,33 +1,17 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
 
-from photonai.base import Hyperpipe, PipelineElement, Stack, OutputSettings
-from photonai.optimization import FloatRange
+from photonai.base import Hyperpipe, PipelineElement, Stack
 
-X, y = load_breast_cancer(return_X_y=True)
-
-# DESIGN YOUR PIPELINE
-my_pipe = Hyperpipe(name='Estimator_pipe',
-                    optimizer='grid_search',
+my_pipe = Hyperpipe(name='ensemble_pipe',
+                    optimizer='random_grid_search',
                     metrics=['balanced_accuracy'],
                     best_config_metric='balanced_accuracy',
                     outer_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
                     inner_cv=StratifiedKFold(n_splits=2, shuffle=True, random_state=42),
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
-# ADD ELEMENTS TO YOUR PIPELINE
-# first normalize all features
 my_pipe += PipelineElement('StandardScaler')
-
-# some feature selection
-my_pipe += PipelineElement('LassoFeatureSelection',
-                           hyperparameters={'percentile_to_keep': FloatRange(start=0.1, step=0.1, stop=0.7,
-                                                                             range_type='range'),
-                                            'alpha': FloatRange(0.5, 1)},
-                           test_disabled=True)
-
-# add imbalanced group handling
-my_pipe += PipelineElement('ImbalancedDataTransformer', method_name='SMOTE', test_disabled=False)
 
 # setup estimator stack
 est_stack = Stack(name='classifier_stack')
@@ -42,4 +26,5 @@ my_pipe += est_stack
 
 my_pipe += PipelineElement('PhotonVotingClassifier')
 
+X, y = load_breast_cancer(return_X_y=True)
 my_pipe.fit(X, y)

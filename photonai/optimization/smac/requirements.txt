@@ -1,0 +1,4 @@
+# please install SWIG -> have a look at https://github.com/automl/SMAC3
+smac
+emcee
+pyDOE

@@ -1,8 +1,8 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Preprocessing, OutputSettings, Stack
-from photonai.optimization import FloatRange, Categorical, IntegerRange
+from photonai.base import Hyperpipe, PipelineElement, Preprocessing, Stack
+from photonai.optimization import FloatRange, Categorical
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(return_X_y=True)
@@ -15,7 +15,7 @@ my_pipe = Hyperpipe('svm_ensemble_pipe',
                     best_config_metric='accuracy',
                     outer_cv=KFold(n_splits=3),
                     inner_cv=KFold(n_splits=3),
-                    output_settings=OutputSettings(project_folder='./tmp/'))
+                    project_folder='./tmp/')
 
 
 preprocessing = Preprocessing()
@@ -31,8 +31,4 @@ for i in range(20):
 my_pipe += my_stack
 my_pipe += PipelineElement('GaussianProcessClassifier')
 
-# NOW TRAIN YOUR PIPELINE
 my_pipe.fit(X, y)
-
-
-

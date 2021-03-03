@@ -4,24 +4,59 @@ import traceback
 import warnings
 import datetime
 import numpy as np
-
 from typing import Union, List
 
 from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper, print_double_metrics
 from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
-from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, \
-    FoldOperations, MDBConfig
+from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
 warnings.filterwarnings('ignore', category=FutureWarning)
 
 
 class InnerFoldManager(object):
-    """
-        Trains and tests a sklearn pipeline for a specific hyperparameter combination with cross-validation,
-        calculates metrics for each fold and averages metrics over all folds
+    """Inner Fold manager.
+
+    Manages the inner part of the cross validation.
+
+    Information about the inner folds is managed in this object.
+    It operates under a specific hyperparameter configuration,
+    triggers unified learning, and provides metrics about all inner folds.
+
+    Parameters
+    ----------
+    pipe_ctor
+        The pipeline instance that shall be trained and tested.
+
+    specific_config: dict
+        The hyperparameter configuration to test
+
+    optimization_infos: Optimization
+        Informations for the optimizer like best_config_metric, maximize_metric, optimizer_params, ...
+
+    cross_validation_infos: CrossValidation
+        Infomrations for the inner cross-validation like test_size, eval_final_performance, ...
+
+    outer_fold_id: UUID
+        UUID for outer_fold for identification.
+
+    optimization_constraints: PhotonBaseConstraint or List of PhotonBaseConstraint
+        Constraints for skipping folds of config if specific constraint occurs.
+
+    raise_error: bool, default=False
+        if true, raises exception when training and testing the pipeline fails
+
+    training: bool, default=False
+        Mode switch.
+
+    cache_folder: str, default=None
+        Path to cache in.
+
+    cache_updater: default=None
+        Funtion to update cache.
+
     """
 
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
@@ -31,14 +66,7 @@ class InnerFoldManager(object):
                  training: bool = False,
                  cache_folder=None,
                  cache_updater=None):
-        """
-        Creates a new InnerFoldManager object
-        :param pipe: The sklearn pipeline instance that shall be trained and tested
-        :param specific_config: The hyperparameter configuration to test
-        :type specific_config: dict
-        :param raise_error: if true, raises exception when training and testing the pipeline fails
-        :type raise_error: bool
-        """
+
         self.params = specific_config
         self.pipe = pipe_ctor
         self.optimization_infos = optimization_infos
@@ -53,16 +81,24 @@ class InnerFoldManager(object):
         self.training = training
 
     def fit(self, X, y, **kwargs):
-        """
-        Iterates over cross-validation folds and trains the pipeline, then uses it for predictions.
-        Calculates metrics per fold and averages them over fold.
-        :param X: Training and test data
-        :param y: Training and test targets
-        :returns: configuration class for result tree that monitors training and test performance
-        """
+        """Iterates over cross-validation folds and trains the pipeline,
+        then uses it for predictions. Calculates metrics per fold and averages
+        them over fold.
 
-        # needed for testing Timeboxed Random Grid Search
-        # time.sleep(35)
+        Parameters
+        ----------
+        X: ndarray
+            Training and test data
+
+        y: ndarray
+            Training and test targets
+
+        Returns
+        -------
+        config_item: MDBConfig
+            configuration class for result tree that monitors training and test performance
+
+        """
 
         config_item = MDBConfig()
         config_item.config_dict = self.params
@@ -267,7 +303,7 @@ class InnerFoldManager(object):
                 def metric_to_db_class(metric_list):
                     db_metrics = []
                     for metric_name, metric_value in metric_list.items():
-                        new_metric = MDBFoldMetric(operation=FoldOperations.RAW, metric_name=metric_name,
+                        new_metric = MDBFoldMetric(operation="raw", metric_name=metric_name,
                                                    value=metric_value)
                         db_metrics.append(new_metric)
                     return db_metrics
@@ -319,17 +355,43 @@ class InnerFoldManager(object):
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
               calculate_metrics: bool=True, training: bool=False, **kwargs):
-        """
-        Uses the pipeline to predict the given data, compare it to the truth values and calculate metrics
+        """Uses the pipeline to predict the given data,
+        compare it to the truth values and calculate metrics
 
-        :param estimator: the pipeline or pipeline element for prediction
-        :param X: the data for prediction
-        :param y_true: the truth values for the data
-        :param metrics: the metrics to be calculated
-        :param indices: the indices of the given data and targets that are logged into the result tree
-        :param training: if True, all training_only pipeline elements are executed, if False they are skipped
-        :param calculate_metrics: if True, calculates metrics for given data
-        :return: ScoreInformation object
+        Parameters
+        ----------
+        estimator:
+            The pipeline or pipeline element for prediction.
+            Requires the 'predict' method.
+
+
+        X: ndarray
+            The data for prediction.
+
+        y_true: ndarray
+            The truth values for the data.
+
+        metrics: list
+            The metrics to be calculated.
+
+        indices: list
+            The indices of the given data and targets that are logged into the result tree.
+
+        training: list
+            if True, all training_only pipeline elements are executed, if False they are skipped
+
+        calculate_metrics: bool, default=True
+            if True, calculates metrics for given data
+
+        training: bool, default=False
+            If True, an estimator.transform() is prepended here.
+
+
+        Returns
+        -------
+        information: MDBScoreInformation
+            Informations about scorer.
+
         """
 
         scoring_time_start = time.time()

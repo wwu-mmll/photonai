@@ -1,3 +1,5 @@
+# we use BaseEstimator as to prepare the transformer for hyperparameter optimization
+# we inherit the get_params and set_params methods
 from sklearn.base import BaseEstimator
 
 

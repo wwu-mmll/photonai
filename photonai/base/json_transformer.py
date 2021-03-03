@@ -20,19 +20,21 @@ class JsonTransformer(object):
             self.black_list = ["base_element"]
         else:
             self.black_list = black_list
-        self.json = {}
-        self.attribute_allocator = {"PipelineElement": ["initial_name", "initial_hyperparameters", "test_disabled", "kwargs"],
+        self.data_json = {}
+        self.attribute_allocator = {"PipelineElement": ["initial_name", "initial_hyperparameters",
+                                                        "test_disabled", "kwargs"],
                                     "Branch": ["initial_name", "elements"],
                                     "Stack": ["initial_name", "elements"],
                                     "Switch": ["initial_name", "elements"],
+                                    "DataFilter": ["indices"],
                                     "NeuroBranch": ["initial_name", "elements"]
                                     }
-        # "FloatRange": ["start", "stop", "range_type", "step", "num"]
+
     @staticmethod
     def write_json_file(value: dict, path: str):
         """
         static method for dumping dict json
-        :param json: dict to dump
+        :param value: dict to dump
         :param path: storage path
         :return: None
         """
@@ -64,7 +66,8 @@ class JsonTransformer(object):
         elif classname in [x[0] for x in inspect.getmembers(sys.modules["photonai.base"])]:
             obj = getattr(sys.modules["photonai.base"], classname)
         else:
-            msg = "Json Transformer is not able to initialize the hyperpipe. Class: "+ classname + " is not defined."
+            msg = "Json Transformer is not able to initialize the hyperpipe. " \
+                  "Class: {} is not defined.".format(classname)
             logger.error(msg)
             raise ValueError(msg)
         return obj
@@ -73,10 +76,11 @@ class JsonTransformer(object):
         """
         main function for saving PHOTON.Hyperpipe -> file.json
         :param pipe:
+        :param path: Path to save json.
         :return:
         """
-        self.json = self.create_json(pipe)
-        self.write_json_file(self.json, path)
+        self.data_json = self.create_json(pipe)
+        self.write_json_file(self.data_json, path)
 
     def create_json(self, pipe):
         """
@@ -84,44 +88,44 @@ class JsonTransformer(object):
         :param pipe: Hyperpipe to transform
         :return: dict representation of hyperpipe
         """
-        self.json = {}
-        self.json["name"] = pipe.name
+        self.data_json = dict()
+        self.data_json["name"] = pipe.name
         for key in ["verbosity", "permutation_id", "cache_folder", "nr_of_processes"]:
-            self.json[key] = getattr(pipe, key)
-        self.json["random_seed"] = pipe.random_state
+            self.data_json[key] = getattr(pipe, key)
+        self.data_json["random_seed"] = pipe.random_state
 
-        self.json["inner_cv"] = self.transform_elements_recursive(pipe.cross_validation.inner_cv)
-        self.json["outer_cv"] = self.transform_elements_recursive(pipe.cross_validation.outer_cv)
-        for c_key in ["calculate_metrics_across_folds", "eval_final_performance", "test_size",
+        self.data_json["inner_cv"] = self.transform_elements_recursive(pipe.cross_validation.inner_cv)
+        self.data_json["outer_cv"] = self.transform_elements_recursive(pipe.cross_validation.outer_cv)
+        for c_key in ["calculate_metrics_across_folds", "use_test_set", "test_size",
                       "calculate_metrics_per_fold"]:
-            self.json[c_key] = getattr(pipe.cross_validation, c_key)
+            self.data_json[c_key] = getattr(pipe.cross_validation, c_key)
 
-        self.json["performance_constraints"] = pipe.optimization.performance_constraints
-        self.json["optimizer"] = pipe.optimization.optimizer_input_str
+        self.data_json["performance_constraints"] = self.transform_elements_recursive(
+            pipe.optimization.performance_constraints)
+        self.data_json["optimizer"] = pipe.optimization.optimizer_input_str
         if pipe.optimization.optimizer_params:
-            self.json["optimizer_params"] = self.transform_elements_recursive(pipe.optimization.optimizer_params)
-        self.json["metrics"] = self.transform_elements_recursive(pipe.optimization.metrics)
-        self.json["best_config_metric"] = pipe.optimization.best_config_metric
+            self.data_json["optimizer_params"] = self.transform_elements_recursive(pipe.optimization.optimizer_params)
+        self.data_json["metrics"] = self.transform_elements_recursive(pipe.optimization.metrics)
+        self.data_json["best_config_metric"] = pipe.optimization.best_config_metric
+        self.data_json["project_folder"] = pipe.project_folder
 
         if pipe.output_settings:
-            self.json["output_settings"] = {"mongodb_connect_url" : pipe.output_settings.mongodb_connect_url,
-                                            "save_output" : pipe.output_settings.save_output,
-                                            "plots" : pipe.output_settings.plots,
-                                            "overwrite_results" : pipe.output_settings.overwrite_results,
-                                            "project_folder" : pipe.output_settings.project_folder,
-                                            "user_id" : pipe.output_settings.user_id,
-                                            "wizard_object_id" : pipe.output_settings.wizard_object_id,
-                                            "wizard_project_name" : pipe.output_settings.wizard_project_name,
-                                            "__photon_type" : "OutputSettings"}
+            self.data_json["output_settings"] = {"mongodb_connect_url": pipe.output_settings.mongodb_connect_url,
+                                                 "save_output": pipe.output_settings.save_output,
+                                                 "overwrite_results": pipe.output_settings.overwrite_results,
+                                                 "user_id": pipe.output_settings.user_id,
+                                                 "wizard_object_id": pipe.output_settings.wizard_object_id,
+                                                 "wizard_project_name": pipe.output_settings.wizard_project_name,
+                                                 "__photon_type": "OutputSettings"}
 
         if pipe.preprocessing:
-            self.json["preprocessing"] = {"elements" : self.transform_elements_recursive(pipe.preprocessing.elements),
-                                         "__photon_type": "Preprocessing"
-                                          }
+            self.data_json["preprocessing"] = {"elements":
+                                                   self.transform_elements_recursive(pipe.preprocessing.elements),
+                                               "__photon_type": "Preprocessing"}
 
-        self.json["elements"] = self.transform_elements_recursive(pipe.elements)
+        self.data_json["elements"] = self.transform_elements_recursive(pipe.elements)
 
-        return self.json
+        return self.data_json
 
     def transform_elements_recursive(self, element):
         """
@@ -146,7 +150,7 @@ class JsonTransformer(object):
                 return tuple(tmp_list)
         # dtype == dict
         elif isinstance(element, dict):
-            for k,v in element.items():
+            for k, v in element.items():
                 if not (k.startswith('_') or v is None):
                     if str(element.__class__.__name__) in self.attribute_allocator.keys():
                         if k in self.attribute_allocator[str(element.__class__.__name__)]:
@@ -155,11 +159,11 @@ class JsonTransformer(object):
                         d[k] = self.transform_elements_recursive(v)
         # dtype == object
         else:
-            for k,v in (dict(inspect.getmembers(element))).items():
+            for k, v in (dict(inspect.getmembers(element))).items():
                 if not (k.startswith('_') or v is None or inspect.ismethod(v)):
                     if str(element.__class__.__name__) in self.attribute_allocator.keys():
                         if k in self.attribute_allocator[str(element.__class__.__name__)]:
-                                d[k] = self.transform_elements_recursive(v)
+                            d[k] = self.transform_elements_recursive(v)
                     elif k not in self.black_list:
                         d[k] = self.transform_elements_recursive(v)
         if d and str(element.__class__.__name__) not in ["dict", "type", "property"]:
@@ -167,7 +171,7 @@ class JsonTransformer(object):
             if d['__photon_type'] in ["IntegerRange", "FloatRange", "NumberType", "BooleanSwitch"] \
                     and 'values' in d:
                 del d['values']
-        d = {key:val for key, val in d.items() if val is not None}
+        d = {key: val for key, val in d.items() if val is not None}
         if not d:
             return None
         return d
@@ -178,23 +182,23 @@ class JsonTransformer(object):
         :param path: storage path
         :return: json value
         """
-        self.json = self.read_json_file(path)
-        return self.from_json(self.json)
+        self.data_json = self.read_json_file(path)
+        return self.from_json(self.data_json)
 
-    def from_json(self, json):
+    def from_json(self, data_json):
         """
         manual to read hyperpipe json
-        :param json: sotrage json
+        :param data_json: storaged json
         :return: PHOTON.Hyperpipe
         """
-        self.json = json
-        for key in ['inner_cv', 'outer_cv', 'output_settings']:
-            self.json[key] = self.load_elements_recursive(self.json[key])
-        init = {key:value for key, value in self.json.items() if key not in ["elements", "preprocessing"]}
+        self.data_json = data_json
+        for key in ['inner_cv', 'outer_cv', 'output_settings', 'performance_constraints']:
+            self.data_json[key] = self.load_elements_recursive(self.data_json[key])
+        init = {key: value for key, value in self.data_json.items() if key not in ["elements", "preprocessing"]}
         pipe = self.str_to_class("Hyperpipe")(**init)
-        elements = self.load_elements_recursive(self.json["elements"])
-        if "preprocessing" in json:
-            pre_elements = self.load_elements_recursive(self.json["preprocessing"]["elements"])
+        elements = self.load_elements_recursive(self.data_json["elements"])
+        if "preprocessing" in data_json:
+            pre_elements = self.load_elements_recursive(self.data_json["preprocessing"]["elements"])
             pre = Preprocessing()
             for pre_element in pre_elements:
                 pre += pre_element
@@ -203,41 +207,43 @@ class JsonTransformer(object):
             pipe += element
         return pipe
 
-    def load_elements_recursive(self, json):
+    def load_elements_recursive(self, data_json):
         """
         reverse of transform_elements_recursive
-        :param json: dict, list, tuple, str, bool, ...
+        :param data_json: dict, list, tuple, str, bool, ...
         :return: python class/type
         """
         a = {}
         b = []
-        if json is None:
+        if data_json is None:
             return None
         # main dtypes
-        if any(isinstance(json, t) for t in [int, bool, str, float]):
-            return json
+        if any(isinstance(data_json, t) for t in [int, bool, str, float]):
+            return data_json
         # dtype == list
-        if isinstance(json, list):
-            for element in json:
+        if isinstance(data_json, list):
+            for element in data_json:
                 b.append(self.load_elements_recursive(element))
             return b
         # dtype == dict
-        elif isinstance(json, dict):
-            for element in json.keys():
+        elif isinstance(data_json, dict):
+            if not data_json:
+                return None
+            for element in data_json.keys():
                 if element not in ["initial_name", "__photon_type", "kwargs", "initial_hyperparameters"]:
-                    a.update({element: self.load_elements_recursive(json[element])})
+                    a.update({element: self.load_elements_recursive(data_json[element])})
                 elif element == "kwargs":
-                    for key in json["kwargs"].keys():
-                        a.update({key: self.load_elements_recursive(json[element][key])})
+                    for key in data_json["kwargs"].keys():
+                        a.update({key: self.load_elements_recursive(data_json[element][key])})
                 elif element == "initial_hyperparameters":
                     tmp = {}
-                    for key in json[element].keys():
+                    for key in data_json[element].keys():
                         if key == "__photon_type":
                             continue
-                        tmp.update({key: self.load_elements_recursive(json[element][key])})
+                        tmp.update({key: self.load_elements_recursive(data_json[element][key])})
                     a["hyperparameters"] = tmp
                 elif element == "initial_name":
-                    a["name"] = json['initial_name']
+                    a["name"] = data_json['initial_name']
             if "__photon_type" in a:
                 del a["__photon_type"]
-            return self.str_to_class(json[element])(**a)
+            return self.str_to_class(data_json[element])(**a)

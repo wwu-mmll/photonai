@@ -3,14 +3,12 @@ import warnings
 import numpy as np
 import json
 
-from prettytable import PrettyTable
-
 from photonai.helper.helper import PhotonDataHelper, print_double_metrics, print_metrics
-from photonai.optimization import DummyPerformance
+from photonai.optimization import DummyPerformanceConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
-from photonai.processing.results_structure import MDBHelper, FoldOperations, MDBInnerFold, MDBScoreInformation
+from photonai.processing.results_structure import MDBInnerFold, MDBScoreInformation
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer, PhotonMasterOptimizer
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -18,6 +16,44 @@ warnings.filterwarnings('ignore', category=FutureWarning)
 
 
 class OuterFoldManager:
+    """Outer Fold manager.
+
+    Controls the tasks over a specified Outer Fold.
+    It is responsible for generating the split in the outer folds
+    and triggering the hyperparameter optimization process.
+    An Objective Function is provided for this purpose.
+    This defines a black box function over the outer_fold data.
+
+    Parameters
+    ----------
+    pipe: PhotonPipeline
+        Defined pipeline structure for optimization.
+
+    optimization_info: Optimization
+        Contains the information how the black box function is solved.
+        Depending on the algorithms and metrics, the objective function is adapted to it.
+
+    outer_fold_id: UUID
+        Unique ID for this object.
+
+    cache_folder, str or None, default=None
+        Folder for storing information in multiprocessing case.
+
+    cache_updater, default=None
+        The object that takes active access to the cache structure.
+        Only in the multiprocess case.
+
+    dummy_estimator: DummyClassifier, DummyRegressor or None, default=None
+        To be able to classify the results,
+        they are compared against a dummy performance.
+        Since there are exceptions to the calculation,
+        this does not necessarily have to be passed.
+
+    result_obj: MDBOuterFold, default=None
+        Contains the memory structure for this object.
+        Results are written here during the running process.
+
+    """
 
     def __init__(self, pipe,
                  optimization_info,
@@ -27,9 +63,8 @@ class OuterFoldManager:
                  cache_updater=None,
                  dummy_estimator=None,
                  result_obj=None):
-        # Information from the Hyperpipe about the design choices
         self.outer_fold_id = outer_fold_id
-        self.cross_validaton_info = cross_validation_info
+        self.cross_validation_info = cross_validation_info
         self.optimization_info = optimization_info
         self._pipe = pipe
         self.copy_pipe_fnc = self._pipe.copy_me
@@ -52,8 +87,6 @@ class OuterFoldManager:
         self._test_X = None
         self._test_y = None
         self._test_kwargs = None
-
-    # How to get optimizer instance?
 
     def _prepare_optimization(self):
 
@@ -82,10 +115,10 @@ class OuterFoldManager:
             self.constraint_objects = None
 
     def _prepare_data(self, X, y=None, **kwargs):
-        logger.info("Preparing data for outer fold " + str(self.cross_validaton_info.outer_folds[self.outer_fold_id].fold_nr) + "...")
+        logger.info("Preparing data for outer fold " + str(self.cross_validation_info.outer_folds[self.outer_fold_id].fold_nr) + "...")
         # Prepare Train and validation set data
-        train_indices = self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices
-        test_indices = self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices
+        train_indices = self.cross_validation_info.outer_folds[self.outer_fold_id].train_indices
+        test_indices = self.cross_validation_info.outer_folds[self.outer_fold_id].test_indices
         self._validation_X, self._validation_y, self._validation_kwargs = PhotonDataHelper.split_data(X, y, kwargs,
                                                                                                       indices=train_indices)
         self._test_X, self._test_y, self._test_kwargs = PhotonDataHelper.split_data(X, y, kwargs, indices=test_indices)
@@ -99,23 +132,23 @@ class OuterFoldManager:
 
     def _generate_inner_folds(self):
 
-        self.inner_folds = FoldInfo.generate_folds(self.cross_validaton_info.inner_cv,
+        self.inner_folds = FoldInfo.generate_folds(self.cross_validation_info.inner_cv,
                                                    self._validation_X,
                                                    self._validation_y,
                                                    self._validation_kwargs)
 
-        self.cross_validaton_info.inner_folds[self.outer_fold_id] = {f.fold_id: f for f in self.inner_folds}
+        self.cross_validation_info.inner_folds[self.outer_fold_id] = {f.fold_id: f for f in self.inner_folds}
 
     def fit(self, X, y=None, **kwargs):
         logger.photon_system_log('')
-        logger.photon_system_log('***************************************************************************************************************')
-        logger.photon_system_log('Outer Cross validation Fold {}'.format(self.cross_validaton_info.outer_folds[self.outer_fold_id].fold_nr))
-        logger.photon_system_log('***************************************************************************************************************')
+        logger.stars()
+        logger.photon_system_log('Outer Cross validation Fold {}'.format(self.cross_validation_info.outer_folds[self.outer_fold_id].fold_nr))
+        logger.stars()
 
         self._prepare_data(X, y, **kwargs)
+        self._prepare_optimization()
         self._fit_dummy()
         self._generate_inner_folds()
-        self._prepare_optimization()
 
         outer_fold_fit_start_time = datetime.datetime.now()
         self.best_metric_yet = None
@@ -125,10 +158,10 @@ class OuterFoldManager:
         # self.__distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
         #                                                 outer_fold_counter=outer_fold_counter)
 
-        if self.cross_validaton_info.calculate_metrics_per_fold:
-            self.fold_operation = FoldOperations.MEAN
+        if self.cross_validation_info.calculate_metrics_per_fold:
+            self.fold_operation = "mean"
         else:
-            self.fold_operation = FoldOperations.RAW
+            self.fold_operation = "raw"
 
         self.max_nr_of_configs = ''
         if hasattr(self.optimizer, 'n_configurations'):
@@ -141,13 +174,28 @@ class OuterFoldManager:
             for current_config in self.optimizer.ask:
                 self.objective_function(current_config)
 
-        logger.clean_info('---------------------------------------------------------------------------------------------------------------')
+        logger.line()
         logger.info('Hyperparameter Optimization finished. Now finding best configuration .... ')
-        print(self.tested_config_counter)
+        logger.info(self.tested_config_counter)
         # now go on with the best config found
         if self.tested_config_counter > 0:
-            best_config_outer_fold = self.optimization_info.get_optimum_config(self.result_object.tested_config_list,
-                                                                               self.fold_operation)
+            best_config_outer_fold = self.result_object.get_optimum_config(self.optimization_info.best_config_metric,
+                                                                           self.optimization_info.maximize_metric,
+                                                                           fold_operation=self.fold_operation)
+            # inform user
+            logger.debug('Optimizer metric: ' + self.optimization_info.best_config_metric + '\n' +
+                         '   --> Maximize metric: ' + str(self.optimization_info.maximize_metric))
+
+            logger.system_line()
+            logger.photon_system_log('BEST_CONFIG ')
+            logger.system_line()
+            logger.photon_system_log(json.dumps(best_config_outer_fold.human_readable_config, indent=4,
+                                                sort_keys=True))
+            logger.system_line()
+            logger.photon_system_log('VALIDATION PERFORMANCE')
+            logger.system_line()
+            print_double_metrics(best_config_outer_fold.get_train_metric(operation="mean"),
+                                 best_config_outer_fold.get_test_metric(operation="mean"))
 
             if not best_config_outer_fold:
                 raise Exception("No best config was found!")
@@ -187,20 +235,20 @@ class OuterFoldManager:
             best_config_performance_mdb.number_samples_validation = self._test_y.shape[0]
             best_config_performance_mdb.feature_importances = optimum_pipe.feature_importances_
 
-            if self.cross_validaton_info.eval_final_performance:
+            if self.cross_validation_info.use_test_set:
                 # Todo: generate mean and std over outer folds as well. move this items to the top
                 logger.info('Calculating best model performance on test set...')
 
                 logger.debug('...scoring test data')
                 test_score_mdb = InnerFoldManager.score(optimum_pipe, self._test_X, self._test_y,
-                                                        indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].test_indices,
+                                                        indices=self.cross_validation_info.outer_folds[self.outer_fold_id].test_indices,
                                                         metrics=self.optimization_info.metrics,
                                                         **self._test_kwargs)
 
                 logger.debug('... scoring training data')
 
                 train_score_mdb = InnerFoldManager.score(optimum_pipe, self._validation_X, self._validation_y,
-                                                         indices=self.cross_validaton_info.outer_folds[self.outer_fold_id].train_indices,
+                                                         indices=self.cross_validation_info.outer_folds[self.outer_fold_id].train_indices,
                                                          metrics=self.optimization_info.metrics,
                                                          training=True,
                                                          **self._validation_kwargs)
@@ -208,6 +256,9 @@ class OuterFoldManager:
                 best_config_performance_mdb.training = train_score_mdb
                 best_config_performance_mdb.validation = test_score_mdb
 
+                logger.system_line()
+                logger.photon_system_log('TEST PERFORMANCE')
+                logger.system_line()
                 print_double_metrics(train_score_mdb.metrics, test_score_mdb.metrics)
             else:
 
@@ -231,14 +282,14 @@ class OuterFoldManager:
             # write best config performance to best config item
             self.result_object.best_config.best_config_score = best_config_performance_mdb
 
-        logger.info('Computations in outer fold {} took {} minutes.'.format(self.cross_validaton_info.outer_folds[self.outer_fold_id].fold_nr,
-                                                                            (datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
+        logger.info('Computations in outer fold {} took {} minutes.'.format(
+            self.cross_validation_info.outer_folds[self.outer_fold_id].fold_nr,
+            (datetime.datetime.now() - outer_fold_fit_start_time).total_seconds() / 60))
 
     def objective_function(self, current_config):
         if current_config is None:
             return
-        logger.clean_info(
-            '---------------------------------------------------------------------------------------------------------------')
+        logger.line()
         self.tested_config_counter += 1
 
         if hasattr(self.optimizer, 'ask_for_pipe'):
@@ -250,7 +301,7 @@ class OuterFoldManager:
 
         hp = InnerFoldManager(pipe_ctor, current_config,
                               self.optimization_info,
-                              self.cross_validaton_info, self.outer_fold_id, self.constraint_objects,
+                              self.cross_validation_info, self.outer_fold_id, self.constraint_objects,
                               cache_folder=self.cache_folder,
                               cache_updater=self.cache_updater)
 
@@ -259,10 +310,10 @@ class OuterFoldManager:
         current_config_mdb.config_nr = self.tested_config_counter
 
         if not current_config_mdb.config_failed:
-            metric_train = MDBHelper.get_metric(current_config_mdb, self.fold_operation,
-                                                self.optimization_info.best_config_metric)
-            metric_test = MDBHelper.get_metric(current_config_mdb, self.fold_operation,
-                                               self.optimization_info.best_config_metric, train=False)
+            metric_train = current_config_mdb.get_train_metric(self.optimization_info.best_config_metric,
+                                                               self.fold_operation)
+            metric_test = current_config_mdb.get_test_metric(self.optimization_info.best_config_metric,
+                                                             self.fold_operation)
 
             if metric_train is None or metric_test is None:
                 raise Exception("Config did not fail, but did not get any metrics either....!!?")
@@ -275,17 +326,17 @@ class OuterFoldManager:
                 if self.optimization_info.maximize_metric:
                     if metric_test > self.best_metric_yet[1]:
                         self.best_metric_yet = config_performance
-                        self.current_best_config.save_memory()
+                        self.current_best_config.decrease_memory()
                         self.current_best_config = current_config_mdb
                     else:
-                        current_config_mdb.save_memory()
+                        current_config_mdb.decrease_memory()
                 else:
                     if metric_test < self.best_metric_yet[1]:
                         self.best_metric_yet = config_performance
-                        self.current_best_config.save_memory()
+                        self.current_best_config.decrease_memory()
                         self.current_best_config = current_config_mdb
                     else:
-                        current_config_mdb.save_memory()
+                        current_config_mdb.decrease_memory()
 
             # Print Result for config
             computation_duration = current_config_mdb.computation_end_time - current_config_mdb.computation_start_time
@@ -309,7 +360,7 @@ class OuterFoldManager:
         # 3. inform optimizer about performance
         logger.debug("Telling hyperparameter optimizer about recent performance.")
         if isinstance(self.optimizer, PhotonSlaveOptimizer):
-            self.optimizer.tell(current_config, config_performance)
+            self.optimizer.tell(current_config, config_performance[1])
         logger.debug("Asking hyperparameter optimizer for new config.")
 
         if self.optimization_info.maximize_metric:
@@ -335,7 +386,7 @@ class OuterFoldManager:
                 inner_fold = MDBInnerFold()
                 inner_fold.training = train_scores
 
-                if self.cross_validaton_info.eval_final_performance:
+                if self.cross_validation_info.use_test_set:
                     test_scores = InnerFoldManager.score(self.dummy_estimator,
                                                          self._test_X, self._test_y,
                                                          metrics=self.optimization_info.metrics)
@@ -346,7 +397,9 @@ class OuterFoldManager:
 
                 # performaceConstraints: DummyEstimator
                 if self.constraint_objects is not None:
-                    dummy_constraint_objs = [opt for opt in self.constraint_objects if isinstance(opt, DummyPerformance)]
+                    dummy_constraint_objs = [opt for opt in self.constraint_objects
+                                             if isinstance(opt, DummyPerformanceConstraint)]
+
                     if dummy_constraint_objs:
                         for dummy_constraint_obj in dummy_constraint_objs:
                             dummy_constraint_obj.set_dummy_performance(self.result_object.dummy_results)
@@ -358,4 +411,3 @@ class OuterFoldManager:
                 return None
         else:
             logger.info("Skipping dummy ..")
-

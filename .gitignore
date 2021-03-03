@@ -1,6 +1,9 @@
 # Photon specific stuff
 configuration.ini
 
+documentation/site/
+site/
+
 **/photon_setup_errors.log
 .pypirc
 **/tmp
@@ -70,7 +73,7 @@ instance/
 .scrapy
 
 # Sphinx documentation
-docs/_build/
+documentation/docs/_build/
 
 # PyBuilder
 target/

@@ -1,0 +1,125 @@
+site_name: ""
+docs_dir: documentation/docs
+nav:
+  - 'Getting Started':
+      - 'Basic Usage': index.md
+      - 'PHOTONAI Framework': getting_started/photonai.md
+      - 'A first regression example': getting_started/regression.md
+      - 'Access established ml-packages': getting_started/algorithm_index.md
+      - 'Hyperparameter Optimization': getting_started/hpos.md
+      - 'Include custom algorithm': getting_started/custom_algorithm.md
+      - 'Inspect and visualize results': getting_started/output.md
+#      - 'Simple Classification': getting_started/classification.md
+
+  - 'Pipeline Architecture':
+      - 'Switch (OR)': photon_elements/switch.md
+      - 'Stack (AND)': photon_elements/stack.md
+      - Feature Subset Pipelines: photon_elements/feature_subset_pipelines.md
+#      - Subpipelines: examples/subpipelines.md
+      - Classifier Ensemble: photon_elements/classifier_ensemble.md
+  - 'Examples':
+      - 'General':
+          - 'Simple Classification': examples/classification.md
+          - 'Simple Regression': examples/regression.md
+          - 'Compare estimators': examples/compare_estimators.md
+          - 'Over- /Undersampling': examples/imbalanced_data.md
+          - 'Remove confounders': examples/confounder_removal.md
+          - 'Use a DNN with multiclass prediction': examples/dnn_multiclass_prediction.md
+      - 'Specific Use Cases':
+          - 'Sample Pairing': examples/sample_pairing.md
+          - 'No Hyperparameter Optimization': examples/no_outer_cv.md
+          - 'Use site-specific validation': examples/group_driven_cv_split.md
+          - 'Permutation Importances': examples/permutation_importances.md
+    #      - Permutation Test: examples/permutation_test.md
+          - 'Optimize a MLP': examples/scikit_learn_mlp.md
+  - 'Features':
+      - 'Custom Metrics': features/custom_metrics.md
+      - 'Hyperparameter Optimization Shortcuts': features/performance_constraints.md
+      - 'Load and use a .photon model': features/save_load.md
+      - 'Stream additional data': features/additional_data.md
+      - 'Inspect the dataflow at runtime': features/callbacks.md
+      - 'Caching': features/caching.md
+      - 'Transform in Batches': features/batching.md
+      - 'Learning Curves': features/learning_curves.md
+      - 'Result Queries': features/result_handler.md
+      - 'Preprocessing' : features/preprocessing.md
+#           Multidim y?
+#      - 'Permutation Test': features/permutation_test.md
+  - 'Algorithms':
+      - 'Access pre-registered algorithms': algorithms/algorithms_index.md
+      - 'Transformers': algorithms/transformers.md
+      - 'Estimators': algorithms/estimators.md
+      - 'Hyperparameter Optimizers': algorithms/hpos.md
+      - 'Registry': algorithms/registry.md
+  - 'API':
+        - Overview: api/architecture.md
+        - 'Base':
+            - Branch: api/base/branch.md
+            - Hyperpipe: api/base/hyperpipe.md
+            - OutputSettings: api/base/output_settings.md
+            - PipelineElement: api/base/pipeline_element.md
+            - Preprocessing: api/base/preprocessing.md
+            - Registry: api/base/registry.md
+            - Stack: api/base/stack.md
+            - Switch: api/base/switch.md
+        - 'Modelwrapper':
+            - 'BaseModelWrapper': api/modelwrapper/base_model_wrapper.md
+            - 'Feature Selection':
+                - FClassifSelectPercentile: api/modelwrapper/feature_selection/FClassifSelectPercentile.md
+                - FRegressionFilterPValue: api/modelwrapper/feature_selection/FRegressionFilterPValue.md
+                - FRegressionSelectPercentile: api/modelwrapper/feature_selection/FRegressionSelectPercentile.md
+                - LassoFeatureSelection: api/modelwrapper/feature_selection/LassoFeatureSelection.md
+                - ModelSelector: api/modelwrapper/feature_selection/ModelSelector.md
+            - 'Keras':
+                - 'KerasDnnClassifier': api/modelwrapper/keras/dnn_classifier.md
+                - 'KerasDnnRegressor': api/modelwrapper/keras/dnn_regressor.md
+            - 'LabelEncoder': api/modelwrapper/label_encoder.md
+            - 'ImbalancedDataTransformer': api/modelwrapper/imblearn.md
+        - 'Optimization':
+            - GridSearch: api/optimization/grid_search.md
+            - RandomGridSearch: api/optimization/random_grid_search.md
+            - RandomSearch: api/optimization/random_search.md
+            - Scikit-Optimize: api/optimization/skopt.md
+            - SMAC: api/optimization/smac.md
+            - Nevergrad: api/optimization/nevergrad.md
+            - 'Hyperparameter':
+                - BooleanSwitch: api/optimization/hyperparameter/boolean_switch.md
+                - Categorical: api/optimization/hyperparameter/categorical.md
+                - FloatRange: api/optimization/hyperparameter/float_range.md
+                - IntegerRange: api/optimization/hyperparameter/integer_range.md
+        - 'Processing':
+            - Results Handler: api/processing/results_handler.md
+        - 'Custom Elements':
+            - Custom Transformer: api/custom_transformer.md
+            - Custom Estimator: api/custom_estimator.md
+  - 'About':
+      - Website: 'https://www.photon-ai.com'
+      - Preprint: 'https://arxiv.org/abs/2002.05426'
+      - 'Contributions': contribution.md
+extra_css:
+  - assets/stylesheets/extra.css
+theme:
+  name: material
+  custom_dir: documentation/overrides
+  repo_url: https://github.com/wwu-mmll/photonai
+  favicon: favicon.png
+  features:
+    - navigation.tabs
+
+markdown_extensions:
+  - attr_list
+  - pymdownx.highlight:
+      linenums: true
+  - pymdownx.superfences
+
+plugins:
+  - search
+  - macros:
+      include_dir: ./
+  - mkdocstrings:
+      handlers:
+        python:
+          selection:
+            filters:
+              - "!^_"
+              - "^__init__$"

@@ -2,6 +2,7 @@ import datetime
 import os
 
 import numpy as np
+import warnings
 from sklearn.utils.metaestimators import _BaseComposition
 
 from photonai.base.cache_manager import CacheManager
@@ -429,12 +430,18 @@ class PhotonPipeline(_BaseComposition):
     def inverse_transform(self, X, y=None, **kwargs):
         # simply use X to apply inverse_transform
         # does not work on any transformers changing y or kwargs!
-        for name, transform in self.elements[::-1]:
+        for name, transform in reversed(self.elements):
+            if transform.disabled:
+                continue
             try:
                 X, y, kwargs = transform.inverse_transform(X, y, **kwargs)
             except Exception as e:
-                if isinstance(e, NotImplementedError):
-                    return X, y, kwargs
+                msg = "The inverse transformation is not possible for {0}. " \
+                      "Cause: {1} " \
+                      "The returned value is based on the inverse input data of {0}.".format(name, str(e))
+                warnings.warn(msg)
+                logger.photon_system_log(msg)
+                break
 
         return X, y, kwargs
 
@@ -458,6 +465,40 @@ class PhotonPipeline(_BaseComposition):
         new_pipe.random_state = self.random_state
         return new_pipe
 
+    def score(self, X: np.ndarray, y: np.ndarray, **kwargs) -> float:
+        """
+        Transforms the data for every step that offers a transform function
+        and then calls the estimator with predict on transformed data.
+        It returns the predictions made.
+
+        In case the last step is no estimator, it returns the transformed data.
+
+        Parameters:
+            X:
+                Test samples.
+
+            y:
+                True values for `X`.
+
+            kwargs:
+                Passed to final_estimator.score(), e.g. sample_weight possible.
+
+        Returns:
+            Score value.
+        """
+
+        X, y, kwargs = self.transform(X, y=y, **kwargs)
+
+        # call score on final estimator
+        if self._final_estimator is not None:
+            if self._final_estimator.is_estimator:
+                return self._final_estimator.score(X, y, **kwargs)
+
+        msg = "It is not possible to run the score method without matching final_estimator. " \
+              "Make sure that the last element is an estimator with integrated score function."
+        logger.error(msg)
+        raise ValueError(msg)
+
     @property
     def named_steps(self):
         return dict(self.elements)
@@ -474,7 +515,7 @@ class PhotonPipeline(_BaseComposition):
         if self.cache_man is not None:
             self.cache_man.clear_cache()
 
-    def _add_preprocessing(self, preprocessing):
+    def add_preprocessing(self, preprocessing):
         if preprocessing:
             self.elements.insert(0, (preprocessing.name, preprocessing))
 
