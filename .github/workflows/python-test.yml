@@ -40,3 +40,5 @@ jobs:
         PYTHONPATH=./ pytest ./test --cov=./photonai
     - name: Coveralls
       run: coveralls
+      env: 
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
