@@ -1169,10 +1169,9 @@ class Hyperpipe(BaseEstimator):
 
     def get_permutation_feature_importances(self, **kwargs):
         """
-        Since PHOTONAI is built on top of the scikit-learn interface,
-        it is possible to use direct functions from their package.
-        Here the example of the [feature importance via permutations](
-        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html).
+        Fits a model for the best config of each outer fold (using the training data of that fold).
+        Then calls sklearn.inspection.permutation_importance with the test data and the given kwargs (e.g. n_repeats).
+        Returns mean of "importances_mean" and of "importances_std" of all outer folds.
 
         Parameters:
             X_val:
@@ -1188,7 +1187,7 @@ class Hyperpipe(BaseEstimator):
                 Keyword arguments, passed to sklearn.permutation_importance.
 
         Returns:
-            Dictionary-like object, with the following attributes: importances_mean, importances_std, importances.
+            Dictionary with average of "mean" and "std" for all outer folds, respectively.
 
         """
 
