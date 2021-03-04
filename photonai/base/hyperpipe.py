@@ -29,6 +29,7 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
+from photonai.helper.helper import PhotonDataHelper
 from photonai.optimization import FloatRange
 from photonai.photonlogger.logger import logger
 from photonai.processing import ResultsHandler
@@ -1166,12 +1167,11 @@ class Hyperpipe(BaseEstimator):
             scorer = Scorer.create(self.optimization.best_config_metric)
             return scorer(y, predictions)
 
-    def get_permutation_feature_importances(self, X_val: np.ndarray, y_val: np.ndarray, **kwargs):
+    def get_permutation_feature_importances(self, **kwargs):
         """
-        Since PHOTONAI is built on top of the scikit-learn interface,
-        it is possible to use direct functions from their package.
-        Here the example of the [feature importance via permutations](
-        https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html).
+        Fits a model for the best config of each outer fold (using the training data of that fold).
+        Then calls sklearn.inspection.permutation_importance with the test data and the given kwargs (e.g. n_repeats).
+        Returns mean of "importances_mean" and of "importances_std" of all outer folds.
 
         Parameters:
             X_val:
@@ -1187,11 +1187,50 @@ class Hyperpipe(BaseEstimator):
                 Keyword arguments, passed to sklearn.permutation_importance.
 
         Returns:
-            Dictionary-like object, with the following attributes: importances_mean, importances_std, importances.
+            Dictionary with average of "mean" and "std" for all outer folds, respectively.
 
         """
 
-        return permutation_importance(self.optimum_pipe, X_val, y_val, **kwargs)
+        importance_list = {'mean': list(), 'std': list()}
+        pipe_copy = self.optimum_pipe.copy_me()
+        logger.photon_system_log("")
+        logger.photon_system_log("Computing permutation importances. This may take a while.")
+        logger.stars()
+        for outer_fold in self.results.outer_folds:
+
+            if outer_fold.best_config.best_config_score is None:
+                raise ValueError("Cannot compute permutation importances when use_test_set is false")
+
+
+            # prepare data
+            train_indices = outer_fold.best_config.best_config_score.training.indices
+            test_indices = outer_fold.best_config.best_config_score.validation.indices
+
+            train_X, train_y, train_kwargs = PhotonDataHelper.split_data(self.data.X,
+                                                                         self.data.y,
+                                                                         self.data.kwargs,
+                                                                         indices=train_indices)
+
+            test_X, test_y, test_kwargs = PhotonDataHelper.split_data(self.data.X,
+                                                                      self.data.y,
+                                                                      self.data.kwargs,
+                                                                      indices=test_indices)
+            # set pipe to config
+            pipe_copy.set_params(**outer_fold.best_config.config_dict)
+            logger.photon_system_log("Permutation Importances: Fitting model for outer fold " + str(outer_fold.fold_nr))
+            pipe_copy.fit(train_X, train_y, **train_kwargs)
+
+            logger.photon_system_log("Permutation Importances: Calculating performances for outer fold "
+                                     + str(outer_fold.fold_nr))
+            outer_fold_perm_imps = permutation_importance(pipe_copy, test_X, test_y, **kwargs)
+            importance_list['mean'].append(outer_fold_perm_imps["importances_mean"])
+            importance_list['std'].append(outer_fold_perm_imps["importances_std"])
+
+        mean_importances = np.mean(np.array(importance_list["mean"]), axis=0)
+        std_importances = np.mean(np.array(importance_list["std"]), axis=0)
+        logger.stars()
+
+        return {'mean': mean_importances, 'std': std_importances}
 
     def inverse_transform_pipeline(self, hyperparameters: dict,
                                    data: np.ndarray,
