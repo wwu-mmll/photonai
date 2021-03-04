@@ -18,10 +18,10 @@ my_pipe += PipelineElement("StandardScaler")
 my_pipe += PipelineElement('Ridge', alpha=1e-2)
 my_pipe.fit(X_train, y_train)
 
-r = my_pipe.get_permutation_feature_importances(X_val, y_val, n_repeats=50, random_state=0)
+r = my_pipe.get_permutation_feature_importances(n_repeats=50, random_state=0)
 
-for i in r.importances_mean.argsort()[::-1]:
-    if r.importances_mean[i] - 2 * r.importances_std[i] > 0:
+for i in r["mean"].argsort()[::-1]:
+    if r["mean"][i] - 2 * r["std"][i] > 0:
         print(f"{diabetes.feature_names[i]:<8}"
-              f"{r.importances_mean[i]:.3f}"
-              f" +/- {r.importances_std[i]:.3f}")
+              f"{r['mean'][i]:.3f}"
+              f" +/- {r['std'][i]:.3f}")

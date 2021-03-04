@@ -197,9 +197,16 @@ class HyperpipeTests(PhotonBaseTest):
         score_element = svc.score(self.__X, self.__y)
         self.assertAlmostEqual(score_photon, score_element)
 
-        permutation_score = hp.get_permutation_feature_importances(self.__X, self.__y, n_repeats=50, random_state=0)
-        score_2 = permutation_importance(svc, self.__X, self.__y, n_repeats=50, random_state=0)
-        np.testing.assert_array_equal(permutation_score["importances"], score_2["importances"])
+        permutation_score = hp.get_permutation_feature_importances(n_repeats=5, random_state=0)
+        self.assertTrue("mean" in permutation_score)
+        self.assertTrue("std" in permutation_score)
+        self.assertEqual(permutation_score["mean"].shape, (self.__X.shape[1],))
+        self.assertEqual(permutation_score["std"].shape, (self.__X.shape[1],))
+
+        hp.cross_validation.use_test_set = False
+        hp.fit(self.__X, self.__y)
+        with self.assertRaises(ValueError):
+            hp.get_permutation_feature_importances(n_repeats=5)
 
     def test_estimation_type(self):
         def callback(X, y=None, **kwargs):
