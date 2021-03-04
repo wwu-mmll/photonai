@@ -2838,14 +2838,14 @@ where N is the number of samples.</p>
 <div class="doc doc-object doc-method">
 <h2 class="doc doc-heading" id="photonai.base.hyperpipe.Hyperpipe.get_permutation_feature_importances">
 
-<code class="highlight language-python"><span class="n">get_permutation_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
+<code class="highlight language-python"><span class="n">get_permutation_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 
       </h2>
 <div class="doc doc-contents ">
-<p>Since PHOTONAI is built on top of the scikit-learn interface,
-it is possible to use direct functions from their package.
-Here the example of the <a href="https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html">feature importance via permutations</a>.</p>
+<p>Fits a model for the best config of each outer fold (using the training data of that fold).
+Then calls sklearn.inspection.permutation_importance with the test data and the given kwargs (e.g. n_repeats).
+Returns mean of "importances_mean" and of "importances_std" of all outer folds.</p>
 <p><strong>Parameters:</strong></p>
 <table>
 <thead>
@@ -2859,7 +2859,7 @@ Here the example of the <a href="https://scikit-learn.org/stable/modules/generat
 <tbody>
 <tr>
 <td><code>X_val</code></td>
-<td><code>ndarray</code></td>
+<td><code></code></td>
 <td>
 <p>The array-like data with shape=[M, D],
 where M is the number of samples and D is the number
@@ -2870,7 +2870,7 @@ of trained dimensions of the fit method.</p>
 </tr>
 <tr>
 <td><code>y_val</code></td>
-<td><code>ndarray</code></td>
+<td><code></code></td>
 <td>
 <p>The array-like true targets.</p>
 </td>
@@ -2896,9 +2896,9 @@ of trained dimensions of the fit method.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>Dictionary-like object, with the following attributes</code></td>
+<td><code></code></td>
 <td>
-<p>importances_mean, importances_std, importances.</p>
+<p>Dictionary with average of "mean" and "std" for all outer folds, respectively.</p>
 </td>
 </tr>
 </tbody>
@@ -2906,12 +2906,11 @@ of trained dimensions of the fit method.</p>
 <details class="quote">
           <summary>Source code in <code>photonai/base/hyperpipe.py</code></summary>
           <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">get_permutation_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X_val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y_val</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+<pre><span></span><code><span class="k">def</span> <span class="nf">get_permutation_feature_importances</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
     <span class="sd">"""</span>
-<span class="sd">    Since PHOTONAI is built on top of the scikit-learn interface,</span>
-<span class="sd">    it is possible to use direct functions from their package.</span>
-<span class="sd">    Here the example of the [feature importance via permutations](</span>
-<span class="sd">    https://scikit-learn.org/stable/modules/generated/sklearn.inspection.permutation_importance.html).</span>
+<span class="sd">    Fits a model for the best config of each outer fold (using the training data of that fold).</span>
+<span class="sd">    Then calls sklearn.inspection.permutation_importance with the test data and the given kwargs (e.g. n_repeats).</span>
+<span class="sd">    Returns mean of "importances_mean" and of "importances_std" of all outer folds.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        X_val:</span>
@@ -2927,11 +2926,50 @@ of trained dimensions of the fit method.</p>
 <span class="sd">            Keyword arguments, passed to sklearn.permutation_importance.</span>
 
 <span class="sd">    Returns:</span>
-<span class="sd">        Dictionary-like object, with the following attributes: importances_mean, importances_std, importances.</span>
+<span class="sd">        Dictionary with average of "mean" and "std" for all outer folds, respectively.</span>
 
 <span class="sd">    """</span>
 
-    <span class="k">return</span> <span class="n">permutation_importance</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimum_pipe</span><span class="p">,</span> <span class="n">X_val</span><span class="p">,</span> <span class="n">y_val</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="n">importance_list</span> <span class="o">=</span> <span class="p">{</span><span class="s1">'mean'</span><span class="p">:</span> <span class="nb">list</span><span class="p">(),</span> <span class="s1">'std'</span><span class="p">:</span> <span class="nb">list</span><span class="p">()}</span>
+    <span class="n">pipe_copy</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimum_pipe</span><span class="o">.</span><span class="n">copy_me</span><span class="p">()</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">photon_system_log</span><span class="p">(</span><span class="s2">""</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">photon_system_log</span><span class="p">(</span><span class="s2">"Computing permutation importances. This may take a while."</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">stars</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">outer_fold</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">results</span><span class="o">.</span><span class="n">outer_folds</span><span class="p">:</span>
+
+        <span class="k">if</span> <span class="n">outer_fold</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">best_config_score</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Cannot compute permutation importances when use_test_set is false"</span><span class="p">)</span>
+
+
+        <span class="c1"># prepare data</span>
+        <span class="n">train_indices</span> <span class="o">=</span> <span class="n">outer_fold</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">best_config_score</span><span class="o">.</span><span class="n">training</span><span class="o">.</span><span class="n">indices</span>
+        <span class="n">test_indices</span> <span class="o">=</span> <span class="n">outer_fold</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">best_config_score</span><span class="o">.</span><span class="n">validation</span><span class="o">.</span><span class="n">indices</span>
+
+        <span class="n">train_X</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="n">train_kwargs</span> <span class="o">=</span> <span class="n">PhotonDataHelper</span><span class="o">.</span><span class="n">split_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span>
+                                                                     <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                                                                     <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span>
+                                                                     <span class="n">indices</span><span class="o">=</span><span class="n">train_indices</span><span class="p">)</span>
+
+        <span class="n">test_X</span><span class="p">,</span> <span class="n">test_y</span><span class="p">,</span> <span class="n">test_kwargs</span> <span class="o">=</span> <span class="n">PhotonDataHelper</span><span class="o">.</span><span class="n">split_data</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">X</span><span class="p">,</span>
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+                                                                  <span class="bp">self</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">kwargs</span><span class="p">,</span>
+                                                                  <span class="n">indices</span><span class="o">=</span><span class="n">test_indices</span><span class="p">)</span>
+        <span class="c1"># set pipe to config</span>
+        <span class="n">pipe_copy</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">outer_fold</span><span class="o">.</span><span class="n">best_config</span><span class="o">.</span><span class="n">config_dict</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">photon_system_log</span><span class="p">(</span><span class="s2">"Permutation Importances: Fitting model for outer fold "</span> <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">outer_fold</span><span class="o">.</span><span class="n">fold_nr</span><span class="p">))</span>
+        <span class="n">pipe_copy</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">train_X</span><span class="p">,</span> <span class="n">train_y</span><span class="p">,</span> <span class="o">**</span><span class="n">train_kwargs</span><span class="p">)</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">photon_system_log</span><span class="p">(</span><span class="s2">"Permutation Importances: Calculating performances for outer fold "</span>
+                                 <span class="o">+</span> <span class="nb">str</span><span class="p">(</span><span class="n">outer_fold</span><span class="o">.</span><span class="n">fold_nr</span><span class="p">))</span>
+        <span class="n">outer_fold_perm_imps</span> <span class="o">=</span> <span class="n">permutation_importance</span><span class="p">(</span><span class="n">pipe_copy</span><span class="p">,</span> <span class="n">test_X</span><span class="p">,</span> <span class="n">test_y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">importance_list</span><span class="p">[</span><span class="s1">'mean'</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outer_fold_perm_imps</span><span class="p">[</span><span class="s2">"importances_mean"</span><span class="p">])</span>
+        <span class="n">importance_list</span><span class="p">[</span><span class="s1">'std'</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">outer_fold_perm_imps</span><span class="p">[</span><span class="s2">"importances_std"</span><span class="p">])</span>
+
+    <span class="n">mean_importances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">importance_list</span><span class="p">[</span><span class="s2">"mean"</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">std_importances</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">importance_list</span><span class="p">[</span><span class="s2">"std"</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">logger</span><span class="o">.</span><span class="n">stars</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="p">{</span><span class="s1">'mean'</span><span class="p">:</span> <span class="n">mean_importances</span><span class="p">,</span> <span class="s1">'std'</span><span class="p">:</span> <span class="n">std_importances</span><span class="p">}</span>
 </code></pre>
 </div>
 </details>
