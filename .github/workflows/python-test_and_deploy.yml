@@ -1,7 +1,7 @@
 # This workflow will install Python dependencies, run tests and lint with a single version of Python
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
-name: PHOTONAI tests
+name: PHOTONAI test and test deploy
 
 on:
   push:
@@ -11,7 +11,7 @@ on:
 
 jobs:
   pytest:
-
+    name: Run PHOTONAI tests and publish test coverage
     runs-on: ubuntu-18.04
     
     services:
@@ -43,3 +43,28 @@ jobs:
       env: 
         COVERALLS_REPO_TOKEN: ${{ secrets.COVERALLS_REPO_TOKEN }}
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  deploy:
+    name: Build and publish to TestPyPI
+    runs-on: ubuntu-18.04
+    needs: pytest
+    if: github.ref == 'refs/heads/master'
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7.6
+    - name: Replace version number with commit hash
+      run: |
+        dt=$(date '+%Y.%m.%d.%H.%M.%S')
+        sed -i "s/^__version__.*/__version__ = '$dt'/g" setup.py
+    - name: Install pypa/build
+      run: pip install build
+    - name: Build a binary wheel and a source tarball
+      run: python -m build --sdist --wheel --outdir dist/ .
+    - name: Publish distribution to Test PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        repository_url: https://test.pypi.org/legacy/

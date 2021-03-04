@@ -1,0 +1,25 @@
+name: PHOTONAI release deployment on PyPI
+
+on:
+  release:
+    types: [published]
+
+jobs:
+  deploy:
+    name: Build and publish to PyPI
+    runs-on: ubuntu-18.04
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7.6
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.7.6
+    - name: Install pypa/build
+      run: pip install build
+    - name: Build a binary wheel and a source tarball
+      run: python -m build --sdist --wheel --outdir dist/ .
+    - name: Publish distribution to Test PyPI
+      uses: pypa/gh-action-pypi-publish@master
+      with:
+        user: __token__
+        password: ${{ secrets.PYPI_API_TOKEN }}
