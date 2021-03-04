@@ -5,29 +5,38 @@ except ImportError:
     use_setuptools()
     from setuptools import setup, find_packages
 
-# from setuptools.command.install import install
-#
-# class Modulenstalltio
-
 
 __version__ = '2.1.0'
+
+with open("README.md", "r", encoding="utf-8") as fh:
+    long_description = fh.read()
 
 setup(
     name='photonai',
     packages=find_packages(),
     include_package_data=True,
     version=__version__,
-    description="""
-PHOTONAI
-is a rapid prototyping framework enabling (not so experienced) users to build, train, optimize, evaluate,
-and share even complex machine learning (ML) pipelines with very high efficiency.
-""",
+    description="PHOTONAI is a high level python API for designing and optimizing machine learning pipelines.",
+    long_description=long_description,
+    long_description_content_type="text/markdown",
+    license = "GPLv3",
     author='PHOTONAI Team',
     author_email='hahnt@wwu.de',
-    url='https://github.com/mmll-wwu/photonai.git',
-    download_url='https://github.com/wwu-mmll/photonai/archive/' + __version__ + '.tar.gz',
+    url='https://www.photon-ai.com/',
+    project_urls={
+        "Source Code": "https://github.com/wwu-mmll/photonai/",
+        "Documentation": "https://wwu-mmll.github.io/photonai/",
+        "Bug Tracker": "https://github.com/wwu-mmll/photonai/issues",
+    },
+    download_url='https://pypi.org/project/photonai/#files',
     keywords=['machine learning', 'deep learning', 'neural networks', 'hyperparameter'],
-    classifiers=[],
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: GNU General Public License v3 (GPLv3)",
+        "Operating System :: OS Independent",
+        'Intended Audience :: Science/Research',
+        'Intended Audience :: Developers',
+    ],
     install_requires=[
         'numpy',
         'matplotlib',
