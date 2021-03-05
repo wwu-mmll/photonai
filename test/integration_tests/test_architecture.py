@@ -25,9 +25,8 @@ class TestArchitectures(PhotonBaseTest):
         if cls.test_multiple_hyperpipes:
             optimizer_list = ['random_grid_search', 'sk_opt']
             eval_final_performance_list = [True, False]
-            inner_cv_list = [KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.2), LeaveOneOut()]
-            outer_cv_list = [None, KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.25),
-                             LeaveOneOut()]
+            inner_cv_list = [KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.2)]
+            outer_cv_list = [None, KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.25)]
             performance_constraints_list = [None]
 
             combinations = list(product(optimizer_list, eval_final_performance_list, inner_cv_list, outer_cv_list,
