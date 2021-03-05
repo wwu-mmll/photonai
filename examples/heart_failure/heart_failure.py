@@ -4,8 +4,8 @@ from photonai.base import Hyperpipe, PipelineElement, Switch
 from photonai.optimization import FloatRange, IntegerRange
 
 # setup training and test workflow
-my_pipe = Hyperpipe('heart_failure_lasso',
-                    outer_cv=ShuffleSplit(n_splits=100, test_size=0.2),
+my_pipe = Hyperpipe('heart_failure',
+                    outer_cv=ShuffleSplit(n_splits=10, test_size=0.2),
                     inner_cv=KFold(n_splits=10, shuffle=True),
                     use_test_set=False,
                     metrics=['balanced_accuracy', 'f1_score', 'matthews_corrcoef',
@@ -13,7 +13,7 @@ my_pipe = Hyperpipe('heart_failure_lasso',
                     best_config_metric='f1_score',
                     optimizer='switch',
                     optimizer_params={'name': 'sk_opt', 'n_configurations': 10},
-                    project_folder='./tmpv2',
+                    project_folder='./tmp',
                     cache_folder='./cache',
                     verbosity=0)
 

@@ -751,9 +751,9 @@ class ResultsHandler:
             self.write_predictions_file()
 
     def convert_to_json_serializable(self, value):
-        if isinstance(value, (np.int, np.int32, np.int64)):
+        if isinstance(value, (int, np.int32, np.int64)):
             return int(value)
-        if isinstance(value, (np.float, np.float32, np.float64)):
+        if isinstance(value, (float, np.float32, np.float64)):
             if self.output_settings.reduce_space:
                 return round(float(value), 3)
             return float(value)
