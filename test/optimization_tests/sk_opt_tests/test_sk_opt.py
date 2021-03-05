@@ -15,7 +15,7 @@ class SkOptOptimizerTest(GridSearchOptimizerTest):
                                   PipelineElement("SVC", hyperparameters={'C': FloatRange(1, 100)})]
         self.optimizer = SkOptOptimizer()
         self.optimizer_name = "sk_opt"
-        self.optimizer_params = None
+        self.optimizer_params = {'n_configurations': 10}
 
     def test_ask_advanced(self):
         with self.assertRaises(ValueError):
