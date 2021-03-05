@@ -1167,6 +1167,79 @@ class Hyperpipe(BaseEstimator):
             scorer = Scorer.create(self.optimization.best_config_metric)
             return scorer(y, predictions)
 
+    def _calculate_permutation_importances(self, **kwargs):
+        """
+        extracted function from get_feature_importance to improve unit testing
+        """
+
+        importance_list = {'mean': list(), 'std': list()}
+
+        def train_and_get_fimps(pipeline, train_idx, test_idx, data_X, data_y, data_kwargs, fold_str):
+
+            train_X, train_y, train_kwargs = PhotonDataHelper.split_data(data_X, data_y, data_kwargs,
+                                                                         indices=train_idx)
+
+            test_X, test_y, test_kwargs = PhotonDataHelper.split_data(data_X, data_y, data_kwargs,
+                                                                      indices=test_idx)
+
+            # fit fold's best model (again) -> to obtain that model's feature importances
+            logger.photon_system_log("Permutation Importances: Fitting model for " + fold_str)
+            pipeline.fit(train_X, train_y, **train_kwargs)
+
+            # get feature importances
+            logger.photon_system_log("Permutation Importances: Calculating performances for " + fold_str)
+            perm_imps = permutation_importance(pipeline, test_X, test_y, **kwargs)
+
+            # store into list
+            importance_list['mean'].append(perm_imps["importances_mean"])
+            importance_list['std'].append(perm_imps["importances_std"])
+
+            return perm_imps
+
+        for outer_fold in self.results.outer_folds:
+
+            if outer_fold.best_config is None:
+                raise ValueError("Could not find a best config for outer fold " + str(outer_fold.fold_nr))
+
+            pipe_copy = self.optimum_pipe.copy_me()
+
+            # set pipe to config
+            pipe_copy.set_params(**outer_fold.best_config.config_dict)
+
+            if not self.results.hyperpipe_info.eval_final_performance:
+                no_outer_cv_indices = False
+                if outer_fold.best_config.best_config_score is None:
+                    no_outer_cv_indices = True
+                if outer_fold.best_config.best_config_score.training is None or not outer_fold.best_config.best_config_score.training.indices:
+                    no_outer_cv_indices = True
+
+                if no_outer_cv_indices:
+                    data_to_split, y_to_split, kwargs_to_split = self.data.X, self.data.y, self.data.kwargs
+                else:
+
+                    logger.photon_system_log("Permutation Importances: Using inner_cv folds.")
+
+                    # get outer fold data
+                    idx = outer_fold.best_config.best_config_score.training.indices
+                    data_to_split, y_to_split, kwargs_to_split = PhotonDataHelper.split_data(self.data.X,
+                                                                                             self.data.y,
+                                                                                             self.data.kwargs,
+                                                                                             indices=idx)
+
+                for inner_fold in outer_fold.best_config.inner_folds:
+                    train_and_get_fimps(pipe_copy,
+                                        inner_fold.training.indices, inner_fold.validation.indices,
+                                        data_to_split, y_to_split, kwargs_to_split,
+                                        "inner fold " + str(inner_fold.fold_nr))
+
+            else:
+                train_and_get_fimps(pipe_copy,
+                                    outer_fold.best_config.best_config_score.training.indices,
+                                    outer_fold.best_config.best_config_score.validation.indices,
+                                    self.data.X, self.data.y, self.data.kwargs, "outer fold " + str(outer_fold.fold_nr))
+
+        return importance_list
+
     def get_permutation_feature_importances(self, **kwargs):
         """
         Fits a model for the best config of each outer fold (using the training data of that fold).
@@ -1191,41 +1264,13 @@ class Hyperpipe(BaseEstimator):
 
         """
 
-        importance_list = {'mean': list(), 'std': list()}
-        pipe_copy = self.optimum_pipe.copy_me()
         logger.photon_system_log("")
         logger.photon_system_log("Computing permutation importances. This may take a while.")
         logger.stars()
-        for outer_fold in self.results.outer_folds:
-
-            if outer_fold.best_config.best_config_score is None:
-                raise ValueError("Cannot compute permutation importances when use_test_set is false")
-
-
-            # prepare data
-            train_indices = outer_fold.best_config.best_config_score.training.indices
-            test_indices = outer_fold.best_config.best_config_score.validation.indices
-
-            train_X, train_y, train_kwargs = PhotonDataHelper.split_data(self.data.X,
-                                                                         self.data.y,
-                                                                         self.data.kwargs,
-                                                                         indices=train_indices)
-
-            test_X, test_y, test_kwargs = PhotonDataHelper.split_data(self.data.X,
-                                                                      self.data.y,
-                                                                      self.data.kwargs,
-                                                                      indices=test_indices)
-            # set pipe to config
-            pipe_copy.set_params(**outer_fold.best_config.config_dict)
-            logger.photon_system_log("Permutation Importances: Fitting model for outer fold " + str(outer_fold.fold_nr))
-            pipe_copy.fit(train_X, train_y, **train_kwargs)
-
-            logger.photon_system_log("Permutation Importances: Calculating performances for outer fold "
-                                     + str(outer_fold.fold_nr))
-            outer_fold_perm_imps = permutation_importance(pipe_copy, test_X, test_y, **kwargs)
-            importance_list['mean'].append(outer_fold_perm_imps["importances_mean"])
-            importance_list['std'].append(outer_fold_perm_imps["importances_std"])
-
+        if self.optimum_pipe is None:
+            raise ValueError("Cannot calculate permutation importances when optimum_pipe is None (probably the "
+                             "training and optimization procedure failed)")
+        importance_list = self._calculate_permutation_importances(**kwargs)
         mean_importances = np.mean(np.array(importance_list["mean"]), axis=0)
         std_importances = np.mean(np.array(importance_list["std"]), axis=0)
         logger.stars()

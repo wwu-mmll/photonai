@@ -184,7 +184,8 @@ class HyperpipeTests(PhotonBaseTest):
 
     def test_permutation_feature_importances(self):
         hp = Hyperpipe('god',
-                       inner_cv=self.inner_cv_object,
+                       outer_cv=KFold(n_splits=3),
+                       inner_cv=KFold(n_splits=2),
                        metrics=self.metrics,
                        best_config_metric=self.best_config_metric,
                        project_folder=self.tmp_folder_path,
@@ -197,16 +198,60 @@ class HyperpipeTests(PhotonBaseTest):
         score_element = svc.score(self.__X, self.__y)
         self.assertAlmostEqual(score_photon, score_element)
 
-        permutation_score = hp.get_permutation_feature_importances(n_repeats=5, random_state=0)
-        self.assertTrue("mean" in permutation_score)
-        self.assertTrue("std" in permutation_score)
-        self.assertEqual(permutation_score["mean"].shape, (self.__X.shape[1],))
-        self.assertEqual(permutation_score["std"].shape, (self.__X.shape[1],))
+        # do it on outer folds
+        permutation_list_outer = hp._calculate_permutation_importances(n_repeats=5, random_state=0)
+        self.assertEqual(len(permutation_list_outer["mean"]), 3)
 
+        permutation_score_outer = hp.get_permutation_feature_importances(n_repeats=5, random_state=0)
+        self.assertTrue("mean" in permutation_score_outer)
+        self.assertTrue("std" in permutation_score_outer)
+        self.assertEqual(permutation_score_outer["mean"].shape, (self.__X.shape[1],))
+        self.assertEqual(permutation_score_outer["std"].shape, (self.__X.shape[1],))
+
+        # do it on inner folds but on training sets from outer split
         hp.cross_validation.use_test_set = False
         hp.fit(self.__X, self.__y)
+        permutation_list_inner = hp._calculate_permutation_importances(n_repeats=5)
+        self.assertEqual(len(permutation_list_inner["mean"]), 3*2)
+        permutation_score_inner = hp.get_permutation_feature_importances(n_repeats=5)
+        self.assertEqual(permutation_score_inner["mean"].shape, (self.__X.shape[1],))
+        self.assertEqual(permutation_score_inner["std"].shape, (self.__X.shape[1],))
+        # check that validation set permutation importances (inner folds) differ from those of test set (outer folds)
+        self.assertFalse(np.array_equal(permutation_score_outer["mean"], permutation_score_inner["mean"]))
+
+        # do it on inner folds only
+        hp.cross_validation.outer_folds = {}
+        hp.cross_validation.outer_cv = None
+        hp.cross_validation.use_test_set = False
+        hp.fit(self.__X, self.__y)
+        permutation_list_no_outer = hp._calculate_permutation_importances(n_repeats=5)
+        self.assertEqual(len(permutation_list_no_outer), 2)
+        permutation_score_no_outer = hp.get_permutation_feature_importances(n_repeats=5)
+        self.assertEqual(permutation_score_inner["mean"].shape, (self.__X.shape[1],))
+        self.assertEqual(permutation_score_inner["std"].shape, (self.__X.shape[1],))
+
+        # raise error
+        def fake_metric(y_true, y_pred):
+           return 'a'
+
+        hp = Hyperpipe('god',
+                       outer_cv=KFold(n_splits=3),
+                       inner_cv=KFold(n_splits=2),
+                       metrics=[('fake_metric', fake_metric)],
+                       best_config_metric='fake_metric',
+                       project_folder=self.tmp_folder_path,
+                       verbosity=0)
+        svc = PipelineElement('SVC')
+        hp += svc
+        try:
+            hp.fit(self.__X, self.__y)
+        except Exception as e:
+            # should produce an error so that hp.results.best_config is None.
+            pass
         with self.assertRaises(ValueError):
             hp.get_permutation_feature_importances(n_repeats=5)
+        with self.assertRaises(ValueError):
+            hp._calculate_permutation_importances(n_repeats=5)
 
     def test_estimation_type(self):
         def callback(X, y=None, **kwargs):
