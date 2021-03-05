@@ -23,7 +23,7 @@ class TestArchitectures(PhotonBaseTest):
         cls.classification = 'classification'
 
         if cls.test_multiple_hyperpipes:
-            optimizer_list = ['random_grid_search', 'sk_opt']
+            optimizer_list = ['random_grid_search']
             eval_final_performance_list = [True, False]
             inner_cv_list = [KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.2)]
             outer_cv_list = [None, KFold(n_splits=3, shuffle=True), ShuffleSplit(n_splits=1, test_size=.25)]
