@@ -346,10 +346,10 @@ class Hyperpipe(BaseEstimator):
                 The metric that should be maximized or minimized in order to choose
                 the best hyperparameter configuration.
 
-            eval_final_performance [bool, default=True]:
+            eval_final_performance:
                 DEPRECATED! Use "use_test_set" instead!
 
-            use_test_set [bool, default=True]:
+            use_test_set:
                 If the metrics should be calculated for the test set,
                 otherwise the test set is seperated but not used.
 
@@ -637,7 +637,9 @@ class Hyperpipe(BaseEstimator):
             if hasattr(pipe, 'nr_of_processes'):
                 pipe.nr_of_processes = 1
             for child in pipe.elements:
-                if hasattr(child, 'base_element'):
+                if isinstance(child, Branch):
+                    Hyperpipe.disable_multiprocessing_recursively(child)
+                elif hasattr(child, 'base_element'):
                     Hyperpipe.disable_multiprocessing_recursively(child.base_element)
         elif isinstance(pipe, PhotonPipeline):
             for name, child in pipe.named_steps.items():
