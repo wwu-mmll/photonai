@@ -866,7 +866,8 @@ class Hyperpipe(BaseEstimator):
             self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
             # Before saving the optimum pipe, add preprocessing without multiprocessing
-            self.optimum_pipe.add_preprocessing(self.disable_multiprocessing_recursively(self.preprocessing))
+            self.disable_multiprocessing_recursively(self.preprocessing)
+            self.optimum_pipe.add_preprocessing(self.preprocessing)
 
             # Now truly set to no caching (including single_subject_caching)
             self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
@@ -1247,15 +1248,6 @@ class Hyperpipe(BaseEstimator):
         Returns mean of "importances_mean" and of "importances_std" of all outer folds.
 
         Parameters:
-            X_val:
-                The array-like data with shape=[M, D],
-                where M is the number of samples and D is the number
-                of features. D must correspond to the number
-                of trained dimensions of the fit method.
-
-            y_val:
-                The array-like true targets.
-
             **kwargs:
                 Keyword arguments, passed to sklearn.permutation_importance.
 
