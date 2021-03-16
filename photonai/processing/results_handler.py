@@ -20,7 +20,7 @@ from pymongo.errors import DocumentTooLarge
 from scipy.stats import sem
 
 from photonai.photonlogger.logger import logger
-from photonai.helper.helper import print_double_metrics, print_metrics, print_estimator_metrics, print_config_list_table
+from photonai.helper.helper import print_metrics, print_estimator_metrics, print_config_list_table, print_outer_folds
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
 from photonai.__init__ import __version__
@@ -922,9 +922,7 @@ Hyperparameter Optimizer: {}
         output_string += """
 {}
 
-""".format(print_double_metrics(self.results.best_config.best_config_score.training.metrics,
-                                self.results.best_config.best_config_score.validation.metrics,
-                                summary=True))
+""".format(print_outer_folds(self.results.hyperpipe_info.metrics, self.results.outer_folds, summary=True))
         output_string += divider("PHOTONAI {} ".format(__version__))
 
         if self.output_settings.results_folder is not None:

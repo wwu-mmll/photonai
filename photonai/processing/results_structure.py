@@ -120,6 +120,7 @@ class MDBOuterFold(EmbeddedMongoModel):
     class_distribution_validation = fields.DictField(blank=True, default={})
     number_samples_validation = fields.IntegerField(blank=True)
     dummy_results = fields.EmbeddedDocumentField(MDBInnerFold, blank=True)
+    owns_best_config = fields.BooleanField(default=False)
 
     def get_optimum_config(self, metric, maximize_metric, dict_filter=None, fold_operation="mean"):
         """

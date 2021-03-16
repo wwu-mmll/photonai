@@ -226,6 +226,20 @@ def print_double_metrics(metric_dict_train, metric_dict_test, photon_system_log=
         logger.debug(t)
 
 
+def print_outer_folds(metric_list, outer_fold_list, photon_system_log=True, summary=False):
+    t = PrettyTable(["fold #"] + [metric for metric in metric_list] + ["Best Hyperparameter Config"])
+    for outer_fold in outer_fold_list:
+        nr_str = str(outer_fold.fold_nr)
+        if outer_fold.owns_best_config:
+            nr_str += "*"
+        t.add_row([nr_str] +
+                  ["%.4f" % outer_fold.best_config.best_config_score.validation.metrics[m] for m in metric_list] +
+                  [outer_fold.best_config.human_readable_config])
+    if summary:
+        return t
+    if photon_system_log:
+        logger.photon_system_log(t)
+
 def print_estimator_metrics(estimator_performances, metric_list, summary=False):
     t = PrettyTable(['Estimator'] + metric_list)
     for estimator_name, estimator_values in estimator_performances.items():
