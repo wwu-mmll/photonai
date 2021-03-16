@@ -120,5 +120,6 @@ class Optimization:
             # min metric
             best_config_metric_nr = np.argmin(list_of_scores)
 
+        outer_folds[best_config_metric_nr].owns_best_config = True
         best_config = outer_folds[best_config_metric_nr].best_config
         return best_config
