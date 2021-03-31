@@ -51,8 +51,8 @@ setup(
         'prettytable',
         'seaborn',
         'joblib',
-        'dask==2.30.0',
-        'distributed==2.30.1',
+        'dask==2021.2.0',
+        'distributed==2021.2.0',
         'scikit-optimize',
         'xlrd']
 )
