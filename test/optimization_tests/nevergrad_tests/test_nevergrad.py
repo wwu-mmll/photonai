@@ -113,7 +113,7 @@ class NevergradIntegrationTest(unittest.TestCase):
                                                                      'C': [0.6], 'coef0': Categorical([0.5])})]
 
         def of(x):
-            x ** 2
+            return x ** 2
 
         with warnings.catch_warnings(record=True) as w:
             opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
