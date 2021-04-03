@@ -23,7 +23,7 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
     skopt aims to be accessible and easy to use in many contexts.
 
 
-    Scikit-optimize [usage and implementation details](https://scikit-optimize.github.io/stable/)
+    Scikit-Optimize's [usage and implementation details](https://scikit-optimize.github.io/stable/)
 
     A detailed parameter documentation [here.](
     https://scikit-optimize.github.io/stable/modules/generated/skopt.optimizer.Optimizer.html#skopt.optimizer.Optimizer)
@@ -43,23 +43,25 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
                  n_configurations: int = 20,
                  n_initial_points: int = 10,
                  limit_in_minutes: Union[float, None] = None,
-                 base_estimator: Union[str, sklearn.base.RegressorMixin] = "ET",
+                 base_estimator: Union[str, sklearn.base.RegressorMixin] = "GP",
                  initial_point_generator: str = "random",
                  acq_func: str = 'gp_hedge',
-                 acq_func_kwargs: dict = None):
+                 acq_optimizer: str = 'auto',
+                 acq_func_kwargs: dict = None,
+                 acq_optimizer_kwargs: dict = None):
         """
         Initialize the object.
 
         Parameters:
             n_configurations:
-                Number of configurations to be calculated.
+                Maximum number of configurations to be calculated.
 
             n_initial_points:
                 Number of evaluations with initialization points
                 before approximating it with `base_estimator`.
 
             limit_in_minutes:
-                Total time in minutes.
+                Total time limit in minutes.
 
             base_estimator:
                 Estimator for returning std(Y | x) along with E[Y | x].
@@ -70,8 +72,16 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
             acq_func:
                 Function to minimize over the posterior distribution.
 
+            acq_optimizer:
+                Method to minimize the acquisition function.
+                The fit model is updated with the optimal value
+                obtained by optimizing acq_func with acq_optimizer.
+
             acq_func_kwargs:
                 Additional arguments to be passed to the acquisition function.
+
+            acq_optimizer_kwargs:
+                Additional arguments to be passed to the acquisition optimizer.
 
         """
         self.metric_to_optimize = ''
@@ -80,7 +90,9 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         self.base_estimator = base_estimator
         self.initial_point_generator = initial_point_generator
         self.acq_func = acq_func
+        self.acq_optimizer = acq_optimizer
         self.acq_func_kwargs = acq_func_kwargs
+        self.acq_optimizer_kwargs = acq_optimizer_kwargs
         self.limit_in_minutes = limit_in_minutes
         self.start_time, self.end_time = None, None
 
@@ -95,7 +107,7 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            Yields the next config.
+            Yield the next config.
 
         """
         if self.start_time is None and self.limit_in_minutes is not None:
@@ -116,9 +128,9 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
         """
-        Initializes hyperparameter search with scikit-optimize.
+        Initialize the hyperparameter search with Scikit-Optimize.
 
-        Assembles all hyperparameters of the list of PipelineElements
+        Assemble all hyperparameters of the list of PipelineElements
         in order to prepare the hyperparameter space.
         Hyperparameters can be accessed via pipe_element.hyperparameters.
 
@@ -158,8 +170,9 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
                         space.append(skopt_param)
 
         if self.constant_dictionary:
-            msg = "PHOTONAI has detected some one-valued params in your hyperparameters. Pleas use the kwargs for " \
-                  "constant values. This run ignores following settings: " + str(self.constant_dictionary.keys())
+            msg = "PHOTONAI has detected some one-valued params in your hyperparameters. " \
+                  "Please use the kwargs for constant values. " \
+                  "This run ignores the setting: {}".format(str(self.constant_dictionary.keys()))
             logger.warning(msg)
             warnings.warn(msg)
 
@@ -173,7 +186,9 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
                                        n_initial_points=self.n_initial_points,
                                        initial_point_generator=self.initial_point_generator,
                                        acq_func=self.acq_func,
-                                       acq_func_kwargs=self.acq_func_kwargs)
+                                       acq_optimizer=self.acq_optimizer,
+                                       acq_func_kwargs=self.acq_func_kwargs,
+                                       acq_optimizer_kwargs=self.acq_optimizer_kwargs)
         self.ask = self.ask_generator()
 
     def tell(self, config: dict, performance: float) -> None:
@@ -208,14 +223,14 @@ class SkOptOptimizer(PhotonSlaveOptimizer):
             elif hyperparam.range_type == 'logspace':
                 return Real(hyperparam.start, hyperparam.stop, name=name, prior='log-uniform')
             else:
-                msg = "The hyperparam.range_type "+hyperparam.range_type+" is not supported by scikit-optimize."
+                msg = "The hyperparam.range_type {} is not supported by Scikit-Optimize.".format(hyperparam.range_type)
                 logger.error(msg)
                 raise ValueError(msg)
         elif isinstance(hyperparam, IntegerRange):
             return Integer(hyperparam.start, hyperparam.stop, name=name)
 
-        msg = "Cannot convert hyperparameter " + str(hyperparam) + ". " \
-              "Supported types: Categorical, IntegerRange, FloatRange, list."
+        msg = "Cannot convert hyperparameter {}. Supported types: " \
+              "Categorical, IntegerRange, FloatRange, list.".format(str(hyperparam))
         logger.error(msg)
         raise ValueError(msg)
 

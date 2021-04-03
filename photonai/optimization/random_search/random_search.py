@@ -20,10 +20,10 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
 
         Parameters:
             limit_in_minutes:
-                Total time in minutes.
+                Total time limit in minutes.
 
             n_configurations:
-                Number of configurations to be calculated.
+                Maximum number of configurations to be calculated.
 
         """
         self.pipeline_elements = None
@@ -51,7 +51,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
         """
-        Initializes grid free random hyperparameter search.
+        Initialize the grid-free random hyperparameter search.
 
         Parameters:
             pipeline_elements:
@@ -70,7 +70,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            Yields the next config.
+            Yield the next config.
 
         """
         while True:

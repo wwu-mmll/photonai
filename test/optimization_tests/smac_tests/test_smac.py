@@ -135,7 +135,7 @@ class Smac3IntegrationTest(unittest.TestCase):
         pipe.add(PipelineElement('StandardScaler'))
         pipe += PipelineElement('PCA', hyperparameters={'n_components': IntegerRange(5, 30)})
         pipe += PipelineElement('SVC', hyperparameters={'kernel': Categorical(["rbf", 'poly']),
-                                                             'C': FloatRange(0.5, 200)}, gamma='auto')
+                                                        'C': FloatRange(0.5, 200)}, gamma='auto')
         X, y = self.simple_classification()
         pipe.fit(X, y)
         self.assertEqual(len(pipe.results.outer_folds[0].tested_config_list), n_configurations)

@@ -33,7 +33,7 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
 
     def prepare(self, pipeline_elements: list, maximize_metric: bool) -> None:
         """
-        Creates a grid from a list of PipelineElements.
+        Create a grid from a list of PipelineElements.
         Hyperparameters can be accessed via pipe_element.hyperparameters.
 
         Parameters:
@@ -54,7 +54,7 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            Yields the next config.
+            Yield the next config.
 
         """
         for parameters in self.param_grid:
@@ -64,8 +64,8 @@ class GridSearchOptimizer(PhotonSlaveOptimizer):
 class RandomGridSearchOptimizer(GridSearchOptimizer):
     """Random grid search optimizer.
 
-    Searches for the best configuration by randomly
-    testing n points of a grid of possible hyperparameters.
+    Search for the best configuration by randomly
+    testing n points in a grid of possible hyperparameters.
 
     Example:
         ``` python
@@ -85,10 +85,10 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
 
         Parameters:
             limit_in_minutes:
-                Total time in minutes.
+                Total time limit in minutes.
 
             n_configurations:
-                Number of configurations to be calculated.
+                Maximum number of configurations to be calculated.
 
         """
         super(RandomGridSearchOptimizer, self).__init__()
@@ -126,7 +126,7 @@ class RandomGridSearchOptimizer(GridSearchOptimizer):
         Generator for new configs - ask method.
 
         Returns:
-            Yields the next config.
+            Yield the next config.
 
         """
         if self.start_time is None and self.limit_in_minutes is not None:

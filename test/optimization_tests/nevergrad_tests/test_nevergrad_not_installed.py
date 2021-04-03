@@ -11,9 +11,7 @@ class NevergradOptimizerWithoutRequirementsTest(unittest.TestCase):
         photonai_ng.__found__ = False
 
     def test_imports(self):
-        """
-        Test for ModuleNotFoundError (requirements.txt).
-        """
+        """Test for ModuleNotFoundError (requirements.txt)."""
         with self.assertRaises(ModuleNotFoundError):
             NevergradOptimizer()
 

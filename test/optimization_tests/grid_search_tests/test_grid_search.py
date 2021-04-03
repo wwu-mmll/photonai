@@ -116,5 +116,5 @@ class BaseOptimizerTests(unittest.TestCase):
     @staticmethod
     def test_master_interface():
         opt = PhotonMasterOptimizer()
-        opt.prepare(list(), True, None)
+        opt.prepare(list(), True, lambda x: x)
         opt.optimize()

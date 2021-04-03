@@ -111,7 +111,10 @@ class NevergradIntegrationTest(unittest.TestCase):
         opt = NevergradOptimizer(facade="NGO", n_configurations=10)
         pipeline_elements = [PipelineElement('SVC', hyperparameters={'kernel': ["sigmoid", "rbf"],
                                                                      'C': [0.6], 'coef0': Categorical([0.5])})]
-        of = lambda x: x ** 2
+
+        def of(x):
+            x ** 2
+
         with warnings.catch_warnings(record=True) as w:
             opt.prepare(pipeline_elements=pipeline_elements, maximize_metric=True, objective_function=of)
             assert any("PHOTONAI has detected some" in s for s in [e.message.args[0] for e in w])
