@@ -603,6 +603,11 @@ class Hyperpipe(BaseEstimator):
                                 "PHOTONAI erases every data item that has a Nan Target".format(str(nr_of_nans)))
                     self.X = self.X[~nans_in_y]
                     self.y = self.y[~nans_in_y]
+                    new_kwargs = dict()
+                    for name, element_list in kwargs.items():
+                        new_kwargs[name] = element_list[~nans_in_y]
+                    self.kwargs = new_kwargs
+
             except Exception as e:
                 # This is only for convenience so if it fails then never mind
                 logger.error("Removing Nans in target vector failed: " + str(e))

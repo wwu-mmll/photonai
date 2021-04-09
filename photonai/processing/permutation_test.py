@@ -187,6 +187,8 @@ class PermutationTest:
         logger.info("Calculating permutation test results")
         try:
             mother_permutation = PermutationTest.find_reference(mongodb_path, permutation_id)
+            if mother_permutation is None:
+                raise DoesNotExist
         except DoesNotExist:
             return None
         else:
@@ -195,6 +197,7 @@ class PermutationTest:
             # all_permutations = MDBHyperpipe.objects.raw({'permutation_id': permutation_id,
             #                                              'computation_completed': True}).only('metrics_test')
             number_of_permutations = len(all_permutations)
+            print("Found {} permutations.".format(number_of_permutations))
 
             if number_of_permutations == 0:
                 number_of_permutations = 1
