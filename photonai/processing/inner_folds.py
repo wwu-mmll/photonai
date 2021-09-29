@@ -65,7 +65,8 @@ class InnerFoldManager(object):
                  raise_error: bool = False,
                  training: bool = False,
                  cache_folder=None,
-                 cache_updater=None):
+                 cache_updater=None,
+                 scorer: Scorer = None):
 
         self.params = specific_config
         self.pipe = pipe_ctor
@@ -73,6 +74,7 @@ class InnerFoldManager(object):
         self.optimization_constraints = optimization_constraints
         self.outer_fold_id = outer_fold_id
         self.cross_validation_infos = cross_validation_infos
+        self.scorer = scorer
 
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
@@ -133,7 +135,8 @@ class InnerFoldManager(object):
                                                        train_data=InnerFoldManager.JobData(train_X, train_y, train,
                                                                                            kwargs_cv_train),
                                                        test_data=InnerFoldManager.JobData(test_X, test_y, test,
-                                                                                          kwargs_cv_test))
+                                                                                          kwargs_cv_test),
+                                                       scorer=self.scorer)
 
                 # only for unparallel processing
                 # inform children in which inner fold we are
@@ -185,7 +188,8 @@ class InnerFoldManager(object):
             InnerFoldManager.process_fit_results(config_item,
                                                  self.cross_validation_infos.calculate_metrics_across_folds,
                                                  self.cross_validation_infos.calculate_metrics_per_fold,
-                                                 self.optimization_infos.metrics)
+                                                 self.optimization_infos.metrics,
+                                                 scorer=self.scorer)
 
         except Exception as e:
             if self.raise_error:
@@ -219,7 +223,8 @@ class InnerFoldManager(object):
                                        metrics=self.optimization_infos.metrics,
                                        callbacks=self.optimization_constraints,
                                        train_data=self.JobData(train_cut_X, train_cut_y, train_cut, train_cut_kwargs),
-                                       test_data=self.JobData(test_X, test_y, test, kwargs_cv_test))
+                                       test_data=self.JobData(test_X, test_y, test, kwargs_cv_test),
+                                       scorer=self.scorer)
             curr_test_cut, curr_train_cut = InnerFoldManager.fit_and_score(job_data)
             learning_curves.append([self.cross_validation_infos.learning_curves_cut.values[i], curr_test_cut.metrics,
                                     curr_train_cut.metrics])
@@ -234,13 +239,14 @@ class InnerFoldManager(object):
 
     class InnerCVJob:
 
-        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data):
+        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data, scorer):
             self.pipe = pipe
             self.config = config
             self.metrics = metrics
             self.callbacks = callbacks
             self.train_data = train_data
             self.test_data = test_data
+            self.scorer = scorer
 
     @staticmethod
     def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor,
@@ -263,7 +269,8 @@ class InnerFoldManager(object):
     def process_fit_results(config_item,
                             calculate_metrics_across_folds,
                             calculate_metrics_per_fold,
-                            metrics):
+                            metrics,
+                            scorer):
 
         overall_y_pred_test = []
         overall_y_true_test = []
@@ -295,9 +302,9 @@ class InnerFoldManager(object):
                 metrics_to_calculate = list(metrics)
                 if 'score' in metrics_to_calculate:
                     metrics_to_calculate.remove('score')
-                metrics_train = Scorer.calculate_metrics(overall_y_true_train,
+                metrics_train = scorer.calculate_metrics(overall_y_true_train,
                                                          overall_y_pred_train, metrics_to_calculate)
-                metrics_test = Scorer.calculate_metrics(overall_y_true_test,
+                metrics_test = scorer.calculate_metrics(overall_y_true_test,
                                                         overall_y_pred_test, metrics_to_calculate)
 
                 def metric_to_db_class(metric_list):
@@ -342,19 +349,22 @@ class InnerFoldManager(object):
         # score test data
         curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics,
                                                 indices=job.test_data.indices,
+                                                scorer=job.scorer,
                                                 **job.test_data.cv_kwargs)
 
         logger.debug('Scoring Test Data')
         # score train data
         curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
                                                  indices=job.train_data.indices,
-                                                 training=True, **job.train_data.cv_kwargs)
+                                                 training=True,
+                                                 scorer=job.scorer, **job.train_data.cv_kwargs)
 
         return curr_test_fold, curr_train_fold
 
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
-              calculate_metrics: bool=True, training: bool=False, **kwargs):
+              calculate_metrics: bool = True, training: bool = False,
+              scorer: Scorer = None, **kwargs):
         """Uses the pipeline to predict the given data,
         compare it to the truth values and calculate metrics
 
@@ -385,6 +395,8 @@ class InnerFoldManager(object):
 
         training: bool, default=False
             If True, an estimator.transform() is prepended here.
+        scorer: Scorer object
+            object that calculates all metrics
 
 
         Returns
@@ -418,10 +430,10 @@ class InnerFoldManager(object):
                     msg = "If scorer object does not return 1d array or list, PHOTON expected name 'y_pred' in nd array."
                     logger.error(msg)
                     raise KeyError(msg)
-                score_metrics = Scorer.calculate_metrics(y_true, y_pred["y_pred"], metrics)
+                score_metrics = scorer.calculate_metrics(y_true, y_pred["y_pred"], metrics)
             else:
                 y_pred_names = []
-                score_metrics = Scorer.calculate_metrics(y_true, y_pred, metrics)
+                score_metrics = scorer.calculate_metrics(y_true, y_pred, metrics)
 
             # add default metric
             if output_metrics:
