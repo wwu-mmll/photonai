@@ -41,7 +41,7 @@ setup(
         'numpy',
         'matplotlib',
         'scikit-learn',
-        'keras',
+        'keras<=2.6.0',
         'pandas',
         'plotly',
         'imbalanced-learn',
