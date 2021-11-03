@@ -24,10 +24,10 @@ if photonai_smac.__found__:
     from ConfigSpace.conditions import InCondition
     # Import SMAC-utilities
     from smac.scenario.scenario import Scenario
-    from smac.facade.smac_bo_facade import SMAC4BO
+    from smac.facade.smac_bb_facade import SMAC4BB as SMAC4BO
     from smac.facade.smac_hpo_facade import SMAC4HPO
     from smac.facade.smac_ac_facade import SMAC4AC
-    from smac.facade.smac_bohb_facade import BOHB4HPO
+    from smac.facade.smac_mf_facade import SMAC4MF as BOHB4HPO
 
 
 @unittest.skipIf(not photonai_smac.__found__, 'smac not available')
@@ -200,7 +200,7 @@ class Smac3IntegrationTest(unittest.TestCase):
         runhistory_original = [1 - x for x in list(smac.solver.runhistory._cost_per_config.values())]
 
         min_len = min(len(runhistory_original), len(runhistory_photon))
-        np.testing.assert_almost_equal(runhistory_photon[:min_len], runhistory_original[:min_len], 1)
+        np.testing.assert_allclose(runhistory_photon[:min_len], runhistory_original[:min_len], rtol=0.10)
 
     def objective_function_switch(self, cfg):
         cfg = {k: cfg[k] for k in cfg if cfg[k]}
