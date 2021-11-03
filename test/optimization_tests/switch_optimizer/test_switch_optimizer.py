@@ -36,7 +36,7 @@ class SwitchOptimizerTest(GridSearchOptimizerTest):
         self.create_hyperpipe()
         for p in self.pipeline_elements:
             self.hyperpipe += p
-        X, y = load_breast_cancer(True)
+        X, y = load_breast_cancer(return_X_y=True)
         self.hyperpipe.fit(X, y)
 
         # check there are three tested configs for each estimator
