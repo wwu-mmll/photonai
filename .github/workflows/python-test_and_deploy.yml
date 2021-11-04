@@ -37,7 +37,7 @@ jobs:
         pip install tensorflow pytest pytest-cov coveralls -r photonai.egg-info/requires.txt -r photonai/optimization/smac/requirements.txt -r photonai/optimization/nevergrad/requirements.txt
     - name: Test with pytest
       run: |
-        PYTHONPATH=./ pytest ./test --cov=./photonai
+        PYTHONPATH=./ pytest ./test --cov=./photonai --tb=long
     - name: Coveralls
       run: coveralls
       env: 
