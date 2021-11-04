@@ -9,7 +9,7 @@ from photonai.processing.permutation_test import PermutationTest
 from photonai.processing.results_handler import ResultsHandler
 from photonai.helper.photon_base_test import PhotonBaseTest
 
-"""
+
 class PermutationTestTests(PhotonBaseTest):
 
     @classmethod
@@ -111,7 +111,7 @@ class PermutationTestTests(PhotonBaseTest):
         return my_pipe
 
     def test_no_mongo_connection_string(self):
-        perm_tester = PermutationTest(self.create_hyperpipe_no_mongo, n_perms=2, n_processes=3, random_state=11,
+        perm_tester = PermutationTest(self.create_hyperpipe_no_mongo, n_perms=2, n_processes=2, random_state=11,
                                       permutation_id=str(uuid.uuid4()))
         with self.assertRaises(ValueError):
             perm_tester.fit(self.X, self.y)
@@ -120,7 +120,7 @@ class PermutationTestTests(PhotonBaseTest):
         X, y = load_breast_cancer(return_X_y=True)
         my_perm_id = str(uuid.uuid4())
         groups = np.random.random_integers(0, 3, (len(y),))
-        perm_tester = PermutationTest(self.create_hyperpipe, n_perms=2, n_processes=3, random_state=11,
+        perm_tester = PermutationTest(self.create_hyperpipe, n_perms=2, n_processes=2, random_state=11,
                                       permutation_id=my_perm_id)
         perm_tester.fit(X, y, groups=groups)
 
@@ -129,7 +129,7 @@ class PermutationTestTests(PhotonBaseTest):
         X, y = np.random.random((200, 5)), np.random.randint(0, 2, size=(200, ))
         my_perm_id = str(uuid.uuid4())
         groups = np.random.random_integers(0, 3, (len(y),))
-        perm_tester = PermutationTest(self.create_hyperpipe, n_perms=2, n_processes=3, random_state=11,
+        perm_tester = PermutationTest(self.create_hyperpipe, n_perms=2, n_processes=2, random_state=11,
                                       permutation_id=my_perm_id)
         with self.assertRaises(RuntimeError):
             perm_tester.fit(X, y, groups=groups)
@@ -146,4 +146,3 @@ class PermutationTestTests(PhotonBaseTest):
                                                      mongodb_path='mongodb://localhost:27017/photon_results')
 
         self.assertAlmostEqual(results.p_values['accuracy'], 0)
-"""
