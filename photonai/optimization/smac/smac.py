@@ -10,10 +10,10 @@ try:
     from smac.configspace import UniformFloatHyperparameter, UniformIntegerHyperparameter, CategoricalHyperparameter, \
         ConfigurationSpace, Configuration, InCondition, Constant
     from smac.scenario.scenario import Scenario
-    from smac.facade.smac_bo_facade import SMAC4BO
+    from smac.facade.smac_bb_facade import SMAC4BB as SMAC4BO
     from smac.facade.smac_hpo_facade import SMAC4HPO
     from smac.facade.smac_ac_facade import SMAC4AC
-    from smac.facade.smac_bohb_facade import BOHB4HPO
+    from smac.facade.smac_mf_facade import SMAC4MF as BOHB4HPO
     __found__ = True
 except (ModuleNotFoundError, ImportError):
     __found__ = False

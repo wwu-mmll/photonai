@@ -9,7 +9,7 @@ from photonai.modelwrapper.PhotonMLPClassifier import PhotonMLPClassifier
 class ModelWrapperTests(unittest.TestCase):
 
     def setUp(self):
-        self.X, self.y = load_breast_cancer(True)
+        self.X, self.y = load_breast_cancer(return_X_y=True)
 
     def test_photon_mlp(self):
         mlp = PhotonMLPClassifier()

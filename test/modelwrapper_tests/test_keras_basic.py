@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer, load_boston
-from keras.models import Sequential
-from keras.layers import Dense, Dropout
 import tensorflow as tf
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.layers import Dense, Dropout
 import numpy as np
 import warnings
 import os

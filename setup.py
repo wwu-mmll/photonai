@@ -41,7 +41,7 @@ setup(
         'numpy',
         'matplotlib',
         'scikit-learn',
-        'keras',
+        'keras<=2.6.0',
         'pandas',
         'plotly',
         'imbalanced-learn',
@@ -51,8 +51,8 @@ setup(
         'prettytable',
         'seaborn',
         'joblib',
-        'dask==2.30.0',
-        'distributed==2.30.1',
+        'dask',
+        'distributed',
         'scikit-optimize',
         'xlrd']
 )

@@ -947,11 +947,8 @@ class Hyperpipe(BaseEstimator):
     # ===================================================================
 
     @staticmethod
-    def fit_outer_folds(outer_fold_computer, X, y, kwargs, cache_folder):
-        try:
-            outer_fold_computer.fit(X, y, **kwargs)
-        finally:
-            CacheManager.clear_cache_files(cache_folder)
+    def fit_outer_folds(outer_fold_computer, X, y, kwargs):
+        outer_fold_computer.fit(X, y, **kwargs)
         return
 
     def fit(self, data: np.ndarray, targets: np.ndarray, **kwargs):
@@ -1046,8 +1043,7 @@ class Hyperpipe(BaseEstimator):
                         result = dask.delayed(Hyperpipe.fit_outer_folds)(outer_fold_computer,
                                                                          self.data.X,
                                                                          self.data.y,
-                                                                         self.data.kwargs,
-                                                                         self.cache_folder)
+                                                                         self.data.kwargs)
                         delayed_jobs.append(result)
                     else:
                         try:
@@ -1066,7 +1062,8 @@ class Hyperpipe(BaseEstimator):
                 # evaluate hyperparameter optimization results for best config
                 self._finalize_optimization()
 
-                # clear complete cache ?
+                # clear complete cache ? use self.cache_folder to delete all subfolders within the parent cache folder
+                # directory
                 CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
             ###############################################################################################
