@@ -15,9 +15,10 @@ from photonai.optimization.optimization_info import Optimization
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.helper.photon_base_test import PhotonBaseTest
-
+from photonai.processing.metrics import Scorer
 
 # ------------------------------------------------------------
+
 
 class InnerFoldTests(PhotonBaseTest):
 
@@ -39,10 +40,11 @@ class InnerFoldTests(PhotonBaseTest):
         self.cross_validation.inner_folds = {self. outer_fold_id: {i: FoldInfo(i, i+1, train, test) for i, (train, test) in
                                                                    enumerate(self.inner_cv.split(self.X, self.y))}}
         self.optimization = Optimization('grid_search', {}, ['accuracy', 'recall', 'specificity'], 'accuracy', None)
+        self.scorer = Scorer(self.optimization.metrics)
 
     def test_fit_against_sklearn(self):
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
-                                     self.cross_validation, self.outer_fold_id)
+                                     self.cross_validation, self.outer_fold_id, scorer=self.scorer)
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         self.assertIsNotNone(photon_results_config_item.computation_start_time)
@@ -81,7 +83,8 @@ class InnerFoldTests(PhotonBaseTest):
         # A: for a single constraint
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
-                                     optimization_constraints=MinimumPerformanceConstraint('accuracy', 0.95, 'first'))
+                                     optimization_constraints=MinimumPerformanceConstraint('accuracy', 0.95, 'first'),
+                                     scorer=self.scorer)
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         # the first fold has an accuracy of 0.874 so we expect the test_pipe to stop calculating after the first fold
@@ -93,7 +96,8 @@ class InnerFoldTests(PhotonBaseTest):
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
                                      optimization_constraints=[MinimumPerformanceConstraint('accuracy', 0.85, 'first'),
-                                                               MinimumPerformanceConstraint('specificity', 0.8, 'first')])
+                                                               MinimumPerformanceConstraint('specificity', 0.8, 'first')],
+                                     scorer=self.scorer)
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         self.assertTrue(len(photon_results_config_item.inner_folds) == 1)
@@ -102,7 +106,8 @@ class InnerFoldTests(PhotonBaseTest):
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
                                      optimization_constraints=[MinimumPerformanceConstraint('accuracy', 0.75, 'any'),
-                                                               MinimumPerformanceConstraint('specificity', 0.75, 'any')])
+                                                               MinimumPerformanceConstraint('specificity', 0.75, 'any')],
+                                     scorer=self.scorer)
 
         photon_results_config_item = test_pipe.fit(self.X, self.y)
         self.assertTrue(len(photon_results_config_item.inner_folds) == 4)
@@ -112,7 +117,7 @@ class InnerFoldTests(PhotonBaseTest):
         # case A: raise_error = False -> we expect continuation of the computation
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
                                      self.cross_validation, self.outer_fold_id,
-                                     raise_error=False)
+                                     raise_error=False, scorer=self.scorer)
 
         # computing with inequal number of features and targets should result in an error
         test_pipe.fit(self.X, self.y[:10])
@@ -126,7 +131,7 @@ class InnerFoldTests(PhotonBaseTest):
 
         # assert that we have the predictions stored
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
-                                     self.cross_validation, self.outer_fold_id)
+                                     self.cross_validation, self.outer_fold_id, scorer=self.scorer)
 
         # in case we want to have metrics calculated across false, we need to temporarily store the predictions
         test_pipe.optimization_infos.calculate_metrics_across_folds = True
@@ -138,7 +143,7 @@ class InnerFoldTests(PhotonBaseTest):
 
     def test_save_feature_importances(self):
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
-                                     self.cross_validation, self.outer_fold_id)
+                                     self.cross_validation, self.outer_fold_id, scorer=self.scorer)
 
         # we expect the feature importances to be of length 5 because the input is through the PCA reduced to 5 dimensions
         output_config = test_pipe.fit(self.X, self.y)
@@ -148,7 +153,7 @@ class InnerFoldTests(PhotonBaseTest):
     def test_process_fit_results(self):
 
         test_pipe = InnerFoldManager(self.pipe.copy_me, self.config, self.optimization,
-                                     self.cross_validation, self.outer_fold_id)
+                                     self.cross_validation, self.outer_fold_id, scorer=self.scorer)
         test_pipe.cross_validation_infos.calculate_metrics_across_folds = True
         test_pipe.cross_validation_infos.calculate_metrics_per_fold = False
         across_folds_config_item = test_pipe.fit(self.X, self.y)

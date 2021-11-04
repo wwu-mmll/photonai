@@ -217,6 +217,8 @@ class Scorer:
         output_metrics = {}
         if metrics:
             for metric in metrics:
+                if metric not in self.imported_metrics.keys():
+                    raise NameError
                 scorer = self.imported_metrics[metric]
                 if scorer is not None:
                     scorer_value = scorer(y_true, y_pred)
