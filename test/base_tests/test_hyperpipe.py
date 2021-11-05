@@ -50,7 +50,7 @@ class HyperpipeTests(PhotonBaseTest):
         super(HyperpipeTests, self).setUp()
         self.ss_pipe_element = PipelineElement('StandardScaler')
         self.pca_pipe_element = PipelineElement('PCA', {'n_components': [1, 2]}, random_state=42, test_disabled=True)
-        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['linear']}, # 'rbf', 'sigmoid']
+        self.svc_pipe_element = PipelineElement('SVC', {'C': [0.1, 1], 'kernel': ['linear']},  # 'rbf', 'sigmoid']
                                                 random_state=42)
 
         self.inner_cv_object = KFold(n_splits=3)
@@ -353,6 +353,9 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertIsNotNone(loaded_optimum_pipe._meta_information)
         self.assertIsNotNone(loaded_optimum_pipe._meta_information['photon_version'])
 
+        # check preprocessing inside of optimum pipe
+        self.assertEqual(loaded_optimum_pipe.elements[0][0], 'Preprocessing')
+
         # check if predictions stay realiably the same
         y_pred_loaded = loaded_optimum_pipe.predict(self.__X)
         y_pred = my_pipe.optimum_pipe.predict(self.__X)
@@ -459,7 +462,6 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].random_state, 4567)
         self.assertEqual(self.hyperpipe._pipe.elements[-1][-1].base_element.random_state, 4567)
 
-
     def test_dummy_estimator_preparation(self):
 
         self.hyperpipe.results = MDBHyperpipe()
@@ -541,7 +543,6 @@ class HyperpipeTests(PhotonBaseTest):
             self.hyperpipe.fit(None, None)
         # however the file should be gone by now
         self.assertFalse(os.path.isfile(self.hyperpipe.output_settings.setup_error_file))
-
 
     def test_prepare_result_logging(self):
         # test that results object is given and entails hyperpipe infos

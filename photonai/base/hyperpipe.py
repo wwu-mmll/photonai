@@ -346,10 +346,10 @@ class Hyperpipe(BaseEstimator):
                 The metric that should be maximized or minimized in order to choose
                 the best hyperparameter configuration.
 
-            eval_final_performance [bool, default=True]:
+            eval_final_performance:
                 DEPRECATED! Use "use_test_set" instead!
 
-            use_test_set [bool, default=True]:
+            use_test_set:
                 If the metrics should be calculated for the test set,
                 otherwise the test set is seperated but not used.
 
@@ -603,6 +603,11 @@ class Hyperpipe(BaseEstimator):
                                 "PHOTONAI erases every data item that has a Nan Target".format(str(nr_of_nans)))
                     self.X = self.X[~nans_in_y]
                     self.y = self.y[~nans_in_y]
+                    new_kwargs = dict()
+                    for name, element_list in kwargs.items():
+                        new_kwargs[name] = element_list[~nans_in_y]
+                    self.kwargs = new_kwargs
+
             except Exception as e:
                 # This is only for convenience so if it fails then never mind
                 logger.error("Removing Nans in target vector failed: " + str(e))
@@ -637,7 +642,9 @@ class Hyperpipe(BaseEstimator):
             if hasattr(pipe, 'nr_of_processes'):
                 pipe.nr_of_processes = 1
             for child in pipe.elements:
-                if hasattr(child, 'base_element'):
+                if isinstance(child, Branch):
+                    Hyperpipe.disable_multiprocessing_recursively(child)
+                elif hasattr(child, 'base_element'):
                     Hyperpipe.disable_multiprocessing_recursively(child.base_element)
         elif isinstance(pipe, PhotonPipeline):
             for name, child in pipe.named_steps.items():
@@ -866,7 +873,8 @@ class Hyperpipe(BaseEstimator):
             self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
 
             # Before saving the optimum pipe, add preprocessing without multiprocessing
-            self.optimum_pipe.add_preprocessing(self.disable_multiprocessing_recursively(self.preprocessing))
+            self.disable_multiprocessing_recursively(self.preprocessing)
+            self.optimum_pipe.add_preprocessing(self.preprocessing)
 
             # Now truly set to no caching (including single_subject_caching)
             self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
@@ -939,11 +947,8 @@ class Hyperpipe(BaseEstimator):
     # ===================================================================
 
     @staticmethod
-    def fit_outer_folds(outer_fold_computer, X, y, kwargs, cache_folder):
-        try:
-            outer_fold_computer.fit(X, y, **kwargs)
-        finally:
-            CacheManager.clear_cache_files(cache_folder)
+    def fit_outer_folds(outer_fold_computer, X, y, kwargs):
+        outer_fold_computer.fit(X, y, **kwargs)
         return
 
     def fit(self, data: np.ndarray, targets: np.ndarray, **kwargs):
@@ -1038,8 +1043,7 @@ class Hyperpipe(BaseEstimator):
                         result = dask.delayed(Hyperpipe.fit_outer_folds)(outer_fold_computer,
                                                                          self.data.X,
                                                                          self.data.y,
-                                                                         self.data.kwargs,
-                                                                         self.cache_folder)
+                                                                         self.data.kwargs)
                         delayed_jobs.append(result)
                     else:
                         try:
@@ -1058,7 +1062,8 @@ class Hyperpipe(BaseEstimator):
                 # evaluate hyperparameter optimization results for best config
                 self._finalize_optimization()
 
-                # clear complete cache ?
+                # clear complete cache ? use self.cache_folder to delete all subfolders within the parent cache folder
+                # directory
                 CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
             ###############################################################################################
@@ -1247,15 +1252,6 @@ class Hyperpipe(BaseEstimator):
         Returns mean of "importances_mean" and of "importances_std" of all outer folds.
 
         Parameters:
-            X_val:
-                The array-like data with shape=[M, D],
-                where M is the number of samples and D is the number
-                of features. D must correspond to the number
-                of trained dimensions of the fit method.
-
-            y_val:
-                The array-like true targets.
-
             **kwargs:
                 Keyword arguments, passed to sklearn.permutation_importance.
 

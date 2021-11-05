@@ -55,7 +55,9 @@ class StratifiedKFoldRegression(_BaseKFold):
        """
 
     def __init__(self, n_splits=3, shuffle=False, random_state=None):
-        super(StratifiedKFoldRegression, self).__init__(n_splits, shuffle, random_state)
+        super(StratifiedKFoldRegression, self).__init__(n_splits=n_splits,
+                                                        shuffle=shuffle,
+                                                        random_state=random_state)
 
     def _make_test_folds(self, X, y=None):
         rng = self.random_state

@@ -6,7 +6,7 @@ except ImportError:
     from setuptools import setup, find_packages
 
 
-__version__ = '2.1.0'
+__version__ = '2.2.0'
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -41,7 +41,7 @@ setup(
         'numpy',
         'matplotlib',
         'scikit-learn',
-        'keras',
+        'keras<=2.6.0',
         'pandas',
         'plotly',
         'imbalanced-learn',
@@ -51,8 +51,8 @@ setup(
         'prettytable',
         'seaborn',
         'joblib',
-        'dask==2.30.0',
-        'distributed==2.30.1',
+        'dask>=2021.10.0',
+        'distributed',
         'scikit-optimize',
         'xlrd']
 )
