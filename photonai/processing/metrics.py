@@ -12,7 +12,7 @@ from sklearn.metrics import accuracy_score
 from photonai.photonlogger.logger import logger
 
 
-class Scorer(object):
+class Scorer:
     """Scorer.
 
     Transforms a string literal into an callable instance of a particular metric.
@@ -53,6 +53,10 @@ class Scorer(object):
     ]
 
     dynamic_keras_import = None
+
+    def __init__(self, metrics: list):
+        self.imported_metrics = dict()
+        self._prepare_metrics(metrics)
 
     @classmethod
     def try_import_keras(cls):
@@ -111,9 +115,9 @@ class Scorer(object):
         elif callable(metric):
             Scorer.CUSTOM_ELEMENT_DICTIONARY[metric_name] = metric
         return metric_name
-    
-    @classmethod
-    def create(cls, metric: str) -> Optional[Callable]:
+
+    @staticmethod
+    def create(metric: str) -> Optional[Callable]:
         """Searches for the metric by name and instantiates the according calculation function
 
         Parameters
@@ -175,8 +179,11 @@ class Scorer(object):
             logger.error('Specify valid metric to choose best config.')
         raise NameError('Specify valid metric to choose best config.')
 
-    @staticmethod
-    def calculate_metrics(y_true, y_pred, metrics):
+    def _prepare_metrics(self, metrics):
+        for metric in metrics:
+            self.imported_metrics[metric] = self.create(metric)
+
+    def calculate_metrics(self, y_true, y_pred, metrics):
         """Applies all metrics to the given predicted and true values.
         The metrics are encoded via a string literal which is mapped
         to the according calculation function.
@@ -210,7 +217,9 @@ class Scorer(object):
         output_metrics = {}
         if metrics:
             for metric in metrics:
-                scorer = Scorer.create(metric)
+                if metric not in self.imported_metrics.keys():
+                    raise NameError
+                scorer = self.imported_metrics[metric]
                 if scorer is not None:
                     scorer_value = scorer(y_true, y_pred)
                     output_metrics[metric] = scorer_value
