@@ -1,5 +1,5 @@
 import warnings
-import keras
+import tensorflow.keras as keras
 from sklearn.base import BaseEstimator
 
 from photonai.photonlogger.logger import logger
