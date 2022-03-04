@@ -51,7 +51,7 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         'combine': ["SMOTEENN", "SMOTETomek"],
     }
 
-    def __init__(self, method_name: str = 'RandomUnderSampler', **kwargs):
+    def __init__(self, method_name: str = 'RandomUnderSampler'):
         """
         Instantiates an object that transforms the data into balanced groups according to the given method.
 
@@ -84,20 +84,26 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
                     - SMOTEENN,
                     - SMOTETomek.
 
-            **kwargs:
-                Any parameters to pass to the imbalance strategy object.
 
         """
         if not __found__:
             raise ModuleNotFoundError("Module imblearn not found or not installed as expected. "
                                       "Please install the requirements.txt in PHOTON main folder.")
 
+        self._method_name = None
         self.method_name = method_name
         self.needs_y = True
 
+    @property
+    def method_name(self):
+        return self._method_name
+
+    @method_name.setter
+    def method_name(self, value):
+
         imbalance_type = ''
         for group, possible_strategies in ImbalancedDataTransformer.IMBALANCED_DICT.items():
-            if self.method_name in possible_strategies:
+            if value in possible_strategies:
                 imbalance_type = group
 
         if imbalance_type == "oversampling":
@@ -115,8 +121,9 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
             logger.error(msg)
             raise ValueError(msg)
 
-        desired_class = getattr(home, method_name)
-        self.method = desired_class(**kwargs)
+        desired_class = getattr(home, value)
+        self._method_name = value
+        self.method = desired_class()
 
     def fit_transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray):
         """
