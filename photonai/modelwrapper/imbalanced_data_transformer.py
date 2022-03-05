@@ -51,7 +51,7 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
         'combine': ["SMOTEENN", "SMOTETomek"],
     }
 
-    def __init__(self, method_name: str = 'RandomUnderSampler'):
+    def __init__(self, method_name: str = 'RandomUnderSampler', config: dict = None):
         """
         Instantiates an object that transforms the data into balanced groups according to the given method.
 
@@ -84,12 +84,19 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
                     - SMOTEENN,
                     - SMOTETomek.
 
+            config:
+                Each strategy has a set of presets. This parameter is necessary
+                to select the appropriate settings for the selected method.
+                It is important that the key exactly matches the method_name.
+                If no key is found for a method, it will be started with the default settings.
+                Please do not use this parameter inside the 'hyperparmeters' to optimize it.
 
         """
         if not __found__:
             raise ModuleNotFoundError("Module imblearn not found or not installed as expected. "
                                       "Please install the requirements.txt in PHOTON main folder.")
 
+        self.config = config
         self._method_name = None
         self.method_name = method_name
         self.needs_y = True
@@ -123,7 +130,15 @@ class ImbalancedDataTransformer(BaseEstimator, TransformerMixin):
 
         desired_class = getattr(home, value)
         self._method_name = value
-        self.method = desired_class()
+        if self.config is not None and value in self.config:
+            if not isinstance(self.config[value], dict):
+                msg = "Please use for the imbalanced config a format like: " \
+                      "config={'SMOTE': {'sampling_strategy': {0: 9, 1: 12}}}."
+                logger.error(msg)
+                raise ValueError(msg)
+            self.method = desired_class(**self.config[value])
+        else:
+            self.method = desired_class()
 
     def fit_transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray):
         """
