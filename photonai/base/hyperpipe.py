@@ -1273,6 +1273,7 @@ class Hyperpipe(BaseEstimator):
 
         return {'mean': mean_importances, 'std': std_importances}
 
+
     def inverse_transform_pipeline(self, hyperparameters: dict,
                                    data: np.ndarray,
                                    targets: np.ndarray,
@@ -1377,6 +1378,20 @@ class Hyperpipe(BaseEstimator):
 
         """
         return PhotonModelPersistor.load_optimum_pipe(file, password)
+
+    @staticmethod
+    def reload_hyperpipe(results_folder, X, y, **data_kwargs):
+
+        res_handler = ResultsHandler()
+        res_handler.load_from_file(os.path.join(results_folder, "photon_result_file.json"))
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(os.path.join(results_folder, "photon_best_model.photon"))
+
+        new_hyperpipe = JsonTransformer().from_json_file(os.path.join(results_folder, "hyperpipe_config.json"))
+        new_hyperpipe.results = res_handler.results
+        new_hyperpipe.optimum_pipe = loaded_optimum_pipe
+        new_hyperpipe.data = Hyperpipe.Data(X, y, data_kwargs)
+
+        return new_hyperpipe
 
     def __repr__(self, **kwargs):
         """Overwrite BaseEstimator's function to avoid errors when using Jupyter Notebooks."""

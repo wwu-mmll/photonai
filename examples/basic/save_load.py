@@ -11,3 +11,7 @@ X, _ = load_breast_cancer(True)
 
 my_pipe = Hyperpipe.load_optimum_pipe("full_path/to/photon_best_model.photon")
 predictions = my_pipe.predict(X)
+
+# get permutation importances posthoc
+reloaded_hyperpipe = Hyperpipe.reload_hyperpipe("full_path/to/results_folder/", X, y)
+post_hoc_perm_importances = Hyperpipe.get_permutation_feature_importances(n_repeats=5, random_state=0)
