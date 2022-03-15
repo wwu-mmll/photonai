@@ -28,9 +28,14 @@ my_pipe = Hyperpipe('balancing_pipe',
 my_pipe += PipelineElement('StandardScaler')
 
 tested_methods = Categorical(['RandomOverSampler', 'SMOTEENN', 'SVMSMOTE',
-                              'BorderlineSMOTE', 'SMOTE', 'ClusterCentroids'])
+                              'BorderlineSMOTE', 'SMOTE'])
+
+# Only SMOTE got a different input parameter.
+# All other strategies stay with the default setting.
+# Please do not try to optimize over this parameter (not use config inside the 'hyperparameters').
 my_pipe += PipelineElement('ImbalancedDataTransformer',
                            hyperparameters={'method_name': tested_methods},
+                           config={"SMOTE": {"k_neighbors": 3}},
                            test_disabled=True)
 
 my_pipe += PipelineElement("RandomForestClassifier", n_estimators=200)

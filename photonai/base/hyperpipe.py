@@ -305,9 +305,9 @@ class Hyperpipe(BaseEstimator):
                     - "grid_search": Optimizer that iteratively tests all possible hyperparameter combinations.
                     - "random_grid_search": A variation of the grid search optimization that randomly picks
                         hyperparameter combinations from all possible hyperparameter combinations.
-                    - "sk_opt": Scikit-Optimize based on theories of Baysian optimization.
+                    - "sk_opt": Scikit-Optimize based on theories of bayesian optimization.
                     - "random_search": randomly chooses hyperparameter from grid-free domain.
-                    - "smac": SMAC based on theories of Baysian optimization.
+                    - "smac": SMAC based on theories of bayesian optimization.
                     - "nevergrad": Nevergrad based on theories of evolutionary learning.
 
                 - In case an object is given:
@@ -359,7 +359,7 @@ class Hyperpipe(BaseEstimator):
 
             test_size:
                 The amount of the data that should be left out if no outer_cv is given and
-                eval_final_perfomance is set to True.
+                eval_final_performance is set to True.
 
             calculate_metrics_per_fold:
                 If True, the metrics are calculated for each inner_fold.
@@ -377,11 +377,11 @@ class Hyperpipe(BaseEstimator):
                 gives only warn and error, 1 gives adds info and 2 adds debug.
 
             learning_curves:
-                Enables larning curve procedure. Evaluate learning process over
+                Enables learning curve procedure. Evaluate learning process over
                 different sizes of input. Depends on learning_curves_cut.
 
             learning_curves_cut:
-                The tested relativ cuts for data size.
+                The tested relative cuts for data size.
 
             performance_constraints:
                 Objects that indicate whether a configuration should
