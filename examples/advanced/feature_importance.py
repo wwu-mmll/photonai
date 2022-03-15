@@ -25,3 +25,8 @@ for i in r["mean"].argsort()[::-1]:
         print(f"{diabetes.feature_names[i]:<8}"
               f"{r['mean'][i]:.3f}"
               f" +/- {r['std'][i]:.3f}")
+
+
+# get permutation importances posthoc
+# reloaded_hyperpipe = Hyperpipe.reload_hyperpipe("full_path/to/results_folder/", X_train, y_train)
+# post_hoc_perm_importances = Hyperpipe.get_permutation_feature_importances(n_repeats=5, random_state=0)

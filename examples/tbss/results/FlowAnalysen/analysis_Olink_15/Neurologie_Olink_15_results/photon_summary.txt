@@ -1,0 +1,34 @@
+ANALYSIS INFORMATION ================================================================================ 
+Project Folder: ./results/FlowAnalysen/analysis_Olink_15/Neurologie_Olink_15_results,
+Computation Time: 2021-12-13 20:44:54.143815 - 2021-12-13 20:45:00.184052
+Duration: 0:00:06.040237
+Optimized for: bac
+Hyperparameter Optimizer: grid_search
+
+DUMMY RESULTS =======================================================================================
++-------------------+--+
+| PERFORMANCE DUMMY |  |
++-------------------+--+
++-------------------+--+
+
+AVERAGE PERFORMANCE ACROSS OUTER FOLDS ==============================================================
++-------------+---------------+--------------+-----------+----------+
+| Metric Name | Training Mean | Training Std | Test Mean | Test Std |
++-------------+---------------+--------------+-----------+----------+
+|     bac     |    0.994155   |     0.0      |  0.29027  |   0.0    |
++-------------+---------------+--------------+-----------+----------+
+
+BEST HYPERPARAMETER CONFIGURATION ===================================================================
+{}
+
+
++--------+--------+----------------------------+
+| fold # |  bac   | Best Hyperparameter Config |
++--------+--------+----------------------------+
+|   1*   | 0.2903 |             {}             |
++--------+--------+----------------------------+
+
+PHOTONAI 2.2.0 ======================================================================================
+Your results are stored in ./results/FlowAnalysen/analysis_Olink_15/Neurologie_Olink_15_results
+Go to https://explorer.photon-ai.com and upload your photon_result_file.json for convenient result visualization! 
+For more info and documentation visit https://www.photon-ai.com
