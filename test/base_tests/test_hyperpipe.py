@@ -13,8 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline as SKLPipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.inspection import permutation_importance
-from keras.metrics import Accuracy
+from tensorflow.keras.metrics import Accuracy
 
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
     Switch, ParallelBranch
