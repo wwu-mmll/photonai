@@ -60,7 +60,7 @@ class KerasBaseClassifierTest(unittest.TestCase):
         reload_estinator = self.estimator_type()
         reload_estinator.load("keras_example_saved_model")
 
-        np.testing.assert_array_almost_equal(estimator.predict(self.X), reload_estinator.predict(self.X), decimal=4)
+        np.testing.assert_array_almost_equal(estimator.predict(self.X), reload_estinator.predict(self.X), decimal=3)
 
         # remove saved keras files
         for fname in os.listdir("."):

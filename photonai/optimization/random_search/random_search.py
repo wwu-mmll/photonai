@@ -13,7 +13,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
     testing hyperparameter combinations without any grid.
 
     """
-    def __init__(self, limit_in_minutes: Union[float, None] = 60, n_configurations: Union[int, None] = None):
+    def __init__(self, limit_in_minutes: Union[float, None] = None, n_configurations: Union[int, None] = 10):
         """
         Initialize the object.
         One of limit_in_minutes or n_configurations must differ from None.
@@ -74,19 +74,24 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
 
         """
         while True:
-            _ = (yield self._generate_config())
             self.k_configutration += 1
+            new_config = True
             if self.limit_in_minutes:
                 if self.start_time is None:
                     self.start_time = datetime.datetime.now()
                     self.end_time = self.start_time + datetime.timedelta(minutes=self.limit_in_minutes)
 
                 if datetime.datetime.now() >= self.end_time:
-                    return
+                    new_config = False
 
             if self.n_configurations:
-                if self.k_configutration >= self.n_configurations:
-                    return
+                if self.k_configutration >= self.n_configurations + 1:
+                    new_config = False
+
+            if not new_config:
+                return
+
+            _ = (yield self._generate_config())
 
     def _generate_config(self):
         config = {}

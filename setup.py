@@ -6,7 +6,7 @@ except ImportError:
     from setuptools import setup, find_packages
 
 
-__version__ = '2.2.0'
+__version__ = '2.2.1'
 
 with open("README.md", "r", encoding="utf-8") as fh:
     long_description = fh.read()
@@ -41,7 +41,6 @@ setup(
         'numpy',
         'matplotlib',
         'scikit-learn',
-        'keras<=2.6.0',
         'pandas',
         'plotly',
         'imbalanced-learn',

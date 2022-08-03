@@ -447,6 +447,30 @@ class ResultsHandler:
 
             return sorted_df.to_dict('list')
 
+    def get_mean_train_predictions(self, filename=''):
+        """
+         This function returns the MEAN predictions, true targets, and fold index
+         for the TRAINING Set of the best configuration of each outer fold.
+         """
+        if self.results is None:
+            raise ValueError("Result tree information is needed but results attribute of object is None.")
+
+        score_info_list = list()
+        fold_nr_list = list()
+        for outer_fold in self.results.outer_folds:
+            score_info_list.append(outer_fold.best_config.best_config_score.training)
+            fold_nr_list.append(outer_fold.fold_nr)
+        infos = self.collect_fold_lists(score_info_list, fold_nr_list, filename)
+        infos = {key: np.array(value) for key, value in infos.items()}
+        num_items = np.unique(infos["indices"])
+        mean_pred = np.zeros(num_items.shape)
+        y_true = np.zeros(num_items.shape)
+        for i in num_items:
+            idx = (infos["indices"] == i)
+            mean_pred[i] = np.mean(infos["y_pred"][idx])
+            y_true[i] = infos["y_true"][idx][0]
+        return {'y_true': y_true, 'y_pred': mean_pred, 'indices': num_items}
+
     def get_test_predictions(self, filename=''):
         """
         This function returns the predictions, true targets, and fold index
