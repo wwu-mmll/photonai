@@ -74,7 +74,6 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
 
         """
         while True:
-            _ = (yield self._generate_config())
             self.k_configutration += 1
             new_config = True
             if self.limit_in_minutes:
@@ -83,7 +82,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
                     self.end_time = self.start_time + datetime.timedelta(minutes=self.limit_in_minutes)
 
                 if datetime.datetime.now() >= self.end_time:
-                    new_config=False
+                    new_config = False
 
             if self.n_configurations:
                 if self.k_configutration >= self.n_configurations:
@@ -91,6 +90,8 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
 
             if not new_config:
                 return
+
+            _ = (yield self._generate_config())
 
     def _generate_config(self):
         config = {}
