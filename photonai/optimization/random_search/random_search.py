@@ -85,7 +85,7 @@ class RandomSearchOptimizer(PhotonSlaveOptimizer):
                     new_config = False
 
             if self.n_configurations:
-                if self.k_configutration >= self.n_configurations:
+                if self.k_configutration >= self.n_configurations + 1:
                     new_config = False
 
             if not new_config:
