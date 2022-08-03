@@ -1215,7 +1215,7 @@ class Hyperpipe(BaseEstimator):
                 no_outer_cv_indices = False
                 if outer_fold.best_config.best_config_score is None:
                     no_outer_cv_indices = True
-                if outer_fold.best_config.best_config_score.training is None or not outer_fold.best_config.best_config_score.training.indices:
+                elif outer_fold.best_config.best_config_score.training is None or not outer_fold.best_config.best_config_score.training.indices:
                     no_outer_cv_indices = True
 
                 if no_outer_cv_indices:
