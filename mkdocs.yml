@@ -105,6 +105,7 @@ theme:
   favicon: favicon.png
   features:
     - navigation.tabs
+  font: false
 
 markdown_extensions:
   - attr_list
