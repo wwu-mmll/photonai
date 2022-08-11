@@ -8,9 +8,8 @@
       
       
       
-      
-      <link rel="shortcut icon" href="../../../favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.8">
+      <link rel="icon" href="../../../favicon.png">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.3.9">
     
     
       
@@ -18,28 +17,27 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.cb6bc1d0.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.1d29e8d0.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.39b8e14a.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
         
       
+      
     
     
     
       
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
-      
     
     
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
       <link rel="stylesheet" href="../../../assets/stylesheets/extra.css">
     
+    <script>__md_scope=new URL("../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
+
     
     
   </head>
@@ -51,8 +49,8 @@
     
     
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
-      
   
+    
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -69,24 +67,25 @@
       
     </div>
     
+    
       
 
 <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="../../.." title="" class="md-header-nav__button md-logo" aria-label="">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="" class="md-header__button md-logo" aria-label="" data-md-component="logo">
       <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
     </a>
-    <label class="md-header-nav__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
-    <div class="md-header-nav__title" data-md-component="header-title">
-      <div class="md-header-nav__ellipsis">
-        <div class="md-header-nav__topic">
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
           <span class="md-ellipsis">
             
           </span>
         </div>
-        <div class="md-header-nav__topic">
+        <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
               Switch
@@ -96,22 +95,27 @@
       </div>
     </div>
     
-      <label class="md-header-nav__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
+      <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -128,6 +132,7 @@
     
     
   </nav>
+  
 </header>
     
     <div class="md-container" data-md-component="container">
@@ -135,6 +140,7 @@
       
         
           
+            
 <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
@@ -263,6 +269,7 @@
     </ul>
   </div>
 </nav>
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -270,19 +277,17 @@
           
             
               
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-
-
 
   
 
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="" class="md-nav__button md-logo" aria-label="">
+    <a href="../../.." title="" class="md-nav__button md-logo" aria-label="" data-md-component="logo">
       <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
     </a>
     
@@ -301,21 +306,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
       
-      <label class="md-nav__link" for="nav-1">
-        Getting Started
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
-        <label class="md-nav__title" for="nav-1">
+        <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Getting Started
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -326,8 +335,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -338,8 +349,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -350,8 +363,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -362,8 +377,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -374,8 +391,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -386,8 +405,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -398,6 +419,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -416,21 +438,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
       
-      <label class="md-nav__link" for="nav-2">
-        Pipeline Architecture
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          Pipeline Architecture
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Pipeline Architecture" data-md-level="1">
-        <label class="md-nav__title" for="nav-2">
+        <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Pipeline Architecture
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -441,8 +467,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -453,8 +481,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -465,8 +495,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -477,6 +509,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -495,21 +528,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
       
-      <label class="md-nav__link" for="nav-3">
-        Examples
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Examples
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Examples" data-md-level="1">
-        <label class="md-nav__title" for="nav-3">
+        <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Examples
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -517,21 +554,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_1" type="checkbox" id="__nav_3_1" >
       
-      <label class="md-nav__link" for="nav-3-1">
-        General
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_1">
+          General
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="General" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-1">
+        <label class="md-nav__title" for="__nav_3_1">
           <span class="md-nav__icon md-icon"></span>
           General
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -542,8 +583,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -554,8 +597,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -566,8 +611,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -578,8 +625,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -590,8 +639,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -602,14 +653,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -617,21 +671,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-2" type="checkbox" id="nav-3-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
       
-      <label class="md-nav__link" for="nav-3-2">
-        Specific Use Cases
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2">
+          Specific Use Cases
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Specific Use Cases" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-2">
+        <label class="md-nav__title" for="__nav_3_2">
           <span class="md-nav__icon md-icon"></span>
           Specific Use Cases
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -642,8 +700,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -654,8 +714,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -666,8 +728,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -678,8 +742,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -690,12 +756,14 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -714,21 +782,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
       
-      <label class="md-nav__link" for="nav-4">
-        Features
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Features
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Features" data-md-level="1">
-        <label class="md-nav__title" for="nav-4">
+        <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Features
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -739,8 +811,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -751,8 +825,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -763,8 +839,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -775,8 +853,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -787,8 +867,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -799,8 +881,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -811,8 +895,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -823,8 +909,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -835,8 +923,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -847,6 +937,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -865,21 +956,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="nav-5">
-        Algorithms
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          Algorithms
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Algorithms" data-md-level="1">
-        <label class="md-nav__title" for="nav-5">
+        <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Algorithms
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -890,8 +985,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -902,8 +999,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -914,8 +1013,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -926,8 +1027,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -938,6 +1041,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -958,21 +1062,25 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="nav-6">
-        API
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="nav-6">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -983,8 +1091,10 @@
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -994,21 +1104,25 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-2" type="checkbox" id="nav-6-2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_2" type="checkbox" id="__nav_6_2" checked>
       
-      <label class="md-nav__link" for="nav-6-2">
-        Base
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_2">
+          Base
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Base" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-2">
+        <label class="md-nav__title" for="__nav_6_2">
           <span class="md-nav__icon md-icon"></span>
           Base
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1019,8 +1133,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1031,8 +1147,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1043,8 +1161,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1055,8 +1175,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1067,8 +1189,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1079,8 +1203,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1091,8 +1217,10 @@
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -1101,6 +1229,7 @@
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
       
         
       
@@ -1115,7 +1244,9 @@
       </a>
       
         
+
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
@@ -1125,7 +1256,7 @@
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#photonai.base.photon_elements.Switch" class="md-nav__link">
@@ -1169,14 +1300,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1184,21 +1318,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3" type="checkbox" id="nav-6-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3" type="checkbox" id="__nav_6_3" >
       
-      <label class="md-nav__link" for="nav-6-3">
-        Modelwrapper
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3">
+          Modelwrapper
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Modelwrapper" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-3">
+        <label class="md-nav__title" for="__nav_6_3">
           <span class="md-nav__icon md-icon"></span>
           Modelwrapper
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1209,8 +1347,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1218,21 +1358,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3-2" type="checkbox" id="nav-6-3-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3_2" type="checkbox" id="__nav_6_3_2" >
       
-      <label class="md-nav__link" for="nav-6-3-2">
-        Feature Selection
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3_2">
+          Feature Selection
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Feature Selection" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-3-2">
+        <label class="md-nav__title" for="__nav_6_3_2">
           <span class="md-nav__icon md-icon"></span>
           Feature Selection
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1243,8 +1387,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1255,8 +1401,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1267,8 +1415,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1279,8 +1429,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1291,14 +1443,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1306,21 +1461,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3-3" type="checkbox" id="nav-6-3-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3_3" type="checkbox" id="__nav_6_3_3" >
       
-      <label class="md-nav__link" for="nav-6-3-3">
-        Keras
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3_3">
+          Keras
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Keras" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-3-3">
+        <label class="md-nav__title" for="__nav_6_3_3">
           <span class="md-nav__icon md-icon"></span>
           Keras
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1331,8 +1490,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1343,14 +1504,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1361,8 +1525,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1373,14 +1539,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1388,21 +1557,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4" type="checkbox" id="nav-6-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_4" type="checkbox" id="__nav_6_4" >
       
-      <label class="md-nav__link" for="nav-6-4">
-        Optimization
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_4">
+          Optimization
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Optimization" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-4">
+        <label class="md-nav__title" for="__nav_6_4">
           <span class="md-nav__icon md-icon"></span>
           Optimization
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1413,8 +1586,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1425,8 +1600,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1437,8 +1614,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1449,8 +1628,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1461,8 +1642,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1473,8 +1656,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1482,21 +1667,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4-7" type="checkbox" id="nav-6-4-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_4_7" type="checkbox" id="__nav_6_4_7" >
       
-      <label class="md-nav__link" for="nav-6-4-7">
-        Hyperparameter
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_4_7">
+          Hyperparameter
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Hyperparameter" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-4-7">
+        <label class="md-nav__title" for="__nav_6_4_7">
           <span class="md-nav__icon md-icon"></span>
           Hyperparameter
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1507,8 +1696,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1519,8 +1710,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1531,8 +1724,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1543,20 +1738,24 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1564,21 +1763,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-5" type="checkbox" id="nav-6-5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_5" type="checkbox" id="__nav_6_5" >
       
-      <label class="md-nav__link" for="nav-6-5">
-        Processing
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_5">
+          Processing
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Processing" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-5">
+        <label class="md-nav__title" for="__nav_6_5">
           <span class="md-nav__icon md-icon"></span>
           Processing
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1589,14 +1792,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1604,21 +1810,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-6" type="checkbox" id="nav-6-6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_6" type="checkbox" id="__nav_6_6" >
       
-      <label class="md-nav__link" for="nav-6-6">
-        Custom Elements
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_6">
+          Custom Elements
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Custom Elements" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-6">
+        <label class="md-nav__title" for="__nav_6_6">
           <span class="md-nav__icon md-icon"></span>
           Custom Elements
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1629,8 +1839,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1641,12 +1853,14 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -1665,21 +1879,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
       
-      <label class="md-nav__link" for="nav-7">
-        About
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7">
+          About
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="About" data-md-level="1">
-        <label class="md-nav__title" for="nav-7">
+        <label class="md-nav__title" for="__nav_7">
           <span class="md-nav__icon md-icon"></span>
           About
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1690,8 +1908,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1702,8 +1922,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1714,6 +1936,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -1729,11 +1952,13 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
+
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
@@ -1743,7 +1968,7 @@
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#photonai.base.photon_elements.Switch" class="md-nav__link">
@@ -1788,17 +2013,21 @@
               </div>
             
           
-          <div class="md-content">
+          <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
-                
-                <h1 id="documentation-for-switch">Documentation for <code>Switch</code></h1>
-<div class="doc doc-object doc-class">
-<h2 class="hidden-toc" id="photonai.base.photon_elements.Switch" style="visibility: hidden; position: absolute;">
-        </h2>
-<div class="doc doc-contents first">
-<p>This class encapsulates several PipelineElements that
+
+
+<h1 id="documentation-for-switch">Documentation for <code>Switch</code></h1>
+
+
+  <div class="doc doc-object doc-class">
+
+<a id="photonai.base.photon_elements.Switch"></a>
+    <div class="doc doc-contents first">
+
+      <p>This class encapsulates several PipelineElements that
 belong at the same step of the pipeline, competing for
 being the best choice.</p>
 <p>If for example you want to find out if Preprocessing A
@@ -1808,12 +2037,9 @@ Or you want to test if a random forest outperforms the good old SVM.</p>
 but is not suitable for any complex optimizations.
 Currently optimization works for grid_search, random search and
 smac and the specializes switch optimizer.</p>
+
 <p><strong>Examples:</strong></p>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span><span class="normal"> 1</span>
+    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -1824,69 +2050,410 @@ smac and the specializes switch optimizer.</p>
 <span class="normal"> 9</span>
 <span class="normal">10</span>
 <span class="normal">11</span>
-<span class="normal">12</span></pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">Switch</span>
+<span class="normal">12</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">PipelineElement</span><span class="p">,</span> <span class="n">Switch</span>
 <span class="kn">from</span> <span class="nn">photonai.optimization</span> <span class="kn">import</span> <span class="n">IntegerRange</span>
 <span class="c1"># Estimator Switch</span>
-<span class="n">svm</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">'SVC'</span><span class="p">,</span>
-                      <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">'kernel'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'rbf'</span><span class="p">,</span> <span class="s1">'linear'</span><span class="p">]})</span>
+<span class="n">svm</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">,</span>
+                      <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;kernel&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;rbf&#39;</span><span class="p">,</span> <span class="s1">&#39;linear&#39;</span><span class="p">]})</span>
 
-<span class="n">tree</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">'DecisionTreeClassifier'</span><span class="p">,</span>
-                       <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">'min_samples_split'</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                                        <span class="s1">'min_samples_leaf'</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-                                        <span class="s1">'criterion'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'gini'</span><span class="p">,</span> <span class="s1">'entropy'</span><span class="p">]})</span>
+<span class="n">tree</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;DecisionTreeClassifier&#39;</span><span class="p">,</span>
+                       <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;min_samples_split&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                                        <span class="s1">&#39;min_samples_leaf&#39;</span><span class="p">:</span> <span class="n">IntegerRange</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+                                        <span class="s1">&#39;criterion&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;gini&#39;</span><span class="p">,</span> <span class="s1">&#39;entropy&#39;</span><span class="p">]})</span>
 
-<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">Switch</span><span class="p">(</span><span class="s1">'EstimatorSwitch'</span><span class="p">,</span> <span class="p">[</span><span class="n">svm</span><span class="p">,</span> <span class="n">tree</span><span class="p">])</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-<div class="doc doc-children">
-<div class="doc doc-object doc-method">
+<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">Switch</span><span class="p">(</span><span class="s1">&#39;EstimatorSwitch&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">svm</span><span class="p">,</span> <span class="n">tree</span><span class="p">])</span>
+</code></pre></div></td></tr></table></div>
+
+        <details class="quote">
+          <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">Switch</span><span class="p">(</span><span class="n">PipelineElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    This class encapsulates several PipelineElements that</span>
+<span class="sd">    belong at the same step of the pipeline, competing for</span>
+<span class="sd">    being the best choice.</span>
+
+<span class="sd">    If for example you want to find out if Preprocessing A</span>
+<span class="sd">    or Preprocessing B is better at this position in the pipe.</span>
+<span class="sd">    Or you want to test if a random forest outperforms the good old SVM.</span>
+
+<span class="sd">    ATTENTION: This class is a construct that may be convenient</span>
+<span class="sd">    but is not suitable for any complex optimizations.</span>
+<span class="sd">    Currently optimization works for grid_search, random search and</span>
+<span class="sd">    smac and the specializes switch optimizer.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        ``` python</span>
+<span class="sd">        from photonai.base import PipelineElement, Switch</span>
+<span class="sd">        from photonai.optimization import IntegerRange</span>
+<span class="sd">        # Estimator Switch</span>
+<span class="sd">        svm = PipelineElement(&#39;SVC&#39;,</span>
+<span class="sd">                              hyperparameters={&#39;kernel&#39;: [&#39;rbf&#39;, &#39;linear&#39;]})</span>
+
+<span class="sd">        tree = PipelineElement(&#39;DecisionTreeClassifier&#39;,</span>
+<span class="sd">                               hyperparameters={&#39;min_samples_split&#39;: IntegerRange(2, 5),</span>
+<span class="sd">                                                &#39;min_samples_leaf&#39;: IntegerRange(1, 5),</span>
+<span class="sd">                                                &#39;criterion&#39;: [&#39;gini&#39;, &#39;entropy&#39;]})</span>
+
+<span class="sd">        my_pipe += Switch(&#39;EstimatorSwitch&#39;, [svm, tree])</span>
+<span class="sd">        ```</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PipelineElement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">estimator_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new Switch object and generated the hyperparameter combination grid.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            name:</span>
+<span class="sd">                How the element is called in the pipeline.</span>
+
+<span class="sd">            elements:</span>
+<span class="sd">                The competing pipeline elements.</span>
+
+<span class="sd">            estimator_name:</span>
+<span class="sd">                -</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">initial_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">sklearn_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;__current_element&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_element</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_element_configurations</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">disabled</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">test_disabled</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">batch_size</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator_name</span> <span class="o">=</span> <span class="n">estimator_name</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs_y</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs_covariates</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="c1"># we assume we test models against each other, but only guessing</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_estimator</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">is_transformer</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">&quot;SWITCH:&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_random_state</span> <span class="o">=</span> <span class="kc">False</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="k">if</span> <span class="n">elements</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="n">elements</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">generate_private_config_grid</span><span class="p">()</span>
+            <span class="k">for</span> <span class="n">p_element</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span><span class="p">[</span><span class="n">p_element</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_element</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new estimator or transformer object to the switch container.</span>
+<span class="sd">        All items change their positions during testing.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pipeline_element:</span>
+<span class="sd">                Item that should be tested against other</span>
+<span class="sd">                competing elements at that position in the pipeline.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Switch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">pipeline_element</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span><span class="p">[</span><span class="n">pipeline_element</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pipeline_element</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">generate_private_config_grid</span><span class="p">()</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new estimator or transformer object to the switch container.</span>
+<span class="sd">        All items change their positions during testing.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            pipeline_element:</span>
+<span class="sd">                Item that should be tested against other</span>
+<span class="sd">                competing elements at that position in the pipeline.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">pipeline_element</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hyperparameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># Todo: return actual hyperparameters of all pipeline elements??</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span>
+
+    <span class="nd">@hyperparameters</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">hyperparameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">generate_private_config_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="c1"># reset</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_element_configurations</span> <span class="o">=</span> <span class="p">[]</span>
+
+        <span class="c1"># calculate anew</span>
+        <span class="n">hyperparameters</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="c1"># generate possible combinations for each item respectively - do not mix hyperparameters across items</span>
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">pipe_element</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">):</span>
+            <span class="c1"># distinct_values_config = create_global_config([pipe_element])</span>
+            <span class="c1"># add pipeline switch name in the config so that the hyperparameters can be set from other classes</span>
+            <span class="c1"># pipeline switch will give the hyperparameters to the respective child</span>
+            <span class="c1"># distinct_values_config_copy = {}</span>
+            <span class="c1"># for config_key, config_value in distinct_values_config.items():</span>
+            <span class="c1">#     distinct_values_config_copy[self.name + &quot;__&quot; + config_key] = config_value</span>
+
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">pipe_element</span><span class="p">,</span> <span class="s1">&#39;generate_config_grid&#39;</span><span class="p">):</span>
+                <span class="n">element_configurations</span> <span class="o">=</span> <span class="n">pipe_element</span><span class="o">.</span><span class="n">generate_config_grid</span><span class="p">()</span>
+                <span class="n">final_configuration_list</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">element_configurations</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+                    <span class="n">final_configuration_list</span><span class="o">.</span><span class="n">append</span><span class="p">({})</span>
+                <span class="c1"># else:</span>
+                <span class="k">for</span> <span class="n">dict_item</span> <span class="ow">in</span> <span class="n">element_configurations</span><span class="p">:</span>
+                    <span class="c1"># copy_of_dict_item = {}</span>
+                    <span class="c1"># for key, value in dict_item.items():</span>
+                    <span class="c1">#     copy_of_dict_item[self.name + &#39;__&#39; + key] = value</span>
+                    <span class="n">final_configuration_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">dict</span><span class="p">(</span><span class="n">dict_item</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_element_configurations</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">final_configuration_list</span><span class="p">)</span>
+            <span class="n">hyperparameters</span> <span class="o">+=</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">nr</span><span class="p">)</span> <span class="k">for</span> <span class="n">nr</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">final_configuration_list</span><span class="p">))]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span> <span class="o">=</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">sklearn_name</span><span class="p">:</span> <span class="n">hyperparameters</span><span class="p">}</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">current_element</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_element</span>
+
+    <span class="nd">@current_element</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">current_element</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_current_element</span> <span class="o">=</span> <span class="n">value</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">current_element</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span>
+
+    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="p">:</span> <span class="nb">bool</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">deep</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="p">{}</span>
+
+    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        The optimization process sees the amount of possible</span>
+<span class="sd">        combinations and chooses one of them. Then this class activates</span>
+<span class="sd">        the belonging element and prepared the element with the</span>
+<span class="sd">        particular chosen configuration.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config_nr</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">estimator_name</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
+        <span class="c1"># copy dict for adaptations</span>
+        <span class="n">params</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="c1"># in case we are operating with grid search</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">sklearn_name</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">config_nr</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">sklearn_name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="s1">&#39;current_element&#39;</span> <span class="ow">in</span> <span class="n">params</span><span class="p">:</span>
+            <span class="n">config_nr</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s1">&#39;current_element&#39;</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="s2">&quot;estimator_name&quot;</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">estimator_name</span> <span class="o">=</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;estimator_name&quot;</span><span class="p">]</span>
+            <span class="k">del</span> <span class="n">params</span><span class="p">[</span><span class="s2">&quot;estimator_name&quot;</span><span class="p">]</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">estimator_name</span><span class="p">]</span>
+
+        <span class="k">if</span> <span class="n">params</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="n">params</span>
+
+        <span class="c1"># todo: raise Warning that Switch could not identify which estimator to set when estimator</span>
+        <span class="c1">#  has no params to optimize</span>
+
+        <span class="c1"># in case we are operating with grid search or any derivates</span>
+        <span class="k">if</span> <span class="n">config_nr</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config_nr</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;ValueError: current_element must be of type Tuple&#39;</span><span class="p">)</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;current_element must be of type Tuple&#39;</span><span class="p">)</span>
+
+            <span class="c1"># grid search hack</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">current_element</span> <span class="o">=</span> <span class="n">config_nr</span>
+            <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_element_configurations</span><span class="p">[</span><span class="n">config_nr</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">config_nr</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+        <span class="c1"># if we don&#39;t use the specialized switch optimizer</span>
+        <span class="c1"># we need to identify the element to activate by checking for which element the optimizer gave params</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">estimator_name</span><span class="p">:</span>
+            <span class="c1"># ugly hack because subscription is somehow not possible, we use the for loop but break</span>
+            <span class="k">for</span> <span class="n">kwargs_key</span><span class="p">,</span> <span class="n">kwargs_value</span> <span class="ow">in</span> <span class="n">params</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">first_element_name</span> <span class="o">=</span> <span class="n">kwargs_key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;__&quot;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span><span class="p">[</span><span class="n">first_element_name</span><span class="p">]</span>
+                <span class="k">break</span>
+
+        <span class="c1"># so now the element to be activated is found and taken care of,</span>
+        <span class="c1"># let&#39;s move on to give the base element the config to set</span>
+        <span class="k">if</span> <span class="n">config</span><span class="p">:</span>
+            <span class="c1"># remove name</span>
+            <span class="n">unnamed_config</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="k">for</span> <span class="n">config_key</span><span class="p">,</span> <span class="n">config_value</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                <span class="n">key_split</span> <span class="o">=</span> <span class="n">config_key</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
+                <span class="n">unnamed_config</span><span class="p">[</span><span class="s1">&#39;__&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">key_split</span><span class="p">[</span><span class="mi">1</span><span class="p">::])]</span> <span class="o">=</span> <span class="n">config_value</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">unnamed_config</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">copy_me</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">Switch</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">_random_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_state</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="n">new_element</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">copy_me</span><span class="p">()</span>
+            <span class="n">ps</span> <span class="o">+=</span> <span class="n">new_element</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">_current_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_current_element</span>
+        <span class="k">return</span> <span class="n">ps</span>
+
+    <span class="k">def</span> <span class="nf">prettify_config_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config_name</span><span class="p">,</span> <span class="n">config_value</span><span class="p">,</span> <span class="n">return_dict</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">str</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Makes the sklearn configuration dictionary human readable.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Configuration as prettified string or configuration as</span>
+<span class="sd">            dict with prettified keys.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config_value</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_element_configurations</span><span class="p">[</span><span class="n">config_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]][</span><span class="n">config_value</span><span class="p">[</span><span class="mi">1</span><span class="p">]]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">output</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">return_dict</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="p">{</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="n">config_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">name</span><span class="p">:</span> <span class="kc">None</span><span class="p">}</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">[</span><span class="n">config_value</span><span class="p">[</span><span class="mi">0</span><span class="p">]]</span><span class="o">.</span><span class="n">name</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">return_dict</span><span class="p">:</span>
+                    <span class="k">return</span> <span class="n">output</span>
+                <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="n">output</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">super</span><span class="p">(</span><span class="n">Switch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="n">prettify_config_output</span><span class="p">(</span><span class="n">config_name</span><span class="p">,</span> <span class="n">config_value</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict probabilities. Base element needs predict_proba()</span>
+<span class="sd">        function, otherwise return None.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            X:</span>
+<span class="sd">                The array-like data with shape=[N, D], where N is the number</span>
+<span class="sd">                of samples and D is the number of features.</span>
+
+<span class="sd">            **kwargs:</span>
+<span class="sd">                Keyword arguments, not in use yet.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Probabilities.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;predict_proba&#39;</span><span class="p">):</span>
+                <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">return</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">X</span>
+
+    <span class="k">def</span> <span class="nf">_check_hyper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">BaseEstimator</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls inverse_transform on the base element.</span>
+
+<span class="sd">        For a dimension preserving transformer without inverse,</span>
+<span class="sd">        the value is returned untreated.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            X:</span>
+<span class="sd">                The array-like data with shape=[N, D], where N</span>
+<span class="sd">                is the number of samples and D is the number of features.</span>
+
+<span class="sd">            y:</span>
+<span class="sd">                The truth array-like values with shape=[N], where N is</span>
+<span class="sd">                the number of samples.</span>
+
+<span class="sd">            **kwargs:</span>
+<span class="sd">                Keyword arguments, passed to base_element.transform.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            (X, y, kwargs) in back-transformed version if possible.</span>
+
+<span class="sd">            &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;inverse_transform&#39;</span><span class="p">):</span>
+            <span class="c1"># todo: check this</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">adjusted_delegate_call</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">inverse_transform</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">kwargs</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_estimator_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">estimator_types</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="n">estimator_types</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="nb">getattr</span><span class="p">(</span><span class="n">element</span><span class="p">,</span> <span class="s1">&#39;_estimator_type&#39;</span><span class="p">))</span>
+
+        <span class="n">unique_types</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">estimator_types</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_types</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Switch should only contain elements of a single type (transformer, classifier, &quot;</span>
+                                      <span class="s2">&quot;regressor). Found multiple types: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">unique_types</span><span class="p">))</span>
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">unique_types</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">unique_types</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">feature_importances_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;feature_importances_&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;feature_importances_&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
 <h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.__iadd__">
-
 <code class="highlight language-python"><span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Add a new estimator or transformer object to the switch container.
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Add a new estimator or transformer object to the switch container.
 All items change their positions during testing.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>pipeline_element</code></td>
-<td><code>PipelineElement</code></td>
-<td>
-<p>Item that should be tested against other
-competing elements at that position in the pipeline.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>pipeline_element</code></td>
+        <td><code>PipelineElement</code></td>
+        <td><p>Item that should be tested against other
+competing elements at that position in the pipeline.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add a new estimator or transformer object to the switch container.</span>
 <span class="sd">    All items change their positions during testing.</span>
 
@@ -1895,70 +2462,71 @@ competing elements at that position in the pipeline.</p>
 <span class="sd">            Item that should be tested against other</span>
 <span class="sd">            competing elements at that position in the pipeline.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">(</span><span class="n">Switch</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">pipeline_element</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span><span class="p">[</span><span class="n">pipeline_element</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">pipeline_element</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">generate_private_config_grid</span><span class="p">()</span>
     <span class="k">return</span> <span class="bp">self</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.__init__">
+</code></pre></div>
+        </details>
+    </div>
 
-<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">estimator_name</span><span class="o">=</span><span class="s1">''</span><span class="p">)</span></code>
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.__init__">
+<code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">estimator_name</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Creates a new Switch object and generated the hyperparameter combination grid.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Creates a new Switch object and generated the hyperparameter combination grid.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>name</code></td>
-<td><code>str</code></td>
-<td>
-<p>How the element is called in the pipeline.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>elements</code></td>
-<td><code>List[photonai.base.photon_elements.PipelineElement]</code></td>
-<td>
-<p>The competing pipeline elements.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>estimator_name</code></td>
-<td><code>str</code></td>
-<td>
-<p>-</p>
-</td>
-<td><code>''</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>name</code></td>
+        <td><code>str</code></td>
+        <td><p>How the element is called in the pipeline.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>elements</code></td>
+        <td><code>List[photonai.base.photon_elements.PipelineElement]</code></td>
+        <td><p>The competing pipeline elements.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>estimator_name</code></td>
+        <td><code>str</code></td>
+        <td><p>-</p></td>
+        <td><code>&#39;&#39;</code></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PipelineElement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">estimator_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">''</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PipelineElement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">estimator_name</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates a new Switch object and generated the hyperparameter combination grid.</span>
 
 <span class="sd">    Parameters:</span>
@@ -1971,10 +2539,10 @@ competing elements at that position in the pipeline.</p>
 <span class="sd">        estimator_name:</span>
 <span class="sd">            -</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_name</span> <span class="o">=</span> <span class="n">name</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">initial_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_name</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">sklearn_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">"__current_element"</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">sklearn_name</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s2">&quot;__current_element&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span> <span class="o">=</span> <span class="p">{}</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_current_element</span> <span class="o">=</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">pipeline_element_configurations</span> <span class="o">=</span> <span class="p">[]</span>
@@ -1989,7 +2557,7 @@ competing elements at that position in the pipeline.</p>
     <span class="c1"># we assume we test models against each other, but only guessing</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">is_estimator</span> <span class="o">=</span> <span class="kc">True</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">is_transformer</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">"SWITCH:"</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">&quot;SWITCH:&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">_random_state</span> <span class="o">=</span> <span class="kc">False</span>
 
     <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span> <span class="o">=</span> <span class="p">{}</span>
@@ -2001,48 +2569,53 @@ competing elements at that position in the pipeline.</p>
             <span class="bp">self</span><span class="o">.</span><span class="n">elements_dict</span><span class="p">[</span><span class="n">p_element</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">p_element</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="p">[]</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.add">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.add">
 <code class="highlight language-python"><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Add a new estimator or transformer object to the switch container.
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Add a new estimator or transformer object to the switch container.
 All items change their positions during testing.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>pipeline_element</code></td>
-<td><code>PipelineElement</code></td>
-<td>
-<p>Item that should be tested against other
-competing elements at that position in the pipeline.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>pipeline_element</code></td>
+        <td><code>PipelineElement</code></td>
+        <td><p>Item that should be tested against other
+competing elements at that position in the pipeline.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">pipeline_element</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add a new estimator or transformer object to the switch container.</span>
 <span class="sd">    All items change their positions during testing.</span>
 
@@ -2051,75 +2624,76 @@ competing elements at that position in the pipeline.</p>
 <span class="sd">            Item that should be tested against other</span>
 <span class="sd">            competing elements at that position in the pipeline.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">pipeline_element</span><span class="p">)</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.predict_proba">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Switch.predict_proba">
 <code class="highlight language-python"><span class="n">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Predict probabilities. Base element needs predict_proba()
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Predict probabilities. Base element needs predict_proba()
 function, otherwise return None.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>X</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The array-like data with shape=[N, D], where N is the number
-of samples and D is the number of features.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>**kwargs</code></td>
-<td><code></code></td>
-<td>
-<p>Keyword arguments, not in use yet.</p>
-</td>
-<td><code>{}</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>X</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The array-like data with shape=[N, D], where N is the number
+of samples and D is the number of features.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code></td>
+        <td></td>
+        <td><p>Keyword arguments, not in use yet.</p></td>
+        <td><code>{}</code></td>
+      </tr>
+  </tbody>
 </table>
 <p><strong>Returns:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>Optional[numpy.ndarray]</code></td>
-<td>
-<p>Probabilities.</p>
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>Optional[numpy.ndarray]</code></td>
+      <td><p>Probabilities.</p></td>
+    </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="kc">None</span><span class="p">]:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Predict probabilities. Base element needs predict_proba()</span>
 <span class="sd">    function, otherwise return None.</span>
 
@@ -2134,99 +2708,99 @@ of samples and D is the number of features.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        Probabilities.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">disabled</span><span class="p">:</span>
-        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">'predict_proba'</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;predict_proba&#39;</span><span class="p">):</span>
             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="k">return</span> <span class="kc">None</span>
     <span class="k">return</span> <span class="n">X</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-</div>
-</div>
-</div>
-                
-              
-              
-                
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
 
               
             </article>
+            
           </div>
         </div>
+        
       </main>
       
-        
-<footer class="md-footer">
+        <footer class="md-footer">
   
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
         
-          <a href="../stack/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <a href="../stack/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Stack" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Stack
             </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Stack
-              </div>
-            </div>
-          </a>
+          </div>
+        </a>
+      
+      
         
-        
-          <a href="../../modelwrapper/base_model_wrapper/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                BaseModelWrapper
-              </div>
+        <a href="../../modelwrapper/base_model_wrapper/" class="md-footer__link md-footer__link--next" aria-label="Next: BaseModelWrapper" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              BaseModelWrapper
             </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
-      <div class="md-footer-copyright">
-        
-        Made with
-        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs
-        </a>
-      </div>
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
       
     </div>
   </div>
 </footer>
       
     </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs"], "search": "../../../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
-      <script src="../../../assets/javascripts/vendor.18f0862e.min.js"></script>
-      <script src="../../../assets/javascripts/bundle.994580cf.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
-      
-      <script>
-        app = initialize({
-          base: "../../..",
-          features: ['navigation.tabs'],
-          search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.9c0e82ba.min.js"
-          }, typeof search !== "undefined" && search)
-        })
-      </script>
+    
+      <script src="../../../assets/javascripts/bundle.6c7ad80a.min.js"></script>
       
     
   </body>

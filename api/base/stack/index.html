@@ -8,9 +8,8 @@
       
       
       
-      
-      <link rel="shortcut icon" href="../../../favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.8">
+      <link rel="icon" href="../../../favicon.png">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.3.9">
     
     
       
@@ -18,28 +17,27 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.cb6bc1d0.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.1d29e8d0.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.39b8e14a.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
         
       
+      
     
     
     
       
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
-      
     
     
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
       <link rel="stylesheet" href="../../../assets/stylesheets/extra.css">
     
+    <script>__md_scope=new URL("../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
+
     
     
   </head>
@@ -51,8 +49,8 @@
     
     
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
-      
   
+    
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -69,24 +67,25 @@
       
     </div>
     
+    
       
 
 <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="../../.." title="" class="md-header-nav__button md-logo" aria-label="">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="" class="md-header__button md-logo" aria-label="" data-md-component="logo">
       <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
     </a>
-    <label class="md-header-nav__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
-    <div class="md-header-nav__title" data-md-component="header-title">
-      <div class="md-header-nav__ellipsis">
-        <div class="md-header-nav__topic">
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
           <span class="md-ellipsis">
             
           </span>
         </div>
-        <div class="md-header-nav__topic">
+        <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
               Stack
@@ -96,22 +95,27 @@
       </div>
     </div>
     
-      <label class="md-header-nav__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
+      <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -128,6 +132,7 @@
     
     
   </nav>
+  
 </header>
     
     <div class="md-container" data-md-component="container">
@@ -135,6 +140,7 @@
       
         
           
+            
 <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
@@ -263,6 +269,7 @@
     </ul>
   </div>
 </nav>
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -270,19 +277,17 @@
           
             
               
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-
-
 
   
 
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="" class="md-nav__button md-logo" aria-label="">
+    <a href="../../.." title="" class="md-nav__button md-logo" aria-label="" data-md-component="logo">
       <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
     </a>
     
@@ -301,21 +306,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
       
-      <label class="md-nav__link" for="nav-1">
-        Getting Started
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
-        <label class="md-nav__title" for="nav-1">
+        <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Getting Started
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -326,8 +335,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -338,8 +349,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -350,8 +363,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -362,8 +377,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -374,8 +391,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -386,8 +405,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -398,6 +419,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -416,21 +438,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
       
-      <label class="md-nav__link" for="nav-2">
-        Pipeline Architecture
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          Pipeline Architecture
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Pipeline Architecture" data-md-level="1">
-        <label class="md-nav__title" for="nav-2">
+        <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Pipeline Architecture
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -441,8 +467,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -453,8 +481,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -465,8 +495,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -477,6 +509,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -495,21 +528,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
       
-      <label class="md-nav__link" for="nav-3">
-        Examples
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Examples
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Examples" data-md-level="1">
-        <label class="md-nav__title" for="nav-3">
+        <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Examples
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -517,21 +554,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_1" type="checkbox" id="__nav_3_1" >
       
-      <label class="md-nav__link" for="nav-3-1">
-        General
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_1">
+          General
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="General" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-1">
+        <label class="md-nav__title" for="__nav_3_1">
           <span class="md-nav__icon md-icon"></span>
           General
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -542,8 +583,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -554,8 +597,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -566,8 +611,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -578,8 +625,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -590,8 +639,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -602,14 +653,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -617,21 +671,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-2" type="checkbox" id="nav-3-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
       
-      <label class="md-nav__link" for="nav-3-2">
-        Specific Use Cases
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2">
+          Specific Use Cases
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Specific Use Cases" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-2">
+        <label class="md-nav__title" for="__nav_3_2">
           <span class="md-nav__icon md-icon"></span>
           Specific Use Cases
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -642,8 +700,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -654,8 +714,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -666,8 +728,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -678,8 +742,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -690,12 +756,14 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -714,21 +782,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
       
-      <label class="md-nav__link" for="nav-4">
-        Features
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Features
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Features" data-md-level="1">
-        <label class="md-nav__title" for="nav-4">
+        <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Features
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -739,8 +811,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -751,8 +825,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -763,8 +839,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -775,8 +853,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -787,8 +867,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -799,8 +881,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -811,8 +895,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -823,8 +909,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -835,8 +923,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -847,6 +937,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -865,21 +956,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="nav-5">
-        Algorithms
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          Algorithms
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Algorithms" data-md-level="1">
-        <label class="md-nav__title" for="nav-5">
+        <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Algorithms
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -890,8 +985,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -902,8 +999,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -914,8 +1013,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -926,8 +1027,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -938,6 +1041,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -958,21 +1062,25 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="nav-6">
-        API
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="nav-6">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -983,8 +1091,10 @@
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -994,21 +1104,25 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-2" type="checkbox" id="nav-6-2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_2" type="checkbox" id="__nav_6_2" checked>
       
-      <label class="md-nav__link" for="nav-6-2">
-        Base
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_2">
+          Base
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Base" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-2">
+        <label class="md-nav__title" for="__nav_6_2">
           <span class="md-nav__icon md-icon"></span>
           Base
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1019,8 +1133,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1031,8 +1147,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1043,8 +1161,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1055,8 +1175,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1067,8 +1189,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1079,8 +1203,10 @@
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -1089,6 +1215,7 @@
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
       
         
       
@@ -1103,7 +1230,9 @@
       </a>
       
         
+
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
@@ -1113,7 +1242,7 @@
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#photonai.base.photon_elements.Stack" class="md-nav__link">
@@ -1178,8 +1307,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1190,14 +1321,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1205,21 +1339,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3" type="checkbox" id="nav-6-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3" type="checkbox" id="__nav_6_3" >
       
-      <label class="md-nav__link" for="nav-6-3">
-        Modelwrapper
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3">
+          Modelwrapper
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Modelwrapper" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-3">
+        <label class="md-nav__title" for="__nav_6_3">
           <span class="md-nav__icon md-icon"></span>
           Modelwrapper
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1230,8 +1368,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1239,21 +1379,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3-2" type="checkbox" id="nav-6-3-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3_2" type="checkbox" id="__nav_6_3_2" >
       
-      <label class="md-nav__link" for="nav-6-3-2">
-        Feature Selection
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3_2">
+          Feature Selection
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Feature Selection" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-3-2">
+        <label class="md-nav__title" for="__nav_6_3_2">
           <span class="md-nav__icon md-icon"></span>
           Feature Selection
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1264,8 +1408,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1276,8 +1422,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1288,8 +1436,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1300,8 +1450,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1312,14 +1464,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1327,21 +1482,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3-3" type="checkbox" id="nav-6-3-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3_3" type="checkbox" id="__nav_6_3_3" >
       
-      <label class="md-nav__link" for="nav-6-3-3">
-        Keras
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3_3">
+          Keras
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Keras" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-3-3">
+        <label class="md-nav__title" for="__nav_6_3_3">
           <span class="md-nav__icon md-icon"></span>
           Keras
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1352,8 +1511,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1364,14 +1525,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1382,8 +1546,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1394,14 +1560,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1409,21 +1578,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4" type="checkbox" id="nav-6-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_4" type="checkbox" id="__nav_6_4" >
       
-      <label class="md-nav__link" for="nav-6-4">
-        Optimization
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_4">
+          Optimization
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Optimization" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-4">
+        <label class="md-nav__title" for="__nav_6_4">
           <span class="md-nav__icon md-icon"></span>
           Optimization
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1434,8 +1607,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1446,8 +1621,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1458,8 +1635,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1470,8 +1649,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1482,8 +1663,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1494,8 +1677,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1503,21 +1688,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4-7" type="checkbox" id="nav-6-4-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_4_7" type="checkbox" id="__nav_6_4_7" >
       
-      <label class="md-nav__link" for="nav-6-4-7">
-        Hyperparameter
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_4_7">
+          Hyperparameter
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Hyperparameter" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-4-7">
+        <label class="md-nav__title" for="__nav_6_4_7">
           <span class="md-nav__icon md-icon"></span>
           Hyperparameter
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1528,8 +1717,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1540,8 +1731,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1552,8 +1745,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1564,20 +1759,24 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1585,21 +1784,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-5" type="checkbox" id="nav-6-5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_5" type="checkbox" id="__nav_6_5" >
       
-      <label class="md-nav__link" for="nav-6-5">
-        Processing
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_5">
+          Processing
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Processing" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-5">
+        <label class="md-nav__title" for="__nav_6_5">
           <span class="md-nav__icon md-icon"></span>
           Processing
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1610,14 +1813,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1625,21 +1831,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-6" type="checkbox" id="nav-6-6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_6" type="checkbox" id="__nav_6_6" >
       
-      <label class="md-nav__link" for="nav-6-6">
-        Custom Elements
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_6">
+          Custom Elements
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Custom Elements" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-6">
+        <label class="md-nav__title" for="__nav_6_6">
           <span class="md-nav__icon md-icon"></span>
           Custom Elements
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1650,8 +1860,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1662,12 +1874,14 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -1686,21 +1900,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
       
-      <label class="md-nav__link" for="nav-7">
-        About
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7">
+          About
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="About" data-md-level="1">
-        <label class="md-nav__title" for="nav-7">
+        <label class="md-nav__title" for="__nav_7">
           <span class="md-nav__icon md-icon"></span>
           About
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1711,8 +1929,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1723,8 +1943,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1735,6 +1957,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -1750,11 +1973,13 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
+
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
@@ -1764,7 +1989,7 @@
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#photonai.base.photon_elements.Stack" class="md-nav__link">
@@ -1830,168 +2055,460 @@
               </div>
             
           
-          <div class="md-content">
+          <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
-                
-                <h1 id="documentation-for-stack">Documentation for <code>Stack</code></h1>
-<div class="doc doc-object doc-class">
-<h2 class="hidden-toc" id="photonai.base.photon_elements.Stack" style="visibility: hidden; position: absolute;">
-        </h2>
-<div class="doc doc-contents first">
-<p>Creates a vertical stacking/parallelization of pipeline items.</p>
+
+
+<h1 id="documentation-for-stack">Documentation for <code>Stack</code></h1>
+
+
+  <div class="doc doc-object doc-class">
+
+<a id="photonai.base.photon_elements.Stack"></a>
+    <div class="doc doc-contents first">
+
+      <p>Creates a vertical stacking/parallelization of pipeline items.</p>
 <p>The object acts as a single PipelineElement and encapsulates
 several vertically stacked other PipelineElements, each
 child receiving the same input data. The data is iteratively
 distributed to all children, the results are collected
 and horizontally concatenated.</p>
+
 <p><strong>Examples:</strong></p>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span><span class="normal">1</span>
+    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal">1</span>
 <span class="normal">2</span>
 <span class="normal">3</span>
-<span class="normal">4</span></pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="n">tree</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">'DecisionTreeClassifier'</span><span class="p">)</span>
-<span class="n">svc</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">'LinearSVC'</span><span class="p">)</span>
+<span class="normal">4</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="n">tree</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;DecisionTreeClassifier&#39;</span><span class="p">)</span>
+<span class="n">svc</span> <span class="o">=</span> <span class="n">PipelineElement</span><span class="p">(</span><span class="s1">&#39;LinearSVC&#39;</span><span class="p">)</span>
 
-<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">Stack</span><span class="p">(</span><span class="s1">'final_stack'</span><span class="p">,</span> <span class="p">[</span><span class="n">tree</span><span class="p">,</span> <span class="n">svc</span><span class="p">],</span> <span class="n">use_probabilities</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-<div class="doc doc-children">
-<div class="doc doc-object doc-method">
+<span class="n">my_pipe</span> <span class="o">+=</span> <span class="n">Stack</span><span class="p">(</span><span class="s1">&#39;final_stack&#39;</span><span class="p">,</span> <span class="p">[</span><span class="n">tree</span><span class="p">,</span> <span class="n">svc</span><span class="p">],</span> <span class="n">use_probabilities</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
+
+        <details class="quote">
+          <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">Stack</span><span class="p">(</span><span class="n">PipelineElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Creates a vertical stacking/parallelization of pipeline items.</span>
+
+<span class="sd">    The object acts as a single PipelineElement and encapsulates</span>
+<span class="sd">    several vertically stacked other PipelineElements, each</span>
+<span class="sd">    child receiving the same input data. The data is iteratively</span>
+<span class="sd">    distributed to all children, the results are collected</span>
+<span class="sd">    and horizontally concatenated.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        ``` python</span>
+<span class="sd">        tree = PipelineElement(&#39;DecisionTreeClassifier&#39;)</span>
+<span class="sd">        svc = PipelineElement(&#39;LinearSVC&#39;)</span>
+
+<span class="sd">        my_pipe += Stack(&#39;final_stack&#39;, [tree, svc], use_probabilities=True)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PipelineElement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_probabilities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Creates a new Stack element.</span>
+<span class="sd">        Collects all possible hyperparameter combinations of the children.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            name:</span>
+<span class="sd">                Give the pipeline element a name.</span>
+
+<span class="sd">            elements:</span>
+<span class="sd">                List of pipeline elements that should run in parallel.</span>
+
+<span class="sd">            use_probabilities:</span>
+<span class="sd">                For a stack that includes estimators you can choose whether</span>
+<span class="sd">                predict or predict_proba is called for all estimators.</span>
+<span class="sd">                In case only some implement predict_proba, predict</span>
+<span class="sd">                is called for the remaining estimators.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Stack</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">test_disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                    <span class="n">base_element</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">elements</span> <span class="o">=</span> <span class="nb">list</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">elements</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">item_to_stack</span> <span class="ow">in</span> <span class="n">elements</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">item_to_stack</span><span class="p">)</span>
+
+        <span class="c1"># todo: Stack should not be allowed to change y, only covariates</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs_y</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">needs_covariates</span> <span class="o">=</span> <span class="kc">True</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">&quot;STACK:&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">use_probabilities</span> <span class="o">=</span> <span class="n">use_probabilities</span>
+
+    <span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new element to the stack.</span>
+<span class="sd">        Generate sklearn hyperparameter names in order</span>
+<span class="sd">        to set the item&#39;s hyperparameters in the optimization process.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            item:</span>
+<span class="sd">                The Element that should be stacked and will run in a</span>
+<span class="sd">                vertical parallelization in the original pipe.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">check_if_needs_y</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+        <span class="nb">super</span><span class="p">(</span><span class="n">Stack</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+        <span class="c1"># for each configuration</span>
+        <span class="n">tmp_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">hyperparameters</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">tmp_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;__&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">check_if_needs_y</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="p">(</span><span class="n">Branch</span><span class="p">,</span> <span class="n">Stack</span><span class="p">,</span> <span class="n">Switch</span><span class="p">)):</span>
+            <span class="k">for</span> <span class="n">child_item</span> <span class="ow">in</span> <span class="n">item</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">check_if_needs_y</span><span class="p">(</span><span class="n">child_item</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="n">PipelineElement</span><span class="p">):</span>
+            <span class="k">if</span> <span class="n">item</span><span class="o">.</span><span class="n">needs_y</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Elements in Stack must not transform y because the number of samples in every &quot;</span>
+                                 <span class="s2">&quot;element of the stack might differ. Then, it will not be possible to concatenate those &quot;</span>
+                                 <span class="s2">&quot;data and target matrices. Please use the transformer that is using y before or after &quot;</span>
+                                 <span class="s2">&quot;the stack.&quot;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Add a new element to the stack.</span>
+<span class="sd">        Generate sklearn hyperparameter names in order</span>
+<span class="sd">        to set the item&#39;s hyperparameters in the optimization process.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            item:</span>
+<span class="sd">                The Element that should be stacked and will run in a</span>
+<span class="sd">                vertical parallelization in the original pipe.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">hyperparameters</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span>
+
+    <span class="nd">@hyperparameters</span><span class="o">.</span><span class="n">setter</span>
+    <span class="k">def</span> <span class="nf">hyperparameters</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">value</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Setting hyperparameters does not make sense, only the items that added</span>
+<span class="sd">        can be optimized, not the container (self).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">pass</span>
+
+    <span class="k">def</span> <span class="nf">generate_config_grid</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">tmp_grid</span> <span class="o">=</span> <span class="n">create_global_config_grid</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">tmp_grid</span>
+
+    <span class="k">def</span> <span class="nf">get_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">deep</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+        <span class="n">all_params</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="n">all_params</span><span class="p">[</span><span class="n">element</span><span class="o">.</span><span class="n">name</span><span class="p">]</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">get_params</span><span class="p">(</span><span class="n">deep</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">all_params</span>
+
+    <span class="k">def</span> <span class="nf">set_params</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Find the particular child and distribute the params to it&quot;&quot;&quot;</span>
+        <span class="n">spread_params_dict</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">val</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">splitted_k</span> <span class="o">=</span> <span class="n">k</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;__&#39;</span><span class="p">)</span>
+            <span class="n">item_name</span> <span class="o">=</span> <span class="n">splitted_k</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">item_name</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">spread_params_dict</span><span class="p">:</span>
+                <span class="n">spread_params_dict</span><span class="p">[</span><span class="n">item_name</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+            <span class="n">dict_entry</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;__&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">splitted_k</span><span class="p">[</span><span class="mi">1</span><span class="p">::]):</span> <span class="n">val</span><span class="p">}</span>
+            <span class="n">spread_params_dict</span><span class="p">[</span><span class="n">item_name</span><span class="p">]</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">dict_entry</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">name</span><span class="p">,</span> <span class="n">params</span> <span class="ow">in</span> <span class="n">spread_params_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="n">missing_element</span> <span class="o">=</span> <span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">params</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">element</span><span class="o">.</span><span class="n">name</span> <span class="o">==</span> <span class="n">name</span><span class="p">:</span>
+                    <span class="n">element</span><span class="o">.</span><span class="n">set_params</span><span class="p">(</span><span class="o">**</span><span class="n">params</span><span class="p">)</span>
+                    <span class="n">missing_element</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">if</span> <span class="n">missing_element</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t set hyperparameter for element </span><span class="si">{}</span><span class="s2"> -&gt; </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing_element</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                                                                                           <span class="n">missing_element</span><span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls fit iteratively on every child.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            X:</span>
+<span class="sd">                The array-like data with shape=[N, D], where N is the</span>
+<span class="sd">                number of samples and D is the number of features.</span>
+
+<span class="sd">            y:</span>
+<span class="sd">                The truth array-like values with shape=[N],</span>
+<span class="sd">                where N is the number of samples.</span>
+
+<span class="sd">            **kwargs:</span>
+<span class="sd">                Keyword arguments, passed to base_elements fit.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Fitted self.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="c1"># Todo: parallellize fitting</span>
+            <span class="n">element</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span>
+
+    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls the predict function on underlying base elements.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            X:</span>
+<span class="sd">                The array-like data with shape=[N, D], where N is the</span>
+<span class="sd">                number of samples and D is the number of features.</span>
+
+<span class="sd">            **kwargs:</span>
+<span class="sd">                Keyword arguments, passed to base_elements predict.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Prediction values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_probabilities</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;Iteratively calls predict on every child.&quot;&quot;&quot;</span>
+        <span class="c1"># Todo: strategy for concatenating data from different pipes</span>
+        <span class="c1"># todo: parallelize prediction</span>
+        <span class="n">predicted_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="n">element_transform</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">predicted_data</span> <span class="o">=</span> <span class="n">PhotonDataHelper</span><span class="o">.</span><span class="n">stack_data_horizontally</span><span class="p">(</span><span class="n">predicted_data</span><span class="p">,</span> <span class="n">element_transform</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">predicted_data</span>
+
+    <span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Predict probabilities for every pipe element and stack them together.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            X:</span>
+<span class="sd">                The array-like data with shape=[N, D], where N is the number</span>
+<span class="sd">                of samples and D is the number of features.</span>
+
+<span class="sd">            y:</span>
+<span class="sd">                The truth array-like values with shape=[N],</span>
+<span class="sd">                where N is the number of samples.</span>
+
+<span class="sd">            **kwargs:</span>
+<span class="sd">                Keyword arguments, not used yet.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Probability values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">predicted_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="n">element_transform</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">element_transform</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="n">element_transform</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+            <span class="n">predicted_data</span> <span class="o">=</span> <span class="n">PhotonDataHelper</span><span class="o">.</span><span class="n">stack_data_horizontally</span><span class="p">(</span><span class="n">predicted_data</span><span class="p">,</span> <span class="n">element_transform</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">predicted_data</span>
+
+    <span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Calls transform on every child.</span>
+
+<span class="sd">        If the encapsulated child is a hyperpipe, also calls predict on the last element in the pipeline.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            X:</span>
+<span class="sd">                The array-liketraining with shape=[N, D] and test data,</span>
+<span class="sd">                where N is the number of samples and D is the number of features.</span>
+
+<span class="sd">            y:</span>
+<span class="sd">                The truth array-like values with shape=[N],</span>
+<span class="sd">                where N is the number of samples.</span>
+
+<span class="sd">            **kwargs:</span>
+<span class="sd">                Keyword arguments, passed to base_elements transform.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Prediction values.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">transformed_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="c1"># if it is a hyperpipe with a final estimator, we want to use predict:</span>
+            <span class="n">element_transform</span><span class="p">,</span> <span class="n">_</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">transformed_data</span> <span class="o">=</span> <span class="n">PhotonDataHelper</span><span class="o">.</span><span class="n">stack_data_horizontally</span><span class="p">(</span><span class="n">transformed_data</span><span class="p">,</span> <span class="n">element_transform</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">transformed_data</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">kwargs</span>
+
+    <span class="k">def</span> <span class="nf">copy_me</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="n">ps</span> <span class="o">=</span> <span class="n">Stack</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
+            <span class="n">new_element</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">copy_me</span><span class="p">()</span>
+            <span class="n">ps</span> <span class="o">+=</span> <span class="n">new_element</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">base_element</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">base_element</span>
+        <span class="n">ps</span><span class="o">.</span><span class="n">_random_state</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_random_state</span>
+        <span class="k">return</span> <span class="n">ps</span>
+
+    <span class="k">def</span> <span class="nf">inverse_transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Inverse Transform is not yet implemented for a Stacking Element in PHOTON&quot;</span><span class="p">)</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">_estimator_type</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="nf">_check_hyper</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span><span class="n">BaseEstimator</span><span class="p">):</span>
+        <span class="k">pass</span>
+
+    <span class="nd">@property</span>
+    <span class="k">def</span> <span class="nf">feature_importances_</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span>
+</code></pre></div>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
 <h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.__iadd__">
-
 <code class="highlight language-python"><span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Add a new element to the stack.
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Add a new element to the stack.
 Generate sklearn hyperparameter names in order
 to set the item's hyperparameters in the optimization process.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>item</code></td>
-<td><code>PipelineElement</code></td>
-<td>
-<p>The Element that should be stacked and will run in a
-vertical parallelization in the original pipe.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>item</code></td>
+        <td><code>PipelineElement</code></td>
+        <td><p>The Element that should be stacked and will run in a
+vertical parallelization in the original pipe.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__iadd__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add a new element to the stack.</span>
 <span class="sd">    Generate sklearn hyperparameter names in order</span>
-<span class="sd">    to set the item's hyperparameters in the optimization process.</span>
+<span class="sd">    to set the item&#39;s hyperparameters in the optimization process.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        item:</span>
 <span class="sd">            The Element that should be stacked and will run in a</span>
 <span class="sd">            vertical parallelization in the original pipe.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">check_if_needs_y</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
     <span class="nb">super</span><span class="p">(</span><span class="n">Stack</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
 
     <span class="c1"># for each configuration</span>
     <span class="n">tmp_dict</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">item</span><span class="o">.</span><span class="n">hyperparameters</span><span class="p">)</span>
     <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">element</span> <span class="ow">in</span> <span class="n">tmp_dict</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-        <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">'__'</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_hyperparameters</span><span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span> <span class="o">+</span> <span class="s1">&#39;__&#39;</span> <span class="o">+</span> <span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">tmp_dict</span><span class="p">[</span><span class="n">key</span><span class="p">]</span>
 
     <span class="k">return</span> <span class="bp">self</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.__init__">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.__init__">
 <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">elements</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_probabilities</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Creates a new Stack element.
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Creates a new Stack element.
 Collects all possible hyperparameter combinations of the children.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>name</code></td>
-<td><code>str</code></td>
-<td>
-<p>Give the pipeline element a name.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>elements</code></td>
-<td><code>List[photonai.base.photon_elements.PipelineElement]</code></td>
-<td>
-<p>List of pipeline elements that should run in parallel.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>use_probabilities</code></td>
-<td><code>bool</code></td>
-<td>
-<p>For a stack that includes estimators you can choose whether
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>name</code></td>
+        <td><code>str</code></td>
+        <td><p>Give the pipeline element a name.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>elements</code></td>
+        <td><code>List[photonai.base.photon_elements.PipelineElement]</code></td>
+        <td><p>List of pipeline elements that should run in parallel.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>use_probabilities</code></td>
+        <td><code>bool</code></td>
+        <td><p>For a stack that includes estimators you can choose whether
 predict or predict_proba is called for all estimators.
 In case only some implement predict_proba, predict
-is called for the remaining estimators.</p>
-</td>
-<td><code>False</code></td>
-</tr>
-</tbody>
+is called for the remaining estimators.</p></td>
+        <td><code>False</code></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PipelineElement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_probabilities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">elements</span><span class="p">:</span> <span class="n">List</span><span class="p">[</span><span class="n">PipelineElement</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">use_probabilities</span><span class="p">:</span> <span class="nb">bool</span> <span class="o">=</span> <span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Creates a new Stack element.</span>
 <span class="sd">    Collects all possible hyperparameter combinations of the children.</span>
 
@@ -2008,7 +2525,7 @@ is called for the remaining estimators.</p>
 <span class="sd">            In case only some implement predict_proba, predict</span>
 <span class="sd">            is called for the remaining estimators.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="nb">super</span><span class="p">(</span><span class="n">Stack</span><span class="p">,</span> <span class="bp">self</span><span class="p">)</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="n">hyperparameters</span><span class="o">=</span><span class="p">{},</span> <span class="n">test_disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">disabled</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
                                 <span class="n">base_element</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
@@ -2021,137 +2538,141 @@ is called for the remaining estimators.</p>
     <span class="c1"># todo: Stack should not be allowed to change y, only covariates</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">needs_y</span> <span class="o">=</span> <span class="kc">False</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">needs_covariates</span> <span class="o">=</span> <span class="kc">True</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">"STACK:"</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="s2">&quot;STACK:&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">use_probabilities</span> <span class="o">=</span> <span class="n">use_probabilities</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.add">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.add">
 <code class="highlight language-python"><span class="n">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Add a new element to the stack.
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Add a new element to the stack.
 Generate sklearn hyperparameter names in order
 to set the item's hyperparameters in the optimization process.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>item</code></td>
-<td><code>PipelineElement</code></td>
-<td>
-<p>The Element that should be stacked and will run in a
-vertical parallelization in the original pipe.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>item</code></td>
+        <td><code>PipelineElement</code></td>
+        <td><p>The Element that should be stacked and will run in a
+vertical parallelization in the original pipe.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">add</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">item</span><span class="p">:</span> <span class="n">PipelineElement</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Add a new element to the stack.</span>
 <span class="sd">    Generate sklearn hyperparameter names in order</span>
-<span class="sd">    to set the item's hyperparameters in the optimization process.</span>
+<span class="sd">    to set the item&#39;s hyperparameters in the optimization process.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        item:</span>
 <span class="sd">            The Element that should be stacked and will run in a</span>
 <span class="sd">            vertical parallelization in the original pipe.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="fm">__iadd__</span><span class="p">(</span><span class="n">item</span><span class="p">)</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.fit">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.fit">
 <code class="highlight language-python"><span class="n">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Calls fit iteratively on every child.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Calls fit iteratively on every child.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>X</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The array-like data with shape=[N, D], where N is the
-number of samples and D is the number of features.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>y</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The truth array-like values with shape=[N],
-where N is the number of samples.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>**kwargs</code></td>
-<td><code></code></td>
-<td>
-<p>Keyword arguments, passed to base_elements fit.</p>
-</td>
-<td><code>{}</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>X</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The array-like data with shape=[N, D], where N is the
+number of samples and D is the number of features.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>y</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The truth array-like values with shape=[N],
+where N is the number of samples.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code></td>
+        <td></td>
+        <td><p>Keyword arguments, passed to base_elements fit.</p></td>
+        <td><code>{}</code></td>
+      </tr>
+  </tbody>
 </table>
 <p><strong>Returns:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code></code></td>
-<td>
-<p>Fitted self.</p>
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td></td>
+      <td><p>Fitted self.</p></td>
+    </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">fit</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calls fit iteratively on every child.</span>
 
 <span class="sd">    Parameters:</span>
@@ -2169,77 +2690,78 @@ where N is the number of samples.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        Fitted self.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
         <span class="c1"># Todo: parallellize fitting</span>
         <span class="n">element</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">return</span> <span class="bp">self</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.predict">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.predict">
 <code class="highlight language-python"><span class="n">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Calls the predict function on underlying base elements.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Calls the predict function on underlying base elements.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>X</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The array-like data with shape=[N, D], where N is the
-number of samples and D is the number of features.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>**kwargs</code></td>
-<td><code></code></td>
-<td>
-<p>Keyword arguments, passed to base_elements predict.</p>
-</td>
-<td><code>{}</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>X</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The array-like data with shape=[N, D], where N is the
+number of samples and D is the number of features.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code></td>
+        <td></td>
+        <td><p>Keyword arguments, passed to base_elements predict.</p></td>
+        <td><code>{}</code></td>
+      </tr>
+  </tbody>
 </table>
 <p><strong>Returns:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ndarray</code></td>
-<td>
-<p>Prediction values.</p>
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ndarray</code></td>
+      <td><p>Prediction values.</p></td>
+    </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calls the predict function on underlying base elements.</span>
 
 <span class="sd">    Parameters:</span>
@@ -2253,86 +2775,85 @@ number of samples and D is the number of features.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        Prediction values.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">use_probabilities</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.predict_proba">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.predict_proba">
 <code class="highlight language-python"><span class="n">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Predict probabilities for every pipe element and stack them together.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Predict probabilities for every pipe element and stack them together.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>X</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The array-like data with shape=[N, D], where N is the number
-of samples and D is the number of features.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>y</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The truth array-like values with shape=[N],
-where N is the number of samples.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>**kwargs</code></td>
-<td><code></code></td>
-<td>
-<p>Keyword arguments, not used yet.</p>
-</td>
-<td><code>{}</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>X</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The array-like data with shape=[N, D], where N is the number
+of samples and D is the number of features.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>y</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The truth array-like values with shape=[N],
+where N is the number of samples.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code></td>
+        <td></td>
+        <td><p>Keyword arguments, not used yet.</p></td>
+        <td><code>{}</code></td>
+      </tr>
+  </tbody>
 </table>
 <p><strong>Returns:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>ndarray</code></td>
-<td>
-<p>Probability values.</p>
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>ndarray</code></td>
+      <td><p>Probability values.</p></td>
+    </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">predict_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Predict probabilities for every pipe element and stack them together.</span>
 
 <span class="sd">    Parameters:</span>
@@ -2350,7 +2871,7 @@ where N is the number of samples.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        Probability values.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">predicted_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
     <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
         <span class="n">element_transform</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">predict_proba</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
@@ -2358,82 +2879,81 @@ where N is the number of samples.</p>
             <span class="n">element_transform</span> <span class="o">=</span> <span class="n">element</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
         <span class="n">predicted_data</span> <span class="o">=</span> <span class="n">PhotonDataHelper</span><span class="o">.</span><span class="n">stack_data_horizontally</span><span class="p">(</span><span class="n">predicted_data</span><span class="p">,</span> <span class="n">element_transform</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">predicted_data</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.transform">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.photon_elements.Stack.transform">
 <code class="highlight language-python"><span class="n">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Calls transform on every child.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Calls transform on every child.</p>
 <p>If the encapsulated child is a hyperpipe, also calls predict on the last element in the pipeline.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>X</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The array-liketraining with shape=[N, D] and test data,
-where N is the number of samples and D is the number of features.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>y</code></td>
-<td><code>ndarray</code></td>
-<td>
-<p>The truth array-like values with shape=[N],
-where N is the number of samples.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-<tr>
-<td><code>**kwargs</code></td>
-<td><code></code></td>
-<td>
-<p>Keyword arguments, passed to base_elements transform.</p>
-</td>
-<td><code>{}</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>X</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The array-liketraining with shape=[N, D] and test data,
+where N is the number of samples and D is the number of features.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>y</code></td>
+        <td><code>ndarray</code></td>
+        <td><p>The truth array-like values with shape=[N],
+where N is the number of samples.</p></td>
+        <td><code>None</code></td>
+      </tr>
+      <tr>
+        <td><code>**kwargs</code></td>
+        <td></td>
+        <td><p>Keyword arguments, passed to base_elements transform.</p></td>
+        <td><code>{}</code></td>
+      </tr>
+  </tbody>
 </table>
 <p><strong>Returns:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>(&lt;class 'numpy.ndarray'&gt;, &lt;class 'numpy.ndarray'&gt;, &lt;class 'dict'&gt;)</code></td>
-<td>
-<p>Prediction values.</p>
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>(&lt;class &#39;numpy.ndarray&#39;&gt;, &lt;class &#39;numpy.ndarray&#39;&gt;, &lt;class &#39;dict&#39;&gt;)</code></td>
+      <td><p>Prediction values.</p></td>
+    </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/photon_elements.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">transform</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">X</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">y</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Calls transform on every child.</span>
 
 <span class="sd">    If the encapsulated child is a hyperpipe, also calls predict on the last element in the pipeline.</span>
@@ -2453,7 +2973,7 @@ where N is the number of samples.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        Prediction values.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">transformed_data</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([])</span>
     <span class="k">for</span> <span class="n">element</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">elements</span><span class="p">:</span>
         <span class="c1"># if it is a hyperpipe with a final estimator, we want to use predict:</span>
@@ -2461,92 +2981,92 @@ where N is the number of samples.</p>
         <span class="n">transformed_data</span> <span class="o">=</span> <span class="n">PhotonDataHelper</span><span class="o">.</span><span class="n">stack_data_horizontally</span><span class="p">(</span><span class="n">transformed_data</span><span class="p">,</span> <span class="n">element_transform</span><span class="p">)</span>
 
     <span class="k">return</span> <span class="n">transformed_data</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">kwargs</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-</div>
-</div>
-</div>
-                
-              
-              
-                
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
 
               
             </article>
+            
           </div>
         </div>
+        
       </main>
       
-        
-<footer class="md-footer">
+        <footer class="md-footer">
   
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
         
-          <a href="../registry/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <a href="../registry/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Registry" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Registry
             </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Registry
-              </div>
-            </div>
-          </a>
+          </div>
+        </a>
+      
+      
         
-        
-          <a href="../switch/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Switch
-              </div>
+        <a href="../switch/" class="md-footer__link md-footer__link--next" aria-label="Next: Switch" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Switch
             </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
-      <div class="md-footer-copyright">
-        
-        Made with
-        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs
-        </a>
-      </div>
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
       
     </div>
   </div>
 </footer>
       
     </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs"], "search": "../../../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
-      <script src="../../../assets/javascripts/vendor.18f0862e.min.js"></script>
-      <script src="../../../assets/javascripts/bundle.994580cf.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
-      
-      <script>
-        app = initialize({
-          base: "../../..",
-          features: ['navigation.tabs'],
-          search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.9c0e82ba.min.js"
-          }, typeof search !== "undefined" && search)
-        })
-      </script>
+    
+      <script src="../../../assets/javascripts/bundle.6c7ad80a.min.js"></script>
       
     
   </body>

@@ -8,9 +8,8 @@
       
       
       
-      
-      <link rel="shortcut icon" href="../../../favicon.png">
-      <meta name="generator" content="mkdocs-1.1.2, mkdocs-material-6.2.8">
+      <link rel="icon" href="../../../favicon.png">
+      <meta name="generator" content="mkdocs-1.3.1, mkdocs-material-8.3.9">
     
     
       
@@ -18,28 +17,27 @@
       
     
     
-      <link rel="stylesheet" href="../../../assets/stylesheets/main.cb6bc1d0.min.css">
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.1d29e8d0.min.css">
       
         
-        <link rel="stylesheet" href="../../../assets/stylesheets/palette.39b8e14a.min.css">
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.cbb835fc.min.css">
         
       
+      
     
     
     
       
-        
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&display=fallback">
-        <style>body,input{font-family:"Roboto",-apple-system,BlinkMacSystemFont,Helvetica,Arial,sans-serif}code,kbd,pre{font-family:"Roboto Mono",SFMono-Regular,Consolas,Menlo,monospace}</style>
-      
     
     
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
     
       <link rel="stylesheet" href="../../../assets/stylesheets/extra.css">
     
+    <script>__md_scope=new URL("../../..",location),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
+
     
     
   </head>
@@ -51,8 +49,8 @@
     
     
     <body dir="ltr" data-md-color-scheme="" data-md-color-primary="none" data-md-color-accent="none">
-      
   
+    
     
     <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
     <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
@@ -69,24 +67,25 @@
       
     </div>
     
+    
       
 
 <header class="md-header" data-md-component="header">
-  <nav class="md-header-nav md-grid" aria-label="Header">
-    <a href="../../.." title="" class="md-header-nav__button md-logo" aria-label="">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="" class="md-header__button md-logo" aria-label="" data-md-component="logo">
       <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
     </a>
-    <label class="md-header-nav__button md-icon" for="__drawer">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"/></svg>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
     </label>
-    <div class="md-header-nav__title" data-md-component="header-title">
-      <div class="md-header-nav__ellipsis">
-        <div class="md-header-nav__topic">
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
           <span class="md-ellipsis">
             
           </span>
         </div>
-        <div class="md-header-nav__topic">
+        <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
               Registry
@@ -96,22 +95,27 @@
       </div>
     </div>
     
-      <label class="md-header-nav__button md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
       </label>
-      
-<div class="md-search" data-md-component="search" role="dialog">
+      <div class="md-search" data-md-component="search" role="dialog">
   <label class="md-search__overlay" for="__search"></label>
   <div class="md-search__inner" role="search">
     <form class="md-search__form" name="search">
-      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" data-md-state="active" required>
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
       <label class="md-search__icon md-icon" for="__search">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0116 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 019.5 16 6.5 6.5 0 013 9.5 6.5 6.5 0 019.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"/></svg>
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
       </label>
-      <button type="reset" class="md-search__icon md-icon" aria-label="Clear" data-md-component="search-reset" tabindex="-1">
-        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"/></svg>
-      </button>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
     </form>
     <div class="md-search__output">
       <div class="md-search__scrollwrap" data-md-scrollfix>
@@ -128,6 +132,7 @@
     
     
   </nav>
+  
 </header>
     
     <div class="md-container" data-md-component="container">
@@ -135,6 +140,7 @@
       
         
           
+            
 <nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
   <div class="md-tabs__inner md-grid">
     <ul class="md-tabs__list">
@@ -263,6 +269,7 @@
     </ul>
   </div>
 </nav>
+          
         
       
       <main class="md-main" data-md-component="main">
@@ -270,19 +277,17 @@
           
             
               
-              <div class="md-sidebar md-sidebar--primary" data-md-component="navigation" >
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
-
-
 
   
 
 
 <nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../../.." title="" class="md-nav__button md-logo" aria-label="">
+    <a href="../../.." title="" class="md-nav__button md-logo" aria-label="" data-md-component="logo">
       <div class="photon-logo">PHOTON<span class="ai">AI</span></div>
     </a>
     
@@ -301,21 +306,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-1" type="checkbox" id="nav-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_1" type="checkbox" id="__nav_1" >
       
-      <label class="md-nav__link" for="nav-1">
-        Getting Started
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_1">
+          Getting Started
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Getting Started" data-md-level="1">
-        <label class="md-nav__title" for="nav-1">
+        <label class="md-nav__title" for="__nav_1">
           <span class="md-nav__icon md-icon"></span>
           Getting Started
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -326,8 +335,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -338,8 +349,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -350,8 +363,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -362,8 +377,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -374,8 +391,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -386,8 +405,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -398,6 +419,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -416,21 +438,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-2" type="checkbox" id="nav-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_2" type="checkbox" id="__nav_2" >
       
-      <label class="md-nav__link" for="nav-2">
-        Pipeline Architecture
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_2">
+          Pipeline Architecture
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Pipeline Architecture" data-md-level="1">
-        <label class="md-nav__title" for="nav-2">
+        <label class="md-nav__title" for="__nav_2">
           <span class="md-nav__icon md-icon"></span>
           Pipeline Architecture
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -441,8 +467,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -453,8 +481,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -465,8 +495,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -477,6 +509,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -495,21 +528,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3" type="checkbox" id="nav-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3" type="checkbox" id="__nav_3" >
       
-      <label class="md-nav__link" for="nav-3">
-        Examples
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3">
+          Examples
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Examples" data-md-level="1">
-        <label class="md-nav__title" for="nav-3">
+        <label class="md-nav__title" for="__nav_3">
           <span class="md-nav__icon md-icon"></span>
           Examples
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -517,21 +554,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-1" type="checkbox" id="nav-3-1" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_1" type="checkbox" id="__nav_3_1" >
       
-      <label class="md-nav__link" for="nav-3-1">
-        General
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_1">
+          General
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="General" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-1">
+        <label class="md-nav__title" for="__nav_3_1">
           <span class="md-nav__icon md-icon"></span>
           General
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -542,8 +583,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -554,8 +597,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -566,8 +611,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -578,8 +625,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -590,8 +639,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -602,14 +653,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -617,21 +671,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-3-2" type="checkbox" id="nav-3-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_3_2" type="checkbox" id="__nav_3_2" >
       
-      <label class="md-nav__link" for="nav-3-2">
-        Specific Use Cases
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_3_2">
+          Specific Use Cases
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Specific Use Cases" data-md-level="2">
-        <label class="md-nav__title" for="nav-3-2">
+        <label class="md-nav__title" for="__nav_3_2">
           <span class="md-nav__icon md-icon"></span>
           Specific Use Cases
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -642,8 +700,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -654,8 +714,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -666,8 +728,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -678,8 +742,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -690,12 +756,14 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -714,21 +782,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-4" type="checkbox" id="nav-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_4" type="checkbox" id="__nav_4" >
       
-      <label class="md-nav__link" for="nav-4">
-        Features
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_4">
+          Features
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Features" data-md-level="1">
-        <label class="md-nav__title" for="nav-4">
+        <label class="md-nav__title" for="__nav_4">
           <span class="md-nav__icon md-icon"></span>
           Features
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -739,8 +811,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -751,8 +825,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -763,8 +839,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -775,8 +853,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -787,8 +867,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -799,8 +881,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -811,8 +895,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -823,8 +909,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -835,8 +923,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -847,6 +937,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -865,21 +956,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-5" type="checkbox" id="nav-5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_5" type="checkbox" id="__nav_5" >
       
-      <label class="md-nav__link" for="nav-5">
-        Algorithms
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_5">
+          Algorithms
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Algorithms" data-md-level="1">
-        <label class="md-nav__title" for="nav-5">
+        <label class="md-nav__title" for="__nav_5">
           <span class="md-nav__icon md-icon"></span>
           Algorithms
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -890,8 +985,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -902,8 +999,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -914,8 +1013,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -926,8 +1027,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -938,6 +1041,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -958,21 +1062,25 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6" type="checkbox" id="nav-6" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6" type="checkbox" id="__nav_6" checked>
       
-      <label class="md-nav__link" for="nav-6">
-        API
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6">
+          API
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="API" data-md-level="1">
-        <label class="md-nav__title" for="nav-6">
+        <label class="md-nav__title" for="__nav_6">
           <span class="md-nav__icon md-icon"></span>
           API
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -983,8 +1091,10 @@
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -994,21 +1104,25 @@
     <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-2" type="checkbox" id="nav-6-2" checked>
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_2" type="checkbox" id="__nav_6_2" checked>
       
-      <label class="md-nav__link" for="nav-6-2">
-        Base
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_2">
+          Base
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Base" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-2">
+        <label class="md-nav__title" for="__nav_6_2">
           <span class="md-nav__icon md-icon"></span>
           Base
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1019,8 +1133,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1031,8 +1147,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1043,8 +1161,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1055,8 +1175,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1067,8 +1189,10 @@
     </li>
   
 
+            
           
             
+              
   
   
     
@@ -1077,6 +1201,7 @@
     <li class="md-nav__item md-nav__item--active">
       
       <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
       
         
       
@@ -1091,7 +1216,9 @@
       </a>
       
         
+
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
@@ -1101,7 +1228,7 @@
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#photonai.base.registry.registry.PhotonRegistry" class="md-nav__link">
@@ -1159,8 +1286,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1171,8 +1300,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1183,14 +1314,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1198,21 +1332,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3" type="checkbox" id="nav-6-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3" type="checkbox" id="__nav_6_3" >
       
-      <label class="md-nav__link" for="nav-6-3">
-        Modelwrapper
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3">
+          Modelwrapper
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Modelwrapper" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-3">
+        <label class="md-nav__title" for="__nav_6_3">
           <span class="md-nav__icon md-icon"></span>
           Modelwrapper
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1223,8 +1361,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1232,21 +1372,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3-2" type="checkbox" id="nav-6-3-2" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3_2" type="checkbox" id="__nav_6_3_2" >
       
-      <label class="md-nav__link" for="nav-6-3-2">
-        Feature Selection
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3_2">
+          Feature Selection
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Feature Selection" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-3-2">
+        <label class="md-nav__title" for="__nav_6_3_2">
           <span class="md-nav__icon md-icon"></span>
           Feature Selection
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1257,8 +1401,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1269,8 +1415,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1281,8 +1429,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1293,8 +1443,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1305,14 +1457,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1320,21 +1475,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-3-3" type="checkbox" id="nav-6-3-3" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_3_3" type="checkbox" id="__nav_6_3_3" >
       
-      <label class="md-nav__link" for="nav-6-3-3">
-        Keras
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_3_3">
+          Keras
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Keras" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-3-3">
+        <label class="md-nav__title" for="__nav_6_3_3">
           <span class="md-nav__icon md-icon"></span>
           Keras
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1345,8 +1504,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1357,14 +1518,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1375,8 +1539,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1387,14 +1553,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1402,21 +1571,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4" type="checkbox" id="nav-6-4" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_4" type="checkbox" id="__nav_6_4" >
       
-      <label class="md-nav__link" for="nav-6-4">
-        Optimization
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_4">
+          Optimization
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Optimization" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-4">
+        <label class="md-nav__title" for="__nav_6_4">
           <span class="md-nav__icon md-icon"></span>
           Optimization
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1427,8 +1600,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1439,8 +1614,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1451,8 +1628,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1463,8 +1642,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1475,8 +1656,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1487,8 +1670,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1496,21 +1681,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-4-7" type="checkbox" id="nav-6-4-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_4_7" type="checkbox" id="__nav_6_4_7" >
       
-      <label class="md-nav__link" for="nav-6-4-7">
-        Hyperparameter
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_4_7">
+          Hyperparameter
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Hyperparameter" data-md-level="3">
-        <label class="md-nav__title" for="nav-6-4-7">
+        <label class="md-nav__title" for="__nav_6_4_7">
           <span class="md-nav__icon md-icon"></span>
           Hyperparameter
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1521,8 +1710,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1533,8 +1724,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1545,8 +1738,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1557,20 +1752,24 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1578,21 +1777,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-5" type="checkbox" id="nav-6-5" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_5" type="checkbox" id="__nav_6_5" >
       
-      <label class="md-nav__link" for="nav-6-5">
-        Processing
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_5">
+          Processing
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Processing" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-5">
+        <label class="md-nav__title" for="__nav_6_5">
           <span class="md-nav__icon md-icon"></span>
           Processing
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1603,14 +1806,17 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1618,21 +1824,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-6-6" type="checkbox" id="nav-6-6" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_6_6" type="checkbox" id="__nav_6_6" >
       
-      <label class="md-nav__link" for="nav-6-6">
-        Custom Elements
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_6_6">
+          Custom Elements
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="Custom Elements" data-md-level="2">
-        <label class="md-nav__title" for="nav-6-6">
+        <label class="md-nav__title" for="__nav_6_6">
           <span class="md-nav__icon md-icon"></span>
           Custom Elements
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1643,8 +1853,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1655,12 +1867,14 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -1679,21 +1893,25 @@
     <li class="md-nav__item md-nav__item--nested">
       
       
-        <input class="md-nav__toggle md-toggle" data-md-toggle="nav-7" type="checkbox" id="nav-7" >
+        <input class="md-nav__toggle md-toggle" data-md-toggle="__nav_7" type="checkbox" id="__nav_7" >
       
-      <label class="md-nav__link" for="nav-7">
-        About
-        <span class="md-nav__icon md-icon"></span>
-      </label>
+      
+      
+      
+        <label class="md-nav__link" for="__nav_7">
+          About
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
       <nav class="md-nav" aria-label="About" data-md-level="1">
-        <label class="md-nav__title" for="nav-7">
+        <label class="md-nav__title" for="__nav_7">
           <span class="md-nav__icon md-icon"></span>
           About
         </label>
         <ul class="md-nav__list" data-md-scrollfix>
           
-          
             
+              
   
   
   
@@ -1704,8 +1922,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1716,8 +1936,10 @@
     </li>
   
 
+            
           
             
+              
   
   
   
@@ -1728,6 +1950,7 @@
     </li>
   
 
+            
           
         </ul>
       </nav>
@@ -1743,11 +1966,13 @@
             
             
               
-              <div class="md-sidebar md-sidebar--secondary" data-md-component="toc" >
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
                 <div class="md-sidebar__scrollwrap">
                   <div class="md-sidebar__inner">
                     
+
 <nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
   
   
     
@@ -1757,7 +1982,7 @@
       <span class="md-nav__icon md-icon"></span>
       Table of contents
     </label>
-    <ul class="md-nav__list" data-md-scrollfix>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
   <a href="#photonai.base.registry.registry.PhotonRegistry" class="md-nav__link">
@@ -1816,29 +2041,30 @@
               </div>
             
           
-          <div class="md-content">
+          <div class="md-content" data-md-component="content">
             <article class="md-content__inner md-typeset">
               
                 
-                
-                <h1 id="documentation-for-photonregistry">Documentation for <code>PhotonRegistry</code></h1>
-<div class="doc doc-object doc-class">
-<h2 class="hidden-toc" id="photonai.base.registry.registry.PhotonRegistry" style="visibility: hidden; position: absolute;">
-        </h2>
-<div class="doc doc-contents first">
-<p>Helper class to manage the PHOTONAI Element Register.</p>
+
+
+<h1 id="documentation-for-photonregistry">Documentation for <code>PhotonRegistry</code></h1>
+
+
+  <div class="doc doc-object doc-class">
+
+<a id="photonai.base.registry.registry.PhotonRegistry"></a>
+    <div class="doc doc-contents first">
+
+      <p>Helper class to manage the PHOTONAI Element Register.</p>
 <p>Use it to add and remove items into the register.
 You can also retrieve information about items and its hyperparameters.</p>
 <p>Every item in the register is encoded by a string literal
 that points to a python class and its namespace.
 You can access the python class via the string literal.
 The class PhotonElement imports and instantiates the class for you.</p>
+
 <p><strong>Examples:</strong></p>
-<table class="highlighttable">
-<tr>
-<td class="linenos">
-<div class="linenodiv">
-<pre><span></span><span class="normal"> 1</span>
+    <div class="highlight"><table class="highlighttable"><tr><td class="linenos"><div class="linenodiv"><pre><span></span><span class="normal"> 1</span>
 <span class="normal"> 2</span>
 <span class="normal"> 3</span>
 <span class="normal"> 4</span>
@@ -1854,81 +2080,552 @@ The class PhotonElement imports and instantiates the class for you.</p>
 <span class="normal">14</span>
 <span class="normal">15</span>
 <span class="normal">16</span>
-<span class="normal">17</span></pre>
-</div>
-</td>
-<td class="code">
-<div class="highlight">
-<pre><span></span><code><span class="kn">import</span> <span class="nn">os</span>
+<span class="normal">17</span></pre></div></td><td class="code"><div><pre><span></span><code><span class="kn">import</span> <span class="nn">os</span>
 <span class="kn">from</span> <span class="nn">photonai.base</span> <span class="kn">import</span> <span class="n">PhotonRegistry</span>
 
 <span class="c1"># REGISTER ELEMENT saved in folder custom_elements_folder</span>
 <span class="n">base_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="vm">__file__</span><span class="p">))</span>
-<span class="n">custom_elements_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_folder</span><span class="p">,</span> <span class="s1">'custom_elements'</span><span class="p">)</span>
+<span class="n">custom_elements_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">base_folder</span><span class="p">,</span> <span class="s1">&#39;custom_elements&#39;</span><span class="p">)</span>
 
 <span class="n">registry</span> <span class="o">=</span> <span class="n">PhotonRegistry</span><span class="p">(</span><span class="n">custom_elements_folder</span><span class="o">=</span><span class="n">custom_elements_folder</span><span class="p">)</span>
-<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">photon_name</span><span class="o">=</span><span class="s1">'MyCustomEstimator'</span><span class="p">,</span>
-                  <span class="n">class_str</span><span class="o">=</span><span class="s1">'custom_estimator.CustomEstimator'</span><span class="p">,</span>
-                  <span class="n">element_type</span><span class="o">=</span><span class="s1">'Estimator'</span><span class="p">)</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="n">photon_name</span><span class="o">=</span><span class="s1">&#39;MyCustomEstimator&#39;</span><span class="p">,</span>
+                  <span class="n">class_str</span><span class="o">=</span><span class="s1">&#39;custom_estimator.CustomEstimator&#39;</span><span class="p">,</span>
+                  <span class="n">element_type</span><span class="o">=</span><span class="s1">&#39;Estimator&#39;</span><span class="p">)</span>
 
 <span class="n">registry</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
-<span class="n">registry</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'MyCustomEstimator'</span><span class="p">)</span>
+<span class="n">registry</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;MyCustomEstimator&#39;</span><span class="p">)</span>
 
 <span class="c1"># get informations of other available elements</span>
-<span class="n">registry</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'SVC'</span><span class="p">)</span>
-</code></pre>
-</div>
-</td>
-</tr>
-</table>
-<div class="doc doc-children">
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.__init__">
+<span class="n">registry</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;SVC&#39;</span><span class="p">)</span>
+</code></pre></div></td></tr></table></div>
 
+        <details class="quote">
+          <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
+          <div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">PhotonRegistry</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Helper class to manage the PHOTONAI Element Register.</span>
+
+<span class="sd">    Use it to add and remove items into the register.</span>
+<span class="sd">    You can also retrieve information about items and its hyperparameters.</span>
+
+<span class="sd">    Every item in the register is encoded by a string literal</span>
+<span class="sd">    that points to a python class and its namespace.</span>
+<span class="sd">    You can access the python class via the string literal.</span>
+<span class="sd">    The class PhotonElement imports and instantiates the class for you.</span>
+
+<span class="sd">    Example:</span>
+<span class="sd">        ``` python</span>
+<span class="sd">        import os</span>
+<span class="sd">        from photonai.base import PhotonRegistry</span>
+
+<span class="sd">        # REGISTER ELEMENT saved in folder custom_elements_folder</span>
+<span class="sd">        base_folder = os.path.dirname(os.path.abspath(__file__))</span>
+<span class="sd">        custom_elements_folder = os.path.join(base_folder, &#39;custom_elements&#39;)</span>
+
+<span class="sd">        registry = PhotonRegistry(custom_elements_folder=custom_elements_folder)</span>
+<span class="sd">        registry.register(photon_name=&#39;MyCustomEstimator&#39;,</span>
+<span class="sd">                          class_str=&#39;custom_estimator.CustomEstimator&#39;,</span>
+<span class="sd">                          element_type=&#39;Estimator&#39;)</span>
+
+<span class="sd">        registry.activate()</span>
+<span class="sd">        registry.info(&#39;MyCustomEstimator&#39;)</span>
+
+<span class="sd">        # get informations of other available elements</span>
+<span class="sd">        registry.info(&#39;SVC&#39;)</span>
+<span class="sd">        ```</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">ELEMENT_DICTIONARY</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+    <span class="n">PHOTON_REGISTRIES</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;PhotonCore&#39;</span><span class="p">]</span>
+    <span class="n">CUSTOM_ELEMENTS_FOLDER</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="n">CUSTOM_ELEMENTS</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_elements_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Initialize the object.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            custom_elements_folder:</span>
+<span class="sd">                Path to folder with custom element in it.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getfile</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">())))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">module_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span><span class="p">,</span> <span class="s2">&quot;modules&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">)</span>
+
+        <span class="c1"># update list with available sub_elements</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_list_available_modules</span><span class="p">()</span>
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span> <span class="o">=</span> <span class="n">custom_elements_folder</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_load_custom_folder</span><span class="p">(</span><span class="n">custom_elements_folder</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> \
+                <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span> <span class="o">==</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">:</span>
+            <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">())</span>
+
+    <span class="k">def</span> <span class="nf">_list_available_modules</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">abs_filename</span> <span class="ow">in</span> <span class="n">glob</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">,</span> <span class="s2">&quot;*.json&quot;</span><span class="p">)):</span>
+            <span class="n">basename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">abs_filename</span><span class="p">)</span>
+            <span class="n">file</span><span class="p">,</span> <span class="n">ext</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">basename</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">file</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">PHOTON_REGISTRIES</span><span class="p">:</span>
+                <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">PHOTON_REGISTRIES</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">file</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">add_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path_to_file</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">filename</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">path_to_file</span><span class="p">)</span>
+        <span class="n">copyfile</span><span class="p">(</span><span class="n">path_to_file</span><span class="p">,</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">,</span> <span class="n">filename</span><span class="p">))</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_list_available_modules</span><span class="p">()</span>
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">delete_module</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">module_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">PHOTON_REGISTRIES</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">module_name</span><span class="p">)</span>
+        <span class="n">os</span><span class="o">.</span><span class="n">remove</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">,</span> <span class="n">module_name</span> <span class="o">+</span> <span class="s2">&quot;.json&quot;</span><span class="p">))</span>
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">()</span>
+
+    <span class="k">def</span> <span class="nf">_load_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Load JSON file in which the elements for the PHOTON submodule are stored.</span>
+
+<span class="sd">        The JSON files are stored in the framework folder by the name convention &#39;photon_package.json&#39;</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_package:</span>
+<span class="sd">              The name of the photonai submodule</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            JSON file as dict, file path as str.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">photon_package</span> <span class="o">==</span> <span class="s1">&#39;CustomElements&#39;</span><span class="p">:</span>
+            <span class="n">folder</span> <span class="o">=</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">folder</span><span class="p">:</span>
+                <span class="k">return</span> <span class="p">{}</span>
+        <span class="k">elif</span> <span class="n">photon_package</span> <span class="o">==</span> <span class="s2">&quot;PhotonCore&quot;</span><span class="p">:</span>
+            <span class="n">folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">folder</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">module_path</span>
+
+        <span class="n">file_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">folder</span><span class="p">,</span> <span class="n">photon_package</span> <span class="o">+</span> <span class="s1">&#39;.json&#39;</span><span class="p">)</span>
+        <span class="n">file_content</span> <span class="o">=</span> <span class="p">{}</span>
+
+        <span class="c1"># Reading json</span>
+        <span class="k">try</span><span class="p">:</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">file_name</span><span class="p">,</span> <span class="s1">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="k">try</span><span class="p">:</span>
+                    <span class="n">file_content</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">f</span><span class="p">)</span>
+                <span class="k">except</span> <span class="n">json</span><span class="o">.</span><span class="n">JSONDecodeError</span> <span class="k">as</span> <span class="n">jde</span><span class="p">:</span>
+                    <span class="c1"># handle empty file</span>
+                    <span class="k">if</span> <span class="n">jde</span><span class="o">.</span><span class="n">msg</span> <span class="o">==</span> <span class="s1">&#39;Expecting value&#39;</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Package File &quot;</span> <span class="o">+</span> <span class="n">file_name</span> <span class="o">+</span> <span class="s2">&quot; was empty.&quot;</span><span class="p">)</span>
+                    <span class="k">else</span><span class="p">:</span>
+                        <span class="k">raise</span> <span class="n">jde</span>
+        <span class="k">except</span> <span class="ne">FileNotFoundError</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not find file for &quot;</span> <span class="o">+</span> <span class="n">photon_package</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">file_content</span><span class="p">:</span>
+            <span class="n">file_content</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">return</span> <span class="n">file_content</span>
+
+    <span class="k">def</span> <span class="nf">get_package_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Collect all registered elements from JSON file.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_package:</span>
+<span class="sd">                The names of the PHOTONAI submodules for which</span>
+<span class="sd">                the elements should be retrieved.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">            Dict of registered elements.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">class_info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">photon_package</span><span class="p">:</span>
+
+            <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_json</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+
+            <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
+                <span class="n">class_path</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+                <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">package</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;PhotonCore&quot;</span><span class="p">,</span> <span class="s2">&quot;CustomElements&quot;</span><span class="p">]:</span>
+                    <span class="c1"># try to import something from module.</span>
+                    <span class="c1"># if that fails. drop this shit.</span>
+                    <span class="k">try</span><span class="p">:</span>
+                        <span class="n">imported_module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="n">class_path</span><span class="p">)</span>
+                        <span class="n">desired_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">imported_module</span><span class="p">,</span> <span class="n">class_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:])</span>
+                        <span class="n">custom_element</span> <span class="o">=</span> <span class="n">desired_class</span><span class="p">()</span>
+                    <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not import from package </span><span class="si">{}</span><span class="s2">. Deleting json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">package</span><span class="p">))</span>
+                        <span class="bp">self</span><span class="o">.</span><span class="n">delete_module</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+
+                <span class="n">class_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_path</span><span class="p">,</span> <span class="n">class_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+        <span class="k">return</span> <span class="n">class_info</span>
+
+    <span class="k">def</span> <span class="nf">_load_custom_folder</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_elements_folder</span><span class="p">):</span>
+
+        <span class="k">if</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_custom_folder</span><span class="p">(</span><span class="n">custom_elements_folder</span><span class="p">)</span>
+
+            <span class="c1"># load custom elements from json</span>
+            <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_json</span><span class="p">(</span><span class="s1">&#39;CustomElements&#39;</span><span class="p">)</span>
+            <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">PHOTON_REGISTRIES</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s1">&#39;CustomElements&#39;</span><span class="p">)</span>
+            <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_custom_folder</span><span class="p">(</span><span class="n">custom_folder</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">custom_folder</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating folder </span><span class="si">{}</span><span class="s1">&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">custom_folder</span><span class="p">))</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">makedirs</span><span class="p">(</span><span class="n">custom_folder</span><span class="p">)</span>
+
+        <span class="n">custom_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">custom_folder</span><span class="p">,</span> <span class="s1">&#39;CustomElements.json&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">custom_file</span><span class="p">):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Creating CustomElements.json&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">custom_file</span><span class="p">,</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+                <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">custom_folder</span>
+
+    <span class="k">def</span> <span class="nf">activate</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To activate a custom elements folder, specify a folder when instantiating the registry &quot;</span>
+                             <span class="s2">&quot;module. Example: registry = PhotonRegistry(&#39;/MY/CUSTOM/ELEMENTS/FOLDER) &quot;</span>
+                             <span class="s2">&quot;In case you don&#39;t have any custom models, there is no need to activate the registry.&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t find custom elements folder: </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">))</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">,</span> <span class="s1">&#39;CustomElements.json&#39;</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t find CustomElements.json. Did you register your element first?&quot;</span><span class="p">)</span>
+
+        <span class="c1"># add folder to python path</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Adding custom elements folder to system path...&quot;</span><span class="p">)</span>
+        <span class="n">sys</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">)</span>
+
+        <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">([</span><span class="s1">&#39;CustomElements&#39;</span><span class="p">]))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Successfully activated custom elements!&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">class_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">element_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Save element information to the JSON file.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_name:</span>
+<span class="sd">                The string literal with which you want to access the class.</span>
+
+<span class="sd">            class_str:</span>
+<span class="sd">                The namespace of the class, like in the import statement.</span>
+
+<span class="sd">            element_type:</span>
+<span class="sd">                Can be &#39;Estimator&#39; or &#39;Transformer&#39;</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check if folder exists</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To register an element, specify a custom elements folder when instantiating the registry &quot;</span>
+                             <span class="s2">&quot;module. Example: registry = PhotonRegistry(&#39;/MY/CUSTOM/ELEMENTS/FOLDER)&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">&quot;Estimator&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">&quot;Transformer&quot;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable element_type must be &#39;Estimator&#39; or &#39;Transformer&#39;&quot;</span><span class="p">)</span>
+
+        <span class="n">duplicate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_duplicate</span><span class="p">(</span><span class="n">photon_name</span><span class="o">=</span><span class="n">photon_name</span><span class="p">,</span> <span class="n">class_str</span><span class="o">=</span><span class="n">class_str</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">duplicate</span><span class="p">:</span>
+            <span class="n">python_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">,</span> <span class="n">class_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.py&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">python_file</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t find python file </span><span class="si">{}</span><span class="s2"> in your custom elements folder. &quot;</span>
+                                        <span class="s2">&quot;Please copy your file into this folder first!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">python_file</span><span class="p">))</span>
+            <span class="c1"># add new element</span>
+            <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_str</span><span class="p">,</span> <span class="n">element_type</span>
+
+            <span class="c1"># write back to file</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_to_json</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Adding PipelineElement &#39;</span> <span class="o">+</span> <span class="n">class_str</span> <span class="o">+</span> <span class="s1">&#39; to CustomElements.json as &quot;&#39;</span> <span class="o">+</span> <span class="n">photon_name</span> <span class="o">+</span> <span class="s1">&#39;&quot;.&#39;</span><span class="p">)</span>
+
+            <span class="c1"># activate custom elements</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
+
+            <span class="c1"># check custom element</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running tests on custom element...&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_tests</span><span class="p">(</span><span class="n">photon_name</span><span class="p">,</span> <span class="n">element_type</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Could not register element!&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_run_tests</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">,</span> <span class="n">element_type</span><span class="p">):</span>
+
+        <span class="c1"># this is a sneaky hack to avoid circular imports of PipelineElement</span>
+        <span class="n">imported_module</span> <span class="o">=</span> <span class="n">importlib</span><span class="o">.</span><span class="n">import_module</span><span class="p">(</span><span class="s2">&quot;photonai.base&quot;</span><span class="p">)</span>
+        <span class="n">desired_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">imported_module</span><span class="p">,</span> <span class="s2">&quot;PipelineElement&quot;</span><span class="p">)</span>
+        <span class="n">custom_element</span> <span class="o">=</span> <span class="n">desired_class</span><span class="p">(</span><span class="n">photon_name</span><span class="p">)</span>
+
+        <span class="c1"># check if has fit, transform, predict</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;fit&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Custom element does not implement fit() method.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s1">&#39;Transformer&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;transform&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Custom element does not implement transform() method.&quot;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s1">&#39;Estimator&#39;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="p">,</span> <span class="s1">&#39;predict&#39;</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Custom element does not implement predict() method.&quot;</span><span class="p">)</span>
+
+        <span class="c1"># check if estimator is regressor or classifier</span>
+        <span class="k">if</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s1">&#39;Estimator&#39;</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">custom_element</span><span class="p">,</span> <span class="s1">&#39;_estimator_type&#39;</span><span class="p">):</span>
+                <span class="n">est_type</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">custom_element</span><span class="p">,</span> <span class="s1">&#39;_estimator_type&#39;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">est_type</span> <span class="o">==</span> <span class="s2">&quot;regressor&quot;</span><span class="p">:</span>
+                    <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">elif</span> <span class="n">est_type</span> <span class="o">==</span> <span class="s2">&quot;classifier&quot;</span><span class="p">:</span>
+                    <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_breast_cancer</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element does not specify whether it is a regressor or classifier. &quot;</span>
+                                     <span class="s2">&quot;Is </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">est_type</span><span class="p">))</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Custom element does not specify whether it is a regressor or classifier. &quot;</span>
+                                          <span class="s2">&quot;Consider inheritance from ClassifierMixin or RegressorMixin or set &quot;</span>
+                                          <span class="s2">&quot;_estimator_type manually.&quot;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">X</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">load_boston</span><span class="p">(</span><span class="n">return_X_y</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+        <span class="c1"># try and test functionality</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;covariates&#39;</span><span class="p">:</span> <span class="n">np</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">))}</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># test fit</span>
+            <span class="n">returned_element</span> <span class="o">=</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">fit</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Not able to run tests on fit() method. Test data not compatible.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">e</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">returned_element</span><span class="p">,</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="vm">__class__</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;fit() method does not return self.&quot;</span><span class="p">)</span>
+
+        <span class="k">try</span><span class="p">:</span>
+            <span class="c1"># test transform or predict (if base element does not implement transform method, predict should be called</span>
+            <span class="c1"># by PipelineElement -&gt; so we only need to test transform()</span>
+            <span class="k">if</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">needs_y</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s1">&#39;Estimator&#39;</span><span class="p">:</span>
+                    <span class="k">raise</span> <span class="ne">NotImplementedError</span><span class="p">(</span><span class="s2">&quot;Estimator should not need y.&quot;</span><span class="p">)</span>
+                <span class="n">Xt</span><span class="p">,</span> <span class="n">yt</span><span class="p">,</span> <span class="n">kwargst</span> <span class="o">=</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                <span class="k">if</span> <span class="s1">&#39;covariates&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargst</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element does not correctly transform kwargs although needs_y is True. &quot;</span>
+                                     <span class="s2">&quot;If you change the number of samples in transform(), make sure to transform kwargs &quot;</span>
+                                     <span class="s2">&quot;respectively.&quot;</span><span class="p">)</span>
+                <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargst</span><span class="p">[</span><span class="s1">&#39;covariates&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+                    <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element is not returning the correct number of samples!&quot;</span><span class="p">)</span>
+
+            <span class="k">elif</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">needs_covariates</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s1">&#39;Estimator&#39;</span><span class="p">:</span>
+                    <span class="n">yt</span><span class="p">,</span> <span class="n">kwargst</span> <span class="o">=</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">yt</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element is not returning the correct number of samples!&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Xt</span><span class="p">,</span> <span class="n">kwargst</span> <span class="o">=</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">)</span> <span class="ow">or</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">kwargst</span><span class="p">[</span><span class="s1">&#39;covariates&#39;</span><span class="p">])</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element is not returning the correct number of samples!&quot;</span><span class="p">)</span>
+
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">if</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s1">&#39;Estimator&#39;</span><span class="p">:</span>
+                    <span class="n">yt</span> <span class="o">=</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">predict</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">yt</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">y</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element is not returning the correct number of samples!&quot;</span><span class="p">)</span>
+                <span class="k">else</span><span class="p">:</span>
+                    <span class="n">Xt</span> <span class="o">=</span> <span class="n">custom_element</span><span class="o">.</span><span class="n">base_element</span><span class="o">.</span><span class="n">transform</span><span class="p">(</span><span class="n">X</span><span class="p">)</span>
+                    <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">Xt</span><span class="p">)</span> <span class="o">==</span> <span class="nb">len</span><span class="p">(</span><span class="n">X</span><span class="p">):</span>
+                        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element is not returning the correct number of samples!&quot;</span><span class="p">)</span>
+
+        <span class="k">except</span> <span class="ne">ValueError</span> <span class="k">as</span> <span class="n">ve</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s2">&quot;too many values to unpack&quot;</span> <span class="ow">in</span> <span class="n">ve</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">]:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Custom element does not return X, y and kwargs the way it should &quot;</span>
+                                          <span class="s2">&quot;according to needs_y and needs_covariates.&quot;</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">ve</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+                <span class="k">return</span> <span class="n">ve</span>
+        <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">e</span><span class="o">.</span><span class="n">args</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Not able to run tests on transform() or predict() method. Test data probably not compatible.&quot;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">e</span>
+
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;All tests on custom element passed.&#39;</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Show information for object that is encoded by this name.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_name:</span>
+<span class="sd">                The string literal which accesses the class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">()</span>  <span class="c1"># load existing json</span>
+
+        <span class="k">if</span> <span class="n">photon_name</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+            <span class="n">element_namespace</span><span class="p">,</span> <span class="n">element_name</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span>
+
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Name: &quot;</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Namespace: &quot;</span> <span class="o">+</span> <span class="n">element_namespace</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
+
+            <span class="k">try</span><span class="p">:</span>
+                <span class="n">imported_module</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">element_namespace</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">element_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+                <span class="n">desired_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">imported_module</span><span class="p">,</span> <span class="n">element_name</span><span class="p">)</span>
+                <span class="n">base_element</span> <span class="o">=</span> <span class="n">desired_class</span><span class="p">()</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Possible Hyperparameters as derived from constructor:&quot;</span><span class="p">)</span>
+                <span class="n">class_args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">base_element</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">more_info</span> <span class="ow">in</span> <span class="n">class_args</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">more_info</span><span class="p">)))</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
+            <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
+                <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not instantiate class &quot;</span> <span class="o">+</span> <span class="n">element_namespace</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not find element &quot;</span> <span class="o">+</span> <span class="n">photon_name</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Delete Element from JSON file.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_name:</span>
+<span class="sd">                The string literal encoding the class.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">photon_name</span> <span class="ow">in</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">:</span>
+            <span class="k">del</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_write_to_json</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing the PipelineElement named &quot;</span><span class="si">{0}</span><span class="s1">&quot; from CustomElements.json.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Cannot remove &quot;</span><span class="si">{0}</span><span class="s1">&quot; from CustomElements.json. Element has not been registered before.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
+
+    <span class="nd">@staticmethod</span>
+    <span class="k">def</span> <span class="nf">_check_duplicate</span><span class="p">(</span><span class="n">photon_name</span><span class="p">,</span> <span class="n">class_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">content</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">bool</span><span class="p">:</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Helper function to check if the entry is either registered by</span>
+<span class="sd">        a different name or if the name is already given to another class.</span>
+
+<span class="sd">         Parameters:</span>
+<span class="sd">            content:</span>
+<span class="sd">                The content of the CustomElements.json.</span>
+
+<span class="sd">            class_str:</span>
+<span class="sd">                The namespace.Classname, where the class lives,</span>
+<span class="sd">                from where it should be imported.</span>
+
+<span class="sd">            photon_name:</span>
+<span class="sd">                The name of the element with which it is called within PHOTONAI.</span>
+
+<span class="sd">        Returns:</span>
+<span class="sd">             False if there is no key with this name and the class</span>
+<span class="sd">             is not already registered with another key.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># check for duplicate name (dict key)</span>
+        <span class="k">if</span> <span class="n">photon_name</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;A PipelineElement named &#39;</span> <span class="o">+</span> <span class="n">photon_name</span> <span class="o">+</span> <span class="s1">&#39; has already been registered.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+
+        <span class="c1"># check for duplicate class_str</span>
+        <span class="k">if</span> <span class="nb">any</span><span class="p">(</span><span class="n">class_str</span> <span class="ow">in</span> <span class="s1">&#39;.&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="n">s</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">s</span><span class="p">[</span><span class="mi">1</span><span class="p">]])</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">content</span><span class="o">.</span><span class="n">values</span><span class="p">()):</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;The Class named &#39;</span> <span class="o">+</span> <span class="n">class_str</span> <span class="o">+</span> <span class="s1">&#39; has already been registered.&#39;</span><span class="p">)</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">return</span> <span class="kc">False</span>
+
+    <span class="k">def</span> <span class="nf">_write_to_json</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">content_to_write</span><span class="p">:</span> <span class="nb">dict</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Write json content to file</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            content2write:</span>
+<span class="sd">                The new information to attach to the file.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="c1"># Writing JSON data</span>
+        <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">,</span> <span class="s2">&quot;CustomElements.json&quot;</span><span class="p">),</span> <span class="s1">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+            <span class="n">json</span><span class="o">.</span><span class="n">dump</span><span class="p">(</span><span class="n">content_to_write</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">list_available_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">        Print info about all items that are registered for the PHOTONAI</span>
+<span class="sd">        submodule to the console.</span>
+
+<span class="sd">        Parameters:</span>
+<span class="sd">            photon_package:</span>
+<span class="sd">                The names of the PHOTON submodules for which</span>
+<span class="sd">                the elements should be retrieved.</span>
+
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">photon_package</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">photon_package</span> <span class="o">=</span> <span class="p">[</span><span class="n">photon_package</span><span class="p">]</span>
+        <span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">photon_package</span><span class="p">:</span>
+            <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_json</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">package</span><span class="p">)</span>
+                <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">content</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
+                    <span class="n">class_info</span><span class="p">,</span> <span class="n">package_type</span> <span class="o">=</span> <span class="n">v</span>
+                    <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2"> </span><span class="si">{:&lt;5}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">class_info</span><span class="p">,</span> <span class="n">package_type</span><span class="p">))</span>
+</code></pre></div>
+        </details>
+
+
+
+  <div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.__init__">
 <code class="highlight language-python"><span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_elements_folder</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span></code>
 
   <span class="doc doc-properties">
       <small class="doc doc-property doc-property-special"><code>special</code></small>
   </span>
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Initialize the object.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Initialize the object.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>custom_elements_folder</code></td>
-<td><code>str</code></td>
-<td>
-<p>Path to folder with custom element in it.</p>
-</td>
-<td><code>None</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>custom_elements_folder</code></td>
+        <td><code>str</code></td>
+        <td><p>Path to folder with custom element in it.</p></td>
+        <td><code>None</code></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_elements_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="fm">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">custom_elements_folder</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Initialize the object.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        custom_elements_folder:</span>
 <span class="sd">            Path to folder with custom element in it.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">abspath</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">getfile</span><span class="p">(</span><span class="n">inspect</span><span class="o">.</span><span class="n">currentframe</span><span class="p">())))</span>
-    <span class="bp">self</span><span class="o">.</span><span class="n">module_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span><span class="p">,</span> <span class="s2">"modules"</span><span class="p">)</span>
+    <span class="bp">self</span><span class="o">.</span><span class="n">module_path</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">current_folder</span><span class="p">,</span> <span class="s2">&quot;modules&quot;</span><span class="p">)</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">):</span>
         <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">module_path</span><span class="p">)</span>
 
@@ -1940,118 +2637,126 @@ The class PhotonElement imports and instantiates the class for you.</p>
     <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> \
             <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span> <span class="o">==</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">:</span>
         <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">ELEMENT_DICTIONARY</span><span class="o">.</span><span class="n">update</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">())</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.delete">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.delete">
 <code class="highlight language-python"><span class="n">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Delete Element from JSON file.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Delete Element from JSON file.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>photon_name</code></td>
-<td><code>str</code></td>
-<td>
-<p>The string literal encoding the class.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>photon_name</code></td>
+        <td><code>str</code></td>
+        <td><p>The string literal encoding the class.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">delete</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Delete Element from JSON file.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        photon_name:</span>
 <span class="sd">            The string literal encoding the class.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="n">photon_name</span> <span class="ow">in</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">:</span>
         <span class="k">del</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span>
 
         <span class="bp">self</span><span class="o">.</span><span class="n">_write_to_json</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Removing the PipelineElement named "</span><span class="si">{0}</span><span class="s1">" from CustomElements.json.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Removing the PipelineElement named &quot;</span><span class="si">{0}</span><span class="s1">&quot; from CustomElements.json.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Cannot remove "</span><span class="si">{0}</span><span class="s1">" from CustomElements.json. Element has not been registered before.'</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Cannot remove &quot;</span><span class="si">{0}</span><span class="s1">&quot; from CustomElements.json. Element has not been registered before.&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">photon_name</span><span class="p">))</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
 <h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.get_package_info">
+<code class="highlight language-python"><span class="n">get_package_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;PhotonCore&#39;</span><span class="p">])</span></code>
 
-<code class="highlight language-python"><span class="n">get_package_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="o">=</span><span class="p">[</span><span class="s1">'PhotonCore'</span><span class="p">])</span></code>
 
+</h2>
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Collect all registered elements from JSON file.</p>
+    <div class="doc doc-contents ">
+
+      <p>Collect all registered elements from JSON file.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>photon_package</code></td>
-<td><code>list</code></td>
-<td>
-<p>The names of the PHOTONAI submodules for which
-the elements should be retrieved.</p>
-</td>
-<td><code>['PhotonCore']</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>photon_package</code></td>
+        <td><code>list</code></td>
+        <td><p>The names of the PHOTONAI submodules for which
+the elements should be retrieved.</p></td>
+        <td><code>[&#39;PhotonCore&#39;]</code></td>
+      </tr>
+  </tbody>
 </table>
 <p><strong>Returns:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Type</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>dict</code></td>
-<td>
-<p>Dict of registered elements.</p>
-</td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Type</th>
+      <th>Description</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><code>dict</code></td>
+      <td><p>Dict of registered elements.</p></td>
+    </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">get_package_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">get_package_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">dict</span><span class="p">:</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Collect all registered elements from JSON file.</span>
 
 <span class="sd">    Parameters:</span>
@@ -2062,7 +2767,7 @@ the elements should be retrieved.</p>
 <span class="sd">    Returns:</span>
 <span class="sd">        Dict of registered elements.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">class_info</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
     <span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">photon_package</span><span class="p">:</span>
 
@@ -2071,7 +2776,7 @@ the elements should be retrieved.</p>
         <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">key</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">content</span><span class="p">):</span>
             <span class="n">class_path</span><span class="p">,</span> <span class="n">class_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">splitext</span><span class="p">(</span><span class="n">content</span><span class="p">[</span><span class="n">key</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
 
-            <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">package</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">"PhotonCore"</span><span class="p">,</span> <span class="s2">"CustomElements"</span><span class="p">]:</span>
+            <span class="k">if</span> <span class="n">idx</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">package</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s2">&quot;PhotonCore&quot;</span><span class="p">,</span> <span class="s2">&quot;CustomElements&quot;</span><span class="p">]:</span>
                 <span class="c1"># try to import something from module.</span>
                 <span class="c1"># if that fails. drop this shit.</span>
                 <span class="k">try</span><span class="p">:</span>
@@ -2080,124 +2785,134 @@ the elements should be retrieved.</p>
                     <span class="n">custom_element</span> <span class="o">=</span> <span class="n">desired_class</span><span class="p">()</span>
                 <span class="k">except</span> <span class="p">(</span><span class="ne">AttributeError</span><span class="p">,</span> <span class="ne">ModuleNotFoundError</span><span class="p">)</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
                     <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Could not import from package </span><span class="si">{}</span><span class="s2">. Deleting json."</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">package</span><span class="p">))</span>
+                    <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not import from package </span><span class="si">{}</span><span class="s2">. Deleting json.&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">package</span><span class="p">))</span>
                     <span class="bp">self</span><span class="o">.</span><span class="n">delete_module</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
 
             <span class="n">class_info</span><span class="p">[</span><span class="n">key</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_path</span><span class="p">,</span> <span class="n">class_name</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
     <span class="k">return</span> <span class="n">class_info</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.info">
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.info">
 <code class="highlight language-python"><span class="n">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Show information for object that is encoded by this name.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Show information for object that is encoded by this name.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>photon_name</code></td>
-<td><code>str</code></td>
-<td>
-<p>The string literal which accesses the class.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>photon_name</code></td>
+        <td><code>str</code></td>
+        <td><p>The string literal which accesses the class.</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Show information for object that is encoded by this name.</span>
 
 <span class="sd">    Parameters:</span>
 <span class="sd">        photon_name:</span>
 <span class="sd">            The string literal which accesses the class.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_package_info</span><span class="p">()</span>  <span class="c1"># load existing json</span>
 
     <span class="k">if</span> <span class="n">photon_name</span> <span class="ow">in</span> <span class="n">content</span><span class="p">:</span>
         <span class="n">element_namespace</span><span class="p">,</span> <span class="n">element_name</span> <span class="o">=</span> <span class="n">content</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span>
 
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------------------"</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Name: "</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"Namespace: "</span> <span class="o">+</span> <span class="n">element_namespace</span><span class="p">)</span>
-        <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------------------"</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Name: &quot;</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Namespace: &quot;</span> <span class="o">+</span> <span class="n">element_namespace</span><span class="p">)</span>
+        <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
 
         <span class="k">try</span><span class="p">:</span>
             <span class="n">imported_module</span> <span class="o">=</span> <span class="nb">__import__</span><span class="p">(</span><span class="n">element_namespace</span><span class="p">,</span> <span class="nb">globals</span><span class="p">(),</span> <span class="nb">locals</span><span class="p">(),</span> <span class="n">element_name</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
             <span class="n">desired_class</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">imported_module</span><span class="p">,</span> <span class="n">element_name</span><span class="p">)</span>
             <span class="n">base_element</span> <span class="o">=</span> <span class="n">desired_class</span><span class="p">()</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">"Possible Hyperparameters as derived from constructor:"</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;Possible Hyperparameters as derived from constructor:&quot;</span><span class="p">)</span>
             <span class="n">class_args</span> <span class="o">=</span> <span class="n">inspect</span><span class="o">.</span><span class="n">signature</span><span class="p">(</span><span class="n">base_element</span><span class="o">.</span><span class="fm">__init__</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">item</span><span class="p">,</span> <span class="n">more_info</span> <span class="ow">in</span> <span class="n">class_args</span><span class="o">.</span><span class="n">parameters</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">more_info</span><span class="p">)))</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s2">"----------------------------------"</span><span class="p">)</span>
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">item</span><span class="p">,</span> <span class="nb">str</span><span class="p">(</span><span class="n">more_info</span><span class="p">)))</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;----------------------------------&quot;</span><span class="p">)</span>
         <span class="k">except</span> <span class="ne">Exception</span> <span class="k">as</span> <span class="n">e</span><span class="p">:</span>
             <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="n">e</span><span class="p">)</span>
-            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Could not instantiate class "</span> <span class="o">+</span> <span class="n">element_namespace</span> <span class="o">+</span> <span class="s2">"."</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
+            <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not instantiate class &quot;</span> <span class="o">+</span> <span class="n">element_namespace</span> <span class="o">+</span> <span class="s2">&quot;.&quot;</span> <span class="o">+</span> <span class="n">element_name</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">"Could not find element "</span> <span class="o">+</span> <span class="n">photon_name</span><span class="p">)</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s2">&quot;Could not find element &quot;</span> <span class="o">+</span> <span class="n">photon_name</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
+
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
 <h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.list_available_elements">
+<code class="highlight language-python"><span class="n">list_available_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;PhotonCore&#39;</span><span class="p">])</span></code>
 
-<code class="highlight language-python"><span class="n">list_available_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="o">=</span><span class="p">[</span><span class="s1">'PhotonCore'</span><span class="p">])</span></code>
 
+</h2>
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Print info about all items that are registered for the PHOTONAI
+    <div class="doc doc-contents ">
+
+      <p>Print info about all items that are registered for the PHOTONAI
 submodule to the console.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>photon_package</code></td>
-<td><code>list</code></td>
-<td>
-<p>The names of the PHOTON submodules for which
-the elements should be retrieved.</p>
-</td>
-<td><code>['PhotonCore']</code></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>photon_package</code></td>
+        <td><code>list</code></td>
+        <td><p>The names of the PHOTON submodules for which
+the elements should be retrieved.</p></td>
+        <td><code>[&#39;PhotonCore&#39;]</code></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">list_available_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">list_available_elements</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_package</span><span class="p">:</span> <span class="nb">list</span> <span class="o">=</span> <span class="n">PHOTON_REGISTRIES</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Print info about all items that are registered for the PHOTONAI</span>
 <span class="sd">    submodule to the console.</span>
 
@@ -2206,72 +2921,73 @@ the elements should be retrieved.</p>
 <span class="sd">            The names of the PHOTON submodules for which</span>
 <span class="sd">            the elements should be retrieved.</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">photon_package</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
         <span class="n">photon_package</span> <span class="o">=</span> <span class="p">[</span><span class="n">photon_package</span><span class="p">]</span>
     <span class="k">for</span> <span class="n">package</span> <span class="ow">in</span> <span class="n">photon_package</span><span class="p">:</span>
         <span class="n">content</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_load_json</span><span class="p">(</span><span class="n">package</span><span class="p">)</span>
         <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">content</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
-            <span class="nb">print</span><span class="p">(</span><span class="s1">'</span><span class="se">\n</span><span class="s1">'</span> <span class="o">+</span> <span class="n">package</span><span class="p">)</span>
+            <span class="nb">print</span><span class="p">(</span><span class="s1">&#39;</span><span class="se">\n</span><span class="s1">&#39;</span> <span class="o">+</span> <span class="n">package</span><span class="p">)</span>
             <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="nb">sorted</span><span class="p">(</span><span class="n">content</span><span class="o">.</span><span class="n">items</span><span class="p">()):</span>
                 <span class="n">class_info</span><span class="p">,</span> <span class="n">package_type</span> <span class="o">=</span> <span class="n">v</span>
-                <span class="nb">print</span><span class="p">(</span><span class="s2">"</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2"> </span><span class="si">{:&lt;5}</span><span class="s2">"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">class_info</span><span class="p">,</span> <span class="n">package_type</span><span class="p">))</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-<div class="doc doc-object doc-method">
-<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.register">
+                <span class="nb">print</span><span class="p">(</span><span class="s2">&quot;</span><span class="si">{:&lt;35}</span><span class="s2"> </span><span class="si">{:&lt;75}</span><span class="s2"> </span><span class="si">{:&lt;5}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">k</span><span class="p">,</span> <span class="n">class_info</span><span class="p">,</span> <span class="n">package_type</span><span class="p">))</span>
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+  <div class="doc doc-object doc-method">
+
+
+
+<h2 class="doc doc-heading" id="photonai.base.registry.registry.PhotonRegistry.register">
 <code class="highlight language-python"><span class="n">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">,</span> <span class="n">class_str</span><span class="p">,</span> <span class="n">element_type</span><span class="p">)</span></code>
 
 
-      </h2>
-<div class="doc doc-contents ">
-<p>Save element information to the JSON file.</p>
+</h2>
+
+    <div class="doc doc-contents ">
+
+      <p>Save element information to the JSON file.</p>
+
 <p><strong>Parameters:</strong></p>
 <table>
-<thead>
-<tr>
-<th>Name</th>
-<th>Type</th>
-<th>Description</th>
-<th>Default</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>photon_name</code></td>
-<td><code>str</code></td>
-<td>
-<p>The string literal with which you want to access the class.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>class_str</code></td>
-<td><code>str</code></td>
-<td>
-<p>The namespace of the class, like in the import statement.</p>
-</td>
-<td><em>required</em></td>
-</tr>
-<tr>
-<td><code>element_type</code></td>
-<td><code>str</code></td>
-<td>
-<p>Can be 'Estimator' or 'Transformer'</p>
-</td>
-<td><em>required</em></td>
-</tr>
-</tbody>
+  <thead>
+    <tr>
+      <th>Name</th>
+      <th>Type</th>
+      <th>Description</th>
+      <th>Default</th>
+    </tr>
+  </thead>
+  <tbody>
+      <tr>
+        <td><code>photon_name</code></td>
+        <td><code>str</code></td>
+        <td><p>The string literal with which you want to access the class.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>class_str</code></td>
+        <td><code>str</code></td>
+        <td><p>The namespace of the class, like in the import statement.</p></td>
+        <td><em>required</em></td>
+      </tr>
+      <tr>
+        <td><code>element_type</code></td>
+        <td><code>str</code></td>
+        <td><p>Can be 'Estimator' or 'Transformer'</p></td>
+        <td><em>required</em></td>
+      </tr>
+  </tbody>
 </table>
-<details class="quote">
+        <details class="quote">
           <summary>Source code in <code>photonai/base/registry/registry.py</code></summary>
-          <div class="highlight">
-<pre><span></span><code><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">class_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">element_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
-    <span class="sd">"""</span>
+          <div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">register</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">photon_name</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">class_str</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="n">element_type</span><span class="p">:</span> <span class="nb">str</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
 <span class="sd">    Save element information to the JSON file.</span>
 
 <span class="sd">    Parameters:</span>
@@ -2282,125 +2998,125 @@ the elements should be retrieved.</p>
 <span class="sd">            The namespace of the class, like in the import statement.</span>
 
 <span class="sd">        element_type:</span>
-<span class="sd">            Can be 'Estimator' or 'Transformer'</span>
+<span class="sd">            Can be &#39;Estimator&#39; or &#39;Transformer&#39;</span>
 
-<span class="sd">    """</span>
+<span class="sd">    &quot;&quot;&quot;</span>
     <span class="c1"># check if folder exists</span>
     <span class="k">if</span> <span class="ow">not</span> <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"To register an element, specify a custom elements folder when instantiating the registry "</span>
-                         <span class="s2">"module. Example: registry = PhotonRegistry('/MY/CUSTOM/ELEMENTS/FOLDER)"</span><span class="p">)</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;To register an element, specify a custom elements folder when instantiating the registry &quot;</span>
+                         <span class="s2">&quot;module. Example: registry = PhotonRegistry(&#39;/MY/CUSTOM/ELEMENTS/FOLDER)&quot;</span><span class="p">)</span>
 
-    <span class="k">if</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">"Estimator"</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">"Transformer"</span><span class="p">:</span>
-        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">"Variable element_type must be 'Estimator' or 'Transformer'"</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">&quot;Estimator&quot;</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">element_type</span> <span class="o">==</span> <span class="s2">&quot;Transformer&quot;</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Variable element_type must be &#39;Estimator&#39; or &#39;Transformer&#39;&quot;</span><span class="p">)</span>
 
     <span class="n">duplicate</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_check_duplicate</span><span class="p">(</span><span class="n">photon_name</span><span class="o">=</span><span class="n">photon_name</span><span class="p">,</span> <span class="n">class_str</span><span class="o">=</span><span class="n">class_str</span><span class="p">,</span> <span class="n">content</span><span class="o">=</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
 
     <span class="k">if</span> <span class="ow">not</span> <span class="n">duplicate</span><span class="p">:</span>
-        <span class="n">python_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">,</span> <span class="n">class_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">'.'</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">'.py'</span><span class="p">)</span>
+        <span class="n">python_file</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS_FOLDER</span><span class="p">,</span> <span class="n">class_str</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s1">&#39;.&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="s1">&#39;.py&#39;</span><span class="p">)</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">isfile</span><span class="p">(</span><span class="n">python_file</span><span class="p">):</span>
-            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">"Couldn't find python file </span><span class="si">{}</span><span class="s2"> in your custom elements folder. "</span>
-                                    <span class="s2">"Please copy your file into this folder first!"</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">python_file</span><span class="p">))</span>
+            <span class="k">raise</span> <span class="ne">FileNotFoundError</span><span class="p">(</span><span class="s2">&quot;Couldn&#39;t find python file </span><span class="si">{}</span><span class="s2"> in your custom elements folder. &quot;</span>
+                                    <span class="s2">&quot;Please copy your file into this folder first!&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">python_file</span><span class="p">))</span>
         <span class="c1"># add new element</span>
         <span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">[</span><span class="n">photon_name</span><span class="p">]</span> <span class="o">=</span> <span class="n">class_str</span><span class="p">,</span> <span class="n">element_type</span>
 
         <span class="c1"># write back to file</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">_write_to_json</span><span class="p">(</span><span class="n">PhotonRegistry</span><span class="o">.</span><span class="n">CUSTOM_ELEMENTS</span><span class="p">)</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">'Adding PipelineElement '</span> <span class="o">+</span> <span class="n">class_str</span> <span class="o">+</span> <span class="s1">' to CustomElements.json as "'</span> <span class="o">+</span> <span class="n">photon_name</span> <span class="o">+</span> <span class="s1">'".'</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s1">&#39;Adding PipelineElement &#39;</span> <span class="o">+</span> <span class="n">class_str</span> <span class="o">+</span> <span class="s1">&#39; to CustomElements.json as &quot;&#39;</span> <span class="o">+</span> <span class="n">photon_name</span> <span class="o">+</span> <span class="s1">&#39;&quot;.&#39;</span><span class="p">)</span>
 
         <span class="c1"># activate custom elements</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">activate</span><span class="p">()</span>
 
         <span class="c1"># check custom element</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">"Running tests on custom element..."</span><span class="p">)</span>
+        <span class="n">logger</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="s2">&quot;Running tests on custom element...&quot;</span><span class="p">)</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_run_tests</span><span class="p">(</span><span class="n">photon_name</span><span class="p">,</span> <span class="n">element_type</span><span class="p">)</span>
     <span class="k">else</span><span class="p">:</span>
-        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">'Could not register element!'</span><span class="p">)</span>
-</code></pre>
-</div>
-</details>
-</div>
-</div>
-</div>
-</div>
-</div>
-                
-              
-              
-                
+        <span class="n">logger</span><span class="o">.</span><span class="n">error</span><span class="p">(</span><span class="s1">&#39;Could not register element!&#39;</span><span class="p">)</span>
+</code></pre></div>
+        </details>
+    </div>
 
+  </div>
+
+
+
+
+
+  </div>
+
+    </div>
+
+  </div>
 
               
             </article>
+            
           </div>
         </div>
+        
       </main>
       
-        
-<footer class="md-footer">
+        <footer class="md-footer">
   
-    <div class="md-footer-nav">
-      <nav class="md-footer-nav__inner md-grid" aria-label="Footer">
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
         
-          <a href="../preprocessing/" class="md-footer-nav__link md-footer-nav__link--prev" rel="prev">
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"/></svg>
+        <a href="../preprocessing/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Preprocessing" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Preprocessing
             </div>
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Previous
-                </span>
-                Preprocessing
-              </div>
-            </div>
-          </a>
+          </div>
+        </a>
+      
+      
         
-        
-          <a href="../stack/" class="md-footer-nav__link md-footer-nav__link--next" rel="next">
-            <div class="md-footer-nav__title">
-              <div class="md-ellipsis">
-                <span class="md-footer-nav__direction">
-                  Next
-                </span>
-                Stack
-              </div>
+        <a href="../stack/" class="md-footer__link md-footer__link--next" aria-label="Next: Stack" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Stack
             </div>
-            <div class="md-footer-nav__button md-icon">
-              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"/></svg>
-            </div>
-          </a>
-        
-      </nav>
-    </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
   
   <div class="md-footer-meta md-typeset">
     <div class="md-footer-meta__inner md-grid">
-      <div class="md-footer-copyright">
-        
-        Made with
-        <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
-          Material for MkDocs
-        </a>
-      </div>
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
       
     </div>
   </div>
 </footer>
       
     </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    <script id="__config" type="application/json">{"base": "../../..", "features": ["navigation.tabs"], "search": "../../../assets/javascripts/workers/search.b97dbffb.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
     
-      <script src="../../../assets/javascripts/vendor.18f0862e.min.js"></script>
-      <script src="../../../assets/javascripts/bundle.994580cf.min.js"></script><script id="__lang" type="application/json">{"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing"}</script>
-      
-      <script>
-        app = initialize({
-          base: "../../..",
-          features: ['navigation.tabs'],
-          search: Object.assign({
-            worker: "../../../assets/javascripts/worker/search.9c0e82ba.min.js"
-          }, typeof search !== "undefined" && search)
-        })
-      </script>
+    
+      <script src="../../../assets/javascripts/bundle.6c7ad80a.min.js"></script>
       
     
   </body>
