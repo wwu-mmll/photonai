@@ -439,7 +439,7 @@ class Hyperpipe(BaseEstimator):
                                                           learning_curves_cut=learning_curves_cut)
 
         # ====================== Data ===========================
-        self.data = Hyperpipe.Data()
+        self.data = Hyperpipe.Data(allow_multidim_targets=allow_multidim_targets)
 
         # ====================== Output Folder and Log File Management ===========================
         if output_settings:

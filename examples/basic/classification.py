@@ -17,6 +17,7 @@ my_pipe.add(PipelineElement('StandardScaler'))
 
 my_pipe += PipelineElement('PCA',
                            hyperparameters={'n_components': IntegerRange(10, 30)},
+                           n_components=10,
                            test_disabled=True)
 
 my_pipe += PipelineElement('SVC',
