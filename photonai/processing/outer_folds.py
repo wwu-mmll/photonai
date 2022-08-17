@@ -9,6 +9,7 @@ from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
 from photonai.processing.results_structure import MDBInnerFold, MDBScoreInformation
+from photonai.processing.metrics import Scorer
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer, PhotonMasterOptimizer
 
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -65,6 +66,7 @@ class OuterFoldManager:
                  result_obj=None):
         self.outer_fold_id = outer_fold_id
         self.cross_validation_info = cross_validation_info
+        self.scorer = Scorer(optimization_info.metrics)
         self.optimization_info = optimization_info
         self._pipe = pipe
         self.copy_pipe_fnc = self._pipe.copy_me
@@ -243,6 +245,7 @@ class OuterFoldManager:
                 test_score_mdb = InnerFoldManager.score(optimum_pipe, self._test_X, self._test_y,
                                                         indices=self.cross_validation_info.outer_folds[self.outer_fold_id].test_indices,
                                                         metrics=self.optimization_info.metrics,
+                                                        scorer=self.scorer,
                                                         **self._test_kwargs)
 
                 logger.debug('... scoring training data')
@@ -251,6 +254,7 @@ class OuterFoldManager:
                                                          indices=self.cross_validation_info.outer_folds[self.outer_fold_id].train_indices,
                                                          metrics=self.optimization_info.metrics,
                                                          training=True,
+                                                         scorer=self.scorer,
                                                          **self._validation_kwargs)
 
                 best_config_performance_mdb.training = train_score_mdb
@@ -303,7 +307,8 @@ class OuterFoldManager:
                               self.optimization_info,
                               self.cross_validation_info, self.outer_fold_id, self.constraint_objects,
                               cache_folder=self.cache_folder,
-                              cache_updater=self.cache_updater)
+                              cache_updater=self.cache_updater,
+                              scorer=self.scorer)
 
         # Test the configuration cross validated by inner_cv object
         current_config_mdb = hp.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
@@ -380,7 +385,8 @@ class OuterFoldManager:
                 dummy_y = np.reshape(self._validation_y, (-1, 1))
                 self.dummy_estimator.fit(dummy_y, self._validation_y)
                 train_scores = InnerFoldManager.score(self.dummy_estimator, self._validation_X, self._validation_y,
-                                                      metrics=self.optimization_info.metrics)
+                                                      metrics=self.optimization_info.metrics,
+                                                      scorer=self.scorer)
 
                 # fill result tree with fold information
                 inner_fold = MDBInnerFold()
@@ -389,7 +395,8 @@ class OuterFoldManager:
                 if self.cross_validation_info.use_test_set:
                     test_scores = InnerFoldManager.score(self.dummy_estimator,
                                                          self._test_X, self._test_y,
-                                                         metrics=self.optimization_info.metrics)
+                                                         metrics=self.optimization_info.metrics,
+                                                         scorer=self.scorer)
                     print_metrics("DUMMY", test_scores.metrics)
                     inner_fold.validation = test_scores
 

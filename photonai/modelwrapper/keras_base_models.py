@@ -1,13 +1,13 @@
 import warnings
 import numpy as np
-import keras
+import tensorflow.keras as keras
 from typing import Union
-from keras.utils.all_utils import to_categorical
-from keras.layers import Dropout, Dense
-from keras.layers import BatchNormalization
-from keras.models import Sequential
-from keras.optimizers import Optimizer, adam_v2, rmsprop_v2, adadelta_v2, adagrad_v2, adamax_v2, nadam_v2, gradient_descent_v2
-from keras.activations import softmax, softplus, selu, sigmoid, softsign, hard_sigmoid, elu, relu, tanh, \
+from tensorflow.keras.utils import to_categorical
+from tensorflow.keras.layers import Dropout, Dense
+from tensorflow.keras.layers import BatchNormalization
+from tensorflow.keras.models import Sequential
+from tensorflow.keras.optimizers import Optimizer, Adam, RMSprop, Adadelta, Adagrad, Adamax, Nadam, SGD
+from tensorflow.keras.activations import softmax, softplus, selu, sigmoid, softsign, hard_sigmoid, elu, relu, tanh, \
     linear, exponential
 from sklearn.base import ClassifierMixin, RegressorMixin
 
@@ -15,13 +15,13 @@ from photonai.photonlogger.logger import logger
 from photonai.modelwrapper.keras_base_estimator import KerasBaseEstimator
 
 __supported_optimizers__ = {
-    'sgd': gradient_descent_v2.SGD,
-    'rmsprop': rmsprop_v2.RMSprop,
-    'adagrad': adagrad_v2.Adagrad,
-    'adadelta': adadelta_v2.Adadelta,
-    'adam': adam_v2.Adam,
-    'adamax': adamax_v2.Adamax,
-    'nadam': nadam_v2.Nadam
+    'sgd': SGD,
+    'rmsprop': RMSprop,
+    'adagrad': Adagrad,
+    'adadelta': Adadelta,
+    'adam': Adam,
+    'adamax': Adamax,
+    'nadam': Nadam
 }
 __supported_activations__ = {
     'softmax': softmax,

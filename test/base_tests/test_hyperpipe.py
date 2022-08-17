@@ -13,8 +13,7 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline as SKLPipeline
 from sklearn.preprocessing import StandardScaler
-from sklearn.inspection import permutation_importance
-from keras.metrics import Accuracy
+from tensorflow.keras.metrics import Accuracy
 
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
     Switch, ParallelBranch
@@ -252,6 +251,27 @@ class HyperpipeTests(PhotonBaseTest):
             hp.get_permutation_feature_importances(n_repeats=5)
         with self.assertRaises(ValueError):
             hp._calculate_permutation_importances(n_repeats=5)
+
+
+    def test_get_permutation_feature_importances_post_hoc(self):
+
+        hp = Hyperpipe('god',
+                       outer_cv=KFold(n_splits=3),
+                       inner_cv=KFold(n_splits=2),
+                       metrics=self.metrics,
+                       best_config_metric=self.best_config_metric,
+                       project_folder=self.tmp_folder_path,
+                       verbosity=0)
+        svc = PipelineElement('SVC')
+        hp += svc
+        hp.fit(self.__X, self.__y)
+        f_importances_prior = hp.get_permutation_feature_importances(n_repeats=5, random_state=42)
+
+        reloaded_hyperpipe = Hyperpipe.reload_hyperpipe(hp.results.output_folder, self.__X, self.__y)
+        f_importances_post = reloaded_hyperpipe.get_permutation_feature_importances(n_repeats=5, random_state=42)
+
+        np.testing.assert_almost_equal(f_importances_prior["mean"], f_importances_post["mean"])
+        np.testing.assert_almost_equal(f_importances_prior["std"], f_importances_post["std"])
 
     def test_estimation_type(self):
         def callback(X, y=None, **kwargs):

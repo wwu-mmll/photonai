@@ -46,13 +46,13 @@ class ScorerTest(unittest.TestCase):
         Handle all given metrics with a scorer call.
         """
         for implemented_metric in self.all_implemented_metrics:
-            self.assertIsInstance(Scorer.calculate_metrics([1, 1, 0, 1],
+            self.assertIsInstance(Scorer([implemented_metric]).calculate_metrics([1, 1, 0, 1],
                                                            [0, 1, 0, 1],
                                                            [implemented_metric])[implemented_metric], float)
 
         for not_implemented_metric in self.some_not_implemented_metrics:
             with self.assertRaises(NameError):
-                np.testing.assert_equal(Scorer.calculate_metrics(
+                np.testing.assert_equal(Scorer(list(self.all_implemented_metrics)).calculate_metrics(
                     [1, 1, 0, 1], [0, 1, 0, 1], [not_implemented_metric])[not_implemented_metric], np.nan)
 
     def test_doubled_custom_metric(self):

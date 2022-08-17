@@ -305,9 +305,9 @@ class Hyperpipe(BaseEstimator):
                     - "grid_search": Optimizer that iteratively tests all possible hyperparameter combinations.
                     - "random_grid_search": A variation of the grid search optimization that randomly picks
                         hyperparameter combinations from all possible hyperparameter combinations.
-                    - "sk_opt": Scikit-Optimize based on theories of Baysian optimization.
+                    - "sk_opt": Scikit-Optimize based on theories of bayesian optimization.
                     - "random_search": randomly chooses hyperparameter from grid-free domain.
-                    - "smac": SMAC based on theories of Baysian optimization.
+                    - "smac": SMAC based on theories of bayesian optimization.
                     - "nevergrad": Nevergrad based on theories of evolutionary learning.
 
                 - In case an object is given:
@@ -359,7 +359,7 @@ class Hyperpipe(BaseEstimator):
 
             test_size:
                 The amount of the data that should be left out if no outer_cv is given and
-                eval_final_perfomance is set to True.
+                eval_final_performance is set to True.
 
             calculate_metrics_per_fold:
                 If True, the metrics are calculated for each inner_fold.
@@ -377,11 +377,11 @@ class Hyperpipe(BaseEstimator):
                 gives only warn and error, 1 gives adds info and 2 adds debug.
 
             learning_curves:
-                Enables larning curve procedure. Evaluate learning process over
+                Enables learning curve procedure. Evaluate learning process over
                 different sizes of input. Depends on learning_curves_cut.
 
             learning_curves_cut:
-                The tested relativ cuts for data size.
+                The tested relative cuts for data size.
 
             performance_constraints:
                 Objects that indicate whether a configuration should
@@ -947,11 +947,8 @@ class Hyperpipe(BaseEstimator):
     # ===================================================================
 
     @staticmethod
-    def fit_outer_folds(outer_fold_computer, X, y, kwargs, cache_folder):
-        try:
-            outer_fold_computer.fit(X, y, **kwargs)
-        finally:
-            CacheManager.clear_cache_files(cache_folder)
+    def fit_outer_folds(outer_fold_computer, X, y, kwargs):
+        outer_fold_computer.fit(X, y, **kwargs)
         return
 
     def fit(self, data: np.ndarray, targets: np.ndarray, **kwargs):
@@ -1046,8 +1043,7 @@ class Hyperpipe(BaseEstimator):
                         result = dask.delayed(Hyperpipe.fit_outer_folds)(outer_fold_computer,
                                                                          self.data.X,
                                                                          self.data.y,
-                                                                         self.data.kwargs,
-                                                                         self.cache_folder)
+                                                                         self.data.kwargs)
                         delayed_jobs.append(result)
                     else:
                         try:
@@ -1066,7 +1062,8 @@ class Hyperpipe(BaseEstimator):
                 # evaluate hyperparameter optimization results for best config
                 self._finalize_optimization()
 
-                # clear complete cache ?
+                # clear complete cache ? use self.cache_folder to delete all subfolders within the parent cache folder
+                # directory
                 CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
             ###############################################################################################
@@ -1218,7 +1215,7 @@ class Hyperpipe(BaseEstimator):
                 no_outer_cv_indices = False
                 if outer_fold.best_config.best_config_score is None:
                     no_outer_cv_indices = True
-                if outer_fold.best_config.best_config_score.training is None or not outer_fold.best_config.best_config_score.training.indices:
+                elif outer_fold.best_config.best_config_score.training is None or not outer_fold.best_config.best_config_score.training.indices:
                     no_outer_cv_indices = True
 
                 if no_outer_cv_indices:
@@ -1275,6 +1272,7 @@ class Hyperpipe(BaseEstimator):
         logger.stars()
 
         return {'mean': mean_importances, 'std': std_importances}
+
 
     def inverse_transform_pipeline(self, hyperparameters: dict,
                                    data: np.ndarray,
@@ -1380,6 +1378,20 @@ class Hyperpipe(BaseEstimator):
 
         """
         return PhotonModelPersistor.load_optimum_pipe(file, password)
+
+    @staticmethod
+    def reload_hyperpipe(results_folder, X, y, **data_kwargs):
+
+        res_handler = ResultsHandler()
+        res_handler.load_from_file(os.path.join(results_folder, "photon_result_file.json"))
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(os.path.join(results_folder, "photon_best_model.photon"))
+
+        new_hyperpipe = JsonTransformer().from_json_file(os.path.join(results_folder, "hyperpipe_config.json"))
+        new_hyperpipe.results = res_handler.results
+        new_hyperpipe.optimum_pipe = loaded_optimum_pipe
+        new_hyperpipe.data = Hyperpipe.Data(X, y, data_kwargs)
+
+        return new_hyperpipe
 
     def __repr__(self, **kwargs):
         """Overwrite BaseEstimator's function to avoid errors when using Jupyter Notebooks."""

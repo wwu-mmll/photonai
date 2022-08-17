@@ -10,12 +10,12 @@
 
 #### PHOTONAI is a high level python API for designing and optimizing machine learning pipelines.
 
-We create a system in which you can easily select and combine both pre-processing and learning algorithms from
+We've created a system in which you can easily select and combine both pre-processing and learning algorithms from
 state-of-the-art machine learning toolboxes,
  and arrange them in simple or parallel pipeline data streams. 
  
  In addition, you can parametrize your training and testing
- workflow choosing cross-validation schemas, performance metrics and hyperparameter
+ workflow choosing cross-validation schemes, performance metrics and hyperparameter
  optimization metrics from a list of pre-registered options. 
  
  Importantly, you can integrate custom solutions into your data processing pipeline, 
@@ -25,7 +25,7 @@ state-of-the-art machine learning toolboxes,
 For a detailed description, 
 __[visit our website and read the documentation](https://www.photon-ai.com)__
 
-or you can read a prolonged introduction on [Arxiv](https://arxiv.org/abs/2002.05426)
+or you can read our paper in [PLOS ONE](https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0254062)
 
 
 

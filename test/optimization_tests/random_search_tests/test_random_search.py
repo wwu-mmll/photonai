@@ -34,14 +34,15 @@ class RandomSearchOptimizerTest(GridSearchOptimizerTest):
             RandomSearchOptimizer(n_configurations=-1, limit_in_minutes=-1)
 
     def test_time_limit(self):
-        self.optimizer = RandomSearchOptimizer(limit_in_minutes=0.05)  # 3 seconds
+        self.optimizer = RandomSearchOptimizer(limit_in_minutes=1/60.)  # 1 second
         self.optimizer.prepare(pipeline_elements=self.pipeline_elements, maximize_metric=True)
-        configs = []
-        start = time.time()
-        for config in self.optimizer.ask:
-            configs.append(config)
-        stop = time.time()
-        self.assertAlmostEqual(stop-start, 3, 0)
+        config_iter = iter(self.optimizer.ask)
+        c1 = next(config_iter)
+        self.assertTrue(type(c1) == dict)
+        time.sleep(2)
+
+        with self.assertRaises(StopIteration):
+            config2 = next(config_iter)
 
     def test_run(self):
         pass

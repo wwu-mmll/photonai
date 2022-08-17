@@ -139,6 +139,11 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(csv_file.y_true.values, self.y_true))
         self.assertTrue(np.array_equal(csv_file.probabilities.values, self.y_true / 10))
 
+        training_preds = self.hyperpipe.results_handler.get_mean_train_predictions()
+        self.assertTrue(np.array_equal(training_preds['y_true'], self.y_true))
+        self.assertTrue(np.array_equal(training_preds['y_pred'], self.y_true))
+        self.assertTrue(np.array_equal(training_preds['indices'], range(len(self.X))))
+
     def test_get_predictions_no_outer_cv_eval_final_performance_false(self):
         self.hyperpipe += PipelineElement('PhotonTestXPredictor')
         self.hyperpipe.cross_validation.outer_cv = None

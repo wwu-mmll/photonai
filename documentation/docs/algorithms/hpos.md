@@ -32,6 +32,11 @@ pipe = Hyperpipe("...",
                                    'limit_in_minutes': 20})
 ```
 
+If the `optimizer_params` contain a time and numerical limit, both limits are
+considered by aborting if either of the limits is met.
+
+The default limit for Random Search is `n_configurations=10`.
+
 <h3>Scikit-Optimize</h3>
 Scikit-Optimize, or skopt, is a simple and efficient library to
 minimize (very) expensive and noisy black-box functions.
