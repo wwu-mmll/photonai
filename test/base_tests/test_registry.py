@@ -29,6 +29,7 @@ class RegistryTest(PhotonBaseTest):
 
     def test_register_without_custom_folder(self):
         registry = PhotonRegistry()
+        PhotonRegistry.CUSTOM_ELEMENTS_FOLDER = None
         with self.assertRaises(ValueError):
             registry.register('SomeName', 'not_existing_file.SomeName', 'Estimator')
 
