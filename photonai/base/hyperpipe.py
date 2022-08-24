@@ -805,13 +805,14 @@ class Hyperpipe(BaseEstimator):
                                                     'BestConfigMetric': self.optimization.best_config_metric}
 
         # add json file of hyperpipe attributes
-        try:
-            json_transformer = JsonTransformer()
-            json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
-        except:
-            msg = "JsonTransformer was unable to create the .json file."
-            logger.warning(msg)
-            warnings.warn(msg)
+        if self.output_settings.save_output:
+            try:
+                json_transformer = JsonTransformer()
+                json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
+            except:
+                msg = "JsonTransformer was unable to create the .json file."
+                logger.warning(msg)
+                warnings.warn(msg)
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
