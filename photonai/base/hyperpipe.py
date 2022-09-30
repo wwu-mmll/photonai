@@ -1354,9 +1354,11 @@ class Hyperpipe(BaseEstimator):
                 pipe_copy += element.copy_me()
         return pipe_copy
 
-    def save_optimum_pipe(self, filename=None, password=None):
-        if filename is None:
-            filename = "photon_" + self.name + "_best_model.p"
+    def save_optimum_pipe(self, dirname=None, password=None):
+        if dirname is None:
+            filename = "photon_best_model.photon"
+        else:
+            filename = os.path.join(dirname, "photon_best_model.photon")
         PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, filename, password)
 
     @staticmethod
