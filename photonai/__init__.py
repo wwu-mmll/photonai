@@ -13,6 +13,8 @@ It also enables you to persist and load your optimal model, including all prepro
 
 """
 
-__version__ = '2.2.1'
+from pbr.version import VersionInfo
+from base import Hyperpipe, OutputSettings, Stack, Switch, Branch, PipelineElement, ParallelBranch, PhotonRegistry
 
-# __all__ = ( )
+# Check the PBR version module docs for other options than release_string()
+__version__ = VersionInfo('<my_package>').release_string()
