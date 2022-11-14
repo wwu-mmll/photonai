@@ -32,7 +32,7 @@ jobs:
 #        sudo apt-get -y install gfortran swig
     - name: Install dependencies
       run: |
-        pip install wheel flake8 
+        pip install wheel flake8 pbr
         python setup.py egg_info
         pip install tensorflow pytest pytest-cov coveralls -r photonai.egg-info/requires.txt -r photonai/optimization/smac/requirements.txt -r photonai/optimization/nevergrad/requirements.txt
     - name: Test with pytest

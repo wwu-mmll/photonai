@@ -15,7 +15,7 @@ jobs:
       with:
         python-version: 3.7.6
     - name: Install pypa/build
-      run: pip install build
+      run: pip install build pbr
     - name: Build a binary wheel and a source tarball
       run: python -m build --sdist --wheel --outdir dist/ .
     - name: Publish distribution to Test PyPI
