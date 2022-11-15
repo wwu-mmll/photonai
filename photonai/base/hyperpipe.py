@@ -1001,7 +1001,7 @@ class Hyperpipe(BaseEstimator):
         if self.nr_of_processes > 1:
             hyperpipe_client = Client(threads_per_worker=1,
                                       n_workers=self.nr_of_processes,
-                                      processes=self.multi_threading)
+                                      processes=(not self.multi_threading))
 
         try:
             # check data
