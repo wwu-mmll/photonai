@@ -14,3 +14,4 @@ dask>=2021.10.0
 distributed
 scikit-optimize
 xlrd
+pbr
