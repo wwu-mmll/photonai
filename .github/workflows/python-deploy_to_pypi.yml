@@ -7,13 +7,13 @@ on:
 jobs:
   deploy:
     name: Build and publish to PyPI
-    runs-on: ubuntu-18.04
+    runs-on: ubuntu-22.04
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.7.6
+    - name: Set up Python 3.10.8
       uses: actions/setup-python@v4
       with:
-        python-version: 3.7.6
+        python-version: 3.10.8
     - name: Install pypa/build
       run: pip install build pbr wheel
     - name: Build a binary wheel and a source tarball

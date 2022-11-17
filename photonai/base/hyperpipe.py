@@ -284,6 +284,7 @@ class Hyperpipe(BaseEstimator):
                  permutation_id: str = None,
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
+                 multi_threading: bool = True,
                  allow_multidim_targets: bool = False):
         """
         Initialize the object.
@@ -397,6 +398,9 @@ class Hyperpipe(BaseEstimator):
             nr_of_processes:
                 Determined the amount of simultaneous calculation of outer_folds.
 
+            multi_threading:
+                If true dask is used in multi threading mode, if false multi processing
+
             allow_multidim_targets:
                 Allows multidimensional targets.
 
@@ -483,6 +487,7 @@ class Hyperpipe(BaseEstimator):
 
         # ====================== Caching and Parallelization ===========================
         self.nr_of_processes = nr_of_processes
+        self.multi_threading = multi_threading
         if cache_folder:
             self.cache_folder = os.path.join(cache_folder, self.name)
         else:
@@ -994,7 +999,9 @@ class Hyperpipe(BaseEstimator):
 
         # loop over outer cross validation
         if self.nr_of_processes > 1:
-            hyperpipe_client = Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
+            hyperpipe_client = Client(threads_per_worker=1,
+                                      n_workers=self.nr_of_processes,
+                                      processes=(not self.multi_threading))
 
         try:
             # check data
