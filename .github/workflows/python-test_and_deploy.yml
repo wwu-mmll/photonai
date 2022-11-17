@@ -47,17 +47,12 @@ jobs:
     name: Build and publish to TestPyPI
     runs-on: ubuntu-22.04
     needs: pytest
-    if: github.ref == 'refs/heads/master'
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.10.8
       uses: actions/setup-python@v4
       with:
         python-version: 3.10.8
-    - name: Replace version number with commit hash
-      run: |
-        dt=$(date '+%Y.%m.%d.%H.%M.%S')
-        sed -i "s/^__version__.*/__version__ = '$dt'/g" setup.py
     - name: Install pypa/build
       run: pip install build pbr wheel
     - name: Build a binary wheel and a source tarball
