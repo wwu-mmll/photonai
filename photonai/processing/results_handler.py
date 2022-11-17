@@ -23,7 +23,7 @@ from photonai.photonlogger.logger import logger
 from photonai.helper.helper import print_metrics, print_estimator_metrics, print_config_list_table, print_outer_folds
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
-from photonai.__init__ import __version__
+from photonai.version import __version__
 
 
 class ResultsHandler:
