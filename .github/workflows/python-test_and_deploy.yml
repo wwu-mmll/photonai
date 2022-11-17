@@ -47,6 +47,7 @@ jobs:
     name: Build and publish to TestPyPI
     runs-on: ubuntu-22.04
     needs: pytest
+    if: github.ref == 'refs/heads/master'
     steps:
     - uses: actions/checkout@v3
       with:
