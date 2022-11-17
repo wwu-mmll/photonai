@@ -12,9 +12,8 @@ After PHOTON has found the best configuration for your model, it offers a conven
 It also enables you to persist and load your optimal model, including all preprocessing elements, with only one line of code.
 
 """
+from .version import __version__
 
-from pbr.version import VersionInfo
 from .base import Hyperpipe, OutputSettings, Stack, Switch, Branch, PipelineElement, ParallelBranch, PhotonRegistry
 
-# Check the PBR version module docs for other options than release_string()
-__version__ = VersionInfo('<my_package>').release_string()
+

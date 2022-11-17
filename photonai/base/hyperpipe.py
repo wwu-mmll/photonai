@@ -23,7 +23,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
 from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
 from sklearn.inspection import permutation_importance
-from pbr.version import VersionInfo
+from photonai.version import __version__
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
     PhotonNative
@@ -760,7 +760,7 @@ class Hyperpipe(BaseEstimator):
 
     def _prepare_result_logging(self, start_time):
 
-        self.results = MDBHyperpipe(name=self.name, version=VersionInfo('<my_package>').release_string())
+        self.results = MDBHyperpipe(name=self.name, version=__version__)
         self.results.hyperpipe_info = MDBHyperpipeInfo()
 
         # in case eval final performance is false, we have no outer fold predictions
@@ -1496,7 +1496,7 @@ class PhotonModelPersistor:
 
         # write meta infos from pipeline
         with open(os.path.join(folder, '_optimum_pipe_meta.pkl'), 'wb') as f:
-            meta_infos = {'photon_version': VersionInfo('<my_package>').release_string()}
+            meta_infos = {'photon_version': __version__}
             pickle.dump(meta_infos, f)
 
         # get all files

@@ -23,7 +23,7 @@ from photonai.photonlogger.logger import logger
 from photonai.helper.helper import print_metrics, print_estimator_metrics, print_config_list_table, print_outer_folds
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
-from pbr.version import VersionInfo
+from photonai.version import __version__
 
 
 class ResultsHandler:
@@ -954,7 +954,7 @@ Hyperparameter Optimizer: {}
 {}
 
 """.format(print_outer_folds(self.results.hyperpipe_info.metrics, self.results.outer_folds, summary=True))
-        output_string += divider("PHOTONAI {} ".format(VersionInfo('<my_package>').release_string()))
+        output_string += divider("PHOTONAI {} ".format(__version__))
 
         if self.output_settings.results_folder is not None:
             output_string += "\nYour results are stored in " + self.output_settings.results_folder + "\n"
