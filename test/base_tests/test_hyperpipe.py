@@ -143,6 +143,23 @@ class HyperpipeTests(PhotonBaseTest):
             targets = np.random.randint(0, 1, (500, 2))
             self.hyperpipe.fit(data, targets)
 
+    def test_imbalanced_data_sanity(self):
+        self.hyperpipe = Hyperpipe('god',
+                                   inner_cv=self.inner_cv_object,
+                                   metrics=['sensitivity', 'specificity', 'balanced_accuracy', 'accuracy'],
+                                   best_config_metric='accuracy',
+                                   project_folder=self.tmp_folder_path)
+        self.hyperpipe += self.ss_pipe_element
+        self.hyperpipe.add(self.svc_pipe_element)
+        X = np.random.random((100, 10))
+        y = np.zeros((100, ))
+        y[90::] = 1
+        with self.assertRaises(ValueError):
+            self.hyperpipe.fit(X, y)
+
+        self.hyperpipe.ignore_sanity_checks = True
+        self.hyperpipe.fit(X, y)
+
     def test_hyperpipe_with_custom_metric(self):
 
         def custom_metric(y_true, y_pred):

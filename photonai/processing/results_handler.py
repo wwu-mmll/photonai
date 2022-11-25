@@ -775,14 +775,19 @@ class ResultsHandler:
             self.write_predictions_file()
 
     def convert_to_json_serializable(self, value):
-        if isinstance(value, (int, np.int32, np.int64)):
-            return int(value)
-        if isinstance(value, (float, np.float32, np.float64)):
-            if self.output_settings.reduce_space:
-                return round(float(value), 3)
-            return float(value)
-        else:
-            return json_util.default(value)
+        try:
+            if isinstance(value, (int, np.int32, np.int64)):
+                return int(value)
+            if isinstance(value, (float, np.float32, np.float64)):
+                if self.output_settings.round_results:
+                    return round(float(value), 4)
+                return float(value)
+            else:
+                return json_util.default(value)
+        except TypeError:
+            # if the object is not natively serializable we convert it to string and hope the toString method returns
+            # the right information.
+            return str(value)
 
     def write_result_tree_to_file(self):
         try:
