@@ -2,9 +2,7 @@ import os
 from sklearn.model_selection import KFold, ShuffleSplit
 from sklearn.datasets import load_boston
 
-from photonai.base import Hyperpipe, PipelineElement, Switch
-from photonai.optimization import FloatRange, IntegerRange
-from photonai.processing import ResultsHandler
+from photonai import Hyperpipe, PipelineElement, Switch, FloatRange, IntegerRange, ResultsHandler
 
 X, y = load_boston(return_X_y=True)
 

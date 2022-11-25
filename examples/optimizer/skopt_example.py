@@ -1,8 +1,7 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
 
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import FloatRange, Categorical
+from photonai import Hyperpipe, PipelineElement, FloatRange, Categorical
 
 # WE USE THE BOSTON HOUSING DATA FROM SKLEARN
 X, y = load_boston(return_X_y=True)

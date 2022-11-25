@@ -1,8 +1,8 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, OutputSettings
-from photonai.optimization import MinimumPerformanceConstraint, DummyPerformanceConstraint, BestPerformanceConstraint, IntegerRange
+from photonai import Hyperpipe, PipelineElement, MinimumPerformanceConstraint, \
+    DummyPerformanceConstraint, BestPerformanceConstraint, IntegerRange
 
 import matplotlib.pyplot as plt
 

@@ -1,7 +1,7 @@
 import json
 from sklearn.datasets import load_breast_cancer
 
-from photonai.base.json_transformer import JsonTransformer
+from photonai import JsonTransformer
 
 metadata = """
 {

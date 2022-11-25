@@ -68,8 +68,12 @@ class PhotonRegistry:
 
         # update list with available sub_elements
         self._list_available_modules()
-        PhotonRegistry.CUSTOM_ELEMENTS_FOLDER = custom_elements_folder
-        self._load_custom_folder(custom_elements_folder)
+        if PhotonRegistry.CUSTOM_ELEMENTS_FOLDER is not None and custom_elements_folder is None:
+            logger.info(f"Keeping custom elements folder {PhotonRegistry.CUSTOM_ELEMENTS_FOLDER}")
+        else:
+            PhotonRegistry.CUSTOM_ELEMENTS_FOLDER = custom_elements_folder
+
+        self._load_custom_folder(PhotonRegistry.CUSTOM_ELEMENTS_FOLDER)
 
         if len(PhotonRegistry.ELEMENT_DICTIONARY) == 0 or \
                 PhotonRegistry.ELEMENT_DICTIONARY == PhotonRegistry.CUSTOM_ELEMENTS:

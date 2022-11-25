@@ -23,7 +23,7 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
 from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
 from sklearn.inspection import permutation_importance
-from photonai.__init__ import __version__
+from photonai.version import __version__
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
     PhotonNative
@@ -53,6 +53,7 @@ class OutputSettings:
                  save_output: bool = True,
                  overwrite_results: bool = False,
                  generate_best_model: bool = True,
+                 round_results: bool = False,
                  user_id: str = '',
                  wizard_object_id: str = '',
                  wizard_project_name: str = '',
@@ -73,6 +74,9 @@ class OutputSettings:
             generate_best_model:
                 Determines whether an optimum_pipe should be created and fitted.
                 If False, no dependent files are created.
+
+            round_results:
+                Rounds numeric results to 4 decimal points in order to reduce the size of the output file.
 
             user_id:
                The user name of the according PHOTONAI Wizard login.
@@ -95,6 +99,7 @@ class OutputSettings:
             raise DeprecationWarning(msg)
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
+        self.round_results = round_results
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
@@ -275,6 +280,7 @@ class Hyperpipe(BaseEstimator):
                  project_folder: str = '',
                  calculate_metrics_per_fold: bool = True,
                  calculate_metrics_across_folds: bool = False,
+                 ignore_sanity_checks: bool = False,
                  random_seed: int = None,
                  verbosity: int = 0,
                  learning_curves: bool = False,
@@ -284,6 +290,7 @@ class Hyperpipe(BaseEstimator):
                  permutation_id: str = None,
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
+                 multi_threading: bool = True,
                  allow_multidim_targets: bool = False):
         """
         Initialize the object.
@@ -369,6 +376,10 @@ class Hyperpipe(BaseEstimator):
                 If True, the metrics are calculated across all inner_fold.
                 If False, calculate_metrics_per_fold must be True.
 
+            ignore_sanity_checks:
+                If True, photonai will not verify use cases such as:
+                    - classification, imbalanced classes and best_config_metric set to "accuracy"
+
             random_seed:
                 Random Seed.
 
@@ -396,6 +407,9 @@ class Hyperpipe(BaseEstimator):
 
             nr_of_processes:
                 Determined the amount of simultaneous calculation of outer_folds.
+
+            multi_threading:
+                If true dask is used in multi threading mode, if false multi processing
 
             allow_multidim_targets:
                 Allows multidimensional targets.
@@ -483,13 +497,14 @@ class Hyperpipe(BaseEstimator):
 
         # ====================== Caching and Parallelization ===========================
         self.nr_of_processes = nr_of_processes
+        self.multi_threading = multi_threading
         if cache_folder:
             self.cache_folder = os.path.join(cache_folder, self.name)
         else:
             self.cache_folder = None
 
         # ====================== Internals ===========================
-
+        self.ignore_sanity_checks = ignore_sanity_checks
         self.permutation_id = permutation_id
         self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
@@ -498,6 +513,7 @@ class Hyperpipe(BaseEstimator):
         self.random_state = random_seed
         if random_seed is not None:
             import random
+            # Todo: seed numpy here?
             random.seed(random_seed)
 
     # ===================================================================
@@ -805,13 +821,30 @@ class Hyperpipe(BaseEstimator):
                                                     'BestConfigMetric': self.optimization.best_config_metric}
 
         # add json file of hyperpipe attributes
-        try:
-            json_transformer = JsonTransformer()
-            json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
-        except:
-            msg = "JsonTransformer was unable to create the .json file."
-            logger.warning(msg)
-            warnings.warn(msg)
+        if self.output_settings.save_output:
+            try:
+                json_transformer = JsonTransformer()
+                json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
+            except:
+                msg = "JsonTransformer was unable to create the .json file."
+                logger.warning(msg)
+                warnings.warn(msg)
+
+    def check_for_imbalanced_data(self):
+        if self.estimation_type == 'classifier':
+            targets = np.unique(self.data.y)
+            num_classes = len(targets)
+            logger.photon_system_log("Found {} target classes: {}".format(num_classes, targets))
+            if num_classes == 2:
+                percent_of_first_class = np.sum(self.data.y == targets[0])/len(self.data.y)
+                if percent_of_first_class > 0.7 or percent_of_first_class < 0.35:
+                    logger.photon_system_log("Target classes are imbalanced: {}% belongs to {}".format(percent_of_first_class * 100,
+                                                                                          targets[0]))
+                    if self.optimization.best_config_metric == "accuracy":
+                        raise ValueError("Found imbalanced classes and best_config_metric for accuracy. In this setup, "
+                                         "your model most probably won't learn anything valuable. Consider using "
+                                         "balanced_accuracy as best_config_metric and/or using a over/undersampling "
+                                         "by adding a PipelineElement('ImbalancedDataTransform')")
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
@@ -993,11 +1026,18 @@ class Hyperpipe(BaseEstimator):
 
         # loop over outer cross validation
         if self.nr_of_processes > 1:
-            hyperpipe_client = Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
+            hyperpipe_client = Client(threads_per_worker=1,
+                                      n_workers=self.nr_of_processes,
+                                      processes=(not self.multi_threading))
 
         try:
             # check data
             self.data.input_data_sanity_checks(data, targets, **kwargs)
+
+            # sanity check data with setup
+            if not self.ignore_sanity_checks:
+                self.check_for_imbalanced_data()
+
             # create photon pipeline
             self._prepare_pipeline()
             # initialize the progress monitors
@@ -1353,10 +1393,12 @@ class Hyperpipe(BaseEstimator):
                 pipe_copy += element.copy_me()
         return pipe_copy
 
-    def save_optimum_pipe(self, filename=None, password=None):
-        if filename is None:
-            filename = "photon_" + self.name + "_best_model.p"
-        PhotonModelPersistor.save_optimum_pipe(self, filename, password)
+    def save_optimum_pipe(self, dirname=None, password=None):
+        if dirname is None:
+            filename = "./photon_best_model.photon"
+        else:
+            filename = os.path.join(dirname, "photon_best_model.photon")
+        PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, filename, password)
 
     @staticmethod
     def load_optimum_pipe(file: str, password: str = None) -> PhotonPipeline:

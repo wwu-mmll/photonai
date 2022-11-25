@@ -3,8 +3,7 @@ from sklearn.model_selection import StratifiedKFold, StratifiedShuffleSplit
 from sklearn.exceptions import UndefinedMetricWarning
 from imblearn.datasets import fetch_datasets
 
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import Categorical
+from photonai import Hyperpipe, PipelineElement, Categorical
 
 # Since we test very imbalanced data, we want to ignore some metric based zero-divisions.
 warnings.filterwarnings("ignore", category=UndefinedMetricWarning)

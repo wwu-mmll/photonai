@@ -143,6 +143,23 @@ class HyperpipeTests(PhotonBaseTest):
             targets = np.random.randint(0, 1, (500, 2))
             self.hyperpipe.fit(data, targets)
 
+    def test_imbalanced_data_sanity(self):
+        self.hyperpipe = Hyperpipe('god',
+                                   inner_cv=self.inner_cv_object,
+                                   metrics=['sensitivity', 'specificity', 'balanced_accuracy', 'accuracy'],
+                                   best_config_metric='accuracy',
+                                   project_folder=self.tmp_folder_path)
+        self.hyperpipe += self.ss_pipe_element
+        self.hyperpipe.add(self.svc_pipe_element)
+        X = np.random.random((100, 10))
+        y = np.zeros((100, ))
+        y[90::] = 1
+        with self.assertRaises(ValueError):
+            self.hyperpipe.fit(X, y)
+
+        self.hyperpipe.ignore_sanity_checks = True
+        self.hyperpipe.fit(X, y)
+
     def test_hyperpipe_with_custom_metric(self):
 
         def custom_metric(y_true, y_pred):
@@ -381,6 +398,19 @@ class HyperpipeTests(PhotonBaseTest):
         y_pred = my_pipe.optimum_pipe.predict(self.__X)
         np.testing.assert_array_equal(y_pred_loaded, y_pred)
 
+        # part2: my_pipe.save_optimum_pipe
+        pipe_dirname = self.tmp_folder_path
+        my_pipe.save_optimum_pipe(pipe_dirname)
+        self.assertTrue(os.path.exists(os.path.join(pipe_dirname, "photon_best_model.photon")))
+
+        # try loading the pipeline
+        second_loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(os.path.join(pipe_dirname, "photon_best_model.photon"))
+        self.assertIsNotNone(second_loaded_optimum_pipe._meta_information)
+        self.assertIsNotNone(second_loaded_optimum_pipe._meta_information['photon_version'])
+
+        self.assertEqual(second_loaded_optimum_pipe.elements[0][0], 'Preprocessing')
+
+
     def test_save_optimum_pipe_custom_element(self):
         tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')
         settings = OutputSettings(overwrite_results=True)
@@ -404,6 +434,14 @@ class HyperpipeTests(PhotonBaseTest):
         # check if we have the meta information recovered
         loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(model_path)
         self.assertIsNotNone(loaded_optimum_pipe._meta_information)
+
+        # part 2:
+        my_pipe.save_optimum_pipe(self.tmp_folder_path)
+        self.assertTrue(os.path.exists(os.path.join(self.tmp_folder_path, "photon_best_model.photon")))
+
+        second_loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(os.path.join(self.tmp_folder_path,
+                                                                              "photon_best_model.photon"))
+        self.assertIsNotNone(second_loaded_optimum_pipe._meta_information)
 
     def test_failure_to_save_optimum_pipe(self):
         tmp_path = os.path.join(self.tmp_folder_path, 'optimum_pipypipe')

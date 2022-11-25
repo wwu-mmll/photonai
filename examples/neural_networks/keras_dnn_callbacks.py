@@ -2,7 +2,7 @@ from sklearn.datasets import fetch_openml
 from sklearn.model_selection import KFold
 from keras.callbacks import EarlyStopping
 
-from photonai.base import Hyperpipe, PipelineElement
+from photonai import Hyperpipe, PipelineElement
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = fetch_openml('mnist_784', version=1, return_X_y=True)
