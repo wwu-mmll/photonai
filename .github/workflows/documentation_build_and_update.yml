@@ -27,9 +27,7 @@ jobs:
         run: pip install .
 
       - name: Build docs
-        run: |
-          cd documentation
-          PYTHONPATH=.. mkdocs build
+        run:  mkdocs build
   deploy:
     name: Deploy docs
     runs-on: ubuntu-latest
@@ -55,6 +53,4 @@ jobs:
         run: pip install .
 
       - name: Deploy docs
-        run: |
-          cd documentation
-          PYTHONPATH=.. mkdocs gh-deploy --force
+        run: mkdocs gh-deploy --force
