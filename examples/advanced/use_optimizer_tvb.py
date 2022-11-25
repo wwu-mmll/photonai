@@ -1,8 +1,6 @@
-from photonai.optimization import RandomSearchOptimizer, IntegerRange, FloatRange, Categorical
-from photonai.base import PipelineElement, Hyperpipe
+from photonai import RandomSearchOptimizer, IntegerRange, FloatRange, Categorical, PipelineElement, Hyperpipe
 from sklearn.base import BaseEstimator, ClassifierMixin
 from scipy.stats import pearsonr
-import pandas as pd
 import numpy as np
 
 # ------------------------------------------------------------------------------------------------------

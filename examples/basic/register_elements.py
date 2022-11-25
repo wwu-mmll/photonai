@@ -2,8 +2,7 @@ import os
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, PhotonRegistry
-from photonai.optimization import IntegerRange
+from photonai import Hyperpipe, PipelineElement, PhotonRegistry, IntegerRange
 
 # REGISTER ELEMENT
 base_folder = os.path.dirname(os.path.abspath(__file__))

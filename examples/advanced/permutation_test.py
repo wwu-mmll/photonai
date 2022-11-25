@@ -2,7 +2,7 @@ import uuid
 import numpy as np
 from sklearn.datasets import load_breast_cancer
 
-from photonai.processing.permutation_test import PermutationTest
+from photonai import PermutationTest
 
 
 def create_hyperpipe():

@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement
+from photonai import Hyperpipe, PipelineElement
 
 X, y = load_boston(return_X_y=True)
 

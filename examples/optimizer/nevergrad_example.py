@@ -2,8 +2,7 @@ from sklearn.datasets import load_boston
 from sklearn.model_selection import ShuffleSplit
 import nevergrad as ng
 
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import BooleanSwitch, FloatRange
+from photonai import Hyperpipe, PipelineElement, BooleanSwitch, FloatRange
 
 X, y = load_boston(return_X_y=True)
 
