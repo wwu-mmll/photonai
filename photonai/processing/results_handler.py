@@ -775,25 +775,46 @@ class ResultsHandler:
             self.write_predictions_file()
 
     def convert_to_json_serializable(self, value):
-        if isinstance(value, (int, np.int32, np.int64)):
-            return int(value)
-        if isinstance(value, (float, np.float32, np.float64)):
-            if self.output_settings.reduce_space:
-                return round(float(value), 3)
-            return float(value)
-        else:
-            return json_util.default(value)
+        try:
+            if isinstance(value, (int, np.int32, np.int64)):
+                return int(value)
+            if isinstance(value, (float, np.float32, np.float64)):
+                if self.output_settings.round_results:
+                    return round(float(value), 4)
+                return float(value)
+            else:
+                return json_util.default(value)
+        except TypeError:
+            # if the object is not natively serializable we convert it to string and hope the toString method returns
+            # the right information.
+            return str(value)
 
     def write_result_tree_to_file(self):
         try:
             local_file = os.path.join(self.results.output_folder, 'photon_result_file.json')
-            result = self.round_floats(self.results.to_son().to_dict())
+            result = self.handle_objects(self.round_floats(self.results.to_son().to_dict()))
 
             with open(local_file, 'w') as outfile:
                 json.dump(result, outfile, default=self.convert_to_json_serializable)
         except OSError as e:
             logger.error("Could not write results to local file")
             logger.error(str(e))
+
+    @classmethod
+    def handle_objects(cls, d):
+        # recursive method for
+        result = {}
+        if isinstance(d, dict):
+            for key, value in d.items():
+                value = cls.handle_objects(value)
+                result.update({key: value})
+            return result
+        elif isinstance(d, list):
+            return [cls.handle_objects(val) for val in d]
+        elif isinstance(d, object):
+            return str(d)
+        else:
+            return d
 
     @classmethod
     def round_floats(cls, d):

@@ -53,6 +53,7 @@ class OutputSettings:
                  save_output: bool = True,
                  overwrite_results: bool = False,
                  generate_best_model: bool = True,
+                 round_results: bool = False,
                  user_id: str = '',
                  wizard_object_id: str = '',
                  wizard_project_name: str = '',
@@ -73,6 +74,9 @@ class OutputSettings:
             generate_best_model:
                 Determines whether an optimum_pipe should be created and fitted.
                 If False, no dependent files are created.
+
+            round_results:
+                Rounds numeric results to 4 decimal points in order to reduce the size of the output file.
 
             user_id:
                The user name of the according PHOTONAI Wizard login.
@@ -95,6 +99,7 @@ class OutputSettings:
             raise DeprecationWarning(msg)
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
+        self.round_results = round_results
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
@@ -275,6 +280,7 @@ class Hyperpipe(BaseEstimator):
                  project_folder: str = '',
                  calculate_metrics_per_fold: bool = True,
                  calculate_metrics_across_folds: bool = False,
+                 ignore_sanity_checks: bool = False,
                  random_seed: int = None,
                  verbosity: int = 0,
                  learning_curves: bool = False,
@@ -369,6 +375,10 @@ class Hyperpipe(BaseEstimator):
             calculate_metrics_across_folds:
                 If True, the metrics are calculated across all inner_fold.
                 If False, calculate_metrics_per_fold must be True.
+
+            ignore_sanity_checks:
+                If True, photonai will not verify use cases such as:
+                    - classification, imbalanced classes and best_config_metric set to "accuracy"
 
             random_seed:
                 Random Seed.
@@ -494,7 +504,7 @@ class Hyperpipe(BaseEstimator):
             self.cache_folder = None
 
         # ====================== Internals ===========================
-
+        self.ignore_sanity_checks = ignore_sanity_checks
         self.permutation_id = permutation_id
         self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
@@ -503,6 +513,7 @@ class Hyperpipe(BaseEstimator):
         self.random_state = random_seed
         if random_seed is not None:
             import random
+            # Todo: seed numpy here?
             random.seed(random_seed)
 
     # ===================================================================
@@ -819,6 +830,22 @@ class Hyperpipe(BaseEstimator):
                 logger.warning(msg)
                 warnings.warn(msg)
 
+    def check_for_imbalanced_data(self):
+        if self.estimation_type == 'classifier':
+            targets = np.unique(self.data.y)
+            num_classes = len(targets)
+            logger.photon_system_log("Found {} target classes: {}".format(num_classes, targets))
+            if num_classes == 2:
+                percent_of_first_class = np.sum(self.data.y == targets[0])/len(self.data.y)
+                if percent_of_first_class > 0.7 or percent_of_first_class < 0.35:
+                    logger.photon_system_log("Target classes are imbalanced: {}% belongs to {}".format(percent_of_first_class * 100,
+                                                                                          targets[0]))
+                    if self.optimization.best_config_metric == "accuracy":
+                        raise ValueError("Found imbalanced classes and best_config_metric for accuracy. In this setup, "
+                                         "your model most probably won't learn anything valuable. Consider using "
+                                         "balanced_accuracy as best_config_metric and/or using a over/undersampling "
+                                         "by adding a PipelineElement('ImbalancedDataTransform')")
+
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
         # 1. computing average metrics
@@ -1006,6 +1033,11 @@ class Hyperpipe(BaseEstimator):
         try:
             # check data
             self.data.input_data_sanity_checks(data, targets, **kwargs)
+
+            # sanity check data with setup
+            if not self.ignore_sanity_checks:
+                self.check_for_imbalanced_data()
+
             # create photon pipeline
             self._prepare_pipeline()
             # initialize the progress monitors

@@ -189,6 +189,19 @@ class ResultsHandlerTest(PhotonBaseTest):
         with self.assertRaises(ValueError):
             res_handler.get_validation_predictions('test_predictions')
 
+    def test_crazy_results(self):
+
+        class WeirdResultItem:
+            def __str__(self):
+                return "Item Info"
+        res_handler = ResultsHandler()
+        res_handler.output_settings = OutputSettings(round_results=True)
+        class_json = res_handler.convert_to_json_serializable(WeirdResultItem())
+        self.assertEqual(class_json, str(WeirdResultItem()))
+        nr = 0.342123354
+        number_json = res_handler.convert_to_json_serializable(np.float64(nr))
+        self.assertEqual(number_json, round(nr, 4))
+
     def test_save_all_learning_curves(self):
         """
         Test count of saved learning curve files.
