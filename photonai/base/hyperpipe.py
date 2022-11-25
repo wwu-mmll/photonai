@@ -76,7 +76,7 @@ class OutputSettings:
                 If False, no dependent files are created.
 
             round_results:
-                Rounds numeric results to 4 decimal points in order to reduce the size of the output file.
+                Rounds numeric results to 2 decimal points in order to reduce the size of the output file.
 
             user_id:
                The user name of the according PHOTONAI Wizard login.
