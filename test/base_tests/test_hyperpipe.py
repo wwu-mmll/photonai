@@ -13,7 +13,6 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import KFold
 from sklearn.pipeline import Pipeline as SKLPipeline
 from sklearn.preprocessing import StandardScaler
-# from tensorflow.keras.metrics import Accuracy
 
 from photonai.base import PipelineElement, Hyperpipe, OutputSettings, Preprocessing, CallbackElement, Branch, Stack, \
     Switch, ParallelBranch
@@ -166,6 +165,7 @@ class HyperpipeTests(PhotonBaseTest):
         def custom_metric(y_true, y_pred):
             return 99.9
 
+        from tensorflow.keras.metrics import Accuracy
         self.hyperpipe = Hyperpipe('god', inner_cv=self.inner_cv_object,
                                    metrics=[('custom_metric', custom_metric), 'accuracy'],
                                    best_config_metric=Accuracy,
