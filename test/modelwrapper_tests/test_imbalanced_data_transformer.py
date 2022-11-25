@@ -120,6 +120,7 @@ class ImbalancedDataTransformTest(BaseModelWrapperTest):
                             metrics=['accuracy', target_relative, target_absolute],
                             best_config_metric="accuracy",
                             inner_cv=StratifiedShuffleSplit(n_splits=3, test_size=0.2),
+                            ignore_sanity_checks=True,
                             verbosity=1,
                             project_folder='./tmp/')
 

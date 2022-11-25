@@ -779,8 +779,6 @@ class ResultsHandler:
             if isinstance(value, (int, np.int32, np.int64)):
                 return int(value)
             if isinstance(value, (float, np.float32, np.float64)):
-                if self.output_settings.round_results:
-                    return round(float(value), 4)
                 return float(value)
             else:
                 return json_util.default(value)
@@ -811,23 +809,22 @@ class ResultsHandler:
             return result
         elif isinstance(d, list):
             return [cls.handle_objects(val) for val in d]
-        elif isinstance(d, object):
-            return str(d)
         else:
             return d
 
-    @classmethod
-    def round_floats(cls, d):
+    def round_floats(self, d):
         # recursive method for rounding all floats in result.json
         result = {}
         if isinstance(d, dict):
             for key, value in d.items():
-                value = cls.round_floats(value)
+                value = self.round_floats(value)
                 result.update({key: value})
             return result
         elif isinstance(d, list):
-            return [cls.round_floats(val) for val in d]
+            return [self.round_floats(val) for val in d]
         elif isinstance(d, float):
+            if self.output_settings.round_results:
+                return round(d, 2)
             return round(d, 6)
         else:
             return d

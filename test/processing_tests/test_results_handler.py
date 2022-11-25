@@ -195,12 +195,15 @@ class ResultsHandlerTest(PhotonBaseTest):
             def __str__(self):
                 return "Item Info"
         res_handler = ResultsHandler()
-        res_handler.output_settings = OutputSettings(round_results=True)
         class_json = res_handler.convert_to_json_serializable(WeirdResultItem())
         self.assertEqual(class_json, str(WeirdResultItem()))
+
+    def test_round_results(self):
+        res_handler = ResultsHandler()
+        res_handler.output_settings = OutputSettings(round_results=True)
         nr = 0.342123354
-        number_json = res_handler.convert_to_json_serializable(np.float64(nr))
-        self.assertEqual(number_json, round(nr, 4))
+        number_json = res_handler.round_floats(nr)
+        self.assertEqual(number_json, round(nr, 2))
 
     def test_save_all_learning_curves(self):
         """
