@@ -1,4 +1,4 @@
-from photonai.base import Hyperpipe
+from photonai import Hyperpipe
 from sklearn.datasets import load_breast_cancer
 
 X, _ = load_breast_cancer(True)

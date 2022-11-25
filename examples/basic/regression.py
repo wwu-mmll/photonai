@@ -1,8 +1,7 @@
 from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import IntegerRange, FloatRange
+from photonai import Hyperpipe, PipelineElement, IntegerRange, FloatRange
 
 
 my_pipe = Hyperpipe('basic_regression_pipe',

@@ -5,8 +5,7 @@ from sklearn.model_selection import ShuffleSplit
 from sklearn.metrics.pairwise import rbf_kernel
 from joblib import Memory
 
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import FloatRange
+from photonai import Hyperpipe, PipelineElement, FloatRange
 
 
 cache_dir = './tmp/kernel_cache'

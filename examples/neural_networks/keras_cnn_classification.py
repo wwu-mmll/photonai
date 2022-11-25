@@ -12,8 +12,7 @@ from sklearn.model_selection import StratifiedShuffleSplit
 
 from examples.neural_networks.dataset import load_har
 
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import Categorical
+from photonai import Hyperpipe, PipelineElement, Categorical
 
 dataset_path = data_utils.get_file(
     fname='UCI HAR Dataset.zip',
