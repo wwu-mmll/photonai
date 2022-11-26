@@ -29,6 +29,7 @@ from photonai.base.photon_elements import Stack, Switch, Preprocessing, Callback
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
+from photonai.base.naming import *
 from photonai.helper.helper import PhotonDataHelper
 from photonai.optimization import FloatRange
 from photonai.photonlogger.logger import logger
@@ -123,7 +124,7 @@ class OutputSettings:
     @property
     def setup_error_file(self):
         if self.project_folder:
-            return os.path.join(self.project_folder, 'photon_setup_errors.log')
+            return os.path.join(self.project_folder, 'photonai_setup_errors.log')
         else:
             return ""
 
@@ -147,8 +148,8 @@ class OutputSettings:
             if not os.path.exists(self.results_folder):
                 os.makedirs(self.results_folder)
 
-            if os.path.basename(self.log_file) == "photon_setup_errors.log":
-                self.log_file = 'photon_output.log'
+            if os.path.basename(self.log_file) == "photonai_setup_errors.log":
+                self.log_file = 'photonai_output.log'
             self.log_file = self._add_timestamp(self.log_file)
             self.set_log_file()
 
@@ -824,8 +825,9 @@ class Hyperpipe(BaseEstimator):
         if self.output_settings.save_output:
             try:
                 json_transformer = JsonTransformer()
-                json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
-            except:
+                json_transformer.to_json_file(self,
+                                              os.path.join(self.output_settings.results_folder, HYPERPIPE_CONFIG_FILE))
+            except Exception as e:
                 msg = "JsonTransformer was unable to create the .json file."
                 logger.warning(msg)
                 warnings.warn(msg)
@@ -915,7 +917,7 @@ class Hyperpipe(BaseEstimator):
             if self.output_settings.save_output:
                 try:
                     pretrained_model_filename = os.path.join(self.output_settings.results_folder,
-                                                             'photon_best_model.photon')
+                                                             BEST_MODEL_FILE)
                     PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
                     logger.info("Saved best model to file.")
                 except Exception as e:
@@ -1393,11 +1395,14 @@ class Hyperpipe(BaseEstimator):
                 pipe_copy += element.copy_me()
         return pipe_copy
 
-    def save_optimum_pipe(self, dirname=None, password=None):
-        if dirname is None:
-            filename = "./photon_best_model.photon"
+    def save_optimum_pipe(self, dirname=None, password=None, overwrite_filename=False):
+        if overwrite_filename:
+            # todo: ugly, this is only for unit testing
+            filename = dirname
+        elif dirname is None:
+            filename = "./{}".format(BEST_MODEL_FILE)
         else:
-            filename = os.path.join(dirname, "photon_best_model.photon")
+            filename = os.path.join(dirname, BEST_MODEL_FILE)
         PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, filename, password)
 
     @staticmethod
@@ -1425,10 +1430,27 @@ class Hyperpipe(BaseEstimator):
     def reload_hyperpipe(results_folder, X, y, **data_kwargs):
 
         res_handler = ResultsHandler()
-        res_handler.load_from_file(os.path.join(results_folder, "photon_result_file.json"))
-        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(os.path.join(results_folder, "photon_best_model.photon"))
 
-        new_hyperpipe = JsonTransformer().from_json_file(os.path.join(results_folder, "hyperpipe_config.json"))
+        result_file = os.path.join(results_folder, RESULTS_FILE)
+        if not os.path.isfile(result_file):
+            result_file = os.path.join(results_folder, "photon_result_file.json")
+        if not os.path.isfile(result_file):
+            raise ValueError("Could not find serialized result json? -> 'photonai_results.json',"
+                             "or for old versions 'photon_result_file.json'")
+
+        res_handler.load_from_file(result_file)
+
+        best_model = os.path.join(results_folder, BEST_MODEL_FILE)
+        if not os.path.isfile(best_model):
+            # be downwards compatible
+            best_model = os.path.join(results_folder, 'photon_best_model.photon')
+        if not os.path.isfile(best_model):
+            raise ValueError("Could not find serialized model? -> 'best_model.photonai'"
+                             " or for old versions 'photon_best_model.photon'")
+
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(best_model)
+
+        new_hyperpipe = JsonTransformer().from_json_file(os.path.join(results_folder, HYPERPIPE_CONFIG_FILE))
         new_hyperpipe.results = res_handler.results
         new_hyperpipe.optimum_pipe = loaded_optimum_pipe
         new_hyperpipe.data = Hyperpipe.Data(X, y, data_kwargs)
@@ -1513,8 +1535,10 @@ class PhotonModelPersistor:
                 Password used to encrypt the pipeline file.
 
         """
-        folder = os.path.splitext(zip_file)[0]
-        zip_file = folder + '.photon'
+
+        splitted_file = os.path.splitext(zip_file)
+        folder = splitted_file[0]
+        zip_file = folder + splitted_file[1]
 
         if os.path.exists(folder):
             msg = 'The file you specified already exists as a folder.'
@@ -1527,7 +1551,7 @@ class PhotonModelPersistor:
         PhotonModelPersistor.save_elements([val[1] for val in optimum_pipe.elements], folder)
 
         # write meta infos from pipeline
-        with open(os.path.join(folder, '_optimum_pipe_meta.pkl'), 'wb') as f:
+        with open(os.path.join(folder, META_FILE), 'wb') as f:
             meta_infos = {'photon_version': __version__}
             pickle.dump(meta_infos, f)
 
@@ -1552,7 +1576,7 @@ class PhotonModelPersistor:
 
     @staticmethod
     def load_elements(folder):
-        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'rb') as f:
+        with open(os.path.join(folder, BLUEPRINT_FILE), 'rb') as f:
             setup_info = pickle.load(f)
             element_list = list()
             for element_info in setup_info:
@@ -1614,17 +1638,20 @@ class PhotonModelPersistor:
             Returns pipeline with all trained PipelineElements.
 
         """
-        if file.endswith('.photon'):
+        if file.endswith('.photon') | file.endswith('.photonai'):
             folder = os.path.dirname(file)
             zf = zipfile.ZipFile(file)
             zf.extractall(folder, pwd=password)
         else:
-            raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
+            raise FileNotFoundError('Specify .photonai file that holds PHOTONAI optimum pipe.')
 
-        load_folder = os.path.join(folder, 'photon_best_model')
+        # file name with extension
+        photon_model_name = os.path.splitext(os.path.basename(file))[0]
+        load_folder = os.path.join(folder, photon_model_name)
+
         meta_infos = {}
         try:
-            with open(os.path.join(load_folder, '_optimum_pipe_meta.pkl'), 'rb') as f:
+            with open(os.path.join(load_folder, META_FILE), 'rb') as f:
                 meta_infos = pickle.load(f)
         except:
             print("Could not load meta information for optimum pipe")
@@ -1632,9 +1659,9 @@ class PhotonModelPersistor:
         element_list = PhotonModelPersistor.load_elements(folder=load_folder)
 
         # delete unpacked folder to clean up
-        # ToDo: Don't unpack at all, but use PHOTON file directly
+        # ToDo: Don't unpack at all, but use PHOTONAI file directly
         from shutil import rmtree
-        rmtree(os.path.join(folder, 'photon_best_model'), ignore_errors=True)
+        rmtree(load_folder, ignore_errors=True)
 
         photon_pipe = PhotonPipeline(element_list)
         photon_pipe._meta_information = meta_infos

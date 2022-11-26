@@ -24,6 +24,7 @@ from photonai.helper.helper import print_metrics, print_estimator_metrics, print
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
 from photonai.version import __version__
+from photonai.base.naming import RESULTS_FILE, SUMMARY_FILE, BEST_CONFIG_PREDICTIONS_FILE
 
 
 class ResultsHandler:
@@ -59,7 +60,8 @@ class ResultsHandler:
                 Full path to json file.
 
         """
-        self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
+        with open(results_file, 'r') as rf:
+            self.results = MDBHyperpipe.from_document(json.load(rf))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         """
@@ -768,12 +770,6 @@ class ResultsHandler:
             logger.error("Could not save backmapped feature importances.")
             logger.error(e)
 
-    def write_convenience_files(self):
-        if self.output_settings.save_output:
-            logger.info("Writing summary file, plots and prediction csv to result folder ...")
-            self.write_summary()
-            self.write_predictions_file()
-
     def convert_to_json_serializable(self, value):
         try:
             if isinstance(value, (int, np.int32, np.int64)):
@@ -789,7 +785,8 @@ class ResultsHandler:
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.results.output_folder, 'photon_result_file.json')
+
+            local_file = os.path.join(self.results.output_folder, RESULTS_FILE)
             result = self.handle_objects(self.round_floats(self.results.to_son().to_dict()))
 
             with open(local_file, 'w') as outfile:
@@ -839,7 +836,7 @@ class ResultsHandler:
 
     def write_predictions_file(self):
           if self.output_settings.save_output:
-            filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+            filename = os.path.join(self.output_settings.results_folder, BEST_CONFIG_PREDICTIONS_FILE)
             # usually we write the predictions for the outer fold
             if not self.output_settings.save_predictions_from_best_config_inner_folds:
                 return self.get_test_predictions(filename)
@@ -976,13 +973,13 @@ Hyperparameter Optimizer: {}
 
         if self.output_settings.results_folder is not None:
             output_string += "\nYour results are stored in " + self.output_settings.results_folder + "\n"
-            output_string += "Go to https://explorer.photon-ai.com and upload your photon_result_file.json " \
+            output_string += "Go to https://explorer.photon-ai.com and upload your photonai_results.json " \
                              "for convenient result visualization! \n"
             output_string += "For more info and documentation visit https://www.photon-ai.com"
 
         if self.output_settings.save_output:
             try:
-                summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
+                summary_filename = os.path.join(self.output_settings.results_folder, SUMMARY_FILE)
                 text_file = open(summary_filename, "w")
                 text_file.write(output_string)
                 text_file.close()

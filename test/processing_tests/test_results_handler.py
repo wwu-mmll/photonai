@@ -12,6 +12,7 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from photonai.base import Hyperpipe, OutputSettings
 from photonai.base import PipelineElement, Stack, Switch
+from photonai.base.naming import *
 from photonai.optimization import IntegerRange, FloatRange
 from photonai.processing import ResultsHandler
 from photonai.helper.photon_base_test import PhotonBaseTest
@@ -25,10 +26,11 @@ class ResultsHandlerTest(PhotonBaseTest):
         cls.file = __file__
         super(ResultsHandlerTest, cls).setUpClass()
 
-        cls.files = ['best_config_predictions.csv',
-                     'photon_result_file.json',
-                     'photon_summary.txt',
-                     'photon_best_model.photon']
+        cls.files = [
+            BEST_CONFIG_PREDICTIONS_FILE,
+            RESULTS_FILE,
+            SUMMARY_FILE,
+            BEST_MODEL_FILE]
 
         cls.results_folder = cls.tmp_folder_path
         cls.output_settings = OutputSettings(save_output=True)
@@ -238,7 +240,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
         hyperpipe.fit(self.__X, self.__y)
 
-        results_file = os.path.join(hyperpipe.output_settings.results_folder, "photon_result_file.json")
+        results_file = os.path.join(hyperpipe.output_settings.results_folder, "photonai_results.json")
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)
