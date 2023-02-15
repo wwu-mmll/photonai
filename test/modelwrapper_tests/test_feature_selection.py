@@ -80,7 +80,7 @@ class FeatureSelectionTests(PhotonBaseTest):
 
     def test_LassoFeatureSelection_inverse(self):
         lfs = PipelineElement('LassoFeatureSelection')
-        lfs.fit(self.X_regr[:30], self.y_regr[:30])
+        lfs.fit(self.X_regr, self.y_regr)
         X_selected, _, _ = lfs.transform(self.X_regr)
         X_back, _, _ = lfs.inverse_transform(X_selected)
         self.assertLess(X_selected.shape[1], self.X_regr.shape[1])
