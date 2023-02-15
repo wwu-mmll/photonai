@@ -3,7 +3,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.metrics import mean_absolute_error
 from sklearn.model_selection import KFold
 
@@ -38,7 +38,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                                    verbosity=0)
 
     def test_cv_config_and_dummy_nr(self):
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         self.hyperpipe += PipelineElement('StandardScaler')
         self.hyperpipe += PipelineElement('PCA', {'n_components': IntegerRange(3, 5)})
         self.hyperpipe += PipelineElement('SVR', {'C': FloatRange(0.001, 10, num=5),
@@ -178,7 +178,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
         self.assertTrue(np.array_equal(csv_file.probabilities.values, values_to_expect / 10))
 
     def test_best_config_stays_the_same(self):
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         self.hyperpipe += PipelineElement('StandardScaler')
         self.hyperpipe += PipelineElement('PCA', {'n_components': [4, 5]}, random_state=42)
         self.hyperpipe += PipelineElement('LinearRegression')
@@ -330,7 +330,7 @@ class ResultHandlerAndHelperTests(PhotonBaseTest):
                               project_folder=self.tmp_folder_path)
         hyperpipe += PipelineElement('StandardScaler')
         hyperpipe += PipelineElement('DecisionTreeRegressor')
-        X, y = load_boston(return_X_y=True)
+        X, y = load_diabetes(return_X_y=True)
         hyperpipe.fit(X, y)
 
         exepcted_nr_of_feature_importances = X.shape[1]

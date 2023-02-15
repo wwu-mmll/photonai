@@ -1,10 +1,10 @@
 import os
 from sklearn.model_selection import KFold, ShuffleSplit
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 
 from photonai import Hyperpipe, PipelineElement, Switch, FloatRange, IntegerRange, ResultsHandler
 
-X, y = load_boston(return_X_y=True)
+X, y = load_diabetes(return_X_y=True)
 
 # setup training and test workflow
 my_pipe = Hyperpipe('compare_estimators',

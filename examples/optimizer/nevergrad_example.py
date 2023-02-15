@@ -1,10 +1,10 @@
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.model_selection import ShuffleSplit
 import nevergrad as ng
 
 from photonai import Hyperpipe, PipelineElement, BooleanSwitch, FloatRange
 
-X, y = load_boston(return_X_y=True)
+X, y = load_diabetes(return_X_y=True)
 
 # list of all available nevergrad optimizer
 print(list(ng.optimizers.registry.values()))

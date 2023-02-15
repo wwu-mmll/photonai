@@ -6,7 +6,7 @@ import sys
 from glob import glob
 
 import numpy as np
-from sklearn.datasets import load_breast_cancer, load_boston
+from sklearn.datasets import load_breast_cancer, load_diabetes
 from shutil import copyfile
 
 from photonai.photonlogger.logger import logger
@@ -285,7 +285,7 @@ class PhotonRegistry:
             if hasattr(custom_element, '_estimator_type'):
                 est_type = getattr(custom_element, '_estimator_type')
                 if est_type == "regressor":
-                    X, y = load_boston(return_X_y=True)
+                    X, y = load_diabetes(return_X_y=True)
                 elif est_type == "classifier":
                     X, y = load_breast_cancer(return_X_y=True)
                 else:
@@ -296,7 +296,7 @@ class PhotonRegistry:
                                           "Consider inheritance from ClassifierMixin or RegressorMixin or set "
                                           "_estimator_type manually.")
         else:
-            X, y = load_boston(return_X_y=True)
+            X, y = load_diabetes(return_X_y=True)
 
         # try and test functionality
         kwargs = {'covariates': np.random.randn(len(y))}
