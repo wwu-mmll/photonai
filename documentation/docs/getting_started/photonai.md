@@ -18,7 +18,7 @@
 and many others...
 
 ## Class diagram
-![Basic PHOTONAI class hierachy](https://www.photon-ai.com/static/img/photon/architecture.jpg "PHOTONAI class diagram")
+![Basic PHOTONAI class hierachy](../assets/img/photonai/architecture.jpg "PHOTONAI class diagram")
 
 ## Basic structure 
 The PHOTONAI framework is built to accelerate and simplify the design of machine learning pipelines and automatize the 

@@ -4,4 +4,4 @@
 {% include 'examples/advanced/learning_curves.py' %}
 ```
 
-![PHOTONAI Learning Curve Plot](https://www.photon-ai.com/static/img/photon/learning_curves.png "PHOTONAI learning curve plot")
+![PHOTONAI Learning Curve Plot](../assets/img/photonai/learning_curves.png "PHOTONAI learning curve plot")
