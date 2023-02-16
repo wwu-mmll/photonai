@@ -1,0 +1,56 @@
+name: Update documentation
+on: push
+
+jobs:
+  build:
+    name: Build docs
+    runs-on: ubuntu-latest
+    if: ${{ github.ref != 'refs/heads/main' }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install mkdocs requirements
+        run: pip install mkdocs mkdocs-material pymdown-extensions mkdocstrings-python mkdocs-jupyter jupyter mkdocs-macros-plugin
+
+      - name: Install photonai requirements
+        run: pip install -r requirements.txt
+
+      - name: Install photonai
+        run: pip install .
+
+      - name: Build docs
+        run:  mkdocs build
+  deploy:
+    name: Deploy docs
+    runs-on: ubuntu-latest
+    if: ${{ github.ref == 'refs/heads/main' }}
+    steps:
+      - name: Checkout main
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.9'
+
+      - name: Install mkdocs requirements
+        run: pip install mkdocs mkdocs-material pymdown-extensions mkdocstrings-python mkdocs-jupyter jupyter mkdocs-macros-plugin
+
+      - name: Install photonai requirements
+        run: pip install -r requirements.txt
+
+      - name: Install photonai
+        run: pip install .
+
+      - name: Deploy docs
+        run: mkdocs gh-deploy --force

@@ -1,11 +1,9 @@
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement
-from photonai.optimization import Categorical
+from photonai import Hyperpipe, PipelineElement, Categorical
 
-# WE USE THE Boston_Housing SET FROM SKLEARN
-X, y = load_boston(return_X_y=True)
+X, y = load_diabetes(return_X_y=True)
 
 
 # DESIGN YOUR PIPELINE

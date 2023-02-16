@@ -1,8 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement, Switch
-from photonai.optimization import IntegerRange
+from photonai import Hyperpipe, PipelineElement, Switch, IntegerRange
 
 # GET DATA
 X, y = load_breast_cancer(return_X_y=True)

@@ -90,7 +90,7 @@ class StratifiedKFoldRegression(_BaseKFold):
     def _iter_test_masks(self, X=None, y=None, groups=None):
         test_folds = self._make_test_folds(X, y)
         for i in range(self.n_splits):
-            test_mask = np.zeros(self.n_samples, dtype=np.bool)
+            test_mask = np.zeros(self.n_samples, dtype=bool)
             test_mask[test_folds[i]] = True
             yield test_mask
 

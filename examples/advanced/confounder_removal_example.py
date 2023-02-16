@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement
+from photonai import Hyperpipe, PipelineElement
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 data = load_breast_cancer()

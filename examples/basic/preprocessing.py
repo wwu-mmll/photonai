@@ -1,8 +1,7 @@
 from sklearn.model_selection import ShuffleSplit
 from sklearn.datasets import fetch_openml
 
-from photonai.base import Hyperpipe, PipelineElement, Preprocessing
-from photonai.optimization import FloatRange
+from photonai import Hyperpipe, PipelineElement, Preprocessing, FloatRange
 
 audiology = fetch_openml(name='audiology')
 X = audiology.data.values
