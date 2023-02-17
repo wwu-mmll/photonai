@@ -1,11 +1,14 @@
-name: Update documentation
-on: push
+name: PHOTONAI release documentation deployment
+
+on:
+  release:
+    types: [published]
 
 jobs:
-  build:
-    name: Build docs
+  deploy:
+    name: Deploy docs
     runs-on: ubuntu-latest
-    if: ${{ github.ref != 'refs/heads/main' }}
+    if: ${{ github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout main
         uses: actions/checkout@v3
@@ -26,6 +29,5 @@ jobs:
       - name: Install photonai
         run: pip install .
 
-      - name: Build docs
-        run:  mkdocs build
-
+      - name: Deploy docs
+        run: mkdocs gh-deploy --force
