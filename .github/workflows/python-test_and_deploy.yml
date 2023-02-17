@@ -68,8 +68,8 @@ jobs:
       run: python -m build -n --sdist --wheel --outdir dist/ .
     - name: Publish distribution to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      if: ${{ matrix.python-version }} ==
+      if: ${{ matrix.python-version }} == 3.10
       with:
         user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }} == 3.10
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
         repository_url: https://test.pypi.org/legacy/
