@@ -46,7 +46,7 @@ class DummyNeedsCovariatesEstimator(BaseEstimator, RegressorMixin):
         return X + 1
 
 
-class DummyTransformer(BaseEstimator):
+class DummyTransformer(BaseEstimator, RegressorMixin):
     def __init__(self):
         pass
 

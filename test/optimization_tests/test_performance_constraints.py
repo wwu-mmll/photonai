@@ -6,7 +6,7 @@ from photonai.optimization import DummyPerformanceConstraint, MinimumPerformance
 from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.processing.results_structure import MDBConfig, MDBScoreInformation, MDBInnerFold
 
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 from photonai.base import Hyperpipe, PipelineElement
 
@@ -156,7 +156,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
         self.constraint_object = BestPerformanceConstraint(strategy='mean', margin=-0.2, metric='mean_squared_error')
 
     def test_shall_continue(self):
-        X, y = load_diabetes(return_X_y=True)
+        X, y = load_boston(return_X_y=True)
 
         inner_fold_length = 7
         my_pipe = Hyperpipe(name='performance_pipe',
@@ -202,7 +202,7 @@ class BestPerformanceTest(PhotonBaseConstraintTest):
                 originals_for_std.append(val)
 
     def test_shall_continue_warnings(self):
-        X, y = load_diabetes(return_X_y=True)
+        X, y = load_boston(return_X_y=True)
 
         inner_fold_length = 7
         my_pipe = Hyperpipe(name='performance_pipe',

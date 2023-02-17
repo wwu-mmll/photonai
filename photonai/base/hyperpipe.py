@@ -23,13 +23,12 @@ from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
 from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
 from sklearn.inspection import permutation_importance
-from photonai.version import __version__
+from photonai.__init__ import __version__
 from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.json_transformer import JsonTransformer
-from photonai.base.naming import *
 from photonai.helper.helper import PhotonDataHelper
 from photonai.optimization import FloatRange
 from photonai.photonlogger.logger import logger
@@ -54,7 +53,6 @@ class OutputSettings:
                  save_output: bool = True,
                  overwrite_results: bool = False,
                  generate_best_model: bool = True,
-                 round_results: bool = False,
                  user_id: str = '',
                  wizard_object_id: str = '',
                  wizard_project_name: str = '',
@@ -75,9 +73,6 @@ class OutputSettings:
             generate_best_model:
                 Determines whether an optimum_pipe should be created and fitted.
                 If False, no dependent files are created.
-
-            round_results:
-                Rounds numeric results to 2 decimal points in order to reduce the size of the output file.
 
             user_id:
                The user name of the according PHOTONAI Wizard login.
@@ -100,7 +95,6 @@ class OutputSettings:
             raise DeprecationWarning(msg)
         self.mongodb_connect_url = mongodb_connect_url
         self.overwrite_results = overwrite_results
-        self.round_results = round_results
 
         self.user_id = user_id
         self.wizard_object_id = wizard_object_id
@@ -124,7 +118,7 @@ class OutputSettings:
     @property
     def setup_error_file(self):
         if self.project_folder:
-            return os.path.join(self.project_folder, 'photonai_setup_errors.log')
+            return os.path.join(self.project_folder, 'photon_setup_errors.log')
         else:
             return ""
 
@@ -148,8 +142,8 @@ class OutputSettings:
             if not os.path.exists(self.results_folder):
                 os.makedirs(self.results_folder)
 
-            if os.path.basename(self.log_file) == "photonai_setup_errors.log":
-                self.log_file = 'photonai_output.log'
+            if os.path.basename(self.log_file) == "photon_setup_errors.log":
+                self.log_file = 'photon_output.log'
             self.log_file = self._add_timestamp(self.log_file)
             self.set_log_file()
 
@@ -281,7 +275,6 @@ class Hyperpipe(BaseEstimator):
                  project_folder: str = '',
                  calculate_metrics_per_fold: bool = True,
                  calculate_metrics_across_folds: bool = False,
-                 ignore_sanity_checks: bool = False,
                  random_seed: int = None,
                  verbosity: int = 0,
                  learning_curves: bool = False,
@@ -291,7 +284,6 @@ class Hyperpipe(BaseEstimator):
                  permutation_id: str = None,
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
-                 multi_threading: bool = True,
                  allow_multidim_targets: bool = False):
         """
         Initialize the object.
@@ -377,10 +369,6 @@ class Hyperpipe(BaseEstimator):
                 If True, the metrics are calculated across all inner_fold.
                 If False, calculate_metrics_per_fold must be True.
 
-            ignore_sanity_checks:
-                If True, photonai will not verify use cases such as:
-                    - classification, imbalanced classes and best_config_metric set to "accuracy"
-
             random_seed:
                 Random Seed.
 
@@ -408,9 +396,6 @@ class Hyperpipe(BaseEstimator):
 
             nr_of_processes:
                 Determined the amount of simultaneous calculation of outer_folds.
-
-            multi_threading:
-                If true dask is used in multi threading mode, if false multi processing
 
             allow_multidim_targets:
                 Allows multidimensional targets.
@@ -498,14 +483,13 @@ class Hyperpipe(BaseEstimator):
 
         # ====================== Caching and Parallelization ===========================
         self.nr_of_processes = nr_of_processes
-        self.multi_threading = multi_threading
         if cache_folder:
             self.cache_folder = os.path.join(cache_folder, self.name)
         else:
             self.cache_folder = None
 
         # ====================== Internals ===========================
-        self.ignore_sanity_checks = ignore_sanity_checks
+
         self.permutation_id = permutation_id
         self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
@@ -514,7 +498,6 @@ class Hyperpipe(BaseEstimator):
         self.random_state = random_seed
         if random_seed is not None:
             import random
-            # Todo: seed numpy here?
             random.seed(random_seed)
 
     # ===================================================================
@@ -822,31 +805,13 @@ class Hyperpipe(BaseEstimator):
                                                     'BestConfigMetric': self.optimization.best_config_metric}
 
         # add json file of hyperpipe attributes
-        if self.output_settings.save_output:
-            try:
-                json_transformer = JsonTransformer()
-                json_transformer.to_json_file(self,
-                                              os.path.join(self.output_settings.results_folder, HYPERPIPE_CONFIG_FILE))
-            except Exception as e:
-                msg = "JsonTransformer was unable to create the .json file."
-                logger.warning(msg)
-                warnings.warn(msg)
-
-    def check_for_imbalanced_data(self):
-        if self.estimation_type == 'classifier':
-            targets = np.unique(self.data.y)
-            num_classes = len(targets)
-            logger.photon_system_log("Found {} target classes: {}".format(num_classes, targets))
-            if num_classes == 2:
-                percent_of_first_class = np.sum(self.data.y == targets[0])/len(self.data.y)
-                if percent_of_first_class > 0.7 or percent_of_first_class < 0.35:
-                    logger.photon_system_log("Target classes are imbalanced: {}% belongs to {}".format(percent_of_first_class * 100,
-                                                                                          targets[0]))
-                    if self.optimization.best_config_metric == "accuracy":
-                        raise ValueError("Found imbalanced classes and best_config_metric for accuracy. In this setup, "
-                                         "your model most probably won't learn anything valuable. Consider using "
-                                         "balanced_accuracy as best_config_metric and/or using a over/undersampling "
-                                         "by adding a PipelineElement('ImbalancedDataTransform')")
+        try:
+            json_transformer = JsonTransformer()
+            json_transformer.to_json_file(self, self.output_settings.results_folder+"/hyperpipe_config.json")
+        except:
+            msg = "JsonTransformer was unable to create the .json file."
+            logger.warning(msg)
+            warnings.warn(msg)
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
@@ -917,7 +882,7 @@ class Hyperpipe(BaseEstimator):
             if self.output_settings.save_output:
                 try:
                     pretrained_model_filename = os.path.join(self.output_settings.results_folder,
-                                                             BEST_MODEL_FILE)
+                                                             'photon_best_model.photon')
                     PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
                     logger.info("Saved best model to file.")
                 except Exception as e:
@@ -1028,18 +993,11 @@ class Hyperpipe(BaseEstimator):
 
         # loop over outer cross validation
         if self.nr_of_processes > 1:
-            hyperpipe_client = Client(threads_per_worker=1,
-                                      n_workers=self.nr_of_processes,
-                                      processes=(not self.multi_threading))
+            hyperpipe_client = Client(threads_per_worker=1, n_workers=self.nr_of_processes, processes=False)
 
         try:
             # check data
             self.data.input_data_sanity_checks(data, targets, **kwargs)
-
-            # sanity check data with setup
-            if not self.ignore_sanity_checks:
-                self.check_for_imbalanced_data()
-
             # create photon pipeline
             self._prepare_pipeline()
             # initialize the progress monitors
@@ -1395,15 +1353,10 @@ class Hyperpipe(BaseEstimator):
                 pipe_copy += element.copy_me()
         return pipe_copy
 
-    def save_optimum_pipe(self, dirname=None, password=None, overwrite_filename=False):
-        if overwrite_filename:
-            # todo: ugly, this is only for unit testing
-            filename = dirname
-        elif dirname is None:
-            filename = "./{}".format(BEST_MODEL_FILE)
-        else:
-            filename = os.path.join(dirname, BEST_MODEL_FILE)
-        PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, filename, password)
+    def save_optimum_pipe(self, filename=None, password=None):
+        if filename is None:
+            filename = "photon_" + self.name + "_best_model.p"
+        PhotonModelPersistor.save_optimum_pipe(self, filename, password)
 
     @staticmethod
     def load_optimum_pipe(file: str, password: str = None) -> PhotonPipeline:
@@ -1430,27 +1383,10 @@ class Hyperpipe(BaseEstimator):
     def reload_hyperpipe(results_folder, X, y, **data_kwargs):
 
         res_handler = ResultsHandler()
+        res_handler.load_from_file(os.path.join(results_folder, "photon_result_file.json"))
+        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(os.path.join(results_folder, "photon_best_model.photon"))
 
-        result_file = os.path.join(results_folder, RESULTS_FILE)
-        if not os.path.isfile(result_file):
-            result_file = os.path.join(results_folder, "photon_result_file.json")
-        if not os.path.isfile(result_file):
-            raise ValueError("Could not find serialized result json? -> 'photonai_results.json',"
-                             "or for old versions 'photon_result_file.json'")
-
-        res_handler.load_from_file(result_file)
-
-        best_model = os.path.join(results_folder, BEST_MODEL_FILE)
-        if not os.path.isfile(best_model):
-            # be downwards compatible
-            best_model = os.path.join(results_folder, 'photon_best_model.photon')
-        if not os.path.isfile(best_model):
-            raise ValueError("Could not find serialized model? -> 'best_model.photonai'"
-                             " or for old versions 'photon_best_model.photon'")
-
-        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(best_model)
-
-        new_hyperpipe = JsonTransformer().from_json_file(os.path.join(results_folder, HYPERPIPE_CONFIG_FILE))
+        new_hyperpipe = JsonTransformer().from_json_file(os.path.join(results_folder, "hyperpipe_config.json"))
         new_hyperpipe.results = res_handler.results
         new_hyperpipe.optimum_pipe = loaded_optimum_pipe
         new_hyperpipe.data = Hyperpipe.Data(X, y, data_kwargs)
@@ -1535,10 +1471,8 @@ class PhotonModelPersistor:
                 Password used to encrypt the pipeline file.
 
         """
-
-        splitted_file = os.path.splitext(zip_file)
-        folder = splitted_file[0]
-        zip_file = folder + splitted_file[1]
+        folder = os.path.splitext(zip_file)[0]
+        zip_file = folder + '.photon'
 
         if os.path.exists(folder):
             msg = 'The file you specified already exists as a folder.'
@@ -1551,7 +1485,7 @@ class PhotonModelPersistor:
         PhotonModelPersistor.save_elements([val[1] for val in optimum_pipe.elements], folder)
 
         # write meta infos from pipeline
-        with open(os.path.join(folder, META_FILE), 'wb') as f:
+        with open(os.path.join(folder, '_optimum_pipe_meta.pkl'), 'wb') as f:
             meta_infos = {'photon_version': __version__}
             pickle.dump(meta_infos, f)
 
@@ -1576,7 +1510,7 @@ class PhotonModelPersistor:
 
     @staticmethod
     def load_elements(folder):
-        with open(os.path.join(folder, BLUEPRINT_FILE), 'rb') as f:
+        with open(os.path.join(folder, '_optimum_pipe_blueprint.pkl'), 'rb') as f:
             setup_info = pickle.load(f)
             element_list = list()
             for element_info in setup_info:
@@ -1638,20 +1572,17 @@ class PhotonModelPersistor:
             Returns pipeline with all trained PipelineElements.
 
         """
-        if file.endswith('.photon') | file.endswith('.photonai'):
+        if file.endswith('.photon'):
             folder = os.path.dirname(file)
             zf = zipfile.ZipFile(file)
             zf.extractall(folder, pwd=password)
         else:
-            raise FileNotFoundError('Specify .photonai file that holds PHOTONAI optimum pipe.')
+            raise FileNotFoundError('Specify .photon file that holds PHOTON optimum pipe.')
 
-        # file name with extension
-        photon_model_name = os.path.splitext(os.path.basename(file))[0]
-        load_folder = os.path.join(folder, photon_model_name)
-
+        load_folder = os.path.join(folder, 'photon_best_model')
         meta_infos = {}
         try:
-            with open(os.path.join(load_folder, META_FILE), 'rb') as f:
+            with open(os.path.join(load_folder, '_optimum_pipe_meta.pkl'), 'rb') as f:
                 meta_infos = pickle.load(f)
         except:
             print("Could not load meta information for optimum pipe")
@@ -1659,9 +1590,9 @@ class PhotonModelPersistor:
         element_list = PhotonModelPersistor.load_elements(folder=load_folder)
 
         # delete unpacked folder to clean up
-        # ToDo: Don't unpack at all, but use PHOTONAI file directly
+        # ToDo: Don't unpack at all, but use PHOTON file directly
         from shutil import rmtree
-        rmtree(load_folder, ignore_errors=True)
+        rmtree(os.path.join(folder, 'photon_best_model'), ignore_errors=True)
 
         photon_pipe = PhotonPipeline(element_list)
         photon_pipe._meta_information = meta_infos

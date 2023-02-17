@@ -4,7 +4,7 @@ from sklearn.datasets import fetch_openml
 from sklearn.model_selection import KFold
 from keras.metrics import Accuracy
 
-from photonai import Hyperpipe, PipelineElement
+from photonai.base import Hyperpipe, PipelineElement
 
 
 # you can have a simple delegate

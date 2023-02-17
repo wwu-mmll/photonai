@@ -1729,7 +1729,7 @@ class ParallelBranch(Branch):
             if self.local_cluster is None:
                 self.local_cluster = Client(threads_per_worker=1,
                                             n_workers=self.nr_of_processes,
-                                            processes=True)
+                                            processes=False)
             else:
                 self.local_cluster.n_workers = self.nr_of_processes
         else:

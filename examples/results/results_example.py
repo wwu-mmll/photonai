@@ -3,7 +3,8 @@ import pandas as pd
 import numpy as np
 from sklearn.model_selection import StratifiedShuffleSplit
 
-from photonai import Hyperpipe, PipelineElement, FloatRange
+from photonai.base import Hyperpipe, PipelineElement
+from photonai.optimization import FloatRange
 from sklearn.datasets import fetch_openml
 
 # blood-transfusion-service-center

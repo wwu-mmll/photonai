@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
 
-from photonai import Hyperpipe, PipelineElement, Stack
+from photonai.base import Hyperpipe, PipelineElement, Stack
 
 my_pipe = Hyperpipe(name='ensemble_pipe',
                     optimizer='random_grid_search',

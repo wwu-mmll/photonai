@@ -1,7 +1,8 @@
 from sklearn.datasets import load_digits
 from sklearn.model_selection import KFold
 
-from photonai import Hyperpipe, PipelineElement, Categorical
+from photonai.base import Hyperpipe, PipelineElement
+from photonai.optimization import Categorical
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_digits(n_class=5, return_X_y=True)

@@ -1,9 +1,10 @@
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai import Hyperpipe, PipelineElement, Switch, IntegerRange
+from photonai.base import Hyperpipe, PipelineElement, Switch
+from photonai.optimization import IntegerRange
 
-X, y = load_diabetes(return_X_y=True)
+X, y = load_boston(return_X_y=True)
 
 my_pipe = Hyperpipe('feature_selection',
                     optimizer='grid_search',

@@ -16,8 +16,9 @@ from sklearn.base import BaseEstimator
 
 from examples.neural_networks.dataset import load_har
 
-from photonai import Hyperpipe, PipelineElement, PhotonRegistry, IntegerRange, BooleanSwitch
+from photonai.base import Hyperpipe, PipelineElement, PhotonRegistry
 from photonai.modelwrapper.keras_base_models import KerasBaseClassifier
+from photonai.optimization import IntegerRange, BooleanSwitch
 
 dataset_path = data_utils.get_file(
     fname='UCI HAR Dataset.zip',

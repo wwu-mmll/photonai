@@ -1,10 +1,12 @@
 import os
 from sklearn.model_selection import KFold, ShuffleSplit
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_boston
 
-from photonai import Hyperpipe, PipelineElement, Switch, FloatRange, IntegerRange, ResultsHandler
+from photonai.base import Hyperpipe, PipelineElement, Switch
+from photonai.optimization import FloatRange, IntegerRange
+from photonai.processing import ResultsHandler
 
-X, y = load_diabetes(return_X_y=True)
+X, y = load_boston(return_X_y=True)
 
 # setup training and test workflow
 my_pipe = Hyperpipe('compare_estimators',
@@ -45,5 +47,5 @@ my_pipe.results_handler.get_mean_of_best_validation_configs_per_estimator()
 results_folder = my_pipe.results_handler.output_settings.results_folder
 
 res = ResultsHandler()
-res.load_from_file(os.path.join(results_folder, "photonai_results.json"))
+res.load_from_file(os.path.join(results_folder, "photon_result_file.json"))
 estimator_performances = res.get_mean_of_best_validation_configs_per_estimator()

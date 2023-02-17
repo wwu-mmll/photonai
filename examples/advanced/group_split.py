@@ -2,7 +2,8 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import GroupKFold, GroupShuffleSplit
 
-from photonai import Hyperpipe, PipelineElement, FloatRange, Categorical
+from photonai.base import Hyperpipe, PipelineElement
+from photonai.optimization import FloatRange, Categorical
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
 X, y = load_breast_cancer(return_X_y=True)

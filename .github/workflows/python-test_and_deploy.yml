@@ -5,14 +5,14 @@ name: PHOTONAI test and test deploy
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
   pull_request:
-    branches: [ main, develop ]
+    branches: [ master, develop ]
 
 jobs:
   pytest:
     name: Run PHOTONAI tests and publish test coverage
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-18.04
     
     services:
       mongodb:
@@ -21,23 +21,23 @@ jobs:
           - 27017:27017
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python 3.10.8
-      uses: actions/setup-python@v4
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7.6
+      uses: actions/setup-python@v2
       with:
-        python-version: 3.10.8
+        python-version: 3.7.6
 #    - name: Install os dependencies
 #      run: | 
 #        sudo apt-get update
 #        sudo apt-get -y install gfortran swig
     - name: Install dependencies
       run: |
-        pip install wheel flake8 pbr
+        pip install wheel flake8 
         python setup.py egg_info
         pip install tensorflow pytest pytest-cov coveralls -r photonai.egg-info/requires.txt -r photonai/optimization/smac/requirements.txt -r photonai/optimization/nevergrad/requirements.txt
     - name: Test with pytest
       run: |
-        PYTHONPATH=./ pytest ./test --cov=./photonai --full-trace
+        PYTHONPATH=./ pytest ./test --cov=./photonai --tb=long
     - name: Coveralls
       run: coveralls
       env: 
@@ -45,23 +45,25 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
   deploy:
     name: Build and publish to TestPyPI
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-18.04
     needs: pytest
-    if: github.ref == 'refs/heads/main'
+    if: github.ref == 'refs/heads/master'
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v2
+    - name: Set up Python 3.7.6
+      uses: actions/setup-python@v2
       with:
-        fetch-depth: 0
-    - name: Set up Python 3.10.8
-      uses: actions/setup-python@v4
-      with:
-        python-version: 3.10.8
+        python-version: 3.7.6
+    - name: Replace version number with commit hash
+      run: |
+        dt=$(date '+%Y.%m.%d.%H.%M.%S')
+        sed -i "s/^__version__.*/__version__ = '$dt'/g" setup.py
     - name: Install pypa/build
-      run: pip install build pbr wheel
+      run: pip install build
     - name: Build a binary wheel and a source tarball
-      run: python -m build -n --sdist --wheel --outdir dist/ .
+      run: python -m build --sdist --wheel --outdir dist/ .
     - name: Publish distribution to Test PyPI
-      uses: pypa/gh-action-pypi-publish@release/v1
+      uses: pypa/gh-action-pypi-publish@master
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}

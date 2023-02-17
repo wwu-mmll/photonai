@@ -2,7 +2,7 @@ import numpy as np
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 from sklearn.base import BaseEstimator, ClassifierMixin
-from photonai import Hyperpipe, PipelineElement
+from photonai.base import Hyperpipe, PipelineElement
 
 
 class AdditionalDataWrapper(BaseEstimator, ClassifierMixin):

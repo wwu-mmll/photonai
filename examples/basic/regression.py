@@ -1,7 +1,8 @@
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai import Hyperpipe, PipelineElement, IntegerRange, FloatRange
+from photonai.base import Hyperpipe, PipelineElement
+from photonai.optimization import IntegerRange, FloatRange
 
 
 my_pipe = Hyperpipe('basic_regression_pipe',
@@ -25,5 +26,5 @@ my_pipe += PipelineElement('RandomForestRegressor',
                            hyperparameters={'n_estimators': IntegerRange(10, 50)})
 
 # load data and train
-X, y = load_diabetes(return_X_y=True)
+X, y = load_boston(return_X_y=True)
 my_pipe.fit(X, y)

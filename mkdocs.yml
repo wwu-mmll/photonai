@@ -98,7 +98,6 @@ nav:
       - 'Contributions': contribution.md
 extra_css:
   - assets/stylesheets/extra.css
-  - assets/stylesheets/fonts.css
 theme:
   name: material
   custom_dir: documentation/overrides

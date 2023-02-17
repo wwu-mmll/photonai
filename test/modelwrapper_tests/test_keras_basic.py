@@ -1,4 +1,4 @@
-from sklearn.datasets import load_breast_cancer, load_diabetes
+from sklearn.datasets import load_breast_cancer, load_boston
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout
@@ -71,7 +71,7 @@ class KerasBaseClassifierTest(unittest.TestCase):
 class KerasBaseRegressorTest(KerasBaseClassifierTest):
 
     def setUp(self):
-        self.X, self.y = load_diabetes(return_X_y=True)
+        self.X, self.y = load_boston(return_X_y=True)
 
         self.model = Sequential()
         self.model.add(Dense(5, input_dim=self.X.shape[1], activation='relu'))

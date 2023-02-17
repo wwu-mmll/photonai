@@ -1,6 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
-from photonai import Hyperpipe, PipelineElement, FloatRange
+from photonai.base import Hyperpipe, PipelineElement
+from photonai.optimization import FloatRange
 
 my_pipe = Hyperpipe('basic_forest_pipe',
                     inner_cv=KFold(n_splits=2),

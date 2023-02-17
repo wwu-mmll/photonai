@@ -1,7 +1,8 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai import Hyperpipe, PipelineElement, Switch, FloatRange, IntegerRange
+from photonai.base import Hyperpipe, PipelineElement, Switch
+from photonai.optimization import FloatRange, IntegerRange
 
 my_pipe = Hyperpipe('hp_switch_optimizer',
                     inner_cv=KFold(n_splits=5),
