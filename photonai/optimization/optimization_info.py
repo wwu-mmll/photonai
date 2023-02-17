@@ -70,7 +70,7 @@ class Optimization:
         if self.metrics is None or len(self.metrics) == 0:
             if self.best_config_metric is None:
                 error_msg = "No metrics were chosen. Please choose metrics to quantify your performance and set " \
-                            "the best_config_metric so that PHOTONAI which optimizes for"
+                            "the best_config_metric so that PHOTON which optimizes for"
                 logger.error(error_msg)
                 raise ValueError(error_msg)
             else:
@@ -80,7 +80,7 @@ class Optimization:
         if self.best_config_metric is not None:
             if isinstance(self.best_config_metric, list):
                 warning_text = "Best Config Metric must be a single metric given as string, no list. " \
-                               "PHOTONAI chose the first one from the list of metrics to calculate."
+                               "PHOTON chose the first one from the list of metrics to calculate."
 
                 self.best_config_metric = self.best_config_metric[0]
                 logger.warning(warning_text)
@@ -92,7 +92,7 @@ class Optimization:
 
         if self.best_config_metric is None and self.metrics is not None and len(self.metrics) > 0:
             self.best_config_metric = self.metrics[0]
-            warning_text = "No best config metric was given, so PHOTONAI chose the first in the list of metrics as " \
+            warning_text = "No best config metric was given, so PHOTON chose the first in the list of metrics as " \
                            "criteria for choosing the best configuration."
             logger.warning(warning_text)
             raise Warning(warning_text)

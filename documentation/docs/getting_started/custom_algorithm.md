@@ -14,7 +14,7 @@ Afterwards, register your element with the photon registry like this.
 Custom elements must only be registered once.
 
 ```python
-from photonai import PhotonRegistry
+from photonai.base import PhotonRegistry
 
 custom_element_root_folder = "./"
 registry = PhotonRegistry(custom_elements_folder=custom_element_root_folder)
@@ -31,7 +31,7 @@ Importantly, the custom_elements_folder must be activated for each use as the fo
 custom class implementation might otherwise not be accessible by the python script. 
 
 ```python
-from photonai import PhotonRegistry, Hyperpipe, PipelineElement
+from photonai.base import PhotonRegistry, Hyperpipe, PipelineElement
 
 custom_element_root_folder = "./"
 registry = PhotonRegistry(custom_elements_folder=custom_element_root_folder)

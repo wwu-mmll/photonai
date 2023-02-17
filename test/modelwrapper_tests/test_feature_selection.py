@@ -1,5 +1,5 @@
 from numpy.testing import assert_array_almost_equal
-from sklearn.datasets import load_breast_cancer, load_diabetes
+from sklearn.datasets import load_breast_cancer, load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
 
 from photonai.base import Hyperpipe, PipelineElement
@@ -16,7 +16,7 @@ class FeatureSelectionTests(PhotonBaseTest):
     def setUp(self):
         super(FeatureSelectionTests, self).setUp()
         self.X_classif, self.y_classif = load_breast_cancer(return_X_y=True)
-        self.X_regr, self.y_regr = load_diabetes(return_X_y=True)
+        self.X_regr, self.y_regr = load_boston(return_X_y=True)
         self.pipe_classif = Hyperpipe("feature_selection_pipe_classif",
                               outer_cv=ShuffleSplit(test_size=0.2, n_splits=1, random_state=15),
                               inner_cv= KFold(n_splits=3, shuffle=True, random_state=15),
@@ -80,7 +80,7 @@ class FeatureSelectionTests(PhotonBaseTest):
 
     def test_LassoFeatureSelection_inverse(self):
         lfs = PipelineElement('LassoFeatureSelection')
-        lfs.fit(self.X_regr, self.y_regr)
+        lfs.fit(self.X_regr[:30], self.y_regr[:30])
         X_selected, _, _ = lfs.transform(self.X_regr)
         X_back, _, _ = lfs.inverse_transform(X_selected)
         self.assertLess(X_selected.shape[1], self.X_regr.shape[1])

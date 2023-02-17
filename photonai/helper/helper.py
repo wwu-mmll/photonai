@@ -240,7 +240,6 @@ def print_outer_folds(metric_list, outer_fold_list, photon_system_log=True, summ
     if photon_system_log:
         logger.photon_system_log(t)
 
-
 def print_estimator_metrics(estimator_performances, metric_list, summary=False):
     t = PrettyTable(['Estimator'] + metric_list)
     for estimator_name, estimator_values in estimator_performances.items():

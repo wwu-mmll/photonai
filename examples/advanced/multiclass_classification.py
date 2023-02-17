@@ -1,7 +1,8 @@
 from sklearn.datasets import load_iris
 from sklearn.model_selection import KFold
 
-from photonai import Hyperpipe, PipelineElement, FloatRange, Categorical
+from photonai.base import Hyperpipe, PipelineElement
+from photonai.optimization import FloatRange, Categorical
 
 # loading the iris dataset
 X, y = load_iris(return_X_y=True)

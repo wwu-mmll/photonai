@@ -27,7 +27,7 @@ PHOTONAI offers [Grid-Search](../../api/optimization/grid_search), [Random Searc
 
 ## PCA
 ```python
-from photonai import PipelineElement
+from photonai.base import PipelineElement
 PipelineElement('PCA',
                 hyperparameters={'n_components': IntegerRange(5, 20)},
                 test_disabled=True)

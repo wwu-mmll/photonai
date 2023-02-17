@@ -133,12 +133,11 @@ class JsonTransformer(object):
         :param element: as type dict, list, tuple, str, bool, ...
         :return: json like version
         """
-
         d = {}
         if element is None:
             return d
         # main dtype
-        if any(isinstance(element, t) for t in [int, bool, str, float]):
+        if any(isinstance(element, t) for t in [int, bool, str, float, np.float]):
             return element
         # dtype == list or dtype == tuple
         if isinstance(element, list) or isinstance(element, tuple):

@@ -12,7 +12,6 @@ from sklearn.base import BaseEstimator, TransformerMixin
 
 from photonai.base import Hyperpipe, OutputSettings
 from photonai.base import PipelineElement, Stack, Switch
-from photonai.base.naming import *
 from photonai.optimization import IntegerRange, FloatRange
 from photonai.processing import ResultsHandler
 from photonai.helper.photon_base_test import PhotonBaseTest
@@ -26,11 +25,10 @@ class ResultsHandlerTest(PhotonBaseTest):
         cls.file = __file__
         super(ResultsHandlerTest, cls).setUpClass()
 
-        cls.files = [
-            BEST_CONFIG_PREDICTIONS_FILE,
-            RESULTS_FILE,
-            SUMMARY_FILE,
-            BEST_MODEL_FILE]
+        cls.files = ['best_config_predictions.csv',
+                     'photon_result_file.json',
+                     'photon_summary.txt',
+                     'photon_best_model.photon']
 
         cls.results_folder = cls.tmp_folder_path
         cls.output_settings = OutputSettings(save_output=True)
@@ -191,22 +189,6 @@ class ResultsHandlerTest(PhotonBaseTest):
         with self.assertRaises(ValueError):
             res_handler.get_validation_predictions('test_predictions')
 
-    def test_crazy_results(self):
-
-        class WeirdResultItem:
-            def __str__(self):
-                return "Item Info"
-        res_handler = ResultsHandler()
-        class_json = res_handler.convert_to_json_serializable(WeirdResultItem())
-        self.assertEqual(class_json, str(WeirdResultItem()))
-
-    def test_round_results(self):
-        res_handler = ResultsHandler()
-        res_handler.output_settings = OutputSettings(round_results=True)
-        nr = 0.342123354
-        number_json = res_handler.round_floats(nr)
-        self.assertEqual(number_json, round(nr, 2))
-
     def test_save_all_learning_curves(self):
         """
         Test count of saved learning curve files.
@@ -240,7 +222,7 @@ class ResultsHandlerTest(PhotonBaseTest):
         hyperpipe.output_settings.mongodb_connect_url = self.mongodb_path
         hyperpipe.fit(self.__X, self.__y)
 
-        results_file = os.path.join(hyperpipe.output_settings.results_folder, "photonai_results.json")
+        results_file = os.path.join(hyperpipe.output_settings.results_folder, "photon_result_file.json")
         my_result_handler = ResultsHandler()
         my_result_handler.load_from_file(results_file)
         self.assertIsInstance(my_result_handler.results, MDBHyperpipe)

@@ -119,7 +119,7 @@ class PermutationTest:
 
                     my_client = Client(threads_per_worker=1,
                                        n_workers=self.n_processes,
-                                       processes=True)
+                                       processes=False)
 
                     for perm_run in perms_todo:
                         del_job = dask.delayed(PermutationTest.run_parallelized_permutation)(self.hyperpipe_constructor, X,

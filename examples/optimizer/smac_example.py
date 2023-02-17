@@ -1,9 +1,10 @@
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold, ShuffleSplit
 
-from photonai import Hyperpipe, PipelineElement, Switch, FloatRange, Categorical, IntegerRange
+from photonai.base import Hyperpipe, PipelineElement, Switch
+from photonai.optimization import FloatRange, Categorical, IntegerRange
 
-X, y = load_diabetes(return_X_y=True)
+X, y = load_boston(return_X_y=True)
 
 # DESIGN YOUR PIPELINE
 my_pipe = Hyperpipe('smac_example',

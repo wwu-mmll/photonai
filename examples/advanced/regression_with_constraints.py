@@ -1,8 +1,8 @@
-from sklearn.datasets import load_diabetes
+from sklearn.datasets import load_boston
 from sklearn.model_selection import KFold
 
-from photonai import Hyperpipe, PipelineElement, MinimumPerformanceConstraint, \
-    DummyPerformanceConstraint, BestPerformanceConstraint, IntegerRange
+from photonai.base import Hyperpipe, PipelineElement, OutputSettings
+from photonai.optimization import MinimumPerformanceConstraint, DummyPerformanceConstraint, BestPerformanceConstraint, IntegerRange
 
 import matplotlib.pyplot as plt
 
@@ -25,7 +25,7 @@ my_pipe = Hyperpipe(name='constrained_forest_pipe',
 my_pipe += PipelineElement('StandardScaler')
 my_pipe += PipelineElement('RandomForestRegressor', hyperparameters={'n_estimators': IntegerRange(5, 50)})
 
-X, y = load_diabetes(return_X_y=True)
+X, y = load_boston(return_X_y=True)
 my_pipe.fit(X, y)
 
 

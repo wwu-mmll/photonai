@@ -2,7 +2,8 @@ import math
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import StratifiedKFold
 
-from photonai import Hyperpipe, PipelineElement, FloatRange, Categorical
+from photonai.base import Hyperpipe, PipelineElement
+from photonai.optimization import FloatRange, Categorical
 
 
 # WE USE THE BREAST CANCER SET FROM SKLEARN
