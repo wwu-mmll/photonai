@@ -13,7 +13,7 @@ on:
 
 jobs:
   pytest:
-    name: Run PHOTONAI tests ${{matrix.python-version}} and publish test coverage
+    name: Run PHOTONAI tests ${{matrix.python-version}}
     runs-on: ubuntu-22.04
     
     services:
@@ -24,7 +24,7 @@ jobs:
 
     strategy:
       matrix:
-        python-version: ['3.8', '3.9', '3.10']
+        python-version: ['3.7', '3.8', '3.9']
 
     steps:
     - uses: actions/checkout@v3
@@ -36,6 +36,34 @@ jobs:
 #      run: | 
 #        sudo apt-get update
 #        sudo apt-get -y install gfortran swig
+    - name: Install dependencies
+      run: |
+        pip install wheel flake8 pbr
+        python setup.py egg_info
+        pip install tensorflow pytest pytest-cov coveralls -r photonai.egg-info/requires.txt -r photonai/optimization/smac/requirements.txt -r photonai/optimization/nevergrad/requirements.txt
+    - name: Test with pytest
+      run: |
+        PYTHONPATH=./ pytest ./test --cov=./photonai --full-trace
+  coverage:
+    name: Run PHOTONAI tests and publish test coverage
+    runs-on: ubuntu-22.04
+
+    services:
+      mongodb:
+        image: mongo:latest
+        ports:
+          - 27017:27017
+
+  steps:
+    - uses: actions/checkout@v3
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python-version }}
+    #    - name: Install os dependencies
+    #      run: |
+    #        sudo apt-get update
+    #        sudo apt-get -y install gfortran swig
     - name: Install dependencies
       run: |
         pip install wheel flake8 pbr
@@ -59,7 +87,7 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up Python ${{ matrix.python-version }}
+    - name: Set up Python 3.10
       uses: actions/setup-python@v4
       with:
         python-version: 3.10.8
@@ -69,7 +97,6 @@ jobs:
       run: python -m build -n --sdist --wheel --outdir dist/ .
     - name: Publish distribution to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
-      if: ${{ matrix.python-version }} == 3.10
       with:
         user: __token__
         password: ${{ secrets.TEST_PYPI_API_TOKEN }}
