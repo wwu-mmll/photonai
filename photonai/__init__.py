@@ -12,7 +12,12 @@ After PHOTON has found the best configuration for your model, it offers a conven
 It also enables you to persist and load your optimal model, including all preprocessing elements, with only one line of code.
 
 """
+from .version import __version__
 
-__version__ = '2.2.1'
-
-# __all__ = ( )
+from .base import Hyperpipe, OutputSettings, Stack, Switch, Branch, PipelineElement, ParallelBranch, \
+    PhotonRegistry, DataFilter, CallbackElement, Preprocessing
+from .optimization import FloatRange, IntegerRange, Categorical, MinimumPerformanceConstraint, \
+    BestPerformanceConstraint, DummyPerformanceConstraint, BooleanSwitch
+from .base.json_transformer import JsonTransformer
+from .processing.permutation_test import PermutationTest
+from .processing import ResultsHandler

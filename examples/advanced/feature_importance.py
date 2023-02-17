@@ -1,7 +1,7 @@
 from sklearn.datasets import load_diabetes
 from sklearn.model_selection import KFold, train_test_split
 
-from photonai.base import Hyperpipe, PipelineElement
+from photonai import Hyperpipe, PipelineElement
 
 diabetes = load_diabetes()
 X_train, X_val, y_train, y_val = train_test_split(diabetes.data, diabetes.target, random_state=0)

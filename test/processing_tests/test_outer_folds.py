@@ -1,5 +1,5 @@
 import numpy as np
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.dummy import DummyRegressor
 from sklearn.model_selection import ShuffleSplit
 
@@ -35,7 +35,7 @@ class OuterFoldTests(PhotonBaseTest):
                                                  learning_curves=False,
                                                  learning_curves_cut=None)
 
-        self.X, self.y = load_boston(return_X_y=True)
+        self.X, self.y = load_diabetes(return_X_y=True)
         self.outer_fold_id = "TestFoldOuter1"
         self.cv_info.outer_folds = {self.outer_fold_id: FoldInfo(0, 1, train, test) for train, test in
                                     self.outer_cv.split(self.X, self.y)}
@@ -170,13 +170,13 @@ class OuterFoldTests(PhotonBaseTest):
             self.cv_info.outer_folds[self.outer_fold_id].test_indices))
         self.assertTrue(len(best_config.best_config_score.validation.y_pred) == len(
             self.cv_info.outer_folds[self.outer_fold_id].test_indices))
-        self.assertTrue(len(best_config.best_config_score.feature_importances) == 7)
+        self.assertTrue(len(best_config.best_config_score.feature_importances) == 4)
 
         for config in outer_fold_man1.result_object.tested_config_list:
             if config.config_nr == best_config.config_nr:
                 for fold_i, fold in enumerate(config.inner_folds):
-                    self.assertTrue(np.sum(len(fold.validation.y_pred) == 41))
-                    self.assertTrue(np.sum(len(fold.feature_importances) == 7))
+                    self.assertTrue(np.sum(len(fold.validation.y_pred) == 36))
+                    self.assertTrue(np.sum(len(fold.feature_importances) == 4))
             else:
                 self.assertTrue(np.sum(len(fold.validation.y_pred) for fold in config.inner_folds) == 0)
                 self.assertTrue(np.sum(len(fold.validation.probabilities) for fold in config.inner_folds) == 0)
@@ -229,9 +229,9 @@ class OuterFoldTests(PhotonBaseTest):
         outer_fold_man._prepare_data(self.X, self.y)
         outer_fold_man._fit_dummy()
 
-        # for boston housing we expect
-        train_values = {'mean_absolute_error': 6.809283403587883, 'mean_squared_error': 86.87340383295755}
-        test_values = {'mean_absolute_error': 6.255843525529023, 'mean_squared_error': 75.04543037399255}
+        # for diabetes dataset we expect
+        train_values = {'mean_absolute_error': 66.44815382516512, 'mean_squared_error': 6076.398012984615}
+        test_values = {'mean_absolute_error': 64.00646146990485, 'mean_squared_error': 5361.533457238513}
 
         self.assertDictEqual(outer_fold_man.result_object.dummy_results.validation.metrics, test_values)
         self.assertDictEqual(outer_fold_man.result_object.dummy_results.training.metrics, train_values)

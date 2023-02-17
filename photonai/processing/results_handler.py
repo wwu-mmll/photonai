@@ -23,7 +23,8 @@ from photonai.photonlogger.logger import logger
 from photonai.helper.helper import print_metrics, print_estimator_metrics, print_config_list_table, print_outer_folds
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHyperpipe
-from photonai.__init__ import __version__
+from photonai.version import __version__
+from photonai.base.naming import RESULTS_FILE, SUMMARY_FILE, BEST_CONFIG_PREDICTIONS_FILE
 
 
 class ResultsHandler:
@@ -59,7 +60,8 @@ class ResultsHandler:
                 Full path to json file.
 
         """
-        self.results = MDBHyperpipe.from_document(json.load(open(results_file, 'r')))
+        with open(results_file, 'r') as rf:
+            self.results = MDBHyperpipe.from_document(json.load(rf))
 
     def load_from_mongodb(self, mongodb_connect_url: str, pipe_name: str):
         """
@@ -768,26 +770,24 @@ class ResultsHandler:
             logger.error("Could not save backmapped feature importances.")
             logger.error(e)
 
-    def write_convenience_files(self):
-        if self.output_settings.save_output:
-            logger.info("Writing summary file, plots and prediction csv to result folder ...")
-            self.write_summary()
-            self.write_predictions_file()
-
     def convert_to_json_serializable(self, value):
-        if isinstance(value, (int, np.int32, np.int64)):
-            return int(value)
-        if isinstance(value, (float, np.float32, np.float64)):
-            if self.output_settings.reduce_space:
-                return round(float(value), 3)
-            return float(value)
-        else:
-            return json_util.default(value)
+        try:
+            if isinstance(value, (int, np.int32, np.int64)):
+                return int(value)
+            if isinstance(value, (float, np.float32, np.float64)):
+                return float(value)
+            else:
+                return json_util.default(value)
+        except TypeError:
+            # if the object is not natively serializable we convert it to string and hope the toString method returns
+            # the right information.
+            return str(value)
 
     def write_result_tree_to_file(self):
         try:
-            local_file = os.path.join(self.results.output_folder, 'photon_result_file.json')
-            result = self.round_floats(self.results.to_son().to_dict())
+
+            local_file = os.path.join(self.results.output_folder, RESULTS_FILE)
+            result = self.handle_objects(self.round_floats(self.results.to_son().to_dict()))
 
             with open(local_file, 'w') as outfile:
                 json.dump(result, outfile, default=self.convert_to_json_serializable)
@@ -796,17 +796,32 @@ class ResultsHandler:
             logger.error(str(e))
 
     @classmethod
-    def round_floats(cls, d):
+    def handle_objects(cls, d):
+        # recursive method for
+        result = {}
+        if isinstance(d, dict):
+            for key, value in d.items():
+                value = cls.handle_objects(value)
+                result.update({key: value})
+            return result
+        elif isinstance(d, list):
+            return [cls.handle_objects(val) for val in d]
+        else:
+            return d
+
+    def round_floats(self, d):
         # recursive method for rounding all floats in result.json
         result = {}
         if isinstance(d, dict):
             for key, value in d.items():
-                value = cls.round_floats(value)
+                value = self.round_floats(value)
                 result.update({key: value})
             return result
         elif isinstance(d, list):
-            return [cls.round_floats(val) for val in d]
+            return [self.round_floats(val) for val in d]
         elif isinstance(d, float):
+            if self.output_settings.round_results:
+                return round(d, 2)
             return round(d, 6)
         else:
             return d
@@ -821,7 +836,7 @@ class ResultsHandler:
 
     def write_predictions_file(self):
           if self.output_settings.save_output:
-            filename = os.path.join(self.output_settings.results_folder, 'best_config_predictions.csv')
+            filename = os.path.join(self.output_settings.results_folder, BEST_CONFIG_PREDICTIONS_FILE)
             # usually we write the predictions for the outer fold
             if not self.output_settings.save_predictions_from_best_config_inner_folds:
                 return self.get_test_predictions(filename)
@@ -958,13 +973,13 @@ Hyperparameter Optimizer: {}
 
         if self.output_settings.results_folder is not None:
             output_string += "\nYour results are stored in " + self.output_settings.results_folder + "\n"
-            output_string += "Go to https://explorer.photon-ai.com and upload your photon_result_file.json " \
+            output_string += "Go to https://explorer.photon-ai.com and upload your photonai_results.json " \
                              "for convenient result visualization! \n"
             output_string += "For more info and documentation visit https://www.photon-ai.com"
 
         if self.output_settings.save_output:
             try:
-                summary_filename = os.path.join(self.output_settings.results_folder, 'photon_summary.txt')
+                summary_filename = os.path.join(self.output_settings.results_folder, SUMMARY_FILE)
                 text_file = open(summary_filename, "w")
                 text_file.write(output_string)
                 text_file.close()

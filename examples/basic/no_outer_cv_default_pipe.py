@@ -1,10 +1,10 @@
 import numpy as np
-from sklearn.datasets import load_boston
+from sklearn.datasets import load_diabetes
 from sklearn.model_selection import KFold
 
-from photonai.base import Hyperpipe, PipelineElement
+from photonai import Hyperpipe, PipelineElement
 
-X, y = load_boston(return_X_y=True)
+X, y = load_diabetes(return_X_y=True)
 
 my_pipe = Hyperpipe(name='single_outer_pipe',
                     metrics=['mean_absolute_error', 'mean_squared_error', 'pearson_correlation'],

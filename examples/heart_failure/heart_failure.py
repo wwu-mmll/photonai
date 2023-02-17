@@ -1,7 +1,6 @@
 import pandas as pd
 from sklearn.model_selection import KFold, ShuffleSplit
-from photonai.base import Hyperpipe, PipelineElement, Switch
-from photonai.optimization import FloatRange, IntegerRange
+from photonai import Hyperpipe, PipelineElement, Switch, FloatRange, IntegerRange
 
 # setup training and test workflow
 my_pipe = Hyperpipe('heart_failure',
