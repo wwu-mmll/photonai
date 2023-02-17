@@ -8,10 +8,12 @@ on:
     branches: [ main, develop ]
   pull_request:
     branches: [ main, develop ]
+  schedule:
+    - cron: '0 10 5 * *'
 
 jobs:
   pytest:
-    name: Run PHOTONAI tests and publish test coverage
+    name: Run PHOTONAI tests ${{matrix.python-version}} and publish test coverage
     runs-on: ubuntu-22.04
     
     services:
@@ -20,12 +22,16 @@ jobs:
         ports:
           - 27017:27017
 
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10']
+
     steps:
     - uses: actions/checkout@v3
     - name: Set up Python 3.10.8
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10.8
+        python-version: ${{ matrix.python-version }}
 #    - name: Install os dependencies
 #      run: | 
 #        sudo apt-get update
@@ -62,7 +68,8 @@ jobs:
       run: python -m build -n --sdist --wheel --outdir dist/ .
     - name: Publish distribution to Test PyPI
       uses: pypa/gh-action-pypi-publish@release/v1
+      if: ${{ matrix.python-version }} ==
       with:
         user: __token__
-        password: ${{ secrets.TEST_PYPI_API_TOKEN }}
+        password: ${{ secrets.TEST_PYPI_API_TOKEN }} == 3.10
         repository_url: https://test.pypi.org/legacy/
