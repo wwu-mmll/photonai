@@ -29,4 +29,4 @@ for i in r["mean"].argsort()[::-1]:
 
 # get permutation importances posthoc
 # reloaded_hyperpipe = Hyperpipe.reload_hyperpipe("full_path/to/results_folder/", X_train, y_train)
-# post_hoc_perm_importances = Hyperpipe.get_permutation_feature_importances(n_repeats=5, random_state=0)
+# post_hoc_perm_importances = reloaded_hyperpipe.get_permutation_feature_importances(n_repeats=5, random_state=0)

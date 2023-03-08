@@ -1253,7 +1253,7 @@ class Hyperpipe(BaseEstimator):
             if outer_fold.best_config is None:
                 raise ValueError("Could not find a best config for outer fold " + str(outer_fold.fold_nr))
 
-            pipe_copy = self.optimum_pipe.copy_me()
+            pipe_copy = Branch.prepare_photon_pipe(self.elements)
 
             # set pipe to config
             pipe_copy.set_params(**outer_fold.best_config.config_dict)
