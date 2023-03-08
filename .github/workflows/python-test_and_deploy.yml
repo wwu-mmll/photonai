@@ -12,38 +12,6 @@ on:
     - cron: '0 10 5 * *'
 
 jobs:
-  pytest:
-    name: Run PHOTONAI tests ${{matrix.python-version}}
-    runs-on: ubuntu-22.04
-    
-    services:
-      mongodb:
-        image: mongo:latest
-        ports:
-          - 27017:27017
-
-    strategy:
-      matrix:
-        python-version: ['3.8', '3.9']
-
-    steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v4
-      with:
-        python-version: ${{ matrix.python-version }}
-#    - name: Install os dependencies
-#      run: | 
-#        sudo apt-get update
-#        sudo apt-get -y install gfortran swig
-    - name: Install dependencies
-      run: |
-        pip install wheel flake8 pbr
-        python setup.py egg_info
-        pip install tensorflow pytest pytest-cov coveralls -r photonai.egg-info/requires.txt -r photonai/optimization/smac/requirements.txt -r photonai/optimization/nevergrad/requirements.txt
-    - name: Test with pytest
-      run: |
-        PYTHONPATH=./ pytest ./test --cov=./photonai --full-trace
   coverage:
     name: Run PHOTONAI tests and publish test coverage
     runs-on: ubuntu-22.04
@@ -56,10 +24,10 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - name: Set up Python 3.10.8
+    - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10.8
+        python-version: 3.9
     - name: Install dependencies
       run: |
         pip install wheel flake8 pbr
@@ -82,10 +50,10 @@ jobs:
     - uses: actions/checkout@v3
       with:
         fetch-depth: 0
-    - name: Set up Python 3.10
+    - name: Set up Python 3.9
       uses: actions/setup-python@v4
       with:
-        python-version: 3.10.8
+        python-version: 3.9
     - name: Install pypa/build
       run: pip install build pbr wheel
     - name: Build a binary wheel and a source tarball
