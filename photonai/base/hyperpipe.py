@@ -58,7 +58,8 @@ class OutputSettings:
                  user_id: str = '',
                  wizard_object_id: str = '',
                  wizard_project_name: str = '',
-                 project_folder: str = ''):
+                 project_folder: str = '',
+                 create_explorer_json: bool = True):
         """
         Initialize the object.
 
@@ -92,6 +93,9 @@ class OutputSettings:
             project_folder:
                 Deprecated Parameter - transferred to Hyperpipe.
 
+            create_explorer_json:
+                If true, the results json is created, otherwise this step is skipped and no json will be generated
+
         """
         if project_folder:
             msg = "Deprecated: The parameter 'project_folder' was moved to the Hyperpipe. " \
@@ -108,6 +112,7 @@ class OutputSettings:
 
         self.generate_best_model = generate_best_model
         self.save_output = save_output
+        self.create_explorer_json = create_explorer_json
         self.save_predictions_from_best_config_inner_folds = None
 
         self.verbosity = 0
@@ -822,7 +827,7 @@ class Hyperpipe(BaseEstimator):
                                                     'BestConfigMetric': self.optimization.best_config_metric}
 
         # add json file of hyperpipe attributes
-        if self.output_settings.save_output:
+        if self.output_settings.save_output and self.output_settings.create_explorer_json:
             try:
                 json_transformer = JsonTransformer()
                 json_transformer.to_json_file(self,
