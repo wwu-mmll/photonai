@@ -210,7 +210,7 @@ class PermutationTest:
 
             for _, metric in metrics.items():
                 perm_performances[metric["name"]] = [i.get_test_metric(metric["name"], operation="mean")
-                                                     for i in all_permutations for m in i.metrics_test]
+                                                     for i in all_permutations]
 
             # Calculate p-value
             p = PermutationTest.calculate_p(true_performance=true_performances, perm_performances=perm_performances,
@@ -352,9 +352,9 @@ class PermutationTest:
         p = dict()
         for _, metric in metrics.items():
             if metric['greater_is_better']:
-                p[metric['name']] = np.sum(true_performance[metric['name']] < np.asarray(perm_performances[metric['name']]))/(n_perms + 1)
+                p[metric['name']] = (np.sum(true_performance[metric['name']] < np.asarray(perm_performances[metric['name']])) + 1)/(n_perms + 1)
             else:
-                p[metric['name']] = np.sum(true_performance[metric['name']] > np.asarray(perm_performances[metric['name']]))/(n_perms + 1)
+                p[metric['name']] = (np.sum(true_performance[metric['name']] > np.asarray(perm_performances[metric['name']])) + 1)/(n_perms + 1)
         return p
 
     @staticmethod
