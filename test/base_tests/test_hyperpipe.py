@@ -225,6 +225,22 @@ class HyperpipeTests(PhotonBaseTest):
         self.assertEqual(permutation_score_outer["mean"].shape, (self.__X.shape[1],))
         self.assertEqual(permutation_score_outer["std"].shape, (self.__X.shape[1],))
 
+        # test model and permutation_importance comparision
+        with self.assertRaises(ValueError):
+            _ = hp.get_model_and_permutation_importances()
+
+        # set to linear kernel
+        # hp.elements[-1].base_element.kernel = 'linear'
+        # todo: why is feature_importances None for linear kernel of SVC, coeffs
+        hp.elements[-1] = PipelineElement('RandomForestClassifier')
+        hp.fit(self.__X, self.__y)
+        permutation_features = hp.get_model_and_permutation_importances(n_repeats=10, random_state=1)
+        self.assertEqual(permutation_features.shape[0], 8)
+        self.assertEqual(permutation_features.shape[1], self.__X.shape[1])
+        model_ranks = [permutation_features[fc]["model_rank"] for fc in permutation_features.columns]
+        model_ranks.sort()
+        self.assertTrue(np.array_equal(model_ranks, [i for i in range(1, self.__X.shape[1] + 1)]))
+
         # do it on inner folds but on training sets from outer split
         hp.cross_validation.use_test_set = False
         hp.fit(self.__X, self.__y)

@@ -1320,6 +1320,38 @@ class Hyperpipe(BaseEstimator):
 
         return {'mean': mean_importances, 'std': std_importances}
 
+    def get_model_and_permutation_importances(self, column_names=None, **kwargs):
+        feature_importances_model_all = [fold.best_config.best_config_score.feature_importances
+                                         for i, fold in enumerate(self.results.outer_folds)]
+        if np.sum([1 for f in feature_importances_model_all if f is None]) > 0:
+            raise ValueError("There are folds that do not yield valid feature importances for the estimator.")
+
+        mean_fimps_model = np.mean(feature_importances_model_all, axis=0)
+        norm_fimps_model = mean_fimps_model / mean_fimps_model.sum(axis=0, keepdims=1)
+        rank_fimps_model = [sorted(norm_fimps_model)[::-1].index(v) + 1 for v in norm_fimps_model]
+        feature_importances_model = {'mean': mean_fimps_model, 'std': np.std(feature_importances_model_all, axis=0),
+                                     'norm': norm_fimps_model, 'rank': rank_fimps_model}
+        feature_importances_perm = self.get_permutation_feature_importances(**kwargs)
+        abs_mean = np.abs(feature_importances_perm["mean"])
+        feature_importances_perm["norm"] = abs_mean / abs_mean.sum(axis=0, keepdims=1)
+        feature_importances_perm["rank"] = [sorted(feature_importances_perm["norm"])[::-1].index(v) + 1
+                                            for v in feature_importances_perm["norm"]]
+
+        num_columns = len(feature_importances_perm["mean"])
+        column_names = column_names if column_names is not None else ["feature_{}".format(fi) for fi in range(num_columns)]
+
+        feature_importances_df = pd.DataFrame(index=['model_mean', 'model_std',
+                                                     'perm_mean', 'perm_std',
+                                                     'model_norm', 'perm_norm',
+                                                     'model_rank', 'perm_rank'],
+                                              columns=column_names)
+        for i, cname in enumerate(column_names):
+            for name, origin in {'model': feature_importances_model, 'perm': feature_importances_perm}.items():
+                for aggregator in ["mean", "norm", 'std', 'rank']:
+                    feature_importances_df.at[name + '_' + aggregator, cname] = origin[aggregator][i]
+        logger.photon_system_log(str(feature_importances_df))
+        return feature_importances_df
+
 
     def inverse_transform_pipeline(self, hyperparameters: dict,
                                    data: np.ndarray,
@@ -1354,6 +1386,8 @@ class Hyperpipe(BaseEstimator):
         copied_pipe.set_params(**hyperparameters)
         copied_pipe.fit(data, targets)
         return copied_pipe.inverse_transform(data_to_inverse)
+
+
 
     # ===================================================================
     # Copy, Save and Load
