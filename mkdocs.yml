@@ -9,7 +9,7 @@ nav:
       - 'Hyperparameter Optimization': getting_started/hpos.md
       - 'Include custom algorithm': getting_started/custom_algorithm.md
       - 'Inspect and visualize results': getting_started/output.md
-#      - 'Simple Classification': getting_started/classification.md
+#      - 'Simple Classification': getting_started/default_classification.md
 
   - 'Pipeline Architecture':
       - 'Switch (OR)': photon_elements/switch.md
@@ -19,7 +19,7 @@ nav:
       - Classifier Ensemble: photon_elements/classifier_ensemble.md
   - 'Examples':
       - 'General':
-          - 'Simple Classification': examples/classification.md
+          - 'Simple Classification': examples/default_classification.md
           - 'Simple Regression': examples/regression.md
           - 'Compare estimators': examples/compare_estimators.md
           - 'Over- /Undersampling': examples/imbalanced_data.md
