@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer
 from sklearn.model_selection import KFold
 
-from photonai import Hyperpipe, PipelineElement, Switch, IntegerRange
+from photonai import Hyperpipe, PipelineElement, Switch, IntegerRange, ClassifierSwitch, RegressorSwitch
 
 # GET DATA
 X, y = load_breast_cancer(return_X_y=True)
@@ -32,5 +32,9 @@ tree = PipelineElement('DecisionTreeClassifier',
                                         'criterion': ['gini', 'entropy']})
 
 my_pipe += Switch('EstimatorSwitch', [svm, tree])
+
+# we also have pre-defined switches for classification and regression
+# my_pipe += RegressorSwitch()
+# my_pipe += ClassifierSwitch()
 
 my_pipe.fit(X, y)

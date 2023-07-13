@@ -6,7 +6,15 @@
     </p>
 </div>
 
+<h3>Regression with default pipeline</h3>
 ``` python
 {% include "examples/basic/regression.py" %} 
+
+```
+
+<h3>Regression with custom pipeline</h3>
+
+``` python
+{% include "examples/basic/regression_custom.py" %} 
 
 ```

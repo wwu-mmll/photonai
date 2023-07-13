@@ -18,6 +18,7 @@ my_pipe += PipelineElement("StandardScaler")
 my_pipe += PipelineElement('Ridge', alpha=1e-2)
 my_pipe.fit(X_train, y_train)
 
+# get model-agnostic feature importances
 r = my_pipe.get_permutation_feature_importances(n_repeats=50, random_state=0)
 
 for i in r["mean"].argsort()[::-1]:
@@ -26,7 +27,9 @@ for i in r["mean"].argsort()[::-1]:
               f"{r['mean'][i]:.3f}"
               f" +/- {r['std'][i]:.3f}")
 
+# if your have a model that returns feature importance scores you can compare those to permutation feature importances
+feature_importances_df = my_pipe.get_model_and_permutation_importances(n_repeats=50, random_state=0)
 
 # get permutation importances posthoc
 # reloaded_hyperpipe = Hyperpipe.reload_hyperpipe("full_path/to/results_folder/", X_train, y_train)
-# post_hoc_perm_importances = Hyperpipe.get_permutation_feature_importances(n_repeats=5, random_state=0)
+# post_hoc_perm_importances = reloaded_hyperpipe.get_permutation_feature_importances(n_repeats=5, random_state=0)

@@ -1343,13 +1343,10 @@ class Switch(PipelineElement):
 
         self.elements_dict = {}
 
-        if elements:
-            self.elements = elements
-            self.generate_private_config_grid()
+        self.elements = []
+        if elements is not None:
             for p_element in elements:
-                self.elements_dict[p_element.name] = p_element
-        else:
-            self.elements = []
+                self.__iadd__(p_element)
 
     def __iadd__(self, pipeline_element: PipelineElement):
         """
