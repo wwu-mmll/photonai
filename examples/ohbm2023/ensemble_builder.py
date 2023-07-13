@@ -9,7 +9,7 @@ def create_ensemble(copy_pipe_fnc, outer_fold, best_config_outer_fold):
     print("Delegate was here!")
     return optimum_pipe, best_config_outer_fold
 
-
+# todo: create test suite
 my_pipe = RegressionPipe('diabetes',
                          project_folder='./tmp',
                          add_estimator=False,

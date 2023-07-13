@@ -18,6 +18,7 @@ def best_config_selector(list_of_non_failed_configs, metric, fold_operation, max
     return list_of_non_failed_configs[0]
 
 
+# todo: create test suite
 my_pipe = RegressionPipe('diabetes',
                          add_estimator=False,
                          select_best_config_delegate=best_config_selector)
