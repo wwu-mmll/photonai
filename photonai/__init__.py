@@ -15,7 +15,8 @@ It also enables you to persist and load your optimal model, including all prepro
 from .version import __version__
 
 from .base import Hyperpipe, OutputSettings, Stack, Switch, Branch, PipelineElement, ParallelBranch, \
-    PhotonRegistry, DataFilter, CallbackElement, Preprocessing
+    PhotonRegistry, DataFilter, CallbackElement, Preprocessing, ClassificationPipe, ClassifierSwitch, \
+    RegressionPipe, RegressorSwitch
 from .optimization import FloatRange, IntegerRange, Categorical, MinimumPerformanceConstraint, \
     BestPerformanceConstraint, DummyPerformanceConstraint, BooleanSwitch
 from .base.json_transformer import JsonTransformer

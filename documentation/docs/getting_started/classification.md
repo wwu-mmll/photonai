@@ -6,7 +6,16 @@
     </p>
 </div>
 
+<h3>Classification with default pipeline</h3>
+
 ``` python
 {% include "examples/basic/classification.py" %} 
+
+```
+
+<h3>Classification with custom pipeline</h3>
+
+``` python
+{% include "examples/basic/classification_custom.py" %} 
 
 ```

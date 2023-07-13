@@ -23,7 +23,7 @@ class PhotonVotingClassifier(BaseEstimator, ClassifierMixin):
     @staticmethod
     def _most_frequent(X, axis):
         mode_obj = stats.mode(X, axis=axis)
-        return [i[0] for i in mode_obj.mode]
+        return mode_obj.mode
 
 
 class PhotonVotingRegressor(BaseEstimator, RegressorMixin):

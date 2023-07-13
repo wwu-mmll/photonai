@@ -552,6 +552,9 @@ class Hyperpipe(BaseEstimator):
     def __str__(self):
         return "Hyperpipe {}".format(self.name)
 
+    def repr(self):
+        return str(self)
+
     class Data:
 
         def __init__(self, X=None, y=None, kwargs=None, allow_multidim_targets=False):

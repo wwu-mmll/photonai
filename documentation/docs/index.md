@@ -1,31 +1,55 @@
 <h1>Getting Started</h1>
-<h2>1. Installation</h2>
+<h2>Installation</h2>
 <p class="small-p">You only need two things: Python 3 and your favourite Python IDE to get started. Then simply install via pip.</p>
 
 ```python
 pip install photonai
 ```
 
-<h2>2. Setup New Analysis</h2>
-Start by importing some utilities and creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs. 
+<h2> Setup Default Analysis </h2>
+<h3>Regression with default pipeline</h3>
 
+```python
+from sklearn.datasets import load_diabetes
+from photonai import RegressionPipe
+
+my_pipe = RegressionPipe('diabetes')
+X, y = load_diabetes(return_X_y=True)
+my_pipe.fit(X, y)
+```
+
+<h3>Classification with modified default pipeline</h2>
+``` python
+from photonai import ClassificationPipe
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import ShuffleSplit
+
+X, y = load_breast_cancer(return_X_y=True)
+my_pipe = ClassificationPipe(name='breast_cancer_analysis',
+                             inner_cv=ShuffleSplit(n_splits=2),
+                             scaling=True,
+                             imputation=False,
+                             imputation_nan_value=None,
+                             feature_selection=False,
+                             dim_reduction=True,
+                             n_pca_components=10)
+my_pipe.fit(X, y)
+```
+
+
+<h2>Or Setup New Custom Analysis</h2>
+
+Start by importing some utilities. and creating a new Hyperpipe instance, naming the analysis and specifying where to save all outputs.
+Select parameters to customize the training, hyperparameter optimization and testing procedure.
+Particularly, you can choose the hyperparameter optimization strategy, set parameters, choose performance metrics
+and choose the performance metric to minimize or maximize, respectively.
+    
 ```python
 from sklearn.model_selection import ShuffleSplit, KFold
 from sklearn.datasets import load_breast_cancer
 from photonai.base import Hyperpipe, PipelineElement, Switch
 from photonai.optimization import IntegerRange, FloatRange
 
-pipe = Hyperpipe('basic_pipe', project_folder='./')
-```
-
-
-<h2>3. Define training, optimization and testing parameters</h2>
-Select parameters to customize the training, hyperparameter optimization and testing procedure.
-
-Particularly, you can choose the hyperparameter optimization strategy, set parameters, choose performance metrics
-and choose the performance metric to minimize or maximize, respectively.
-    
-```python 
 pipe = Hyperpipe('basic_pipe', project_folder='./',
 
                   # choose hyperparameter optimization strategy
@@ -43,7 +67,7 @@ pipe = Hyperpipe('basic_pipe', project_folder='./',
                   inner_cv=KFold(n_splits=10))
 ``` 
 
-<h2>4. Build custom pipeline</h2>
+<h3>Add pipeline elements to your liking.</h3>
 Select and arrange normalization, dimensionality reduction, feature selection, data augmentation,
 over- or undersampling algorithms in simple or parallel data streams. You can integrate
 custom algorithms or choose from our wide range of pre-registered algorithms from established toolboxes.
@@ -69,7 +93,7 @@ or_element += PipelineElement('SVC',
 pipe += or_element
 ```
 
-<h2>5. Load Data and Train</h2> 
+<h3>Finally, load data and start training!</h3> 
 Load your data and start the (nested-) cross-validated hyperparameter optimization, training and evaluation procedure.
 You will see an extensive output to monitor the hyperparameter optimization progress, see the results and track the
 best performances so far.

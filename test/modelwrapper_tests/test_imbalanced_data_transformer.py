@@ -141,8 +141,10 @@ class ImbalancedDataTransformTest(BaseModelWrapperTest):
             acc = round(test_config_item.metrics_train[0].value, 3)
             relative = round(test_config_item.metrics_train[2].value, 3)
             absolute = round(test_config_item.metrics_train[4].value, 3)
-            test_perf = test_perf.append(pd.Series([config, acc, relative, absolute], index=test_perf.columns),
-                                         ignore_index=True)
+            test_perf = pd.concat([test_perf, pd.DataFrame({'config': [config],
+                                                            'acc': [acc],
+                                                            'class_distribution': [relative],
+                                                            'absolute_samples': [absolute]})], ignore_index=True)
 
         self.assertGreater(test_perf[test_perf["config"] == "RandomOverSampler"]["absolute_samples"].tolist()[0],
                            test_perf[test_perf["config"] == "RandomUnderSampler"]["absolute_samples"].tolist()[0])
