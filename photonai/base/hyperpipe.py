@@ -298,7 +298,8 @@ class Hyperpipe(BaseEstimator):
                  nr_of_processes: int = 1,
                  multi_threading: bool = True,
                  allow_multidim_targets: bool = False,
-                 select_best_config_delegate = None):
+                 select_best_config_delegate=None,
+                 ensemble_builder=None):
         """
         Initialize the object.
 
@@ -524,6 +525,7 @@ class Hyperpipe(BaseEstimator):
             random.seed(random_seed)
 
         self.select_best_config_delegate = select_best_config_delegate
+        self.ensemble_builder = ensemble_builder
 
     # ===================================================================
     # Helper Classes
@@ -1089,7 +1091,8 @@ class Hyperpipe(BaseEstimator):
                                                            cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,
                                                            result_obj=outer_fold,
-                                                           select_best_config_delegate=self.select_best_config_delegate)
+                                                           select_best_config_delegate=self.select_best_config_delegate,
+                                                           ensemble_builder=self.ensemble_builder)
                     # 2. monitor outputs
                     self.results.outer_folds.append(outer_fold)
 

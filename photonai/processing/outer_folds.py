@@ -64,7 +64,8 @@ class OuterFoldManager:
                  cache_updater=None,
                  dummy_estimator=None,
                  result_obj=None,
-                 select_best_config_delegate=None):
+                 select_best_config_delegate=None,
+                 ensemble_builder=None):
         self.outer_fold_id = outer_fold_id
         self.cross_validation_info = cross_validation_info
         self.scorer = Scorer(optimization_info.metrics)
@@ -72,7 +73,9 @@ class OuterFoldManager:
         self._pipe = pipe
         self.copy_pipe_fnc = self._pipe.copy_me
         self.dummy_estimator = dummy_estimator
+
         self.best_config_delegate = select_best_config_delegate
+        self.ensemble_builder = ensemble_builder
 
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
@@ -206,12 +209,17 @@ class OuterFoldManager:
                 raise Exception("No best config was found!")
 
             # ... and create optimal pipeline
-            optimum_pipe = self.copy_pipe_fnc()
-            if self.cache_updater is not None:
-                self.cache_updater(optimum_pipe, self.cache_folder, "fixed_fold_id")
-            optimum_pipe.caching = False
-            # set self to best config
-            optimum_pipe.set_params(**best_config_outer_fold.config_dict)
+            if self.ensemble_builder is None:
+                optimum_pipe = self.copy_pipe_fnc()
+                if self.cache_updater is not None:
+                    self.cache_updater(optimum_pipe, self.cache_folder, "fixed_fold_id")
+                optimum_pipe.caching = False
+                # set self to best config
+                optimum_pipe.set_params(**best_config_outer_fold.config_dict)
+            else:
+                optimum_pipe, best_config_outer_fold = self.ensemble_builder(self.copy_pipe_fnc,
+                                                                             self.result_object,
+                                                                             best_config_outer_fold)
 
             # Todo: set all children to best config and inform to NOT optimize again, ONLY fit
             # for child_name, child_config in best_config_outer_fold_mdb.children_config_dict.items():
