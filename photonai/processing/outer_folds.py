@@ -63,7 +63,8 @@ class OuterFoldManager:
                  cache_folder=None,
                  cache_updater=None,
                  dummy_estimator=None,
-                 result_obj=None):
+                 result_obj=None,
+                 select_best_config_delegate=None):
         self.outer_fold_id = outer_fold_id
         self.cross_validation_info = cross_validation_info
         self.scorer = Scorer(optimization_info.metrics)
@@ -71,6 +72,7 @@ class OuterFoldManager:
         self._pipe = pipe
         self.copy_pipe_fnc = self._pipe.copy_me
         self.dummy_estimator = dummy_estimator
+        self.best_config_delegate = select_best_config_delegate
 
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
@@ -183,7 +185,8 @@ class OuterFoldManager:
         if self.tested_config_counter > 0:
             best_config_outer_fold = self.result_object.get_optimum_config(self.optimization_info.best_config_metric,
                                                                            self.optimization_info.maximize_metric,
-                                                                           fold_operation=self.fold_operation)
+                                                                           fold_operation=self.fold_operation,
+                                                                           select_best_delegate=self.best_config_delegate)
             # inform user
             logger.debug('Optimizer metric: ' + self.optimization_info.best_config_metric + '\n' +
                          '   --> Maximize metric: ' + str(self.optimization_info.maximize_metric))
