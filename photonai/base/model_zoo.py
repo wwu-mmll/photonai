@@ -6,6 +6,8 @@ from photonai.optimization import FloatRange
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
+from sklearn.metrics import mean_absolute_error, mean_squared_error, explained_variance_score
+from sklearn.metrics import balanced_accuracy_score, accuracy_score, recall_score, pre
 from photonai.photonlogger.logger import logger
 from typing import Optional, List, Union
 from pathlib import Path

@@ -4,8 +4,7 @@ import numpy as np
 class BaseConfigSelector:
 
     def prepare_metrics(self, list_of_non_failed_configs, metric):
-        classification_metrics = ['balanced_accuracy', 'specificity', 'precision',
-                                  'recall', 'f1_score', 'matthews_corrcoef']
+        classification_metrics = ['balanced_accuracy', 'precision', 'recall', 'f1_score', 'matthews_corrcoef']
         regression_metrics = ['mean_absolute_error', 'mean_squared_error', 'explained_variance']
 
         # right now we can only do this ugly hack, sorry!
