@@ -15,7 +15,8 @@ datasets = [
         'columns': ['Sex', 'Length', 'Diameter', 'Height', 'WholeWeight', 'ShuckedWeight',
                     'VisceraWeight', 'ShellWeight', 'Rings'],
         'categorials': ['Sex'],
-        'filename': 'abalone.data'
+        'filename': 'abalone.data',
+        'task': 'Classification'
     },
     {
         'name': "Haberman's Survival",
@@ -24,7 +25,8 @@ datasets = [
         'columns': ["Age", "Year", "nPositiveNodes", "Survival"],
         'target': 'Survival',
         'categorials': [],
-        'filename': 'haberman.data'
+        'filename': 'haberman.data',
+        'task': 'Classification'
     },
     {
         'name': 'Autistic Spectrum Disorder Screening Data for Children',
@@ -33,9 +35,38 @@ datasets = [
         'columns': [],
         'target': 'Class/ASD',
         'categorials': ['gender', 'ethnicity', 'jundice', 'austim', 'contry_of_res', 'used_app_before', 'age_desc', 'relation', 'Class/ASD'],
-        'filename': 'Autism-Child-Data.arff'
+        'filename': 'Autism-Child-Data.arff',
+        'task': 'Classification'
+    },
+    {
+        'name': 'Parkinsons Telemonitoring Data Set',
+        'uci_url': 'https://archive.ics.uci.edu/static/public/189/parkinsons+telemonitoring.zip',
+        'website': 'https://archive.ics.uci.edu/dataset/189/parkinsons+telemonitoring',
+        'columns': ['subject', 'age', 'sex', 'test_time', 'motor_UPDRS', 'total_UPDRS', 'Jitter', 'variation',
+                    'shimmer', 'amplitude', 'nhr', 'rpde', 'dfa', 'ppe'],
+        'target': 'motor_UPDRS',
+        'categorials': [],
+        'filename': 'parkinsons_updrs.data',
+        'task': 'Regression'
+    },
+    {
+
     }
 ]
+
+
+def get_available_datasets(print_to_console: bool = False,
+                           return_details: bool = False):
+    if print_to_console:
+        for ds in datasets:
+            print('*'*50)
+            print(ds['name'])
+            if return_details:
+                print(f"Details: {ds['website']}")
+    if not return_details:
+        return [ds['name'] for ds in datasets]
+    return [{'name': ds['name'], 'details': ds['website'], 'task': ds['task']} for ds in datasets]
+
 
 
 def load_dataset(name: str = None):
@@ -64,9 +95,9 @@ def load_dataset(name: str = None):
 
 def __load_single_dataset(dataset: dict):
     if os.path.isfile(dataset['filename']):
-        print(f"Using cached dataset {dataset['filename']}")
+        print(f"Using cached dataset {dataset['filename']} ({dataset['task']})")
         return pd.read_csv(dataset['filename'])
-    print(f"Fetching dataset {dataset['filename']}")
+    print(f"Fetching dataset {dataset['filename']} ({dataset['task']})")
     resp = urllib.request.urlopen(dataset['uci_url'])
     zipfile = ZipFile(BytesIO(resp.read()))
     in_mem_fo = TextIOWrapper(zipfile.open(dataset['filename']), encoding='utf-8')
@@ -88,5 +119,6 @@ def __load_single_dataset(dataset: dict):
 
 
 if __name__ == '__main__':
+    print(get_available_datasets(return_details=True))
     for X, y in load_dataset():
         print(f'{X.shape}, {y.shape}')
