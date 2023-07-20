@@ -68,7 +68,6 @@ def get_available_datasets(print_to_console: bool = False,
     return [{'name': ds['name'], 'details': ds['website'], 'task': ds['task']} for ds in datasets]
 
 
-
 def load_dataset(name: str = None):
     """
     Load the UCI datasets
@@ -78,19 +77,17 @@ def load_dataset(name: str = None):
         name: str, default=None
             Name of the dataset to load
     """
-    if name is not None:
-        target_dataset = None
-        for ds in datasets:
-            if ds['name'] == name:
-                target_dataset = ds
-                break
-        if target_dataset is None:
-            raise ValueError("Requested dataset not found")
-        df = __load_single_dataset(target_dataset)
-        return df.loc[:, df.columns != target_dataset['target']].to_numpy(), df[target_dataset['target']].to_numpy()
-    for dataset in datasets:
-        df = __load_single_dataset(dataset)
-        yield df.loc[:, df.columns != dataset['target']].to_numpy(), df[dataset['target']].to_numpy()
+    if name is None:
+        raise ValueError("Please specify dataset")
+    target_dataset = None
+    for ds in datasets:
+        if ds['name'] == name:
+            target_dataset = ds
+            break
+    if target_dataset is None:
+        raise ValueError("Requested dataset not found")
+    df = __load_single_dataset(target_dataset)
+    return df.loc[:, df.columns != target_dataset['target']].to_numpy(), df[target_dataset['target']].to_numpy()
 
 
 def __load_single_dataset(dataset: dict):

@@ -12,6 +12,7 @@ list_of_dataset_runners = {'breast_cancer': BreastCancerRunner,}
                            # 'autistic': AutisticRunner,
                            # 'parkinson': ParkinsonsRunner}
 
+
 current_config_selector = RandomConfigSelector
 config_selector_name = 'random'
 procs = []
