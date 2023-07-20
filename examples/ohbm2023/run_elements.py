@@ -4,6 +4,7 @@ from photonai.base import ClassificationPipe, RegressionPipe
 from pathlib import Path
 from testsuite import load_dataset
 
+
 class Runner:
 
     def __init__(self, name: str,
@@ -52,26 +53,31 @@ class DiabetesRunner(Runner):
     def analysis_type(self):
         return 'regression'
 
+
 class AbaloneRunner(Runner):
     def load_data(self):
         return load_dataset('Abalone')
     
     def analysis_type(self):
         return 'classification'
-    
+
+
 class HabermansSurvivalRunner(Runner):
     def load_data(self):
         return load_dataset("Haberman's Survival")
     
     def analysis_type(self):
         return 'classification'
-    
+
+
 class AutisticRunner(Runner):
     def load_data(self):
         return load_dataset('Autistic Spectrum Disorder Screening Data for Children')
+
     def analysis_type(self):
         return 'classification'
-    
+
+
 class ParkinsonsRunner(Runner):
     def load_data(self):
         return load_dataset("Parkinsons Telemonitoring Data Set")

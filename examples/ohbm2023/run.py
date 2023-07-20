@@ -19,6 +19,7 @@ list_of_dataset_runners = {'breast_cancer': BreastCancerRunner,}
                            # 'parkinson': ParkinsonsRunner}
 
 current_config_selector = list_of_config_selectors[config_selector_name]
+
 procs = []
 
 for name, runner_type in list_of_dataset_runners.items():
