@@ -15,4 +15,3 @@ distributed
 scikit-optimize
 xlrd
 pbr
-uci-dataset

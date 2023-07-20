@@ -3,6 +3,7 @@ import urllib.request
 from zipfile import ZipFile
 from io import BytesIO, TextIOWrapper
 from sklearn.preprocessing import LabelEncoder
+from scipy.io.arff import loadarff
 import pandas as pd
 
 datasets = [
@@ -13,7 +14,6 @@ datasets = [
         'target': 'Rings',
         'columns': ['Sex', 'Length', 'Diameter', 'Height', 'WholeWeight', 'ShuckedWeight',
                     'VisceraWeight', 'ShellWeight', 'Rings'],
-        'mask_targets': False,
         'categorials': ['Sex'],
         'filename': 'abalone.data'
     },
@@ -25,6 +25,15 @@ datasets = [
         'target': 'Survival',
         'categorials': [],
         'filename': 'haberman.data'
+    },
+    {
+        'name': 'Autistic Spectrum Disorder Screening Data for Children',
+        'uci_url': 'https://archive.ics.uci.edu/static/public/419/autistic+spectrum+disorder+screening+data+for+children.zip',
+        'website': 'https://archive.ics.uci.edu/dataset/419/autistic+spectrum+disorder+screening+data+for+children',
+        'columns': [],
+        'target': 'Class/ASD',
+        'categorials': ['gender', 'ethnicity', 'jundice', 'austim', 'contry_of_res', 'used_app_before', 'age_desc', 'relation', 'Class/ASD'],
+        'filename': 'Autism-Child-Data.arff'
     }
 ]
 
@@ -61,7 +70,16 @@ def __load_single_dataset(dataset: dict):
     resp = urllib.request.urlopen(dataset['uci_url'])
     zipfile = ZipFile(BytesIO(resp.read()))
     in_mem_fo = TextIOWrapper(zipfile.open(dataset['filename']), encoding='utf-8')
-    df = pd.read_csv(in_mem_fo, header=None, names=dataset['columns'])
+    if dataset['filename'][-4:] == 'data':
+        df = pd.read_csv(in_mem_fo, header=None, names=dataset['columns'])
+    elif dataset['filename'][-4:] == 'arff':
+        data = loadarff(in_mem_fo)
+        df = pd.DataFrame(data[0])
+        for c in df.columns:
+            if df[c].dtype == 'object':
+                df[c] = df[c].str.decode('UTF-8')
+    else:
+        raise ValueError(f"Unknown filetype: {dataset['filename'][:-4]}")
     # remove categorials
     for categorial in dataset['categorials']:
         df[categorial] = LabelEncoder().fit_transform(df[categorial])
