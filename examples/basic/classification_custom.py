@@ -5,17 +5,17 @@ from photonai import Hyperpipe, PipelineElement, FloatRange, Categorical, Intege
 my_pipe = Hyperpipe('basic_svm_pipe',
                     inner_cv=KFold(n_splits=5),
                     outer_cv=KFold(n_splits=3),
-                    optimizer='sk_opt',
+                    optimizer='random_search',
                     optimizer_params={'n_configurations': 15},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',
-                    project_folder='./tmp')
+                    project_folder='./tmp',
+                    verbosity=1)
 
 my_pipe.add(PipelineElement('StandardScaler'))
 
 my_pipe += PipelineElement('PCA',
                            hyperparameters={'n_components': IntegerRange(10, 30)},
-                           n_components=10,
                            test_disabled=True)
 
 my_pipe += PipelineElement('SVC',
