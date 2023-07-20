@@ -11,7 +11,7 @@ class ResultCollector:
 
     def collect_results(self):
         for analysis_type in ['classification', 'regression']:
-            result_df = pd.DataFrame()
+            result_df = None
             analysis_type_path = self.output_path.joinpath(analysis_type)
             if analysis_type_path.exists():
                 for analysis_path in analysis_type_path.iterdir():
@@ -25,9 +25,13 @@ class ResultCollector:
                         for metric_name, metric_values in perf.items():
                             perf_dict[metric_name + '_mean'] = [np.mean(metric_values)]
                             perf_dict[metric_name + '_std'] = [np.std(metric_values)]
-                        result_df = pd.concat([result_df, pd.DataFrame(perf_dict)], ignore_index=True)
-            result_df.describe()
-            result_df.to_csv(self.output_path.joinpath(analysis_type + ".csv"), index=False)
+                        new_df = pd.DataFrame(perf_dict, columns=[k for k in perf_dict.keys()])
+                        if result_df is None:
+                            result_df = new_df
+                        else:
+                            result_df = pd.concat([result_df, new_df], ignore_index=True)
+                print(result_df.describe())
+                result_df.to_csv(self.output_path.joinpath(analysis_type + ".csv"), index=False)
 
 
 
