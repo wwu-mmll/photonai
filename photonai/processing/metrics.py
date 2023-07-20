@@ -21,27 +21,27 @@ class Scorer:
 
     ELEMENT_DICTIONARY: Dict[str, Tuple[str, str, str]] = {
         # Classification
-        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', 'score'),
-        'accuracy': ('sklearn.metrics', 'accuracy_score', 'score'),
-        'f1_score': ('sklearn.metrics', 'f1_score', 'score'),
-        'hamming_loss': ('sklearn.metrics', 'hamming_loss', 'error'),
-        'log_loss': ('sklearn.metrics', 'log_loss', 'error'),
-        'precision': ('sklearn.metrics', 'precision_score', 'score'),
-        'recall': ('sklearn.metrics', 'recall_score', 'score'),
-        'auc': ('sklearn.metrics', 'roc_auc_score', 'score'),
-        'sensitivity': ('photonai.processing.metrics', 'sensitivity', 'score'),
-        'specificity': ('photonai.processing.metrics', 'specificity', 'score'),
-        'balanced_accuracy': ('photonai.processing.metrics', 'balanced_accuracy', 'score'),
-        'categorical_accuracy': ('photonai.processing.metrics', 'categorical_accuracy_score', 'score'),
+        'matthews_corrcoef': ('sklearn.metrics', 'matthews_corrcoef', 'score', {}),
+        'accuracy': ('sklearn.metrics', 'accuracy_score', 'score', {}),
+        'f1_score': ('sklearn.metrics', 'f1_score', 'score', {'average': 'weighted'}),
+        'hamming_loss': ('sklearn.metrics', 'hamming_loss', 'error', {}),
+        'log_loss': ('sklearn.metrics', 'log_loss', 'error', {}),
+        'precision': ('sklearn.metrics', 'precision_score', 'score', {'average': 'weighted'}),
+        'recall': ('sklearn.metrics', 'recall_score', 'score', {'average': 'weighted'}),
+        'auc': ('sklearn.metrics', 'roc_auc_score', 'score', {}),
+        'sensitivity': ('photonai.processing.metrics', 'sensitivity', 'score', {}),
+        'specificity': ('photonai.processing.metrics', 'specificity', 'score', {}),
+        'balanced_accuracy': ('photonai.processing.metrics', 'balanced_accuracy', 'score', {}),
+        'categorical_accuracy': ('photonai.processing.metrics', 'categorical_accuracy_score', 'score', {}),
 
         # Regression
-        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error'),
-        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
-        'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
-        'r2': ('sklearn.metrics', 'r2_score', 'score'),
-        'pearson_correlation': ('photonai.processing.metrics', 'pearson_correlation', 'score'),
-        'spearman_correlation': ('photonai.processing.metrics', 'spearman_correlation', 'score'),
-        'variance_explained':  ('photonai.processing.metrics', 'variance_explained_score', 'score')
+        'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error', {}),
+        'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error', {}),
+        'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score', {}),
+        'r2': ('sklearn.metrics', 'r2_score', 'score', {}),
+        'pearson_correlation': ('photonai.processing.metrics', 'pearson_correlation', 'score', {}),
+        'spearman_correlation': ('photonai.processing.metrics', 'spearman_correlation', 'score', {}),
+        'variance_explained':  ('photonai.processing.metrics', 'variance_explained_score', 'score', {})
     }
 
     CUSTOM_ELEMENT_DICTIONARY: Dict[str, Callable] = {}
@@ -221,7 +221,10 @@ class Scorer:
                     raise NameError
                 scorer = self.imported_metrics[metric]
                 if scorer is not None:
-                    scorer_value = scorer(y_true, y_pred)
+                    kwargs = {}
+                    if metric in Scorer.ELEMENT_DICTIONARY:
+                        _, _, _, kwargs = Scorer.ELEMENT_DICTIONARY[metric]
+                    scorer_value = scorer(y_true, y_pred, **kwargs)
                     output_metrics[metric] = scorer_value
                 else:
                     output_metrics[metric] = np.nan

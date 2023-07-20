@@ -12,10 +12,10 @@ config_selector_name = 'default'
 multiprocessing = False
 
 list_of_dataset_runners = {
-                           # 'abalone': AbaloneRunner,
-                           # 'habermans_survival': HabermansSurvivalRunner,
-                           # 'autistic': AutisticRunner,
-                           # 'parkinson': ParkinsonsRunner,
+                           'abalone': AbaloneRunner,
+                           'habermans_survival': HabermansSurvivalRunner,
+                           'autistic': AutisticRunner,
+                           'parkinson': ParkinsonsRunner,
                            'breast_cancer': BreastCancerRunner,
                            'diabetes': DiabetesRunner,
 }
