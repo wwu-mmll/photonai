@@ -1,6 +1,7 @@
 from run_elements import BreastCancerRunner, DiabetesRunner
 from config_selectors import DefaultConfigSelector
 from collect_results import ResultCollector
+from multiprocessing import Process
 
 
 list_of_dataset_runners = {'breast_cancer': BreastCancerRunner,
@@ -8,6 +9,7 @@ list_of_dataset_runners = {'breast_cancer': BreastCancerRunner,
 
 current_config_selector = DefaultConfigSelector
 config_selector_name = 'default'
+procs = []
 
 for name, runner_type in list_of_dataset_runners.items():
     # todo: add multiprocessing!
@@ -15,7 +17,16 @@ for name, runner_type in list_of_dataset_runners.items():
     runner = runner_type(name=name,
                          project_folder=project_folder,
                          best_config_selector=DefaultConfigSelector())
-    # runner.run_analysis()
+
+    func = runner.run_analysis
+    proc = Process(target=func)
+    procs.append(proc)
+    proc.start()
+
+
+# complete the processes
+for proc in procs:
+    proc.join()
 
 
 collector = ResultCollector(project_folder)
