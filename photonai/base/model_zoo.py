@@ -803,6 +803,7 @@ class RegressionPipe(DefaultPipeline):
         metrics = metrics if metrics is not None else ['mean_absolute_error',
                                                        'mean_squared_error',
                                                        'explained_variance']
+        metrics = [('mean_absolute_error', custom_metric), Accuracy, 'accuracy'],
 
         super(RegressionPipe, self).__init__(name=name,
                                              project_folder=project_folder,

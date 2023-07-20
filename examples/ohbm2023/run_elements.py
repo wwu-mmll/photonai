@@ -56,6 +56,7 @@ class DiabetesRunner(Runner):
 
 class AbaloneRunner(Runner):
     def load_data(self):
+        X, y = load_dataset('Abalone')
         return load_dataset('Abalone')
     
     def analysis_type(self):

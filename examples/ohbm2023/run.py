@@ -8,15 +8,17 @@ import os
 list_of_config_selectors = {'default': DefaultConfigSelector,
                             'random': RandomConfigSelector}
 
-config_selector_name = 'random'
+config_selector_name = 'default'
 multiprocessing = False
 
-list_of_dataset_runners = {'breast_cancer': BreastCancerRunner,}
-                           # 'diabetes': DiabetesRunner,
+list_of_dataset_runners = {
                            # 'abalone': AbaloneRunner,
                            # 'habermans_survival': HabermansSurvivalRunner,
                            # 'autistic': AutisticRunner,
-                           # 'parkinson': ParkinsonsRunner}
+                           # 'parkinson': ParkinsonsRunner,
+                           'breast_cancer': BreastCancerRunner,
+                           'diabetes': DiabetesRunner,
+}
 
 current_config_selector = list_of_config_selectors[config_selector_name]
 
@@ -32,8 +34,7 @@ for name, runner_type in list_of_dataset_runners.items():
     func = runner.run_analysis
 
     if multiprocessing is False:
-        # func()
-        pass
+        func()
     else:
         proc = Process(target=func)
         procs.append(proc)
