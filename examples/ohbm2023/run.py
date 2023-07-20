@@ -10,15 +10,20 @@ import os
 list_of_config_selectors = {'default': DefaultConfigSelector,
                             'random': RandomConfigSelector}
 
+
+config_selector_name = 'default'
 multiprocessing = False
 calculate = False
 
-list_of_dataset_runners = {'breast_cancer': BreastCancerRunner,
-                           'diabetes': DiabetesRunner}
-                           # 'abalone': AbaloneRunner,
-                           # 'habermans_survival': HabermansSurvivalRunner,
-                           # 'autistic': AutisticRunner,
-                           # 'parkinson': ParkinsonsRunner}
+
+list_of_dataset_runners = {
+                           'abalone': AbaloneRunner,
+                           'habermans_survival': HabermansSurvivalRunner,
+                           'autistic': AutisticRunner,
+                           'parkinson': ParkinsonsRunner,
+                           'breast_cancer': BreastCancerRunner,
+                           'diabetes': DiabetesRunner,
+}
 
 procs = []
 base_project_folder = './tmp/'
@@ -47,6 +52,7 @@ for config_selector_name, current_config_selector in list_of_config_selectors.it
 
     collector = ResultCollector(project_folder)
     collector.collect_results()
+
 
 regression_results = None
 classification_results = None

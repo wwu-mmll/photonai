@@ -143,7 +143,7 @@ class DefaultPipeline(Hyperpipe):
                  best_config_metric: str = '',
                  optimizer: str = 'random_grid_search',
                  optimizer_params: dict = {'n_configurations': 50},
-                 random_seed = 42,
+                 random_seed=42,
                  X_csv_path: Union[str, Path, None] = None,
                  y_csv_path: Union[str, Path, None] = None,
                  delimiter=",",
@@ -170,6 +170,7 @@ class DefaultPipeline(Hyperpipe):
                                               best_config_metric=best_config_metric,
                                               optimizer=optimizer,
                                               optimizer_params=optimizer_params,
+                                              random_seed=random_seed,
                                               **kwargs)
 
         if add_default_pipeline_elements is True:
@@ -179,12 +180,14 @@ class DefaultPipeline(Hyperpipe):
     def set_default_pipeline(self, scaling, imputation, imputation_nan_value, feature_selection, dim_reduction,
                              n_pca_components, add_estimator, default_estimator):
         logger.stars()
-        if scaling is True:
-            logger.photon_system_log("USING STANDARD SCALER ")
-            self.add(PipelineElement('StandardScaler'))
         if imputation is True:
             logger.photon_system_log("USING SIMPLE IMPUTER ")
             self.add(PipelineElement('SimpleImputer', missing_values=imputation_nan_value))
+
+        if scaling is True:
+            logger.photon_system_log("USING STANDARD SCALER ")
+            self.add(PipelineElement('StandardScaler'))
+
         if feature_selection:
             self.add(PipelineElement('FClassifSelectPercentile',
                                      hyperparameters={'percentile': IntegerRange(10, 50, step=10)},
@@ -799,10 +802,6 @@ class RegressionPipe(DefaultPipeline):
                     Allows multidimensional targets.
 
         """
-
-        metrics = metrics if metrics is not None else ['mean_absolute_error',
-                                                       'mean_squared_error',
-                                                       'explained_variance']
 
         super(RegressionPipe, self).__init__(name=name,
                                              project_folder=project_folder,

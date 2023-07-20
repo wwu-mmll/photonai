@@ -4,6 +4,9 @@ configuration.ini
 documentation/site/
 site/
 
+*.data
+*.arff
+
 **/photon_setup_errors.log
 .pypirc
 **/tmp
