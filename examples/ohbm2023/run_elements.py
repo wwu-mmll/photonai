@@ -27,7 +27,8 @@ class Runner:
         pipe_obj = ClassificationPipe if self.analysis_type() == 'classification' else RegressionPipe
         hyperpipe = pipe_obj(name=self.name,
                              project_folder=self.project_folder_generator(),
-                             select_best_config_delegate=self.best_config_selector)
+                             select_best_config_delegate=self.best_config_selector,
+                             imputation=True)
         return hyperpipe
 
     def run_analysis(self):
@@ -56,7 +57,7 @@ class DiabetesRunner(Runner):
 
 class AbaloneRunner(Runner):
     def load_data(self):
-        X, y = load_dataset('Abalone')
+        # X, y = load_dataset('Abalone')
         return load_dataset('Abalone')
     
     def analysis_type(self):
@@ -73,7 +74,8 @@ class HabermansSurvivalRunner(Runner):
 
 class AutisticRunner(Runner):
     def load_data(self):
-        return load_dataset('Autistic Spectrum Disorder Screening Data for Children')
+        X, y = load_dataset('Autistic Spectrum Disorder Screening Data for Children')
+        return X, y
 
     def analysis_type(self):
         return 'classification'
@@ -81,7 +83,11 @@ class AutisticRunner(Runner):
 
 class ParkinsonsRunner(Runner):
     def load_data(self):
-        return load_dataset("Parkinsons Telemonitoring Data Set")
+        X, y = load_dataset("Parkinsons Telemonitoring Data Set")
+        # the first row is the header?
+        X = X[1::]
+        y = y[1::]
+        return X, y
     
     def analysis_type(self):
         return 'regression'

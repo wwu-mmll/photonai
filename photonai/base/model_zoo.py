@@ -180,12 +180,14 @@ class DefaultPipeline(Hyperpipe):
     def set_default_pipeline(self, scaling, imputation, imputation_nan_value, feature_selection, dim_reduction,
                              n_pca_components, add_estimator, default_estimator):
         logger.stars()
-        if scaling is True:
-            logger.photon_system_log("USING STANDARD SCALER ")
-            self.add(PipelineElement('StandardScaler'))
         if imputation is True:
             logger.photon_system_log("USING SIMPLE IMPUTER ")
             self.add(PipelineElement('SimpleImputer', missing_values=imputation_nan_value))
+
+        if scaling is True:
+            logger.photon_system_log("USING STANDARD SCALER ")
+            self.add(PipelineElement('StandardScaler'))
+
         if feature_selection:
             self.add(PipelineElement('FClassifSelectPercentile',
                                      hyperparameters={'percentile': IntegerRange(10, 50, step=10)},
