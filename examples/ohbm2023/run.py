@@ -5,8 +5,8 @@ from multiprocessing import Process
 import os
 
 
-list_of_dataset_runners = {'breast_cancer': BreastCancerRunner,
-                           'diabetes': DiabetesRunner, 
+list_of_dataset_runners = {#'breast_cancer': BreastCancerRunner,
+                           #'diabetes': DiabetesRunner,
                            'abalone': AbaloneRunner,
                            'habermans_survival': HabermansSurvivalRunner,
                            'autistic': AutisticRunner,
