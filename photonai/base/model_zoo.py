@@ -6,8 +6,6 @@ from photonai.optimization import FloatRange
 from sklearn.model_selection import KFold, StratifiedKFold
 from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
-from sklearn.metrics import mean_absolute_error, mean_squared_error, explained_variance_score
-from sklearn.metrics import balanced_accuracy_score, accuracy_score, recall_score, pre
 from photonai.photonlogger.logger import logger
 from typing import Optional, List, Union
 from pathlib import Path
@@ -145,7 +143,7 @@ class DefaultPipeline(Hyperpipe):
                  best_config_metric: str = '',
                  optimizer: str = 'random_grid_search',
                  optimizer_params: dict = {'n_configurations': 50},
-                 random_seed = 42,
+                 random_seed=42,
                  X_csv_path: Union[str, Path, None] = None,
                  y_csv_path: Union[str, Path, None] = None,
                  delimiter=",",
@@ -172,6 +170,7 @@ class DefaultPipeline(Hyperpipe):
                                               best_config_metric=best_config_metric,
                                               optimizer=optimizer,
                                               optimizer_params=optimizer_params,
+                                              random_seed=random_seed,
                                               **kwargs)
 
         if add_default_pipeline_elements is True:
@@ -801,11 +800,6 @@ class RegressionPipe(DefaultPipeline):
                     Allows multidimensional targets.
 
         """
-
-        metrics = metrics if metrics is not None else ['mean_absolute_error',
-                                                       'mean_squared_error',
-                                                       'explained_variance']
-        metrics = [('mean_absolute_error', custom_metric), Accuracy, 'accuracy'],
 
         super(RegressionPipe, self).__init__(name=name,
                                              project_folder=project_folder,
