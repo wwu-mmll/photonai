@@ -20,10 +20,10 @@ class Runner:
         raise NotImplementedError("Must be overriden by child!")
 
     def project_folder_generator(self):
-        return self.project_folder.joinpath("_" + self.name)
+        return self.project_folder.joinpath(self.analysis_type()).joinpath(self.name)
 
     def define_hyperpipe(self):
-        pipe_obj = ClassificationPipe if self.analysis_type == 'classification' else RegressionPipe
+        pipe_obj = ClassificationPipe if self.analysis_type() == 'classification' else RegressionPipe
         hyperpipe = pipe_obj(name=self.name,
                              project_folder=self.project_folder_generator(),
                              select_best_config_delegate=self.best_config_selector)
