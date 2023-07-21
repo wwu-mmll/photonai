@@ -96,3 +96,32 @@ class RankingConfigSelector(BaseConfigSelector):
 
         return best_config_outer_fold
 
+class WeightedRankingConfigSelector(RankingConfigSelector):
+
+    def __call__(self, list_of_non_failed_configs, metric, fold_operation, maximize_metric):
+        
+        all_metrics_mean, all_metrics_std, metric_list = self.prepare_metrics(list_of_non_failed_configs, metric)
+        
+        metric_ranks = np.array([]) 
+
+        for i, current_metric in enumerate(metric_list) :
+        
+            best_config_metric_values = [c.get_test_metric(current_metric, fold_operation) for c in list_of_non_failed_configs]
+            current_metric_ranks = self.rank_metrics(best_config_metric_values, Scorer.greater_is_better_distinction(current_metric))
+
+            if current_metric == metric : 
+                current_metric_ranks = current_metric_ranks * 0.5
+            else :
+                current_metric_ranks = current_metric_ranks * (0.5 / (len(metric_list) - 1))
+
+            # Rank the metric values
+            metric_ranks = np.append(metric_ranks, current_metric_ranks)
+
+        total_ranks = np.sum(metric_ranks)
+        
+        # Select the configuration with the best rank sum (the bigger the rank the better)
+        best_config_metric_nr = np.argmax(total_ranks)
+        
+        best_config_outer_fold = list_of_non_failed_configs[best_config_metric_nr]
+
+        return best_config_outer_fold
