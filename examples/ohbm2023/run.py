@@ -1,14 +1,15 @@
 from run_elements import *
-from config_selectors import DefaultConfigSelector, RandomConfigSelector
+from config_selectors import DefaultConfigSelector, RandomConfigSelector, RankingAgreementConfigSelector
 from collect_results import ResultCollector
 from multiprocessing import Process
 import os
 
 
 list_of_config_selectors = {'default': DefaultConfigSelector,
-                            'random': RandomConfigSelector}
+                            'random': RandomConfigSelector,
+                            'rank': RankingAgreementConfigSelector}
 
-config_selector_name = 'default'
+config_selector_name = 'rank'
 multiprocessing = False
 
 list_of_dataset_runners = {
