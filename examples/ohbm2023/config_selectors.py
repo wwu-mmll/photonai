@@ -47,3 +47,21 @@ class RandomConfigSelector:
 
         return best_config_outer_fold
 
+
+class PercentileConfigSelector(BaseConfigSelector):
+
+    def __init__(self, percentile: int = 50):
+        self.percentile = percentile
+
+    def __call__(self, list_of_non_failed_configs, metric, fold_operation, maximize_metric):
+
+        all_metrics_mean, all_metrics_std = self.prepare_metrics(list_of_non_failed_configs, metric)
+        best_config_metric_values = [c.get_test_metric(metric, fold_operation) for c in list_of_non_failed_configs]
+
+        position = (self.percentile / 100.) if maximize_metric else 1 - (self.percentile / 100.)
+        index = position * (len(best_config_metric_values) - 1)
+        index = int(index + 0.5)  # index to integer conversion
+        # following line is a hack for speedup
+        best_config_outer_fold = list_of_non_failed_configs[np.argpartition(best_config_metric_values, index)[index]]
+
+        return best_config_outer_fold
