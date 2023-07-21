@@ -1,5 +1,5 @@
 from run_elements import *
-from config_selectors import DefaultConfigSelector, RandomConfigSelector, RankingAgreementConfigSelector
+from config_selectors import DefaultConfigSelector, RandomConfigSelector, RankingConfigSelector, WeightedRankingConfigSelector
 from collect_results import ResultCollector
 from multiprocessing import Process
 import os
@@ -7,7 +7,8 @@ import os
 
 list_of_config_selectors = {'default': DefaultConfigSelector,
                             'random': RandomConfigSelector,
-                            'rank': RankingAgreementConfigSelector}
+                            'rank': RankingConfigSelector, 
+                            'weighted_rank': WeightedRankingConfigSelector}
 
 config_selector_name = 'rank'
 multiprocessing = False
@@ -17,7 +18,7 @@ list_of_dataset_runners = {
                            # 'habermans_survival': HabermansSurvivalRunner,
                            # 'autistic': AutisticRunner,
                            # 'parkinson': ParkinsonsRunner,
-                           'breast_cancer': BreastCancerRunner,
+                           #'breast_cancer': BreastCancerRunner,
                            'diabetes': DiabetesRunner,
 }
 
