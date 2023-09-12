@@ -187,6 +187,10 @@
     "sklearn.svm.LinearSVR",
     "Estimator"
   ],
+  "LinearDiscriminantAnalysis": [
+    "sklearn.discriminant_analysis.LinearDiscriminantAnalysis",
+    "Estimator"
+  ],
   "NuSVC":[
     "sklearn.svm.NuSVC",
     "Estimator"

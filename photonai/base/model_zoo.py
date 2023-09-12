@@ -57,8 +57,8 @@ class ClassifierSwitch(Switch, ClassifierMixin):
                   """
 
     def __init__(self, name: str = 'classifier_switch') -> None:
-        element_list = [PipelineElement('SVC', hyperparameters={'C': [1e-8, 1e-6, 1e-4, 1e-2, 1, 1e2, 1e4, 1e6, 1e8],
-                                                                'kernel': ['rbf', 'linear']}, max_iter=1000),
+        element_list = [PipelineElement('SVC', hyperparameters={'C': [1e-8, 1e-6, 1e-4, 1e-2, 1, 1e2, 1e4, 1e6, 1e8]},
+                                        max_iter=100000, kernel='rbf'),
                         PipelineElement('RandomForestClassifier', hyperparameters={"max_features": ["sqrt", "log2"],
                                                                                    "min_samples_leaf": [0.01, 0.1, 0.2]}),
                         PipelineElement('AdaBoostClassifier', hyperparameters={'n_estimators': [10, 25, 50]}),
@@ -178,12 +178,12 @@ class DefaultPipeline(Hyperpipe):
     def set_default_pipeline(self, scaling, imputation, imputation_nan_value, feature_selection, dim_reduction,
                              n_pca_components, add_estimator, default_estimator):
         logger.stars()
-        if scaling is True:
-            logger.photon_system_log("USING STANDARD SCALER ")
-            self.add(PipelineElement('StandardScaler'))
         if imputation is True:
             logger.photon_system_log("USING SIMPLE IMPUTER ")
             self.add(PipelineElement('SimpleImputer', missing_values=imputation_nan_value))
+        if scaling is True:
+            logger.photon_system_log("USING STANDARD SCALER ")
+            self.add(PipelineElement('StandardScaler'))
         if feature_selection:
             self.add(PipelineElement('FClassifSelectPercentile',
                                      hyperparameters={'percentile': IntegerRange(10, 50, step=10)},
