@@ -37,6 +37,7 @@ class Scorer:
         # Regression
         'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error'),
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
+        'median_absolute_error': ('sklearn.metrics', 'median_absolute_error', 'error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
         'r2': ('sklearn.metrics', 'r2_score', 'score'),
         'pearson_correlation': ('photonai.processing.metrics', 'pearson_correlation', 'score'),
