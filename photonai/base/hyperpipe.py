@@ -1243,6 +1243,7 @@ class Hyperpipe(BaseEstimator):
 
             # get feature importances
             logger.photon_system_log("Permutation Importances: Calculating performances for " + fold_str)
+
             perm_imps = permutation_importance(pipeline, test_X, test_y, **kwargs)
 
             # store into list

@@ -160,6 +160,7 @@ class PermutationTest:
         perm_pipe.verbosity = verbosity
         perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
         perm_pipe.permutation_id = permutation_id
+        perm_pipe.permutation_run = perm_run
 
         # print(y_perm)
         po = OutputSettings(mongodb_connect_url=perm_pipe.output_settings.mongodb_connect_url,

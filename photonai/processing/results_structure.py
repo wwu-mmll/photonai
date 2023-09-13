@@ -217,6 +217,7 @@ class MDBHyperpipe(MongoModel, MetricHelper):
     output_folder = fields.CharField(blank=True)
 
     permutation_id = fields.CharField(blank=True)
+    permutation_run = fields.IntegerField(blank=True)
     permutation_failed = fields.CharField(blank=True)
     permutation_test = fields.EmbeddedDocumentField(MDBPermutationResults, blank=True)
 
