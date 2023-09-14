@@ -160,7 +160,6 @@ class PermutationTest:
         perm_pipe.verbosity = verbosity
         perm_pipe.name = perm_pipe.name + '_perm_' + str(perm_run)
         perm_pipe.permutation_id = permutation_id
-        perm_pipe.permutation_run = perm_run
 
         # print(y_perm)
         po = OutputSettings(mongodb_connect_url=perm_pipe.output_settings.mongodb_connect_url,
@@ -173,6 +172,7 @@ class PermutationTest:
             print('Fitting permutation ' + str(perm_run) + ' ...')
             perm_pipe.fit(X, y_perm, **kwargs)
             perm_pipe.results.computation_completed = True
+            perm_pipe.results.permutation_run = perm_run
             PermutationTest.clear_data_and_save(perm_pipe)
             print('Finished permutation ' + str(perm_run) + ' ...')
         except Exception as e:
