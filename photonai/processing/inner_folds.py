@@ -359,7 +359,10 @@ class InnerFoldManager(object):
 
         logger.debug('Scoring Training Data')
         # score train data
-        curr_train_fold = MDBScoreInformation(metrics={},
+        scores = {}
+        for metric in list(curr_test_fold.metrics.keys()):
+            scores[metric] = 0
+        curr_train_fold = MDBScoreInformation(metrics=scores,
                                               score_duration=0,
                                               y_pred=np.zeros_like(job.train_data.y), y_true=job.train_data.y,
                                               indices=np.asarray(job.train_data.indices).tolist(),
