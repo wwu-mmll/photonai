@@ -297,7 +297,8 @@ class Hyperpipe(BaseEstimator):
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
                  multi_threading: bool = True,
-                 allow_multidim_targets: bool = False):
+                 allow_multidim_targets: bool = False,
+                 score_train: bool = True):
         """
         Initialize the object.
 
@@ -420,6 +421,9 @@ class Hyperpipe(BaseEstimator):
             allow_multidim_targets:
                 Allows multidimensional targets.
 
+            score_train:
+                metrics for the train-set are only calculated if score_train is true.
+
         """
 
         self.name = re.sub(r'\W+', '', name)
@@ -514,6 +518,7 @@ class Hyperpipe(BaseEstimator):
         self.permutation_id = permutation_id
         self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
+        self.score_train = score_train
 
         # ====================== Random Seed ===========================
         self.random_state = random_seed
@@ -1085,7 +1090,8 @@ class Hyperpipe(BaseEstimator):
                                                            cache_folder=self.cache_folder,
                                                            cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,
-                                                           result_obj=outer_fold)
+                                                           result_obj=outer_fold,
+                                                           score_train=self.score_train)
                     # 2. monitor outputs
                     self.results.outer_folds.append(outer_fold)
 

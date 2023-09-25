@@ -63,7 +63,8 @@ class OuterFoldManager:
                  cache_folder=None,
                  cache_updater=None,
                  dummy_estimator=None,
-                 result_obj=None):
+                 result_obj=None,
+                 score_train: bool = True):
         self.outer_fold_id = outer_fold_id
         self.cross_validation_info = cross_validation_info
         self.scorer = Scorer(optimization_info.metrics)
@@ -71,6 +72,7 @@ class OuterFoldManager:
         self._pipe = pipe
         self.copy_pipe_fnc = self._pipe.copy_me
         self.dummy_estimator = dummy_estimator
+        self.score_train = score_train
 
         self.cache_folder = cache_folder
         self.cache_updater = cache_updater
@@ -246,6 +248,7 @@ class OuterFoldManager:
                                                         indices=self.cross_validation_info.outer_folds[self.outer_fold_id].test_indices,
                                                         metrics=self.optimization_info.metrics,
                                                         scorer=self.scorer,
+                                                        score_train=self.score_train,
                                                         **self._test_kwargs)
 
                 logger.debug('... scoring training data')
@@ -255,6 +258,7 @@ class OuterFoldManager:
                                                          metrics=self.optimization_info.metrics,
                                                          training=True,
                                                          scorer=self.scorer,
+                                                         score_train=self.score_train,
                                                          **self._validation_kwargs)
 
                 best_config_performance_mdb.training = train_score_mdb
@@ -386,7 +390,7 @@ class OuterFoldManager:
                 self.dummy_estimator.fit(dummy_y, self._validation_y)
                 train_scores = InnerFoldManager.score(self.dummy_estimator, self._validation_X, self._validation_y,
                                                       metrics=self.optimization_info.metrics,
-                                                      scorer=self.scorer)
+                                                      scorer=self.scorer, score_train=self.score_train)
 
                 # fill result tree with fold information
                 inner_fold = MDBInnerFold()
@@ -396,7 +400,7 @@ class OuterFoldManager:
                     test_scores = InnerFoldManager.score(self.dummy_estimator,
                                                          self._test_X, self._test_y,
                                                          metrics=self.optimization_info.metrics,
-                                                         scorer=self.scorer)
+                                                         scorer=self.scorer, score_train=self.score_train)
                     print_metrics("DUMMY", test_scores.metrics)
                     inner_fold.validation = test_scores
 
