@@ -364,9 +364,10 @@ class InnerFoldManager(object):
             scores[metric] = 0
         curr_train_fold = MDBScoreInformation(metrics=scores,
                                               score_duration=0,
-                                              y_pred=np.zeros_like(job.train_data.y), y_true=job.train_data.y,
+                                              y_pred=list(np.zeros_like(job.train_data.y)),
+                                              y_true=list(job.train_data.y),
                                               indices=np.asarray(job.train_data.indices).tolist(),
-                                              probabilities=None)
+                                              probabilities=[])
         if job.score_train:
             curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
                                                  indices=job.train_data.indices,
