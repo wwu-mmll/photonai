@@ -490,5 +490,9 @@
   "LocallyLinearEmbedding":[
     "sklearn.manifold.LocallyLinearEmbedding",
     "Transformer"
+  ],
+  "CPMFeatureSelection":[
+    "photonai.modelwrapper.cpm_feature_selection.CPMFeatureSelection",
+    "Estimator"
   ]
 }
