@@ -933,7 +933,7 @@ class Hyperpipe(BaseEstimator):
                     logger.error(str(e))
 
                 # get feature importances of optimum pipe
-                logger.info("Mapping back feature importances...")
+                # logger.info("Mapping back feature importances...")
                 feature_importances = self.optimum_pipe.feature_importances_
 
                 if not feature_importances:
