@@ -939,7 +939,7 @@ class Hyperpipe(BaseEstimator):
                 if not feature_importances:
                     logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
                 else:
-                    self.results.best_config_feature_importances = feature_importances
+
 
                     # write backmapping file only if optimum_pipes inverse_transform works completely.
                     # restriction: only a faulty inverse_transform is considered, missing ones are further ignored.
@@ -953,6 +953,7 @@ class Hyperpipe(BaseEstimator):
                             # save backmapping
                             self.results_handler.save_backmapping(
                                 filename='optimum_pipe_feature_importances_backmapped', backmapping=backmapping)
+                            self.results.best_config_feature_importances = list(np.squeeze(backmapping))
                         else:
                             logger.info('Could not save feature importance: backmapping NOT successful.')
 
