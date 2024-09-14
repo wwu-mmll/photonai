@@ -43,31 +43,19 @@ from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo
 
 
 # def safe_delete(file_path):
+#     handlers_to_remove = []
+#
 #     for handler in logger.handlers:
+#         if isinstance(handler, logging.FileHandler):
+#             if handler.stream and not handler.stream.closed:
+#                 handlers_to_remove.append(handler)
+#
+#     for handler in handlers_to_remove:
 #         handler.close()
 #         logger.removeHandler(handler)
 #
 #     if os.path.exists(file_path):
-#         try:
-#             os.remove(file_path)
-#             print(f"Successfully removed {file_path}")
-#         except PermissionError as e:
-#             print(f"Failed to remove {file_path}: {e}")
-
-def safe_delete(file_path):
-    handlers_to_remove = []
-
-    for handler in logger.handlers:
-        if isinstance(handler, logging.FileHandler):
-            if handler.stream and not handler.stream.closed:
-                handlers_to_remove.append(handler)
-
-    for handler in handlers_to_remove:
-        handler.close()
-        logger.removeHandler(handler)
-
-    if os.path.exists(file_path):
-        os.remove(file_path)
+#         os.remove(file_path)
 
 
 class OutputSettings:
@@ -189,7 +177,19 @@ class OutputSettings:
         # if we made it here, there should be no further setup errors, every error that comes
         # now can go to the standard logger instance
         if os.path.isfile(self.setup_error_file):
-            safe_delete(self.setup_error_file)
+            handlers_to_remove = []
+            # close file prior to deleting it preventing errors
+            for handler in logger.handlers:
+                if isinstance(handler, logging.FileHandler):
+                    if handler.stream and not handler.stream.closed:
+                        handlers_to_remove.append(handler)
+
+            for handler in handlers_to_remove:
+                handler.close()
+                logger.removeHandler(handler)
+
+            if os.path.exists(self.setup_error_file):
+                os.remove(self.setup_error_file)
 
     def _add_timestamp(self, file):
         return os.path.join(self.results_folder, os.path.basename(file))
@@ -206,19 +206,7 @@ class OutputSettings:
         return level
 
     def set_log_file(self):
-        # logfile_directory = os.path.dirname(self.log_file)
-        # if not os.path.exists(logfile_directory):
-        #     os.makedirs(logfile_directory)
-        # if self.logging_file_handler is None:
-        #     self.logging_file_handler = logging.FileHandler(self.log_file)
-        #     self.logging_file_handler.setLevel(self._get_log_level())
-        #     logger.addHandler(self.logging_file_handler)
-        # else:
-        #     self.logging_file_handler.close()
-        #     self.logging_file_handler.baseFilename = self.log_file
-
         logfile_directory = os.path.dirname(self.log_file)
-
         if not os.path.exists(logfile_directory):
             os.makedirs(logfile_directory)
 
