@@ -42,22 +42,6 @@ from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo
      MDBConfig, MDBOuterFold
 
 
-# def safe_delete(file_path):
-#     handlers_to_remove = []
-#
-#     for handler in logger.handlers:
-#         if isinstance(handler, logging.FileHandler):
-#             if handler.stream and not handler.stream.closed:
-#                 handlers_to_remove.append(handler)
-#
-#     for handler in handlers_to_remove:
-#         handler.close()
-#         logger.removeHandler(handler)
-#
-#     if os.path.exists(file_path):
-#         os.remove(file_path)
-
-
 class OutputSettings:
     """
     Configuration class that specifies the format in which

@@ -1,0 +1,45 @@
+ANALYSIS INFORMATION ================================================================================ 
+Project Folder: C:\Users\juraj\PycharmProjects2024\photoai\test\basic_svm_pipe_results_2024-09-01_14-58-45,
+Computation Time: 2024-09-01 14:58:45.081749 - 2024-09-01 14:58:46.142957
+Duration: 0:00:01.061208
+Optimized for: accuracy
+Hyperparameter Optimizer: grid_search
+
+DUMMY RESULTS =======================================================================================
++-------------------+--+
+| PERFORMANCE DUMMY |  |
++-------------------+--+
++-------------------+--+
+
+AVERAGE PERFORMANCE ACROSS OUTER FOLDS ==============================================================
++-------------------+---------------+--------------+-----------+----------+
+|    Metric Name    | Training Mean | Training Std | Test Mean | Test Std |
++-------------------+---------------+--------------+-----------+----------+
+|      accuracy     |    0.991214   |   1.4e-05    |  0.971874 | 0.003453 |
+|     precision     |    0.985146   |   0.003452   |  0.965179 | 0.003857 |
+|       recall      |      1.0      |     0.0      |  0.983305 | 0.016695 |
+| balanced_accuracy |    0.986492   |   0.005036   |  0.955527 | 0.009211 |
++-------------------+---------------+--------------+-----------+----------+
+
+BEST HYPERPARAMETER CONFIGURATION ===================================================================
+{
+    "PCA": [
+        "disabled=True"
+    ],
+    "SVC": [
+        "kernel=rbf"
+    ]
+}
+
+
++--------+----------+-----------+--------+-------------------+------------------------------------------------------+
+| fold # | accuracy | precision | recall | balanced_accuracy |              Best Hyperparameter Config              |
++--------+----------+-----------+--------+-------------------+------------------------------------------------------+
+|   1*   |  0.9753  |   0.9690  | 1.0000 |       0.9463      |  {'PCA': ['disabled=True'], 'SVC': ['kernel=rbf']}   |
+|   2    |  0.9684  |   0.9613  | 0.9666 |       0.9647      | {'PCA': ['disabled=True'], 'SVC': ['kernel=linear']} |
++--------+----------+-----------+--------+-------------------+------------------------------------------------------+
+
+PHOTONAI 2.4.0 ======================================================================================
+Your results are stored in C:\Users\juraj\PycharmProjects2024\photoai\test\basic_svm_pipe_results_2024-09-01_14-58-45
+Go to https://explorer.photon-ai.com and upload your photonai_results.json for convenient result visualization! 
+For more info and documentation visit https://www.photon-ai.com
