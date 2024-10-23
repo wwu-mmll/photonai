@@ -1,4 +1,5 @@
 import warnings
+import os
 import tensorflow.keras as keras
 from sklearn.base import BaseEstimator
 
@@ -72,20 +73,28 @@ class KerasBaseEstimator(BaseEstimator):
 
     def save(self, filename):
         # serialize model to JSON
+        warnings.warn("Using json export for compatibility, will be deprecated in future.")
         model_json = self.model.to_json()
         with open(filename + ".json", "w") as json_file:
-            json_file.write(model_json)
+           json_file.write(model_json)
         # serialize weights to HDF5
         self.model.save_weights(filename + ".weights.h5")
+        self.model.save(filename + ".keras")
 
     def load(self, filename):
         # load json and create model
-        json_file = open(filename + '.json', 'r')
-        loaded_model_json = json_file.read()
-        json_file.close()
-        loaded_model = keras.models.model_from_json(loaded_model_json)
+        if not os.path.exists(filename+'.keras'):
+            warnings.warn("Using json import for compatiblity, will be deprecated in future. "
+                          "Please save your model to get a *.keras file")
+            json_file = open(filename + '.json', 'r')
+            loaded_model_json = json_file.read()
+            json_file.close()
+            loaded_model = keras.models.model_from_json(loaded_model_json)
 
-        # load weights into new model
-        loaded_model.load_weights(filename + ".weights.h5")
-        self.model = loaded_model
-        self.init_weights = self.model.get_weights()
+            loaded_model.load_weights(filename + ".weights.h5")
+            self.model = loaded_model
+            self.init_weights = self.model.get_weights()
+        else:
+           # load weights into new model
+           self.model = keras.models.load_model(filename + '.keras')
+
