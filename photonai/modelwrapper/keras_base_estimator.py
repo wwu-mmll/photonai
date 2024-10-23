@@ -76,7 +76,7 @@ class KerasBaseEstimator(BaseEstimator):
         with open(filename + ".json", "w") as json_file:
             json_file.write(model_json)
         # serialize weights to HDF5
-        self.model.save_weights(filename + ".h5")
+        self.model.save_weights(filename + ".weights.h5")
 
     def load(self, filename):
         # load json and create model
@@ -86,6 +86,6 @@ class KerasBaseEstimator(BaseEstimator):
         loaded_model = keras.models.model_from_json(loaded_model_json)
 
         # load weights into new model
-        loaded_model.load_weights(filename + ".h5")
+        loaded_model.load_weights(filename + ".weights.h5")
         self.model = loaded_model
         self.init_weights = self.model.get_weights()
