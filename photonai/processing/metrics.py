@@ -108,9 +108,9 @@ class Scorer:
                 metric_obj = metric
 
             def metric_func(y_true, y_pred):
-                metric_obj.reset_states()
+                metric_obj.reset_state()
                 metric_obj.update_state(y_true=y_true, y_pred=y_pred)
-                return float(cls.dynamic_keras_import.backend.eval(metric_obj.result()))
+                return float(metric_obj.result().numpy())
 
             Scorer.CUSTOM_ELEMENT_DICTIONARY[metric_name] = metric_func
         elif callable(metric):
