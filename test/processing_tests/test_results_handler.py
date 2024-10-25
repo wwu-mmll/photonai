@@ -100,24 +100,26 @@ class ResultsHandlerTest(PhotonBaseTest):
     def test_save_backmapping_csv(self):
         """
         Check dimension of feature backmapping equals input dimensions for less than 1000 features.
+        removed in 339d7d0
         """
-        backmapping = np.loadtxt(os.path.join(self.hyperpipe.output_settings.results_folder,
-                                 'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
-        self.assertEqual(np.shape(self.__X)[1], backmapping.size)
+        #backmapping = np.loadtxt(os.path.join(self.hyperpipe.output_settings.results_folder,
+        #                         'optimum_pipe_feature_importances_backmapped.csv'), delimiter=',')
+        #self.assertEqual(np.shape(self.__X)[1], backmapping.size)
 
     def test_save_backmapping_npz(self):
         """
         Check dimension of feature backmapping equals input dimensions for more than 1000 features.
+        removed in 339d7d0
         """
         # run another hyperpipe with more than 1000 features
         # use np.tile to copy features until at least 1000 features are reached
-        X = np.tile(self.__X, (1, 35))
-        self.hyperpipe.fit(X, self.__y)
-        npzfile = np.load(os.path.join(self.hyperpipe.output_settings.results_folder,
-                                       'optimum_pipe_feature_importances_backmapped.npz'))
-        self.assertEqual(len(npzfile.files), 1)
-        backmapping = npzfile[npzfile.files[0]]
-        self.assertEqual(np.shape(X)[1], backmapping.size)
+        #X = np.tile(self.__X, (1, 35))
+        #self.hyperpipe.fit(X, self.__y)
+        #npzfile = np.load(os.path.join(self.hyperpipe.output_settings.results_folder,
+        #                               'optimum_pipe_feature_importances_backmapped.npz'))
+        #self.assertEqual(len(npzfile.files), 1)
+        #backmapping = npzfile[npzfile.files[0]]
+        #self.assertEqual(np.shape(X)[1], backmapping.size)
 
     def test_save_backmapping_stack(self):
         # build hyperpipe with stack first
