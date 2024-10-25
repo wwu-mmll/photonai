@@ -79,7 +79,7 @@ if __name__ == '__main__':
     X, y, clst = get_mock_data()
 
     # define project folder
-    project_folder = "/tmp/gpboost_debug"
+    project_folder = "./tmp/gpboost_debug"
 
     my_pipe = get_gpboost_pipe("Test_gpboost", project_folder, split="random")
     my_pipe.fit(X, y, clusters=clst)
