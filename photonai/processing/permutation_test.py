@@ -172,6 +172,7 @@ class PermutationTest:
             print('Fitting permutation ' + str(perm_run) + ' ...')
             perm_pipe.fit(X, y_perm, **kwargs)
             perm_pipe.results.computation_completed = True
+            perm_pipe.results.permutation_run = perm_run
             PermutationTest.clear_data_and_save(perm_pipe)
             print('Finished permutation ' + str(perm_run) + ' ...')
         except Exception as e:

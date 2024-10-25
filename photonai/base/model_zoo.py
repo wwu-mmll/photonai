@@ -217,7 +217,7 @@ class DefaultPipeline(Hyperpipe):
                     logger.photon_system_log("---")
         logger.stars()
 
-    def fit(self, X=None, y=None):
+    def fit(self, X=None, y=None, **kwargs):
         if (X is not None and self.X_csv_path is not None) or (y is not None and self.y_csv_path is not None):
             raise ValueError("You can either give the fit function data or the pipe definition paths "
                              "to csv files to load data from. Not both.")
@@ -228,7 +228,7 @@ class DefaultPipeline(Hyperpipe):
 
         X = X if X is not None else pd.read_csv(self.X_csv_path, delimiter=self.delimiter)
         y = y if y is not None else pd.read_csv(self.y_csv_path, delimiter=self.delimiter)
-        super().fit(X, y)
+        super().fit(X, y, **kwargs)
 
 
 class ClassificationPipe(DefaultPipeline):

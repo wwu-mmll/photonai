@@ -933,7 +933,7 @@ class Hyperpipe(BaseEstimator):
                     logger.error(str(e))
 
                 # get feature importances of optimum pipe
-                logger.info("Mapping back feature importances...")
+                # logger.info("Mapping back feature importances...")
                 feature_importances = self.optimum_pipe.feature_importances_
 
                 if not feature_importances:
@@ -941,20 +941,22 @@ class Hyperpipe(BaseEstimator):
                 else:
                     self.results.best_config_feature_importances = feature_importances
 
+                    self.results.best_config_feature_importances = feature_importances
+
                     # write backmapping file only if optimum_pipes inverse_transform works completely.
                     # restriction: only a faulty inverse_transform is considered, missing ones are further ignored.
-                    with warnings.catch_warnings(record=True) as w:
-                        # get backmapping
-                        backmapping, _, _ = self.optimum_pipe.\
-                            inverse_transform(np.array(feature_importances).reshape(1, -1), None)
-
-                        if not any("The inverse transformation is not possible for" in s
-                                   for s in [e.message.args[0] for e in w]):
-                            # save backmapping
-                            self.results_handler.save_backmapping(
-                                filename='optimum_pipe_feature_importances_backmapped', backmapping=backmapping)
-                        else:
-                            logger.info('Could not save feature importance: backmapping NOT successful.')
+                    # with warnings.catch_warnings(record=True) as w:
+                    #     # get backmapping
+                    #     backmapping, _, _ = self.optimum_pipe.\
+                    #         inverse_transform(np.array(feature_importances).reshape(1, -1), None)
+                    #
+                    #     if not any("The inverse transformation is not possible for" in s
+                    #                for s in [e.message.args[0] for e in w]):
+                    #         # save backmapping
+                    #         self.results_handler.save_backmapping(
+                    #             filename='optimum_pipe_feature_importances_backmapped', backmapping=backmapping)
+                    #     else:
+                    #         logger.info('Could not save feature importance: backmapping NOT successful.')
 
                 # save learning curves
                 if self.cross_validation.learning_curves:
@@ -1243,6 +1245,7 @@ class Hyperpipe(BaseEstimator):
 
             # get feature importances
             logger.photon_system_log("Permutation Importances: Calculating performances for " + fold_str)
+
             perm_imps = permutation_importance(pipeline, test_X, test_y, **kwargs)
 
             # store into list

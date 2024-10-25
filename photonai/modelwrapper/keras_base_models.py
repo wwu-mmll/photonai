@@ -245,7 +245,7 @@ class KerasDnnBaseModel(KerasBaseEstimator):
         if value.lower() not in __supported_optimizers__.keys():
             raise ValueError("Optimizer is not supported by keras. Please use one of: "+str(__supported_optimizers__))
         else:
-            self._optimizer = __supported_optimizers__[value.lower()](lr=self.learning_rate)
+            self._optimizer = __supported_optimizers__[value.lower()](learning_rate=self.learning_rate)
 
     @property
     def target_activation(self):
