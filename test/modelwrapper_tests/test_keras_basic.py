@@ -1,7 +1,7 @@
 from sklearn.datasets import load_breast_cancer, load_diabetes
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout
+from tensorflow.keras.layers import Dense, Dropout, Input, Activation
 import numpy as np
 import warnings
 import os
@@ -16,7 +16,8 @@ class KerasBaseClassifierTest(unittest.TestCase):
         self.X, self.y = load_breast_cancer(return_X_y=True)
 
         self.model = Sequential()
-        self.model.add(Dense(3, input_dim=self.X.shape[1], activation='relu'))
+        self.model.add(Input(shape=[self.X.shape[1]]))
+        self.model.add(Dense(3, activation="relu"))
         self.model.add(Dropout(0.1))
         self.model.add(Dense(2, activation='softmax'))
         self.model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
@@ -24,8 +25,8 @@ class KerasBaseClassifierTest(unittest.TestCase):
         self.estimator_type = KerasBaseClassifier
 
         inputs = tf.keras.Input(shape=(self.X.shape[1],))
-        x = tf.keras.layers.Dense(4, activation=tf.nn.relu)(inputs)
-        outputs = tf.keras.layers.Dense(2, activation=tf.nn.softmax)(x)
+        x = tf.keras.layers.Dense(4, activation=tf.keras.activations.relu)(inputs)
+        outputs = tf.keras.layers.Dense(2, activation=tf.keras.activations.softmax)(x)
         self.tf_model = tf.keras.Model(inputs=inputs, outputs=outputs)
         self.tf_model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
 
@@ -57,10 +58,18 @@ class KerasBaseClassifierTest(unittest.TestCase):
 
         estimator.save("keras_example_saved_model")
 
-        reload_estinator = self.estimator_type()
-        reload_estinator.load("keras_example_saved_model")
+        reload_estimator = self.estimator_type()
+        reload_estimator.load("keras_example_saved_model")
 
-        np.testing.assert_array_almost_equal(estimator.predict(self.X), reload_estinator.predict(self.X), decimal=3)
+        np.testing.assert_array_almost_equal(estimator.predict(self.X), reload_estimator.predict(self.X), decimal=3)
+
+        # remove novel keras file and test legacy import
+        os.remove("keras_example_saved_model.keras")
+
+        reload_estimator_legacy = self.estimator_type()
+        reload_estimator_legacy.load("keras_example_saved_model")
+
+        np.testing.assert_array_almost_equal(estimator.predict(self.X), reload_estimator.predict(self.X), decimal=3)
 
         # remove saved keras files
         for fname in os.listdir("."):
