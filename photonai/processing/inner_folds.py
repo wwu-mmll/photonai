@@ -66,8 +66,7 @@ class InnerFoldManager(object):
                  training: bool = False,
                  cache_folder=None,
                  cache_updater=None,
-                 scorer: Scorer = None,
-                 score_train: bool = True):
+                 scorer: Scorer = None):
 
         self.params = specific_config
         self.pipe = pipe_ctor
@@ -82,7 +81,6 @@ class InnerFoldManager(object):
 
         self.raise_error = raise_error
         self.training = training
-        self.score_train = score_train
 
     def fit(self, X, y, **kwargs):
         """Iterates over cross-validation folds and trains the pipeline,
@@ -138,8 +136,7 @@ class InnerFoldManager(object):
                                                                                            kwargs_cv_train),
                                                        test_data=InnerFoldManager.JobData(test_X, test_y, test,
                                                                                           kwargs_cv_test),
-                                                       scorer=self.scorer,
-                                                       score_train=self.score_train)
+                                                       scorer=self.scorer)
 
                 # only for unparallel processing
                 # inform children in which inner fold we are
@@ -227,8 +224,7 @@ class InnerFoldManager(object):
                                        callbacks=self.optimization_constraints,
                                        train_data=self.JobData(train_cut_X, train_cut_y, train_cut, train_cut_kwargs),
                                        test_data=self.JobData(test_X, test_y, test, kwargs_cv_test),
-                                       scorer=self.scorer,
-                                       score_train=self.score_train)
+                                       scorer=self.scorer)
             curr_test_cut, curr_train_cut = InnerFoldManager.fit_and_score(job_data)
             learning_curves.append([self.cross_validation_infos.learning_curves_cut.values[i], curr_test_cut.metrics,
                                     curr_train_cut.metrics])
@@ -243,7 +239,7 @@ class InnerFoldManager(object):
 
     class InnerCVJob:
 
-        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data, scorer, score_train):
+        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data, scorer):
             self.pipe = pipe
             self.config = config
             self.metrics = metrics
@@ -251,7 +247,6 @@ class InnerFoldManager(object):
             self.train_data = train_data
             self.test_data = test_data
             self.scorer = scorer
-            self.score_train = score_train
 
     @staticmethod
     def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor,
@@ -349,7 +344,7 @@ class InnerFoldManager(object):
         # start fitting
         pipe.fit(job.train_data.X, job.train_data.y, **job.train_data.cv_kwargs)
 
-        logger.debug('Scoring Test Data')
+        logger.debug('Scoring Training Data')
 
         # score test data
         curr_test_fold = InnerFoldManager.score(pipe, job.test_data.X, job.test_data.y, job.metrics,
@@ -357,19 +352,9 @@ class InnerFoldManager(object):
                                                 scorer=job.scorer,
                                                 **job.test_data.cv_kwargs)
 
-        logger.debug('Scoring Training Data')
+        logger.debug('Scoring Test Data')
         # score train data
-        scores = {}
-        for metric in list(curr_test_fold.metrics.keys()):
-            scores[metric] = 0
-        curr_train_fold = MDBScoreInformation(metrics=scores,
-                                              score_duration=0,
-                                              y_pred=list(np.zeros_like(job.train_data.y)),
-                                              y_true=list(job.train_data.y),
-                                              indices=np.asarray(job.train_data.indices).tolist(),
-                                              probabilities=[])
-        if job.score_train:
-            curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
+        curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
                                                  indices=job.train_data.indices,
                                                  training=True,
                                                  scorer=job.scorer, **job.train_data.cv_kwargs)
