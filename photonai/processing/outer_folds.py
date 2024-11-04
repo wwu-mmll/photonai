@@ -390,7 +390,7 @@ class OuterFoldManager:
                 self.dummy_estimator.fit(dummy_y, self._validation_y)
                 train_scores = InnerFoldManager.score(self.dummy_estimator, self._validation_X, self._validation_y,
                                                       metrics=self.optimization_info.metrics,
-                                                      scorer=self.scorer, score_train=self.score_train)
+                                                      scorer=self.scorer)
 
                 # fill result tree with fold information
                 inner_fold = MDBInnerFold()
@@ -400,7 +400,7 @@ class OuterFoldManager:
                     test_scores = InnerFoldManager.score(self.dummy_estimator,
                                                          self._test_X, self._test_y,
                                                          metrics=self.optimization_info.metrics,
-                                                         scorer=self.scorer, score_train=self.score_train)
+                                                         scorer=self.scorer)
                     print_metrics("DUMMY", test_scores.metrics)
                     inner_fold.validation = test_scores
 
