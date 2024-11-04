@@ -297,7 +297,9 @@ class Hyperpipe(BaseEstimator):
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
                  multi_threading: bool = True,
-                 allow_multidim_targets: bool = False):
+                 allow_multidim_targets: bool = False,
+                 raise_error: bool = False,
+                 score_train: bool = True):
         """
         Initialize the object.
 
@@ -420,6 +422,12 @@ class Hyperpipe(BaseEstimator):
             allow_multidim_targets:
                 Allows multidimensional targets.
 
+            score_train:
+                metrics for the train-set are only calculated if score_train is true.
+
+            raise_error:
+                if true, errors in the inner fold are raised instead of suppressed as warnings.
+
         """
 
         self.name = re.sub(r'\W+', '', name)
@@ -514,6 +522,8 @@ class Hyperpipe(BaseEstimator):
         self.permutation_id = permutation_id
         self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
+        self.score_train = score_train
+        self.raise_error = raise_error
 
         # ====================== Random Seed ===========================
         self.random_state = random_seed
@@ -941,8 +951,6 @@ class Hyperpipe(BaseEstimator):
                 else:
                     self.results.best_config_feature_importances = feature_importances
 
-                    self.results.best_config_feature_importances = feature_importances
-
                     # write backmapping file only if optimum_pipes inverse_transform works completely.
                     # restriction: only a faulty inverse_transform is considered, missing ones are further ignored.
                     # with warnings.catch_warnings(record=True) as w:
@@ -1087,7 +1095,9 @@ class Hyperpipe(BaseEstimator):
                                                            cache_folder=self.cache_folder,
                                                            cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,
-                                                           result_obj=outer_fold)
+                                                           result_obj=outer_fold,
+                                                           score_train=self.score_train,
+                                                           raise_error=self.raise_error)
                     # 2. monitor outputs
                     self.results.outer_folds.append(outer_fold)
 
