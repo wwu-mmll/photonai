@@ -946,8 +946,6 @@ class Hyperpipe(BaseEstimator):
                 else:
                     self.results.best_config_feature_importances = feature_importances
 
-                    self.results.best_config_feature_importances = feature_importances
-
                     # write backmapping file only if optimum_pipes inverse_transform works completely.
                     # restriction: only a faulty inverse_transform is considered, missing ones are further ignored.
                     # with warnings.catch_warnings(record=True) as w:
