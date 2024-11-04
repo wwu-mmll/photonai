@@ -370,7 +370,7 @@ class InnerFoldManager(object):
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
               calculate_metrics: bool = True, training: bool = False,
-              scorer: Scorer = None, score_train=True, **kwargs):
+              dummy: bool = False, scorer: Scorer = None, score_train=True, **kwargs):
         """Uses the pipeline to predict the given data,
         compare it to the truth values and calculate metrics
 
@@ -427,7 +427,7 @@ class InnerFoldManager(object):
                                         indices=np.asarray(indices).tolist(),
                                         probabilities=[])
 
-        if not training:
+        if not training or (training and dummy):
             y_pred = estimator.predict(X, **kwargs)
         else:
             X, y_true_new, kwargs_new = estimator.transform(X, y_true, **kwargs)

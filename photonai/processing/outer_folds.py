@@ -392,6 +392,7 @@ class OuterFoldManager:
                 self.dummy_estimator.fit(dummy_y, self._validation_y)
                 train_scores = InnerFoldManager.score(self.dummy_estimator, self._validation_X, self._validation_y,
                                                       training=True,
+                                                      dummy=True,
                                                       metrics=self.optimization_info.metrics,
                                                       score_train=self.score_train,
                                                       scorer=self.scorer)
