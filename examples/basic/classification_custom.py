@@ -5,7 +5,7 @@ from photonai import Hyperpipe, PipelineElement, FloatRange, Categorical, Intege
 my_pipe = Hyperpipe('basic_svm_pipe',
                     inner_cv=KFold(n_splits=5),
                     outer_cv=KFold(n_splits=3),
-                    optimizer='sk_opt',
+                    optimizer='random_grid_search',
                     optimizer_params={'n_configurations': 15},
                     metrics=['accuracy', 'precision', 'recall', 'balanced_accuracy'],
                     best_config_metric='accuracy',

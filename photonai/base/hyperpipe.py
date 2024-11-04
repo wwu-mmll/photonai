@@ -297,7 +297,9 @@ class Hyperpipe(BaseEstimator):
                  cache_folder: str = None,
                  nr_of_processes: int = 1,
                  multi_threading: bool = True,
-                 allow_multidim_targets: bool = False):
+                 allow_multidim_targets: bool = False,
+                 raise_error: bool = False,
+                 score_train: bool = True):
         """
         Initialize the object.
 
@@ -420,6 +422,12 @@ class Hyperpipe(BaseEstimator):
             allow_multidim_targets:
                 Allows multidimensional targets.
 
+            score_train:
+                metrics for the train-set are only calculated if score_train is true.
+
+            raise_error:
+                if true, errors in the inner fold are raised instead of suppressed as warnings.
+
         """
 
         self.name = re.sub(r'\W+', '', name)
@@ -514,6 +522,8 @@ class Hyperpipe(BaseEstimator):
         self.permutation_id = permutation_id
         self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
+        self.score_train = score_train
+        self.raise_error = raise_error
 
         # ====================== Random Seed ===========================
         self.random_state = random_seed
@@ -933,7 +943,7 @@ class Hyperpipe(BaseEstimator):
                     logger.error(str(e))
 
                 # get feature importances of optimum pipe
-                logger.info("Mapping back feature importances...")
+                # logger.info("Mapping back feature importances...")
                 feature_importances = self.optimum_pipe.feature_importances_
 
                 if not feature_importances:
@@ -943,18 +953,18 @@ class Hyperpipe(BaseEstimator):
 
                     # write backmapping file only if optimum_pipes inverse_transform works completely.
                     # restriction: only a faulty inverse_transform is considered, missing ones are further ignored.
-                    with warnings.catch_warnings(record=True) as w:
-                        # get backmapping
-                        backmapping, _, _ = self.optimum_pipe.\
-                            inverse_transform(np.array(feature_importances).reshape(1, -1), None)
-
-                        if not any("The inverse transformation is not possible for" in s
-                                   for s in [e.message.args[0] for e in w]):
-                            # save backmapping
-                            self.results_handler.save_backmapping(
-                                filename='optimum_pipe_feature_importances_backmapped', backmapping=backmapping)
-                        else:
-                            logger.info('Could not save feature importance: backmapping NOT successful.')
+                    # with warnings.catch_warnings(record=True) as w:
+                    #     # get backmapping
+                    #     backmapping, _, _ = self.optimum_pipe.\
+                    #         inverse_transform(np.array(feature_importances).reshape(1, -1), None)
+                    #
+                    #     if not any("The inverse transformation is not possible for" in s
+                    #                for s in [e.message.args[0] for e in w]):
+                    #         # save backmapping
+                    #         self.results_handler.save_backmapping(
+                    #             filename='optimum_pipe_feature_importances_backmapped', backmapping=backmapping)
+                    #     else:
+                    #         logger.info('Could not save feature importance: backmapping NOT successful.')
 
                 # save learning curves
                 if self.cross_validation.learning_curves:
@@ -1085,7 +1095,9 @@ class Hyperpipe(BaseEstimator):
                                                            cache_folder=self.cache_folder,
                                                            cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,
-                                                           result_obj=outer_fold)
+                                                           result_obj=outer_fold,
+                                                           score_train=self.score_train,
+                                                           raise_error=self.raise_error)
                     # 2. monitor outputs
                     self.results.outer_folds.append(outer_fold)
 
@@ -1243,6 +1255,7 @@ class Hyperpipe(BaseEstimator):
 
             # get feature importances
             logger.photon_system_log("Permutation Importances: Calculating performances for " + fold_str)
+
             perm_imps = permutation_importance(pipeline, test_X, test_y, **kwargs)
 
             # store into list

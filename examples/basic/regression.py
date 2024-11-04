@@ -2,6 +2,7 @@ from sklearn.datasets import load_diabetes
 from photonai import RegressionPipe
 
 my_pipe = RegressionPipe('diabetes',
+                         best_config_metric='median_absolute_error',
                          add_default_pipeline_elements=True,
                          scaling=True,
                          imputation=False,
