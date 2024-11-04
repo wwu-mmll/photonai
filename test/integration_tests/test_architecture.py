@@ -67,6 +67,7 @@ class TestArchitectures(PhotonBaseTest):
                          use_test_set=eval_final_performance,
                          performance_constraints=performance_constraints,
                          cache_folder=cache_folder,
+                         raise_error=True,
                          verbosity=0)
         return pipe
 

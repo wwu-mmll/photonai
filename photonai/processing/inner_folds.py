@@ -359,28 +359,18 @@ class InnerFoldManager(object):
 
         logger.debug('Scoring Training Data')
         # score train data
-        if job.score_train:
-            curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
-                                                 indices=job.train_data.indices,
-                                                 training=True,
-                                                 scorer=job.scorer, **job.train_data.cv_kwargs)
-        else:
-            scores = {}
-            for metric in list(curr_test_fold.metrics.keys()):
-                scores[metric] = 0
-            curr_train_fold = MDBScoreInformation(metrics=scores,
-                                                  score_duration=0,
-                                                  y_pred=list(np.zeros_like(job.train_data.y)),
-                                                  y_true=list(job.train_data.y),
-                                                  indices=np.asarray(job.train_data.indices).tolist(),
-                                                  probabilities=[])
+        curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
+                                                indices=job.train_data.indices,
+                                                training=True,
+                                                score_train=job.score_train,
+                                                scorer=job.scorer, **job.train_data.cv_kwargs)
 
         return curr_test_fold, curr_train_fold
 
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
               calculate_metrics: bool = True, training: bool = False,
-              scorer: Scorer = None, **kwargs):
+              scorer: Scorer = None, score_train=True, **kwargs):
         """Uses the pipeline to predict the given data,
         compare it to the truth values and calculate metrics
 
@@ -425,6 +415,17 @@ class InnerFoldManager(object):
         scoring_time_start = time.time()
 
         output_metrics = {}
+
+        if training and not score_train:
+            scores = {}
+            for metric in list(metrics.keys()):
+                scores[metric] = 0
+            return MDBScoreInformation(metrics=scores,
+                                        score_duration=0,
+                                        y_pred=list(np.zeros_like(y_true)),
+                                        y_true=list(y_true),
+                                        indices=np.asarray(indices).tolist(),
+                                        probabilities=[])
 
         if not training:
             y_pred = estimator.predict(X, **kwargs)
