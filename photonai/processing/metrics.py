@@ -29,14 +29,15 @@ class Scorer:
         'precision': ('sklearn.metrics', 'precision_score', 'score'),
         'recall': ('sklearn.metrics', 'recall_score', 'score'),
         'auc': ('sklearn.metrics', 'roc_auc_score', 'score'),
-        'sensitivity': ('photonai.processing.metrics', 'sensitivity', 'score'),
+        'sensitivity': ('sklearn.metrics', 'recall_score', 'score'),
         'specificity': ('photonai.processing.metrics', 'specificity', 'score'),
-        'balanced_accuracy': ('photonai.processing.metrics', 'balanced_accuracy', 'score'),
+        'balanced_accuracy': ('sklearn.metrics', 'balanced_accuracy_score', 'score'),
         'categorical_accuracy': ('photonai.processing.metrics', 'categorical_accuracy_score', 'score'),
 
         # Regression
         'mean_squared_error': ('sklearn.metrics', 'mean_squared_error', 'error'),
         'mean_absolute_error': ('sklearn.metrics', 'mean_absolute_error', 'error'),
+        'median_absolute_error': ('sklearn.metrics', 'median_absolute_error', 'error'),
         'explained_variance': ('sklearn.metrics', 'explained_variance_score', 'score'),
         'r2': ('sklearn.metrics', 'r2_score', 'score'),
         'pearson_correlation': ('photonai.processing.metrics', 'pearson_correlation', 'score'),
@@ -107,9 +108,9 @@ class Scorer:
                 metric_obj = metric
 
             def metric_func(y_true, y_pred):
-                metric_obj.reset_states()
+                metric_obj.reset_state()
                 metric_obj.update_state(y_true=y_true, y_pred=y_pred)
-                return float(cls.dynamic_keras_import.backend.eval(metric_obj.result()))
+                return float(metric_obj.result().numpy())
 
             Scorer.CUSTOM_ELEMENT_DICTIONARY[metric_name] = metric_func
         elif callable(metric):

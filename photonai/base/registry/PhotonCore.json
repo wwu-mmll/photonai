@@ -295,6 +295,10 @@
     "sklearn.linear_model.LogisticRegression",
     "Estimator"
   ],
+  "LinearDiscriminantAnalysis": [
+    "sklearn.discriminant_analysis.LinearDiscriminantAnalysis",
+    "Transformer"
+  ],
   "PassiveAggressiveClassifier":[
     "sklearn.linear_model.PassiveAggressiveClassifier",
     "Estimator"
@@ -486,5 +490,9 @@
   "LocallyLinearEmbedding":[
     "sklearn.manifold.LocallyLinearEmbedding",
     "Transformer"
+  ],
+  "CPMFeatureSelection":[
+    "photonai.modelwrapper.cpm_feature_selection.CPMFeatureSelection",
+    "Estimator"
   ]
 }
