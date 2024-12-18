@@ -242,7 +242,7 @@ class KerasDnnBaseModel(KerasBaseEstimator):
     def optimizer(self, value):
         if isinstance(value, Optimizer):
             self._optimizer = value
-        if value.lower() not in __supported_optimizers__.keys():
+        elif value.lower() not in __supported_optimizers__.keys():
             raise ValueError("Optimizer is not supported by keras. Please use one of: "+str(__supported_optimizers__))
         else:
             self._optimizer = __supported_optimizers__[value.lower()](learning_rate=self.learning_rate)
