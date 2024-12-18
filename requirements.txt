@@ -1,6 +1,6 @@
 numpy
 matplotlib
-scikit-learn==1.5.2
+scikit-learn==1.6.0
 pandas
 plotly
 imbalanced-learn==0.12.4

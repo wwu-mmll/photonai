@@ -1,7 +1,7 @@
 ###### Requirements with temporary Version Specifiers ######
 numpy
 matplotlib
-scikit-learn==1.5.2
+scikit-learn==1.6.0
 pandas
 plotly
 imbalanced-learn
