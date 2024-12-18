@@ -1,19 +1,25 @@
+from __future__ import annotations
+
 import importlib
 import importlib.util
 import inspect
-from copy import deepcopy
-import dask
-from dask.distributed import Client
-import numpy as np
 import warnings
+from copy import deepcopy
+from typing import List, Union
+
+import dask
+import numpy as np
+from dask.distributed import Client
 from sklearn.base import BaseEstimator
 from sklearn.model_selection._search import ParameterGrid
-from typing import List, Union
 
 from photonai.base.photon_pipeline import PhotonPipeline
 from photonai.base.registry.registry import PhotonRegistry
 from photonai.helper.helper import PhotonDataHelper
-from photonai.optimization.config_grid import create_global_config_grid, create_global_config_dict
+from photonai.optimization.config_grid import (
+    create_global_config_dict,
+    create_global_config_grid,
+)
 from photonai.photonlogger.logger import logger
 
 
@@ -99,7 +105,7 @@ class PipelineElement(BaseEstimator):
                     imported_module = importlib.import_module(desired_class_home)
                     desired_class = getattr(imported_module, desired_class_name)
                     self.base_element = desired_class(**kwargs)
-                except AttributeError as ae:
+                except AttributeError:
                     logger.error('ValueError: Could not find according class:'
                                  + str(PhotonRegistry.ELEMENT_DICTIONARY[name]))
                     raise ValueError('Could not find according class:', PhotonRegistry.ELEMENT_DICTIONARY[name])
@@ -397,6 +403,28 @@ class PipelineElement(BaseEstimator):
             self.disabled = kwargs['disabled']
             del kwargs['disabled']
         self.base_element.set_params(**kwargs)
+        return self
+    
+    def set_output(self, *, transform: None | str = None) -> PipelineElement:
+        """
+        Calls set_output on the base element if it is implemented.
+
+        For more information see the documentation.
+        - https://scikit-learn-enhancement-proposals.readthedocs.io/en/latest/slep018/proposal.html
+        - https://scikit-learn.org/1.5/auto_examples/miscellaneous/plot_set_output.html
+
+        Parameters:
+            transform: 
+                The name of the output transformation. 
+                If None, the base element is set to the default output transformation.
+
+        Returns:
+            self
+        """
+        if hasattr(self.base_element, 'set_output'):
+            self.base_element.set_output(transform=transform)
+        else:
+            logger.warning(f"set_output is not implemented for {self._name}")
         return self
 
     def fit(self, X: np.ndarray, y: np.ndarray = None, **kwargs):
