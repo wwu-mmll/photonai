@@ -3,7 +3,7 @@ matplotlib
 scikit-learn==1.5.2
 pandas
 plotly
-imbalanced-learn==0.12.4
+imbalanced-learn==0.13.0
 pymodm
 scipy
 statsmodels
