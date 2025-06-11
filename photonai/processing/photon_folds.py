@@ -1,7 +1,7 @@
 import uuid
 import numpy as np
-from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedKFold, \
-    StratifiedShuffleSplit, ShuffleSplit
+from sklearn.model_selection import GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedGroupKFold, \
+    StratifiedKFold, StratifiedShuffleSplit, ShuffleSplit
 
 from photonai.photonlogger.logger import logger
 from photonai.processing.cross_validation import StratifiedKFoldRegression
@@ -95,7 +95,7 @@ class FoldInfo:
             groups = None
 
         if cv_strategy is not None:
-            if groups is not None and (isinstance(cv_strategy, (GroupKFold, GroupShuffleSplit, LeaveOneGroupOut))):
+            if groups is not None and (isinstance(cv_strategy, (GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedGroupKFold))):
                 try:
                     data_test_cases = cv_strategy.split(X, y, groups)
                 except:
