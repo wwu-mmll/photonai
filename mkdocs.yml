@@ -127,7 +127,10 @@ plugins:
   - mkdocstrings:
       handlers:
         python:
-          selection:
-            filters:
-              - "!^_"
-              - "^__init__$"
+          options:
+            extra:
+              filter:
+                functions: true
+                private_members: false
+              order:
+                members: alphabetical
