@@ -753,8 +753,8 @@ class HyperpipeTests(PhotonBaseTest):
                            ('RandomForestClassifier', RandomForestClassifier(random_state=42))]
         else:
             sk_elements = [('StandardScaler', StandardScaler()),
-                           ('PCA', PCA(random_state=42)),
-                           ('RandomForestClassifier', RandomForestClassifier(random_state=42))]
+                       ('PCA', PCA(random_state=42)),
+                       ('RandomForestClassifier', RandomForestClassifier(random_state=42))]
         self.sklearn_pipe = SKLPipeline(sk_elements)
         self.sklearn_pipe.set_params(**best_config_copy)
         self.sklearn_pipe.fit(self.__X, self.__y)
@@ -765,7 +765,7 @@ class HyperpipeTests(PhotonBaseTest):
         # fake transform on sklearn pipe
         step1 = self.sklearn_pipe.named_steps["StandardScaler"].transform(self.__X)
         if "PCA" in self.sklearn_pipe.named_steps:
-            step2 = self.sklearn_pipe.named_steps["PCA"].transform(self.__X)
+            step2 = self.sklearn_pipe.named_steps["PCA"].transform(step1)
         else:
             step2 = step1
         self.assertTrue(np.allclose(step2, self.hyperpipe.transform(self.__X)))
