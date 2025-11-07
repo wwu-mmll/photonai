@@ -21,10 +21,9 @@ from dask.distributed import Client
 from sklearn.base import BaseEstimator
 from sklearn.dummy import DummyClassifier, DummyRegressor
 import joblib
-from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits
+from sklearn.model_selection._split import BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits, KFold
 from sklearn.inspection import permutation_importance
 from photonai.version import __version__
-from photonai.base.cache_manager import CacheManager
 from photonai.base.photon_elements import Stack, Switch, Preprocessing, CallbackElement, Branch, PipelineElement, \
     PhotonNative
 from photonai.base.photon_pipeline import PhotonPipeline
@@ -45,75 +44,21 @@ from photonai.processing.results_structure import MDBHyperpipe, MDBHyperpipeInfo
 class OutputSettings:
     """
     Configuration class that specifies the format in which
-    the results are saved. Results can be saved to a MongoDB
-    or a simple son-file. You can also choose whether to save
+    the results are saved. You can also choose whether to save
     predictions and/or feature importances.
     """
     def __init__(self,
-                 mongodb_connect_url: str = None,
-                 save_output: bool = True,
-                 overwrite_results: bool = False,
-                 generate_best_model: bool = True,
-                 round_results: bool = False,
-                 user_id: str = '',
-                 wizard_object_id: str = '',
-                 wizard_project_name: str = '',
-                 project_folder: str = '',
-                 create_explorer_json: bool = True):
+                 save_output: bool = True):
         """
         Initialize the object.
 
         Parameters:
-            mongodb_connect_url:
-                Valid mongodb connection url that specifies a database for storing the results.
-
             save_output:
                 Controls the general saving of the results.
 
-            overwrite_results:
-                Allows overwriting the results folder if it already exists.
-
-            generate_best_model:
-                Determines whether an optimum_pipe should be created and fitted.
-                If False, no dependent files are created.
-
-            round_results:
-                Rounds numeric results to 2 decimal points in order to reduce the size of the output file.
-
-            user_id:
-               The user name of the according PHOTONAI Wizard login.
-
-            wizard_object_id:
-               The object id to map the designed pipeline in the PHOTONAI Wizard
-               to the results in the PHOTONAI CORE Database.
-
-            wizard_project_name:
-                How the project is titled in the PHOTONAI Wizard.
-
-            project_folder:
-                Deprecated Parameter - transferred to Hyperpipe.
-
-            create_explorer_json:
-                If true, the results json is created, otherwise this step is skipped and no json will be generated
-
         """
-        if project_folder:
-            msg = "Deprecated: The parameter 'project_folder' was moved to the Hyperpipe. " \
-                  "Please use Hyperpipe(..., project_folder='')."
-            logger.error(msg)
-            raise DeprecationWarning(msg)
-        self.mongodb_connect_url = mongodb_connect_url
-        self.overwrite_results = overwrite_results
-        self.round_results = round_results
-
-        self.user_id = user_id
-        self.wizard_object_id = wizard_object_id
-        self.wizard_project_name = wizard_project_name
-
-        self.generate_best_model = generate_best_model
         self.save_output = save_output
-        self.create_explorer_json = create_explorer_json
-        self.save_predictions_from_best_config_inner_folds = None
+        self.create_explorer_json = True
 
         self.verbosity = 0
         self.results_folder = ''
@@ -143,10 +88,7 @@ class OutputSettings:
                 os.makedirs(self.project_folder)
 
             # Todo: give rights to user if this is done by docker container
-            if self.overwrite_results:
-                self.results_folder = os.path.join(self.project_folder, name + '_results')
-            else:
-                self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
+            self.results_folder = os.path.join(self.project_folder, name + '_results_' + timestamp)
 
             logger.info("Output Folder: " + self.results_folder)
 
@@ -274,32 +216,20 @@ class Hyperpipe(BaseEstimator):
 
     """
     def __init__(self, name: Optional[str],
-                 inner_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits] = None,
-                 outer_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits, None] = None,
-                 optimizer: str = 'grid_search',
-                 optimizer_params: dict = None,
+                 inner_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits, None] = KFold(n_splits=10,
+                                                                                                      shuffle=True,
+                                                                                                      random_state=42),
+                 outer_cv: Union[BaseCrossValidator, BaseShuffleSplit, _RepeatedSplits] = KFold(n_splits=10,
+                                                                                                shuffle=True,
+                                                                                                random_state=42),
+                 n_configurations: Optional[int] = None,
                  metrics: Optional[List[Union[Scorer.Metric_Type, str]]] = None,
                  best_config_metric: Optional[Union[Scorer.Metric_Type, str]] = None,
-                 eval_final_performance: bool = None,
-                 use_test_set: bool = True,
-                 test_size: float = 0.2,
                  project_folder: str = '',
-                 calculate_metrics_per_fold: bool = True,
-                 calculate_metrics_across_folds: bool = False,
-                 ignore_sanity_checks: bool = False,
-                 random_seed: int = None,
                  verbosity: int = 0,
-                 learning_curves: bool = False,
-                 learning_curves_cut: FloatRange = None,
                  output_settings: OutputSettings = None,
-                 performance_constraints: list = None,
-                 permutation_id: str = None,
                  cache_folder: str = None,
-                 nr_of_processes: int = 1,
-                 multi_threading: bool = True,
-                 allow_multidim_targets: bool = False,
-                 raise_error: bool = False,
-                 score_train: bool = True):
+                 n_jobs: int = 1):
         """
         Initialize the object.
 
@@ -312,27 +242,6 @@ class Hyperpipe(BaseEstimator):
 
             outer_cv:
                 Cross validation strategy to use for the hyperparameter search itself, generates the test set.
-
-            optimizer:
-                Hyperparameter optimization algorithm.
-
-                - In case a string literal is given:
-                    - "grid_search": Optimizer that iteratively tests all possible hyperparameter combinations.
-                    - "random_grid_search": A variation of the grid search optimization that randomly picks
-                        hyperparameter combinations from all possible hyperparameter combinations.
-                    - "sk_opt": Scikit-Optimize based on theories of bayesian optimization.
-                    - "random_search": randomly chooses hyperparameter from grid-free domain.
-                    - "smac": SMAC based on theories of bayesian optimization.
-                    - "nevergrad": Nevergrad based on theories of evolutionary learning.
-
-                - In case an object is given:
-                    expects the object to have the following methods:
-                    - `ask`: returns a hyperparameter configuration in form of an dictionary containing
-                        key->value pairs in the sklearn parameter encoding `model_name__parameter_name: parameter_value`
-                    - `prepare`: takes a list of pipeline elements and their particular hyperparameters to prepare the
-                                 hyperparameter space
-                    - `tell`: gets a tested config and the respective performance in order to
-                        calculate a smart next configuration to process
 
             metrics:
                 Metrics that should be calculated for both training, validation and test set
@@ -361,32 +270,9 @@ class Hyperpipe(BaseEstimator):
                 The metric that should be maximized or minimized in order to choose
                 the best hyperparameter configuration.
 
-            eval_final_performance:
-                DEPRECATED! Use "use_test_set" instead!
-
-            use_test_set:
-                If the metrics should be calculated for the test set,
-                otherwise the test set is seperated but not used.
-
             project_folder:
                 The output folder in which all files generated by the
                 PHOTONAI project are saved to.
-
-            test_size:
-                The amount of the data that should be left out if no outer_cv is given and
-                eval_final_performance is set to True.
-
-            calculate_metrics_per_fold:
-                If True, the metrics are calculated for each inner_fold.
-                If False, calculate_metrics_across_folds must be True.
-
-            calculate_metrics_across_folds:
-                If True, the metrics are calculated across all inner_fold.
-                If False, calculate_metrics_per_fold must be True.
-
-            ignore_sanity_checks:
-                If True, photonai will not verify use cases such as:
-                    - classification, imbalanced classes and best_config_metric set to "accuracy"
 
             random_seed:
                 Random Seed.
@@ -395,79 +281,23 @@ class Hyperpipe(BaseEstimator):
                 The level of verbosity, 0 is least talkative and
                 gives only warn and error, 1 gives adds info and 2 adds debug.
 
-            learning_curves:
-                Enables learning curve procedure. Evaluate learning process over
-                different sizes of input. Depends on learning_curves_cut.
-
-            learning_curves_cut:
-                The tested relative cuts for data size.
-
-            performance_constraints:
-                Objects that indicate whether a configuration should
-                be tested further. For example, the inner fold of a config
-                does not perform better than the dummy performance.
-
-            permutation_id:
-                String identifier for permutation tests.
-
             cache_folder:
                 Folder path for multi-processing.
 
-            nr_of_processes:
+            n_jobs:
                 Determined the amount of simultaneous calculation of outer_folds.
-
-            multi_threading:
-                If true dask is used in multi threading mode, if false multi processing
-
-            allow_multidim_targets:
-                Allows multidimensional targets.
-
-            score_train:
-                metrics for the train-set are only calculated if score_train is true.
-
-            raise_error:
-                if true, errors in the inner fold are raised instead of suppressed as warnings.
 
         """
 
         self.name = re.sub(r'\W+', '', name)
 
-        if eval_final_performance is not None:
-            depr_warning = "Hyperpipe parameter eval_final_performance is deprecated. It's called use_test_set now."
-            use_test_set = eval_final_performance
-            logger.warning(depr_warning)
-            raise DeprecationWarning(depr_warning)
 
         # ====================== Cross Validation ===========================
-        # check if both calculate_metrics_per_folds and calculate_metrics_across_folds is False
-        if not calculate_metrics_across_folds and not calculate_metrics_per_fold:
-            raise NotImplementedError("Apparently, you've set calculate_metrics_across_folds=False and "
-                                      "calculate_metrics_per_fold=False. In this case PHOTONAI does not calculate "
-                                      "any metrics which doesn't make any sense. Set at least one to True.")
-        if inner_cv is None:
-            msg = "PHOTONAI requires an inner_cv split. Please enable inner cross-validation. " \
-                  "As exmaple: Hyperpipe(...inner_cv = KFold(n_splits = 3), ...). " \
-                  "Ensure you import the cross_validation object first."
-            logger.error(msg)
-            raise AttributeError(msg)
-
-        # use default cut 'FloatRange(0, 1, 'range', 0.2)' if learning_curves = True but learning_curves_cut is None
-        if learning_curves and learning_curves_cut is None:
-            learning_curves_cut = FloatRange(0, 1, 'range', 0.2)
-        elif not learning_curves and learning_curves_cut is not None:
-            learning_curves_cut = None
-
         self.cross_validation = Hyperpipe.CrossValidation(inner_cv=inner_cv,
-                                                          outer_cv=outer_cv,
-                                                          use_test_set=use_test_set,
-                                                          test_size=test_size,
-                                                          calculate_metrics_per_fold=calculate_metrics_per_fold,
-                                                          calculate_metrics_across_folds=calculate_metrics_across_folds,
-                                                          learning_curves=learning_curves,
-                                                          learning_curves_cut=learning_curves_cut)
+                                                          outer_cv=outer_cv)
 
         # ====================== Data ===========================
-        self.data = Hyperpipe.Data(allow_multidim_targets=allow_multidim_targets)
+        self.data = Hyperpipe.Data()
 
         # ====================== Output Folder and Log File Management ===========================
         if output_settings:
@@ -499,62 +329,29 @@ class Hyperpipe(BaseEstimator):
         self.preprocessing = None
 
         # ====================== Performance Optimization ===========================
-        if optimizer_params is None:
-            optimizer_params = {}
         self.optimization = Optimization(metrics=metrics,
                                          best_config_metric=best_config_metric,
-                                         optimizer_input=optimizer,
-                                         optimizer_params=optimizer_params,
-                                         performance_constraints=performance_constraints)
-
-        # self.optimization.sanity_check_metrics()
+                                         optimizer_input='random_grid_search',
+                                         optimizer_params={'n_configurations': n_configurations})
 
         # ====================== Caching and Parallelization ===========================
-        self.nr_of_processes = nr_of_processes
-        self.multi_threading = multi_threading
+        self.nr_of_processes = n_jobs
         if cache_folder:
             self.cache_folder = os.path.join(cache_folder, self.name)
         else:
             self.cache_folder = None
 
         # ====================== Internals ===========================
-        self.ignore_sanity_checks = ignore_sanity_checks
-        self.permutation_id = permutation_id
-        self.allow_multidim_targets = allow_multidim_targets
         self.is_final_fit = False
-        self.score_train = score_train
-        self.raise_error = raise_error
-
-        # ====================== Random Seed ===========================
-        self.random_state = random_seed
-        if random_seed is not None:
-            import random
-            # Todo: seed numpy here?
-            random.seed(random_seed)
 
     # ===================================================================
     # Helper Classes
     # ===================================================================
-
     class CrossValidation:
 
-        def __init__(self, inner_cv, outer_cv,
-                     use_test_set, test_size,
-                     calculate_metrics_per_fold,
-                     calculate_metrics_across_folds,
-                     learning_curves,
-                     learning_curves_cut):
+        def __init__(self, inner_cv, outer_cv):
             self.inner_cv = inner_cv
             self.outer_cv = outer_cv
-            self.use_test_set = use_test_set
-            self.test_size = test_size
-
-            self.learning_curves = learning_curves
-            self.learning_curves_cut = learning_curves_cut
-
-            self.calculate_metrics_per_fold = calculate_metrics_per_fold
-            # Todo: if self.outer_cv is LeaveOneOut: Set calculate metrics across folds to True -> Print
-            self.calculate_metrics_across_folds = calculate_metrics_across_folds
 
             self.outer_folds = None
             self.inner_folds = dict()
@@ -671,48 +468,6 @@ class Hyperpipe(BaseEstimator):
         self.output_settings.verbosity = self._verbosity
         self.output_settings.set_log_level()
 
-    @staticmethod
-    def disable_multiprocessing_recursively(pipe):
-        if isinstance(pipe, (Stack, Branch, Switch, Preprocessing)):
-            if hasattr(pipe, 'nr_of_processes'):
-                pipe.nr_of_processes = 1
-            for child in pipe.elements:
-                if isinstance(child, Branch):
-                    Hyperpipe.disable_multiprocessing_recursively(child)
-                elif hasattr(child, 'base_element'):
-                    Hyperpipe.disable_multiprocessing_recursively(child.base_element)
-        elif isinstance(pipe, PhotonPipeline):
-            for name, child in pipe.named_steps.items():
-                Hyperpipe.disable_multiprocessing_recursively(child)
-        else:
-            if hasattr(pipe, 'nr_of_processes'):
-                pipe.nr_of_processes = 1
-
-    @staticmethod
-    def recursive_cache_folder_propagation(element, cache_folder, inner_fold_id):
-        if isinstance(element, (Switch, Stack, Preprocessing)):
-            for child in element.elements:
-                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
-
-        elif isinstance(element, Branch):
-            # in case it's a Branch, we create a cache subfolder and propagate it to every child
-            if cache_folder:
-                cache_folder = os.path.join(cache_folder, element.name)
-            Hyperpipe.recursive_cache_folder_propagation(element.base_element, cache_folder, inner_fold_id)
-            # Hyperpipe.prepare_caching(element.base_element.cache_folder)
-
-        elif isinstance(element, PhotonPipeline):
-            element.fold_id = inner_fold_id
-            element.cache_folder = cache_folder
-
-            # pipe.caching is automatically set to True or False by .cache_folder setter
-
-            for name, child in element.named_steps.items():
-                # we need to check if any element is Branch, Stack or Swtich
-                Hyperpipe.recursive_cache_folder_propagation(child, cache_folder, inner_fold_id)
-
-        # else: if it's a simple PipelineElement, then we just don't do anything
-
     # ===================================================================
     # Pipeline Setup
     # ===================================================================
@@ -793,32 +548,16 @@ class Hyperpipe(BaseEstimator):
         self.results = MDBHyperpipe(name=self.name, version=__version__)
         self.results.hyperpipe_info = MDBHyperpipeInfo()
 
-        # in case eval final performance is false, we have no outer fold predictions
-        if not self.cross_validation.use_test_set:
-            self.output_settings.save_predictions_from_best_config_inner_folds = True
         self.results_handler = ResultsHandler(self.results, self.output_settings)
 
         self.results.computation_start_time = start_time
         self.results.hyperpipe_info.estimation_type = self.estimation_type
         self.results.output_folder = self.output_settings.results_folder
 
-        if self.permutation_id is not None:
-            self.results.permutation_id = self.permutation_id
-
-        # save wizard information to PHOTONAI db in order to map results to the wizard design object
-        if self.output_settings and hasattr(self.output_settings, 'wizard_object_id'):
-            if self.output_settings.wizard_object_id:
-                self.name = self.output_settings.wizard_object_id
-                self.results.name = self.output_settings.wizard_object_id
-                self.results.wizard_object_id = ObjectId(self.output_settings.wizard_object_id)
-                self.results.wizard_system_name = self.output_settings.wizard_project_name
-                self.results.user_id = self.output_settings.user_id
         self.results.outer_folds = []
         self.results.hyperpipe_info.elements = self.__get_pipeline_structure(self.elements)
-        self.results.hyperpipe_info.eval_final_performance = self.cross_validation.use_test_set
         self.results.hyperpipe_info.best_config_metric = self.optimization.best_config_metric
         self.results.hyperpipe_info.metrics = self.optimization.metrics
-        self.results.hyperpipe_info.learning_curves_cut = self.cross_validation.learning_curves_cut
         self.results.hyperpipe_info.maximize_best_config_metric = self.optimization.maximize_metric
 
         # optimization
@@ -849,22 +588,6 @@ class Hyperpipe(BaseEstimator):
                 msg = "JsonTransformer was unable to create the .json file."
                 logger.warning(msg)
                 warnings.warn(msg)
-
-    def check_for_imbalanced_data(self):
-        if self.estimation_type == 'classifier':
-            targets = np.unique(self.data.y)
-            num_classes = len(targets)
-            logger.photon_system_log("Found {} target classes: {}".format(num_classes, targets))
-            if num_classes == 2:
-                percent_of_first_class = np.sum(self.data.y == targets[0])/len(self.data.y)
-                if percent_of_first_class > 0.7 or percent_of_first_class < 0.35:
-                    logger.photon_system_log("Target classes are imbalanced: {}% belongs to {}".format(percent_of_first_class * 100,
-                                                                                          targets[0]))
-                    if self.optimization.best_config_metric == "accuracy":
-                        raise ValueError("Found imbalanced classes and best_config_metric for accuracy. In this setup, "
-                                         "your model most probably won't learn anything valuable. Consider using "
-                                         "balanced_accuracy as best_config_metric and/or using a over/undersampling "
-                                         "by adding a PipelineElement('ImbalancedDataTransform')")
 
     def _finalize_optimization(self):
         # ==================== EVALUATING RESULTS OF HYPERPARAMETER OPTIMIZATION ===============================
@@ -908,67 +631,35 @@ class Hyperpipe(BaseEstimator):
         self.optimum_pipe = self._pipe
         self.optimum_pipe.set_params(**self.best_config)
 
-        if self.output_settings.generate_best_model:
-            logger.info("Fitting best model...")
-            # set self to best config
-            self.optimum_pipe = self._pipe
-            self.optimum_pipe.set_params(**self.best_config)
+        logger.info("Fitting best model...")
+        # set self to best config
+        self.optimum_pipe = self._pipe
+        self.optimum_pipe.set_params(**self.best_config)
 
-            # set caching
-            # we want caching disabled in general but still want to do single subject caching
-            self.recursive_cache_folder_propagation(self.optimum_pipe, self.cache_folder, 'fixed_fold_id')
-            self.optimum_pipe.caching = False
+        # set caching
+        self.optimum_pipe.caching = False
 
-            # disable multiprocessing when fitting optimum pipe
-            # (otherwise inverse_transform won't work for BrainAtlas/Mask)
-            self.disable_multiprocessing_recursively(self.optimum_pipe)
+        self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
+        self.optimum_pipe.add_preprocessing(self.preprocessing)
 
-            self.optimum_pipe.fit(self.data.X, self.data.y, **self.data.kwargs)
+        if self.output_settings.save_output:
+            try:
+                pretrained_model_filename = os.path.join(self.output_settings.results_folder,
+                                                         BEST_MODEL_FILE)
+                PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
+                logger.info("Saved best model to file.")
+            except Exception as e:
+                logger.info("Could not save best model to file")
+                logger.error(str(e))
 
-            # Before saving the optimum pipe, add preprocessing without multiprocessing
-            self.disable_multiprocessing_recursively(self.preprocessing)
-            self.optimum_pipe.add_preprocessing(self.preprocessing)
+            # get feature importances of optimum pipe
+            # logger.info("Mapping back feature importances...")
+            feature_importances = self.optimum_pipe.feature_importances_
 
-            # Now truly set to no caching (including single_subject_caching)
-            self.recursive_cache_folder_propagation(self.optimum_pipe, None, None)
-
-            if self.output_settings.save_output:
-                try:
-                    pretrained_model_filename = os.path.join(self.output_settings.results_folder,
-                                                             BEST_MODEL_FILE)
-                    PhotonModelPersistor.save_optimum_pipe(self.optimum_pipe, pretrained_model_filename)
-                    logger.info("Saved best model to file.")
-                except Exception as e:
-                    logger.info("Could not save best model to file")
-                    logger.error(str(e))
-
-                # get feature importances of optimum pipe
-                # logger.info("Mapping back feature importances...")
-                feature_importances = self.optimum_pipe.feature_importances_
-
-                if not feature_importances:
-                    logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
-                else:
-                    self.results.best_config_feature_importances = feature_importances
-
-                    # write backmapping file only if optimum_pipes inverse_transform works completely.
-                    # restriction: only a faulty inverse_transform is considered, missing ones are further ignored.
-                    # with warnings.catch_warnings(record=True) as w:
-                    #     # get backmapping
-                    #     backmapping, _, _ = self.optimum_pipe.\
-                    #         inverse_transform(np.array(feature_importances).reshape(1, -1), None)
-                    #
-                    #     if not any("The inverse transformation is not possible for" in s
-                    #                for s in [e.message.args[0] for e in w]):
-                    #         # save backmapping
-                    #         self.results_handler.save_backmapping(
-                    #             filename='optimum_pipe_feature_importances_backmapped', backmapping=backmapping)
-                    #     else:
-                    #         logger.info('Could not save feature importance: backmapping NOT successful.')
-
-                # save learning curves
-                if self.cross_validation.learning_curves:
-                    self.results_handler.save_all_learning_curves()
+            if not feature_importances:
+                logger.info("No feature importances available for {}!".format(self.optimum_pipe.elements[-1][0]))
+            else:
+                self.results.best_config_feature_importances = feature_importances
 
         logger.info("Summarizing results...")
 
@@ -992,8 +683,6 @@ class Hyperpipe(BaseEstimator):
     def _prepare_pipeline(self):
         self._pipe = Branch.prepare_photon_pipe(self.elements)
         self._pipe = Branch.sanity_check_pipeline(self._pipe)
-        if self.random_state:
-            self._pipe.random_state = self.random_state
 
     # ===================================================================
     # sklearn interfaces
@@ -1047,16 +736,11 @@ class Hyperpipe(BaseEstimator):
         # loop over outer cross validation
         if self.nr_of_processes > 1:
             hyperpipe_client = Client(threads_per_worker=1,
-                                      n_workers=self.nr_of_processes,
-                                      processes=(not self.multi_threading))
+                                      n_workers=self.nr_of_processes)
 
         try:
             # check data
             self.data.input_data_sanity_checks(data, targets, **kwargs)
-
-            # sanity check data with setup
-            if not self.ignore_sanity_checks:
-                self.check_for_imbalanced_data()
 
             # create photon pipeline
             self._prepare_pipeline()
@@ -1069,19 +753,13 @@ class Hyperpipe(BaseEstimator):
 
                 # Outer Folds
                 outer_folds = FoldInfo.generate_folds(self.cross_validation.outer_cv,
-                                                      self.data.X, self.data.y, self.data.kwargs,
-                                                      self.cross_validation.use_test_set,
-                                                      self.cross_validation.test_size)
+                                                      self.data.X, self.data.y, self.data.kwargs)
 
                 self.cross_validation.outer_folds = {f.fold_id: f for f in outer_folds}
                 delayed_jobs = []
 
                 # Run Dummy Estimator
                 dummy_estimator = self._prepare_dummy_estimator()
-
-                if self.cache_folder is not None:
-                    logger.info("Removing cache files...")
-                    CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
                 # loop over outer cross validation
                 for i, outer_f in enumerate(outer_folds):
@@ -1092,12 +770,8 @@ class Hyperpipe(BaseEstimator):
                                                            self.optimization,
                                                            outer_f.fold_id,
                                                            self.cross_validation,
-                                                           cache_folder=self.cache_folder,
-                                                           cache_updater=self.recursive_cache_folder_propagation,
                                                            dummy_estimator=dummy_estimator,
-                                                           result_obj=outer_fold,
-                                                           score_train=self.score_train,
-                                                           raise_error=self.raise_error)
+                                                           result_obj=outer_fold)
                     # 2. monitor outputs
                     self.results.outer_folds.append(outer_fold)
 
@@ -1108,14 +782,10 @@ class Hyperpipe(BaseEstimator):
                                                                          self.data.kwargs)
                         delayed_jobs.append(result)
                     else:
-                        try:
-                            # 3. fit
-                            outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
-                            # 4. save outer fold results
-                            self.results_handler.save()
-                        finally:
-                            # 5. clear cache
-                            CacheManager.clear_cache_files(self.cache_folder)
+                        # 3. fit
+                        outer_fold_computer.fit(self.data.X, self.data.y, **self.data.kwargs)
+                        # 4. save outer fold results
+                        self.results_handler.save()
 
                 if self.nr_of_processes > 1:
                     dask.compute(*delayed_jobs)
@@ -1123,10 +793,6 @@ class Hyperpipe(BaseEstimator):
 
                 # evaluate hyperparameter optimization results for best config
                 self._finalize_optimization()
-
-                # clear complete cache ? use self.cache_folder to delete all subfolders within the parent cache folder
-                # directory
-                CacheManager.clear_cache_files(self.cache_folder, force_all=True)
 
             ###############################################################################################
             else:
@@ -1160,7 +826,6 @@ class Hyperpipe(BaseEstimator):
             Predicted targets calculated on input data with trained model.
 
         """
-        # Todo: if local_search = true then use optimized pipe here?
         if self._pipe:
             return self.optimum_pipe.predict(data, **kwargs)
 
@@ -1234,181 +899,9 @@ class Hyperpipe(BaseEstimator):
             scorer = Scorer.create(self.optimization.best_config_metric)
             return scorer(y, predictions)
 
-    def _calculate_permutation_importances(self, **kwargs):
-        """
-        extracted function from get_feature_importance to improve unit testing
-        """
-
-        importance_list = {'mean': list(), 'std': list()}
-
-        def train_and_get_fimps(pipeline, train_idx, test_idx, data_X, data_y, data_kwargs, fold_str):
-
-            train_X, train_y, train_kwargs = PhotonDataHelper.split_data(data_X, data_y, data_kwargs,
-                                                                         indices=train_idx)
-
-            test_X, test_y, test_kwargs = PhotonDataHelper.split_data(data_X, data_y, data_kwargs,
-                                                                      indices=test_idx)
-
-            # fit fold's best model (again) -> to obtain that model's feature importances
-            logger.photon_system_log("Permutation Importances: Fitting model for " + fold_str)
-            pipeline.fit(train_X, train_y, **train_kwargs)
-
-            # get feature importances
-            logger.photon_system_log("Permutation Importances: Calculating performances for " + fold_str)
-
-            perm_imps = permutation_importance(pipeline, test_X, test_y, **kwargs)
-
-            # store into list
-            importance_list['mean'].append(perm_imps["importances_mean"])
-            importance_list['std'].append(perm_imps["importances_std"])
-
-            return perm_imps
-
-        for outer_fold in self.results.outer_folds:
-
-            if outer_fold.best_config is None:
-                raise ValueError("Could not find a best config for outer fold " + str(outer_fold.fold_nr))
-
-            pipe_copy = Branch.prepare_photon_pipe(self.elements)
-
-            # set pipe to config
-            pipe_copy.set_params(**outer_fold.best_config.config_dict)
-
-            if not self.results.hyperpipe_info.eval_final_performance:
-                no_outer_cv_indices = False
-                if outer_fold.best_config.best_config_score is None:
-                    no_outer_cv_indices = True
-                elif outer_fold.best_config.best_config_score.training is None or not outer_fold.best_config.best_config_score.training.indices:
-                    no_outer_cv_indices = True
-
-                if no_outer_cv_indices:
-                    data_to_split, y_to_split, kwargs_to_split = self.data.X, self.data.y, self.data.kwargs
-                else:
-
-                    logger.photon_system_log("Permutation Importances: Using inner_cv folds.")
-
-                    # get outer fold data
-                    idx = outer_fold.best_config.best_config_score.training.indices
-                    data_to_split, y_to_split, kwargs_to_split = PhotonDataHelper.split_data(self.data.X,
-                                                                                             self.data.y,
-                                                                                             self.data.kwargs,
-                                                                                             indices=idx)
-
-                for inner_fold in outer_fold.best_config.inner_folds:
-                    train_and_get_fimps(pipe_copy,
-                                        inner_fold.training.indices, inner_fold.validation.indices,
-                                        data_to_split, y_to_split, kwargs_to_split,
-                                        "inner fold " + str(inner_fold.fold_nr))
-
-            else:
-                train_and_get_fimps(pipe_copy,
-                                    outer_fold.best_config.best_config_score.training.indices,
-                                    outer_fold.best_config.best_config_score.validation.indices,
-                                    self.data.X, self.data.y, self.data.kwargs, "outer fold " + str(outer_fold.fold_nr))
-
-        return importance_list
-
-    def get_permutation_feature_importances(self, **kwargs):
-        """
-        Fits a model for the best config of each outer fold (using the training data of that fold).
-        Then calls sklearn.inspection.permutation_importance with the test data and the given kwargs (e.g. n_repeats).
-        Returns mean of "importances_mean" and of "importances_std" of all outer folds.
-
-        Parameters:
-            **kwargs:
-                Keyword arguments, passed to sklearn.permutation_importance.
-
-        Returns:
-            Dictionary with average of "mean" and "std" for all outer folds, respectively.
-
-        """
-
-        logger.photon_system_log("")
-        logger.photon_system_log("Computing permutation importances. This may take a while.")
-        logger.stars()
-        if self.optimum_pipe is None:
-            raise ValueError("Cannot calculate permutation importances when optimum_pipe is None (probably the "
-                             "training and optimization procedure failed)")
-        importance_list = self._calculate_permutation_importances(**kwargs)
-        mean_importances = np.mean(np.array(importance_list["mean"]), axis=0)
-        std_importances = np.mean(np.array(importance_list["std"]), axis=0)
-        logger.stars()
-
-        return {'mean': mean_importances, 'std': std_importances}
-
-    def get_model_and_permutation_importances(self, column_names=None, **kwargs):
-        feature_importances_model_all = [fold.best_config.best_config_score.feature_importances
-                                         for i, fold in enumerate(self.results.outer_folds)]
-        if np.sum([1 for f in feature_importances_model_all if f is None]) > 0:
-            raise ValueError("There are folds that do not yield valid feature importances for the estimator.")
-
-        mean_fimps_model = np.mean(feature_importances_model_all, axis=0)
-        norm_fimps_model = mean_fimps_model / mean_fimps_model.sum(axis=0, keepdims=1)
-        rank_fimps_model = [sorted(norm_fimps_model)[::-1].index(v) + 1 for v in norm_fimps_model]
-        feature_importances_model = {'mean': mean_fimps_model, 'std': np.std(feature_importances_model_all, axis=0),
-                                     'norm': norm_fimps_model, 'rank': rank_fimps_model}
-        feature_importances_perm = self.get_permutation_feature_importances(**kwargs)
-        abs_mean = np.abs(feature_importances_perm["mean"])
-        feature_importances_perm["norm"] = abs_mean / abs_mean.sum(axis=0, keepdims=1)
-        feature_importances_perm["rank"] = [sorted(feature_importances_perm["norm"])[::-1].index(v) + 1
-                                            for v in feature_importances_perm["norm"]]
-
-        num_columns = len(feature_importances_perm["mean"])
-        column_names = column_names if column_names is not None else ["feature_{}".format(fi) for fi in range(num_columns)]
-
-        feature_importances_df = pd.DataFrame(index=['model_mean', 'model_std',
-                                                     'perm_mean', 'perm_std',
-                                                     'model_norm', 'perm_norm',
-                                                     'model_rank', 'perm_rank'],
-                                              columns=column_names)
-        for i, cname in enumerate(column_names):
-            for name, origin in {'model': feature_importances_model, 'perm': feature_importances_perm}.items():
-                for aggregator in ["mean", "norm", 'std', 'rank']:
-                    feature_importances_df.at[name + '_' + aggregator, cname] = origin[aggregator][i]
-        logger.photon_system_log(str(feature_importances_df))
-        return feature_importances_df
-
-
-    def inverse_transform_pipeline(self, hyperparameters: dict,
-                                   data: np.ndarray,
-                                   targets: np.ndarray,
-                                   data_to_inverse: np.ndarray) -> np.ndarray:
-        """
-        Inverse transform data for a pipeline with specific hyperparameter configuration.
-
-        1. Copy Sklearn Pipeline,
-        2. Set Parameters
-        3. Fit Pipeline to data and targets
-        4. Inverse transform data with that pipeline
-
-        Parameters:
-            hyperparameters:
-                The concrete configuration settings for the pipeline elements.
-
-            data:
-                The training data to which the pipeline is fitted.
-
-            targets:
-                The truth values for training.
-
-            data_to_inverse:
-                The data that should be inversed after training.
-
-        Returns:
-            Inverse data as array.
-
-        """
-        copied_pipe = self.pipe.copy_me()
-        copied_pipe.set_params(**hyperparameters)
-        copied_pipe.fit(data, targets)
-        return copied_pipe.inverse_transform(data_to_inverse)
-
-
-
     # ===================================================================
     # Copy, Save and Load
     # ===================================================================
-
     def copy_me(self):
         """
         Helper function to copy an entire Hyperpipe
@@ -1430,8 +923,6 @@ class Hyperpipe(BaseEstimator):
                               outer_cv=deepcopy(self.cross_validation.outer_cv),
                               best_config_metric=self.optimization.best_config_metric,
                               metrics=self.optimization.metrics,
-                              optimizer=self.optimization.optimizer_input_str,
-                              optimizer_params=self.optimization.optimizer_params,
                               project_folder=self.project_folder,
                               output_settings=settings)
 
@@ -1440,11 +931,6 @@ class Hyperpipe(BaseEstimator):
             if hasattr(self, attr) and attr != 'output_settings':
                 setattr(pipe_copy, attr, getattr(self, attr))
 
-        if hasattr(self, 'preprocessing') and self.preprocessing:
-            preprocessing = Preprocessing()
-            for element in self.preprocessing.elements:
-                preprocessing += element.copy_me()
-            pipe_copy += preprocessing
         if hasattr(self, 'elements'):
             for element in self.elements:
                 pipe_copy += element.copy_me()
@@ -1480,37 +966,6 @@ class Hyperpipe(BaseEstimator):
 
         """
         return PhotonModelPersistor.load_optimum_pipe(file, password)
-
-    @staticmethod
-    def reload_hyperpipe(results_folder, X, y, **data_kwargs):
-
-        res_handler = ResultsHandler()
-
-        result_file = os.path.join(results_folder, RESULTS_FILE)
-        if not os.path.isfile(result_file):
-            result_file = os.path.join(results_folder, "photon_result_file.json")
-        if not os.path.isfile(result_file):
-            raise ValueError("Could not find serialized result json? -> 'photonai_results.json',"
-                             "or for old versions 'photon_result_file.json'")
-
-        res_handler.load_from_file(result_file)
-
-        best_model = os.path.join(results_folder, BEST_MODEL_FILE)
-        if not os.path.isfile(best_model):
-            # be downwards compatible
-            best_model = os.path.join(results_folder, 'photon_best_model.photon')
-        if not os.path.isfile(best_model):
-            raise ValueError("Could not find serialized model? -> 'best_model.photonai'"
-                             " or for old versions 'photon_best_model.photon'")
-
-        loaded_optimum_pipe = Hyperpipe.load_optimum_pipe(best_model)
-
-        new_hyperpipe = JsonTransformer().from_json_file(os.path.join(results_folder, HYPERPIPE_CONFIG_FILE))
-        new_hyperpipe.results = res_handler.results
-        new_hyperpipe.optimum_pipe = loaded_optimum_pipe
-        new_hyperpipe.data = Hyperpipe.Data(X, y, data_kwargs)
-
-        return new_hyperpipe
 
     def __repr__(self, **kwargs):
         """Overwrite BaseEstimator's function to avoid errors when using Jupyter Notebooks."""

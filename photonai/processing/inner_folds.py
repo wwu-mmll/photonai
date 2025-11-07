@@ -7,7 +7,6 @@ import numpy as np
 from typing import Union, List
 
 from photonai.helper.helper import PhotonPrintHelper, PhotonDataHelper, print_double_metrics
-from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.metrics import Scorer
 from photonai.processing.results_structure import MDBHelper, MDBInnerFold, MDBScoreInformation, MDBFoldMetric, MDBConfig
@@ -61,28 +60,17 @@ class InnerFoldManager(object):
 
     def __init__(self, pipe_ctor, specific_config: dict, optimization_infos,
                  cross_validation_infos, outer_fold_id,
-                 optimization_constraints: Union[PhotonBaseConstraint, List[PhotonBaseConstraint]] = None,
-                 raise_error: bool = False,
                  training: bool = False,
-                 cache_folder=None,
-                 cache_updater=None,
-                 scorer: Scorer = None,
-                 score_train: bool = True):
+                 scorer: Scorer = None):
 
         self.params = specific_config
         self.pipe = pipe_ctor
         self.optimization_infos = optimization_infos
-        self.optimization_constraints = optimization_constraints
         self.outer_fold_id = outer_fold_id
         self.cross_validation_infos = cross_validation_infos
         self.scorer = scorer
 
-        self.cache_folder = cache_folder
-        self.cache_updater = cache_updater
-
-        self.raise_error = raise_error
         self.training = training
-        self.score_train = score_train
 
     def fit(self, X, y, **kwargs):
         """Iterates over cross-validation folds and trains the pipeline,
@@ -122,8 +110,6 @@ class InnerFoldManager(object):
                 test_X, test_y, kwargs_cv_test = PhotonDataHelper.split_data(X, y, kwargs, indices=test)
 
                 new_pipe = self.pipe()
-                if self.cache_folder is not None and self.cache_updater is not None:
-                    self.cache_updater(new_pipe, self.cache_folder, inner_fold_id)
 
                 if not config_item.human_readable_config:
                     config_item.human_readable_config = PhotonPrintHelper.config_to_human_readable_dict(new_pipe,
@@ -133,18 +119,12 @@ class InnerFoldManager(object):
                 job_data = InnerFoldManager.InnerCVJob(pipe=new_pipe,
                                                        config=dict(self.params),
                                                        metrics=self.optimization_infos.metrics,
-                                                       callbacks=self.optimization_constraints,
+                                                       callbacks=None,
                                                        train_data=InnerFoldManager.JobData(train_X, train_y, train,
                                                                                            kwargs_cv_train),
                                                        test_data=InnerFoldManager.JobData(test_X, test_y, test,
                                                                                           kwargs_cv_test),
-                                                       scorer=self.scorer,
-                                                       score_train=self.score_train)
-
-                # only for unparallel processing
-                # inform children in which inner fold we are
-                # self.pipe.distribute_cv_info_to_hyperpipe_children(inner_fold_counter=fold_cnt)
-                # self.mother_inner_fold_handle(fold_cnt)
+                                                       scorer=self.scorer)
 
                 # --> write that output in InnerFoldManager!
                 # logger.debug(config_item.human_readable_config)
@@ -152,12 +132,6 @@ class InnerFoldManager(object):
                 logger.debug('calculating inner fold ' + str(fold_nr) + '...')
 
                 curr_test_fold, curr_train_fold = InnerFoldManager.fit_and_score(job_data)
-                if self.cross_validation_infos.learning_curves:
-                    learning_curves = self.compute_learning_curves(new_pipe, train_X, train_y, train, kwargs_cv_train,
-                                                                   test_X, test_y, test, kwargs_cv_test)
-                    learning_curves.append([1., curr_test_fold.metrics, curr_train_fold.metrics])
-                else:
-                    learning_curves = list()
 
                 logger.debug('Performance inner fold ' + str(fold_nr))
                 print_double_metrics(curr_train_fold.metrics, curr_test_fold.metrics, photon_system_log=False)
@@ -169,34 +143,13 @@ class InnerFoldManager(object):
                                                         curr_train_fold=curr_train_fold,
                                                         curr_test_fold=curr_test_fold,
                                                         time_monitor=durations,
-                                                        feature_importances=new_pipe.feature_importances_,
-                                                        learning_curves=learning_curves)
-
-                if isinstance(self.optimization_constraints, list):
-                    break_cv = 0
-                    for cf in self.optimization_constraints:
-                        if not cf.shall_continue(config_item):
-                            logger.info('Skipped further cross validation after fold ' + str(fold_nr) +
-                                        ' due to performance constraints in ' + cf.metric)
-                            break_cv += 1
-                            break
-                    if break_cv > 0:
-                        break
-                elif isinstance(self.optimization_constraints, PhotonBaseConstraint):
-                    if not self.optimization_constraints.shall_continue(config_item):
-                        logger.info('Skipped further cross validation after fold ' + str(fold_nr) +
-                                    ' due to performance constraints in ' + self.optimization_constraints.metric)
-                        break
+                                                        feature_importances=new_pipe.feature_importances_)
 
             InnerFoldManager.process_fit_results(config_item,
-                                                 self.cross_validation_infos.calculate_metrics_across_folds,
-                                                 self.cross_validation_infos.calculate_metrics_per_fold,
                                                  self.optimization_infos.metrics,
                                                  scorer=self.scorer)
 
         except Exception as e:
-            if self.raise_error:
-                raise e
             logger.error(e)
             logger.error(traceback.format_exc())
             traceback.print_exc()
@@ -243,7 +196,7 @@ class InnerFoldManager(object):
 
     class InnerCVJob:
 
-        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data, scorer, score_train):
+        def __init__(self, pipe, config, metrics, callbacks, train_data, test_data, scorer):
             self.pipe = pipe
             self.config = config
             self.metrics = metrics
@@ -251,11 +204,10 @@ class InnerFoldManager(object):
             self.train_data = train_data
             self.test_data = test_data
             self.scorer = scorer
-            self.score_train = score_train
 
     @staticmethod
     def update_config_item_with_inner_fold(config_item, fold_cnt, curr_train_fold, curr_test_fold, time_monitor,
-                                           feature_importances, learning_curves):
+                                           feature_importances):
         # fill result tree with fold information
         inner_fold = MDBInnerFold()
         inner_fold.fold_nr = fold_cnt
@@ -266,14 +218,11 @@ class InnerFoldManager(object):
         inner_fold.number_samples_training = len(curr_train_fold.indices)
         inner_fold.time_monitor = time_monitor
         inner_fold.feature_importances = feature_importances
-        inner_fold.learning_curves = learning_curves
         # save all inner folds to the tree under the config item
         config_item.inner_folds.append(inner_fold)
 
     @staticmethod
     def process_fit_results(config_item,
-                            calculate_metrics_across_folds,
-                            calculate_metrics_per_fold,
                             metrics,
                             scorer):
 
@@ -286,56 +235,8 @@ class InnerFoldManager(object):
             curr_test_fold = fold.validation
             curr_train_fold = fold.training
 
-            if calculate_metrics_across_folds:
-                # if we have one hot encoded values -> concat horizontally
-                if isinstance(curr_test_fold.y_pred, np.ndarray):
-                    if len(curr_test_fold.y_pred.shape) > 1:
-                        axis = 1
-                    else:
-                        axis = 0
-                else:
-                    # if we have lists concat
-                    axis = 0
-                overall_y_true_test = np.concatenate((overall_y_true_test, curr_test_fold.y_true), axis=axis)
-                overall_y_pred_test = np.concatenate((overall_y_pred_test, curr_test_fold.y_pred), axis=axis)
-
-                # we assume y_pred from the training set comes in the same shape as y_pred from the test se
-                overall_y_true_train = np.concatenate((overall_y_true_train, curr_train_fold.y_true), axis=axis)
-                overall_y_pred_train = np.concatenate((overall_y_pred_train, curr_train_fold.y_pred), axis=axis)
-
-                # metrics across folds
-                metrics_to_calculate = list(metrics)
-                if 'score' in metrics_to_calculate:
-                    metrics_to_calculate.remove('score')
-                metrics_train = scorer.calculate_metrics(overall_y_true_train,
-                                                         overall_y_pred_train, metrics_to_calculate)
-                metrics_test = scorer.calculate_metrics(overall_y_true_test,
-                                                        overall_y_pred_test, metrics_to_calculate)
-
-                def metric_to_db_class(metric_list):
-                    db_metrics = []
-                    for metric_name, metric_value in metric_list.items():
-                        new_metric = MDBFoldMetric(operation="raw", metric_name=metric_name,
-                                                   value=metric_value)
-                        db_metrics.append(new_metric)
-                    return db_metrics
-
-                db_metrics_train = metric_to_db_class(metrics_train)
-                db_metrics_test = metric_to_db_class(metrics_test)
-
-                # if we want to have metrics for each fold as well, calculate mean and std.
-                if calculate_metrics_per_fold:
-                    db_metrics_fold_train, db_metrics_fold_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
-                                                                                                              metrics)
-                    config_item.metrics_train = db_metrics_train + db_metrics_fold_train
-                    config_item.metrics_test = db_metrics_test + db_metrics_fold_test
-                else:
-                    config_item.metrics_train = db_metrics_train
-                    config_item.metrics_test = db_metrics_test
-
-            elif calculate_metrics_per_fold:
-                # calculate mean and std over all fold metrics
-                config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
+            # calculate mean and std over all fold metrics
+            config_item.metrics_train, config_item.metrics_test = MDBHelper.aggregate_metrics_for_inner_folds(config_item.inner_folds,
                                                                                                                   metrics)
 
     @staticmethod
@@ -362,7 +263,6 @@ class InnerFoldManager(object):
         curr_train_fold = InnerFoldManager.score(pipe, job.train_data.X, job.train_data.y, job.metrics,
                                                 indices=job.train_data.indices,
                                                 training=True,
-                                                score_train=job.score_train,
                                                 scorer=job.scorer, **job.train_data.cv_kwargs)
 
         return curr_test_fold, curr_train_fold
@@ -370,7 +270,7 @@ class InnerFoldManager(object):
     @staticmethod
     def score(estimator, X, y_true, metrics, indices=[],
               calculate_metrics: bool = True, training: bool = False,
-              dummy: bool = False, scorer: Scorer = None, score_train=True, **kwargs):
+              dummy: bool = False, scorer: Scorer = None, **kwargs):
         """Uses the pipeline to predict the given data,
         compare it to the truth values and calculate metrics
 
@@ -416,17 +316,6 @@ class InnerFoldManager(object):
 
         output_metrics = {}
 
-        if training and not score_train:
-            scores = {}
-            for metric in list(metrics.keys()):
-                scores[metric] = 0
-            return MDBScoreInformation(metrics=scores,
-                                        score_duration=0,
-                                        y_pred=list(np.zeros_like(y_true)),
-                                        y_true=list(y_true),
-                                        indices=np.asarray(indices).tolist(),
-                                        probabilities=[])
-
         if not training or (training and dummy):
             y_pred = estimator.predict(X, **kwargs)
         else:
@@ -436,9 +325,6 @@ class InnerFoldManager(object):
             if kwargs_new is not None and len(kwargs_new) > 0:
                 kwargs = kwargs_new
             y_pred = estimator.predict(X, training=True, **kwargs)
-
-        # Nice to have
-        # InnerFoldManager.plot_some_data(y_true, y_pred)
 
         if calculate_metrics:
             if isinstance(y_pred, np.ndarray) and y_pred.dtype.names:

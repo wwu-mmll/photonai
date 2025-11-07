@@ -4,7 +4,6 @@ import numpy as np
 import json
 
 from photonai.helper.helper import PhotonDataHelper, print_double_metrics, print_metrics
-from photonai.optimization import DummyPerformanceConstraint
 from photonai.photonlogger.logger import logger
 from photonai.processing.inner_folds import InnerFoldManager
 from photonai.processing.photon_folds import FoldInfo
@@ -60,12 +59,8 @@ class OuterFoldManager:
                  optimization_info,
                  outer_fold_id,
                  cross_validation_info,
-                 cache_folder=None,
-                 cache_updater=None,
                  dummy_estimator=None,
-                 result_obj=None,
-                 raise_error=False,
-                 score_train: bool = True):
+                 result_obj=None):
         self.outer_fold_id = outer_fold_id
         self.cross_validation_info = cross_validation_info
         self.scorer = Scorer(optimization_info.metrics)
@@ -73,16 +68,10 @@ class OuterFoldManager:
         self._pipe = pipe
         self.copy_pipe_fnc = self._pipe.copy_me
         self.dummy_estimator = dummy_estimator
-        self.score_train = score_train
-        self.raise_error = raise_error
-
-        self.cache_folder = cache_folder
-        self.cache_updater = cache_updater
 
         # Information about the optimization progress
         self.current_best_config = None
         self.optimizer = None
-        self.constraint_objects = None
 
         # data
         self.result_object = result_obj
@@ -105,20 +94,7 @@ class OuterFoldManager:
         else:
             self.optimizer.prepare(pipeline_elements, self.optimization_info.maximize_metric)
 
-        # we've got some super strange pymodm problems here
-        # somehow some information from the previous outer fold lingers on and can be found within a completely new
-        # instantiated OuterFoldMDB object
-        # hence, clearing it
         self.result_object.tested_config_list = list()
-
-        # copy constraint objects.
-        if self.optimization_info.performance_constraints is not None:
-            if isinstance(self.optimization_info.performance_constraints, list):
-                self.constraint_objects = [original.copy_me() for original in self.optimization_info.performance_constraints]
-            else:
-                self.constraint_objects = [self.optimization_info.performance_constraints.copy_me()]
-        else:
-            self.constraint_objects = None
 
     def _prepare_data(self, X, y=None, **kwargs):
         logger.info("Preparing data for outer fold " + str(self.cross_validation_info.outer_folds[self.outer_fold_id].fold_nr) + "...")
@@ -160,18 +136,9 @@ class OuterFoldManager:
         self.best_metric_yet = None
         self.tested_config_counter = 0
 
-        # distribute number of folds to encapsulated child hyperpipes
-        # self.__distribute_cv_info_to_hyperpipe_children(num_of_folds=num_folds,
-        #                                                 outer_fold_counter=outer_fold_counter)
+        self.fold_operation = "mean"
 
-        if self.cross_validation_info.calculate_metrics_per_fold:
-            self.fold_operation = "mean"
-        else:
-            self.fold_operation = "raw"
-
-        self.max_nr_of_configs = ''
-        if hasattr(self.optimizer, 'n_configurations'):
-            self.max_nr_of_configs = str(self.optimizer.n_configurations)
+        self.max_nr_of_configs = str(self.optimizer.n_configurations)
 
         if isinstance(self.optimizer, PhotonMasterOptimizer):
             self.optimizer.optimize()
@@ -208,26 +175,9 @@ class OuterFoldManager:
 
             # ... and create optimal pipeline
             optimum_pipe = self.copy_pipe_fnc()
-            if self.cache_updater is not None:
-                self.cache_updater(optimum_pipe, self.cache_folder, "fixed_fold_id")
-            optimum_pipe.caching = False
+
             # set self to best config
             optimum_pipe.set_params(**best_config_outer_fold.config_dict)
-
-            # Todo: set all children to best config and inform to NOT optimize again, ONLY fit
-            # for child_name, child_config in best_config_outer_fold_mdb.children_config_dict.items():
-            #     if child_config:
-            #         # in case we have a pipeline stacking we need to identify the particular subhyperpipe
-            #         splitted_name = child_name.split('__')
-            #         if len(splitted_name) > 1:
-            #             stacking_element = self.optimum_pipe.named_steps[splitted_name[0]]
-            #             pipe_element = stacking_element.elements[splitted_name[1]]
-            #         else:
-            #             pipe_element = self.optimum_pipe.named_steps[child_name]
-            #         pipe_element.set_params(**child_config)
-            #         pipe_element.is_final_fit = True
-
-            # self.__distribute_cv_info_to_hyperpipe_children(reset=True)
 
             logger.debug('Fitting model with best configuration of outer fold...')
             optimum_pipe.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
@@ -241,52 +191,31 @@ class OuterFoldManager:
             best_config_performance_mdb.number_samples_validation = self._test_y.shape[0]
             best_config_performance_mdb.feature_importances = optimum_pipe.feature_importances_
 
-            if self.cross_validation_info.use_test_set:
-                # Todo: generate mean and std over outer folds as well. move this items to the top
-                logger.info('Calculating best model performance on test set...')
+            logger.info('Calculating best model performance on test set...')
 
-                logger.debug('...scoring test data')
-                test_score_mdb = InnerFoldManager.score(optimum_pipe, self._test_X, self._test_y,
-                                                        indices=self.cross_validation_info.outer_folds[self.outer_fold_id].test_indices,
-                                                        metrics=self.optimization_info.metrics,
-                                                        scorer=self.scorer,
-                                                        **self._test_kwargs)
+            logger.debug('...scoring test data')
+            test_score_mdb = InnerFoldManager.score(optimum_pipe, self._test_X, self._test_y,
+                                                    indices=self.cross_validation_info.outer_folds[self.outer_fold_id].test_indices,
+                                                    metrics=self.optimization_info.metrics,
+                                                    scorer=self.scorer,
+                                                    **self._test_kwargs)
 
-                logger.debug('... scoring training data')
+            logger.debug('... scoring training data')
 
-                train_score_mdb = InnerFoldManager.score(optimum_pipe, self._validation_X, self._validation_y,
-                                                         indices=self.cross_validation_info.outer_folds[self.outer_fold_id].train_indices,
-                                                         metrics=self.optimization_info.metrics,
-                                                         training=True,
-                                                         scorer=self.scorer,
-                                                         score_train=self.score_train,
-                                                         **self._validation_kwargs)
+            train_score_mdb = InnerFoldManager.score(optimum_pipe, self._validation_X, self._validation_y,
+                                                     indices=self.cross_validation_info.outer_folds[self.outer_fold_id].train_indices,
+                                                     metrics=self.optimization_info.metrics,
+                                                     training=True,
+                                                     scorer=self.scorer,
+                                                     **self._validation_kwargs)
 
-                best_config_performance_mdb.training = train_score_mdb
-                best_config_performance_mdb.validation = test_score_mdb
+            best_config_performance_mdb.training = train_score_mdb
+            best_config_performance_mdb.validation = test_score_mdb
 
-                logger.system_line()
-                logger.photon_system_log('TEST PERFORMANCE')
-                logger.system_line()
-                print_double_metrics(train_score_mdb.metrics, test_score_mdb.metrics)
-            else:
-
-                def _copy_inner_fold_means(metric_dict):
-                    # We copy all mean values from validation to the best config
-                    # training
-                    train_item_metrics = {}
-                    for m in metric_dict:
-                        if m.operation == str(self.fold_operation):
-                            train_item_metrics[m.metric_name] = m.value
-                    train_item = MDBScoreInformation()
-                    train_item.metrics_copied_from_inner = True
-                    train_item.metrics = train_item_metrics
-                    return train_item
-
-                # training
-                best_config_performance_mdb.training = _copy_inner_fold_means(best_config_outer_fold.metrics_train)
-                # validation
-                best_config_performance_mdb.validation = _copy_inner_fold_means(best_config_outer_fold.metrics_test)
+            logger.system_line()
+            logger.photon_system_log('TEST PERFORMANCE')
+            logger.system_line()
+            print_double_metrics(train_score_mdb.metrics, test_score_mdb.metrics)
 
             # write best config performance to best config item
             self.result_object.best_config.best_config_score = best_config_performance_mdb
@@ -306,15 +235,10 @@ class OuterFoldManager:
         else:
             pipe_ctor = self.copy_pipe_fnc
 
-        # self.__distribute_cv_info_to_hyperpipe_children(reset=True, config_counter=tested_config_counter)
-
         hp = InnerFoldManager(pipe_ctor, current_config,
                               self.optimization_info,
-                              self.cross_validation_info, self.outer_fold_id, self.constraint_objects,
-                              cache_folder=self.cache_folder,
-                              cache_updater=self.cache_updater,
-                              scorer=self.scorer,
-                              raise_error=self.raise_error)
+                              self.cross_validation_info, self.outer_fold_id,
+                              scorer=self.scorer)
 
         # Test the configuration cross validated by inner_cv object
         current_config_mdb = hp.fit(self._validation_X, self._validation_y, **self._validation_kwargs)
@@ -401,14 +325,13 @@ class OuterFoldManager:
                 inner_fold = MDBInnerFold()
                 inner_fold.training = train_scores
 
-                if self.cross_validation_info.use_test_set:
-                    test_scores = InnerFoldManager.score(self.dummy_estimator,
-                                                         self._test_X, self._test_y,
-                                                         metrics=self.optimization_info.metrics,
-                                                         score_train=self.score_train,
-                                                         scorer=self.scorer)
-                    print_metrics("DUMMY", test_scores.metrics)
-                    inner_fold.validation = test_scores
+                test_scores = InnerFoldManager.score(self.dummy_estimator,
+                                                     self._test_X, self._test_y,
+                                                     metrics=self.optimization_info.metrics,
+                                                     score_train=self.score_train,
+                                                     scorer=self.scorer)
+                print_metrics("DUMMY", test_scores.metrics)
+                inner_fold.validation = test_scores
 
                 self.result_object.dummy_results = inner_fold
 

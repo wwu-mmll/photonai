@@ -734,14 +734,6 @@ class ResultsHandler:
             return str_fig.replace("False", "false").replace("True", "true")
 
     def save(self):
-
-        if self.output_settings.mongodb_connect_url:
-            connect(self.output_settings.mongodb_connect_url, alias='photon_core')
-            logger.info('Write results to mongodb...')
-            try:
-                self.results.save()
-            except DocumentTooLarge:
-                logger.error('Could not save document into MongoDB: Document too large')
         if self.output_settings.save_output:
             logger.info("Writing results to project folder...")
             self.write_result_tree_to_file()
@@ -820,8 +812,6 @@ class ResultsHandler:
         elif isinstance(d, list):
             return [self.round_floats(val) for val in d]
         elif isinstance(d, float):
-            if self.output_settings.round_results:
-                return round(d, 2)
             return round(d, 6)
         else:
             return d
@@ -838,11 +828,8 @@ class ResultsHandler:
           if self.output_settings.save_output:
             filename = os.path.join(self.output_settings.results_folder, BEST_CONFIG_PREDICTIONS_FILE)
             # usually we write the predictions for the outer fold
-            if not self.output_settings.save_predictions_from_best_config_inner_folds:
-                return self.get_test_predictions(filename)
-            # in case no outer folds exist, we write the inner_fold predictions
-            else:
-                return self.get_best_config_inner_fold_predictions(filename)
+            return self.get_test_predictions(filename)
+
 
     def _get_best_outer_fold_configs_per_estimator(self) -> dict:
         # 1. find out which estimators there are

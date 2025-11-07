@@ -1,6 +1,5 @@
 import numpy as np
-from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, \
-    SkOptOptimizer, RandomSearchOptimizer, SMACOptimizer, NevergradOptimizer
+from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, RandomSearchOptimizer
 from photonai.optimization.switch_optimizer.meta_optimizer import MetaHPOptimizer
 from photonai.processing.metrics import Scorer
 from photonai.photonlogger.logger import logger
@@ -10,20 +9,16 @@ class Optimization:
 
     OPTIMIZER_DICTIONARY = {'grid_search': GridSearchOptimizer,
                             'random_grid_search': RandomGridSearchOptimizer,
-                            'sk_opt': SkOptOptimizer,
-                            'smac': SMACOptimizer,
                             'random_search': RandomSearchOptimizer,
-                            'nevergrad': NevergradOptimizer,
                             'switch': MetaHPOptimizer}
 
     def __init__(self, optimizer_input, optimizer_params,
-                 metrics, best_config_metric, performance_constraints):
+                 metrics, best_config_metric):
 
         self._optimizer_input = ''
         self.optimizer_input_str = optimizer_input
         self.optimizer_params = optimizer_params
         self._best_config_metric = ''
-        self.performance_constraints = performance_constraints
         self.metrics = None
         self.maximize_metric = None
         self.best_config_metric = None

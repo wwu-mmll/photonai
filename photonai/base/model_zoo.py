@@ -167,8 +167,6 @@ class DefaultPipeline(Hyperpipe):
                                               outer_cv=outer_cv,
                                               metrics=metrics,
                                               best_config_metric=best_config_metric,
-                                              optimizer=optimizer,
-                                              optimizer_params=optimizer_params,
                                               **kwargs)
 
         if add_default_pipeline_elements is True:

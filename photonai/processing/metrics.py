@@ -204,17 +204,6 @@ class Scorer:
             Dictionary with format name_of_metric -> value.
 
         """
-
-        # Todo: HOW TO CHECK IF ITS REGRESSION?!
-        # The following works only for classification
-        # if np.ndim(y_pred) == 2:
-        #     y_pred = one_hot_to_binary(y_pred)
-        #     logger.warning("test_predictions was one hot encoded => transformed to binary")
-        #
-        # if np.ndim(y_true) == 2:
-        #     y_true = one_hot_to_binary(y_true)
-        #     logger.warning("test_y was one hot encoded => transformed to binary")
-
         output_metrics = {}
         if metrics:
             for metric in metrics:

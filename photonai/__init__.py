@@ -17,8 +17,7 @@ from .version import __version__
 from .base import Hyperpipe, OutputSettings, Stack, Switch, Branch, PipelineElement, ParallelBranch, \
     PhotonRegistry, DataFilter, CallbackElement, Preprocessing, ClassificationPipe, ClassifierSwitch, \
     RegressionPipe, RegressorSwitch
-from .optimization import FloatRange, IntegerRange, Categorical, MinimumPerformanceConstraint, \
-    BestPerformanceConstraint, DummyPerformanceConstraint, BooleanSwitch
+from .optimization import FloatRange, IntegerRange, Categorical, BooleanSwitch
 from .base.json_transformer import JsonTransformer
 from .processing.permutation_test import PermutationTest
 from .processing import ResultsHandler

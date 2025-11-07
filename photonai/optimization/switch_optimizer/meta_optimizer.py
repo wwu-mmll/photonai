@@ -1,8 +1,7 @@
 from photonai.optimization.base_optimizer import PhotonSlaveOptimizer
 from photonai.base.photon_elements import Switch
 
-from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, \
-    SkOptOptimizer, RandomSearchOptimizer
+from photonai.optimization import GridSearchOptimizer, RandomGridSearchOptimizer, RandomSearchOptimizer
 
 
 class MetaHPOptimizer(PhotonSlaveOptimizer):

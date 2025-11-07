@@ -50,7 +50,7 @@ class FoldInfo:
             return dict(zip(unique, counts))
 
     @staticmethod
-    def generate_folds(cv_strategy, X, y, kwargs, eval_final_performance=True, test_size=0.2):
+    def generate_folds(cv_strategy, X, y, kwargs):
         """Generates the training and  test set indices for the hyperparameter search.
         Returns a tuple of training and test indices.
 
@@ -94,38 +94,22 @@ class FoldInfo:
         else:
             groups = None
 
-        if cv_strategy is not None:
-            if groups is not None and (isinstance(cv_strategy, (GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedGroupKFold))):
-                try:
-                    data_test_cases = cv_strategy.split(X, y, groups)
-                except:
-                    logger.error("Could not split data according to groups")
-            elif groups is not None and (isinstance(cv_strategy, (StratifiedKFoldRegression,
-                                                                  StratifiedKFold,
-                                                                  StratifiedShuffleSplit))):
-                try:
-                    data_test_cases = cv_strategy.split(X, groups)
-                except:
-                    logger.error("Could not stratify data for outer cross validation according to "
-                                 "group variable")
-            else:
-                data_test_cases = cv_strategy.split(X, y)
-
-        # in case we do not want to divide between validation and test set
-        # Re eval_final_performance:
-        #         # set eval_final_performance to False because
-        #         # 1. if no cv-object is given, no split is performed --> seems more logical
-        #         #    than passing nothing, passing no cv-object but getting
-        #         #    an 80/20 split by default
-        #         # 2. if cv-object is given, split is performed but we don't peek
-        #         #    into the test set --> thus we can evaluate more hp configs
-        #         #    later without double dipping
-        elif not eval_final_performance:
-            data_test_cases = FoldInfo._yield_all_data(X)
-        # the default is dividing one time into a validation and test set
+        if groups is not None and (isinstance(cv_strategy, (GroupKFold, GroupShuffleSplit, LeaveOneGroupOut, StratifiedGroupKFold))):
+            try:
+                data_test_cases = cv_strategy.split(X, y, groups)
+            except:
+                logger.error("Could not split data according to groups")
+        elif groups is not None and (isinstance(cv_strategy, (StratifiedKFoldRegression,
+                                                              StratifiedKFold,
+                                                              StratifiedShuffleSplit))):
+            try:
+                data_test_cases = cv_strategy.split(X, groups)
+            except:
+                logger.error("Could not stratify data for outer cross validation according to "
+                             "group variable")
         else:
-            train_test_cv_object = ShuffleSplit(n_splits=1, test_size=test_size)
-            data_test_cases = train_test_cv_object.split(X, y)
+            data_test_cases = cv_strategy.split(X, y)
+
 
         fold_objects = list()
         for i, (train_indices, test_indices) in enumerate(data_test_cases):

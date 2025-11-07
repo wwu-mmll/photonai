@@ -90,18 +90,17 @@ class JsonTransformer(object):
         """
         self.data_json = dict()
         self.data_json["name"] = pipe.name
-        for key in ["verbosity", "permutation_id", "cache_folder", "nr_of_processes"]:
+        for key in ["verbosity", "cache_folder", "nr_of_processes"]:
             self.data_json[key] = getattr(pipe, key)
-        self.data_json["random_seed"] = pipe.random_state
+        self.data_json["random_seed"] = ""
 
         self.data_json["inner_cv"] = self.transform_elements_recursive(pipe.cross_validation.inner_cv)
         self.data_json["outer_cv"] = self.transform_elements_recursive(pipe.cross_validation.outer_cv)
         for c_key in ["calculate_metrics_across_folds", "use_test_set", "test_size",
                       "calculate_metrics_per_fold"]:
-            self.data_json[c_key] = getattr(pipe.cross_validation, c_key)
+            self.data_json[c_key] = ""
 
-        self.data_json["performance_constraints"] = self.transform_elements_recursive(
-            pipe.optimization.performance_constraints)
+        self.data_json["performance_constraints"] = ""
         self.data_json["optimizer"] = pipe.optimization.optimizer_input_str
         if pipe.optimization.optimizer_params:
             self.data_json["optimizer_params"] = self.transform_elements_recursive(pipe.optimization.optimizer_params)
@@ -110,12 +109,7 @@ class JsonTransformer(object):
         self.data_json["project_folder"] = pipe.project_folder
 
         if pipe.output_settings:
-            self.data_json["output_settings"] = {"mongodb_connect_url": pipe.output_settings.mongodb_connect_url,
-                                                 "save_output": pipe.output_settings.save_output,
-                                                 "overwrite_results": pipe.output_settings.overwrite_results,
-                                                 "user_id": pipe.output_settings.user_id,
-                                                 "wizard_object_id": pipe.output_settings.wizard_object_id,
-                                                 "wizard_project_name": pipe.output_settings.wizard_project_name,
+            self.data_json["output_settings"] = {"save_output": pipe.output_settings.save_output,
                                                  "__photon_type": "OutputSettings"}
 
         if pipe.preprocessing:

@@ -511,16 +511,10 @@ class PipelineElement(BaseEstimator):
             Predictions values.
 
         """
-        if self.batch_size == 0:
-            return self.__predict(X, **kwargs)
-        else:
-            return self.__batch_predict(self.__predict, X, **kwargs)
+        return self.__predict(X, **kwargs)
 
     def predict_proba(self, X, **kwargs):
-        if self.batch_size == 0:
-            return self.__predict_proba(X, **kwargs)
-        else:
-            return self.__batch_predict(self.__predict_proba, X, **kwargs)
+        return self.__predict_proba(X, **kwargs)
 
     def __predict_proba(self, X: np.ndarray, **kwargs):
         """
@@ -576,49 +570,10 @@ class PipelineElement(BaseEstimator):
             (X, y) in transformed version and original kwargs.
 
         """
-        if self.batch_size == 0:
-            Xt, yt, kwargs = self.__transform(X, y, **kwargs)
-        else:
-            Xt, yt, kwargs = self.__batch_transform(X, y, **kwargs)
+        Xt, yt, kwargs = self.__transform(X, y, **kwargs)
         if all(hasattr(data, "shape") for data in [X, Xt]) and all(len(data.shape) > 1 for data in [X, Xt]):
             self.reduce_dimension = (Xt.shape[1] < X.shape[1])
         return Xt, yt, kwargs
-
-    def inverse_transform(self, X: np.ndarray, y: np.ndarray = None, **kwargs) -> (np.ndarray, np.ndarray, dict):
-        """
-        Calls inverse_transform on the base element.
-
-        When the dimension is preserved: transformers
-        without inverse returns original input.
-
-        Parameters:
-            X:
-                The array-like data with shape=[N, D], where N
-                is the number of samples and D is the number of features.
-
-            y:
-                The truth array-like values with shape=[N], where N is
-                the number of samples.
-
-            **kwargs:
-                Keyword arguments, passed to base_element.transform.
-
-        Raises:
-            NotImplementedError:
-                Thrown when there is a dimensional reduction but no inverse is defined.
-
-        Returns:
-            (X, y, kwargs) in back-transformed version.
-
-        """
-        if hasattr(self.base_element, 'inverse_transform'):
-            # todo: check this
-            X, y, kwargs = self.adjusted_delegate_call(self.base_element.inverse_transform, X, y, **kwargs)
-        elif self.is_transformer and self.reduce_dimension:
-            msg = "{} has no inverse_transform, but element reduce dimesions.".format(self.name)
-            logger.error(msg)
-            raise NotImplementedError(msg)
-        return X, y, kwargs
 
     def __batch_transform(self, X, y=None, **kwargs):
         if not isinstance(X, list) and not isinstance(X, np.ndarray):

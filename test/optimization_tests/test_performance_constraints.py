@@ -2,8 +2,6 @@ import unittest
 import numpy as np
 import warnings
 
-from photonai.optimization import DummyPerformanceConstraint, MinimumPerformanceConstraint, BestPerformanceConstraint, IntegerRange
-from photonai.optimization.performance_constraints import PhotonBaseConstraint
 from photonai.processing.results_structure import MDBConfig, MDBScoreInformation, MDBInnerFold
 
 from sklearn.datasets import load_diabetes
